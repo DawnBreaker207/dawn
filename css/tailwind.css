@@ -2,60 +2,173 @@
 @plugin "@tailwindcss/forms";
 @plugin '@tailwindcss/typography';
 @source '../node_modules/pliny';
+
+/* Custom variant for dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Core theme configuration */
 @theme {
   /* Font families */
-  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans:
+    var(--font-outfit) var(--font-outfit), var(--font-space-grotesk), ui-sans-serif, system-ui,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-  /* Colors */
-  /* Copied from https://tailwindcss.com/docs/theme#default-theme-variable-reference */
-  --color-primary-50: oklch(0.971 0.014 343.198);
-  --color-primary-100: oklch(0.948 0.028 342.258);
-  --color-primary-200: oklch(0.899 0.061 343.231);
-  --color-primary-300: oklch(0.823 0.12 346.018);
-  --color-primary-400: oklch(0.718 0.202 349.761);
-  --color-primary-500: oklch(0.656 0.241 354.308);
-  --color-primary-600: oklch(0.592 0.249 0.584);
-  --color-primary-700: oklch(0.525 0.223 3.958);
-  --color-primary-800: oklch(0.459 0.187 3.815);
-  --color-primary-900: oklch(0.408 0.153 2.432);
-  --color-primary-950: oklch(0.284 0.109 3.907);
+  /* Primary colors - converted to OKLCH for better color interpolation */
+  --color-primary-50: oklch(0.971 0.025 258.3);
+  --color-primary-100: oklch(0.948 0.035 258.3);
+  --color-primary-200: oklch(0.899 0.065 258.3);
+  --color-primary-300: oklch(0.823 0.095 258.3);
+  --color-primary-400: oklch(0.75 0.125 258.3); /* #7aa2f7 equivalent */
+  --color-primary-500: oklch(0.72 0.125 258.3);
+  --color-primary-600: oklch(0.68 0.125 258.3);
+  --color-primary-700: oklch(0.58 0.115 258.3);
+  --color-primary-800: oklch(0.48 0.105 258.3);
+  --color-primary-900: oklch(0.38 0.095 258.3);
+  --color-primary-950: oklch(0.28 0.085 258.3);
 
-  --color-gray-50: oklch(0.985 0.002 247.839);
-  --color-gray-100: oklch(0.967 0.003 264.542);
-  --color-gray-200: oklch(0.928 0.006 264.531);
-  --color-gray-300: oklch(0.872 0.01 258.338);
-  --color-gray-400: oklch(0.707 0.022 261.325);
-  --color-gray-500: oklch(0.551 0.027 264.364);
-  --color-gray-600: oklch(0.446 0.03 256.802);
-  --color-gray-700: oklch(0.373 0.034 259.733);
-  --color-gray-800: oklch(0.278 0.033 256.848);
-  --color-gray-900: oklch(0.21 0.034 264.665);
-  --color-gray-950: oklch(0.13 0.028 261.692);
+  /* Neutral colors (gray) - using OKLCH */
+  --color-gray-50: oklch(0.98 0.002 258.3); /* Light text on dark */
+  --color-gray-100: oklch(0.94 0.005 258.3); /* Borders */
+  --color-gray-200: oklch(0.88 0.008 258.3); /* Secondary text */
+  --color-gray-300: oklch(0.82 0.012 258.3); /* Muted text */
+  --color-gray-400: oklch(0.68 0.015 258.3); /* Disabled text */
+  --color-gray-500: oklch(0.55 0.018 258.3); /* Normal text */
+  --color-gray-600: oklch(0.42 0.02 258.3); /* Light backgrounds */
+  --color-gray-700: oklch(0.32 0.022 258.3); /* Cards/surfaces */
+  --color-gray-800: oklch(0.24 0.02 258.3); /* Code blocks #24283b */
+  --color-gray-900: oklch(0.15 0.02 258.3); /* Main dark #1A1B26 */
+  --color-gray-950: oklch(0.08 0.015 258.3); /* Darkest variant */
 
-  /* Line heights */
+  /* Sky colors */
+  --color-sky-400: oklch(0.723 0.092 232.8);
+  --color-sky-500: oklch(0.681 0.108 232.8);
+  --color-sky-600: oklch(0.62 0.124 232.8);
+
+  /* Brand colors */
+  --color-dark: oklch(0.15 0.02 258.3); /* #1A1B26 equivalent */
+  --color-spotify: oklch(0.65 0.19 142.5); /* #1DB954 equivalent */
+  --color-coral: oklch(0.69 0.15 12.2); /* #EF596F equivalent */
+
+  /* Additional utility colors */
+  --color-amber-400: oklch(0.838 0.142 85.8);
+  --color-blue-500: oklch(0.638 0.175 252);
+  --color-rose-500: oklch(0.656 0.216 12.2);
+  --color-green-900: oklch(0.358 0.136 142.5);
+
+  /* Line heights - migrated from v3 */
   --line-height-11: 2.75rem;
   --line-height-12: 3rem;
   --line-height-13: 3.25rem;
   --line-height-14: 3.5rem;
 
+  /* Spacing - migrated from v3 */
+  --spacing-9-16: 56.25%;
+
   /* Z-index values */
   --z-60: 60;
   --z-70: 70;
   --z-80: 80;
+
+  /* Box shadows - migrated from v3 */
+  --shadow-nextjs: 0 8px 20px rgb(0 0 0 / 0.12);
+  --shadow-nextjs-dark: 0 8px 20px rgb(255 255 255 / 0.12);
+
+  /* Animation durations */
+  --duration-wave: 2.5s;
+  --duration-music-bar: 0.8s;
+  --duration-scale: 150ms;
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+/* Keyframes - migrated from v3 config */
+@keyframes wave-animation {
+  0% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(14deg);
+  }
+  20% {
+    transform: rotate(-8deg);
+  }
+  30% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
+@keyframes music-bar-1 {
+  0%,
+  100% {
+    height: 0%;
+  }
+  50% {
+    height: 70%;
+  }
+}
+
+@keyframes music-bar-2 {
+  0%,
+  100% {
+    height: 50%;
+  }
+  25% {
+    height: 0%;
+  }
+  75% {
+    height: 100%;
+  }
+}
+
+@keyframes music-bar-3 {
+  0%,
+  100% {
+    height: 70%;
+  }
+  15% {
+    height: 100%;
+  }
+  65% {
+    height: 0%;
+  }
+}
+
+@keyframes music-bar-4 {
+  0%,
+  100% {
+    height: 50%;
+  }
+  35.7% {
+    height: 0%;
+  }
+  85.7% {
+    height: 70%;
+  }
+}
+
+@keyframes scale-up {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Base layer compatibility styles */
 @layer base {
   *,
   ::after,
@@ -63,6 +176,10 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
+  }
+
+  :where(.dark, .dark *) {
+    border-color: var(--color-gray-700, currentColor);
   }
 
   a,
@@ -76,77 +193,271 @@
     border-radius: var(--radius-sm);
     outline-color: var(--color-primary-500);
   }
+
+  /* Pre and code styling for consistency with v3 */
+  pre {
+    background-color: oklch(0.16 0.02 258.3); /* #24283b equivalent */
+  }
+
+  code:not(pre code) {
+    color: oklch(0.75 0.08 285.7); /* #BB9AF7 equivalent */
+    background-color: oklch(0.16 0.02 258.3);
+    padding: 2px 4px;
+    border-radius: 0.25rem;
+  }
 }
 
+/* Utilities layer */
 @layer utilities {
+  /* Animation utilities - migrated from v3 */
+  .animate-wave {
+    animation: wave-animation var(--duration-wave) linear infinite;
+  }
+
+  .animate-music-bar-1 {
+    animation: music-bar-1 var(--duration-music-bar) linear infinite;
+  }
+
+  .animate-music-bar-2 {
+    animation: music-bar-2 var(--duration-music-bar) linear infinite;
+  }
+
+  .animate-music-bar-3 {
+    animation: music-bar-3 var(--duration-music-bar) linear infinite;
+  }
+
+  .animate-music-bar-4 {
+    animation: music-bar-4 var(--duration-music-bar) linear infinite;
+  }
+
+  .animate-scale-up {
+    animation: scale-up var(--duration-scale) ease-in-out forwards;
+  }
+
+  /* Box shadow utilities */
+  .shadow-nextjs {
+    box-shadow: var(--shadow-nextjs);
+  }
+
+  .shadow-nextjs-dark {
+    box-shadow: var(--shadow-nextjs-dark);
+  }
+
+  /* Spacing utilities */
+  .aspect-9-16 {
+    aspect-ratio: 9/16;
+  }
+
+  /* Typography enhancements */
   .prose {
+    font-size: 18px;
+
     & a {
       color: var(--color-primary-500);
+      text-underline-offset: 4px;
+
       &:hover {
         color: var(--color-primary-600);
       }
+
       & code {
         color: var(--color-primary-400);
       }
     }
+
+    & :where(h1, h2, h3, h4, h5, h6) {
+      scroll-margin-top: 6rem;
+    }
+
     & :where(h1, h2) {
       font-weight: 700;
       letter-spacing: var(--tracking-tight);
+      color: var(--color-gray-900);
     }
+
+    & h2 {
+      font-size: 28px;
+      margin: 0 0 12px 0;
+    }
+
     & h3 {
+      font-size: 24px;
       font-weight: 600;
+      color: var(--color-gray-900);
     }
-    & :where(code):not(pre code) {
-      color: var(--color-indigo-500);
+
+    & :where(h4, h5, h6) {
+      color: var(--color-gray-900);
+    }
+
+    & img {
+      margin: 0 auto;
+      border-radius: 12px;
+    }
+
+    & blockquote {
+      background: #ebebeb;
+      color: var(--color-gray-900);
+      border-left-color: var(--color-gray-200);
+    }
+
+    & details {
+      background-color: var(--color-gray-100);
+      padding: 2px 4px;
+      border-radius: 0.25rem;
+    }
+
+    & hr {
+      border-color: var(--color-gray-200);
+    }
+
+    & :where(ol li)::marker {
+      font-weight: 600;
+      color: var(--color-gray-500);
+    }
+
+    & :where(ul li)::marker {
+      color: var(--color-gray-500);
+    }
+
+    & strong {
+      color: var(--color-gray-600);
     }
   }
 
+  /* Dark mode prose */
   .prose-invert {
     & a {
       color: var(--color-primary-500);
+
       &:hover {
-        color: var(--color-primary-400);
+        color: var(--color-sky-400) !important;
       }
+
       & code {
-        color: var(--color-primary-400);
+        color: var(--color-sky-400);
       }
     }
+
     & :where(h1, h2, h3, h4, h5, h6) {
       color: var(--color-gray-100);
     }
+
+    & blockquote {
+      background: #5c6370;
+      color: var(--color-gray-100);
+      border-left-color: var(--color-gray-700);
+    }
+
+    & details {
+      background-color: var(--color-gray-800);
+    }
+
+    & hr {
+      border-color: var(--color-gray-700);
+    }
+
+    & :where(ol li)::marker {
+      color: var(--color-gray-400);
+    }
+
+    & :where(ul li)::marker {
+      color: var(--color-gray-400);
+    }
+
+    & strong {
+      color: var(--color-gray-100);
+    }
+
+    & thead th {
+      color: var(--color-gray-100);
+    }
+
+    & tbody tr {
+      border-bottom-color: var(--color-gray-700);
+    }
+  }
+
+  /* Popular tags styling */
+  .popular-tags .javascript {
+    background-color: var(--color-amber-400);
+  }
+
+  .popular-tags .typescript {
+    background-color: var(--color-blue-500);
+  }
+
+  .popular-tags .nestjs {
+    background-color: var(--color-rose-500);
+  }
+
+  .popular-tags .react {
+    background-color: var(--color-sky-500);
+  }
+
+  .popular-tags .devops {
+    background-color: var(--color-sky-600);
+  }
+
+  .popular-tags .database {
+    background-color: var(--color-green-900);
+  }
+
+  /* Utility classes from original */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .content-header-link {
+    opacity: 0;
+    margin-left: -24px;
+    padding-right: 4px;
+  }
+
+  .content-header:hover .content-header-link,
+  .content-header-link:hover {
+    opacity: 1;
+  }
+
+  .linkicon {
+    display: inline-block;
+    vertical-align: middle;
   }
 }
 
+/* Task list and footnotes */
 .task-list-item::before {
-  @apply hidden;
-}
-
-.task-list-item {
-  @apply list-none;
-}
-
-.footnotes {
-  @apply mt-12 border-t border-gray-200 pt-8 dark:border-gray-700;
-}
-
-.data-footnote-backref {
-  @apply no-underline;
-}
-
-.csl-entry {
-  @apply my-5;
-}
-
-.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+.task-list-item {
+  list-style: none;
 }
 
-/* https://stackoverflow.com/questions/61083813/how-to-avoid-internal-autofill-selected-style-to-be-applied */
+.footnotes {
+  margin-top: 3rem;
+  border-top: 1px solid var(--color-gray-200);
+  padding-top: 2rem;
+}
+
+:where(.dark, .dark *) .footnotes {
+  border-top-color: var(--color-gray-700);
+}
+
+.data-footnote-backref {
+  text-decoration: none;
+}
+
+.csl-entry {
+  margin: 1.25rem 0;
+}
+
+/* Autofill fix */
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
   transition:
@@ -154,6 +465,7 @@ input:-webkit-autofill:focus {
     color 600000s 0s;
 }
 
+/* KaTeX display */
 .katex-display {
   overflow: auto hidden;
 }
@@ -167,9 +479,4 @@ input:-webkit-autofill:focus {
 .content-header:hover .content-header-link,
 .content-header-link:hover {
   opacity: 1;
-}
-
-.linkicon {
-  display: inline-block;
-  vertical-align: middle;
 }
