@@ -2,12 +2,12 @@ import { ReactNode } from 'react'
 import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
-import Comments from '@/components/Comments'
-import Link from '@/components/Link'
-import PageTitle from '@/components/PageTitle'
-import SectionContainer from '@/components/SectionContainer'
+import Comments from '@/components/ui/Comments'
+import PageTitle from '@/components/ui/PageTitle'
 import siteMetadata from '@/data/siteMetadata'
-import ScrollTopAndComment from '@/components/ScrollTopAndComment'
+import ScrollTopAndComment from '@/components/ui/ScrollTopAndComment'
+import SectionContainer from '@/components/ui/SectionContainer'
+import Link from '@/components/ui/Link'
 
 interface LayoutProps {
   content: CoreContent<Blog>
@@ -17,7 +17,7 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, next, prev, children }: LayoutProps) {
-  const { path, slug, date, title } = content
+  const { slug, date, title, tags, readingTime } = content
 
   return (
     <SectionContainer>
