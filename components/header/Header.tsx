@@ -1,3 +1,5 @@
+'use client'
+
 import Link from '@/components/ui/Link'
 import headerNavLinks from '@/data/headerNavLinks'
 import Logo from '@/data/logo.svg'
@@ -25,7 +27,7 @@ const Header = () => {
             <Logo className="fill-dark dark:fill-white" />
           </div>
           <div className="group ml-2 text-xl font-bold transition duration-300">
-            Karhdo.dev
+            Dawn.dev
             <span className="block h-0.5 max-w-0 bg-black transition-all duration-500 group-hover:max-w-[85%] dark:bg-white"></span>
           </div>
         </Link>
