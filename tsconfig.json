@@ -17,9 +17,14 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
+      "@/types/*": ["types/*"],
+      "@/utils/*": ["utils/*"],
+      "@/constants/*": ["constants/*"],
       "@/components/*": ["components/*"],
+      "@/servers/*": ["servers/*"],
       "@/data/*": ["data/*"],
       "@/layouts/*": ["layouts/*"],
+      "@/libs/*": ["libs/*"],
       "@/css/*": ["css/*"],
       "contentlayer/generated": ["./.contentlayer/generated"],
       "pliny/*": ["node_modules/pliny/*"]
