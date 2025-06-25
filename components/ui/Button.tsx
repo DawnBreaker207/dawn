@@ -1,5 +1,3 @@
-import { Component } from 'react'
-import React from 'react'
 import clsx from 'clsx'
 
 const Button = ({
@@ -8,8 +6,10 @@ const Button = ({
   className,
   ...rest
 }: {
-  children: React.ElementType
+  children: React.ReactNode
   as?: React.ElementType
+  className?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any
 }) => {
   return (
