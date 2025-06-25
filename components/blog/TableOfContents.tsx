@@ -1,3 +1,4 @@
+'use client'
 import { ChevronRight } from 'lucide-react'
 import { Link } from '../ui'
 import clsx from 'clsx'

@@ -1,3 +1,4 @@
+'use client'
 import clsx from 'clsx'
 import { Twemoji } from '../ui'
 import { useEffect, useRef, useState } from 'react'

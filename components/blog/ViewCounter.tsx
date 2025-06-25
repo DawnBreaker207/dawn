@@ -1,3 +1,4 @@
+'use client'
 import { useBlogStats, useUpdateBlogStats } from 'hooks'
 import { useEffect } from 'react'
 import { ViewCounterProps } from 'types'
