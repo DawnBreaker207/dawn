@@ -30,7 +30,7 @@ export default function PostMinimal({ content, next, prev, children }: LayoutPro
           <div className="space-y-1 pb-10 text-center dark:border-gray-700">
             <div className="w-full">
               <Bleed>
-                <div className="relative aspect-2/1 w-full">
+                <div className="relative aspect-[2/1] w-full">
                   <Image src={displayImage} alt={title} fill className="object-cover" />
                 </div>
               </Bleed>
@@ -42,7 +42,7 @@ export default function PostMinimal({ content, next, prev, children }: LayoutPro
           <div className="prose dark:prose-invert max-w-none py-4">{children}</div>
           {siteMetadata.comments && (
             <div className="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment">
-              <Comments slug={slug} />
+              <Comments />
             </div>
           )}
           <footer>
