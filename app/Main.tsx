@@ -1,29 +1,74 @@
+'use client'
 import Tag from '@/components/ui/Tag'
+// import Snowfall from 'react-snowfall'
 import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
-import NewsletterForm from 'pliny/ui/NewsletterForm'
+// import NewsletterForm from 'pliny/ui/NewsletterForm'
 import Link from '@/components/ui/Link'
-
+import {
+  Avatar,
+  BlogLinks,
+  Greeting,
+  Heading,
+  PopularTags,
+  ShortDescription,
+  SpotifyNowPlaying,
+  TypedBios,
+} from '@/components/homepage'
+import { Twemoji } from '@/components/ui'
 const MAX_DISPLAY = 5
 
 export default function Home({ posts }) {
   return (
-    <>
+    <div className="relative">
+      {/* <Snowfall
+        snowflakeCount={60}
+        style={{
+          zIndex: -1,
+          width: '100vw',
+          height: '100vh',
+          position: 'fixed',
+        }}
+      /> */}
+
+      {/* Introduce myself */}
+      <div className="mt-8 md:mt-8 dark:divide-gray-700">
+        <Greeting />
+        <div className="flex flex-col justify-between md:my-4 md:pb-8 xl:flex-row">
+          <Avatar />
+          <div className="my-auto flex flex-col text-lg leading-8 text-gray-600 dark:text-gray-400">
+            <Heading />
+            <TypedBios />
+            <ShortDescription />
+            <BlogLinks />
+            <SpotifyNowPlaying />
+            <p className="flex">
+              <span className="mr-2">Happy reading</span>
+              <Twemoji emoji="clinking-beer-mugs" />
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <PopularTags />
+
+      {/* List all post */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        <div className="space-y-2 pt-6 pb-8 md:space-y-5">
-          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
-            Latest
+        <div className="space-y-2 py-6 md:space-y-5">
+          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
+            Recent Posts
           </h1>
-          <p className="text-lg leading-7 text-gray-500 dark:text-gray-400">
+          <p className="!mt-2 text-lg leading-7 text-gray-500 dark:text-gray-400">
             {siteMetadata.description}
           </p>
         </div>
+
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {!posts.length && 'No posts found.'}
           {posts.slice(0, MAX_DISPLAY).map((post) => {
             const { slug, date, title, summary, tags } = post
             return (
-              <li key={slug} className="py-12">
+              <li key={slug} className="py-6">
                 <article>
                   <div className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
                     <dl>
@@ -33,7 +78,7 @@ export default function Home({ posts }) {
                       </dd>
                     </dl>
                     <div className="space-y-5 xl:col-span-3">
-                      <div className="space-y-6">
+                      <div className="space-y-4">
                         <div>
                           <h2 className="text-2xl leading-8 font-bold tracking-tight">
                             <Link
@@ -56,8 +101,8 @@ export default function Home({ posts }) {
                       <div className="text-base leading-6 font-medium">
                         <Link
                           href={`/blog/${slug}`}
-                          className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-                          aria-label={`Read more: "${title}"`}
+                          className="text-primary hover:text-sky-600 dark:hover:text-sky-400"
+                          aria-label={`Read "${title}"`}
                         >
                           Read more &rarr;
                         </Link>
@@ -70,22 +115,24 @@ export default function Home({ posts }) {
           })}
         </ul>
       </div>
+
       {posts.length > MAX_DISPLAY && (
         <div className="flex justify-end text-base leading-6 font-medium">
           <Link
             href="/blog"
-            className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+            className="text-primary hover:text-sky-600 dark:hover:text-sky-400"
             aria-label="All posts"
           >
             All Posts &rarr;
           </Link>
         </div>
       )}
-      {siteMetadata.newsletter?.provider && (
+
+      {/* {siteMetadata.newsletter.provider && (
         <div className="flex items-center justify-center pt-4">
           <NewsletterForm />
         </div>
-      )}
-    </>
+      )} */}
+    </div>
   )
 }

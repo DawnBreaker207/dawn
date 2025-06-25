@@ -1,21 +1,32 @@
+import 'css/docsearch.css'
+import 'css/prism.css'
 import 'css/tailwind.css'
+import 'css/twemoji.css'
 import 'pliny/search/algolia.css'
 import 'remark-github-blockquote-alert/alert.css'
 
-import { Space_Grotesk } from 'next/font/google'
-import { Analytics, AnalyticsConfig } from 'pliny/analytics'
-import { SearchProvider, SearchConfig } from 'pliny/search'
-import siteMetadata from '@/data/siteMetadata'
-import { ThemeProviders } from './theme-providers'
-import { Metadata } from 'next'
-import SectionContainer from '@/components/ui/SectionContainer'
-import Header from '@/components/header'
+import { UmamiAnalytics } from '@/components/analytics/umami'
 import Footer from '@/components/footer'
+import Header from '@/components/header'
+import SectionContainer from '@/components/ui/SectionContainer'
+import TiltedGridBackground from '@/components/ui/TiltedGridBackground'
+import siteMetadata from '@/data/siteMetadata'
+import { Metadata } from 'next'
+import { Outfit, Space_Grotesk } from 'next/font/google'
+import { SearchConfig, SearchProvider } from 'pliny/search'
+import { ThemeProviders } from './theme-providers'
 
 const space_grotesk = Space_Grotesk({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-space-grotesk',
+})
+
+const FONT_OUTFIT = Outfit({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-outfit',
 })
 
 export const metadata: Metadata = {
@@ -64,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang={siteMetadata.language}
-      className={`${space_grotesk.variable} scroll-smooth`}
+      className={`${FONT_OUTFIT.variable} scroll-smooth`}
       suppressHydrationWarning
     >
       <link
@@ -72,18 +83,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         sizes="76x76"
         href={`${basePath}/static/favicons/apple-touch-icon.png`}
       />
-      <link
-        rel="icon"
-        type="image/png"
-        sizes="32x32"
-        href={`${basePath}/static/favicons/favicon-32x32.png`}
-      />
-      <link
-        rel="icon"
-        type="image/png"
-        sizes="16x16"
-        href={`${basePath}/static/favicons/favicon-16x16.png`}
-      />
+      <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/tennis-racquet.png" />
+      <link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/tennis-racquet.png" />
       <link rel="manifest" href={`${basePath}/static/favicons/site.webmanifest`} />
       <link
         rel="mask-icon"
@@ -94,15 +95,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
       <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
       <link rel="alternate" type="application/rss+xml" href={`${basePath}/feed.xml`} />
-      <body className="bg-white pl-[calc(100vw-100%)] text-black antialiased dark:bg-gray-950 dark:text-white">
+      <body className="dark:bg-dark bg-white pl-[calc(100vw-100%)] text-black antialiased dark:text-white">
+        <TiltedGridBackground className="inset-x-0 top-0 z-[-1] h-[60vh]" />
+
         <ThemeProviders>
-          <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
+          {/* <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} /> */}
+          <UmamiAnalytics websiteId={siteMetadata.analytics?.umamiAnalytics?.umamiWebsiteId} />
           <SectionContainer>
             <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
               <Header />
-              <main className="mb-auto">{children}</main>
+              <main className="mt-20 mb-auto">{children}</main>
+              <Footer />
             </SearchProvider>
-            <Footer />
           </SectionContainer>
         </ThemeProviders>
       </body>
