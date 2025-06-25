@@ -28,7 +28,12 @@ const MobileNav = () => {
 
   return (
     <>
-      <button aria-label="Toggle Menu" onClick={onToggleNav} className="sm:hidden">
+      <button
+        data-umami-event="mobile-nav-toggle"
+        aria-label="Toggle Menu"
+        onClick={onToggleNav}
+        className="sm:hidden"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
@@ -44,7 +49,7 @@ const MobileNav = () => {
       </button>
       <Transition appear show={navShow} as={Fragment} unmount={false}>
         <Dialog as="div" onClose={onToggleNav} unmount={false}>
-          <TransitionChild
+          <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
             enterFrom="opacity-0"
@@ -55,9 +60,9 @@ const MobileNav = () => {
             unmount={false}
           >
             <div className="fixed inset-0 z-60 bg-black/25" />
-          </TransitionChild>
+          </Transition.Child>
 
-          <TransitionChild
+          <Transition.Child
             as={Fragment}
             enter="transition ease-in-out duration-300 transform"
             enterFrom="translate-x-full opacity-0"
@@ -67,7 +72,7 @@ const MobileNav = () => {
             leaveTo="translate-x-full opacity-0"
             unmount={false}
           >
-            <DialogPanel className="fixed top-0 left-0 z-70 h-full w-full bg-white/95 duration-300 dark:bg-gray-950/98">
+            <Dialog.Panel className="dark:bg-dark fixed top-0 left-0 z-70 h-full w-full transform bg-gray-200 opacity-95 transition-transform duration-300 ease-in-out dark:opacity-[0.98]">
               <nav
                 ref={navRef}
                 className="mt-8 flex h-full basis-0 flex-col items-start overflow-y-auto pt-2 pl-12 text-left"
@@ -97,8 +102,8 @@ const MobileNav = () => {
                   />
                 </svg>
               </button>
-            </DialogPanel>
-          </TransitionChild>
+            </Dialog.Panel>
+          </Transition.Child>
         </Dialog>
       </Transition>
     </>

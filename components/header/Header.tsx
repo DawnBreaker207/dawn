@@ -1,50 +1,65 @@
-import siteMetadata from '@/data/siteMetadata'
+import Link from '@/components/ui/Link'
 import headerNavLinks from '@/data/headerNavLinks'
 import Logo from '@/data/logo.svg'
-import Link from '@/components/ui/Link'
+import siteMetadata from '@/data/siteMetadata'
+import clsx from 'clsx'
+import { usePathname } from 'next/navigation'
+import AnalyticsLink from './AnalyticsLink'
 import MobileNav from './MobileNav'
 import ThemeSwitch from './ThemeSwitch'
-import SearchButton from './SearchButton'
 
 const Header = () => {
-  let headerClass = 'flex items-center w-full bg-white dark:bg-gray-950 justify-between py-10'
+  const pathname = usePathname()
+  let headerClass =
+    'mx-auto w-full max-w-6xl supports-backdrop-blur fixed left-0 right-0 top-1 z-10 bg-white/75 py-2 backdrop-blur dark:bg-dark/75 md:rounded-2xl'
+
   if (siteMetadata.stickyNav) {
     headerClass += ' sticky top-0 z-50'
   }
 
   return (
     <header className={headerClass}>
-      <Link href="/" aria-label={siteMetadata.headerTitle}>
-        <div className="flex items-center justify-between">
-          <div className="mr-3">
-            <Logo />
+      <div className="mx-auto flex max-w-4xl items-center justify-between px-3 xl:max-w-5xl xl:px-0">
+        <Link href="/" aria-label={siteMetadata.headerTitle} className="flex items-center">
+          <div className="animate-wave">
+            <Logo className="fill-dark dark:fill-white" />
           </div>
-          {typeof siteMetadata.headerTitle === 'string' ? (
-            <div className="hidden h-6 text-2xl font-semibold sm:block">
-              {siteMetadata.headerTitle}
-            </div>
-          ) : (
-            siteMetadata.headerTitle
-          )}
+          <div className="group ml-2 text-xl font-bold transition duration-300">
+            Karhdo.dev
+            <span className="block h-0.5 max-w-0 bg-black transition-all duration-500 group-hover:max-w-[85%] dark:bg-white"></span>
+          </div>
+        </Link>
+        <div className="flex items-center gap-3 text-base leading-5">
+          <div className="hidden sm:block">
+            {headerNavLinks
+              .filter((link) => link.href !== '/')
+              .map((link) => (
+                <Link
+                  key={link.title}
+                  href={link.href}
+                  className={clsx(
+                    'mx-1 rounded px-2 py-1 font-medium text-gray-900 sm:px-3 sm:py-2 dark:text-gray-100',
+                    pathname.startsWith(link.href)
+                      ? 'dark:bg-primary-600 bg-gray-200'
+                      : 'dark:hover:bg-primary-600 hover:bg-gray-200'
+                  )}
+                >
+                  <span data-umami-event={`nav-${link.href.replace('/', '')}`}>{link.title}</span>
+                </Link>
+              ))}
+          </div>
+          <div
+            role="separator"
+            data-orientation="vertical"
+            className="hidden h-4 w-px shrink-0 bg-gray-200 md:block dark:bg-gray-600"
+          />
+          <div className="flex items-center">
+            <AnalyticsLink />
+            <ThemeSwitch />
+            {/* <SearchButton /> */}
+            <MobileNav />
+          </div>
         </div>
-      </Link>
-      <div className="flex items-center space-x-4 leading-5 sm:-mr-6 sm:space-x-6">
-        <div className="no-scrollbar hidden max-w-40 items-center gap-x-4 overflow-x-auto sm:flex md:max-w-72 lg:max-w-96">
-          {headerNavLinks
-            .filter((link) => link.href !== '/')
-            .map((link) => (
-              <Link
-                key={link.title}
-                href={link.href}
-                className="hover:text-primary-500 dark:hover:text-primary-400 m-1 font-medium text-gray-900 dark:text-gray-100"
-              >
-                {link.title}
-              </Link>
-            ))}
-        </div>
-        <SearchButton />
-        <ThemeSwitch />
-        <MobileNav />
       </div>
     </header>
   )
