@@ -1,8 +1,8 @@
 import type readingTime from 'reading-time'
 
-// import type { StatsType } from '@prisma/client'
+import type { StatsType } from '@prisma/client'
 import type projectsData from '@/data/projectsData'
-// import type GiscusConfigs from './giscus-configs.type'
+import GiscusConfigs from './giscus-config.type'
 
 export type ProjectDataType = (typeof projectsData)[0]
 
@@ -18,16 +18,16 @@ export interface BlogMetaProps {
   readingTime: ReadingTime
 }
 
-// export interface ViewCounterProps {
-//   slug: string
-//   type: StatsType
-//   className?: string
-// }
+export interface ViewCounterProps {
+  slug: string
+  type: StatsType
+  className?: string
+}
 
-// export interface CommentsProps {
-//   className?: string
-//   configs?: Partial<GiscusConfigs>
-// }
+export interface CommentsProps {
+  className?: string
+  configs?: Partial<GiscusConfigs>
+}
 
 export interface ScrollButtonProps {
   onClick: () => void
