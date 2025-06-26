@@ -2,7 +2,6 @@
 @plugin "@tailwindcss/forms";
 @plugin '@tailwindcss/typography';
 @source '../node_modules/pliny';
-
 /* Custom variant for dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -387,6 +386,14 @@
     background-color: var(--color-blue-500);
   }
 
+  .popular-tags .java {
+    background-color: var(--color-primary-500);
+  }
+
+  .popular-tags .angular {
+    background-color: var(--color-rose-500);
+  }
+
   .popular-tags .nestjs {
     background-color: var(--color-rose-500);
   }
@@ -395,12 +402,15 @@
     background-color: var(--color-sky-500);
   }
 
-  .popular-tags .devops {
-    background-color: var(--color-sky-600);
+  .popular-tags .spring {
+    background-color: var(--color-green-600);
   }
 
   .popular-tags .database {
-    background-color: var(--color-green-900);
+    background-color: var(--color-sky-500);
+  }
+  .popular-tags .devops {
+    background-color: var(--color-sky-600);
   }
 
   /* Utility classes from original */
