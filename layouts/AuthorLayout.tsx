@@ -1,5 +1,6 @@
 import { CareerTimeline } from '@/components/about'
 import { Avatar } from '@/components/homepage'
+import { ProfileCard } from '@/components/profile/ProfileCard'
 import Button from '@/components/ui/Button'
 import Image from '@/components/ui/Image'
 import Link from '@/components/ui/Link'
@@ -28,36 +29,14 @@ export default function AuthorLayout({ children, content }: Props) {
           </p>
         </div>
 
-        <div className="items-start space-y-2 xl:grid xl:grid-cols-3 xl:space-y-0 xl:gap-x-8">
-          <div className="flex flex-col items-center space-x-2 pt-8 sm:pt-28">
-            <Avatar />
-
-            <h3 className="pt-4 pb-2 text-2xl leading-8 font-bold tracking-tight">{name}</h3>
-            <div className="text-gray-500 dark:text-gray-400">{occupation}</div>
-            <div className="text-gray-500 dark:text-gray-400">{company}</div>
-
-            <div className="mt-2 flex gap-3">
-              <Link href={`mailto:${email}`}>
-                <Mail size={24} strokeWidth={1} />
-              </Link>
-              <Link href={github || ''} target="_blank">
-                <Github size={24} strokeWidth={1} />
-              </Link>
-              <Link href={linkedin || ''} target="_blank">
-                <Linkedin size={24} strokeWidth={1} />
-              </Link>
-              <Link href={twitter || ''} target="_blank">
-                <Twitter size={24} strokeWidth={1} />
-              </Link>
-            </div>
+        <div className="items-start space-y-2 py-8 md:grid md:grid-cols-3 xl:space-y-0 xl:gap-x-8">
+          <div className="">
+            <ProfileCard />
           </div>
-
-          {/* <div className="prose max-w-none pb-8 dark:prose-dark xl:col-span-2">{children}</div> */}
 
           <div className="prose max-w-none pb-8 xl:col-span-2">
             <h2>
-              Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Tung Anh (Aka Dawn,
-              <small>I'm not sure about my foreign name, maybe can change</small>)
+              Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Tung Anh (Aka Dawn)
             </h2>
             <p>
               I have a passion for <strong>Java</strong> <strong>JavaScript/TypeScript</strong> and
@@ -65,12 +44,6 @@ export default function AuthorLayout({ children, content }: Props) {
               with <strong>Java</strong>, <strong>JavaScript</strong>, <strong>TypeScript</strong>,{' '}
               <strong>Angular</strong>, and <strong>Spring</strong>.
             </p>
-            <h2>Why have this blog?</h2>
-            <blockquote>
-              <p>
-                My desire to practice my skills and share my acquired knowledge fuels my endeavors.
-              </p>
-            </blockquote>
             <p>
               I founded this blog as a means to document and share the knowledge and practical
               wisdom I've acquired during my journey as a software engineer.
@@ -111,9 +84,13 @@ export default function AuthorLayout({ children, content }: Props) {
             </p>
 
             <p>
-              This blog site takes inspiration from karhdo.dev. I appreciate{' '}
+              This blog site takes inspiration from karhdo.dev and leohuynh.dev. I appreciate{' '}
               <a target="_blank" href="https://twitter.com/karhdo">
                 Khanh Do
+              </a>
+              ,{' '}
+              <a target="_blank" href="https://twitter.com/hta218">
+                Leo Huynh
               </a>{' '}
               and{' '}
               <a target="_blank" href="https://twitter.com/timlrxx">
@@ -143,6 +120,14 @@ export default function AuthorLayout({ children, content }: Props) {
                 for CMS blog
               </li>
               <li>
+                <Twemoji className="!mr-2" emoji="electric-plug" />
+                Integrate{' '}
+                <a target="_blank" href="https://www.notion.com">
+                  Notion
+                </a>{' '}
+                for CMS blog
+              </li>
+              <li>
                 <Twemoji className="!mr-2" emoji="bar-chart" /> Monitoring site with{' '}
                 <a target="_blank" href="https://umami.is/">
                   Umami
@@ -161,6 +146,10 @@ export default function AuthorLayout({ children, content }: Props) {
                 design and code from the{' '}
                 <a target="_blank" href="https://github.com/Karhdo/karhdo.dev">
                   karhdo.dev
+                </a>{' '}
+                and{' '}
+                <a target="_blank" href="https://github.com/hta218/leohuynh.dev">
+                  leohuynh.dev
                 </a>{' '}
                 repository and incorporates the tailwind-nextjs-starter-blog template, version 2.0.
               </li>
