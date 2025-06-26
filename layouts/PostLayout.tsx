@@ -46,7 +46,7 @@ export default function PostLayout(props: LayoutProps) {
         {/*START: Content*/}
         <main className="grid grid-cols-1 gap-12 pt-8 lg:grid-cols-12 lg:pt-10">
           <div className="divide-y divide-gray-200 lg:col-span-8 xl:col-span-9 dark:divide-gray-700">
-            <div className="prose dark:prose-dark lg:prose-lg max-w-none lg:pb-8">{children}</div>
+            <div className="prose lg:prose-lg max-w-none lg:pb-8">{children}</div>
           </div>
 
           <div className="hidden lg:col-span-4 lg:block xl:col-span-3">

@@ -59,18 +59,17 @@ export default function AuthorLayout({ children, content }: Props) {
 
           {/* <div className="prose max-w-none pb-8 dark:prose-dark xl:col-span-2">{children}</div> */}
 
-          <div className="prose dark:prose-dark max-w-none pb-8 xl:col-span-2">
+          <div className="prose max-w-none pb-8 xl:col-span-2">
             <h2>
-              Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Trong Khanh (aka
-              Karhdo)
+              Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Tung Anh (Aka
+              Hogan,
+              <small>I'm not sure about my foreign name, maybe can change</small>)
             </h2>
             <p>
-              I have a passion for <strong>JavaScript/TypeScript</strong> and website development.
-              I'm currently a fullstack developer at <strong>YouNet Media</strong>, deeply engaged
-              in the <strong>EcomHeat</strong> project, which entails market share management,
-              competitor research, and fostering e-commerce growth. I work mainly with{' '}
-              <strong>JavaScript</strong>, <strong>TypeScript</strong>, <strong>React</strong>,{' '}
-              <strong>NodeJS</strong>, <strong>NestJS</strong>, and <strong>NextJS</strong>.
+              I have a passion for <strong>Java</strong> <strong>JavaScript/TypeScript</strong> and
+              web development. I'm currently start a journey as a fullstack developer. I work mainly
+              with <strong>Java</strong>, <strong>JavaScript</strong>, <strong>TypeScript</strong>,{' '}
+              <strong>Angular</strong>, and <strong>Spring</strong>.
             </p>
             <h2>Why have this blog?</h2>
             <blockquote>
@@ -99,23 +98,28 @@ export default function AuthorLayout({ children, content }: Props) {
               </Button>
             </div>
             <CareerTimeline />
+
             <h2>Tech stack</h2>
             <p>
               This blog is built with{' '}
-              <a target="_blank" href="https://nextjs.org/">
+              <a target="_blank" href="https://nextjs.org">
                 Next.js
               </a>{' '}
-              and{' '}
-              <a target="_blank" href="https://tailwindcss.com/">
+              ,{' '}
+              <a target="_blank" href="https://tailwindcss.com">
                 Tailwind CSS
+              </a>{' '}
+              and{' '}
+              <a target="_blank" href="https://www.notion.com">
+                Notion
               </a>{' '}
               using <strong>Tailwind Nextjs Starter Blog</strong>.
             </p>
 
             <p>
-              This blog site takes inspiration from leohuynh.dev. I appreciate{' '}
-              <a target="_blank" href="https://twitter.com/hta218_">
-                Leo Huynh
+              This blog site takes inspiration from karhdo.dev. I appreciate{' '}
+              <a target="_blank" href="https://twitter.com/karhdo">
+                Khanh Do
               </a>{' '}
               and{' '}
               <a target="_blank" href="https://twitter.com/timlrxx">
@@ -137,7 +141,12 @@ export default function AuthorLayout({ children, content }: Props) {
                 <strong>Typescript</strong>, committing with{' '}
                 <a target="_blank" href="https://www.conventionalcommits.org">
                   Conventional Commits
-                </a>
+                </a>{' '}
+                and integrate{' '}
+                <a target="_blank" href="https://www.notion.com">
+                  Notion
+                </a>{' '}
+                for CMS blog
               </li>
               <li>
                 <Twemoji className="!mr-2" emoji="bar-chart" /> Monitoring site with{' '}
@@ -156,8 +165,8 @@ export default function AuthorLayout({ children, content }: Props) {
               <li>
                 <Twemoji className="!mr-2" emoji="man-technologist" /> My website refers to the
                 design and code from the{' '}
-                <a target="_blank" href="https://github.com/hta218/leohuynh.dev">
-                  lehuynh.dev
+                <a target="_blank" href="https://github.com/Karhdo/karhdo.dev">
+                  karhdo.dev
                 </a>{' '}
                 repository and incorporates the tailwind-nextjs-starter-blog template, version 2.0.
               </li>
@@ -170,7 +179,7 @@ export default function AuthorLayout({ children, content }: Props) {
 
             <p>
               See my{' '}
-              <a target="_blank" href="https://github.com/Karhdo/karhdo.dev">
+              <a target="_blank" href="https://github.com/DawnBreaker207/Personal-Blog">
                 repository
               </a>{' '}
               for this blog.
