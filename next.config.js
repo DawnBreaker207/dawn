@@ -80,11 +80,15 @@ module.exports = () => {
         },
         {
           protocol: 'https',
-          hostname: 'www.notion.so',
+          hostname: 'www.notion.so', // Notion Blog
         },
         {
           protocol: 'https',
-          hostname: 'prod-files-secure.s3.us-west-2.amazonaws.com',
+          hostname: 'i.scdn.co', // Spotify album covers
+        },
+        {
+          protocol: 'https',
+          hostname: 'prod-files-secure.s3.us-west-2.amazonaws.com', // Notion Blog
         },
       ],
       unoptimized,
