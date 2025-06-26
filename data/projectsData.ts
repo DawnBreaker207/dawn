@@ -10,43 +10,34 @@ export interface Project {
 
 const projectsData: Project[] = [
   {
-    type: 'work',
-    title: 'EcomHeat - Manage Market Share, Monitor Sales Performance, Optimize Store Operation',
-    description:
-      'The pioneering E-commerce data intelligence platform in Vietnam for brands with the most granular data information.',
-    imgSrc: '/static/images/projects/ecom-heat.png',
-    url: 'https://youneteci.com/en/eci-ecomheat/?ref=karhdo.dev',
-    builtWith: ['React', 'Bootstrap', 'FeathersJS', 'MySQL', 'RabbitMQ'],
-  },
-  {
-    type: 'work',
-    title: 'Military 7A Bidding',
-    description:
-      'Creating a web-based system designed for the efficient management of bidding packages related to medical supplies information.',
-    imgSrc: '/static/images/projects/military-7a-bidding.png',
-    builtWith: ['NestJS', 'PosgreSQL', 'JWT', 'VueJS', 'Tailwind'],
-  },
-  {
     type: 'self',
     title: 'Personal website',
-    imgSrc: '/static/images/projects/karhdo-blog.png',
-    repo: 'Karhdo/karhdo.dev',
-    builtWith: ['Next.js', 'Tailwind', 'Typescript', 'Prisma', 'Umami'],
+    imgSrc: '/static/images/projects/dawn-blog.png',
+    repo: 'DawnBreaker207/dawn.dev',
+    builtWith: ['Next.js', 'Tailwind', 'Typescript', 'Prisma', 'Umami', 'Notion'],
   },
   {
     type: 'self',
-    title: 'Website Selling Food',
-    imgSrc: '/static/images/projects/website-selling-food.png',
-    repo: 'Karhdo/Website-Selling-Food',
-    builtWith: ['PHP', 'Laravel', 'MySQL', 'VueJS', 'Bootstrap'],
+    title: 'Website E-Commerce',
+    imgSrc: '/static/images/projects/time-machine.jpg',
+    repo: 'DawnBreaker207/E-commerce',
+    builtWith: ['Java', 'Spring', 'MySQL', 'Angular', 'Tailwind', 'Angular Material'],
   },
   {
     type: 'self',
-    title: 'Simulate Basic Geometry',
-    description: 'Explore the World of Basic 3D Modeling Simulations on Our Website.',
-    imgSrc: '/static/images/projects/simulate-geometry.png',
-    repo: 'Karhdo/geometry-simulation',
-    builtWith: ['Javascript', 'Jquery', 'ThreeJS'],
+    title: 'Jira Clone',
+    // description: 'Explore the World of Basic 3D Modeling Simulations on Our Website.',
+    imgSrc: '/static/images/projects/jira-clone.png',
+    repo: 'DawnBreaker207/Jira-Clone',
+    builtWith: ['Angular', 'TypeScript', 'Ng-Zorro', 'NestJS'],
+  },
+  {
+    type: 'self',
+    title: 'Dating App',
+    // description: 'Explore the World of Basic 3D Modeling Simulations on Our Website.',
+    imgSrc: '/static/images/projects/time-machine.jpg',
+    repo: 'DawnBreaker207/Dating-App',
+    builtWith: ['C#', '.NET', 'Angular', 'TypeScript', 'Bootstrap'],
   },
 ]
 
