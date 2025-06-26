@@ -19,6 +19,9 @@ const BuildWith = () => (
       <Link href="https://umami.is?ref=karhdo.dev" className="pl-px">
         <BrandIcon type="Umami" className="h-5 w-5" />
       </Link>
+      <Link href="https://www.notion.com" className="pl-px">
+        <BrandIcon type="Notion" className="h-5 w-5" />
+      </Link>
     </div>
     <span className="px-1 text-gray-400 dark:text-gray-500">-</span>
     <Link
