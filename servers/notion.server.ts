@@ -1,9 +1,7 @@
 import { Client } from '@notionhq/client'
-import { log } from 'console'
 import fs from 'fs'
 import { NotionToMarkdown } from 'notion-to-md'
 import path from 'path'
-import { formatDate } from 'pliny/utils/formatDate'
 // dotenv.config()
 
 export const notion = new Client({
@@ -75,7 +73,7 @@ images: ['${cover}']
 })()
 ;(async () => {
   const res = await notion.databases.query({ database_id: databaseId })
-  const outputDir = path.join(process.cwd(), 'data/blog')
+  const outputDir = path.join(process.cwd(), 'app')
   const filePath = path.join(outputDir, 'tag-data.json')
   const tags: Record<string, number> = {}
   for (const page of res.results) {
