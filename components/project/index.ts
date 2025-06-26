@@ -1,4 +1,4 @@
-import GithubRepo from './GithubRepo';
-import ProjectCard from './ProjectCard';
+import GithubRepo from './GithubRepo'
+import ProjectCard from './ProjectCard'
 
-export { GithubRepo, ProjectCard };
+export { GithubRepo, ProjectCard }

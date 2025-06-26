@@ -1,10 +1,10 @@
-import { fetchRepoData } from "@/servers/github.server";
-import { NextRequest } from "next/server";
+import { fetchRepoData } from '@/servers/github.server'
+import { NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const params = new URL(request.url).searchParams;
+  const params = new URL(request.url).searchParams
 
-  const repo = params.get('repo');
+  const repo = params.get('repo')
 
   if (!repo) {
     return Response.json(
@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
       {
         status: 400,
       }
-    );
+    )
   }
 
-  const data = await fetchRepoData(repo);
+  const data = await fetchRepoData(repo)
 
-  return Response.json(data);
+  return Response.json(data)
 }

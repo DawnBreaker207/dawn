@@ -15,9 +15,7 @@ const Link = ({ href, ...rest }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElem
     return <a className={className} href={href} {...rest} />
   }
 
-  return (
-    <a className={className} target="_blank" rel="noopener noreferrer" href={href} {...rest} />
-  )
+  return <a className={className} target="_blank" rel="noopener noreferrer" href={href} {...rest} />
 }
 
 export default Link

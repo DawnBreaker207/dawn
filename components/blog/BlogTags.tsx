@@ -1,8 +1,8 @@
-import { Tag } from '@/components/ui';
+import { Tag } from '@/components/ui'
 
 const BlogTags = ({ tags }: { tags: string[] }) => {
   if (!tags || tags.length === 0) {
-    return null;
+    return null
   }
 
   return (
@@ -11,7 +11,7 @@ const BlogTags = ({ tags }: { tags: string[] }) => {
         <Tag key={tag} text={tag} />
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default BlogTags;
+export default BlogTags

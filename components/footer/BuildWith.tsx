@@ -1,6 +1,6 @@
-import siteMetadata from "@/data/siteMetadata";
-import { Link } from "../ui";
-import BrandIcon from "../ui/BrandIcon";
+import siteMetadata from '@/data/siteMetadata'
+import { Link } from '../ui'
+import BrandIcon from '../ui/BrandIcon'
 
 const BuildWith = () => (
   <div className="flex items-center space-x-1">
@@ -21,10 +21,13 @@ const BuildWith = () => (
       </Link>
     </div>
     <span className="px-1 text-gray-400 dark:text-gray-500">-</span>
-    <Link href={siteMetadata.siteRepo} className="text-gray-500 underline underline-offset-4 dark:text-gray-400">
+    <Link
+      href={siteMetadata.siteRepo}
+      className="text-gray-500 underline underline-offset-4 dark:text-gray-400"
+    >
       <span data-umami-event="view-source">View source</span>
     </Link>
   </div>
-);
+)
 
-export default BuildWith;
+export default BuildWith

@@ -19,10 +19,16 @@ import NestJS from 'public/static/icons/nestjs.svg'
 import Docker from 'public/static/icons/docker.svg'
 import Postgres from 'public/static/icons/postgres.svg'
 import Mongodb from 'public/static/icons/mongodb.svg'
-
+import Java from 'public/static/icons/java.svg'
+import Angular from 'public/static/icons/angular.svg'
+import Spring from 'public/static/icons/spring.svg'
+import MySQL from 'public/static/icons/mysql.svg'
 export const BrandIconsMap = {
   React,
   Remix,
+  Java,
+  Angular,
+  Spring,
   Git,
   GitHub,
   Javascript,
@@ -42,6 +48,7 @@ export const BrandIconsMap = {
   Docker,
   Postgres,
   Mongodb,
+  MySQL
 }
 
 export type BrandIconType = keyof typeof BrandIconsMap

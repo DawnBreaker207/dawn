@@ -1,4 +1,4 @@
-import { Link, Twemoji } from "../ui";
+import { Link, Twemoji } from '../ui'
 
 const BlogLinks = () => {
   return (
@@ -32,7 +32,7 @@ const BlogLinks = () => {
         </Link>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default BlogLinks;
+export default BlogLinks
