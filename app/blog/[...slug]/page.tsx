@@ -12,7 +12,7 @@ import PostBanner from '@/layouts/PostBanner'
 import { Metadata } from 'next'
 import siteMetadata from '@/data/siteMetadata'
 import { notFound } from 'next/navigation'
-import { components } from '@/components/ui/MDXComponents'
+import { components } from '@/components/ui'
 
 const defaultLayout = 'PostLayout'
 const layouts = {
