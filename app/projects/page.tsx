@@ -10,13 +10,12 @@ export default async function Projects() {
   await Promise.all(
     projectsData.map(async (p) => {
       if (p.repo && typeof p.repo === 'string') {
-        p.repo = await fetchRepoData(p.repo as string)
+        ;(p as any).repo = await fetchRepoData(p.repo as string)
       }
     })
   )
 
-  const description =
-    'My open-source side projects and stuff that I built with my colleagues at work'
+  const description = 'My side projects and stuff which I built'
 
   const workProjects = projectsData.filter(({ type }) => type === 'work')
   const sideProjects = projectsData.filter(({ type }) => type === 'self')

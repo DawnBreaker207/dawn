@@ -16,6 +16,7 @@ import {
   TypedBios,
 } from '@/components/homepage'
 import { Twemoji } from '@/components/ui'
+import { ProfileCard } from '@/components/profile/ProfileCard'
 const MAX_DISPLAY = 5
 
 export default function Home({ posts }) {
@@ -35,7 +36,9 @@ export default function Home({ posts }) {
       <div className="mt-8 md:mt-8 dark:divide-gray-700">
         <Greeting />
         <div className="flex flex-col justify-between md:my-4 md:pb-8 xl:flex-row">
-          <Avatar />
+          {/* <Avatar />
+           */}
+          <ProfileCard />
           <div className="my-auto flex flex-col text-lg leading-8 text-gray-600 dark:text-gray-400">
             <Heading />
             <TypedBios />
@@ -50,13 +53,13 @@ export default function Home({ posts }) {
         </div>
       </div>
 
-      <PopularTags />
+      {/* <PopularTags /> */}
 
       {/* List all post */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
         <div className="space-y-2 py-6 md:space-y-5">
           <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
-            Recent Posts
+            Latest Posts
           </h1>
           <p className="!mt-2 text-lg leading-7 text-gray-500 dark:text-gray-400">
             {siteMetadata.description}

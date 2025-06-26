@@ -1,4 +1,5 @@
 import { CareerTimeline } from '@/components/about'
+import { Avatar } from '@/components/homepage'
 import Button from '@/components/ui/Button'
 import Image from '@/components/ui/Image'
 import Link from '@/components/ui/Link'
@@ -29,13 +30,7 @@ export default function AuthorLayout({ children, content }: Props) {
 
         <div className="items-start space-y-2 xl:grid xl:grid-cols-3 xl:space-y-0 xl:gap-x-8">
           <div className="flex flex-col items-center space-x-2 pt-8 sm:pt-28">
-            <Image
-              src={avatar || ''}
-              alt="avatar"
-              width={192}
-              height={192}
-              className="h-48 w-48 rounded-full"
-            />
+            <Avatar />
 
             <h3 className="pt-4 pb-2 text-2xl leading-8 font-bold tracking-tight">{name}</h3>
             <div className="text-gray-500 dark:text-gray-400">{occupation}</div>
@@ -61,8 +56,7 @@ export default function AuthorLayout({ children, content }: Props) {
 
           <div className="prose max-w-none pb-8 xl:col-span-2">
             <h2>
-              Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Tung Anh (Aka
-              Hogan,
+              Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Tung Anh (Aka Dawn,
               <small>I'm not sure about my foreign name, maybe can change</small>)
             </h2>
             <p>

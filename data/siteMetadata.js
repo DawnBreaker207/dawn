@@ -3,7 +3,7 @@ const siteMetadata = {
   title: 'Dawn Blog',
   author: 'Tung Anh',
   headerTitle: 'Dawn Blog',
-  description: 'A personal blog ',
+  description: 'My personal blog ',
   language: 'en-us',
   theme: 'system', // system, dark or light
   siteUrl: 'https://tailwind-nextjs-starter-blog.vercel.app',
@@ -26,9 +26,8 @@ const siteMetadata = {
   // set to true if you want a navbar fixed to the top
   stickyNav: false,
   socialAccounts: {
-    github: 'Karhdo',
-    linkedin: 'karhdo',
-    facebook: 'karhdo.dev',
+    github: 'DawnBreaker207',
+    linkedin: 'tunganh207',
   },
   analytics: {
     // If you want to use an analytics provider you have to add it to the
