@@ -23,6 +23,7 @@ import Java from 'public/static/icons/java.svg'
 import Angular from 'public/static/icons/angular.svg'
 import Spring from 'public/static/icons/spring.svg'
 import MySQL from 'public/static/icons/mysql.svg'
+import Notion from 'public/static/icons/notion.svg'
 export const BrandIconsMap = {
   React,
   Remix,
@@ -48,7 +49,8 @@ export const BrandIconsMap = {
   Docker,
   Postgres,
   Mongodb,
-  MySQL
+  MySQL,
+  Notion,
 }
 
 export type BrandIconType = keyof typeof BrandIconsMap
