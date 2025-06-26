@@ -2,18 +2,18 @@ import TimelineItem from './TimelineItem'
 
 export const EXPERIENCES = [
   {
-    org: 'Younet Media',
-    url: 'https://younetmedia.com',
-    logo: '/static/images/experiences/younetmedia-logo.png',
-    start: 'Mar 2022',
+    org: 'University Of Transport And Communications',
+    url: 'https://www.utc.edu.vn/',
+    logo: '/static/images/experiences/utc-logo.png',
+    start: 'July 2025',
     end: 'Present',
-    title: 'Junior Software Engineer',
+    title: 'Student at UTC',
     icon: 'man-technologist',
-    event: 'career-younetmedia',
+    event: 'career-utc',
     details: () => {
       return (
         <ul className="[&>li]:my-2 [&>li]:pl-0">
-          <li>
+          {/* <li>
             Build{' '}
             <a href="https://ecomheat.youneteci.com" rel="noopener noreferrer" target="_blank">
               Ecomheat
@@ -25,29 +25,30 @@ export const EXPERIENCES = [
             Build <strong>AppCore</strong> - Developed and published core NestJS packages, including
             DatabaseModule, CacheModule, RedisModule, ConfigModule and others on npm to accelerate
             development and deployment across multiple projects.
-          </li>
+          </li> */}
         </ul>
       )
     },
   },
   {
-    org: 'QKIT Software',
-    url: 'https://qkit.vn',
-    logo: '/static/images/experiences/qkit-logo.png',
-    start: 'Jan 2021',
-    end: 'Dec 2022',
-    title: 'Fresher Backend Developer',
+    org: 'FPT Software',
+    url: 'https://fptsoftware.com/',
+    logo: '/static/images/experiences/fsoft-logo.png',
+    start: 'Aug 2024',
+    end: 'Nov 2024',
+    title: 'Intern Web Developer',
     icon: 'man-technologist',
-    event: 'career-qkit',
+    event: 'career-intern-fsoft',
     details: () => {
       return (
         <ul className="[&>li]:my-2 [&>li]:pl-0">
           <li>
-            <strong>Developed and maintained web applications</strong> for managing company website
-            content, including blogs, clients, and recruitment.
+            <strong>Developed and maintained a web-based</strong> healthcare system to manage
+            patient records, appointments, and medical reports for a Japan-based client.
           </li>
           <li>
-            Implemented backend solutions using <strong> NestJS, PostgreSQL, and Prisma</strong>.
+            Supported the development of web features using <strong>Angular</strong>,{' '}
+            <strong>Spring</strong> and <strong>SQL Server</strong>.
           </li>
           <li>
             <strong>Participated in Agile methodologies </strong> to boost project efficiency and
@@ -58,22 +59,22 @@ export const EXPERIENCES = [
     },
   },
   {
-    org: 'University of Information Technology',
-    url: 'https://en.uit.edu.vn',
-    logo: '/static/images/experiences/uit-logo.png',
-    start: 'Aug 2019',
-    end: 'Jun 2023',
-    title: 'Student ad UIT - HCMC (School of Computer Science)',
+    org: 'FPT Polytechnic College',
+    url: 'https://caodang.fpt.edu.vn/',
+    logo: '/static/images/experiences/fpoly-logo.png',
+    start: 'Aug 2022',
+    end: 'May 2025',
+    title: 'Student at College',
     icon: 'man-technologist',
-    event: 'career-qkit',
+    event: 'career-fpoly',
     details: () => {
       return (
         <ul className="[&>li]:my-2 [&>li]:pl-0">
           <li>
-            Get a good degree at <strong>School of Computer Science</strong>
+            Graduated with Distinction from <strong>FPT Polytechnic</strong>
           </li>
           <li>
-            While most of my friends pursued careers in <strong> Data or AI Engineering </strong>, I
+            While most of my friends pursued careers in <strong> Front-End Developer </strong>, I
             found my passion in {''}
             <strong>Software Engineering</strong> , particularly in web and app development. This
             decision has shaped who I am today.
