@@ -18,8 +18,8 @@
   --color-primary-200: oklch(0.899 0.065 258.3);
   --color-primary-300: oklch(0.823 0.095 258.3);
   --color-primary-400: oklch(0.75 0.125 258.3); /* #7aa2f7 equivalent */
-  --color-primary-500: oklch(0.72 0.125 258.3);
-  --color-primary-600: oklch(0.68 0.125 258.3);
+  --color-primary-500: oklch(0.72 0.125 258.3); /* #7aa2f7 equivalent */
+  --color-primary-600: oklch(0.68 0.125 258.3); /* #7aa2f7 equivalent */
   --color-primary-700: oklch(0.58 0.115 258.3);
   --color-primary-800: oklch(0.48 0.105 258.3);
   --color-primary-900: oklch(0.38 0.095 258.3);
@@ -39,12 +39,20 @@
   --color-gray-950: oklch(0.08 0.015 258.3); /* Darkest variant */
 
   /* Sky colors */
+  --color-sky-50: oklch(0.97 0.013 212.8);
+  --color-sky-100: oklch(0.93 0.026 212.8);
+  --color-sky-200: oklch(0.86 0.052 212.8);
+  --color-sky-300: oklch(0.78 0.078 212.8);
   --color-sky-400: oklch(0.723 0.092 232.8);
   --color-sky-500: oklch(0.681 0.108 232.8);
   --color-sky-600: oklch(0.62 0.124 232.8);
+  --color-sky-700: oklch(0.55 0.14 232.8);
+  --color-sky-800: oklch(0.48 0.156 232.8);
+  --color-sky-900: oklch(0.38 0.172 232.8);
+  --color-sky-950: oklch(0.25 0.11 232.8);
 
   /* Brand colors */
-  --color-dark: oklch(0.15 0.02 258.3); /* #1A1B26 equivalent */
+  --color-dark: oklch(0.208 0.031 282.4); /* #2B2D46  equivalent */
   --color-spotify: oklch(0.65 0.19 142.5); /* #1DB954 equivalent */
   --color-coral: oklch(0.69 0.15 12.2); /* #EF596F equivalent */
 
@@ -52,6 +60,7 @@
   --color-amber-400: oklch(0.838 0.142 85.8);
   --color-blue-500: oklch(0.638 0.175 252);
   --color-rose-500: oklch(0.656 0.216 12.2);
+  --color-green-600: oklch(0.552 0.148 142.5);
   --color-green-900: oklch(0.358 0.136 142.5);
 
   /* Line heights - migrated from v3 */
@@ -199,7 +208,7 @@
   }
 
   code:not(pre code) {
-    color: oklch(0.75 0.08 285.7); /* #BB9AF7 equivalent */
+    color: oklch(0.75 0.08 285.7) !important; /* #BB9AF7 equivalent */
     background-color: oklch(0.16 0.02 258.3);
     padding: 2px 4px;
     border-radius: 0.25rem;
@@ -250,11 +259,11 @@
   /* Typography enhancements */
   .prose {
     font-size: 18px;
-
+    color: var(--color-gray-700);
     & a {
       color: var(--color-primary-500);
       text-underline-offset: 4px;
-
+      text-decoration: underline;
       &:hover {
         color: var(--color-primary-600);
       }
@@ -325,12 +334,14 @@
   }
 
   /* Dark mode prose */
-  .prose-invert {
+  :where(.dark, .dark *) .prose {
+    color: var(--color-gray-300);
+
     & a {
       color: var(--color-primary-500);
 
       &:hover {
-        color: var(--color-sky-400) !important;
+        color: var(--color-sky-300) !important;
       }
 
       & code {
@@ -339,13 +350,13 @@
     }
 
     & :where(h1, h2, h3, h4, h5, h6) {
-      color: var(--color-gray-100);
+      color: var(--color-sky-100);
     }
 
     & blockquote {
       background: #5c6370;
       color: var(--color-gray-100);
-      border-left-color: var(--color-gray-700);
+      border-left-color: var(--color-gray-600);
     }
 
     & details {
