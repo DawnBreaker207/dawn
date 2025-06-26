@@ -1,6 +1,5 @@
 'use client'
 import Tag from '@/components/ui/Tag'
-// import Snowfall from 'react-snowfall'
 import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
 // import NewsletterForm from 'pliny/ui/NewsletterForm'
@@ -22,33 +21,25 @@ const MAX_DISPLAY = 5
 export default function Home({ posts }) {
   return (
     <div className="relative">
-      {/* <Snowfall
-        snowflakeCount={60}
-        style={{
-          zIndex: -1,
-          width: '100vw',
-          height: '100vh',
-          position: 'fixed',
-        }}
-      /> */}
-
       {/* Introduce myself */}
       <div className="mt-8 md:mt-8 dark:divide-gray-700">
-        <Greeting />
-        <div className="flex flex-col justify-between md:my-4 md:pb-8 xl:flex-row">
-          {/* <Avatar />
-           */}
-          <ProfileCard />
-          <div className="my-auto flex flex-col text-lg leading-8 text-gray-600 dark:text-gray-400">
-            <Heading />
-            <TypedBios />
-            <ShortDescription />
-            <BlogLinks />
-            <SpotifyNowPlaying />
-            <p className="flex">
-              <span className="mr-2">Happy reading</span>
-              <Twemoji emoji="clinking-beer-mugs" />
-            </p>
+        <div className="pt-6 xl:grid xl:grid-cols-3">
+          <div className="hidden pt-8 xl:block">
+            <ProfileCard />
+          </div>
+          <div className="space-y-4 md:space-y-6 md:pl-12 xl:col-span-2">
+            <Greeting />
+            <div className="text-base leading-7 text-gray-600 md:text-lg md:leading-8 dark:text-gray-400">
+              <Heading />
+              <TypedBios />
+              <ShortDescription />
+              <BlogLinks />
+              <SpotifyNowPlaying />
+              <p className="my-6 flex md:my-8">
+                <span className="mr-2">Happy reading</span>
+                <Twemoji emoji="clinking-beer-mugs" />
+              </p>
+            </div>{' '}
           </div>
         </div>
       </div>
