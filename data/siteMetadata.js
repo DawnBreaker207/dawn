@@ -1,6 +1,7 @@
 // /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
   title: 'Dawn Blog',
+  fullName: 'Tung Anh Ngo',
   author: 'Tung Anh',
   headerTitle: 'Dawn Blog',
   description: 'My personal blog ',
@@ -28,6 +29,7 @@ const siteMetadata = {
   socialAccounts: {
     github: 'DawnBreaker207',
     linkedin: 'tunganh207',
+    x: 'DawnBreaker207',
   },
   analytics: {
     // If you want to use an analytics provider you have to add it to the
