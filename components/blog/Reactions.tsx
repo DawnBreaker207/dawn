@@ -128,6 +128,7 @@ const Reactions = (props: ReactionsProps) => {
     } catch (error) {
       console.error(error)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleOnSave = (key: string) => {
