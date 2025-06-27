@@ -34,7 +34,7 @@ export default function Home({ posts }) {
               <TypedBios />
               <ShortDescription />
               <BlogLinks />
-              <SpotifyNowPlaying />
+              {/* <SpotifyNowPlaying /> */}
               <p className="my-6 flex md:my-8">
                 <span className="mr-2">Happy reading</span>
                 <Twemoji emoji="clinking-beer-mugs" />
