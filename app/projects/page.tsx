@@ -10,6 +10,7 @@ export default async function Projects() {
   await Promise.all(
     projectsData.map(async (p) => {
       if (p.repo && typeof p.repo === 'string') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(p as any).repo = await fetchRepoData(p.repo as string)
       }
     })
