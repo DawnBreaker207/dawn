@@ -13,7 +13,7 @@ const projectsData: Project[] = [
     type: 'self',
     title: 'Personal website',
     imgSrc: '/static/images/projects/dawn-blog.png',
-    repo: 'DawnBreaker207/dawn.dev',
+    repo: 'DawnBreaker207/dawn',
     builtWith: ['Next.js', 'Tailwind', 'Typescript', 'Prisma', 'Umami', 'Notion'],
   },
   {

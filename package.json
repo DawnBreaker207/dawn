@@ -1,5 +1,5 @@
 {
-  "name": "dawn.dev",
+  "name": "dawn",
   "version": "2.4.0",
   "private": true,
   "scripts": {
@@ -12,7 +12,7 @@
     "posts": "dotenv -e .env.local -- tsx servers/notion.server.ts",
     "analyze": "cross-env ANALYZE=true next build",
     "lint": "next lint --fix --dir pages --dir app --dir components --dir lib --dir layouts --dir scripts",
-    "migrate:postgres": "dotenv -e .env.local -- npx prisma migrate deploy"
+    "migrate:mysql": "dotenv -e .env.local -- npx prisma migrate deploy"
   },
   "dependencies": {
     "@giscus/react": "^3.1.0",
