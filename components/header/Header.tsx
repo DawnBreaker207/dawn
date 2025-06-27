@@ -56,7 +56,7 @@ const Header = () => {
             className="hidden h-4 w-px shrink-0 bg-gray-200 md:block dark:bg-gray-600"
           />
           <div className="flex items-center">
-            <AnalyticsLink />
+            {/* <AnalyticsLink /> */}
             <ThemeSwitch />
             {/* <SearchButton /> */}
             <MobileNav />

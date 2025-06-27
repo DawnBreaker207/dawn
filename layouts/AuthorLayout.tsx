@@ -112,12 +112,7 @@ export default function AuthorLayout({ children, content }: Props) {
                 <strong>Typescript</strong>, committing with{' '}
                 <a target="_blank" href="https://www.conventionalcommits.org">
                   Conventional Commits
-                </a>{' '}
-                and integrate{' '}
-                <a target="_blank" href="https://www.notion.com">
-                  Notion
-                </a>{' '}
-                for CMS blog
+                </a>
               </li>
               <li>
                 <Twemoji className="!mr-2" emoji="electric-plug" />
