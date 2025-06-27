@@ -1,8 +1,8 @@
 import { genPageMetadata } from 'app/seo'
 
+import ProjectCard from '@/components/project/ProjectCard'
 import projectsData from '@/data/projectsData'
 import { fetchRepoData } from '@/servers/github.server'
-import ProjectCard from '@/components/project/ProjectCard'
 
 export const metadata = genPageMetadata({ title: 'Projects' })
 

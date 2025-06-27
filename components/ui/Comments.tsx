@@ -1,9 +1,9 @@
 'use client'
 
-import { useTheme } from 'next-themes'
-import { GiscusConfigs, CommentsProps } from '@/types/index'
-import GiscusComponent from '@giscus/react'
 import SITE_METADATA from '@/data/siteMetadata'
+import { CommentsProps, GiscusConfigs } from '@/types/index'
+import GiscusComponent from '@giscus/react'
+import { useTheme } from 'next-themes'
 
 export default function Comments(props: CommentsProps) {
   const { configs, className } = props

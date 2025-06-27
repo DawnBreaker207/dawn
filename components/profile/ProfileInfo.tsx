@@ -1,9 +1,9 @@
 import SITE_METADATA from '@/data/siteMetadata'
-import { BriefcaseBusiness, Github, Linkedin, Mail, MapPin, Twitter, X, XIcon } from 'lucide-react'
-import { Twemoji } from '../ui'
+import { BriefcaseBusiness, Github, Linkedin, Mail, MapPin, Twitter } from 'lucide-react'
 import { Fragment } from 'react'
+import { Twemoji } from '../ui'
 function getAccountHandle(url = '') {
-  let lastPart = url.split('/').pop()
+  const lastPart = url.split('/').pop()
   if (lastPart) {
     return lastPart
   }
