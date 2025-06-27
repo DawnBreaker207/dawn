@@ -33,8 +33,6 @@ const TableOfContents = (props: TableOfContentsProps) => {
       threshold: 0.1,
     })
 
-    console.log(toc)
-
     toc.forEach(({ url }) => {
       const element = document.querySelector(url)
 

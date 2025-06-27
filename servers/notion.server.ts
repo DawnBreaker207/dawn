@@ -24,7 +24,7 @@ const sanitizeTitle = (title: string): string => {
 ;(async () => {
   try {
     const res = await notion.databases.query({ database_id: databaseId })
-    console.log(res)
+
     const outputDir = path.join(process.cwd(), 'data/blog')
     for (const page of res.results) {
       const mdBlocks = await n2m.pageToMarkdown(page.id)
@@ -34,7 +34,6 @@ const sanitizeTitle = (title: string): string => {
 
       const title = props['Title']?.title?.[0]?.plain_text || page.id
       const summary = props['Summary']?.rich_text?.[0]?.plain_text || 'Unknown'
-      console.log('Summary', summary)
 
       const cover = (page as any).cover.external.url
       const date = props['Published Date'].created_time
@@ -46,7 +45,7 @@ const sanitizeTitle = (title: string): string => {
       const filePath = path.join(outputDir, `${slug}.mdx`)
 
       const frontmatter = `---
-      title: ${title}
+title: ${title}
 date: '${new Date(date).toISOString().split('T')[0]}'
 tags: [${tags.map((t: any) => `'${t}'`).join(', ')}]
 draft: ${status === 'Draft' || status === 'Idea'}
@@ -59,16 +58,14 @@ images: ['${cover}']
       if (status === 'Draft' || status === 'Idea') {
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath)
-          console.log(`Delete ${filePath}`)
         }
         continue
       }
 
       fs.writeFileSync(filePath, frontmatter + mdString.parent, 'utf-8')
-      console.log(`Saved: ${filePath}`)
     }
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 })()
 ;(async () => {
