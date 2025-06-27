@@ -1,13 +1,13 @@
-<h1 align="center">Coding Adventure</h1>
+<h1 align="center">Peronal Blog</h1>
 <!-- <p align="center"><i>My desire to practice my skills and share my acquired knowledge fuels my endeavors.</i></p> -->
 
 <div align="center">
-    <a href=""><img src="" alt="Stars Badge"/></a>
-    <a href=""><img src="" alt="Forks Badge"/></a>
-    <a href=""><img src="" alt="Pull Requests Badge"/></a>
-    <a href=""><img src="" alt="Issues Badge"/></a>
-    <a href=""><img alt="GitHub contributors" src=""></a>
-    <a href=""><img src="" alt="License Badge"/></a>
+    <a href="https://github.com/DawnBreaker207/dawn/stargazers"><img src="https://img.shields.io/github/stars/DawnBreaker207/dawn" alt="Stars Badge"/></a>
+    <a href="https://github.com/DawnBreaker207/dawn/network/members"><img src="https://img.shields.io/github/forks/DawnBreaker207/dawn" alt="Forks Badge"/></a>
+    <a href="https://github.com/DawnBreaker207/dawn/pulls"><img src="https://img.shields.io/github/issues-pr/DawnBreaker207/dawn" alt="Pull Requests Badge"/></a>
+    <a href="https://github.com/DawnBreaker207/dawn/issues"><img src="https://img.shields.io/github/issues/DawnBreaker207/dawn" alt="Issues Badge"/></a>
+    <a href="https://github.com/DawnBreaker207/dawn/graphs/contributors"><img src="https://img.shields.io/github/contributors/DawnBreaker207/dawn?color=2b9348" alt="GitHub contributors" ></a>
+    <a href="https://github.com/DawnBreaker207/dawn/blob/master/LICENSE"><img src="https://img.shields.io/github/license/Karhdo/karhdo.dev?color=2b9348" alt="License Badge"/></a>
 </div>
 <br>
 <p align="center"><i>Loved the project? Please visit our <a href="">Website</a></i></p>
@@ -15,7 +15,7 @@
 
 ## Website
 
-<a href=""><img src="" alt="Image Blog Website" /></a>
+<a href=""><img src="https://raw.githubusercontent.com/DawnBreaker207/dawn/main/public/static/images/projects/dawn-blog.png" alt="Image Blog Website" /></a>
 
 ## Tech Stack
 
