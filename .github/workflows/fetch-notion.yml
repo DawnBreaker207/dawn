@@ -1,0 +1,46 @@
+name: Sync Notion Post Daily
+
+on: 
+  schedule:
+    - cron: '0 17 * * *'
+  workflow_dispatch: 
+jobs:
+  notion-async:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: yarn
+
+      - name: 📦 Install dependencies
+        run: yarn install --immutable
+
+      - name: 📄 Create .env.local from GitHub Secrets
+        run: |
+          echo "NOTION_TOKEN=${{ secrets.NOTION_TOKEN }}" >> .env.local
+          echo "NOTION_DATABASE_ID=${{ secrets.NOTION_DATABASE_ID }}" >> .env.local
+
+      - name: 🧠 Run `yarn posts`
+        run: yarn posts
+
+      - name: 📤 Commit & Push changes (if any)
+        env: 
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+          git add content/blog || true
+
+          if git diff --cached --quiet; then
+            echo "✅ No content changes to commit."
+          else
+            git commit -m "🔁 Sync Notion posts"
+            git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+          fi
