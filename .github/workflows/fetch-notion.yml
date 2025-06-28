@@ -36,8 +36,8 @@ jobs:
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
 
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/DawnBreaker207/dawn.git
-          git add data/blog || true
+          git config credential.helper store
+          echo "https://x-access-token:${GH_TOKEN}@github.com" > ~/.git-credentials
 
           if git diff --cached --quiet; then
             echo "✅ No content changes to commit."
