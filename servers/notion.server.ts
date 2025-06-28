@@ -26,6 +26,12 @@ const sanitizeTitle = (title: string): string => {
     const res = await notion.databases.query({ database_id: databaseId })
 
     const outputDir = path.join(process.cwd(), 'data/blog')
+
+    if (fs.existsSync(outputDir)) {
+      fs.rmSync(outputDir, { recursive: true })
+    }
+    fs.mkdirSync(outputDir, { recursive: true })
+
     for (const page of res.results) {
       const mdBlocks = await n2m.pageToMarkdown(page.id)
       const mdString = n2m.toMarkdownString(mdBlocks)
