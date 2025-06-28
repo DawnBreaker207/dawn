@@ -36,7 +36,7 @@ jobs:
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
 
-          git add content/blog || true
+          git add data/blog || true
 
           if git diff --cached --quiet; then
             echo "✅ No content changes to commit."
