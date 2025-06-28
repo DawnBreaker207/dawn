@@ -53,7 +53,7 @@ const sanitizeTitle = (title: string): string => {
       const filePath = path.join(outputDir, `${slug}.mdx`)
 
       const frontmatter = `---
-title: ${title}
+title: '${title.replace(/'/g, "\\'")}'
 date: '${new Date(date).toISOString().split('T')[0]}'
 tags: [${tags.map((t: any) => `'${t}'`).join(', ')}]
 draft: ${status === 'Draft' || status === 'Idea'}
