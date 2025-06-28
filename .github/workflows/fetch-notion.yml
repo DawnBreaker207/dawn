@@ -36,11 +36,12 @@ jobs:
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
 
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/DawnBreaker207/dawn.git
           git add data/blog || true
 
           if git diff --cached --quiet; then
             echo "✅ No content changes to commit."
           else
             git commit -m "🔁 Sync Notion posts"
-            git push https://x-access-token:${GH_TOKEN}@github.com/DawnBreaker207/dawn.git HEAD:main
+            git push origin HEAD:main
           fi
