@@ -30,14 +30,14 @@ const sanitizeTitle = (title: string): string => {
       const mdBlocks = await n2m.pageToMarkdown(page.id)
       const mdString = n2m.toMarkdownString(mdBlocks)
 
-      const props = (page as any).properties
+      const props = (page as any)?.properties
 
       const title = props['Title']?.title?.[0]?.plain_text || page.id
       const summary = props['Summary']?.rich_text?.[0]?.plain_text || 'Unknown'
 
-      const cover = (page as any).cover.external.url
-      const date = props['Published Date'].created_time
-      const layout = props['Layout'].select.name || ''
+      const cover = (page as any)?.cover?.external?.url
+      const date = props['Published Date']?.created_time
+      const layout = props['Layout']?.select?.name || ''
       const status = props['Status']?.status?.name ?? 'Unknown'
       const tags = props['Tags']?.multi_select?.map((tag: any) => tag.name) ?? []
 
