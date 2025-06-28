@@ -42,5 +42,5 @@ jobs:
             echo "✅ No content changes to commit."
           else
             git commit -m "🔁 Sync Notion posts"
-            git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+            git push https://x-access-token:${GH_TOKEN}@github.com/DawnBreaker207/dawn.git HEAD:main
           fi
