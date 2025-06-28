@@ -19,7 +19,7 @@ jobs:
           cache: yarn
 
       - name: 📦 Install dependencies
-        run: yarn install
+        run: yarn install --check-cache
 
       - name: 📄 Create .env.local from GitHub Secrets
         run: |
