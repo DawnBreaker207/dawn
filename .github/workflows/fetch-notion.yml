@@ -39,6 +39,8 @@ jobs:
           git config credential.helper store
           echo "https://x-access-token:${GH_TOKEN}@github.com" > ~/.git-credentials
 
+          git add -A
+
           if git diff --cached --quiet; then
             echo "✅ No content changes to commit."
           else
