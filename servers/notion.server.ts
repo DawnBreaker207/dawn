@@ -35,7 +35,9 @@ const sanitizeTitle = (title: string): string => {
       const title = props['Title']?.title?.[0]?.plain_text || page.id
       const summary = props['Summary']?.rich_text?.[0]?.plain_text || 'Unknown'
 
-      const cover = (page as any)?.cover?.external?.url
+      const cover =
+        (page as any)?.cover?.type === 'external' ? (page as any)?.cover?.external?.url : ''
+
       const date = props['Published Date']?.created_time
       const layout = props['Layout']?.select?.name || ''
       const status = props['Status']?.status?.name ?? 'Unknown'
