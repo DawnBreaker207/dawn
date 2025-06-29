@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ProfileInfo, SpotifyNowPlaying } from '.'
 import { Image } from '../ui'
+import clsx from 'clsx'
 
 const ProfileCard = () => {
   const ref = useRef<HTMLDivElement>(null)
@@ -51,13 +52,17 @@ const ProfileCard = () => {
 
   return (
     <div
-      className="z-10 scale-100 transition-all duration-200 ease-out hover:z-50 hover:scale-[1.11]"
+      className="z-10 mb-8 scale-100 transition-all duration-200 ease-out hover:z-50 md:mb-0 md:hover:scale-[1.15]"
       style={{ perspective: '600px' }}
       ref={ref}
     >
       <div
         style={style}
-        className="overflow-hidden rounded shadow-lg shadow-slate-300 transition-all duration-200 ease-out dark:shadow-sky-700/50"
+        className={clsx(
+          'flex flex-col overflow-hidden transition-all duration-200 ease-out md:rounded-lg',
+          'shadow-demure dark:bg-dark dark:shadow-mondegreen bg-white',
+          'outline-1 outline-gray-100 outline-solid dark:outline-gray-600'
+        )}
       >
         <Image
           src={'/static/images/avatar.jpg'}
