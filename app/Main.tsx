@@ -1,33 +1,22 @@
 'use client'
-import Tag from '@/components/ui/Tag'
-import siteMetadata from '@/data/siteMetadata'
-import { formatDate } from 'pliny/utils/formatDate'
 // import NewsletterForm from 'pliny/ui/NewsletterForm'
-import Link from '@/components/ui/Link'
-import {
-  Avatar,
-  BlogLinks,
-  Greeting,
-  Heading,
-  PopularTags,
-  ShortDescription,
-  SpotifyNowPlaying,
-  TypedBios,
-} from '@/components/homepage'
-import { Twemoji } from '@/components/ui'
+import { PostCardListView } from '@/components/blog/PostCardListView'
+import { BlogLinks, Greeting, Heading, ShortDescription, TypedBios } from '@/components/homepage'
 import { ProfileCard } from '@/components/profile/ProfileCard'
+import { Twemoji } from '@/components/ui'
+import Link from '@/components/ui/Link'
 const MAX_DISPLAY = 5
 
 export default function Home({ posts }) {
   return (
-    <div className="relative">
+    <div className="relative space-y-6 pt-4 md:space-y-24 lg:pt-12">
       {/* Introduce myself */}
       <div className="mt-8 md:mt-8 dark:divide-gray-700">
         <div className="pt-6 xl:grid xl:grid-cols-3">
           <div className="hidden pt-8 xl:block">
             <ProfileCard />
           </div>
-          <div className="space-y-4 md:space-y-6 md:pl-12 xl:col-span-2">
+          <div className="space-y-4 md:space-y-6 md:pl-16 xl:col-span-2">
             <Greeting />
             <div className="text-base leading-7 text-gray-600 md:text-lg md:leading-8 dark:text-gray-400">
               <Heading />
@@ -48,79 +37,33 @@ export default function Home({ posts }) {
 
       {/* List all post */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        <div className="space-y-2 py-6 md:space-y-5">
-          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
-            Latest Posts
-          </h1>
-          <p className="!mt-2 text-lg leading-7 text-gray-500 dark:text-gray-400">
-            {siteMetadata.description}
-          </p>
+        <div className="flex items-center justify-between space-y-2 py-6 font-bold sm:text-2xl sm:leading-10 md:space-y-5 md:text-4xl">
+          <div className="space-y-4">
+            <span className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:mr-3 md:text-5xl md:leading-14 dark:text-gray-100">
+              Latest Posts
+            </span>
+          </div>
+
+          <div className="items-center justify-end text-base leading-6 font-medium">
+            <Link
+              href="/blog"
+              className="text-primary hover:text-sky-600 dark:hover:text-sky-400"
+              aria-label="All posts"
+            >
+              All Posts &rarr;
+            </Link>
+          </div>
         </div>
 
-        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+        <ul className="divide-gray-200 pt-6 md:space-y-20 md:pt-10 dark:divide-gray-700">
           {!posts.length && 'No posts found.'}
-          {posts.slice(0, MAX_DISPLAY).map((post) => {
-            const { slug, date, title, summary, tags } = post
-            return (
-              <li key={slug} className="py-6">
-                <article>
-                  <div className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
-                    <dl>
-                      <dt className="sr-only">Published on</dt>
-                      <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
-                        <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
-                      </dd>
-                    </dl>
-                    <div className="space-y-5 xl:col-span-3">
-                      <div className="space-y-4">
-                        <div>
-                          <h2 className="text-2xl leading-8 font-bold tracking-tight">
-                            <Link
-                              href={`/blog/${slug}`}
-                              className="text-gray-900 dark:text-gray-100"
-                            >
-                              {title}
-                            </Link>
-                          </h2>
-                          <div className="flex flex-wrap">
-                            {tags.map((tag) => (
-                              <Tag key={tag} text={tag} />
-                            ))}
-                          </div>
-                        </div>
-                        <div className="prose max-w-none text-gray-500 dark:text-gray-400">
-                          {summary}
-                        </div>
-                      </div>
-                      <div className="text-base leading-6 font-medium">
-                        <Link
-                          href={`/blog/${slug}`}
-                          className="text-primary hover:text-sky-600 dark:hover:text-sky-400"
-                          aria-label={`Read "${title}"`}
-                        >
-                          Read more &rarr;
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </li>
-            )
-          })}
+          {posts.slice(0, MAX_DISPLAY).map((post, idx) => (
+            <li key={post.slug}>
+              <PostCardListView post={post} loading={idx === 0 ? 'eager' : 'lazy'} />
+            </li>
+          ))}
         </ul>
       </div>
-
-      {posts.length > MAX_DISPLAY && (
-        <div className="flex justify-end text-base leading-6 font-medium">
-          <Link
-            href="/blog"
-            className="text-primary hover:text-sky-600 dark:hover:text-sky-400"
-            aria-label="All posts"
-          >
-            All Posts &rarr;
-          </Link>
-        </div>
-      )}
 
       {/* {siteMetadata.newsletter.provider && (
         <div className="flex items-center justify-center pt-4">
