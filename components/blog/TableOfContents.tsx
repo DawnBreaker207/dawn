@@ -34,7 +34,7 @@ const TableOfContents = (props: TableOfContentsProps) => {
     })
 
     toc.forEach(({ url }) => {
-      const element = document.querySelector(url)
+      const element = document.querySelector(CSS.escape(url))
 
       if (element) {
         observer.observe(element)
@@ -43,7 +43,7 @@ const TableOfContents = (props: TableOfContentsProps) => {
 
     return () => {
       toc.forEach(({ url }) => {
-        const element = document.querySelector(url)
+        const element = document.querySelector(CSS.escape(url))
 
         if (element) {
           observer.unobserve(element)
