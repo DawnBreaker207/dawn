@@ -6,7 +6,7 @@ import { AnchorHTMLAttributes } from 'react'
 const Link = ({ href, ...rest }: LinkProps & AnchorHTMLAttributes<HTMLAnchorElement>) => {
   const isInternalLink = href && href.startsWith('/')
   const isAnchorLink = href && href.startsWith('#')
-  const className = 'break-words hover:text-gray-200 dark:hover:text-primary-600'
+  const className = 'break-words'
   if (isInternalLink) {
     return <NextLink className={className} href={href} {...rest} />
   }
