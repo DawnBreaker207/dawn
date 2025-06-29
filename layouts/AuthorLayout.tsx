@@ -1,12 +1,8 @@
 import { CareerTimeline } from '@/components/about'
-import { Avatar } from '@/components/homepage'
 import { ProfileCard } from '@/components/profile/ProfileCard'
 import Button from '@/components/ui/Button'
-import Image from '@/components/ui/Image'
-import Link from '@/components/ui/Link'
 import Twemoji from '@/components/ui/Twemoji'
 import type { Authors } from 'contentlayer/generated'
-import { Github, Linkedin, Mail, Twitter } from 'lucide-react'
 import { ReactNode } from 'react'
 
 interface Props {
@@ -34,7 +30,7 @@ export default function AuthorLayout({ children, content }: Props) {
             <ProfileCard />
           </div>
 
-          <div className="prose max-w-none md:pl-10 pb-8 xl:col-span-2">
+          <div className="prose max-w-none pb-8 md:pl-10 xl:col-span-2">
             <h2>
               Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Tung Anh (Aka Dawn)
             </h2>

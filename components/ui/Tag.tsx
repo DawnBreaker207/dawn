@@ -1,6 +1,6 @@
-import Link from 'next/link'
-import { slug } from 'github-slugger'
 import clsx from 'clsx'
+import { slug } from 'github-slugger'
+import Link from 'next/link'
 
 export function TagsList({ tags }: { tags: string[] }) {
   if (!tags || tags.length === 0) {
@@ -17,7 +17,7 @@ export function TagsList({ tags }: { tags: string[] }) {
 }
 
 const Tag = ({ text, size = 'sm' }: { text: string; size?: 'sm' | 'md' }) => {
-  let tagName = text.split(' ').join('-')
+  const tagName = text.split(' ').join('-')
   return (
     <Link
       href={`/tags/${slug(text)}`}

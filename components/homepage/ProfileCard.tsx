@@ -1,8 +1,8 @@
 'use client'
+import clsx from 'clsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ProfileInfo, SpotifyNowPlaying } from '.'
 import { Image } from '../ui'
-import clsx from 'clsx'
 
 const ProfileCard = () => {
   const ref = useRef<HTMLDivElement>(null)

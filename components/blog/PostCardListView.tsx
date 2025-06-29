@@ -1,12 +1,12 @@
+import SITE_METADATA from '@/data/siteMetadata'
+import clsx from 'clsx'
 import { Blog } from 'contentlayer/generated'
 import { CoreContent } from 'pliny/utils/contentlayer'
-import { GrowingUnderline } from '../ui/GrowingUnderline'
-import { Image, Link } from '../ui'
-import clsx from 'clsx'
-import SITE_METADATA from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
-import { TagsList } from '../ui/Tag'
+import { Image, Link } from '../ui'
 import { GritBackground } from '../ui/GritBackground'
+import { GrowingUnderline } from '../ui/GrowingUnderline'
+import { TagsList } from '../ui/Tag'
 
 export function PostCardListView({
   post,
@@ -15,7 +15,7 @@ export function PostCardListView({
   post: CoreContent<Blog>
   loading?: 'lazy' | 'eager'
 }) {
-  let { slug, date, title, summary, tags, images, readingTime } = post
+  const { slug, date, title, summary, tags, images, readingTime } = post
   return (
     <article>
       <div className="flex flex-col gap-2 space-y-3 md:flex-row md:gap-8">

@@ -1,16 +1,16 @@
 import { Blog } from 'contentlayer/generated'
 import { CoreContent } from 'pliny/utils/contentlayer'
-import { GrowingUnderline } from '../ui/GrowingUnderline'
 import { Image, Link } from '../ui'
+import { GrowingUnderline } from '../ui/GrowingUnderline'
 
+import SITE_METADATA from '@/data/siteMetadata'
+import clsx from 'clsx'
 import { formatDate } from 'pliny/utils/formatDate'
 import { GritBackground } from '../ui/GritBackground'
-import clsx from 'clsx'
-import SITE_METADATA from '@/data/siteMetadata'
 import { TagsList } from '../ui/Tag'
 
 export function PostCardGridView({ post }: { post: CoreContent<Blog> }) {
-  let { path, date, title, summary, images, readingTime, tags } = post
+  const { path, date, title, summary, images, readingTime, tags } = post
   return (
     <article>
       <div className="flex flex-col items-start justify-between gap-4 md:gap-6">
