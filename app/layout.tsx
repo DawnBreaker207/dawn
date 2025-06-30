@@ -14,6 +14,7 @@ import { Metadata } from 'next'
 import { Outfit, Space_Grotesk } from 'next/font/google'
 import { SearchConfig, SearchProvider } from 'pliny/search'
 import { ThemeProviders } from './theme-providers'
+import { UmamiAnalytics } from '@/components/analytics/umami'
 
 const space_grotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -99,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <ThemeProviders>
           {/* <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} /> */}
-          {/* <UmamiAnalytics websiteId={siteMetadata.analytics?.umamiAnalytics?.umamiWebsiteId} /> */}
+          <UmamiAnalytics websiteId={siteMetadata.analytics?.umamiAnalytics?.umamiWebsiteId} />
           <SectionContainer>
             <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
               <Header />
