@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/stats/:match*",
-      "destination": "https://analytics.dawn.id.vn/:match*"
+      "destination": "https://analytics-dawn-blog.vercel.app/:match*"
     }
   ]
 }
