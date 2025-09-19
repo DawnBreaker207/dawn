@@ -5,7 +5,7 @@ export const EXPERIENCES = [
     org: 'University Of Transport And Communications',
     url: 'https://www.utc.edu.vn/',
     logo: '/static/images/experiences/utc-logo.png',
-    start: 'July 2025',
+    start: 'Sep 2025',
     end: 'Present',
     title: 'Student at UTC',
     icon: 'man-technologist',
@@ -13,15 +13,10 @@ export const EXPERIENCES = [
     details: () => {
       return (
         <ul className="[&>li]:my-2 [&>li]:pl-0">
-          {/* <li>
-            Build{' '}
-            <a href="https://ecomheat.youneteci.com" rel="noopener noreferrer" target="_blank">
-              Ecomheat
-            </a>{' '}
-            - a website helps to measure the performance of the industry and players on E-Commerce
-            platforms thru cross E-commerce channels.
-          </li>
           <li>
+            <strong>In Process</strong>
+          </li>
+          {/* <li>
             Build <strong>AppCore</strong> - Developed and published core NestJS packages, including
             DatabaseModule, CacheModule, RedisModule, ConfigModule and others on npm to accelerate
             development and deployment across multiple projects.
