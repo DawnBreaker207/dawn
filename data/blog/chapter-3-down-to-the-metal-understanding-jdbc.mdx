@@ -1,0 +1,55 @@
+---
+title: 'Chapter 3: Down to the Metal — Understanding JDBC'
+date: '2025-10-14'
+tags: ['Personal Journey']
+draft: false
+summary: Down to the metal, down to the truth
+layout: 
+images: ['https://www.notion.so/images/page-cover/met_fitz_henry_lane.jpg']
+---
+
+
+After setting up the layers, I wanted to see what happened underneath.
+
+
+How does data actually move between my app and the database.
+
+
+So instead of relying on tools or abstractions, I decided to go **down to the metal —** to the JDBC level
+
+
+## 💾 Down to the JDBC Level
+
+
+For education purposes I had to write almost everything myself, using only **Spring Boot** and **Spring Web**. I even wrote the **SQL** manually and took time to understand its syntax. 
+
+
+Back in school, when I used **PHP**, I never really wrote SQL manually. I mostly used **phpMyAdmin** in **Xampp** to create tables or generate queries automatically. Later, most of my personal projects used **MongoDB** as the main database, so I got comfortable with **NoSQL**.
+
+
+This was my first time actually using **SQL** in a real backend system. I’d learned the basics before —simple queries like **`SELECT`**, **`INSERT`** and **`UPDATE`** — but this was different. Now I had to design tables, define relationshipss, and make every thing work with the backend logic. It gave me a small sense of confident — like I was finally starting to get it.
+
+
+## 🔨 Beginning from sctrach
+
+
+I built the entire project without using tools like **Lombok** to speed things up. I already knew the concept of **ORM** (Object Relational Mapping) from theory, but I had never actually used it in practice. I wanted to fully understand the basics first before relying on any tools, so instead of using frameworks like **Spring JDBC, Sptring Data JDBC** or **Spring Data JPA,** I decided to go with the raw **JDBC API** to talk directly to the database —  just pure SQL — only a simple **`DataSource`** configuration from Spring to handle the connection. 
+
+
+For everything else, I had to do it all by hand — basically reproducing SQL tools do behind the scenes. And oh boy! I had to write queries, open the connections, execute statements, and handle results through **`ResultSet`**. I even had to map every record manually. It was easy to understand how things worked, but the **boilerplate** was enormous — sometimes 20 to 30 lines of code just to run a single query it. Still, it was worth it. It took me days to complete the repository layer.
+
+
+## 🚀 Ready for the Next Layer
+
+
+That experience taught me more than any tutorial ever could. 
+
+
+But the backend was only half the story. 
+
+
+To make everything _visible_, I had to _see_ it — in action. 
+
+
+Next stop: **the frontend**
+
