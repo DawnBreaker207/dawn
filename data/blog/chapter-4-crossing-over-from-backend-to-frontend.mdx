@@ -1,0 +1,68 @@
+---
+title: 'Chapter 4: Crossing Over — From Backend to Frontend'
+date: '2025-10-14'
+tags: ['Personal Journey']
+draft: false
+summary: Crossing over from data to UI
+layout: 
+images: ['https://www.notion.so/images/page-cover/met_frederic_edwin_church_1871.jpg']
+---
+
+
+After diving deep into the backed and understand how data truly flows. It was time to make everything visible.
+
+
+## **⚙️ Angular Experience** 
+
+
+After finishing the backend with simple logic, I moved to frontend to create a view. Well, this was a new whole story. As I mentioned in the previous chapter, my background was in the **MERN** stack, but for some reason, I switched to **Angular**. 
+
+
+Angular is a comprehensive framework. The first time I tried it, I found it quite easy to read because it clearly split the view and the logic. However, its docs and community posts are not as diverse as React’s. In some cases, finding solutions was difficult. and some tools could become outdated very quickly. 
+
+
+The hardest part when I started with Angular was **RxJS**, I had never learned the concept reactive programming before. It’s very different when from the concepts of Promises and Callbacks in JavaScript. I still struggle to fully understand it even as I write this. I only grasp a small part of the concept so far. 
+
+
+On the plus side, Angular sets up most of the tools I need when initializing a project, so I didn’t have to hunt for packages like I did with React. For UI components, I used **Ng-Zorro**, which is basically similar to **Ant Design** in React and very simple to use. You might ask, what about Angular Material? It’s a solid choice and widely supported, but it doesn’t provide pre-built components ready to use like Ng-Zorro. you need to customize a lot, and since I’m not very good at that yet. I choose Ng-zorro because I already had experience with Ant Design in React. That made using it faster and more familiar. 
+
+
+## 🏗️Building the structure
+
+
+After initializing the project, it was time to build — but how? A house isn’t really a house without a proper structure. The same goes for a project: the folder structure matters. Unlike React, which is very flexible, Angular follow some rules but still allows flexibility. 
+
+
+Since I had limited experience with Angular, I spent some time researching best practices. I found two main approaches: one is **feature-based**, splitting folders by features, and the other is **module-based**, splitting into modules like `admin`, `client`, `error`, etc. I chose the module-based approach because I wanted to separate the admin layout from the client layout.
+
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/efeae8fb-3b44-437e-a57e-be87cac69182/9471d4ef-9cac-4817-b847-1363dace0287/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB4667HCBG2PN%2F20251021%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20251021T060807Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFYaCXVzLXdlc3QtMiJGMEQCIDNTUE6vt2Q%2BRJFH0DIKnZOogXw3zP5YIUPSetn8g%2F1UAiAju71j%2FYugRBVHQ27xzlR%2Fl1zgr0hV0uxdnO9SPrsCviqIBAj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIM2AllOsPOaGogOoPnKtwDmynxy8HHci59camtcvxS0QYlfsriTUjFJAEEFObD0bG7%2Bf5KKji9AX6tePjoqb7YlFSBJZilYqZGqru6WDEJNnmh%2FWufrJ9yqTVuc8n8nYb%2BuQBLqWTNTkiPSvwK0%2BS4BMJsAR9P%2BBjd%2B4YKbXBiLOzuJeYCu5%2BmMABncumQQ1QM68DmhI%2BkCNWGQDrvOCpLLDETAkqgRS71PQ9XDrRAXDl2W0COjyyEwltWY4tO6BKF8tHSrGkrHigDTAkJ9FRp3aBHK4xI2AD0QjR1Q8PFRkBCNrGYAsZ2%2FifasC%2B9rWaBwmETaYWKxUebJjt4r9GRvyDxYkRGrFmmYvgB9YdctwfwpttlBMEE%2FIFI5gMst%2FsxeeBr0vEdmBZqpU%2BqZhmGHJk%2FEsL8pwKW0UPpDigJ%2FI6kPIqiNJEtqeLMe1oEg8lLd6pztqQpMRYdjF0XHBFT93Pgk5FnaOcm9NpIu53H4inEHQyGOX2JZbo5ERiWEG8ONY%2FudwWJlrLfRiiCdGFiorypslVTxKYQ%2FaShPLJoAwRqcFcZ0TJyGDsZgaMqgsYK34vF3bs7GMMslM5qAIugDtzXRb%2Fz9mhDvNuXJERAeUnBd4Zfvi%2BXXux20m2u7T%2FI0s%2Bgxu0zdiYvcegws8TcxwY6pgGKJwtnkUEHqymgESZTQd8JtGBjde3Wc9ExKbmmEKD%2FNNIrXoTPSorTkNXcaSag45rdnR4Yu%2F5vSINVXIgIo%2F%2FECNJ5Ykn5JK0X3fLL%2BZiSILLvfw%2FZFjGRBlpyfsp3sfvIgrqbyN8Tnva6nsCzCSX%2BA3KCsyc3akExy6VfeX%2FDuONhW0WGHvRwtSiVdgx7auBSKOYtqTN8avQ0sVe7S35U%2FbVmR%2BvF&X-Amz-Signature=dd97e73f9168eac9bb4d0f8905a1c154263df6feca35ac2c37be2a56f8ab863e&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
+
+
+![Screenshot_from_2025-10-19_16-18-18.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/efeae8fb-3b44-437e-a57e-be87cac69182/7f972964-0eb6-4f80-9cd4-38f251129d9f/Screenshot_from_2025-10-19_16-18-18.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB4664DDUDW5F%2F20251021%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20251021T060807Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFYaCXVzLXdlc3QtMiJIMEYCIQD%2Bnr6E84knF1fN9Dj04atEoyvERgk69Xfw86H0x%2BaHWwIhAP05BWOa4f1aRh4%2FGWEmG0K%2F9b7D1II%2BeUGtd91MqewFKogECP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQABoMNjM3NDIzMTgzODA1Igzm%2F0l%2BT2%2B%2BnZPLn3oq3AOlMV%2FCGSjVLIOElbYS%2Fycr%2FmBtuYMp6b3CcGz8K%2FMdjkA9WtoLVuuEcA2%2Fde4AQx7ZCJ1VGxROfOKrv%2FNE3iGJAegSrIQ9iVkEYm%2BecxQ8NdRTcN9Q%2FjMWKGP%2BRedKKiYfPbFZpjpD%2FwB513waDOH72WHoEdy8O7CHipe6Q6S%2BysAw7B28MUQ%2B%2BlvPfvp5se6T6ZCgBRf6X1CjLvlZ3stg40tF5pbw3mtaK4oYLoWtAu%2FFmZ7wF2pOuL%2Byga4o%2FDOSwslYLoJT4eyCrMV2eZbmJmGjU6aTNuPx%2B067xVTU6qzrNiips%2FKsAD1mytqL3wD2eB2TIVS3o%2BFL%2FKYymm8rxq1t6OisiWY4qVdCg%2Fgl%2FoQ8fny2TqMGgR%2FRH16kqDY%2FxGn6cVizp%2FLg7dT3XSeE1hZIdwo9GKQjWpXlWCWPzDnx%2FXlvutSDJqYej0B46KF6hPgh9LeKLsZcZ%2FwmQn1HR7LwziDeIUQUE0BXk9ceGPLMN%2Faqf3Vhpy%2FmxNywX6au2cE5Lv0%2FkHyg1kczi3t2Mwv58ELUdUPaLyZ5IarYFQvhQrfHV0xl5B6%2FJByAIgt1XhwmH6y%2B5VUxHwy%2FYf09N%2Bo71PAnDnTQXbZ%2BBA2LXSkYBB%2Bs9Hhqxz2PlDDkxNzHBjqkASPqDUn0QH%2BPALmIMiAEameoi20esnXeouDXZOmOSanYxEYF55qR7sdXq5KPlTiljY3OnLNQlKA3gz2Z2W%2B%2Fgy83RUpMOpxAjljZKRIjg9LBEDF86ITsyPyQUyeoPHAlhhU9Og9ow70fWRyaBRu5yOEn4jyJjW1g1OLJeskBAH%2FM2xhhH5oSy5c5FT2YPHIwDd3TMIYPvb8m7Qz0Vu6rWzLMM2jP&X-Amz-Signature=c1bf6dae2c0740a100d8e517cd83c0d678ca62a4d9b3519349f78d4e8220610f&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
+
+
+This setup made the project **more organized** and **easier to maintain**, especially as the app grew.
+
+
+## 🔄 From building APIs to facing the frontend
+
+
+Different from testing APIs with Postman — where you just send data and check the result — working on the frontend was a completely different story. In Postman, everything feels simple. You hit send, you see the response, and that’s it.
+
+
+But in frontend, I had to take care of both sides — backend and frontend — and make them work together.
+It took a lot of time, image building the API first and creating the view after — every time I refactored the frontend, the layout change, the flow broke, and I had to fix things again and again. I realized that frontend work could easily take two or even three times longer than backend tasks. 
+
+
+Thankfully, after a lot of trial and error, I managed to get it done and upgrade the system faster than I expected. That was the first big milestone in this journey
+
+
+## 🪜 First Milestone & Next Steps
+
+
+The basic frontend is now fully structured and integrated to the backend
+
+
+Next up: **authentication and real user flows**, which would take the app to the next level.
+
