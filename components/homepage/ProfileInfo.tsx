@@ -9,7 +9,7 @@ const ProfileCardInfo = () => {
       <div className="mt-2 mb-2 space-y-3">
         <div className="flex items-center">
           <Briefcase size={20} strokeWidth={1} />
-          <p className="px-2">Fullstack Engineer</p>
+          <p className="px-2">Software Engineer</p>
         </div>
         <div className="flex items-center">
           <MapPin name="map-pin" size={20} strokeWidth={1} />

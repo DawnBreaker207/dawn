@@ -19,7 +19,7 @@ interface ReactionsProps {
   className?: string
 }
 
-const MAX_REACTIONS = 5
+const MAX_REACTIONS = 20
 
 const REACTIONS: Array<{ emoji: string; key: keyof Stats }> = [
   { emoji: 'sparkling-heart', key: 'loves' },
