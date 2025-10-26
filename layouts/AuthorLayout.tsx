@@ -32,24 +32,24 @@ export default function AuthorLayout({ children, content }: Props) {
 
           <div className="prose max-w-none pb-8 md:pl-10 xl:col-span-2">
             <h2>
-              Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Tung Anh (Aka Dawn)
+              Hello, folks! <Twemoji className="mx-2" emoji="waving-hand" /> I'm Tung Anh
             </h2>
             <p>
-              I have a passion for <strong>Java</strong> <strong>JavaScript/TypeScript</strong> and
-              web development. I'm currently start a journey as a fullstack developer. I work mainly
-              with <strong>Java</strong>, <strong>JavaScript</strong>, <strong>TypeScript</strong>,{' '}
-              <strong>Angular</strong>, and <strong>Spring</strong>.
+              I have a passion for <strong>Java</strong>, <strong>TypeScript</strong>, and web
+              development. I'm currently <strong>starting my journey</strong> as a{' '}
+              <strong>software engineer</strong>. I mainly work with <strong>Angular</strong> and{' '}
+              <strong>Spring</strong>.
             </p>
             <p>
-              I founded this blog as a means to document and share the knowledge and practical
-              wisdom I've acquired during my journey as a software engineer.
+              I created this blog to share insights, best practices, and lessons learned throughout
+              my journey as a software engineering.
             </p>
             <p>
-              Writing and taking notes helps me solidify my understanding of new concepts and
-              technologies. I hope my blog can be a useful resource for fellow web developers.
+              I believe that writing is one of the best ways to learn, and I hope what you find
+              something here that helps you on your own journey as a developer.
             </p>
             <p>
-              I would greatly appreciate your thoughts and comments on what I have written{' '}
+              I’d love to hear your thoughts and feedback on my posts{' '}
               <Twemoji emoji="clinking-beer-mugs" />.
             </p>
             <div className="flex items-center justify-between">
@@ -72,27 +72,31 @@ export default function AuthorLayout({ children, content }: Props) {
               <a target="_blank" href="https://tailwindcss.com">
                 Tailwind CSS
               </a>{' '}
-              and{' '}
-              <a target="_blank" href="https://www.notion.com">
-                Notion
-              </a>{' '}
-              using <strong>Tailwind Nextjs Starter Blog</strong>.
+              using <strong>Tailwind Nextjs Starter Blog</strong> template.
             </p>
 
             <p>
-              This blog site takes inspiration from karhdo.dev and leohuynh.dev. I appreciate{' '}
+              This blog site takes inspiration from{' '}
+              <a target="_blank" href="https://github.com/Karhdo/karhdo.dev">
+                karhdo.dev
+              </a>{' '}
+              and{' '}
+              <a target="_blank" href="https://github.com/hta218/leohuynh.dev">
+                leohuynh.dev
+              </a>
+              . I appreciate{' '}
               <a target="_blank" href="https://twitter.com/karhdo">
                 Khanh Do
               </a>
               ,{' '}
               <a target="_blank" href="https://twitter.com/hta218">
                 Leo Huynh
-              </a>{' '}
-              and{' '}
+              </a>
+              , and{' '}
               <a target="_blank" href="https://twitter.com/timlrxx">
                 Timothy Lin
               </a>{' '}
-              for their contribution to this minimal, lightweight, and highly customizable blog
+              for their contributions to this minimal, lightweight, and highly customizable blog
               starter.
             </p>
 
@@ -112,11 +116,11 @@ export default function AuthorLayout({ children, content }: Props) {
               </li>
               <li>
                 <Twemoji className="!mr-2" emoji="electric-plug" />
-                Integrate{' '}
+                Integrated{' '}
                 <a target="_blank" href="https://www.notion.com">
                   Notion
                 </a>{' '}
-                for CMS blog
+                as a CMS for the blog
               </li>
               <li>
                 <Twemoji className="!mr-2" emoji="bar-chart" /> Monitoring site with{' '}
@@ -126,23 +130,17 @@ export default function AuthorLayout({ children, content }: Props) {
                 website analytics
               </li>
               <li>
-                <Twemoji className="!mr-2" emoji="eyes" /> Theming in dark mode with{' '}
+                <Twemoji className="!mr-2" emoji="eyes" />
+                Implemented dark mode theming inspired by{' '}
                 <a target="_blank" href="https://github.com/folke/tokyonight.nvim">
                   Tokyonight Neovim Theme
                 </a>{' '}
-                colors for better contrast.
+                for better contrast.
               </li>
               <li>
                 <Twemoji className="!mr-2" emoji="man-technologist" /> My website refers to the
-                design and code from the{' '}
-                <a target="_blank" href="https://github.com/Karhdo/karhdo.dev">
-                  karhdo.dev
-                </a>{' '}
-                and{' '}
-                <a target="_blank" href="https://github.com/hta218/leohuynh.dev">
-                  leohuynh.dev
-                </a>{' '}
-                repository and incorporates the tailwind-nextjs-starter-blog template, version 2.0.
+                design and code from the many repository and incorporates the
+                tailwind-nextjs-starter-blog template, version 2.0.
               </li>
               <li>
                 <Twemoji className="!mr-2" emoji="inbox-tray" /> Bumping up <code>mdx-bundler</code>
@@ -152,7 +150,7 @@ export default function AuthorLayout({ children, content }: Props) {
             </ul>
 
             <p>
-              See my{' '}
+              Check out the{' '}
               <a target="_blank" href="https://github.com/DawnBreaker207/Personal-Blog">
                 repository
               </a>{' '}
