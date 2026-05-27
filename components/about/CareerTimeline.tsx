@@ -2,30 +2,11 @@ import TimelineItem from './TimelineItem'
 
 export const EXPERIENCES = [
   {
-    org: 'University of Transport and Communications',
-    url: 'https://www.utc.edu.vn/',
-    logo: '/static/images/experiences/utc-logo.png',
-    start: 'Sep 2025',
-    end: 'Present',
-    title: 'Undergraduate Student at UTC',
-    icon: 'man-technologist',
-    event: 'career-utc',
-    details: () => {
-      return (
-        <ul className="[&>li]:my-2 [&>li]:pl-0">
-          <li>
-            <strong>Undergraduate student.</strong>
-          </li>
-        </ul>
-      )
-    },
-  },
-  {
     org: 'FPT Software',
     url: 'https://fptsoftware.com/',
     logo: '/static/images/experiences/fsoft-logo.png',
-    start: 'Aug 2024',
-    end: 'Nov 2024',
+    start: 'Aug 2025',
+    end: 'Jan 2026',
     title: 'Intern Web Developer',
     icon: 'man-technologist',
     event: 'career-intern-fsoft',
@@ -80,6 +61,25 @@ export const EXPERIENCES = [
             While many peers focused on <strong>Front-End Development</strong>, I discovered my
             passion for <strong>Software Engineering</strong>, where I can combine creativity with
             technical depth to build <strong>end-to-end web solutions</strong>.
+          </li>
+        </ul>
+      )
+    },
+  },
+  {
+    org: 'University of Transport and Communications',
+    url: 'https://www.utc.edu.vn/',
+    logo: '/static/images/experiences/utc-logo.png',
+    start: 'Sep 2022',
+    end: 'Present',
+    title: 'Undergraduate Student at UTC',
+    icon: 'man-technologist',
+    event: 'career-utc',
+    details: () => {
+      return (
+        <ul className="[&>li]:my-2 [&>li]:pl-0">
+          <li>
+            <strong>Undergraduate student.</strong>
           </li>
         </ul>
       )
