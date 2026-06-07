@@ -48,43 +48,43 @@ export const EXPERIENCES = [
       )
     },
   },
-  {
-    org: 'FPT Polytechnic College',
-    url: 'https://caodang.fpt.edu.vn/',
-    logo: '/static/images/experiences/fpoly-logo.png',
-    start: 'Aug 2022',
-    end: 'May 2025',
-    title: 'College Student',
-    icon: 'man-technologist',
-    event: 'career-fpoly',
-    details: () => {
-      return (
-        <ul className="[&>li]:my-2 [&>li]:pl-0">
-          <li>
-            Graduated with Distinction from <strong>FPT Polytechnic College</strong>.
-          </li>
-          <li>
-            Specialized in building modern web applications using technologies such as{' '}
-            <strong>Node.js</strong>, <strong>Express</strong>, <strong>React</strong>, and{' '}
-            <strong>MongodDB</strong>, following the <strong>MERN stack</strong>.
-          </li>
-          <li>
-            Developed a strong foundation in <strong>RESTful API design</strong>,{' '}
-            <strong>database management</strong>, and <strong>UI/UX principles</strong>.
-          </li>
-          <li>
-            Enhanced <strong>problem-solving</strong> and <strong>team collaboration</strong> skills
-            through real-world projects and coding challenges.
-          </li>
-          <li>
-            While many peers focused on <strong>Front-End Development</strong>, I discovered my
-            passion for <strong>Software Engineering</strong>, where I can combine creativity with
-            technical depth to build <strong>end-to-end web solutions</strong>.
-          </li>
-        </ul>
-      )
-    },
-  },
+  // {
+  //   org: 'FPT Polytechnic College',
+  //   url: 'https://caodang.fpt.edu.vn/',
+  //   logo: '/static/images/experiences/fpoly-logo.png',
+  //   start: 'Aug 2022',
+  //   end: 'May 2025',
+  //   title: 'College Student',
+  //   icon: 'man-technologist',
+  //   event: 'career-fpoly',
+  //   details: () => {
+  //     return (
+  //       <ul className="[&>li]:my-2 [&>li]:pl-0">
+  //         <li>
+  //           Graduated with Distinction from <strong>FPT Polytechnic College</strong>.
+  //         </li>
+  //         <li>
+  //           Specialized in building modern web applications using technologies such as{' '}
+  //           <strong>Node.js</strong>, <strong>Express</strong>, <strong>React</strong>, and{' '}
+  //           <strong>MongodDB</strong>, following the <strong>MERN stack</strong>.
+  //         </li>
+  //         <li>
+  //           Developed a strong foundation in <strong>RESTful API design</strong>,{' '}
+  //           <strong>database management</strong>, and <strong>UI/UX principles</strong>.
+  //         </li>
+  //         <li>
+  //           Enhanced <strong>problem-solving</strong> and <strong>team collaboration</strong> skills
+  //           through real-world projects and coding challenges.
+  //         </li>
+  //         <li>
+  //           While many peers focused on <strong>Front-End Development</strong>, I discovered my
+  //           passion for <strong>Software Engineering</strong>, where I can combine creativity with
+  //           technical depth to build <strong>end-to-end web solutions</strong>.
+  //         </li>
+  //       </ul>
+  //     )
+  //   },
+  // },
 ]
 
 const CareerTimeline = () => (
