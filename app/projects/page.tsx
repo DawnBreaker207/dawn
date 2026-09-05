@@ -7,19 +7,19 @@ import { fetchRepoData } from '@/servers/github.server'
 export const metadata = genPageMetadata({ title: 'Projects' })
 
 export default async function Projects() {
-  await Promise.all(
+  const projects = await Promise.all(
     projectsData.map(async (p) => {
-      if (p.repo && typeof p.repo === 'string') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(p as any).repo = await fetchRepoData(p.repo as string)
+      if (typeof p.repo === 'string') {
+        return { ...p, repo: await fetchRepoData(p.repo) }
       }
+      return p
     })
   )
 
   const description = 'My side projects and stuff which I built'
 
-  const workProjects = projectsData.filter(({ type }) => type === 'work')
-  const sideProjects = projectsData.filter(({ type }) => type === 'self')
+  const workProjects = projects.filter(({ type }) => type === 'work')
+  const sideProjects = projects.filter(({ type }) => type === 'self')
 
   return (
     <>
