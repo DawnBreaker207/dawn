@@ -26,7 +26,8 @@ jobs:
       - name: 📄 Create .env.local from GitHub Secrets
         run: |
           echo "NOTION_TOKEN=${{ secrets.NOTION_TOKEN }}" >> .env.local
-          echo "NOTION_DATABASE_ID=${{ secrets.NOTION_DATABASE_ID }}" >> .env.local
+          echo "BLOGS_DATABASE_ID=${{ secrets.BLOGS_DATABASE_ID }}" >> .env.local
+          echo "PROJECTS_DATABASE_ID=${{ secrets.PROJECTS_DATABASE_ID }}" >> .env.local
 
       - name: 🧠 Run `yarn posts`
         run: yarn posts
