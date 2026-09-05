@@ -84,6 +84,10 @@ module.exports = () => {
         },
         {
           protocol: 'https',
+          hostname: 'app.notion.com', // Notion page-cover images
+        },
+        {
+          protocol: 'https',
           hostname: 'i.scdn.co', // Spotify album covers
         },
         {
