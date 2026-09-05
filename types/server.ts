@@ -1,5 +1,7 @@
 export interface SpotifyNowPlayingData {
   isPlaying: boolean
+  status: 'playing' | 'recently-played' | 'unavailable'
+  playedAt?: string
   songUrl?: string
   title?: string
   artist?: string
