@@ -1,0 +1,67 @@
+[
+  {
+    "type": "self",
+    "title": "Microz",
+    "description": "",
+    "url": "",
+    "repo": "DawnBreaker207/Microz",
+    "builtWith": [
+      "Antd",
+      "React",
+      "Tailwind",
+      "Java",
+      "Spring",
+      "TypeScript",
+      "PostgreSQL"
+    ],
+    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_theOxbow.jpg"
+  },
+  {
+    "type": "self",
+    "title": "Jira",
+    "description": "",
+    "url": "",
+    "repo": "DawnBreaker207/Jira-Clone",
+    "builtWith": [
+      "Angular",
+      "TypeScript",
+      "JavaScript",
+      "Ng-Zorro",
+      "NestJs"
+    ],
+    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_thanatopsis.jpg"
+  },
+  {
+    "type": "self",
+    "title": "CinePlex",
+    "description": "",
+    "url": "",
+    "repo": "DawnBreaker207/CinePlex",
+    "builtWith": [
+      "Java",
+      "TypeScript",
+      "Spring",
+      "Angular",
+      "MySQL",
+      "Ng-Zorro",
+      "Redis"
+    ],
+    "imgSrc": "https://app.notion.com/images/page-cover/nationalMuseumOfAsianArt_gardenSceneMelonsEggPlantsFlowersAndTwoWeasels.jpg"
+  },
+  {
+    "type": "self",
+    "title": "Personal website",
+    "description": "",
+    "url": "dawn.io.vn",
+    "repo": "DawnBreaker207/dawn",
+    "builtWith": [
+      "NextJS",
+      "Tailwind",
+      "TypeScript",
+      "Prisma",
+      "Notion",
+      "Umami"
+    ],
+    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_rockyMountainsLandersPeak.jpg"
+  }
+]
