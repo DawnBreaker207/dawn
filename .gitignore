@@ -47,5 +47,3 @@ yarn-error.log*
 .contentlayer
 
 
-# Yarn file
-yarn.lock
