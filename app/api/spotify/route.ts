@@ -2,6 +2,10 @@ import { SpotifyNowPlayingData } from '@/types/server'
 import { getSpotifyNowPlaying } from '@/servers/spotify.server'
 
 export async function GET() {
+  if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_REFRESH_TOKEN) {
+    return Response.json({ isPlaying: false })
+  }
+
   const response = await getSpotifyNowPlaying()
 
   if (response.status === 204 || response.status > 400) {
