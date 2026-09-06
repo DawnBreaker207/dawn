@@ -23,7 +23,7 @@ function tagName(text: string): string {
     <div class="flex flex-wrap gap-2 md:gap-3">
       {tags.map((tag) => (
         <a
-          href={`/tags/${slugify(tag)}`}
+          href={`/topics/${slugify(tag)}`}
           class="rounded-lg bg-slate-100 text-sm font-medium lowercase px-2 py-0.5 font-semibold hover:bg-slate-300 dark:bg-slate-300 dark:hover:bg-slate-100 text-primary-500 dark:text-primary-700"
         >
           <span data-umami-event={`tag-${tagName(tag)}`}>#{tagName(tag)}</span>
