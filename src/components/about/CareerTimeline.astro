@@ -31,10 +31,8 @@ const EXPERIENCES = [
 ];
 ---
 
-<ul class="m-0 list-none p-0">
+<ul class="not-prose m-0 list-none p-0">
   {EXPERIENCES.map((exp, idx) => (
-    <li class="m-0 p-0">
-      <TimelineItem exp={exp} last={idx === EXPERIENCES.length - 1} />
-    </li>
+    <TimelineItem exp={exp} last={idx === EXPERIENCES.length - 1} />
   ))}
 </ul>

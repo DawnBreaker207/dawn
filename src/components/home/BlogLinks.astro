@@ -1,21 +1,44 @@
 ---
 import Link from '@/components/ui/Link.astro';
-import Twemoji from '@/components/ui/Twemoji.astro';
-import GrowingUnderline from '@/components/ui/GrowingUnderline.astro';
+
+const ICONS = {
+  blog: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
+  projects: 'M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.3 7l8.7 5 8.7-5 M12 22V12',
+  lab: 'M10 2v7.5L4.5 19.6A1.7 1.7 0 0 0 6 22h12a1.7 1.7 0 0 0 1.5-2.4L14 9.5V2 M8.5 2h7',
+  about: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+};
 
 const LINKS = [
-  { title: 'My Blogs', href: '/blog', emoji: 'memo', event: 'home-link-blog' },
-  { title: ' My Side Project', href: '/projects', emoji: 'hammer-and-wrench', event: 'home-link-projects' },
-  { title: 'About me', href: '/about', emoji: 'face-with-monocle', event: 'home-link-about' },
-  { title: 'My careers', href: '/about', emoji: 'briefcase', event: 'home-link-resume' },
+  { title: 'blog', href: '/blog', emoji: 'blog', event: 'home-link-blog' },
+  { title: 'projects', href: '/projects', emoji: 'projects', event: 'home-link-projects' },
+  { title: 'lab', href: '/lab', emoji: 'lab', event: 'home-link-lab' },
+  { title: 'about', href: '/about', emoji: 'about', event: 'home-link-about' },
 ];
 ---
 
-<div class="flex flex-col justify-between gap-5">
+<nav class="flex flex-wrap items-center gap-x-6 gap-y-2.5 font-mono text-[13px]">
   {LINKS.map(({ title, href, emoji, event }) => (
-    <Link href={href} class="flex items-center gap-1.5">
-      <Twemoji emoji={emoji} />
-      <GrowingUnderline data-umami-event={event} class="leading-6">{title}</GrowingUnderline>
+    <Link
+      href={href}
+      data-umami-event={event}
+      class="group flex items-center gap-1.5 text-(--fg-dim) transition-colors hover:text-(--accent)"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="flex-none text-(--fg-faint) transition-colors group-hover:text-(--accent)"
+      >
+        {ICONS[emoji as keyof typeof ICONS].split(' M').map((d, i) => (
+          <path d={i === 0 ? d : `M${d}`} />
+        ))}
+      </svg>
+      <span>{title}/</span>
     </Link>
   ))}
-</div>
+</nav>

@@ -21,9 +21,22 @@ const minutes = readingMinutes(post);
 const toc = headings
   .filter((h) => h.depth > 1)
   .map((h) => ({ value: h.text, url: `#${h.slug}`, depth: h.depth }));
+
+// Related posts: top 3 by shared tags, falling back to latest ones.
+let related = posts
+  .filter((p) => p.id !== post.id)
+  .map((p) => ({
+    post: p,
+    score: p.data.tags.filter((t) => post.data.tags.includes(t)).length,
+  }))
+  .filter((r) => r.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3)
+  .map((r) => r.post);
+if (related.length === 0) related = posts.filter((p) => p.id !== post.id).slice(0, 3);
 ---
 
-<BaseLayout title={post.data.title} description={post.data.summary}>
+<BaseLayout title={post.data.title} description={post.data.summary} ogImage={post.id}>
   <PostLayout
     title={post.data.title}
     tags={post.data.tags}
@@ -31,6 +44,7 @@ const toc = headings
     slug={post.id}
     minutes={minutes}
     toc={toc}
+    related={related}
     next={next && { path: `blog/${next.id}`, title: next.data.title }}
     prev={prev && { path: `blog/${prev.id}`, title: prev.data.title }}
   >
