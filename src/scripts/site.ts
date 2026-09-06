@@ -1,6 +1,6 @@
-/* Client-side interactions — theme, mobile nav, profile tilt, typed bios,
-   scroll-to-top, TOC scrollspy, view counter, reactions, blog search,
-   image zoom, giscus comments. */
+/* Client-side interactions — theme, tooltips, mobile nav, analytics links,
+   typed bios, scroll-to-top, TOC scrollspy, view counter, reactions, blog
+   search, image zoom, giscus comments, blog grid/list toggle. */
 
 const $ = <T extends Element>(sel: string, root: ParentNode = document): T | null =>
   root.querySelector(sel);
@@ -13,9 +13,9 @@ const $$ = <T extends Element>(sel: string, root: ParentNode = document): T[] =>
    on same-URL navigations, so a fresh closure re-added each time would stack. */
 function bindOnce<T extends HTMLElement>(node: T | null, event: string, handler: (e: Event) => void): void {
   if (!node) return;
-  const key = `site:${event}`;
-  if (node.dataset.siteBound === key) return;
-  node.dataset.siteBound = key;
+  const key = `siteBound${event}`;
+  if (node.dataset[key] === '1') return;
+  node.dataset[key] = '1';
   node.addEventListener(event, handler);
 }
 
