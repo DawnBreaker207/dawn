@@ -8,7 +8,20 @@ const $ = <T extends Element>(sel: string, root: ParentNode = document): T | nul
 const $$ = <T extends Element>(sel: string, root: ParentNode = document): T[] =>
   Array.from(root.querySelectorAll(sel));
 
+/* Bind a handler at most once per unique node. Component scripts re-run on every
+   astro:page-load, and nodes hosted in the shell (e.g. the theme button) are reused
+   on same-URL navigations, so a fresh closure re-added each time would stack. */
+function bindOnce<T extends HTMLElement>(node: T | null, event: string, handler: (e: Event) => void): void {
+  if (!node) return;
+  const key = `site:${event}`;
+  if (node.dataset.siteBound === key) return;
+  node.dataset.siteBound = key;
+  node.addEventListener(event, handler);
+}
+
 const STORAGE_KEY = 'theme';
+
+let scrollTopWin: (() => void) | null = null;
 
 function resolveTheme(): 'light' | 'dark' {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -21,6 +34,15 @@ function setTheme(next: string) {
   const resolved = resolveTheme();
   document.documentElement.classList.toggle('dark', resolved === 'dark');
   syncThemeIcons(resolved);
+  applyGiscusTheme(resolved);
+}
+
+function applyGiscusTheme(resolved: 'light' | 'dark') {
+  const frame = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+  frame?.contentWindow?.postMessage(
+    { giscus: { setConfig: { theme: resolved === 'dark' ? 'transparent_dark' : 'light' } } },
+    'https://giscus.app'
+  );
 }
 
 function syncThemeIcons(resolved: 'light' | 'dark') {
@@ -30,28 +52,51 @@ function syncThemeIcons(resolved: 'light' | 'dark') {
   if (moon) moon.classList.toggle('hidden', resolved === 'light');
 }
 
+/* Tooltips — rendered as a single fixed element on <body> so they escape the
+   .studio-main overflow:hidden clip (a ::after inside a column would get cut). */
+let tipEl: HTMLDivElement | null = null;
+function showTip(text: string, anchor: HTMLElement, down: boolean) {
+  if (!tipEl) {
+    tipEl = document.createElement('div');
+    tipEl.className = 'tip-el';
+    document.body.appendChild(tipEl);
+  }
+  tipEl.textContent = text;
+  tipEl.style.opacity = '1';
+  const r = anchor.getBoundingClientRect();
+  const width = tipEl.offsetWidth;
+  const left = down ? r.left + r.width / 2 - width / 2 : r.right + 12;
+  const top = down ? r.bottom + 8 : r.top + r.height / 2 - tipEl.offsetHeight / 2;
+  tipEl.style.left = `${left}px`;
+  tipEl.style.top = `${top}px`;
+}
+function hideTip() {
+  if (tipEl) tipEl.style.opacity = '0';
+}
+
+function initTips() {
+  $$<HTMLElement>('[data-tip]').forEach((el) => {
+    const down = el.classList.contains('tip--down');
+    bindOnce(el, 'pointerenter', () => showTip(el.dataset.tip ?? '', el, down));
+    bindOnce(el, 'pointerleave', hideTip);
+    bindOnce(el, 'focus', () => showTip(el.dataset.tip ?? '', el, down));
+    bindOnce(el, 'blur', hideTip);
+  });
+}
+
 function initThemeSwitch() {
   const toggleBtn = $<HTMLButtonElement>('[data-theme-toggle]');
-  const panel = $<HTMLDivElement>('[data-theme-panel]');
-  if (!toggleBtn || !panel) return;
 
-  const onClose = () => panel?.classList.add('hidden');
-  syncThemeIcons(resolveTheme());
+  const resolved = resolveTheme();
+  document.documentElement.classList.toggle('dark', resolved === 'dark');
 
-  toggleBtn.addEventListener('click', (e) => {
+  if (!toggleBtn) return;
+
+  syncThemeIcons(resolved);
+
+  bindOnce(toggleBtn, 'click', (e) => {
     e.stopPropagation();
-    panel.classList.toggle('hidden');
-  });
-  document.addEventListener('click', onClose);
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') onClose();
-  });
-
-  $$<HTMLButtonElement>('[data-theme-option]', panel).forEach((btn) => {
-    btn.addEventListener('click', () => {
-      setTheme(btn.dataset.themeOption || 'system');
-      onClose();
-    });
+    setTheme(resolveTheme() === 'dark' ? 'light' : 'dark');
   });
 }
 
@@ -59,6 +104,7 @@ function initThemeSwitch() {
 const NAV_LINKS = [
   { href: '/blog', title: 'Blog' },
   { href: '/projects', title: 'Projects' },
+  { href: '/lab', title: 'Lab' },
   { href: '/about', title: 'About' },
 ];
 
@@ -131,30 +177,6 @@ function initAnalyticsLinks() {
   });
 }
 
-/* ---- Profile card 3D tilt ---- */
-function initTilt() {
-  const card = $<HTMLElement>('[data-tilt]');
-  if (!card) return;
-
-  const onMove = (e: MouseEvent) => {
-    if (window.innerWidth < 1280) return;
-    const { width, height, x, y } = card.getBoundingClientRect();
-    const mouseX = Math.abs(e.clientX - x);
-    const mouseY = Math.abs(e.clientY - y);
-    const rotate = {
-      x: 15 - (mouseY / height) * 30,
-      y: -15 + (mouseX / width) * 30,
-    };
-    card.style.transform = `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`;
-  };
-  const onLeave = () => {
-    card.style.transform = 'rotateX(0deg) rotateY(0deg)';
-  };
-
-  card.addEventListener('mousemove', onMove);
-  card.addEventListener('mouseleave', onLeave);
-}
-
 /* ---- Typed bios ---- */
 function initTyped() {
   const bios = $('#bios');
@@ -168,12 +190,12 @@ function initTyped() {
   let deleting = false;
 
   const type = () => {
-    const current = values[valueIndex % values.length];
-    typed.textContent = current.slice(0, charIndex);
+    const current = values[valueIndex];
     let delay: number;
 
     if (!deleting) {
       charIndex++;
+      typed.textContent = current.slice(0, charIndex);
       delay = 28;
       if (charIndex === current.length + 1) {
         deleting = true;
@@ -181,12 +203,17 @@ function initTyped() {
       }
     } else {
       charIndex--;
-      delay = 14;
       if (charIndex === 0) {
+        /* never end on an empty line (the "line vanishes then returns" flicker):
+           switch to the next bio and show its first char during the pause */
         deleting = false;
         valueIndex = (valueIndex + 1) % values.length;
-        delay = 400;
+        charIndex = 1;
+        delay = 500;
+      } else {
+        delay = 14;
       }
+      typed.textContent = values[valueIndex].slice(0, charIndex);
     }
     setTimeout(type, delay);
   };
@@ -197,9 +224,11 @@ function initTyped() {
 function initScrollTop() {
   const btn = $<HTMLButtonElement>('[data-scroll-top]');
   if (!btn) return;
+  if (scrollTopWin) window.removeEventListener('scroll', scrollTopWin);
   const onScroll = () => {
     btn.style.display = window.scrollY > 50 ? '' : 'none';
   };
+  scrollTopWin = onScroll;
   window.addEventListener('scroll', onScroll);
   onScroll();
   btn.addEventListener('click', () => window.scrollTo({ top: 0 }));
@@ -371,6 +400,7 @@ function initComments() {
   } catch {
     return;
   }
+  config['data-theme'] = resolveTheme() === 'dark' ? 'transparent_dark' : 'light';
   const s = document.createElement('script');
   s.src = 'https://giscus.app/client.js';
   s.async = true;
@@ -379,17 +409,44 @@ function initComments() {
   host.appendChild(s);
 }
 
+/* ---- View toggle (grid/list) ---- */
+const VIEW_MODE_KEY = 'view-mode';
+
+function initViewToggles() {
+  const toggles = $$<HTMLButtonElement>('[data-view-toggle]');
+  if (!toggles.length) return;
+  const views = $$<HTMLElement>('[data-view]');
+
+  const apply = (mode: string) => {
+    views.forEach((view) => view.classList.toggle('hidden', view.dataset.view !== mode));
+    toggles.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.viewToggle === mode)));
+  };
+
+  apply(localStorage.getItem(VIEW_MODE_KEY) ?? 'grid');
+
+  toggles.forEach((btn) => {
+    const mode = btn.dataset.viewToggle ?? 'grid';
+    const onClick = () => {
+      localStorage.setItem(VIEW_MODE_KEY, mode);
+      apply(mode);
+    };
+    btn.removeEventListener('click', onClick);
+    btn.addEventListener('click', onClick);
+  });
+}
+
 function init() {
   initThemeSwitch();
   initMobileNav();
   initAnalyticsLinks();
-  initTilt();
   initTyped();
   initScrollTop();
   initToc();
   initViewCounter();
   initReactions();
   initBlogSearch();
+  initViewToggles();
+  initTips();
   initImageZoom();
   initComments();
 }
@@ -399,3 +456,4 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+document.addEventListener('astro:page-load', init);
