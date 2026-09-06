@@ -56,8 +56,8 @@ export const SITE = {
     x: 'DawnBreaker207',
   },
   analytics: {
-    umamiSharedUrl: `https://analytics.dawn.io.vn/share/Ab8a7GZONdRrjGJX`,
-    umamiWebsiteId: (import.meta.env.PUBLIC_UMAMI_WEBSITE_ID as string) || undefined,
+    umamiSharedUrl: (import.meta.env.SHARED_URL as string) || undefined,
+    umamiWebsiteId: (import.meta.env.UMAMI_WEBSITE_ID as string) || undefined,
   },
   comments: {
     provider: 'giscus' as const,
