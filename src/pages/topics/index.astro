@@ -1,0 +1,42 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getPosts, slugify } from '@/lib/utils/blog';
+
+export const prerender = true;
+
+const posts = await getPosts();
+const counts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+}
+const tags = [...counts.keys()].sort(
+  (a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0) || a.localeCompare(b)
+);
+---
+
+<BaseLayout title="Topics" description="Topics I write about">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      Topics
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      Topics I write about — browse posts by tag.
+    </p>
+    <p class="mt-2 font-mono text-xs text-(--fg-dim)">{tags.length} topics</p>
+  </header>
+
+  <div class="flex flex-wrap gap-2">
+    {tags.length === 0 && 'No tags found.'}
+    {tags.map((tag) => (
+      <a
+        href={`/topics/${slugify(tag)}`}
+        class="rounded-full border border-(--border) bg-(--bg-alt) px-3 py-1.5 font-mono text-xs no-underline transition-colors hover:border-(--accent)"
+      >
+        <span class="text-(--accent-dim)">#{tag}</span>
+        <span class="ml-1 text-(--fg-dim)">({counts.get(tag)})</span>
+      </a>
+    ))}
+  </div>
+</BaseLayout>
