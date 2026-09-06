@@ -1,28 +1,13 @@
 const sessionKey = 'dawn:tabs';
-const secKey = 'dawn:sidebarSections';
-const themeKey = 'dawn:theme';
 const NAV: Record<string, string> = JSON.parse(document.body.dataset.sitenav ?? '{}');
-
-const sidebar = document.getElementById('sidebar');
-const rail = document.getElementById('rail');
-const tabRoot = document.getElementById('tab-root');
-const tabScroll = document.getElementById('tab-scroll');
-const toggleSidebar = document.getElementById('toggle-sidebar');
-const toggleRail = document.getElementById('toggle-rail');
-const collapseSidebar = document.getElementById('collapse-sidebar');
-const toggleTheme = document.getElementById('toggle-theme');
 
 interface Tab {
   path: string;
   label: string;
 }
 
-const currentTab: Tab | null = tabRoot
-  ? {
-      path: tabRoot.dataset.tabPath ?? '/',
-      label: tabRoot.dataset.tabLabel ?? NAV[location.pathname] ?? location.pathname,
-    }
-  : null;
+const TAB_ICON =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8"/></svg>';
 
 let tabs: Tab[] = [];
 try {
@@ -31,8 +16,17 @@ try {
   tabs = [];
 }
 
-function normalize() {
-  if (currentTab) tabs = [...tabs.filter((t) => t.path !== currentTab.path), currentTab];
+function readCurrentTab(): Tab | null {
+  const tabRoot = document.getElementById('tab-root');
+  if (!tabRoot) return null;
+  return {
+    path: tabRoot.dataset.tabPath ?? '/',
+    label: tabRoot.dataset.tabLabel ?? NAV[location.pathname] ?? location.pathname,
+  };
+}
+
+function normalize(tab: Tab | null) {
+  if (tab) tabs = [...tabs.filter((t) => t.path !== tab.path), tab];
   const home = tabs.find((t) => t.path === '/');
   tabs = tabs.filter((t) => t.path !== '/');
   if (home) tabs.unshift(home);
@@ -43,27 +37,23 @@ function persist() {
 }
 
 function renderTabs() {
+  const tabRoot = document.getElementById('tab-root');
+  const tabScroll = document.getElementById('tab-scroll');
   if (!tabRoot || !tabScroll) return;
   for (const child of [...tabRoot.children]) child.remove();
 
   tabScroll.classList.toggle('fade', tabScroll.scrollWidth > tabScroll.clientWidth + 4);
 
   for (const [i, tab] of tabs.entries()) {
-    const div = document.createElement('div');
-    div.className =
-      'group flex shrink-0 items-center gap-2 border-r border-(--border) px-3 py-2 text-[12px]';
-    div.style.background = tab.path === location.pathname ? 'var(--bg-alt)' : 'var(--bg)';
-
+    const active = tab.path === location.pathname;
     const a = document.createElement('a');
     a.href = tab.path;
-    a.className =
-      tab.path === location.pathname ? 'text-(--fg)' : 'text-(--fg-dim) hover:text-(--accent)';
-    a.textContent = tab.label;
-    div.appendChild(a);
+    a.className = 'flex min-w-0 items-center gap-2 no-underline';
+    a.innerHTML = `<span class="explorer-icon flex-none text-(--fg-faint)">${TAB_ICON}</span><span class="truncate">${tab.label}</span>`;
 
     const close = document.createElement('button');
     close.type = 'button';
-    close.className = 'text-(--fg-faint) opacity-0 group-hover:opacity-100 hover:text-(--fg)';
+    close.className = 'flex-none text-(--fg-faint) opacity-0 group-hover:opacity-100 hover:text-(--fg)';
     close.setAttribute('aria-label', `Close ${tab.label}`);
     close.innerHTML =
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
@@ -72,6 +62,15 @@ function renderTabs() {
       e.stopPropagation();
       if (typeof closeTab === 'function') closeTab(i);
     });
+
+    const div = document.createElement('div');
+    div.className =
+      'group flex shrink-0 items-center gap-2 border-r border-(--border) px-3 text-[12px]';
+    div.style.background = active ? 'var(--bg-alt)' : 'var(--bg)';
+    div.style.boxShadow = active ? 'inset 0 -2px 0 var(--accent)' : '';
+    if (active) a.classList.add('text-(--fg)');
+    else a.classList.add('text-(--fg-dim)', 'hover:text-(--accent)');
+    div.appendChild(a);
     div.appendChild(close);
     tabRoot.appendChild(div);
   }
@@ -100,71 +99,217 @@ function closeTab(index: number) {
   renderTabs();
 }
 
-function setupExplorerSections() {
-  const sections = sidebar?.querySelectorAll<HTMLDetailsElement>('.tree-sec');
-  if (!sections?.length) return;
-
-  let stored: Record<string, boolean> = {};
-  try {
-    stored = JSON.parse(sessionStorage.getItem(secKey) ?? '{}');
-  } catch {
-    stored = {};
-  }
-
-  const changed = Object.keys(stored).length === 0;
-  if (!changed) {
-    sections.forEach((s) => {
-      const id = s.dataset.sec;
-      if (id && id in stored) s.open = !!stored[id];
-    });
-  }
-
-  sections.forEach((s) => {
-    s.addEventListener('toggle', () => {
-      stored[s.dataset.sec ?? ''] = s.open;
-      sessionStorage.setItem(secKey, JSON.stringify(stored));
-    });
-  });
+/* ---- Document-level listeners: bound once per document (sentinel survives HMR),
+       every handler re-queries the live DOM so it survives view-transition swaps. ---- */
+function closeMobilePanel() {
+  const shell = document.getElementById('studio-shell');
+  if (!shell) return;
+  delete shell.dataset.mobilePanel;
+  document.querySelectorAll<HTMLButtonElement>('[data-mobile-toggle]').forEach((btn) =>
+    btn.setAttribute('aria-expanded', 'false')
+  );
 }
 
-function setup() {
-  normalize();
+function updateLocalTime() {
+  const timeEl = document.querySelector<HTMLElement>('[data-local-time]');
+  if (!timeEl) return;
+  const diffEl = document.querySelector<HTMLElement>('[data-local-time-diff]');
+  const date = new Date();
+  const hoursDiff = (date.getTimezoneOffset() - -420) / 60;
+  const diff =
+    hoursDiff === 0
+      ? 'same time'
+      : hoursDiff > 0
+        ? `${hoursDiff}h ahead`
+        : `${Math.abs(hoursDiff)}h behind`;
+  timeEl.textContent = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short',
+  }).format(date);
+  if (diffEl) diffEl.textContent = `- ${diff}`;
+}
+
+function updateCommitAgo() {
+  const commitLink = document.querySelector<HTMLElement>('[data-commit-time]');
+  const commitAgoEl = document.querySelector<HTMLElement>('[data-commit-ago]');
+  if (!commitLink || !commitAgoEl) return;
+  const date = new Date(commitLink.getAttribute('data-commit-time') ?? '');
+  if (Number.isNaN(date.getTime())) return;
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  let value: number;
+  let unit: Intl.RelativeTimeFormatUnit;
+  if (seconds < 60) {
+    value = seconds;
+    unit = 'second';
+  } else if (seconds < 3600) {
+    value = Math.floor(seconds / 60);
+    unit = 'minute';
+  } else if (seconds < 86400) {
+    value = Math.floor(seconds / 3600);
+    unit = 'hour';
+  } else {
+    value = Math.floor(seconds / 86400);
+    unit = 'day';
+  }
+  commitAgoEl.textContent = `· ${rtf.format(-value, unit)}`;
+}
+
+function closeVersionMenus() {
+  const popover = document.querySelector<HTMLElement>('[data-version-popover]');
+  if (!popover) return;
+  popover.hidden = true;
+  document.querySelector('[data-version-trigger]')?.setAttribute('aria-expanded', 'false');
+}
+
+function setupDocListeners() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMobilePanel();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeVersionMenus();
+  });
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const trigger = target.closest('[data-version-trigger]');
+    if (trigger) {
+      const popover = document.querySelector<HTMLElement>('[data-version-popover]');
+      const willOpen = !!popover?.hidden;
+      closeVersionMenus();
+      if (popover && willOpen) {
+        popover.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+      return;
+    }
+    if (target.closest('[data-version-item]')) return closeVersionMenus();
+    if (!target.closest('[data-version-popover]')) closeVersionMenus();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.querySelector<HTMLElement>('[data-ext-overlay]')?.hasAttribute('data-open')) {
+      document
+        .querySelector<HTMLElement>('[data-ext-overlay]')
+        ?.querySelector<HTMLButtonElement>('[data-ext-toggle]')
+        ?.click();
+    }
+  });
+  document.addEventListener(
+    'pointerdown',
+    (e) => {
+      const overlay = document.querySelector<HTMLElement>('[data-ext-overlay]');
+      if (overlay?.hasAttribute('data-open') && !(e.target as Element).closest('[data-ext-overlay]')) {
+        overlay.querySelector<HTMLButtonElement>('[data-ext-toggle]')?.click();
+      }
+    },
+    true
+  );
+
+  updateLocalTime();
+  setInterval(updateLocalTime, 30_000);
+  updateCommitAgo();
+  setInterval(updateCommitAgo, 60_000);
+}
+
+/* Bound once per unique node (sentinel on the node survives same-URL navigations
+   where ClientRouter reuses DOM without a swap, so listeners never double up). */
+function once(node: HTMLElement | null, event: string, handler: EventListener) {
+  if (!node) return;
+  const key = `shell:_${event}`;
+  if (node.dataset.shellBound === key) return;
+  node.dataset.shellBound = key;
+  node.addEventListener(event, handler);
+}
+
+/* ---- Per-page bindings: re-run on every navigation (astro:page-load). ---- */
+function bindShell() {
+  const tab = readCurrentTab();
+  normalize(tab);
   persist();
   renderTabs();
 
-  toggleSidebar?.addEventListener('click', () => {
-    sidebar?.classList.toggle('drawer-open');
-  });
-  sidebar?.querySelectorAll('a').forEach((a) =>
-    a.addEventListener('click', () => sidebar.classList.remove('drawer-open'))
+  const shell = document.getElementById('studio-shell');
+  const mobileToggles = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-mobile-toggle]'));
+  const mobileBackdrop = document.querySelector<HTMLElement>('[data-mobile-backdrop]');
+
+  mobileToggles.forEach((btn) =>
+    once(btn, 'click', () => {
+      if (!shell) return;
+      const panel = btn.dataset.mobileToggle ?? '';
+      const next = shell.dataset.mobilePanel === panel ? '' : panel;
+      if (next) shell.dataset.mobilePanel = next;
+      else delete shell.dataset.mobilePanel;
+      mobileToggles.forEach((b) =>
+        b.setAttribute('aria-expanded', String(b.dataset.mobileToggle === (shell.dataset.mobilePanel ?? '')))
+      );
+    })
   );
+  once(mobileBackdrop, 'click', closeMobilePanel as EventListener);
 
-  collapseSidebar?.addEventListener('click', () => {
-    const collapsed = sidebar?.classList.toggle('collapsed') ?? false;
-    localStorage.setItem('dawn:sidebarCollapsed', String(collapsed));
-  });
-  if (localStorage.getItem('dawn:sidebarCollapsed') === 'true') {
-    sidebar?.classList.add('collapsed');
-  }
+  document
+    .getElementById('sidebar')
+    ?.querySelectorAll('a')
+    .forEach((a) =>
+      once(a, 'click', () => {
+        if (window.innerWidth < 1024) closeMobilePanel();
+      })
+    );
 
-  /* rail: attribute on <html> + localStorage, transitioned via .app-grid */
-  toggleRail?.addEventListener('click', () => {
-    const hidden = document.documentElement.dataset.rail === 'hidden';
-    document.documentElement.dataset.rail = hidden ? '' : 'hidden';
-    localStorage.setItem('dawn:railHidden', hidden ? 'false' : 'true');
+  /* rail: attribute on <html> + localStorage, collapsed via .studio-workspace */
+  const railToggle = document.querySelector<HTMLButtonElement>('[data-rail-toggle]');
+  const isRailHidden = () => document.documentElement.dataset.rail === 'hidden';
+  const setRailLabel = () => {
+    const hidden = isRailHidden();
+    railToggle?.setAttribute('aria-expanded', String(!hidden));
+    railToggle?.setAttribute('data-tip', hidden ? 'show right rail' : 'hide right rail');
+  };
+  once(railToggle, 'click', () => {
+    document.documentElement.dataset.rail = isRailHidden() ? '' : 'hidden';
+    localStorage.setItem('dawn:railHidden', isRailHidden() ? 'true' : 'false');
+    setRailLabel();
   });
   if (localStorage.getItem('dawn:railHidden') === 'true') {
     document.documentElement.dataset.rail = 'hidden';
+    setRailLabel();
   }
 
-  toggleTheme?.addEventListener('click', () => {
-    const darkNow = document.documentElement.classList.contains('dark');
-    document.documentElement.classList.toggle('dark', !darkNow);
-    localStorage.setItem(themeKey, darkNow ? 'light' : 'dark');
-  });
-
-  setupExplorerSections();
+  /* EXTENSIONS overlay (sidebar floor) — instant open/close */
+  const extOverlay = document.querySelector<HTMLElement>('[data-ext-overlay]');
+  const extToggle = extOverlay?.querySelector<HTMLButtonElement>('[data-ext-toggle]');
+  const extList = document.getElementById('sidebar-ext-list') as HTMLUListElement | null;
+  if (extOverlay && extToggle && extList) {
+    const setOpen = (open: boolean) => {
+      if (open) {
+        extOverlay.setAttribute('data-open', '');
+        extList.hidden = false;
+      } else {
+        extOverlay.removeAttribute('data-open');
+        extList.hidden = true;
+      }
+      extToggle.setAttribute('aria-expanded', String(open));
+    };
+    once(extToggle, 'click', () => setOpen(!extOverlay.hasAttribute('data-open')));
+  }
 }
 
-setup();
-document.addEventListener('astro:page-load', setup);
+function boot() {
+  const root = document.documentElement;
+  if (root.hasAttribute('data-shell-boot')) return;
+  root.setAttribute('data-shell-boot', '');
+  setupDocListeners();
+}
+boot(); /* sync: needed because astro:page-load does not fire on the first load */
+bindShell();
+document.addEventListener('astro:page-load', bindShell);
+
+/* Persist UI state across view-transition swaps. The swapped-in document has SSR
+   defaults (rail open), and re-applying afterwards plays the collapse animation on
+   every navigation — carry the attribute onto the incoming doc before the swap. */
+document.addEventListener('astro:before-swap', (e) => {
+  const hidden = document.documentElement.dataset.rail === 'hidden';
+  (e as unknown as { detail?: { newDocument?: Document } }).detail?.newDocument
+    ?.querySelector(':root')
+    ?.toggleAttribute('data-rail', hidden);
+});

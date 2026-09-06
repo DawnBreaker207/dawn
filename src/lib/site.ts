@@ -5,7 +5,7 @@ export const GITHUB_REPO_PATH = `${GITHUB_OWNER}/${GITHUB_REPO}`;
 export const HOST = 'dawn';
 export const REPO_DIR = `~/${GITHUB_REPO_PATH}`;
 
-export const V1_URL = (import.meta.env.ASTRO_PUBLIC_V1_URL as string) || '#';
+export const V1_URL = (import.meta.env.PUBLIC_V1_URL as string) || '#';
 
 export interface Tab {
   id: string;
@@ -20,7 +20,13 @@ export function tabsFor(pathname: string) {
   if (pathname.startsWith('/blog')) return [{ id: 'blog', label: 'blog', path: '/blog' }];
   if (pathname.startsWith('/projects')) return [{ id: 'projects', label: 'projects', path: '/projects' }];
   if (pathname.startsWith('/about')) return [{ id: 'about', label: 'about.md', path: '/about' }];
-  if (pathname.startsWith('/tags')) return [{ id: 'tags', label: 'tags', path: '/tags' }];
+  if (pathname.startsWith('/topics')) return [{ id: 'topics', label: 'topics', path: '/topics' }];
+  if (pathname.startsWith('/lab')) {
+    const exp = pathname.match(/^\/lab\/([^/]+)/)?.[1];
+    return exp
+      ? [{ id: exp, label: `${exp}.astro`, path: `/lab/${exp}` }]
+      : [{ id: 'lab', label: 'lab', path: '/lab' }];
+  }
   return [];
 }
 
@@ -51,15 +57,15 @@ export const SITE = {
   },
   analytics: {
     umamiSharedUrl: `https://analytics.dawn.io.vn/share/Ab8a7GZONdRrjGJX`,
-    umamiWebsiteId: (import.meta.env.ASTRO_PUBLIC_UMAMI_WEBSITE_ID as string) || undefined,
+    umamiWebsiteId: (import.meta.env.PUBLIC_UMAMI_WEBSITE_ID as string) || undefined,
   },
   comments: {
     provider: 'giscus' as const,
     giscusConfig: {
-      repo: (import.meta.env.ASTRO_PUBLIC_GISCUS_REPO as string) || '',
-      repositoryId: (import.meta.env.ASTRO_PUBLIC_GISCUS_REPOSITORY_ID as string) || '',
-      category: (import.meta.env.ASTRO_PUBLIC_GISCUS_CATEGORY as string) || '',
-      categoryId: (import.meta.env.ASTRO_PUBLIC_GISCUS_CATEGORY_ID as string) || '',
+      repo: (import.meta.env.PUBLIC_GISCUS_REPO as string) || '',
+      repositoryId: (import.meta.env.PUBLIC_GISCUS_REPOSITORY_ID as string) || '',
+      category: (import.meta.env.PUBLIC_GISCUS_CATEGORY as string) || '',
+      categoryId: (import.meta.env.PUBLIC_GISCUS_CATEGORY_ID as string) || '',
       mapping: 'title' as const,
       reactions: '1',
       metadata: '0',
@@ -68,6 +74,9 @@ export const SITE = {
     },
   },
 } as const;
+
+export const SITE_URL =
+  (import.meta.env.PUBLIC_SITE_URL as string)?.replace(/\/+$/, '') || SITE.siteUrl;
 
 export const GISCUS_ENABLED = Boolean(
   SITE.comments.giscusConfig.repo &&

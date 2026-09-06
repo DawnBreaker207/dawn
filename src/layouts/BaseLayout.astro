@@ -11,17 +11,46 @@ import '@fontsource/space-grotesk/700.css';
 import '../styles/global.css';
 import '../styles/prism.css';
 import '../styles/twemoji.css';
-import Header from '@/components/header/Header.astro';
-import Footer from '@/components/footer/Footer.astro';
-import { SITE } from '@/lib/site';
+import { ClientRouter } from 'astro:transitions';
+import SidebarExplorer from '@/components/SidebarExplorer.astro';
+import TabBar from '@/components/TabBar.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import Rail from '@/components/Rail.astro';
+import TerminalFooter from '@/components/TerminalFooter.astro';
+import CommandPalette from '@/components/CommandPalette.tsx';
+import { getPosts, slugify } from '@/lib/utils/blog';
+import projectsData from '../../projectsData.json';
+import { SITE, SITE_URL, tabsFor } from '@/lib/site';
+import { headerNavLinks } from '@/lib/nav';
 
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;
 }
 
-const { title = SITE.title, description = SITE.description } = Astro.props;
+const { title = SITE.title, description = SITE.description, ogImage } = Astro.props;
+const ogUrl = ogImage ? `${SITE_URL}/og/${ogImage}.png` : SITE.socialBanner;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
+
+const activePath = Astro.url.pathname;
+const tabs = tabsFor(activePath);
+const siteNav = {
+  '/': 'README.md',
+  ...Object.fromEntries(headerNavLinks.map((link) => [link.href, link.title])),
+};
+
+const blogPosts = (await getPosts())
+  .slice(0, 5)
+  .map((p) => ({ title: p.data.title, desc: p.data.summary ?? '', route: `/blog/${p.id}` }));
+
+const projects = projectsData
+  .map((p) => ({
+    title: p.title,
+    desc: p.description ?? '',
+    route: `/projects#${slugify(p.title)}`,
+  }))
+  .filter((p) => p.title && p.route);
 ---
 
 <!doctype html>
@@ -30,7 +59,9 @@ const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
     <meta name="description" content={description} />
+    <link rel="canonical" href={`${SITE_URL}${Astro.url.pathname}`} />
 
     <link rel="apple-touch-icon" sizes="76x76" href="/static/favicons/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png" />
@@ -43,50 +74,53 @@ const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
 
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={SITE.socialBanner} />
+    <meta property="og:image" content={ogUrl} />
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content={SITE.socialBanner} />
+    <meta name="twitter:image" content={ogUrl} />
 
     <script is:inline>
       (function () {
         var t = localStorage.getItem('theme');
         var d = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.classList.toggle('dark', !!d);
+        if (localStorage.getItem('dawn:railHidden') === 'true')
+          document.documentElement.dataset.rail = 'hidden';
       })();
     </script>
     <title>{pageTitle}</title>
+    <ClientRouter />
   </head>
-  <body class="dark:bg-dark bg-white pl-[calc(100vw-100%)] text-black antialiased dark:text-white">
-    <div class="absolute inset-x-0 top-0 z-[-1] h-[60vh] overflow-hidden [mask-image:linear-gradient(white,transparent)]">
-      <svg
-        class="absolute inset-x-0 inset-y-[-30%] h-[160%] w-full skew-y-[-18deg] fill-black/[0.02] stroke-black/5 dark:fill-white/[.01] dark:stroke-white/[.025]"
-        aria-hidden="true"
-      >
-        <defs>
-          <pattern id="tilted-grid-pattern" width="72" height="56" patternUnits="userSpaceOnUse" x="50%" y="16">
-            <path d="M.5 56V.5H72" fill="none"></path>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" stroke-width="0" fill="url(#tilted-grid-pattern)"></rect>
-        <svg x="50%" y="16" class="overflow-visible">
-          <rect stroke-width="0" width="73" height="57" x="0" y="56"></rect>
-          <rect stroke-width="0" width="73" height="57" x="72" y="168"></rect>
-        </svg>
-      </svg>
+  <body data-sitenav={JSON.stringify(siteNav)} class="overflow-hidden antialiased">
+    <div id="studio-shell" class="studio-shell">
+      <div class="studio-workspace">
+        <SidebarExplorer activePath={activePath} />
+        <main class="studio-main">
+          <TabBar tabs={tabs} />
+          <div class="studio-content thin-scrollbar pt-6">
+            <div class="px-4 pb-1 sm:px-6 xl:px-10">
+              <Breadcrumb activePath={activePath} />
+            </div>
+            <div class="px-4 sm:px-6 xl:px-10">
+              <slot />
+            </div>
+          </div>
+        </main>
+        <Rail />
+        <div class="studio-backdrop lg:hidden" data-mobile-backdrop aria-hidden="true"></div>
+      </div>
+      <TerminalFooter />
     </div>
 
-    <section class="mx-auto max-w-3xl px-4 sm:px-6 xl:max-w-5xl xl:px-0">
-      <Header />
-      <main class="mt-20 mb-auto"><slot /></main>
-      <Footer />
-    </section>
+    <CommandPalette client:load blogPosts={blogPosts} projects={projects} />
 
     {SITE.analytics.umamiWebsiteId && (
       <script is:inline async defer data-website-id={SITE.analytics.umamiWebsiteId} src="/stats/script.js"></script>
     )}
     <script>import '@/scripts/site.ts';</script>
+    <script>import '@/scripts/app-shell.ts';</script>
+    <script>import '@/scripts/extras.ts';</script>
   </body>
 </html>

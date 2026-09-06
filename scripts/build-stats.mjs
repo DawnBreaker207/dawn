@@ -44,6 +44,7 @@ const stats = {
   files,
   stargazers,
   commit: sh('git rev-parse --short HEAD'),
+  commitDate: sh('git log -1 --format=%cI'),
   branch: sh('git branch --show-current') || 'main',
 };
 
