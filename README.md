@@ -7,7 +7,7 @@
     <a href="https://github.com/DawnBreaker207/dawn/pulls"><img src="https://img.shields.io/github/issues-pr/DawnBreaker207/dawn" alt="Pull Requests Badge"/></a>
     <a href="https://github.com/DawnBreaker207/dawn/issues"><img src="https://img.shields.io/github/issues/DawnBreaker207/dawn" alt="Issues Badge"/></a>
     <a href="https://github.com/DawnBreaker207/dawn/graphs/contributors"><img src="https://img.shields.io/github/contributors/DawnBreaker207/dawn?color=2b9348" alt="GitHub contributors" ></a>
-    <a href="https://github.com/DawnBreaker207/dawn/blob/master/LICENSE"><img src="https://img.shields.io/github/license/Karhdo/karhdo.dev?color=2b9348" alt="License Badge"/></a>
+    <a href="https://github.com/DawnBreaker207/dawn/blob/master/LICENSE"><img src="https://img.shields.io/github/license/DawnBreaker207/dawn?color=2b9348" alt="License Badge"/></a>
 </div>
 <br>
 <p align="center"><i>Loved the project? Please visit our <a href="">Website</a></i></p>
@@ -19,20 +19,23 @@
 
 ## Tech Stack
 
-This blog is hosted on [Vercel](https://vercel.com/), built with [Next.js](https://nextjs.org/) and [Tailwind CSS](https://tailwindcss.com/) using **Tailwind Nextjs Starter Blog**.
+[![Astro](https://img.shields.io/badge/astro-BC52EE?logo=astro&logoColor=white)](https://astro.build/)
+[![React](https://img.shields.io/badge/react-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/tailwindcss-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/typescript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Notion](https://img.shields.io/badge/notion-000000?logo=notion&logoColor=white)](https://www.notion.com/)
+[![Prisma](https://img.shields.io/badge/prisma-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Umami](https://img.shields.io/badge/umami-262626?logo=umami&logoColor=white)](https://umami.is/)
+[![Vercel](https://img.shields.io/badge/vercel-000?logo=vercel&logoColor=white)](https://vercel.com/)
 
-[![Next][Next.js]][Next-url] [![MDX][MDX]][MDX-url] [![Vercel][Vercel]][Vercel-url] [![React][React]][React-url] [![Typescript][Typescript]][Typescript-url] [![Tailwind CSS][Tailwind CSS]][Tailwind CSS-url]
+This blog site takes inspiration from [lehuynh.dev](https://leohuynh.dev/).
 
-This blog site takes inspiration from [lehuynh.dev](https://leohuynh.dev/) and [karhdo.dev](https://karhdo-blog.vercel.app). I appreciate [Karhdo](https://twitter.com/karhdo), [Leo Huynh](https://twitter.com/hta218_) and [Timothy Lin](https://twitter.com/timlrxx) for their contribution to this minimal, lightweight, and highly customizable blog starter.
+Highlights:
 
-A few major over-engineering-changes from the original repo:
-
-- ⚛️ Upgrading to **React 19**, **NextJS 15**, **Tailwind 4**
+- ⚛️ **Astro 7** + View Transitions, **React 19** islands, **Tailwind 4**
 - 🎉 Adopting **Typescript**, committing with [Conventional Commits](https://www.conventionalcommits.org/)
 - 🔌 Integrate [Notion](https://www.notion.com) for a CMS blog
 - 👀 Theming in dark mode with [Tokyonight Neovim](https://github.com/folke/tokyonight.nvim) Theme colors for better contrast.
-- 👨‍💻 My website refers to the design and code from the [karhdo.dev](https://karhdo-blog.vercel.app) and [lehuynh.dev](https://leohuynh.dev/) repository and incorporates the tailwind-nextjs-starter-blog template, version 1.0.
-- 📥 Bumping up `mdx-bundler`, `rehype`/`remark` plugins and dependencies to the latest version
 
 ## Express Your Support
 
@@ -47,19 +50,3 @@ Extending sincere thanks for these exceptional resources 🙏
 ---
 
 <p align="center"><b>Copyright © 2025 - Tung Anh</b></p>
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[Next-url]: https://nextjs.org/
-[Typescript]: https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white
-[Typescript-url]: https://www.typescriptlang.org/
-[Tailwind CSS]: https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white
-[Tailwind CSS-url]: https://tailwindcss.com/
-[MDX]: https://img.shields.io/badge/MDX-000000?style=for-the-badge&logo=mdx&logoColor=white
-[MDX-url]: https://mdxjs.com/
-[React]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://reactjs.org/
-[Vercel]: https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white
-[Vercel-url]: https://vercel.com/
