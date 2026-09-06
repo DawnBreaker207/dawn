@@ -1,0 +1,99 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export const prerender = true;
+
+const commands: Array<[string, string]> = [
+  ['help', 'show this manual'],
+  ['blog list', 'list all posts (id + title)'],
+  ['blog go <id>', 'open a post by its id'],
+  ['projects list', 'list all projects'],
+  ['projects go <id>', 'open a project by its id'],
+  ['about', 'about the author'],
+  ['theme <dark | light | system>', 'switch color scheme'],
+  ['clear', 'clear the terminal'],
+  ['exit', 'close the terminal'],
+];
+
+const shortcuts: Array<[string, string]> = [
+  ['Ctrl / ⌘ + K', 'open the command terminal from anywhere'],
+  ['Esc', 'close the terminal / suggestions'],
+  ['Tab', 'accept the highlighted suggestion'],
+  ['↑ / ↓', 'move through the suggestion list'],
+  ['Enter', 'run a command or open the highlighted result'],
+  ['/', 'open the terminal to search from anywhere'],
+  ['t', 'toggle light / dark theme'],
+  ['g → h / b / p', 'go to home / blog / projects'],
+];
+---
+
+<BaseLayout title="Help">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      help
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      This site is built like a developer's editor: everything is reachable from the
+      keyboard. Here's the manual.
+    </p>
+  </header>
+
+  <section class="pal-help max-w-[56rem] text-[13px] leading-relaxed">
+    <h2 class="pal-h">Command terminal</h2>
+    <p>
+      Press <kbd>Ctrl K</kbd> (or <kbd>⌘ K</kbd>) anywhere to open the command terminal.
+      It works in two modes at once:
+    </p>
+    <ul class="pal-list">
+      <li>
+        <strong>Commands</strong> — type one of the commands below. Autocomplete works like a
+        shell: <kbd>Tab</kbd> accepts the highlighted suggestion, <kbd>↑</kbd>/<kbd>↓</kbd> move
+        through the list, <kbd>Enter</kbd> runs it.
+      </li>
+      <li>
+        <strong>Search</strong> — type anything that isn't a command (e.g.{' '}
+        <code>angular</code>) and it lists matching posts, pages, and projects. Press{' '}
+        <kbd>Enter</kbd> (or click/Tab) to open the highlighted one.
+      </li>
+    </ul>
+    <ul class="pal-list">
+      {commands.map(([cmd, usage]) => (
+        <li>
+          <span class="pal-help-cmd">{cmd}</span>
+          <span>{usage}</span>
+        </li>
+      ))}
+    </ul>
+
+    <h2 class="pal-h">Keyboard shortcuts</h2>
+    <ul class="pal-list">
+      {shortcuts.map(([key, action]) => (
+        <li>
+          <span class="pal-help-cmd">
+            <kbd>{key}</kbd>
+          </span>
+          <span>{action}</span>
+        </li>
+      ))}
+    </ul>
+    <p>
+      Shortcuts are ignored while you're typing inside an input or a code editor, so they
+      never get in the way.
+    </p>
+
+    <h2 class="pal-h">On every page</h2>
+    <ul class="pal-list">
+      <li><code>/</code> — open the command terminal and start searching; the footer <strong>?</strong> icon opens this manual.</li>
+      <li><code>t</code> — flip between light and dark theme; the footer ◐ button and the
+      <code>theme</code> command do the same.</li>
+      <li>Footer <span class="pal-help-cmd"> &gt;_</span> opens the terminal lab.</li>
+      <li>Footer <span class="pal-help-cmd"> ?</span> opens this help page.</li>
+      <li>Footer version switcher lets you jump between the <code>main</code> and{' '}
+        <code>v1</code> layouts.</li>
+      <li>Every article shows a reading-progress bar, a table of contents, related posts,
+      and copy buttons with a language badge on each code block.</li>
+      <li>RSS: <a href="/rss.xml" class="underline decoration-(--border) underline-offset-3 hover:decoration-(--fg)">/rss.xml</a> ·
+      sitemap: <a href="/sitemap.xml" class="underline decoration-(--border) underline-offset-3 hover:decoration-(--fg)">/sitemap.xml</a>.</li>
+    </ul>
+  </section>
+</BaseLayout>

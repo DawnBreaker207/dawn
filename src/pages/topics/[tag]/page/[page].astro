@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import ListLayoutWithTags from '@/layouts/ListLayoutWithTags.astro';
+import ListLayout from '@/layouts/ListLayout.astro';
 import { getPosts, slugify, POSTS_PER_PAGE } from '@/lib/utils/blog';
 
 export const prerender = true;
@@ -29,25 +29,14 @@ const initialDisplayPosts = filteredPosts.slice(
   POSTS_PER_PAGE * currentPage
 );
 
-const tagTitle = tag[0].toUpperCase() + tag.split(' ').join('-').slice(1);
-
-const counts = new Map<string, number>();
-for (const post of posts) {
-  for (const t of post.data.tags) {
-    counts.set(t, (counts.get(t) ?? 0) + 1);
-  }
-}
-const sortedTags = [...counts.keys()]
-  .map((t) => ({ tag: t, count: counts.get(t) ?? 0 }))
-  .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+const tagNames = [...new Set(posts.flatMap((p) => p.data.tags))];
+const title = tagNames.find((t) => slugify(t) === tag) ?? tag;
 ---
 
-<BaseLayout title={tagTitle}>
-  <ListLayoutWithTags
-    title={tagTitle}
+<BaseLayout title={title}>
+  <ListLayout
+    title={title}
     posts={initialDisplayPosts}
-    sortedTags={sortedTags}
-    activeTag={tag}
-    pagination={{ currentPage, totalPages, basePath: `tags/${tag}` }}
+    pagination={{ currentPage, totalPages, basePath: `topics/${tag}` }}
   />
 </BaseLayout>

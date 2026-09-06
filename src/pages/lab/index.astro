@@ -1,0 +1,72 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout title="Lab">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      lab
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      A little corner for playable things — small games, experiments, and tools I like to tinker
+      with.
+    </p>
+  </header>
+
+  <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-6">
+      <div class="flex items-center gap-2.5">
+        <span class="text-[20px] font-semibold tracking-[-0.02em] text-(--fg)">Terminal</span>
+        <span class="rounded-sm border border-(--accent) px-1.5 py-0.5 font-mono text-[10px] text-(--accent)">
+          Playable
+        </span>
+      </div>
+      <p class="mt-1.5 text-sm text-(--fg-dim)">
+        The command-line REPL for this site — try <span class="font-mono">help</span>,{' '}
+        <span class="font-mono">about</span>, or <span class="font-mono">blog go 1</span>.
+      </p>
+      <button
+        type="button"
+        data-open-terminal
+        class="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-(--border) bg-(--bg) px-3.5 py-2 font-mono text-xs text-(--fg) shadow-[3px_3px_0_var(--border)] transition-colors hover:text-(--accent) active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_var(--border)]"
+      >
+        <span aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m5 6 6 6-6 6M12 18h7" />
+          </svg>
+        </span>
+        <span>Open terminal</span>
+        <span class="ml-1 text-(--fg-faint)">Ctrl+K</span>
+      </button>
+    </div>
+
+    <div class="rounded-xl border border-dashed border-(--border) p-6 font-mono text-sm text-(--fg-faint)">
+      More experiments coming soon.
+    </div>
+
+    <a
+      href="/lab/spider"
+      class="block rounded-xl border border-(--border) bg-(--bg-alt) p-6 no-underline"
+    >
+      <div class="flex items-center gap-2.5">
+        <span class="text-[20px] font-semibold tracking-[-0.02em] text-(--fg)">Spider</span>
+        <span class="rounded-sm border border-(--accent) px-1.5 py-0.5 font-mono text-[10px] text-(--accent)">
+          Playable
+        </span>
+      </div>
+      <p class="mt-1.5 text-sm text-(--fg-dim)">
+        Interactive web drawing — two spiders follow your cursor. Move to draw.
+      </p>
+      <span class="mt-4 inline-flex items-center gap-1 font-mono text-xs text-(--accent)">
+        <span aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7 17 17 7M8 7h9v9" />
+          </svg>
+        </span>
+        <span>Open spider</span>
+      </span>
+    </a>
+  </section>
+</BaseLayout>

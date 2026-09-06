@@ -1,0 +1,63 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { BOOKS } from '@/lib/books';
+
+export const prerender = true;
+
+const reading = BOOKS.filter((b) => b.status === 'reading');
+const read = BOOKS.filter((b) => b.status === 'read');
+---
+
+<BaseLayout title="Books">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      books
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      What I've read, and what I'm reading right now.
+    </p>
+  </header>
+
+  <section class="space-y-6">
+    <div>
+      <h2 class="mb-3 font-mono text-sm font-medium uppercase tracking-[0.1em] text-(--fg-dim)">
+        currently reading <span class="text-(--accent-dim)">({reading.length})</span>
+      </h2>
+      {reading.length ? (
+        <ul class="space-y-2 font-mono text-[13px]">
+          {reading.map((book) => (
+            <li class="!my-0">
+              <span class="mr-2 text-(--accent-dim)">▸</span>
+              <strong>{book.title}</strong>
+              <span class="text-(--fg-dim)"> — {book.author}</span>
+              {book.progress && (
+                <span class="ml-2 text-[12px] text-(--fg-faint)">{book.progress}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="font-mono text-[13px] text-(--fg-faint)">Nothing here yet.</p>
+      )}
+    </div>
+
+    <div>
+      <h2 class="mb-3 font-mono text-sm font-medium uppercase tracking-[0.1em] text-(--fg-dim)">
+        read <span class="text-(--accent-dim)">({read.length})</span>
+      </h2>
+      {read.length ? (
+        <ul class="space-y-2 font-mono text-[13px]">
+          {read.map((book) => (
+            <li class="!my-0">
+              <span class="mr-2 text-(--accent-dim)">✓</span>
+              <strong>{book.title}</strong>
+              <span class="text-(--fg-dim)"> — {book.author}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="font-mono text-[13px] text-(--fg-faint)">Nothing here yet.</p>
+      )}
+    </div>
+  </section>
+</BaseLayout>
