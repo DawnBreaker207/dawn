@@ -217,9 +217,9 @@ function setupDocListeners() {
    where ClientRouter reuses DOM without a swap, so listeners never double up). */
 function once(node: HTMLElement | null, event: string, handler: EventListener) {
   if (!node) return;
-  const key = `shell:_${event}`;
-  if (node.dataset.shellBound === key) return;
-  node.dataset.shellBound = key;
+  const key = `shellBound${event}`;
+  if (node.dataset[key] === '1') return;
+  node.dataset[key] = '1';
   node.addEventListener(event, handler);
 }
 
