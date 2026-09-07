@@ -1,0 +1,11 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: cls } = Astro.props;
+---
+
+<div
+  class={`absolute z-[-1] bg-cover bg-center bg-[url("/static/images/black-grit.png")] dark:bg-[url("/static/images/white-grit.png")] ${cls ?? ''}`}
+></div>

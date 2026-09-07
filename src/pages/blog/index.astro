@@ -1,0 +1,20 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ListLayout from '@/layouts/ListLayout.astro';
+import { getPosts } from '@/lib/utils/blog';
+
+export const prerender = true;
+
+const POSTS_PER_PAGE = 10;
+const posts = await getPosts();
+const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+const initialDisplayPosts = posts.slice(0, POSTS_PER_PAGE);
+---
+
+<BaseLayout title="Blog">
+  <ListLayout
+    title="All Posts"
+    posts={initialDisplayPosts}
+    pagination={{ currentPage: 1, totalPages, basePath: 'blog' }}
+  />
+</BaseLayout>

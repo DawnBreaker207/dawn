@@ -1,0 +1,121 @@
+---
+import { getCollection } from 'astro:content';
+import projectsData from '../../projectsData.json';
+
+interface Props {
+  activePath: string;
+}
+
+const { activePath } = Astro.props;
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const recent = sortedPosts.slice(0, 8);
+
+const inBlog = activePath.startsWith('/blog');
+const inProjects = activePath.startsWith('/projects');
+const inStatic = activePath.startsWith('/about') || activePath.startsWith('/faq');
+---
+
+<aside
+  id="sidebar"
+  class="min-w-0 shrink-0 flex-col border-r border-(--border) bg-(--bg) overflow-y-auto"
+>
+  <div class="tree-head flex items-center gap-2 px-3 py-2 text-[11px] tracking-[0.12em] text-(--fg-faint) uppercase">
+    <span class="tree-title">Explorer</span>
+    <button
+      id="collapse-sidebar"
+      type="button"
+      class="tip ml-auto px-1 py-0.5 text-(--fg-faint) hover:text-(--fg)"
+      data-tip="Thu gọn sidebar"
+      aria-label="Collapse explorer"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    </button>
+  </div>
+
+  <nav class="flex-1 py-1">
+    <a
+      href="/"
+      class:list={['tip flex items-center gap-2 px-3 py-[3px] text-[13px] hover:bg-(--bg-alt)', activePath === '/' && 'bg-(--bg-alt) text-(--fg)']}
+      data-tip="README.md"
+      aria-current={activePath === '/' ? 'page' : undefined}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-(--fg-faint)">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+      </svg>
+      <span class="row-label truncate">README.md</span>
+    </a>
+
+    <details class="tree-sec" data-sec="blog" open={inBlog ? true : undefined}>
+      <summary>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chev shrink-0">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+        <span class="row-label">blog/</span>
+      </summary>
+      {recent.map((post) => (
+        <a
+          href={`/blog/${post.id}`}
+          class:list={['tree-file tip', activePath === `/blog/${post.id}` && 'bg-(--bg-alt) text-(--fg)']}
+          data-tip={`${post.id}.mdx`}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-(--fg-faint)">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+          </svg>
+          <span class="row-label truncate">{post.id}.mdx</span>
+        </a>
+      ))}
+      <a href="/blog" class="tree-file leaf">
+        xem tất cả →
+      </a>
+    </details>
+
+    <details class="tree-sec" data-sec="projects" open={inProjects ? true : undefined}>
+      <summary>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chev shrink-0">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+        <span class="row-label">projects/</span>
+      </summary>
+      {projectsData.map((project) => (
+        <a href="/projects" class="tree-file tip" data-tip={`${project.title}.mdx`}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-(--fg-faint)">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+          </svg>
+          <span class="row-label truncate">{project.title}.mdx</span>
+        </a>
+      ))}
+    </details>
+
+    <details class="tree-sec" data-sec="docs" open={inStatic ? true : undefined}>
+      <summary>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chev shrink-0">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+        <span class="row-label">docs/</span>
+      </summary>
+      {['about', 'faq'].map((slug) => (
+        <a
+          href={`/${slug}`}
+          class:list={['tree-file tip', activePath === `/${slug}` && 'bg-(--bg-alt) text-(--fg)']}
+          data-tip={`${slug}.md`}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-(--fg-faint)">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+          </svg>
+          <span class="row-label truncate">{slug}.md</span>
+        </a>
+      ))}
+    </details>
+  </nav>
+</aside>

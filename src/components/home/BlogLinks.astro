@@ -1,0 +1,21 @@
+---
+import Link from '@/components/ui/Link.astro';
+import Twemoji from '@/components/ui/Twemoji.astro';
+import GrowingUnderline from '@/components/ui/GrowingUnderline.astro';
+
+const LINKS = [
+  { title: 'My Blogs', href: '/blog', emoji: 'memo', event: 'home-link-blog' },
+  { title: ' My Side Project', href: '/projects', emoji: 'hammer-and-wrench', event: 'home-link-projects' },
+  { title: 'About me', href: '/about', emoji: 'face-with-monocle', event: 'home-link-about' },
+  { title: 'My careers', href: '/about', emoji: 'briefcase', event: 'home-link-resume' },
+];
+---
+
+<div class="flex flex-col justify-between gap-5">
+  {LINKS.map(({ title, href, emoji, event }) => (
+    <Link href={href} class="flex items-center gap-1.5">
+      <Twemoji emoji={emoji} />
+      <GrowingUnderline data-umami-event={event} class="leading-6">{title}</GrowingUnderline>
+    </Link>
+  ))}
+</div>

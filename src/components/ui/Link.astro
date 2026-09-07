@@ -1,0 +1,25 @@
+---
+interface Props {
+  href: string;
+  class?: string;
+  'aria-label'?: string;
+  title?: string;
+  rel?: string;
+  'data-umami-event'?: string;
+}
+
+const { href, class: cls } = Astro.props;
+const rest = Object.fromEntries(
+  Object.entries(Astro.props).filter(([k]) => !['href', 'class'].includes(k))
+);
+const isInternal = href.startsWith('/');
+---
+
+<a
+  href={href}
+  class={`break-words ${cls ?? ''}`}
+  {...(!isInternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+  {...rest}
+>
+  <slot />
+</a>

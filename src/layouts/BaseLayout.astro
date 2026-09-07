@@ -1,0 +1,92 @@
+---
+import '@fontsource/outfit/400.css';
+import '@fontsource/outfit/500.css';
+import '@fontsource/outfit/600.css';
+import '@fontsource/outfit/700.css';
+import '@fontsource/outfit/800.css';
+import '@fontsource/space-grotesk/400.css';
+import '@fontsource/space-grotesk/500.css';
+import '@fontsource/space-grotesk/600.css';
+import '@fontsource/space-grotesk/700.css';
+import '../styles/global.css';
+import '../styles/prism.css';
+import '../styles/twemoji.css';
+import Header from '@/components/header/Header.astro';
+import Footer from '@/components/footer/Footer.astro';
+import { SITE } from '@/lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = SITE.title, description = SITE.description } = Astro.props;
+const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
+---
+
+<!doctype html>
+<html lang={SITE.language} class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+
+    <link rel="apple-touch-icon" sizes="76x76" href="/static/favicons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png" />
+    <link rel="manifest" href="/static/favicons/site.webmanifest" />
+    <link rel="mask-icon" href="/static/favicons/safari-pinned-tab.svg" color="#5bbad5" />
+    <meta name="msapplication-TileColor" content="#000000" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
+
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={SITE.socialBanner} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={SITE.socialBanner} />
+
+    <script is:inline>
+      (function () {
+        var t = localStorage.getItem('theme');
+        var d = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', !!d);
+      })();
+    </script>
+    <title>{pageTitle}</title>
+  </head>
+  <body class="dark:bg-dark bg-white pl-[calc(100vw-100%)] text-black antialiased dark:text-white">
+    <div class="absolute inset-x-0 top-0 z-[-1] h-[60vh] overflow-hidden [mask-image:linear-gradient(white,transparent)]">
+      <svg
+        class="absolute inset-x-0 inset-y-[-30%] h-[160%] w-full skew-y-[-18deg] fill-black/[0.02] stroke-black/5 dark:fill-white/[.01] dark:stroke-white/[.025]"
+        aria-hidden="true"
+      >
+        <defs>
+          <pattern id="tilted-grid-pattern" width="72" height="56" patternUnits="userSpaceOnUse" x="50%" y="16">
+            <path d="M.5 56V.5H72" fill="none"></path>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" stroke-width="0" fill="url(#tilted-grid-pattern)"></rect>
+        <svg x="50%" y="16" class="overflow-visible">
+          <rect stroke-width="0" width="73" height="57" x="0" y="56"></rect>
+          <rect stroke-width="0" width="73" height="57" x="72" y="168"></rect>
+        </svg>
+      </svg>
+    </div>
+
+    <section class="mx-auto max-w-3xl px-4 sm:px-6 xl:max-w-5xl xl:px-0">
+      <Header />
+      <main class="mt-20 mb-auto"><slot /></main>
+      <Footer />
+    </section>
+
+    {SITE.analytics.umamiWebsiteId && (
+      <script is:inline async defer data-website-id={SITE.analytics.umamiWebsiteId} src="/stats/script.js"></script>
+    )}
+    <script>import '@/scripts/site.ts';</script>
+  </body>
+</html>

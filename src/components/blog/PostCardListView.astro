@@ -1,0 +1,73 @@
+---
+import Link from '@/components/ui/Link.astro';
+import GrowingUnderline from '@/components/ui/GrowingUnderline.astro';
+import GritBackground from '@/components/ui/GritBackground.astro';
+import TagsList from '@/components/ui/Tag.astro';
+import { SITE, formatDate } from '@/lib/site';
+import { readingMinutes, type Post } from '@/lib/utils/blog';
+
+interface Props {
+  post: Post;
+  loading?: 'lazy' | 'eager';
+}
+
+const { post, loading = 'lazy' } = Astro.props;
+const { id, data } = post;
+const image = data.images && data.images.length > 0 ? data.images[0] : SITE.socialBanner;
+const minutes = readingMinutes(post);
+---
+
+<article>
+  <div class="flex flex-col gap-2 space-y-3 md:flex-row md:gap-8">
+    <Link
+      href={`/blog/${id}`}
+      class="relative block h-auto w-full shrink-0 pt-0 pr-3 pb-3 pl-0 transition-all ease-in-out hover:pt-1 hover:pr-2 hover:pb-2 hover:pl-1 md:h-80 md:w-72"
+    >
+      <img
+        src={image}
+        alt={data.title}
+        width="500"
+        height="500"
+        loading={loading}
+        class="aspect-video h-full w-full rounded-xl shadow-2xl"
+      />
+      <GritBackground
+        class="top-3 right-0 bottom-0 left-3 rounded-xl border-2 border-gray-800 dark:border-gray-400"
+      />
+    </Link>
+    <div class="space-y-4 md:space-y-5">
+      <div class="space-y-4 md:space-y-6">
+        <div class="space-y-3">
+          <dl class="text-sm">
+            <dt class="sr-only">Published on</dt>
+            <dd class="leading-6 font-medium text-gray-500 dark:text-gray-400">
+              <time datetime={data.date.toISOString()}>{formatDate(data.date)}</time>
+              <span class="mx-2 text-gray-400">/</span>
+              <span>{minutes} mins read</span>
+            </dd>
+          </dl>
+          <h2 class="pb-1 text-xl font-bold tracking-tight md:text-2xl">
+            <Link href={`/blog/${id}`} class="text-gray-900 dark:text-gray-100">
+              <GrowingUnderline data-umami-event="latest-post-title" duration={500}>
+                {data.title}
+              </GrowingUnderline>
+            </Link>
+          </h2>
+          <TagsList tags={data.tags} />
+        </div>
+        <div class="text-gray-500 line-clamp-2 md:line-clamp-3 dark:text-gray-400">
+          {data.summary}
+        </div>
+      </div>
+      <div class="text-base leading-6 font-medium">
+        <Link
+          href={`/blog/${id}`}
+          class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300"
+          aria-label={`Read "${data.title}"`}
+        >
+          <GrowingUnderline data-umami-event="latest-post-read-more">Read article →</GrowingUnderline>
+        </Link>
+      </div>
+    </div>
+  </div>
+</article>

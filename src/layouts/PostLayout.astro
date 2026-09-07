@@ -1,0 +1,81 @@
+---
+import PageTitle from '@/components/ui/PageTitle.astro';
+import ScrollTopAndComment from '@/components/ui/ScrollTopAndComment.astro';
+import BlogTags from '@/components/blog/BlogTags.astro';
+import BlogMeta from '@/components/blog/BlogMeta.astro';
+import TableOfContents from '@/components/blog/TableOfContents.astro';
+import Reactions from '@/components/blog/Reactions.astro';
+import BlogNav from '@/components/blog/BlogNav.astro';
+import { GISCUS_ENABLED, SITE } from '@/lib/site';
+
+interface Props {
+  title: string;
+  tags: string[];
+  date: Date;
+  slug: string;
+  minutes: number;
+  toc: { value: string; url: string; depth: number }[];
+  next?: { path: string; title: string };
+  prev?: { path: string; title: string };
+}
+
+const { title, tags, date, slug, minutes, toc, next, prev } = Astro.props;
+---
+
+<section class="mx-auto max-w-3xl px-4 sm:px-6 xl:max-w-5xl xl:px-0">
+  <ScrollTopAndComment />
+
+  <article>
+    <header>
+      <div class="dark:border-gray space-y-1 border-b border-gray-200 pb-10">
+        <div class="space-y-6">
+          <PageTitle>{title}</PageTitle>
+          <BlogTags tags={tags} />
+          <dl>
+            <div>
+              <dt class="sr-only">Published on</dt>
+              <BlogMeta date={date} slug={slug} minutes={minutes} />
+            </div>
+          </dl>
+        </div>
+      </div>
+    </header>
+
+    <main class="grid grid-cols-1 gap-12 pt-8 lg:grid-cols-12 lg:pt-10">
+      <div class="divide-y divide-gray-200 lg:col-span-8 xl:col-span-9 dark:divide-gray-700">
+        <div class="prose lg:prose-lg max-w-none lg:pb-8">
+          <slot />
+        </div>
+      </div>
+
+      <div class="hidden lg:col-span-4 lg:block xl:col-span-3">
+        <div class="space-y-4 divide-y divide-gray-200 lg:sticky lg:top-16 dark:divide-gray-700">
+          <TableOfContents toc={toc} />
+          <Reactions class="pt-6" slug={slug} />
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <BlogNav next={next} prev={prev} />
+
+      {GISCUS_ENABLED && (
+        <div class="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment" data-giscus>
+          <script type="application/json" data-giscus-config>
+            {JSON.stringify({
+              'data-repo': SITE.comments.giscusConfig.repo,
+              'data-repo-id': SITE.comments.giscusConfig.repositoryId,
+              'data-category': SITE.comments.giscusConfig.category,
+              'data-category-id': SITE.comments.giscusConfig.categoryId,
+              'data-mapping': SITE.comments.giscusConfig.mapping,
+              'data-reactions-enabled': SITE.comments.giscusConfig.reactions,
+              'data-emit-metadata': SITE.comments.giscusConfig.metadata,
+              'data-theme': SITE.comments.giscusConfig.theme,
+              'data-lang': 'en',
+            })}
+          </script>
+        </div>
+      )}
+    </footer>
+  </article>
+</section>

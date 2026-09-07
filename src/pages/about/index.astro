@@ -1,0 +1,107 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AuthorLayout from '@/layouts/AuthorLayout.astro';
+import Button from '@/components/ui/Button.astro';
+import Twemoji from '@/components/ui/Twemoji.astro';
+import CareerTimeline from '@/components/about/CareerTimeline.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout title="About">
+  <AuthorLayout title="About" description="Further insights into who I am and the purpose of this blog.">
+        <h2>
+          Hello, folks! <Twemoji class="mx-2" emoji="waving-hand" /> I'm Tung Anh
+        </h2>
+        <p>
+          I have a passion for <strong>Java</strong>, <strong>TypeScript</strong>, and web
+          development. I'm currently <strong>starting my journey</strong> as a{' '}
+          <strong>software engineer</strong>. I mainly work with <strong>Angular</strong> and{' '}
+          <strong>Spring</strong>.
+        </p>
+        <p>
+          I created this blog to share insights, best practices, and lessons learned throughout my
+          journey as a software engineering.
+        </p>
+        <p>
+          I believe that writing is one of the best ways to learn, and I hope what you find
+          something here that helps you on your own journey as a developer.
+        </p>
+        <p>
+          I'd love to hear your thoughts and feedback on my posts{' '}
+          <Twemoji emoji="clinking-beer-mugs" />
+        </p>
+        <div class="flex items-center justify-between">
+          <h2>My Career</h2>
+
+          <Button href="/static/resume.pdf" target="_blank">
+            <span>Resume</span>
+            <Twemoji emoji="page-facing-up" />
+          </Button>
+        </div>
+        <CareerTimeline />
+
+        <h2>Tech stack</h2>
+        <p>
+          This blog is built with{' '}
+          <a target="_blank" href="https://nextjs.org">Next.js</a>,{' '}
+          <a target="_blank" href="https://tailwindcss.com">Tailwind CSS</a> using{' '}
+          <strong>Tailwind Nextjs Starter Blog</strong> template.
+        </p>
+
+        <p>
+          This blog site takes inspiration from{' '}
+          <a target="_blank" href="https://github.com/Karhdo/karhdo.dev">karhdo.dev</a> and{' '}
+          <a target="_blank" href="https://github.com/hta218/leohuynh.dev">leohuynh.dev</a>. I
+          appreciate <a target="_blank" href="https://twitter.com/karhdo">Khanh Do</a>,{' '}
+          <a target="_blank" href="https://twitter.com/hta218">Leo Huynh</a>, and{' '}
+          <a target="_blank" href="https://twitter.com/timlrxx">Timothy Lin</a> for their
+          contributions to this minimal, lightweight, and highly customizable blog starter.
+        </p>
+
+        <p>A few major over-engineering-changes from the original repo:</p>
+
+        <ul>
+          <li>
+            <Twemoji class="!mr-2" emoji="atom-symbol" /> Upgrading to{' '}
+            <strong>React 18</strong>, <strong>Next 14</strong>.
+          </li>
+          <li>
+            <Twemoji class="!mr-2" emoji="party-popper" /> Adopting <strong>Typescript</strong>,
+            committing with{' '}
+            <a target="_blank" href="https://www.conventionalcommits.org">Conventional Commits</a>
+          </li>
+          <li>
+            <Twemoji class="!mr-2" emoji="electric-plug" />
+            Integrated <a target="_blank" href="https://www.notion.com">Notion</a> as a CMS for the
+            blog
+          </li>
+          <li>
+            <Twemoji class="!mr-2" emoji="bar-chart" /> Monitoring site with{' '}
+            <a target="_blank" href="https://umami.is/">Umami</a> website analytics
+          </li>
+          <li>
+            <Twemoji class="!mr-2" emoji="eyes" /> Implemented dark mode theming inspired by{' '}
+            <a target="_blank" href="https://github.com/folke/tokyonight.nvim">Tokyonight Neovim Theme</a>{' '}
+            for better contrast.
+          </li>
+          <li>
+            <Twemoji class="!mr-2" emoji="man-technologist" /> My website refers to the design and
+            code from the many repository and incorporates the tailwind-nextjs-starter-blog
+            template, version 2.0.
+          </li>
+          <li>
+            <Twemoji class="!mr-2" emoji="inbox-tray" /> Bumping up <code>mdx-bundler</code>,{' '}
+            <code>rehype</code>/<code>remark</code> plugins and dependencies to the latest version
+          </li>
+        </ul>
+
+        <p>
+          Check out the{' '}
+          <a target="_blank" href="https://github.com/DawnBreaker207/Personal-Blog">
+            repository
+          </a>{' '}
+          for this blog.
+        </p>
+  </AuthorLayout>
+</BaseLayout>

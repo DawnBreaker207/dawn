@@ -1,0 +1,67 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Greeting from '@/components/home/Greeting.astro';
+import Heading from '@/components/home/Heading.astro';
+import TypedBios from '@/components/home/TypedBios.astro';
+import ShortDescription from '@/components/home/ShortDescription.astro';
+import BlogLinks from '@/components/home/BlogLinks.astro';
+import ProfileCard from '@/components/profile/ProfileCard.astro';
+import Twemoji from '@/components/ui/Twemoji.astro';
+import Link from '@/components/ui/Link.astro';
+import PostCardListView from '@/components/blog/PostCardListView.astro';
+import { getPosts } from '@/lib/utils/blog';
+
+export const prerender = true;
+
+const MAX_DISPLAY = 5;
+const posts = await getPosts();
+---
+
+<BaseLayout>
+  <div class="relative space-y-6 pt-4 md:space-y-24 lg:pt-12">
+    <div class="mt-8 md:mt-8 dark:divide-gray-700">
+      <div class="pt-6 xl:grid xl:grid-cols-3">
+        <div class="hidden pt-8 xl:block">
+          <ProfileCard />
+        </div>
+        <div class="space-y-4 md:space-y-6 md:pl-16 xl:col-span-2">
+          <Greeting />
+          <div class="text-base leading-7 text-gray-600 md:text-lg md:leading-8 dark:text-gray-400">
+            <Heading />
+            <TypedBios />
+            <ShortDescription />
+            <BlogLinks />
+            <p class="my-6 flex md:my-8">
+              <span class="mr-2">Happy reading</span>
+              <Twemoji emoji="clinking-beer-mugs" />
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divide-y divide-gray-200 dark:divide-gray-700">
+      <div class="flex items-center justify-between space-y-2 py-6 font-bold sm:text-2xl sm:leading-10 md:space-y-5 md:text-4xl">
+        <div class="space-y-4">
+          <span class="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:mr-3 md:text-5xl md:leading-14 dark:text-gray-100">
+            Latest Posts
+          </span>
+        </div>
+        <div class="items-center justify-end text-base leading-6 font-medium">
+          <Link href="/blog" class="text-primary hover:text-sky-600 dark:hover:text-sky-400" aria-label="All posts">
+            All Posts &rarr;
+          </Link>
+        </div>
+      </div>
+
+      <ul class="divide-gray-200 pt-6 md:space-y-20 md:pt-10 dark:divide-gray-700">
+        {!posts.length && 'No posts found.'}
+        {posts.slice(0, MAX_DISPLAY).map((post, idx) => (
+          <li>
+            <PostCardListView post={post} loading={idx === 0 ? 'eager' : 'lazy'} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</BaseLayout>
