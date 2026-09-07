@@ -1285,3 +1285,23 @@ pre.has-copy:hover .copy-btn,
   color: var(--accent);
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 140ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+.git-grass-grid {
+  --git-grass-cell: minmax(0, calc((100% - 208px) / 53));
+}
+@media (max-width: 767px) {
+  .git-grass-grid {
+    --git-grass-cell: 18px;
+  }
+}
+

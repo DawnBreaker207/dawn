@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Day {
   date: string;
@@ -22,7 +22,7 @@ interface Props {
   total?: number;
   cols?: number;
   simple?: boolean;
-  track?: string;
+  grass?: boolean;
 }
 
 const GREEN = ['var(--bg-alt)', '#bbf7d0', '#86efac', '#4ade80', '#16a34a'];
@@ -63,15 +63,18 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-export default function CommitGraph({ total = 28, cols = 14, simple = false, track }: Props) {
+export default function CommitGraph({ total = 28, cols = 14, simple = false, grass = false }: Props) {
   const [days, setDays] = useState<Day[] | null>(null);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [detail, setDetail] = useState<DayDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetched = useRef(false);
 
   useEffect(() => {
     let alive = true;
+    if (fetched.current) return;
+    fetched.current = true;
     fetch('/api/github/today')
       .then((r) => (r.ok ? r.json() : null))
       .then((d: DayDetail | null) => {
@@ -80,6 +83,14 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, tra
       .catch(() => {})
       .finally(() => {
         if (alive) setLoading(false);
+      });
+    fetch('/api/github/contributions')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((data: Day[]) => {
+        if (alive) setDays(data);
+      })
+      .catch(() => {
+        if (alive) setError(true);
       });
     return () => {
       alive = false;
@@ -107,21 +118,6 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, tra
       abort.abort();
     };
   }, [selected]);
-
-  useEffect(() => {
-    let alive = true;
-    fetch('/api/github/contributions')
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((data: Day[]) => {
-        if (alive) setDays(data);
-      })
-      .catch(() => {
-        if (alive) setError(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   if (error) {
     return <p className="text-[11px] text-(--fg-faint)">contributions unavailable</p>;
@@ -151,12 +147,58 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, tra
         </span>
       </div>
 
+      {grass ? (
+      <div className="w-full overflow-x-auto py-1 pl-0 pr-1">
+        <div
+          className="git-grass-grid grid w-max min-w-full gap-1"
+          style={{
+            gridTemplateColumns: `repeat(${cols}, var(--git-grass-cell))`,
+          }}
+          aria-label="GitHub contribution heatmap"
+        >
+        {squares.map((d, i) =>
+          d ? (
+            simple ? (
+              <span
+                key={d.date}
+                title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
+                className="aspect-square w-full rounded-[3px] border"
+                style={{
+                  backgroundColor: GREEN[Math.min(4, d.level)],
+                  borderColor: GREEN_BORDER[Math.min(4, d.level)],
+                }}
+              />
+            ) : (
+            <button
+              key={d.date}
+              type="button"
+              onClick={() => setSelected((s) => (s === d.date ? null : d.date))}
+              aria-pressed={activeDate === d.date}
+              title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
+              className="aspect-square w-full cursor-pointer rounded-[3px] border transition focus:outline-none"
+              style={{
+                backgroundColor: GREEN[Math.min(4, d.level)],
+                borderColor: GREEN_BORDER[Math.min(4, d.level)],
+                ...(activeDate === d.date
+                  ? { boxShadow: '0 0 0 2px var(--accent)' }
+                  : {}),
+              }}
+            />
+            )
+          ) : (
+            <span
+              key={`skel-${i}`}
+              className="aspect-square w-full animate-pulse rounded-[3px] border border-(--border) bg-(--bg)"
+            />
+          )
+        )}
+        </div>
+      </div>
+      ) : (
       <div
         className="grid gap-1"
         style={{
-          gridTemplateColumns: track
-            ? `repeat(${cols}, ${track})`
-            : `repeat(${cols}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
         }}
         aria-label="GitHub contribution heatmap"
       >
@@ -197,6 +239,7 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, tra
           )
         )}
       </div>
+      )}
 
       {!simple && (
       <div className="mt-3 border-t border-(--border) pt-3">

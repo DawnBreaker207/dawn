@@ -25,8 +25,6 @@ const RANGES: {
 const grassCols = (i: number, window: number) =>
   i === 0 ? Math.ceil(window / 2) : Math.ceil(window / 7);
 
-const GRASS_TRACK = 'minmax(0, calc((100% - 208px) / 53))';
-
 function fmt(date: string): string {
   const [y, m, d] = date.split('-').map(Number);
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(
@@ -98,9 +96,16 @@ function ChartBars({ days, gran, footer, window }: { days: Day[] | null; gran: G
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget;
+                    const parent = el.parentElement;
                     const half = el.offsetLeft + el.offsetWidth / 2;
-                    const limit = (el.parentElement?.clientWidth ?? 48) - 48;
-                    setHover({ x: Math.max(48, Math.min(half, limit)), label: b.label, count: b.count });
+                    if (!parent) return;
+                    const tipW = Math.min(
+                      document.querySelector('.chart-tip')?.getBoundingClientRect().width ?? 150,
+                      parent.clientWidth - 40
+                    );
+                    const low = tipW / 2 + 8;
+                    const limit = parent.clientWidth - tipW / 2;
+                    setHover({ x: Math.max(low, Math.min(half, limit)), label: b.label, count: b.count });
                   }}
                   onMouseLeave={() => setHover(null)}
                 />
@@ -177,7 +182,7 @@ export default function GitActivity() {
         <ChartBars days={days} gran={active.gran} footer={active.footer} window={active.window} />
       </div>
 
-      <CommitGraph total={active.window} cols={grassCols(range, active.window)} track={GRASS_TRACK} />
+      <CommitGraph total={active.window} cols={grassCols(range, active.window)} grass />
     </div>
   );
 }
