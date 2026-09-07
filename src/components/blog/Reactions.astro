@@ -1,0 +1,30 @@
+---
+import Twemoji from '@/components/ui/Twemoji.astro';
+
+interface Props {
+  slug: string;
+  class?: string;
+}
+
+const { slug, class: cls } = Astro.props;
+
+const REACTIONS = [
+  { emoji: 'sparkling-heart', key: 'loves' },
+  { emoji: 'clapping-hands', key: 'applauses' },
+  { emoji: 'bullseye', key: 'bullseye' },
+  { emoji: 'light-bulb', key: 'ideas' },
+];
+---
+
+<div class={`flex items-center gap-6 ${cls ?? ''}`} data-reactions data-slug={slug}>
+  {REACTIONS.map(({ emoji, key }) => (
+    <button type="button" data-reaction={key} data-umami-event="post-reaction" class="relative flex cursor-pointer flex-col items-center justify-center gap-1.5">
+      <Twemoji emoji={emoji} size="2x" />
+      <span class="relative h-6 w-8 overflow-hidden">
+        <span class="absolute inset-0 font-semibold text-gray-600 dark:text-gray-300" data-reaction-count>
+          --
+        </span>
+      </span>
+    </button>
+  ))}
+</div>

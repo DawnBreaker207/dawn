@@ -1,0 +1,52 @@
+---
+import Link from '@/components/ui/Link.astro';
+import GrowingUnderline from '@/components/ui/GrowingUnderline.astro';
+import GritBackground from '@/components/ui/GritBackground.astro';
+import TagsList from '@/components/ui/Tag.astro';
+import { SITE, formatDate } from '@/lib/site';
+import { readingMinutes, type Post } from '@/lib/utils/blog';
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+const { id, data } = post;
+const image = data.images && data.images.length > 0 ? data.images[0] : SITE.socialBanner;
+const minutes = readingMinutes(post);
+---
+
+<article>
+  <div class="flex flex-col items-start justify-between gap-4 md:gap-6">
+    <Link
+      href={`/blog/${id}`}
+      class="relative block h-auto w-full shrink-0 pt-0 pr-3 pb-3 pl-0 transition-all ease-in-out hover:pt-1 hover:pr-2 hover:pb-2 hover:pl-1 md:aspect-3/2"
+    >
+      <img
+        src={image}
+        alt={data.title}
+        width="600"
+        height="400"
+        class="aspect-video h-full w-full rounded-xl shadow-2xl"
+      />
+      <GritBackground
+        class="top-3 right-0 bottom-0 left-3 rounded-xl border-2 border-gray-800 dark:border-gray-400"
+      />
+    </Link>
+    <div class="w-full space-y-3">
+      <div class="flex items-center gap-x-1.5 text-sm text-gray-600 dark:text-gray-400">
+        <time datetime={data.date.toISOString()}>{formatDate(data.date)}</time>
+        <span class="mx-1 text-gray-400">/</span>
+        <span>{minutes} mins read</span>
+      </div>
+      <TagsList tags={data.tags} />
+      <div class="group relative">
+        <h3 class="text-xl leading-6 font-semibold">
+          <Link href={`/blog/${id}`}>
+            <GrowingUnderline>{data.title}</GrowingUnderline>
+          </Link>
+        </h3>
+      </div>
+    </div>
+  </div>
+</article>

@@ -1,0 +1,17 @@
+---
+import Tag from '@/components/ui/Tag.astro';
+
+interface Props {
+  tags: string[];
+}
+
+const { tags } = Astro.props;
+---
+
+{
+  tags.length > 0 && (
+    <div class="!mt-1 flex flex-wrap">
+      <Tag tags={tags} />
+    </div>
+  )
+}

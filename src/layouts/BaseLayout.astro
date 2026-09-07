@@ -1,0 +1,126 @@
+---
+import '@fontsource/outfit/400.css';
+import '@fontsource/outfit/500.css';
+import '@fontsource/outfit/600.css';
+import '@fontsource/outfit/700.css';
+import '@fontsource/outfit/800.css';
+import '@fontsource/space-grotesk/400.css';
+import '@fontsource/space-grotesk/500.css';
+import '@fontsource/space-grotesk/600.css';
+import '@fontsource/space-grotesk/700.css';
+import '../styles/global.css';
+import '../styles/prism.css';
+import '../styles/twemoji.css';
+import { ClientRouter } from 'astro:transitions';
+import SidebarExplorer from '@/components/SidebarExplorer.astro';
+import TabBar from '@/components/TabBar.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import Rail from '@/components/Rail.astro';
+import TerminalFooter from '@/components/TerminalFooter.astro';
+import CommandPalette from '@/components/CommandPalette.tsx';
+import { getPosts, slugify } from '@/lib/utils/blog';
+import projectsData from '../../projectsData.json';
+import { SITE, SITE_URL, tabsFor } from '@/lib/site';
+import { headerNavLinks } from '@/lib/nav';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title = SITE.title, description = SITE.description, ogImage } = Astro.props;
+const ogUrl = ogImage ? `${SITE_URL}/og/${ogImage}.png` : SITE.socialBanner;
+const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
+
+const activePath = Astro.url.pathname;
+const tabs = tabsFor(activePath);
+const siteNav = {
+  '/': 'README.md',
+  ...Object.fromEntries(headerNavLinks.map((link) => [link.href, link.title])),
+};
+
+const blogPosts = (await getPosts())
+  .slice(0, 5)
+  .map((p) => ({ title: p.data.title, desc: p.data.summary ?? '', route: `/blog/${p.id}` }));
+
+const projects = projectsData
+  .map((p) => ({
+    title: p.title,
+    desc: p.description ?? '',
+    route: `/projects#${slugify(p.title)}`,
+  }))
+  .filter((p) => p.title && p.route);
+---
+
+<!doctype html>
+<html lang={SITE.language} class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={`${SITE_URL}${Astro.url.pathname}`} />
+
+    <link rel="apple-touch-icon" sizes="76x76" href="/static/favicons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png" />
+    <link rel="manifest" href="/static/favicons/site.webmanifest" />
+    <link rel="mask-icon" href="/static/favicons/safari-pinned-tab.svg" color="#5bbad5" />
+    <meta name="msapplication-TileColor" content="#000000" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
+
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogUrl} />
+
+    <script is:inline>
+      (function () {
+        var t = localStorage.getItem('theme');
+        var d = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', !!d);
+        if (localStorage.getItem('dawn:railHidden') === 'true')
+          document.documentElement.dataset.rail = 'hidden';
+      })();
+    </script>
+    <title>{pageTitle}</title>
+    <ClientRouter />
+  </head>
+  <body data-sitenav={JSON.stringify(siteNav)} class="overflow-hidden antialiased">
+    <div id="studio-shell" class="studio-shell">
+      <div class="studio-workspace">
+        <SidebarExplorer activePath={activePath} />
+        <main class="studio-main">
+          <TabBar tabs={tabs} />
+          <div class="studio-content thin-scrollbar pt-6">
+            <div class="px-4 pb-1 sm:px-6 xl:px-10">
+              <Breadcrumb activePath={activePath} />
+            </div>
+            <div class="px-4 sm:px-6 xl:px-10">
+              <slot />
+            </div>
+          </div>
+        </main>
+        <Rail />
+        <div class="studio-backdrop lg:hidden" data-mobile-backdrop aria-hidden="true"></div>
+      </div>
+      <TerminalFooter />
+    </div>
+
+    <CommandPalette client:load blogPosts={blogPosts} projects={projects} />
+
+    {SITE.analytics.umamiWebsiteId && (
+      <script is:inline async defer data-website-id={SITE.analytics.umamiWebsiteId} src="/stats/script.js"></script>
+    )}
+    <script>import '@/scripts/site.ts';</script>
+    <script>import '@/scripts/app-shell.ts';</script>
+    <script>import '@/scripts/extras.ts';</script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+---
+import Link from '@/components/ui/Link.astro';
+import type { Post } from '@/lib/utils/blog';
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+const { id, data } = post;
+const date = new Intl.DateTimeFormat('en-CA').format(data.date);
+---
+
+<Link
+  href={`/blog/${id}`}
+  class="grid grid-cols-1 items-start gap-4.5 border-t border-(--border) py-4.5 no-underline first-of-type:border-t-0 md:grid-cols-[92px_1fr_auto]"
+>
+  <time class="pt-0.5 font-mono text-xs text-(--fg-dim)">{date}</time>
+  <div>
+    <h3 class="m-0 text-[20px] leading-tight tracking-[-0.04em] text-(--fg)">{data.title}</h3>
+    <p class="mt-1 m-0 leading-snug text-(--fg-dim)">{data.summary}</p>
+  </div>
+  {data.tags[0] && (
+    <span class="pt-0.5 font-mono text-[12px] text-(--accent-dim)">#{data.tags[0]}</span>
+  )}
+</Link>

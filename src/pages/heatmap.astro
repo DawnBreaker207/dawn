@@ -1,0 +1,19 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import GitActivity from '@/components/GitActivity';
+
+export const prerender = true;
+---
+
+<BaseLayout title="Heatmap">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      git heatmap
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      Full GitHub contribution activity. Click a day for details.
+    </p>
+  </header>
+
+  <GitActivity client:visible />
+</BaseLayout>

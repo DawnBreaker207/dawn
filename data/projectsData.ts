@@ -1,4 +1,4 @@
-import { GithubRepository } from '@/types/server'
+import type { GithubRepository } from '@/types/server'
 import projectsData from '../projectsData.json'
 
 export interface Project {

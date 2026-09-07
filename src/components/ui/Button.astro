@@ -1,0 +1,27 @@
+---
+interface Props {
+  href?: string;
+  target?: string;
+  class?: string;
+  'aria-label'?: string;
+  'data-umami-event'?: string;
+}
+
+const { href, class: cls } = Astro.props;
+const rest = Object.fromEntries(Object.entries(Astro.props).filter(([k]) => !['href', 'class'].includes(k)));
+
+const clsBase =
+  'border border-transparent dark:bg-primary-600 bg-gray-200 hover:opacity-80 !text-black hover:!text-black dark:!text-white dark:hover:!text-white focus:shadow-outline-blue focus:outline-none transition-colors duration-150 text-sm leading-5 font-medium inline rounded-lg px-4 py-2 shadow inline-flex items-center gap-1 no-underline';
+---
+
+{
+  href ? (
+    <a href={href} class={`${clsBase} ${cls ?? ''}`} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button class={`${clsBase} ${cls ?? ''}`} {...rest}>
+      <slot />
+    </button>
+  )
+}

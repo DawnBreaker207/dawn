@@ -1,0 +1,55 @@
+---
+interface Props {
+  activePath: string;
+}
+
+const { activePath } = Astro.props;
+
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+const crumbs: Crumb[] = [{ label: '~/dawn', href: '/' }];
+
+const pathname = activePath;
+if (pathname.startsWith('/blog')) {
+  crumbs.push({ label: 'blog', href: '/blog' });
+  const slug = pathname.match(/^\/blog\/([^/]+)/)?.[1];
+  if (slug) crumbs.push({ label: slug });
+} else if (pathname.startsWith('/projects')) {
+  crumbs.push({ label: 'projects' });
+} else if (pathname.startsWith('/about')) {
+  crumbs.push({ label: 'about' });
+} else if (pathname.startsWith('/heatmap')) {
+  crumbs.push({ label: 'heatmap' });
+} else if (pathname.startsWith('/books')) {
+  crumbs.push({ label: 'books' });
+} else if (pathname.startsWith('/lab')) {
+  crumbs.push({ label: 'lab', href: '/lab' });
+  const exp = pathname.match(/^\/lab\/([^/]+)/)?.[1];
+  if (exp) crumbs.push({ label: exp });
+} else if (pathname.startsWith('/topics')) {
+    crumbs.push({ label: 'topics', href: '/topics' });
+    const tag = pathname.match(/^\/topics\/([^/]+)/)?.[1];
+  if (tag) crumbs.push({ label: tag });
+}
+if (pathname === '/' || pathname === '') {
+  crumbs.push({ label: 'README.md' });
+}
+---
+
+<nav class="flex min-w-0 items-center gap-1.5 font-mono text-[12px] text-(--fg-faint)">
+  {crumbs.map((crumb, i) => (
+    <span class="flex min-w-0 items-center gap-1.5">
+      {i > 0 && <span class="select-none">/</span>}
+      {crumb.href ? (
+        <a href={crumb.href} class="min-w-0 truncate hover:text-(--accent) hover:no-underline">
+          {crumb.label}
+        </a>
+      ) : (
+        <span class="min-w-0 truncate">{crumb.label}</span>
+      )}
+    </span>
+  ))}
+</nav>

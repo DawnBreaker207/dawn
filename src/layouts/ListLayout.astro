@@ -1,0 +1,159 @@
+---
+import PostCardGridView from '@/components/blog/PostCardGridView.astro';
+import PostRowView from '@/components/blog/PostRowView.astro';
+import Pagination from '@/components/blog/Pagination.astro';
+import type { Post } from '@/lib/utils/blog';
+
+interface Props {
+  title: string;
+  posts: Post[];
+  pagination?: { currentPage: number; totalPages: number; basePath: string };
+  showEmpty?: boolean;
+}
+
+const { title, posts, pagination, showEmpty = true } = Astro.props;
+---
+
+<div class="divide-y divide-gray-200 dark:divide-gray-700">
+  <div class="space-y-2 pt-6 pb-8 md:space-y-5">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <h1 class="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
+        {title}
+      </h1>
+      <div
+        class="mb-2 flex shrink-0 items-center gap-0.5 rounded-md border border-(--border) p-0.5 font-mono text-xs"
+        role="group"
+        aria-label="View mode"
+      >
+        <button
+          type="button"
+          data-view-toggle="grid"
+          title="Grid view"
+          aria-pressed="true"
+          aria-label="Grid view"
+          class="cursor-pointer rounded p-1.5 text-(--fg-dim) transition-colors hover:text-(--fg) aria-pressed:bg-(--bg-alt) aria-pressed:text-(--fg)"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          data-view-toggle="list"
+          title="List view"
+          aria-pressed="false"
+          aria-label="List view"
+          class="cursor-pointer rounded p-1.5 text-(--fg-dim) transition-colors hover:text-(--fg) aria-pressed:bg-(--bg-alt) aria-pressed:text-(--fg)"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="8" x2="21" y1="6" y2="6" />
+            <line x1="8" x2="21" y1="12" y2="12" />
+            <line x1="8" x2="21" y1="18" y2="18" />
+            <line x1="3" x2="3.01" y1="6" y2="6" />
+            <line x1="3" x2="3.01" y1="12" y2="12" />
+            <line x1="3" x2="3.01" y1="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="relative max-w-lg">
+      <label>
+        <span class="sr-only">Search articles</span>
+        <input
+          aria-label="Search articles"
+          type="text"
+          data-blog-search
+          placeholder="Search articles"
+          class="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-900 dark:bg-gray-800 dark:text-gray-100"
+        />
+      </label>
+      <svg
+        class="absolute top-3 right-3 h-5 w-5 text-gray-400 dark:text-gray-300"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
+      </svg>
+    </div>
+  </div>
+
+  {!posts.length && showEmpty ? (
+    <div class="py-10">No posts found</div>
+  ) : (
+    <div data-post-list>
+      <div
+        data-view="grid"
+        class="grid grid-cols-1 gap-x-8 py-10 md:gap-y-16 lg:grid-cols-2 xl:grid-cols-3"
+      >
+        {posts.map((post) => (
+          <div
+            data-search-item
+            data-title={post.data.title}
+            data-tags={post.data.tags.join(' ')}
+            data-summary={post.data.summary ?? ''}
+          >
+            <PostCardGridView post={post} />
+          </div>
+        ))}
+      </div>
+      <div data-view="list" class="hidden pb-10 pt-6">
+        {posts.map((post) => (
+          <div
+            data-search-item
+            data-title={post.data.title}
+            data-tags={post.data.tags.join(' ')}
+            data-summary={post.data.summary ?? ''}
+          >
+            <PostRowView post={post} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
+<script is:inline>
+  (function () {
+    var mode = localStorage.getItem('view-mode');
+    if (mode === 'grid' || mode === 'list') {
+      document.querySelectorAll('[data-view-toggle]').forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.dataset.viewToggle === mode));
+      });
+      document.querySelectorAll('[data-view]').forEach(function (v) {
+        v.classList.toggle('hidden', v.dataset.view !== mode);
+      });
+    }
+  })();
+</script>
+
+{pagination && pagination.totalPages > 1 && (
+  <Pagination basePath={pagination.basePath} currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
+)}

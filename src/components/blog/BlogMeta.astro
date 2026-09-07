@@ -1,0 +1,33 @@
+---
+import Twemoji from '@/components/ui/Twemoji.astro';
+import { formatDate } from '@/lib/site';
+
+interface Props {
+  date: Date;
+  slug: string;
+  minutes: number;
+}
+
+const { date, slug, minutes } = Astro.props;
+---
+
+<dd class="flex-column flex gap-1 font-semibold text-gray-500 dark:text-gray-400">
+  <time datetime={date.toISOString()} class="flex items-center">
+    <Twemoji emoji="calendar" />
+    <span class="ml-1 md:ml-2">{formatDate(date)}</span>
+  </time>
+
+  <span class="mx-2">{` • `}</span>
+
+  <div class="flex items-center">
+    <Twemoji emoji="hourglass-not-done" />
+    <span class="ml-1.5 md:ml-2">{minutes} mins read</span>
+  </div>
+
+  <span class="mx-2">{` • `}</span>
+
+  <div class="flex items-center">
+    <Twemoji emoji="eye" />
+    <span class="ml-1.5 md:ml-2" data-view-count data-slug={slug}>---</span>
+  </div>
+</dd>

@@ -1,0 +1,56 @@
+---
+import Link from '@/components/ui/Link.astro';
+
+interface Props {
+  exp: {
+    org: string;
+    url: string;
+    logo: string;
+    start: string;
+    end: string;
+    title: string;
+    icon: string;
+    event: string;
+    details: string[];
+  };
+  last?: boolean;
+}
+
+const { exp, last = false } = Astro.props;
+---
+
+<li class="relative flex gap-4 pb-8 last:pb-0">
+  {!last && <span class="absolute top-12 bottom-0 left-[23px] w-px bg-(--border)" aria-hidden="true"></span>}
+  <img
+    src={exp.logo}
+    alt={exp.org}
+    width="88"
+    height="88"
+    loading="lazy"
+    decoding="async"
+    class="relative z-10 h-12 w-12 shrink-0 rounded-lg border border-(--border) bg-(--bg) object-contain p-1"
+  />
+  <div class="min-w-0 flex-1 pt-0.5">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <h3 class="m-0 text-[17px] leading-snug font-semibold tracking-[-0.02em] text-(--fg)!">
+        <a
+          href={exp.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-(--fg)! hover:text-(--accent)! hover:no-underline"
+        >
+          {exp.org}
+        </a>
+      </h3>
+      <span class="rounded-md border border-(--border) bg-(--bg-alt) px-2 py-0.5 font-mono text-[11px] whitespace-nowrap text-(--fg-dim)">
+        {exp.start} – {exp.end}
+      </span>
+    </div>
+    <p class="mt-0.5 text-[14px] text-(--fg-dim)!">{exp.title}</p>
+    <ul class="mt-2 mb-0 list-disc space-y-1 pl-5 text-[15px] text-(--fg-dim) marker:text-(--border)">
+      {exp.details.map((d) => (
+        <li set:html={d} />
+      ))}
+    </ul>
+  </div>
+</li>
