@@ -5,7 +5,19 @@ export const GITHUB_REPO_PATH = `${GITHUB_OWNER}/${GITHUB_REPO}`;
 export const HOST = 'dawn';
 export const REPO_DIR = `~/${GITHUB_REPO_PATH}`;
 
-export const V1_URL = (import.meta.env.PUBLIC_V1_URL as string) || '#';
+export interface SiteVersion {
+  branch: string;
+  label: string;
+  href: string;
+  current?: boolean;
+}
+
+export const CURRENT_BRANCH = 'main';
+
+export const SITE_VERSIONS: SiteVersion[] = [
+  { branch: 'main', label: 'Astro × npm', href: '/', current: true },
+  { branch: 'v1', label: 'Next.js 15 × npm', href: 'https://v1.dawn.io.vn' },
+];
 
 export interface Tab {
   id: string;
