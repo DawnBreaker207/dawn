@@ -1,0 +1,25 @@
+---
+interface Props {
+  active?: boolean;
+  duration?: number;
+  class?: string;
+  'data-umami-event'?: string;
+}
+
+const { active = false, duration = 300, class: cls } = Astro.props;
+const rest = Object.fromEntries(
+  Object.entries(Astro.props).filter(([k]) => !['active', 'duration', 'class'].includes(k))
+);
+---
+
+<span
+  style={`--duration: ${duration}ms`}
+  class={`bg-linear-to-r bg-bottom-left bg-no-repeat transition-[background-size] duration-(--duration,300ms) from-blue-200 to-blue-100 dark:from-cyan-800 dark:to-cyan-900 ${
+    active
+      ? 'bg-size-[100%_50%] hover:bg-size-[100%_100%]'
+      : 'bg-size-[0px_50%] hover:bg-size-[100%_50%]'
+  } ${cls ?? ''}`}
+  {...rest}
+>
+  <slot />
+</span>

@@ -1,0 +1,42 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ListLayout from '@/layouts/ListLayout.astro';
+import { getPosts, slugify, POSTS_PER_PAGE } from '@/lib/utils/blog';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tags = new Set(posts.flatMap((post) => post.data.tags.map(slugify)));
+  const paths: { params: { tag: string; page: string } }[] = [];
+  for (const tag of tags) {
+    const count = posts.filter((post) => post.data.tags.map(slugify).includes(tag)).length;
+    const totalPages = Math.ceil(count / POSTS_PER_PAGE);
+    for (let i = 1; i < totalPages; i += 1) {
+      paths.push({ params: { tag, page: String(i + 1) } });
+    }
+  }
+  return paths;
+}
+
+const tag = Astro.params.tag ?? '';
+const currentPage = Number(Astro.params.page);
+const posts = await getPosts();
+const filteredPosts = posts.filter((p) => p.data.tags.map(slugify).includes(tag));
+const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+const initialDisplayPosts = filteredPosts.slice(
+  POSTS_PER_PAGE * (currentPage - 1),
+  POSTS_PER_PAGE * currentPage
+);
+
+const tagNames = [...new Set(posts.flatMap((p) => p.data.tags))];
+const title = tagNames.find((t) => slugify(t) === tag) ?? tag;
+---
+
+<BaseLayout title={title}>
+  <ListLayout
+    title={title}
+    posts={initialDisplayPosts}
+    pagination={{ currentPage, totalPages, basePath: `topics/${tag}` }}
+  />
+</BaseLayout>

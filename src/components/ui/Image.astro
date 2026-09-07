@@ -1,0 +1,28 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  loading?: 'lazy' | 'eager';
+  class?: string;
+  style?: string;
+  'data-zoom'?: boolean;
+}
+
+const { src, alt, width, height, loading = 'lazy', class: cls, style } = Astro.props;
+const rest = Object.fromEntries(
+  Object.entries(Astro.props).filter(([k]) => !['src', 'alt', 'width', 'height', 'loading', 'class', 'style', 'data-zoom'].includes(k))
+);
+---
+
+<img
+  src={src}
+  alt={alt}
+  {...(width ? { width: String(width) } : {})}
+  {...(height ? { height: String(height) } : {})}
+  loading={loading}
+  class={cls}
+  style={style}
+  {...rest}
+/>

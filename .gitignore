@@ -1,41 +1,12 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
-/.pnp
-.pnp.js
-/.yarn/*
-!/.yarn/releases
-!/.yarn/plugins
-!/.yarn/sdks
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-public/sitemap.xml
-.vercel
+# astro build output
+/dist
+/.astro
 
 # production
 /build
-*.xml
-
-# rss feed
-/public/feed.xml
-
-# search
-/public/search.json
-
-# misc
-.DS_Store
-
-# debug
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # local env files
 .env.local
@@ -43,7 +14,17 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Contentlayer
+# vercel
+.vercel
+
+# debug
+*.log
+npm-debug.log*
+
+# misc
+.DS_Store
+
+# legacy next.js artifacts
 .contentlayer
-
-
+public/feed.xml
+public/search.json

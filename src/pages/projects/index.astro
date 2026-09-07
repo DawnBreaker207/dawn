@@ -1,0 +1,63 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProjectCard from '@/components/project/ProjectCard.astro';
+import { slugify } from '@/lib/utils/blog';
+import projectsData from '../../../projectsData.json';
+import { fetchRepoData, type GithubRepository } from '@/lib/runtime/github';
+
+export const prerender = true;
+
+type Project = {
+  type: 'work' | 'self';
+  title: string;
+  description?: string;
+  imgSrc: string;
+  url?: string;
+  repo?: string | GithubRepository | null;
+  builtWith: string[];
+};
+
+const projectList = projectsData as Project[];
+
+const projects = await Promise.all(
+  projectList.map(async (p) =>
+    typeof p.repo === 'string' ? { ...p, repo: await fetchRepoData(p.repo) } : p
+  )
+);
+
+const groups = [
+  { title: 'Work', note: 'commercial / professional', items: projects.filter(({ type }) => type === 'work') },
+  { title: 'Side projects', note: 'open-source / personal', items: projects.filter(({ type }) => type === 'self') },
+];
+---
+
+<BaseLayout title="Projects">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      projects
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      Open-source side projects and practical tools I've built with teammates or shipped on my own.
+    </p>
+  </header>
+
+  {groups.map((group) =>
+    group.items.length > 0 && (
+      <section class="mb-12">
+        <div class="mb-5 flex items-end justify-between">
+          <h2 class="m-0 text-[22px] font-semibold tracking-[-0.04em] text-(--fg)">
+            {group.title}
+          </h2>
+          <span class="font-mono text-xs text-(--fg-faint)">{group.note}</span>
+        </div>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {group.items.map((p) => (
+            <div id={slugify(p.title)} class="contents scroll-mt-24">
+              <ProjectCard project={p} />
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  )}
+</BaseLayout>
