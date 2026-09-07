@@ -29,15 +29,17 @@ export function tabsFor(pathname: string) {
   if (pathname === '/' || pathname === '') return [{ id: 'README', label: 'README.md', path: '/' }];
   const slug = pathname.match(/^\/blog\/([^/]+)/)?.[1];
   if (slug) return [{ id: slug, label: `${slug}.mdx`, path: `/blog/${slug}` }];
-  if (pathname.startsWith('/blog')) return [{ id: 'blog', label: 'blog', path: '/blog' }];
-  if (pathname.startsWith('/projects')) return [{ id: 'projects', label: 'projects', path: '/projects' }];
+  if (pathname.startsWith('/blog')) return [{ id: 'blog', label: 'blog.astro', path: '/blog' }];
+  if (pathname.startsWith('/projects')) return [{ id: 'projects', label: 'projects.astro', path: '/projects' }];
   if (pathname.startsWith('/about')) return [{ id: 'about', label: 'about.md', path: '/about' }];
-  if (pathname.startsWith('/topics')) return [{ id: 'topics', label: 'topics', path: '/topics' }];
+  if (pathname.startsWith('/topics')) return [{ id: 'topics', label: 'topics.astro', path: '/topics' }];
+  if (pathname.startsWith('/heatmap')) return [{ id: 'heatmap', label: 'heatmap.astro', path: '/heatmap' }];
+  if (pathname.startsWith('/books')) return [{ id: 'books', label: 'books.astro', path: '/books' }];
   if (pathname.startsWith('/lab')) {
     const exp = pathname.match(/^\/lab\/([^/]+)/)?.[1];
     return exp
       ? [{ id: exp, label: `${exp}.astro`, path: `/lab/${exp}` }]
-      : [{ id: 'lab', label: 'lab', path: '/lab' }];
+      : [{ id: 'lab', label: 'lab.astro', path: '/lab' }];
   }
   return [];
 }
