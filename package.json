@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/build-stats.mjs && astro build",
+    "build": "node scripts/build-stats.mjs && node scripts/build-og.mjs && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "sync:notion": "node scripts/sync-notion.mjs"
@@ -25,6 +25,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "astro": "^7.3.1",
+    "markdown-it": "^15.0.1",
     "notion-to-md": "^3.1.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -38,9 +39,12 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^26.4.1",
+    "jsdom": "^30.0.1",
     "prisma": "^6.19.3",
+    "satori": "^0.33.4",
     "typescript": "^6.0.3"
   }
 }
