@@ -1,0 +1,31 @@
+---
+import type { Tab } from '@/lib/site';
+
+interface Props {
+  tabs: Tab[];
+}
+
+const { tabs } = Astro.props;
+const active = tabs.at(-1) ?? { path: '/', label: 'README.md' };
+---
+
+<div class="flex items-center border-b border-(--border) bg-(--bg) text-[12px]">
+  <button
+    id="toggle-sidebar"
+    type="button"
+    class="px-2.5 py-2 text-(--fg-faint) hover:bg-(--bg-alt) lg:hidden"
+    aria-label="Toggle explorer"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 6h18M3 12h18M3 18h18" />
+    </svg>
+  </button>
+  <div id="tab-scroll" class="tab-bar flex min-w-0 flex-1 overflow-x-auto">
+    <div
+      id="tab-root"
+      class="contents"
+      data-tab-path={active.path}
+      data-tab-label={active.label}
+    ></div>
+  </div>
+</div>

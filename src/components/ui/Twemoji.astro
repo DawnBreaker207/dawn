@@ -1,0 +1,12 @@
+---
+interface Props {
+  emoji: string;
+  size?: 'base' | 'lg' | '2x' | '3x' | '4x' | '5x';
+  class?: string;
+}
+
+const { emoji, size = 'lg', class: cls } = Astro.props;
+const sizeClass = size === 'base' ? '' : `twa-${size}`;
+---
+
+<i class={`twa inline-block ${sizeClass} twa-${emoji} ${cls ?? ''}`}></i>

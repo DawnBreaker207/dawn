@@ -1,0 +1,37 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ListLayoutWithTags from '@/layouts/ListLayoutWithTags.astro';
+import { getPosts, slugify } from '@/lib/utils/blog';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tagSet = new Set(posts.flatMap((p) => p.data.tags.map(slugify)));
+  return [...tagSet].map((tag) => ({ params: { tag } }));
+}
+
+const tag = Astro.params.tag ?? '';
+
+function tagTitle(t: string): string {
+  return t[0].toUpperCase() + t.split(' ').join('-').slice(1);
+}
+
+const posts = await getPosts();
+const title = tagTitle(tag);
+const filteredPosts = posts.filter((p) => p.data.tags.map(slugify).includes(tag));
+
+const counts = new Map<string, number>();
+for (const post of posts) {
+  for (const t of post.data.tags) {
+    counts.set(t, (counts.get(t) ?? 0) + 1);
+  }
+}
+const sortedTags = [...counts.keys()]
+  .map((t) => ({ tag: t, count: counts.get(t) ?? 0 }))
+  .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+---
+
+<BaseLayout title={title}>
+  <ListLayoutWithTags title={title} posts={filteredPosts} sortedTags={sortedTags} activeTag={tag} />
+</BaseLayout>

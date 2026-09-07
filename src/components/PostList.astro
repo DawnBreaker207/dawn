@@ -1,0 +1,41 @@
+---
+import type { Post } from '@/lib/utils/blog';
+import { readingMinutes } from '@/lib/utils/blog';
+import TagChips from './TagChips.astro';
+
+interface Props {
+  posts: Post[];
+}
+
+const { posts } = Astro.props;
+---
+
+<ul class="divide-y divide-(--border)">
+  {posts.map((post) => (
+    <li class="group py-6">
+      <p class="post-meta mb-2">
+        <time datetime={post.data.date.toISOString()}>
+          {post.data.date.toISOString().slice(0, 10)}
+        </time>
+        <span class="text-(--fg-faint)"> / </span>
+        {readingMinutes(post)} phút đọc
+      </p>
+      <h2 class="mb-2 text-xl font-bold tracking-tight text-(--fg) md:text-2xl">
+        <a
+          href={`/blog/${post.id}`}
+          class="transition-colors group-hover:text-(--accent) hover:no-underline"
+        >
+          {post.data.title}
+        </a>
+      </h2>
+      <TagChips tags={post.data.tags} />
+      <p class="mt-3 line-clamp-2 text-[15px] leading-6 text-(--fg-dim)">{post.data.summary}</p>
+      <a
+        href={`/blog/${post.id}`}
+        class="mt-3 inline-block text-sm font-medium text-(--accent) hover:no-underline"
+      >
+        Đọc tiếp →
+      </a>
+    </li>
+  ))}
+</ul>

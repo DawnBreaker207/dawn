@@ -1,0 +1,157 @@
+/* Prism syntax highlighting — literal values instead of @apply */
+
+/* Code title styles */
+.remark-code-title {
+  border-radius: 0.125rem;
+  background: oklch(0.32 0.022 258.3);
+  padding: 0.75rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-gray-200);
+}
+
+:where(.dark, .dark *) .remark-code-title {
+  background: var(--color-gray-800);
+  color: var(--color-gray-200);
+}
+
+.remark-code-title + div > pre {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Code block styles */
+.code-highlight {
+  float: left;
+  min-width: 100%;
+}
+
+.code-line {
+  display: block;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  border-left-width: 4px;
+  border-left-color: transparent;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.code-line.inserted {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.code-line.deleted {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.highlight-line {
+  margin-left: -1rem;
+  margin-right: -1rem;
+  border-left-width: 4px;
+  border-left-color: var(--color-primary-500);
+  background: rgba(128, 132, 156, 0.5);
+}
+
+.line-number::before {
+  display: inline-block;
+  width: 1rem;
+  margin-right: 1rem;
+  margin-left: -0.5rem;
+  text-align: right;
+  color: var(--color-gray-400);
+  content: attr(line);
+}
+
+/* Token styles — Night Owl palette (hex kept as-is) */
+.token.comment,
+.token.prolog,
+.token.cdata {
+  color: rgb(99, 119, 119);
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: rgb(199, 146, 234);
+}
+
+.namespace {
+  color: rgb(178, 204, 214);
+}
+
+.token.deleted {
+  color: rgba(239, 83, 80, 0.56);
+  font-style: italic;
+}
+
+.token.symbol,
+.token.property {
+  color: rgb(128, 203, 196);
+}
+
+.token.tag,
+.token.operator,
+.token.keyword {
+  color: rgb(127, 219, 202);
+}
+
+.token.boolean {
+  color: rgb(255, 88, 116);
+}
+
+.token.number {
+  color: rgb(247, 140, 108);
+}
+
+.token.constant,
+.token.function,
+.token.builtin,
+.token.char {
+  color: rgb(130, 170, 255);
+}
+
+.token.selector,
+.token.doctype {
+  color: rgb(199, 146, 234);
+  font-style: italic;
+}
+
+.token.attr-name,
+.token.inserted {
+  color: rgb(173, 219, 103);
+  font-style: italic;
+}
+
+.token.string,
+.token.url,
+.token.entity,
+.language-css .token.string,
+.style .token.string {
+  color: rgb(173, 219, 103);
+}
+
+.token.class-name,
+.token.atrule,
+.token.attr-value {
+  color: rgb(255, 203, 139);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: rgb(214, 222, 235);
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.table {
+  display: inline;
+}

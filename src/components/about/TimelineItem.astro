@@ -1,0 +1,90 @@
+---
+import Link from '@/components/ui/Link.astro';
+import Twemoji from '@/components/ui/Twemoji.astro';
+
+interface Props {
+  exp: {
+    org: string;
+    url: string;
+    logo: string;
+    start: string;
+    end: string;
+    title: string;
+    icon: string;
+    event: string;
+    details: string[];
+  };
+  last?: boolean;
+}
+
+const { exp, last = false } = Astro.props;
+---
+
+<div
+  class={`group/timeline-item relative -mx-3 flex flex-row items-start gap-3 rounded-lg p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
+    !last
+      ? 'before:z-1 before:absolute before:top-10 before:left-[35px] before:h-full before:w-px before:bg-gray-300 dark:before:bg-gray-500'
+      : ''
+  }`}
+>
+  <img
+    src={exp.logo}
+    alt={exp.org}
+    width="200"
+    height="200"
+    loading="lazy"
+    class="dark:bg-dark h-12 w-12 shrink-0 rounded-md bg-white group-hover/timeline-item:bg-slate-100 dark:group-hover/timeline-item:bg-slate-800"
+    style="object-fit: contain"
+  />
+  <details class="group w-full !bg-inherit">
+    <summary class="relative pr-10 marker:content-none [&::-webkit-details-marker]:hidden">
+      <svg
+        class="plus group-hover/timeline-item:visible md:invisible absolute top-1 right-1 transition-transform duration-300 ease-in-out text-gray-600 dark:text-gray-500 group-open:hidden"
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        data-umami-event={`${exp.event} expand`}
+      >
+        <path d="M5 12h14" /><path d="M12 5v14" />
+      </svg>
+      <svg
+        class="minus hidden group-open:block absolute top-1 right-1 transition-transform duration-300 ease-in-out text-gray-600 dark:text-gray-500"
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        data-umami-event={`${exp.event} collapse`}
+      >
+        <path d="M5 12h14" />
+      </svg>
+      <div class="flex flex-col">
+        <div class="line-clamp-1 text-xs text-gray-500 tabular-nums dark:text-gray-400">
+          <span>{exp.start}</span> – <span>{exp.end}</span>
+        </div>
+        <Link href={exp.url} class="line-clamp-1 w-fit font-semibold text-gray-900 no-underline hover:text-gray-900 dark:text-white dark:hover:text-white">
+          {exp.org}
+        </Link>
+        <div class="flex items-center gap-1 pt-1 text-sm text-gray-700 dark:text-gray-200">
+          <Twemoji emoji={exp.icon} class="!-mt-1" />
+          <span>{exp.title}</span>
+        </div>
+      </div>
+    </summary>
+    <div class="pt-1 text-base">
+      <ul class="[&>li]:my-2 [&>li]:pl-0">
+        {exp.details.map((d) => <li set:html={d}></li>)}
+      </ul>
+    </div>
+  </details>
+</div>

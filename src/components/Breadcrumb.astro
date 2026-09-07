@@ -1,0 +1,72 @@
+---
+import type { Tab } from '@/lib/site';
+
+interface Props {
+  activePath: string;
+  tabs: Tab[];
+  titleBySlug: Record<string, string>;
+}
+
+const { activePath, tabs, titleBySlug } = Astro.props;
+
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+const crumbs: Crumb[] = [{ label: '~/dawn', href: '/' }];
+
+const pathname = activePath;
+if (pathname.startsWith('/blog')) {
+  crumbs.push({ label: 'blog', href: '/blog' });
+  const slug = pathname.match(/^\/blog\/([^/]+)/)?.[1];
+  if (slug) crumbs.push({ label: titleBySlug[slug] ?? slug });
+} else if (pathname.startsWith('/projects')) {
+  crumbs.push({ label: 'projects' });
+} else if (pathname.startsWith('/about')) {
+  crumbs.push({ label: 'about' });
+} else if (pathname.startsWith('/faq')) {
+  crumbs.push({ label: 'faq' });
+} else if (pathname.startsWith('/tags')) {
+  crumbs.push({ label: 'tags', href: '/tags' });
+  const tag = pathname.match(/^\/tags\/([^/]+)/)?.[1];
+  if (tag) crumbs.push({ label: tag });
+}
+const isHome = pathname === '/' || pathname === '';
+
+const fileGlow = tabs.at(-1);
+---
+
+<div class="flex items-center justify-between border-b border-(--border) bg-(--bg-alt) px-3 py-1.5 text-[12px] text-(--fg-dim)">
+  <nav class="flex min-w-0 items-center gap-1.5">
+    {isHome ? (
+      <span>~</span>
+    ) : (
+      crumbs.map((crumb, i) => (
+        <span class="flex min-w-0 items-center gap-1.5">
+          {i > 0 && <span class="text-(--fg-faint) select-none">/</span>}
+          {crumb.href ? (
+            <a href={crumb.href} class="min-w-0 truncate text-(--fg-dim) hover:text-(--accent) hover:no-underline">
+              {crumb.label}
+            </a>
+          ) : (
+            <span class="min-w-0 truncate text-(--fg)">{crumb.label}</span>
+          )}
+        </span>
+      ))
+    )}
+    {fileGlow && (
+      <span class="ml-1 hidden text-(--fg-faint) sm:inline">· {fileGlow.label}</span>
+    )}
+  </nav>
+  <button
+    id="toggle-rail"
+    type="button"
+    class="tip ml-2 shrink-0 px-1.5 py-0.5 text-(--fg-faint) hover:text-(--fg) hover:no-underline"
+    data-tip="Ẩn / hiện rail"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 4h16v7H4zM4 13h16v7H4z" />
+    </svg>
+  </button>
+</div>

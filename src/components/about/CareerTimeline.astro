@@ -1,0 +1,40 @@
+---
+import TimelineItem from '@/components/about/TimelineItem.astro';
+
+const EXPERIENCES = [
+  {
+    org: 'FPT Software',
+    url: 'https://fptsoftware.com/',
+    logo: '/static/images/experiences/fsoft-logo.png',
+    start: 'Aug 2025',
+    end: 'Jan 2026',
+    title: 'Intern Web Developer',
+    icon: 'man-technologist',
+    event: 'career-intern-fsoft',
+    details: [
+      `Developed and maintained a <strong>web-based healthcare system</strong> to manage patient records, appointments, and medical reports for a Japan-based client.`,
+      `Supported the development of web features using <strong>Angular</strong>, <strong>Spring</strong>, and <strong>SQL Server</strong>.`,
+      `Participated in <strong>Agile methodologies processes</strong> to improve team efficiency and project delivery.`,
+    ],
+  },
+  {
+    org: 'University of Transport and Communications',
+    url: 'https://www.utc.edu.vn/',
+    logo: '/static/images/experiences/utc-logo.png',
+    start: 'Sep 2022',
+    end: 'Present',
+    title: 'Undergraduate Student at UTC',
+    icon: 'man-technologist',
+    event: 'career-utc',
+    details: [`<strong>Undergraduate student.</strong>`],
+  },
+];
+---
+
+<ul class="m-0 list-none p-0">
+  {EXPERIENCES.map((exp, idx) => (
+    <li class="m-0 p-0">
+      <TimelineItem exp={exp} last={idx === EXPERIENCES.length - 1} />
+    </li>
+  ))}
+</ul>

@@ -1,0 +1,32 @@
+---
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  base: string;
+}
+
+const { currentPage, totalPages, base } = Astro.props;
+const pageHref = (n: number) => (n === 1 ? base : `${base}/page/${n}`);
+const prev = currentPage > 1 ? pageHref(currentPage - 1) : null;
+const next = currentPage < totalPages ? pageHref(currentPage + 1) : null;
+---
+
+{
+  totalPages > 1 && (
+    <nav class="mt-8 flex items-center gap-4 border-t border-(--border) pt-4 font-mono text-[13px]">
+      {prev ? (
+        <a href={prev} class="text-(--accent) hover:no-underline">← Newer</a>
+      ) : (
+        <span class="text-(--fg-faint)">← Newer</span>
+      )}
+      <span class="ml-auto text-(--fg-faint)">
+        {currentPage} / {totalPages}
+      </span>
+      {next ? (
+        <a href={next} class="text-(--accent) hover:no-underline">Older →</a>
+      ) : (
+        <span class="text-(--fg-faint)">Older →</span>
+      )}
+    </nav>
+  )
+}
