@@ -1,23 +1,14 @@
 import type { APIRoute } from 'astro';
 import { fetchContributions, type ContributionDay } from '@/lib/runtime/github';
+import { apiCache } from '@/lib/api-cache';
 
 export const prerender = false;
 
-const TTL = 1000 * 60 * 60 * 3;
-const cache: { days: ContributionDay[]; at: number } = { days: [], at: 0 };
+const cached = apiCache<ContributionDay[]>({
+  ttlMs: 1000 * 60 * 60 * 3,
+  maxAge: 3600,
+  sMaxAge: 10800,
+  stale: 1800,
+});
 
-export const GET: APIRoute = async () => {
-  const now = Date.now();
-  if (cache.days.length > 0 && now - cache.at < TTL) {
-    return Response.json(cache.days);
-  }
-  try {
-    const days = await fetchContributions();
-    cache.days = days;
-    cache.at = now;
-    return Response.json(days);
-  } catch {
-    if (cache.days.length > 0) return Response.json(cache.days);
-    return Response.json({ error: 'contributions unavailable' }, { status: 502 });
-  }
-};
+export const GET: APIRoute = async () => cached('contributions', fetchContributions);
