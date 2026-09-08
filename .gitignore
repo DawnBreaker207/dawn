@@ -28,3 +28,5 @@ npm-debug.log*
 .contentlayer
 public/feed.xml
 public/search.json
+# generated at build time
+src/build-stats.json
