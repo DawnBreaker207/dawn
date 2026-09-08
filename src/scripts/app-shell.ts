@@ -34,11 +34,20 @@ function readCurrentTab(): Tab | null {
   };
 }
 
+const MAX_TABS = 5;
+
 function normalize(tab: Tab | null) {
   if (tab) tabs = [...tabs.filter((t) => t.path !== tab.path), tab];
   const home = tabs.find((t) => t.path === '/');
   tabs = tabs.filter((t) => t.path !== '/');
   if (home) tabs.unshift(home);
+  if (tabs.length > MAX_TABS) {
+    const keep = new Set(['/', location.pathname]);
+    tabs = [...tabs.filter((t) => keep.has(t.path)), ...tabs.filter((t) => !keep.has(t.path))].slice(
+      0,
+      MAX_TABS
+    );
+  }
 }
 
 function persist() {
@@ -62,7 +71,7 @@ function renderTabs() {
 
     const close = document.createElement('button');
     close.type = 'button';
-    close.className = 'flex-none text-(--fg-faint) opacity-0 group-hover:opacity-100 hover:text-(--fg)';
+    close.className = 'flex-none text-(--fg-faint) pointer-coarse:opacity-100 hover:text-(--fg) group-hover:opacity-100 opacity-0';
     close.setAttribute('aria-label', `Close ${tab.label}`);
     close.innerHTML =
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
