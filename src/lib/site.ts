@@ -57,7 +57,7 @@ export const SITE = {
   siteRepo: 'https://github.com/DawnBreaker207/dawn',
   siteLogo: '/static/images/logo.png',
   socialBanner: '/static/images/twitter-card.png',
-  email: 'tunganhngo207@gmail.com',
+  email: 'contact@dawn.io.vn',
   github: 'https://github.com/DawnBreaker207',
   x: 'https://twitter.com/DawnBreaker207',
   facebook: 'https://facebook.com/tunganh207',
