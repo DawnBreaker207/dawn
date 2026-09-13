@@ -243,6 +243,8 @@ function once(node: HTMLElement | null, event: string, handler: EventListener) {
 
 /* ---- Per-page bindings: re-run on every navigation (astro:page-load). ---- */
 function bindShell() {
+  updateLocalTime();
+  updateCommitAgo();
   const tab = readCurrentTab();
   normalize(tab);
   persist();

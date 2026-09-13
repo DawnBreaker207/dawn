@@ -178,10 +178,12 @@ function initAnalyticsLinks() {
 }
 
 /* ---- Typed bios ---- */
+let typedTimer: ReturnType<typeof setTimeout> | undefined;
 function initTyped() {
   const bios = $('#bios');
   const typed = $('#typed');
   if (!bios || !typed) return;
+  clearTimeout(typedTimer);
 
   const values = $$('li', bios).map((li) => li.textContent ?? '').filter(Boolean);
   if (!values.length) return;
@@ -215,7 +217,7 @@ function initTyped() {
       }
       typed.textContent = values[valueIndex].slice(0, charIndex);
     }
-    setTimeout(type, delay);
+    typedTimer = setTimeout(type, delay);
   };
   type();
 }
