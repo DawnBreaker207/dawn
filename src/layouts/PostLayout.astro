@@ -23,6 +23,18 @@ interface Props {
 }
 
 const { title, tags, date, slug, minutes, toc, next, prev, related } = Astro.props;
+
+const giscusConfig = JSON.stringify({
+  'data-repo': SITE.comments.giscusConfig.repo,
+  'data-repo-id': SITE.comments.giscusConfig.repositoryId,
+  'data-category': SITE.comments.giscusConfig.category,
+  'data-category-id': SITE.comments.giscusConfig.categoryId,
+  'data-mapping': SITE.comments.giscusConfig.mapping,
+  'data-reactions-enabled': SITE.comments.giscusConfig.reactions,
+  'data-emit-metadata': SITE.comments.giscusConfig.metadata,
+  'data-theme': SITE.comments.giscusConfig.theme,
+  'data-lang': 'en',
+});
 ---
 
 <section class="mx-auto max-w-3xl px-4 sm:px-6 xl:max-w-5xl xl:px-0" data-post-page>
@@ -71,19 +83,7 @@ const { title, tags, date, slug, minutes, toc, next, prev, related } = Astro.pro
 
       {GISCUS_ENABLED && (
         <div class="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment" data-giscus>
-          <script type="application/json" data-giscus-config>
-            {JSON.stringify({
-              'data-repo': SITE.comments.giscusConfig.repo,
-              'data-repo-id': SITE.comments.giscusConfig.repositoryId,
-              'data-category': SITE.comments.giscusConfig.category,
-              'data-category-id': SITE.comments.giscusConfig.categoryId,
-              'data-mapping': SITE.comments.giscusConfig.mapping,
-              'data-reactions-enabled': SITE.comments.giscusConfig.reactions,
-              'data-emit-metadata': SITE.comments.giscusConfig.metadata,
-              'data-theme': SITE.comments.giscusConfig.theme,
-              'data-lang': 'en',
-            })}
-          </script>
+          <script type="application/json" data-giscus-config set:html={giscusConfig}></script>
         </div>
       )}
     </footer>
