@@ -1,11 +1,26 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { BOOKS } from '@/lib/books';
+import booksData from '../data/books.json';
 
 export const prerender = true;
 
-const reading = BOOKS.filter((b) => b.status === 'reading');
-const read = BOOKS.filter((b) => b.status === 'read');
+type Book = {
+  title: string;
+  link: string;
+  bookMediumImageUrl: string;
+  authorName: string;
+  userRating: string;
+  bookDescription: string;
+  bookPublished: string;
+};
+
+const currentlyReading = (booksData.currentlyReading ?? []) as Book[];
+const read = (booksData.read ?? []) as Book[];
+
+function stars(rating: string): number {
+  const r = parseInt(rating, 10);
+  return isNaN(r) ? 0 : Math.min(Math.max(r, 0), 5);
+}
 ---
 
 <BaseLayout title="Books">
@@ -18,46 +33,114 @@ const read = BOOKS.filter((b) => b.status === 'read');
     </p>
   </header>
 
-  <section class="space-y-6">
+  <section class="space-y-10">
+    {/* Currently Reading */}
     <div>
-      <h2 class="mb-3 font-mono text-sm font-medium uppercase tracking-[0.1em] text-(--fg-dim)">
-        currently reading <span class="text-(--accent-dim)">({reading.length})</span>
+      <h2 class="mb-4 font-mono text-sm font-medium uppercase tracking-[0.1em] text-(--fg-dim)">
+        currently reading <span class="text-(--accent-dim)">({currentlyReading.length})</span>
       </h2>
-      {reading.length ? (
-        <ul class="space-y-2 font-mono text-[13px]">
-          {reading.map((book) => (
-            <li class="!my-0">
-              <span class="mr-2 text-(--accent-dim)">▸</span>
-              <strong>{book.title}</strong>
-              <span class="text-(--fg-dim)"> — {book.author}</span>
-              {book.progress && (
-                <span class="ml-2 text-[12px] text-(--fg-faint)">{book.progress}</span>
+      {currentlyReading.length > 0 ? (
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {currentlyReading.map((book) => (
+            <a
+              href={book.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex gap-4 rounded-2xl border border-(--border) bg-(--bg) p-4 no-underline transition-shadow hover:shadow-[4px_4px_0_var(--border)]"
+            >
+              {book.bookMediumImageUrl && (
+                <img
+                  src={book.bookMediumImageUrl}
+                  alt={book.title}
+                  width="120"
+                  height="180"
+                  loading="lazy"
+                  class="h-[180px] w-[120px] shrink-0 rounded-lg object-cover"
+                />
               )}
-            </li>
+              <div class="min-w-0 flex-1">
+                <h3 class="m-0 truncate text-[17px] font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent)!">
+                  {book.title}
+                </h3>
+                <p class="mt-1 truncate text-[13px] text-(--fg-dim)">{book.authorName}</p>
+                {book.bookPublished && (
+                  <p class="mt-1 font-mono text-[11px] text-(--fg-faint)">{book.bookPublished}</p>
+                )}
+                {book.bookDescription && (
+                  <p class="mt-2 line-clamp-3 text-[13px] leading-snug text-(--fg-dim)">
+                    {book.bookDescription}
+                  </p>
+                )}
+              </div>
+            </a>
           ))}
-        </ul>
+        </div>
       ) : (
         <p class="font-mono text-[13px] text-(--fg-faint)">Nothing here yet.</p>
       )}
     </div>
 
+    {/* Read */}
     <div>
-      <h2 class="mb-3 font-mono text-sm font-medium uppercase tracking-[0.1em] text-(--fg-dim)">
+      <h2 class="mb-4 font-mono text-sm font-medium uppercase tracking-[0.1em] text-(--fg-dim)">
         read <span class="text-(--accent-dim)">({read.length})</span>
       </h2>
-      {read.length ? (
-        <ul class="space-y-2 font-mono text-[13px]">
+      {read.length > 0 ? (
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           {read.map((book) => (
-            <li class="!my-0">
-              <span class="mr-2 text-(--accent-dim)">✓</span>
-              <strong>{book.title}</strong>
-              <span class="text-(--fg-dim)"> — {book.author}</span>
-            </li>
+            <a
+              href={book.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex gap-4 rounded-2xl border border-(--border) bg-(--bg) p-4 no-underline transition-shadow hover:shadow-[4px_4px_0_var(--border)]"
+            >
+              {book.bookMediumImageUrl && (
+                <img
+                  src={book.bookMediumImageUrl}
+                  alt={book.title}
+                  width="120"
+                  height="180"
+                  loading="lazy"
+                  class="h-[180px] w-[120px] shrink-0 rounded-lg object-cover"
+                />
+              )}
+              <div class="min-w-0 flex-1">
+                <h3 class="m-0 truncate text-[17px] font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent)!">
+                  {book.title}
+                </h3>
+                <p class="mt-1 truncate text-[13px] text-(--fg-dim)">{book.authorName}</p>
+                {stars(book.userRating) > 0 && (
+                  <div class="mt-1.5 flex items-center gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <span
+                        class:list={[
+                          'text-sm',
+                          i < stars(book.userRating) ? 'text-amber-400' : 'text-(--fg-faint)',
+                        ]}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {book.bookDescription && (
+                  <p class="mt-2 line-clamp-3 text-[13px] leading-snug text-(--fg-dim)">
+                    {book.bookDescription}
+                  </p>
+                )}
+              </div>
+            </a>
           ))}
-        </ul>
+        </div>
       ) : (
         <p class="font-mono text-[13px] text-(--fg-faint)">Nothing here yet.</p>
       )}
     </div>
   </section>
+
+  {booksData.syncedAt && (
+    <p class="mt-12 font-mono text-[11px] text-(--fg-faint)">
+      Synced via Goodreads RSS on {new Date(booksData.syncedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+    </p>
+  )}
 </BaseLayout>
