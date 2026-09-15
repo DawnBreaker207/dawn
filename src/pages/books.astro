@@ -10,16 +10,17 @@ type Book = {
   bookMediumImageUrl: string;
   authorName: string;
   userRating: string;
-  bookDescription: string;
-  bookPublished: string;
+  userReadAt: string;
 };
 
-const currentlyReading = (booksData.currentlyReading ?? []) as Book[];
+const currentlyReading = (booksData.currentlyReading ?? []).slice(0, 4) as Book[];
 const read = (booksData.read ?? []) as Book[];
 
-function stars(rating: string): number {
-  const r = parseInt(rating, 10);
-  return isNaN(r) ? 0 : Math.min(Math.max(r, 0), 5);
+const READ_LIMIT = 5;
+
+function rating(r: string): number {
+  const n = parseInt(r, 10);
+  return isNaN(n) ? 0 : Math.min(Math.max(n, 0), 5);
 }
 ---
 
@@ -29,118 +30,139 @@ function stars(rating: string): number {
       books
     </h1>
     <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
-      What I've read, and what I'm reading right now.
+      What I've read, and what I'm reading right now —
+      <a
+        href="https://www.goodreads.com/review/list/204322578"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-umami-event="goodreads-link"
+        class="font-mono text-xs text-(--fg-faint) hover:text-(--accent)"
+      >
+        Goodreads ↗
+      </a>
     </p>
   </header>
 
-  <section class="space-y-10">
-    {/* Currently Reading */}
-    <div>
-      <h2 class="mb-4 font-mono text-sm font-medium uppercase tracking-[0.1em] text-(--fg-dim)">
-        currently reading <span class="text-(--accent-dim)">({currentlyReading.length})</span>
-      </h2>
-      {currentlyReading.length > 0 ? (
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {currentlyReading.map((book) => (
-            <a
-              href={book.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="group flex gap-4 rounded-2xl border border-(--border) bg-(--bg) p-4 no-underline transition-shadow hover:shadow-[4px_4px_0_var(--border)]"
-            >
-              {book.bookMediumImageUrl && (
-                <img
-                  src={book.bookMediumImageUrl}
-                  alt={book.title}
-                  width="120"
-                  height="180"
-                  loading="lazy"
-                  class="h-[180px] w-[120px] shrink-0 rounded-lg object-cover"
-                />
-              )}
-              <div class="min-w-0 flex-1">
-                <h3 class="m-0 truncate text-[17px] font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent)!">
-                  {book.title}
-                </h3>
-                <p class="mt-1 truncate text-[13px] text-(--fg-dim)">{book.authorName}</p>
-                {book.bookPublished && (
-                  <p class="mt-1 font-mono text-[11px] text-(--fg-faint)">{book.bookPublished}</p>
-                )}
-                {book.bookDescription && (
-                  <p class="mt-2 line-clamp-3 text-[13px] leading-snug text-(--fg-dim)">
-                    {book.bookDescription}
-                  </p>
-                )}
-              </div>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <p class="font-mono text-[13px] text-(--fg-faint)">Nothing here yet.</p>
-      )}
-    </div>
+  {currentlyReading.length > 0 && (
+    <section class="mb-12">
+      <div class="mb-5 flex items-end justify-between">
+        <h2 class="m-0 text-[22px] font-semibold tracking-[-0.04em] text-(--fg)">
+          Currently reading
+        </h2>
+        <span class="font-mono text-xs text-(--fg-faint)">{currentlyReading.length} books</span>
+      </div>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {currentlyReading.map((book) => (
+          <a
+            href={book.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-umami-event="book-link-current"
+            class="group flex min-h-[120px] gap-4 rounded-2xl border border-(--border) bg-(--bg) p-4 no-underline transition-shadow hover:shadow-[4px_4px_0_var(--border)]"
+          >
+            {book.bookMediumImageUrl && (
+              <img
+                src={book.bookMediumImageUrl}
+                alt={book.title}
+                width="60"
+                height="90"
+                loading="lazy"
+                class="h-[90px] w-[60px] shrink-0 rounded-md border border-(--border) object-cover"
+              />
+            )}
+            <div class="min-w-0">
+              <h3 class="m-0 truncate text-[17px] font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent)">
+                {book.title}
+              </h3>
+              <p class="mt-1 truncate text-[13px] text-(--fg-dim)">{book.authorName}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
 
-    {/* Read */}
-    <div>
-      <h2 class="mb-4 font-mono text-sm font-medium uppercase tracking-[0.1em] text-(--fg-dim)">
-        read <span class="text-(--accent-dim)">({read.length})</span>
-      </h2>
-      {read.length > 0 ? (
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {read.map((book) => (
-            <a
-              href={book.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="group flex gap-4 rounded-2xl border border-(--border) bg-(--bg) p-4 no-underline transition-shadow hover:shadow-[4px_4px_0_var(--border)]"
-            >
-              {book.bookMediumImageUrl && (
-                <img
-                  src={book.bookMediumImageUrl}
-                  alt={book.title}
-                  width="120"
-                  height="180"
-                  loading="lazy"
-                  class="h-[180px] w-[120px] shrink-0 rounded-lg object-cover"
-                />
+  {read.length > 0 && (
+    <section>
+      <div class="mb-5 flex items-end justify-between">
+        <h2 class="m-0 text-[22px] font-semibold tracking-[-0.04em] text-(--fg)">
+          Read
+        </h2>
+        <span class="font-mono text-xs text-(--fg-faint)">{read.length} books</span>
+      </div>
+      <div class="divide-y divide-(--border)">
+        {read.slice(0, READ_LIMIT).map((book) => (
+          <a
+            href={book.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-umami-event="book-link-read"
+            class="group grid grid-cols-1 items-start gap-4.5 py-4.5 no-underline md:grid-cols-[56px_1fr_auto]"
+          >
+            {book.bookMediumImageUrl && (
+              <img
+                src={book.bookMediumImageUrl}
+                alt={book.title}
+                width="56"
+                height="84"
+                loading="lazy"
+                class="h-[84px] w-[56px] shrink-0 rounded-md border border-(--border) object-cover"
+              />
+            )}
+            <div class="min-w-0">
+              <h3 class="m-0 text-[17px] leading-tight font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent)">
+                {book.title}
+              </h3>
+              <p class="mt-1 text-[13px] text-(--fg-dim)">{book.authorName}</p>
+            </div>
+            <div class="shrink-0 pt-0.5 font-mono text-xs text-(--fg-dim)">
+              {rating(book.userRating) > 0 && (
+                <span class="text-(--accent-dim)">Goodreads {book.userRating}/5</span>
               )}
-              <div class="min-w-0 flex-1">
-                <h3 class="m-0 truncate text-[17px] font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent)!">
-                  {book.title}
-                </h3>
-                <p class="mt-1 truncate text-[13px] text-(--fg-dim)">{book.authorName}</p>
-                {stars(book.userRating) > 0 && (
-                  <div class="mt-1.5 flex items-center gap-0.5">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <span
-                        class:list={[
-                          'text-sm',
-                          i < stars(book.userRating) ? 'text-amber-400' : 'text-(--fg-faint)',
-                        ]}
-                      >
-                        ★
-                      </span>
-                    ))}
-                  </div>
+            </div>
+          </a>
+        ))}
+      </div>
+      {read.length > READ_LIMIT && (
+        <details class="mt-4">
+          <summary class="cursor-pointer font-mono text-[13px] text-(--accent) select-none hover:underline">
+            Show more ({read.length - READ_LIMIT} more)
+          </summary>
+          <div class="mt-4 divide-y divide-(--border)">
+            {read.slice(READ_LIMIT).map((book) => (
+              <a
+                href={book.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-umami-event="book-link-read-more"
+                class="group grid grid-cols-1 items-start gap-4.5 py-4.5 no-underline md:grid-cols-[56px_1fr_auto]"
+              >
+                {book.bookMediumImageUrl && (
+                  <img
+                    src={book.bookMediumImageUrl}
+                    alt={book.title}
+                    width="56"
+                    height="84"
+                    loading="lazy"
+                    class="h-[84px] w-[56px] shrink-0 rounded-md border border-(--border) object-cover"
+                  />
                 )}
-                {book.bookDescription && (
-                  <p class="mt-2 line-clamp-3 text-[13px] leading-snug text-(--fg-dim)">
-                    {book.bookDescription}
-                  </p>
-                )}
-              </div>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <p class="font-mono text-[13px] text-(--fg-faint)">Nothing here yet.</p>
+                <div class="min-w-0">
+                  <h3 class="m-0 text-[17px] leading-tight font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent)">
+                    {book.title}
+                  </h3>
+                  <p class="mt-1 text-[13px] text-(--fg-dim)">{book.authorName}</p>
+                </div>
+                <div class="shrink-0 pt-0.5 font-mono text-xs text-(--fg-dim)">
+                  {rating(book.userRating) > 0 && (
+                    <span class="text-(--accent-dim)">Goodreads {book.userRating}/5</span>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </details>
       )}
-    </div>
-  </section>
-
-  {booksData.syncedAt && (
-    <p class="mt-12 font-mono text-[11px] text-(--fg-faint)">
-      Synced via Goodreads RSS on {new Date(booksData.syncedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-    </p>
+    </section>
   )}
 </BaseLayout>
