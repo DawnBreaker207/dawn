@@ -29,8 +29,9 @@ jobs:
           echo "NOTION_TOKEN=${{ secrets.NOTION_TOKEN }}" >> .env.local
           echo "BLOGS_DATABASE_ID=${{ secrets.BLOGS_DATABASE_ID }}" >> .env.local
           echo "PROJECTS_DATABASE_ID=${{ secrets.PROJECTS_DATABASE_ID }}" >> .env.local
+          echo "TIMELINE_DATABASE_ID=${{ secrets.TIMELINE_DATABASE_ID }}" >> .env.local
 
-      - name: Run Notion sync
+      - name: Run Notion sync (posts + timeline)
         run: npm run sync:notion
 
       - name: Commit & Push changes (if any)

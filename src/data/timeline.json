@@ -1,16 +1,25 @@
 {
   "items": [
     {
+      "org": "AtwoM Việt Nam",
+      "url": "https://atwom.com.vn/",
+      "logo": "/static/images/experiences/atwom-logo.png",
+      "start": "Jan 2026",
+      "end": "Aug 2026",
+      "title": "Intern Web Developer",
+      "event": "career-intern-atwom",
+      "details": []
+    },
+    {
       "org": "University of Transport and Communications",
       "url": "https://www.utc.edu.vn/",
       "logo": "/static/images/experiences/utc-logo.png",
       "start": "Sep 2022",
       "end": "Present",
       "title": "Undergraduate Student at UTC",
-      "icon": "man-technologist",
       "event": "career-utc",
       "details": [
-        "<strong>Undergraduate student.</strong>"
+        "<strong>Undergraduate student</strong>."
       ]
     },
     {
@@ -18,9 +27,8 @@
       "url": "https://fptsoftware.com/",
       "logo": "/static/images/experiences/fsoft-logo.png",
       "start": "Aug 2025",
-      "end": "Jan 2026",
+      "end": "Aug 2026",
       "title": "Intern Web Developer",
-      "icon": "man-technologist",
       "event": "career-intern-fsoft",
       "details": [
         "Developed and maintained a <strong>web-based healthcare system</strong> to manage patient records, appointments, and medical reports for a Japan-based client.",
@@ -29,5 +37,5 @@
       ]
     }
   ],
-  "syncedAt": "2026-09-15T06:41:16.029Z"
+  "syncedAt": "2026-09-15T10:29:01.616Z"
 }
