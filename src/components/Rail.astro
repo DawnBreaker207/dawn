@@ -1,5 +1,6 @@
 ---
 import CommitGraph from '@/components/CommitGraph';
+import RecentActivity from '@/components/RecentActivity';
 ---
 
 <aside
@@ -13,4 +14,9 @@ import CommitGraph from '@/components/CommitGraph';
   <div class="p-3">
     <CommitGraph client:visible />
   </div>
+
+  <div class="border-b border-(--border) px-3 py-2 text-[11px] tracking-[0.12em] text-(--fg-faint) uppercase">
+    Recent activity
+  </div>
+  <RecentActivity client:visible />
 </aside>
