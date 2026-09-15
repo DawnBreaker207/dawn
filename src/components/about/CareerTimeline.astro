@@ -1,5 +1,6 @@
 ---
 import TimelineItem from '@/components/about/TimelineItem.astro';
+import timelineData from '../../data/timeline.json';
 
 const EXPERIENCES = [
   {
@@ -29,10 +30,15 @@ const EXPERIENCES = [
     details: [`<strong>Undergraduate student.</strong>`],
   },
 ];
+
+// Prefer the Notion-synced timeline (src/data/timeline.json); fall back to the
+// static list above when the sync produced nothing yet.
+const items = timelineData.items.length > 0 ? timelineData.items : EXPERIENCES;
+const last = items.length - 1;
 ---
 
 <ul class="not-prose m-0 list-none p-0">
-  {EXPERIENCES.map((exp, idx) => (
-    <TimelineItem exp={exp} last={idx === EXPERIENCES.length - 1} />
+  {items.map((exp, idx) => (
+    <TimelineItem exp={exp} last={idx === last} />
   ))}
 </ul>

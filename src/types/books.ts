@@ -1,0 +1,22 @@
+export type GoodreadsBook = {
+  guid: string;
+  pubDate: string;
+  title: string;
+  link: string;
+  bookId: string;
+  bookImageUrl: string;
+  bookSmallImageUrl: string;
+  bookMediumImageUrl: string;
+  bookLargeImageUrl: string;
+  bookDescription: string;
+  authorName: string;
+  isbn: string;
+  userRating: string;
+  userReadAt: string;
+  userDateAdded: string;
+  userDateCreated: string;
+  userShelves: string;
+  userReview: string;
+  averageRating: string;
+  bookPublished: string;
+};
