@@ -7,10 +7,11 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/build-stats.mjs && node scripts/build-og.mjs && node scripts/build-books.mjs && node scripts/sync-notion.mjs && astro build",
+    "build": "prisma generate && node scripts/build-stats.mjs && node scripts/build-og.mjs && node scripts/build-books.mjs && node scripts/sync-notion.mjs && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "sync:notion": "node scripts/sync-notion.mjs"
+    "sync:notion": "node scripts/sync-notion.mjs",
+    "check:db": "node scripts/check-db.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.0",

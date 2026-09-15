@@ -277,7 +277,7 @@ function formatNumber(n: number): string {
 
 async function fetchStats(slug: string): Promise<Record<string, number> | null> {
   try {
-    const res = await fetch(`/api/stats?slug=${encodeURIComponent(slug)}&type=post`);
+    const res = await fetch(`/api/stats?slug=${encodeURIComponent(slug)}&type=blog`);
     if (!res.ok) return null;
     const data = await res.json().catch(() => null);
     return data && typeof data === 'object' ? data : null;
@@ -291,7 +291,7 @@ async function bumpStat(slug: string, name: string, value: number) {
     await fetch('/api/stats', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug, type: 'post', [name]: value }),
+      body: JSON.stringify({ slug, type: 'blog', [name]: value }),
     });
   } catch {
     /* offline */
