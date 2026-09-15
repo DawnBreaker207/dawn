@@ -169,6 +169,7 @@ export default function GitActivity() {
                 type="button"
                 onClick={() => setRange(i)}
                 aria-pressed={range === i}
+                data-umami-event="git-range"
                 className={`cursor-pointer rounded-md px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] transition-colors ${
                   range === i ? 'bg-(--accent) text-(--bg)' : 'text-(--fg-dim) hover:text-(--fg)'
                 }`}

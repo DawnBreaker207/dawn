@@ -28,6 +28,7 @@ const { title, posts, pagination, showEmpty = true } = Astro.props;
         <button
           type="button"
           data-view-toggle="grid"
+          data-umami-event="view-grid"
           title="Grid view"
           aria-pressed="true"
           aria-label="Grid view"
@@ -52,6 +53,7 @@ const { title, posts, pagination, showEmpty = true } = Astro.props;
         <button
           type="button"
           data-view-toggle="list"
+          data-umami-event="view-list"
           title="List view"
           aria-pressed="false"
           aria-label="List view"

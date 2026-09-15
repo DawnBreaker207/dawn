@@ -104,12 +104,14 @@ export default function CommandPalette({
     const ae = document.activeElement;
     restoreRef.current = ae instanceof HTMLElement && ae !== document.body ? ae : null;
     setOpen(true);
+    (window as { umami?: { track: (e: string) => void } }).umami?.track('palette-open');
   }, []);
 
   const close = useCallback(() => {
     setOpen(false);
     setInput('');
     setSel(-1);
+    (window as { umami?: { track: (e: string) => void } }).umami?.track('palette-close');
     const el = restoreRef.current;
     restoreRef.current = null;
     if (el && el.isConnected) el.focus();
@@ -120,6 +122,7 @@ export default function CommandPalette({
     restoreRef.current = footer;
     footer.focus();
     setOpen(true);
+    (window as { umami?: { track: (e: string) => void } }).umami?.track('terminal-open');
   }, []);
 
   const welcomeNode = (

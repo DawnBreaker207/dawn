@@ -16,7 +16,7 @@ const nextPage = currentPage + 1 <= totalPages;
   <nav class="flex justify-between">
     {!prevPage && <button class="cursor-auto disabled:opacity-50" disabled>Previous</button>}
     {prevPage && (
-      <Link href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`} rel="prev">
+      <Link href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`} rel="prev" data-umami-event="pagination-prev">
         Previous
       </Link>
     )}
@@ -24,6 +24,6 @@ const nextPage = currentPage + 1 <= totalPages;
       {currentPage} of {totalPages}
     </span>
     {!nextPage && <button class="cursor-auto disabled:opacity-50" disabled>Next</button>}
-    {nextPage && <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">Next</Link>}
+    {nextPage && <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next" data-umami-event="pagination-next">Next</Link>}
   </nav>
 </div>
