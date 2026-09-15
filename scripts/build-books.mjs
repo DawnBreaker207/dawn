@@ -57,7 +57,11 @@ const parser = new Parser({
   },
 });
 
-const SHELVES = ['currently-reading', 'read'];
+// shelf -> JSON key
+const SHELVES = [
+  ['currently-reading', 'currentlyReading'],
+  ['read', 'read'],
+];
 
 const feedUrl = (shelf) =>
   `https://www.goodreads.com/review/list_rss/${userId}?shelf=${shelf}`;
@@ -118,11 +122,10 @@ if (!userId) {
 
 const result = { ...existing };
 
-for (const shelf of SHELVES) {
+for (const [shelf, key] of SHELVES) {
   try {
     const books = await fetchShelf(shelf);
-    if (shelf === 'currently-reading') result.currentlyReading = books;
-    else result.read = books;
+    result[key] = books;
     console.log(`  📚 ${shelf}: ${books.length} book(s)`);
   } catch (err) {
     console.error(`  ❌ Failed to fetch "${shelf}" — keeping previous data: ${err.message}`);
