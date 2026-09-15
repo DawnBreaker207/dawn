@@ -2,11 +2,14 @@ import { Client } from '@notionhq/client';
 import { NotionToMarkdown } from 'notion-to-md';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// Syncs posts from the Notion database into data/blog/ as .mdx. The `layout:`
-// frontmatter field is dropped because @astrojs/mdx would treat it as a
-// component import. Run from the repo root after sourcing .env.local:
-// `node scripts/sync-notion.mjs`.
+// Syncs everything from Notion to static build data, run from the repo root:
+// - Posts from BLOGS_DATABASE_ID -> data/blog/*.mdx
+// - Resume timeline from TIMELINE_DATABASE_ID -> src/data/timeline.json
+// When a DATABASE_ID env is missing the corresponding part is skipped.
+
+const root = fileURLToPath(new URL('..', import.meta.url));
 
 const loadEnv = () => {
   const file = path.join(process.cwd(), '.env.local');
@@ -20,11 +23,12 @@ loadEnv();
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
 const n2m = new NotionToMarkdown({ notionClient: notion });
-const databaseId = process.env.BLOGS_DATABASE_ID;
-if (!databaseId) {
-  console.error('Missing BLOGS_DATABASE_ID');
-  process.exit(1);
-}
+
+const text = (p) => (p?.rich_text ?? []).map((t) => t.plain_text).join('');
+
+// ---------------------------------------------------------------------------
+// Blog posts
+// ---------------------------------------------------------------------------
 
 const sanitizeTitle = (title) =>
   title
@@ -34,37 +38,53 @@ const sanitizeTitle = (title) =>
     .replace(/-+/g, '-')
     .trim();
 
-const outputDir = path.join(process.cwd(), 'data/blog');
-const imagesRoot = path.join(process.cwd(), 'public/static/images/blog');
-
-fs.rmSync(outputDir, { recursive: true, force: true });
-fs.mkdirSync(outputDir, { recursive: true });
-fs.rmSync(imagesRoot, { recursive: true, force: true });
-fs.mkdirSync(imagesRoot, { recursive: true });
-
-const res = await notion.databases.query({ database_id: databaseId });
-
-for (const page of res.results) {
-  const mdBlocks = await n2m.pageToMarkdown(page.id);
-  const mdString = n2m.toMarkdownString(mdBlocks);
-
-  const props = page?.properties ?? {};
-  const title = props['Title']?.title?.[0]?.plain_text || page.id;
-  const summary = props['Summary']?.rich_text?.[0]?.plain_text || 'Unknown';
-  const cover = page?.cover?.type === 'external' ? page?.cover?.external?.url : '';
-  const date = props['Published Date']?.created_time ?? new Date().toISOString();
-  const status = props['Status']?.status?.name ?? 'Unknown';
-  const tags = props['Tags']?.multi_select?.map((tag) => tag.name) ?? [];
-
-  const slug = sanitizeTitle(title);
-  const filePath = path.join(outputDir, `${slug}.mdx`);
-
-  if (status === 'Draft' || status === 'Idea') {
-    fs.rmSync(filePath, { force: true });
-    continue;
+async function syncBlogs() {
+  const databaseId = process.env.BLOGS_DATABASE_ID;
+  if (!databaseId) {
+    console.warn('[sync-notion] Missing BLOGS_DATABASE_ID — skipping blog sync.');
+    return;
   }
 
-  const frontmatter = `---
+  const outputDir = path.join(process.cwd(), 'data/blog');
+  const imagesRoot = path.join(process.cwd(), 'public/static/images/blog');
+
+  fs.rmSync(outputDir, { recursive: true, force: true });
+  fs.mkdirSync(outputDir, { recursive: true });
+  fs.rmSync(imagesRoot, { recursive: true, force: true });
+  fs.mkdirSync(imagesRoot, { recursive: true });
+
+  // The database id in .env is the view; the real schema lives in its data
+  // source (inline database). Resolve it so query() works.
+  const db = await notion.databases.retrieve({ database_id: databaseId });
+  const sourceId = db.data_sources?.[0]?.id;
+  if (!sourceId) {
+    console.warn('[sync-notion] No data source found for blogs — skipping blog sync.');
+    return;
+  }
+
+  const res = await notion.dataSources.query({ data_source_id: sourceId, page_size: 200 });
+
+  for (const page of res.results) {
+    const mdBlocks = await n2m.pageToMarkdown(page.id);
+    const mdString = n2m.toMarkdownString(mdBlocks);
+
+    const props = page?.properties ?? {};
+    const title = props['Title']?.title?.[0]?.plain_text || page.id;
+    const summary = props['Summary']?.rich_text?.[0]?.plain_text || 'Unknown';
+    const cover = page?.cover?.type === 'external' ? page?.cover?.external?.url : '';
+    const date = props['Published Date']?.created_time ?? new Date().toISOString();
+    const status = props['Status']?.status?.name ?? 'Unknown';
+    const tags = props['Tags']?.multi_select?.map((tag) => tag.name) ?? [];
+
+    const slug = sanitizeTitle(title);
+    const filePath = path.join(outputDir, `${slug}.mdx`);
+
+    if (status === 'Draft' || status === 'Idea') {
+      fs.rmSync(filePath, { force: true });
+      continue;
+    }
+
+    const frontmatter = `---
 title: '${title.replace(/'/g, "\\'")}'
 date: '${new Date(date).toISOString().split('T')[0]}'
 tags: [${tags.map((t) => `'${t}'`).join(', ')}]
@@ -75,39 +95,157 @@ images: ['${cover}']
 
 `;
 
-  const postImagesDir = path.join(imagesRoot, slug);
-  fs.mkdirSync(postImagesDir, { recursive: true });
+    const postImagesDir = path.join(imagesRoot, slug);
+    fs.mkdirSync(postImagesDir, { recursive: true });
 
-  const usedNames = new Set();
-  let markdown = mdString.parent;
-  for (const m of [...markdown.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)]) {
-    const url = m[1];
-    if (!url.includes('prod-files-secure.s3.us-west-2.amazonaws.com')) continue;
+    const usedNames = new Set();
+    let markdown = mdString.parent;
+    for (const m of [...markdown.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)]) {
+      const url = m[1];
+      if (!url.includes('prod-files-secure.s3.us-west-2.amazonaws.com')) continue;
 
-    const rawName = decodeURIComponent(url.split('?')[0].split('/').pop() || 'image');
-    let name = rawName.toLowerCase().replace(/[^\w.-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    if (!/\.[a-z0-9]+$/i.test(name)) name += '.png';
+      const rawName = decodeURIComponent(url.split('?')[0].split('/').pop() || 'image');
+      let name = rawName.toLowerCase().replace(/[^\w.-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (!/\.[a-z0-9]+$/i.test(name)) name += '.png';
 
-    let final = name;
-    let i = 1;
-    while (usedNames.has(final)) {
-      final = `${name.replace(/\.[a-z0-9]+$/i, '')}-${i}${name.match(/\.[a-z0-9]+$/i)?.[0] || ''}`;
-      i++;
+      let final = name;
+      let i = 1;
+      while (usedNames.has(final)) {
+        final = `${name.replace(/\.[a-z0-9]+$/i, '')}-${i}${name.match(/\.[a-z0-9]+$/i)?.[0] || ''}`;
+        i++;
+      }
+      usedNames.add(final);
+
+      try {
+        const resp = await fetch(url);
+        if (resp.ok) fs.writeFileSync(path.join(postImagesDir, final), Buffer.from(await resp.arrayBuffer()));
+      } catch (e) {
+        console.error(`Failed to download image ${url}`, e);
+      }
+
+      markdown = markdown.replace(m[0], `![${final}](/static/images/blog/${slug}/${final})`);
     }
-    usedNames.add(final);
 
-    try {
-      const resp = await fetch(url);
-      if (resp.ok) fs.writeFileSync(path.join(postImagesDir, final), Buffer.from(await resp.arrayBuffer()));
-    } catch (e) {
-      console.error(`Failed to download image ${url}`, e);
-    }
-
-    markdown = markdown.replace(m[0], `![${final}](/static/images/blog/${slug}/${final})`);
+    fs.writeFileSync(filePath, frontmatter + markdown, 'utf-8');
+    console.log('synced', slug);
   }
 
-  fs.writeFileSync(filePath, frontmatter + markdown, 'utf-8');
-  console.log('synced', slug);
+  console.log(`Done: ${res.results.length} posts processed`);
 }
 
-console.log(`Done: ${res.results.length} pages processed`);
+// ---------------------------------------------------------------------------
+// Resume timeline
+// ---------------------------------------------------------------------------
+
+const LOGO_DIR = path.join(root, 'public', 'static', 'images', 'experiences');
+const TIMELINE_OUT = path.join(root, 'src', 'data', 'timeline.json');
+
+// Format "2022-09-01" -> "Sep 2022"
+const fmtMonth = (iso) => {
+  if (!iso) return '';
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+};
+
+const dateStart = (p) => (p?.date ? p.date.start : '');
+const dateEnd = (p) => (p?.date ? p.date.end : '');
+
+const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Render a Notion rich_text array as inline HTML (bold/italic/code/strike + links).
+const richTextHtml = (p) =>
+  (p?.html ?? p?.rich_text ?? [])
+    .map((t) => {
+      let s = escapeHtml(t.plain_text);
+      const { bold, italic, code, strikethrough, underline } = t.annotations ?? {};
+      if (code) s = `<code>${s}</code>`;
+      if (bold) s = `<strong>${s}</strong>`;
+      if (italic) s = `<em>${s}</em>`;
+      if (strikethrough) s = `<s>${s}</s>`;
+      if (underline) s = `<u>${s}</u>`;
+      return t.href ? `<a href="${escapeHtml(t.href)}" target="_blank" rel="noopener">${s}</a>` : s;
+    })
+    .join('');
+
+// Local logo path if a file matching the Notion attachment name already
+// exists; otherwise download the remote URL into that folder once.
+async function resolveLogo(logo) {
+  if (!logo?.files?.[0]) return '';
+  const url =
+    logo.files[0].type === 'file'
+      ? logo.files[0].file?.url
+      : logo.files[0].external?.url;
+  if (!url) return '';
+
+  const name = decodeURIComponent(url.split('?')[0].split('/').pop() || '')
+    .toLowerCase()
+    .replace(/[^\w.-]/g, '_');
+  if (!name || !/\.[a-z0-9]+$/i.test(name)) return '';
+
+  const local = path.join(LOGO_DIR, name);
+  if (fs.existsSync(local)) return `/static/images/experiences/${name}`;
+
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return '';
+    fs.writeFileSync(local, Buffer.from(await res.arrayBuffer()));
+    return `/static/images/experiences/${name}`;
+  } catch (e) {
+    console.warn(`[sync-notion] failed to download logo ${name}: ${e.message}`);
+    return '';
+  }
+}
+
+async function syncTimeline() {
+  const dbId = process.env.TIMELINE_DATABASE_ID;
+  if (!dbId) {
+    console.warn('[sync-notion] Missing TIMELINE_DATABASE_ID — skipping timeline sync.');
+    return;
+  }
+
+  // The database id in .env is the view; the real schema lives in its data
+  // source (inline database). Resolve it so query() works.
+  const db = await notion.databases.retrieve({ database_id: dbId });
+  const sourceId = db.data_sources?.[0]?.id;
+  if (!sourceId) {
+    console.warn('[sync-notion] No data source found for timeline — skipping.');
+    return;
+  }
+
+  const res = await notion.dataSources.query({ data_source_id: sourceId, page_size: 200 });
+
+  const items = [];
+  for (const page of res.results) {
+    const props = page.properties ?? {};
+    const status = props['Status']?.status?.name ?? props['Status']?.select?.name ?? '';
+    if (status === 'Private') continue;
+
+    // Details live in the page content as bulleted/numbered list items.
+    const blocks = await notion.blocks.children.list({ block_id: page.id, page_size: 100 });
+    const details = [];
+    for (const b of blocks.results) {
+      if (b.type !== 'bulleted_list_item' && b.type !== 'numbered_list_item') continue;
+      const html = richTextHtml(b[b.type]).trim();
+      if (html) details.push(html);
+    }
+
+    items.push({
+      org: text(props['Org']),
+      url: text(props['Url']),
+      logo: await resolveLogo(props['Logo']),
+      start: fmtMonth(dateStart(props['Time'])),
+      end: fmtMonth(dateEnd(props['Time'])) || 'Present',
+      title: props['Name']?.title?.[0]?.plain_text ?? '',
+      event: text(props['Event']),
+      details,
+    });
+  }
+
+  fs.mkdirSync(path.dirname(TIMELINE_OUT), { recursive: true });
+  fs.writeFileSync(TIMELINE_OUT, JSON.stringify({ items, syncedAt: new Date().toISOString() }, null, 2) + '\n');
+  console.log(`✅ Synced ${items.length} timeline entries -> src/data/timeline.json`);
+}
+
+await syncBlogs();
+await syncTimeline();

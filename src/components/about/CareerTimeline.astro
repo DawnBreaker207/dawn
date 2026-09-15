@@ -10,7 +10,6 @@ const EXPERIENCES = [
     start: 'Aug 2025',
     end: 'Jan 2026',
     title: 'Intern Web Developer',
-    icon: 'man-technologist',
     event: 'career-intern-fsoft',
     details: [
       `Developed and maintained a <strong>web-based healthcare system</strong> to manage patient records, appointments, and medical reports for a Japan-based client.`,
@@ -25,7 +24,6 @@ const EXPERIENCES = [
     start: 'Sep 2022',
     end: 'Present',
     title: 'Undergraduate Student at UTC',
-    icon: 'man-technologist',
     event: 'career-utc',
     details: [`<strong>Undergraduate student.</strong>`],
   },
@@ -33,7 +31,9 @@ const EXPERIENCES = [
 
 // Prefer the Notion-synced timeline (src/data/timeline.json); fall back to the
 // static list above when the sync produced nothing yet.
-const items = timelineData.items.length > 0 ? timelineData.items : EXPERIENCES;
+const items = (timelineData.items.length > 0 ? timelineData.items : EXPERIENCES).sort(
+  (a, b) => new Date(b.start).valueOf() - new Date(a.start).valueOf()
+);
 const last = items.length - 1;
 ---
 
