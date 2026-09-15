@@ -175,6 +175,7 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, gra
               onClick={() => setSelected((s) => (s === d.date ? null : d.date))}
               aria-pressed={activeDate === d.date}
               title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
+              data-umami-event="commit-day"
               className="aspect-square w-full cursor-pointer rounded-[3px] border transition focus:outline-none"
               style={{
                 backgroundColor: GREEN[Math.min(4, d.level)],
@@ -221,6 +222,7 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, gra
               onClick={() => setSelected((s) => (s === d.date ? null : d.date))}
               aria-pressed={activeDate === d.date}
               title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
+              data-umami-event="commit-day"
               className="aspect-square w-full cursor-pointer rounded-[3px] border transition focus:outline-none"
               style={{
                 backgroundColor: GREEN[Math.min(4, d.level)],

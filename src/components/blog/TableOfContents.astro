@@ -32,7 +32,7 @@ const { toc, class: cls } = Astro.props;
         class="text-gray-500 dark:text-gray-400"
         style={`padding-left: ${(depth - 2) * 16}px`}
       >
-        <a href={url} data-toc-id={url.slice(1)} class="toc-link break-words hover:text-gray-700 dark:hover:text-gray-200">{value}</a>
+        <a href={url} data-toc-id={url.slice(1)} data-umami-event={`toc-${value.toLowerCase().replace(/[^\w]+/g, '-').slice(0, 30)}`} class="toc-link break-words hover:text-gray-700 dark:hover:text-gray-200">{value}</a>
       </li>
     ))}
   </ul>

@@ -94,6 +94,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
       id="toggle-theme"
       data-theme-toggle
       type="button"
+      data-umami-event="theme-toggle"
       class="tip shrink-0 cursor-pointer px-1 text-(--fg-faint) hover:text-(--fg)"
       data-tip="Light / Dark"
       aria-label="Toggle light/dark theme"
@@ -106,6 +107,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
         type="button"
         class="version-trigger"
         data-version-trigger
+        data-umami-event="version-menu"
         aria-haspopup="menu"
         aria-expanded="false"
         aria-label="Switch site version (git branch)"
