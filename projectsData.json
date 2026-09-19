@@ -3,6 +3,7 @@
     "type": "self",
     "title": "Microz",
     "description": "",
+    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_theOxbow.jpg",
     "url": "",
     "repo": "DawnBreaker207/Microz",
     "builtWith": [
@@ -13,14 +14,14 @@
       "Spring",
       "TypeScript",
       "PostgreSQL"
-    ],
-    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_theOxbow.jpg"
+    ]
   },
   {
     "type": "self",
     "title": "Jira",
     "description": "",
-    "url": "",
+    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_thanatopsis.jpg",
+    "url": "jira-mu.vercel.app",
     "repo": "DawnBreaker207/Jira-Clone",
     "builtWith": [
       "Angular",
@@ -28,13 +29,13 @@
       "JavaScript",
       "Ng-Zorro",
       "NestJs"
-    ],
-    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_thanatopsis.jpg"
+    ]
   },
   {
     "type": "self",
     "title": "CinePlex",
     "description": "",
+    "imgSrc": "https://app.notion.com/images/page-cover/nationalMuseumOfAsianArt_gardenSceneMelonsEggPlantsFlowersAndTwoWeasels.jpg",
     "url": "",
     "repo": "DawnBreaker207/CinePlex",
     "builtWith": [
@@ -45,23 +46,22 @@
       "MySQL",
       "Ng-Zorro",
       "Redis"
-    ],
-    "imgSrc": "https://app.notion.com/images/page-cover/nationalMuseumOfAsianArt_gardenSceneMelonsEggPlantsFlowersAndTwoWeasels.jpg"
+    ]
   },
   {
     "type": "self",
-    "title": "Personal website",
+    "title": "Dawn",
     "description": "",
+    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_rockyMountainsLandersPeak.jpg",
     "url": "dawn.io.vn",
     "repo": "DawnBreaker207/dawn",
     "builtWith": [
-      "NextJS",
       "Tailwind",
       "TypeScript",
       "Prisma",
       "Notion",
-      "Umami"
-    ],
-    "imgSrc": "https://app.notion.com/images/page-cover/hudsonRiverSchool_rockyMountainsLandersPeak.jpg"
+      "Umami",
+      "Astro"
+    ]
   }
 ]
