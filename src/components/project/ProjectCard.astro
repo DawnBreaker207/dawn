@@ -43,7 +43,8 @@ const STACK_ICONS: Record<string, string> = {
 const repository = typeof project.repo === 'object' && project.repo !== null ? project.repo : null;
 
 const owner = repository?.nameWithOwner || (typeof project.repo === 'string' ? project.repo : '');
-const homepage = repository?.homepageUrl || project.url || '';
+const homepage = project.url || repository?.homepageUrl || '';
+const homepageHref = homepage && !/^https?:\/\//i.test(homepage) ? `http://${homepage}` : homepage;
 const href = repository?.url || (project.repo ? `https://github.com/${String(project.repo)}` : homepage);
 const repoHref = repository?.url || (project.repo ? `https://github.com/${String(project.repo)}` : '');
 const description = repository?.description || project.description || 'No description provided yet.';
@@ -93,7 +94,7 @@ const mainLanguage = repository
     <div class="flex shrink-0 items-center gap-1.5">
       {homepage && (
         <a
-          href={homepage}
+          href={homepageHref}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="View demo"
