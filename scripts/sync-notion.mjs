@@ -4,10 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Syncs everything from Notion to static build data, run from the repo root:
-// - Posts from BLOGS_DATABASE_ID -> data/blog/*.mdx
-// - Resume timeline from TIMELINE_DATABASE_ID -> src/data/timeline.json
-// When a DATABASE_ID env is missing the corresponding part is skipped.
+// Syncs from Notion to build data (run from repo root):
+//   Posts -> data/blog/*.mdx | Projects -> projectsData.json | Timeline -> src/data/timeline.json
+// Skipped when the matching env id is missing.
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
@@ -53,8 +52,7 @@ async function syncBlogs() {
   fs.rmSync(imagesRoot, { recursive: true, force: true });
   fs.mkdirSync(imagesRoot, { recursive: true });
 
-  // The database id in .env is the view; the real schema lives in its data
-  // source (inline database). Resolve it so query() works.
+  // .env db id is a view; resolve its data source to query() the real schema.
   const db = await notion.databases.retrieve({ database_id: databaseId });
   const sourceId = db.data_sources?.[0]?.id;
   if (!sourceId) {
@@ -134,13 +132,61 @@ images: ['${cover}']
 }
 
 // ---------------------------------------------------------------------------
+// Projects
+// ---------------------------------------------------------------------------
+
+async function syncProjects() {
+  const dbId = process.env.PROJECTS_DATABASE_ID;
+  if (!dbId) {
+    console.warn('[sync-notion] Missing PROJECTS_DATABASE_ID — skipping projects sync.');
+    return;
+  }
+
+  const db = await notion.databases.retrieve({ database_id: dbId });
+  const sourceId = db.data_sources?.[0]?.id;
+  if (!sourceId) {
+    console.warn('[sync-notion] No data source found for projects — skipping.');
+    return;
+  }
+
+  const res = await notion.dataSources.query({ data_source_id: sourceId, page_size: 200 });
+
+  const items = [];
+  for (const page of res.results) {
+    const props = page?.properties ?? {};
+    const status = props['Status']?.select?.name ?? '';
+    if (status === 'Draft' || status === 'Idea') continue;
+
+    const typeValue = props['Type']?.select?.name ?? '';
+    items.push({
+      type: typeValue.toLowerCase() === 'work' ? 'work' : 'self',
+      title: props['Name']?.title?.[0]?.plain_text ?? '',
+      description: props['Description']?.rich_text?.[0]?.plain_text ?? '',
+      imgSrc:
+        page.cover?.type === 'external'
+          ? page.cover.external.url
+          : page.cover?.type === 'file'
+            ? page.cover.file.url
+            : '',
+      url: props['URL']?.url ?? '',
+      repo: props['Link']?.url ?? '',
+      builtWith: props['Build With']?.multi_select?.map((t) => t.name) ?? [],
+    });
+  }
+
+  const out = path.join(process.cwd(), 'projectsData.json');
+  fs.writeFileSync(out, JSON.stringify(items, null, 2) + '\n');
+  console.log(`✅ Synced ${items.length} projects -> projectsData.json`);
+}
+
+// ---------------------------------------------------------------------------
 // Resume timeline
 // ---------------------------------------------------------------------------
 
 const LOGO_DIR = path.join(root, 'public', 'static', 'images', 'experiences');
 const TIMELINE_OUT = path.join(root, 'src', 'data', 'timeline.json');
 
-// Format "2022-09-01" -> "Sep 2022"
+// "2022-09-01" -> "Sep 2022"
 const fmtMonth = (iso) => {
   if (!iso) return '';
   const d = new Date(`${iso}T00:00:00`);
@@ -153,7 +199,7 @@ const dateEnd = (p) => (p?.date ? p.date.end : '');
 
 const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// Render a Notion rich_text array as inline HTML (bold/italic/code/strike + links).
+// Notion rich_text array as inline HTML.
 const richTextHtml = (p) =>
   (p?.html ?? p?.rich_text ?? [])
     .map((t) => {
@@ -168,8 +214,7 @@ const richTextHtml = (p) =>
     })
     .join('');
 
-// Local logo path if a file matching the Notion attachment name already
-// exists; otherwise download the remote URL into that folder once.
+// Reuse local logo if the attachment was already downloaded; else fetch once.
 async function resolveLogo(logo) {
   if (!logo?.files?.[0]) return '';
   const url =
@@ -204,8 +249,7 @@ async function syncTimeline() {
     return;
   }
 
-  // The database id in .env is the view; the real schema lives in its data
-  // source (inline database). Resolve it so query() works.
+  // .env db id is a view; resolve its data source to query() the real schema.
   const db = await notion.databases.retrieve({ database_id: dbId });
   const sourceId = db.data_sources?.[0]?.id;
   if (!sourceId) {
@@ -221,7 +265,7 @@ async function syncTimeline() {
     const status = props['Status']?.status?.name ?? props['Status']?.select?.name ?? '';
     if (status === 'Private') continue;
 
-    // Details live in the page content as bulleted/numbered list items.
+    // Details are bulleted/numbered list blocks in the page body.
     const blocks = await notion.blocks.children.list({ block_id: page.id, page_size: 100 });
     const details = [];
     for (const b of blocks.results) {
@@ -248,4 +292,5 @@ async function syncTimeline() {
 }
 
 await syncBlogs();
+await syncProjects();
 await syncTimeline();
