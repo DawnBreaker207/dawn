@@ -3,9 +3,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 
 export const prerender = true;
 
-// Static shell first (cheap), full telemetry hydrates after first paint from
-// /api/token-burn.json?view=full so client navigation never waits on the
-// private GitHub summary fetch during document render.
+// Static shell first; telemetry hydrates post-paint from view=full JSON.
 
 const WINDOWS = [
   { key: 'today', label: 'today' },

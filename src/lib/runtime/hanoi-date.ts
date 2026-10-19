@@ -1,6 +1,4 @@
-// The AI tools stamp their logs with the machine's local calendar day (UTC+7,
-// Vietnamese clock). Hanoi has no DST, so shifting by +7h and reading UTC
-// fields is exactly the local day.
+// Logs use the local Hanoi calendar (UTC+7, no DST): +7h then read UTC fields.
 
 const HANOI_OFFSET_MS = 7 * 60 * 60 * 1000;
 

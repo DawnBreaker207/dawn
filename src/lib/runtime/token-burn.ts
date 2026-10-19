@@ -1,9 +1,6 @@
-// AI coding token spend, read from a private, pre-aggregated summary JSON in
-// the `token-burn` repo via the GitHub Contents API. The source URL and PAT
-// both live in env and are only used server-side, so neither the endpoint nor
-// the credential reaches the client. The summary holds only time-absolute
-// data — `today`/`last7Days`/`last30Days` are derived here from `daily[]`
-// using the Hanoi calendar (`hanoi-date`).
+// Token spend from the private pre-aggregated summary in the token-burn repo
+// (env-held URL + token, server-side only — nothing reaches the client).
+// `.daily[]` is time-absolute; windows are derived with the Hanoi calendar.
 import { hanoiStartDateOffset, todayInHanoi } from '@/lib/runtime/hanoi-date';
 import { env } from '@/lib/env';
 import type {
@@ -139,10 +136,7 @@ function buildTokenBurnFullPayload(summary: TokenBurnSummary): TokenBurnFullPayl
   };
 }
 
-// Fetch the pre-aggregated summary. The endpoint URL and the credential live in
-// env only. `TOKEN_BURN_GH_TOKEN` (dedicated token with read access to the
-// private repo) wins so heatmap-style read tokens can coexist; fallback is the
-// generic `GITHUB_API_TOKEN`.
+// TOKEN_BURN_GH_TOKEN wins so the heatmap token can stay a separate credential.
 async function fetchTokenBurnSummary(): Promise<{ summary: TokenBurnSummary } | { error: string }> {
   const endpoint = env('TOKEN_BURN_SUMMARY_URL');
   if (!endpoint) return { error: 'TOKEN_BURN_SUMMARY_URL is not configured.' };

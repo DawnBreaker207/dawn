@@ -1,6 +1,4 @@
-// Client hydration for /tokens: fetch the full payload after first paint and
-// fill the static skeleton. The compact rail/card variant of Leo's widget is
-// out of scope here — this page always loads the `view=full` payload.
+// /tokens hydration: fetch view=full after first paint, fill the static skeleton.
 import type { TokenBurnFullPayload, TokenBurnModelSlice, TokenBurnWindow } from '@/types/token-burn';
 
 const CHART_DAYS = 90;
@@ -215,6 +213,5 @@ async function hydrateTokenBurn() {
   }
 }
 
-// ClientRouter (BaseLayout) fires astro:page-load on first paint and on SPA
-// navigations alike — hydrating at most once per page instance.
+// astro:page-load fires on first paint and SPA navigations alike.
 document.addEventListener('astro:page-load', hydrateTokenBurn);

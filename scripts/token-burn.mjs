@@ -1,13 +1,8 @@
 #!/usr/bin/env node
 /**
- * Aggregate AI token usage into the private token-burn repo (Leo-style widget).
- *
- *   node scripts/token-burn.mjs             # scan + push summary.json
- *   node scripts/token-burn.mjs --dry-run   # print payload only, no push
- *   node scripts/token-burn.mjs --self-check
- *
- * Requires Node >= 24 (node:sqlite). Auth: GITHUB_TOKEN/TOKEN_BURN_GH_TOKEN,
- * falling back to the gh CLI login (scope repo).
+ * Aggregate AI token usage into the private token-burn repo.
+ *   node scripts/token-burn.mjs [--dry-run]
+ * Node >= 24 (node:sqlite). Auth: gh CLI login (or TOKEN_BURN_GH_TOKEN env).
  */
 import { DatabaseSync } from 'node:sqlite';
 import { spawnSync, execFileSync } from 'node:child_process';
@@ -88,9 +83,7 @@ async function scanOpencode() {
     }
 
     const days = new Map();
-    // Subagent child sessions carry their own burn (their model usage is NOT
-    // duplicated in the parent row), so tokens/cost count every row while the
-    // `sessions` stat counts roots only.
+    // Child subagent rows burn tokens independently; "sessions" counts roots only.
     for (const row of db.prepare(`
       SELECT CASE WHEN parent_id IS NULL THEN 1 ELSE 0 END AS is_parent,
              model, cost,
@@ -115,8 +108,7 @@ async function scanOpencode() {
       days.set(day, cell);
     }
 
-    // User turns -> messages. The stored type name varies between opencode
-    // versions, so probe once and match the one that looks like a prompt.
+    // "messages" = user turns; the stored type name varies by opencode version.
     const seenTypes = new Map();
     for (const row of db.prepare(
       `SELECT type, datetime(time_created / 1000, 'unixepoch', '${HOUR_SQL}') AS day
@@ -142,9 +134,7 @@ async function scanOpencode() {
   }
 }
 
-// ccusage reads vendor-specific local transcripts and emits one JSON shape:
-// { daily: [{ date|period, totalTokens, totalCost, modelBreakdowns }] }.
-// `sub` selects the source ("antigravity daily" | "daily" for Claude Code).
+// ccusage emits { daily: [{ date|period, modelBreakdowns }] }; claude uses "period".
 function scanCcusage(sub, label) {
   const res = spawnSync(`npx -y ccusage@latest ${sub} --json`, {
     shell: true,
@@ -178,12 +168,10 @@ function scanCcusage(sub, label) {
 // ---- merge (pure, self-checked) ---------------------------------------------
 
 /**
- * Per-date rows keep one cell per machine (`by: { [machine]: cell }`), each
- * cell summing that machine's sources; a date's totals are the sum of its
- * cells. So two machines can push the same dates without clobbering each
- * other — each machine only ever replaces its OWN cells. A date untouched by
- * any scan keeps whatever cells it already had (legacy flat rows are adopted
- * under the pushing machine's name once).
+ * Per-date rows hold one cell per machine (`by`); a date's totals sum its
+ * cells. Machines only replace their OWN cells, so several devices can push
+ * the same dates without clobbering. Dates no scan touches keep prior cells
+ * (legacy flat rows are adopted once under the pushing machine's name).
  */
 export function mergeSummary(existing, scans, machine, nowIso) {
   const base = existing ?? {};
@@ -355,8 +343,7 @@ async function main() {
 
   selfCheck();
 
-  // Each source owns a slot per date; remove a source here ONLY if its logs
-  // are gone for good (its dates would be re-summed without it).
+  // Sources stack per date. Remove a source line ONLY if its logs are gone for good.
   const scans = [
     await scanOpencode(),
     scanCcusage('antigravity daily', 'antigravity'),
@@ -369,8 +356,7 @@ async function main() {
     process.exit(1);
   }
   if (scanned.length !== scans.length && !dryRun) {
-    // A missing source would silently drop that source's history from its
-    // dates — fail loudly instead; the nightly task retries tomorrow.
+    // A failed scan would erase that source's dates - abort; the nightly task retries.
     console.error('error: a scan failed — not pushing to avoid dropping data');
     process.exit(1);
   }
@@ -400,7 +386,7 @@ async function main() {
   console.log(`pushed summary.json to ${REPO}`);
 }
 
-// Run standalone only (not when imported for tests/tools).
+// Standalone only; importable for tests.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
     console.error('error:', error.message);

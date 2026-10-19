@@ -1,5 +1,4 @@
-// One window of token-burn numbers. `cost` is an estimate (retail pricing),
-// never an invoice.
+// One usage window; `cost` is a retail estimate, not an invoice.
 export interface TokenBurnWindow {
   cost: number;
   tokens: number;
@@ -13,8 +12,7 @@ export interface TokenBurnModelSlice {
   tokens: number;
 }
 
-// A single published day from the private telemetry summary. Dates are the
-// local (Hanoi) calendar day the usage happened on.
+// One published day; dates are local Hanoi calendar days.
 export interface TokenBurnDailyPoint {
   date: string;
   tokens: number;
@@ -22,11 +20,7 @@ export interface TokenBurnDailyPoint {
   sessions: number;
 }
 
-/**
- * Compact payload for cards. The `today`/`last7Days`/`last30Days` windows are
- * derived server-side from the summary's `daily[]` using the Hanoi calendar —
- * the stored file deliberately holds only time-absolute data.
- */
+/** Compact payload; windows are derived server-side (Hanoi calendar). */
 export interface TokenBurnPayload {
   ok: boolean
   allTime: TokenBurnWindow;
@@ -39,10 +33,7 @@ export interface TokenBurnPayload {
   error?: string;
 }
 
-/**
- * The `/tokens` page's richer view: same windows plus the all-time per-model
- * breakdown and the full `daily[]` series the compact payload drops.
- */
+/** Richer view for /tokens: full daily[] series + all-time model breakdown. */
 export interface TokenBurnFullPayload {
   ok: boolean;
   allTime: TokenBurnWindow;
