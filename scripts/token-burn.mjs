@@ -77,11 +77,15 @@ async function scanOpencode() {
     }
 
     const days = new Map();
+    // Subagent child sessions carry their own burn (their model usage is NOT
+    // duplicated in the parent row), so tokens/cost count every row while the
+    // `sessions` stat counts roots only.
     for (const row of db.prepare(`
-      SELECT model, cost,
+      SELECT CASE WHEN parent_id IS NULL THEN 1 ELSE 0 END AS is_parent,
+             model, cost,
              tokens_input + tokens_output + tokens_cache_read + tokens_cache_write AS tokens,
              datetime(time_updated / 1000, 'unixepoch', '${HOUR_SQL}') AS day
-      FROM session_v2 WHERE parent_id IS NULL
+      FROM session_v2
     `).all()) {
       const day = row.day?.slice(0, 10);
       if (!day) continue;
@@ -94,7 +98,7 @@ async function scanOpencode() {
       addTotals(cell, {
         tokens: row.tokens ?? 0,
         cost: row.cost ?? 0,
-        sessions: 1,
+        sessions: row.is_parent ? 1 : 0,
         model,
       });
       days.set(day, cell);
