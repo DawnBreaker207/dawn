@@ -16,6 +16,7 @@ import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import os from 'node:os';
+import { pathToFileURL } from 'node:url';
 
 const REPO = process.env.TOKEN_BURN_REPO ?? 'DawnBreaker207/token-burn';
 const BRANCH = 'main';
@@ -43,6 +44,16 @@ function addTotals(cell, { tokens = 0, cost = 0, sessions = 0, messages = 0, mod
     cell.byModel[model] ??= { tokens: 0, cost: 0 };
     cell.byModel[model].tokens += tokens;
     cell.byModel[model].cost += cost;
+  }
+}
+
+// Additive merge of two per-source/per-machine cells.
+function addCell(target, cell) {
+  addTotals(target, cell ?? {});
+  for (const [model, slice] of Object.entries(cell?.byModel ?? {})) {
+    target.byModel[model] ??= { tokens: 0, cost: 0 };
+    target.byModel[model].tokens += slice.tokens ?? 0;
+    target.byModel[model].cost += slice.cost ?? 0;
   }
 }
 
@@ -167,51 +178,57 @@ function scanCcusage(sub, label) {
 // ---- merge (pure, self-checked) ---------------------------------------------
 
 /**
- * Per-date, per-source slots: each scan owns its slot for a date (so rerunning
- * never double-counts), and a date's row sums every source slot. Dates outside
- * all scans keep their published rows, so wiping local logs never erases data.
+ * Per-date rows keep one cell per machine (`by: { [machine]: cell }`), each
+ * cell summing that machine's sources; a date's totals are the sum of its
+ * cells. So two machines can push the same dates without clobbering each
+ * other — each machine only ever replaces its OWN cells. A date untouched by
+ * any scan keeps whatever cells it already had (legacy flat rows are adopted
+ * under the pushing machine's name once).
  */
 export function mergeSummary(existing, scans, machine, nowIso) {
   const base = existing ?? {};
-  const slots = new Map(); // date -> cells[] indexed by scan position
-  scans.forEach((scan, index) => {
-    if (scan.error) return;
+  const rows = new Map(
+    (base.daily ?? []).map((row) => [
+      row.date,
+      { by: row.by ?? { [machine]: { ...row, byModel: { ...row.byModel } } } },
+    ]),
+  );
+
+  // All of this machine's scans sum into one local cell per date, which then
+  // replaces this machine's cell for that date (other machines' cells stay).
+  const daySlots = new Map();
+  for (const scan of scans) {
+    if (scan.error) continue;
     for (const [date, cell] of scan.days) {
       if (!date) continue;
-      const daySlots = slots.get(date) ?? [];
-      daySlots[index] = cell;
-      slots.set(date, daySlots);
+      const acc = daySlots.get(date) ?? emptyDay();
+      addCell(acc, cell);
+      daySlots.set(date, acc);
     }
-  });
+  }
+  for (const [date, cell] of daySlots) {
+    const row = rows.get(date) ?? { by: {} };
+    row.by = { ...row.by, [machine]: cell };
+    rows.set(date, row);
+  }
 
-  const daily = new Map((base.daily ?? []).map((row) => [row.date, row]));
-  for (const [date, daySlots] of slots) {
-    const merged = emptyDay();
-    for (const cell of daySlots) {
-      if (!cell) continue;
-      merged.tokens += cell.tokens ?? 0;
-      merged.cost += cell.cost ?? 0;
-      merged.sessions += cell.sessions ?? 0;
-      merged.messages += cell.messages ?? 0;
-      for (const [model, slice] of Object.entries(cell.byModel ?? {})) {
-        merged.byModel[model] ??= { tokens: 0, cost: 0 };
-        merged.byModel[model].tokens += slice.tokens ?? 0;
-        merged.byModel[model].cost += slice.cost ?? 0;
-      }
-    }
-    daily.set(date, {
+  const daily = [];
+  for (const [date, { by }] of [...rows.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const totals = emptyDay();
+    for (const cell of Object.values(by)) addCell(totals, cell);
+    daily.push({
       date,
-      tokens: merged.tokens,
-      cost: round4(merged.cost),
-      sessions: merged.sessions,
-      messages: merged.messages,
-      byModel: merged.byModel,
+      tokens: totals.tokens,
+      cost: round4(totals.cost),
+      sessions: totals.sessions,
+      messages: totals.messages,
+      byModel: totals.byModel,
+      by,
     });
   }
-  const rows = [...daily.values()].sort((a, b) => a.date.localeCompare(b.date));
   const allTime = emptyDay();
   const byModel = {};
-  for (const row of rows) {
+  for (const row of daily) {
     allTime.tokens += row.tokens ?? 0;
     allTime.cost += row.cost ?? 0;
     allTime.sessions += row.sessions ?? 0;
@@ -231,7 +248,7 @@ export function mergeSummary(existing, scans, machine, nowIso) {
       messages: allTime.messages,
     },
     byModel,
-    daily: rows,
+    daily,
     machines: [...new Set([...(base.machines ?? []), machine])].sort(),
     lastActivity: [base.lastActivity ?? '', nowIso].filter(Boolean).sort().at(-1),
   };
@@ -258,7 +275,7 @@ function selfCheck() {
     machines: ['old-pc'],
     lastActivity: '2026-10-01T00:00:00.000Z',
   };
-  // Two sources cover the same date: their cells must ADD UP, not overwrite.
+  // Two LOCAL sources cover the same date: their cells must ADD UP.
   const opencodeScan = { days: new Map([['2026-10-01', { tokens: 5, cost: 0.5, sessions: 2, messages: 3, byModel: { 'muse-model': { tokens: 5, cost: 0.5 } } }]]) };
   const agyScan = { days: new Map([['2026-10-01', { tokens: 7, cost: 0.25, sessions: 0, messages: 0, byModel: { 'agy-model': { tokens: 7, cost: 0.25 } } }]]) };
   const merged = mergeSummary(existing, [opencodeScan, agyScan], 'this-pc', '2026-10-03T00:00:00.000Z');
@@ -268,12 +285,24 @@ function selfCheck() {
   assert(merged.byModel['muse-model'].tokens === 5 && merged.byModel['agy-model'].tokens === 7 && merged.byModel['old-model'].tokens === 9, 'byModel rebuilt per date + kept unscanned');
   assert(merged.machines.join(',') === 'old-pc,this-pc', 'machines merged');
   assert(merged.lastActivity === '2026-10-03T00:00:00.000Z', 'lastActivity moves forward');
-  // rerun with identical scans -> identical numbers (idempotent, no double count)
+  // rerun with identical scans -> identical numbers (idempotent)
   const rerun = mergeSummary(merged, [opencodeScan, agyScan], 'this-pc', '2026-10-04T00:00:00.000Z');
   assert(rerun.daily[0].tokens === 12, 'rerunning is idempotent');
   // unscanned history survives
   const kept = mergeSummary(existing, [], 'this-pc', '2026-10-03T00:00:00.000Z');
   assert(kept.daily[0]?.tokens === 10 && kept.daily[1]?.tokens === 9, 'unscanned history kept');
+
+  // ── multi-machine ─────────────────────────────────────────────
+  // Another machine scans the SAME date: its cell must coexist, not clobber.
+  const otherPcScan = { days: new Map([['2026-10-01', { tokens: 100, cost: 2, sessions: 1, messages: 5, byModel: { 'laptop-model': { tokens: 100, cost: 2 } } }]]) };
+  const twoPcs = mergeSummary(merged, [otherPcScan], 'laptop', '2026-10-05T00:00:00.000Z');
+  assert(twoPcs.daily[0].tokens === 12 + 100, 'second machine adds its cell on a shared date');
+  assert(twoPcs.daily[0].by['this-pc'].tokens === 12 && twoPcs.daily[0].by['laptop'].tokens === 100, 'per-machine cells stored');
+  assert(twoPcs.daily[0].sessions === 3, 'sessions sum across machines');
+  // this-pc rerun AFTER laptop pushed: laptop's numbers survive (own cells only)
+  const backOnMain = mergeSummary(twoPcs, [opencodeScan, agyScan], 'this-pc', '2026-10-06T00:00:00.000Z');
+  assert(backOnMain.daily[0].tokens === 12 + 100 && backOnMain.daily[0].by['laptop'].tokens === 100, 'rerun on machine A never erases machine B');
+  assert(backOnMain.daily[1].tokens === 9, 'laptop did not touch dates it never scanned');
 }
 
 // ---- github contents api ------------------------------------------------------
@@ -371,7 +400,10 @@ async function main() {
   console.log(`pushed summary.json to ${REPO}`);
 }
 
-main().catch((error) => {
-  console.error('error:', error.message);
-  process.exit(1);
-});
+// Run standalone only (not when imported for tests/tools).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error('error:', error.message);
+    process.exit(1);
+  });
+}
