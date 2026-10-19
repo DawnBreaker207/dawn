@@ -131,14 +131,17 @@ async function scanOpencode() {
   }
 }
 
-function scanAntigravity() {
-  const res = spawnSync('npx -y ccusage@latest antigravity daily --json', {
+// ccusage reads vendor-specific local transcripts and emits one JSON shape:
+// { daily: [{ date|period, totalTokens, totalCost, modelBreakdowns }] }.
+// `sub` selects the source ("antigravity daily" | "daily" for Claude Code).
+function scanCcusage(sub, label) {
+  const res = spawnSync(`npx -y ccusage@latest ${sub} --json`, {
     shell: true,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
   });
   if (res.status !== 0) {
-    return { error: `ccusage failed (exit ${res.status}): ${(res.stderr ?? '').slice(-200)}` };
+    return { error: `${label}: ccusage failed (exit ${res.status}): ${(res.stderr ?? '').slice(-200)}` };
   }
   const start = res.stdout.indexOf('{');
   const data = JSON.parse(res.stdout.slice(start));
@@ -156,7 +159,7 @@ function scanAntigravity() {
     if (cell.tokens === 0 && (row.totalTokens ?? 0) > 0) {
       addTotals(cell, { tokens: row.totalTokens, cost: row.totalCost ?? 0 });
     }
-    days.set(row.date?.slice(0, 10), cell);
+    days.set((row.date ?? row.period)?.slice(0, 10), cell);
   }
   return { days };
 }
@@ -323,11 +326,23 @@ async function main() {
 
   selfCheck();
 
-  const scans = [await scanOpencode(), scanAntigravity()];
+  // Each source owns a slot per date; remove a source here ONLY if its logs
+  // are gone for good (its dates would be re-summed without it).
+  const scans = [
+    await scanOpencode(),
+    scanCcusage('antigravity daily', 'antigravity'),
+    scanCcusage('daily', 'claude code'),
+  ];
   const scanned = scans.filter((s) => !s.error);
   for (const s of scans) if (s.error) console.warn(`warn: ${s.error}`);
   if (scanned.length === 0) {
     console.error('error: no data sources available');
+    process.exit(1);
+  }
+  if (scanned.length !== scans.length && !dryRun) {
+    // A missing source would silently drop that source's history from its
+    // dates — fail loudly instead; the nightly task retries tomorrow.
+    console.error('error: a scan failed — not pushing to avoid dropping data');
     process.exit(1);
   }
 
