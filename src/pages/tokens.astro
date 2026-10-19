@@ -1,0 +1,203 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export const prerender = true;
+
+// Static shell first (cheap), full telemetry hydrates after first paint from
+// /api/token-burn.json?view=full so client navigation never waits on the
+// private GitHub summary fetch during document render.
+
+const WINDOWS = [
+  { key: 'today', label: 'today' },
+  { key: 'last7Days', label: 'last 7 days' },
+  { key: 'last30Days', label: 'last 30 days' },
+];
+---
+
+<BaseLayout title="Token burn" description="Token-burn telemetry for AI pair-coding sessions — all-time totals, daily burn chart, and the breakdown by model.">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      token burn
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      Every token burned pair-coding with AI agents — pulled nightly from my own local usage
+      telemetry. Costs are estimated retail figures, not invoices.
+    </p>
+  </header>
+
+  <div data-token-burn>
+    <p
+      data-tok-error
+      hidden
+      class="mb-8 rounded-lg border border-(--border) bg-(--bg-alt) px-4 py-3 font-mono text-[13px] text-(--fg-dim)"
+    >
+      telemetry is unavailable right now.
+    </p>
+
+    {/* ── Hero: all-time headline ───────────────────────────── */}
+    <section class="mb-10">
+      <p class="m-0 mb-3 font-mono text-[11px] tracking-widest text-(--fg-faint) uppercase">
+        tokens burned · all-time
+      </p>
+      <p
+        data-tok-hero-tokens
+        class="m-0 min-h-[0.92em] min-w-[10ch] font-mono text-[clamp(34px,6vw,64px)] leading-[0.92] font-black tracking-[-0.04em] text-(--fg) tabular-nums"
+      >
+        <span class="tok-skel inline-block h-[0.72em] w-[10ch] rounded-md" aria-hidden="true"></span>
+      </p>
+      <dl class="mt-6 grid max-w-xl grid-cols-3 gap-px overflow-hidden rounded-lg border border-(--border)">
+        {[
+          { key: 'spend', label: 'spend' },
+          { key: 'sessions', label: 'sessions' },
+          { key: 'messages', label: 'prompts' },
+        ].map((m) => (
+          <div class="bg-(--bg-alt) px-4 py-3">
+            <dt class="m-0 font-mono text-[10px] tracking-widest text-(--fg-faint) uppercase">{m.label}</dt>
+            <dd
+              data-tok-meta={m.key}
+              class="m-0 mt-1 min-h-[1.25em] font-mono text-lg text-(--fg) tabular-nums"
+            >
+              <span class="tok-skel inline-block h-[0.9em] w-12 rounded align-baseline" aria-hidden="true"></span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+
+    {/* ── Recent windows ────────────────────────────────────── */}
+    <section class="mb-12">
+      <p class="m-0 mb-3 border-b border-(--border) pb-2 font-mono text-[11px] tracking-widest text-(--fg-faint) uppercase">
+        recent
+      </p>
+      <div class="grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-(--border)">
+        {
+          WINDOWS.map(({ key, label }) => (
+            <div class="bg-(--bg-alt) px-4 py-3">
+              <span class="font-mono text-[10px] tracking-widest text-(--fg-faint) uppercase">{label}</span>
+              <p
+                data-tok-window={key}
+                class="m-0 mt-2 min-h-[1.2em] font-mono text-[clamp(16px,2.2vw,21px)] tracking-[-0.03em] text-(--fg) tabular-nums"
+              >
+                <span class="tok-skel inline-block h-[0.85em] w-14 rounded align-baseline" aria-hidden="true"></span>
+              </p>
+              <p
+                data-tok-window-meta={key}
+                class="m-0 mt-1 min-h-[1.25em] font-mono text-[11px] text-(--fg-faint)"
+              >
+                <span class="tok-skel inline-block h-[0.9em] w-24 rounded align-baseline" aria-hidden="true"></span>
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    {/* ── Daily burn chart ──────────────────────────────────── */}
+    <section data-tok-chart-section class="mb-12">
+      <p class="mb-3 flex items-center gap-3 border-b border-(--border) pb-2 font-mono text-[11px] tracking-widest text-(--fg-faint) uppercase">
+        daily burn
+        <span class="flex-1 border-t border-(--border)" aria-hidden="true"></span>
+        <span class="tracking-normal text-(--fg-dim) normal-case">
+          <span data-tok-chart-count>—</span>
+          ·
+          <span data-tok-chart-peak>—</span>
+        </span>
+      </p>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-4 shadow-[3px_3px_0_var(--border)]">
+        <div class="relative h-44 pl-11">
+          <div class="absolute right-0 left-11 top-0">
+            <span data-tok-chart-max class="absolute right-full mr-2 -translate-y-1/2 font-mono text-[9px] text-(--fg-faint) tabular-nums">—</span>
+            <span class="block h-px border-t border-dashed border-(--border)"></span>
+          </div>
+          <div class="absolute right-0 left-11 top-1/2">
+            <span data-tok-chart-mid class="absolute right-full mr-2 -translate-y-1/2 font-mono text-[9px] text-(--fg-faint) tabular-nums">—</span>
+            <span class="block h-px border-t border-dashed border-(--border)"></span>
+          </div>
+          <div class="absolute right-0 left-11 bottom-0">
+            <span class="absolute right-full bottom-0 mr-2 font-mono text-[9px] text-(--fg-faint) tabular-nums">0</span>
+            <span class="block h-px bg-(--border)"></span>
+          </div>
+          <div data-tok-chart-bars class="absolute inset-0 left-11 flex items-end gap-px"></div>
+        </div>
+        <div class="mt-2 flex justify-between pl-11 font-mono text-[10px] text-(--fg-faint)">
+          <span data-tok-chart-first>—</span>
+          <span data-tok-chart-last>—</span>
+        </div>
+      </div>
+    </section>
+
+    {/* ── By model ──────────────────────────────────────────── */}
+    <section data-tok-models-section class="mb-10">
+      <p class="mb-3 flex items-center gap-3 border-b border-(--border) pb-2 font-mono text-[11px] tracking-widest text-(--fg-faint) uppercase">
+        by model
+        <span class="flex-1 border-t border-(--border)" aria-hidden="true"></span>
+        <span data-tok-model-count class="tracking-normal text-(--fg-dim) normal-case">—</span>
+      </p>
+      <div data-tok-models class="overflow-hidden rounded-lg border border-(--border) bg-(--bg-alt) shadow-[3px_3px_0_var(--border)]">
+        {Array.from({ length: 6 }).map(() => (
+          <div class="flex items-center gap-3 border-b border-(--border) px-4 py-2.5 last:border-b-0">
+            <span class="tok-skel h-3 w-5 shrink-0 rounded" />
+            <span class="tok-skel h-4 w-44 shrink-0 rounded" />
+            <span class="tok-skel h-4 w-16 shrink-0 rounded" />
+            <span class="tok-skel ml-auto h-4 w-10 shrink-0 rounded" />
+            <span class="tok-skel h-4 w-16 shrink-0 rounded" />
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* ── Provenance ────────────────────────────────────────── */}
+    <p class="font-mono text-[11px] leading-relaxed text-(--fg-faint)">
+      <span class="text-(--fg-dim)">machines</span>
+      {' '}
+      <span data-tok-machines class="inline-block min-w-24">—</span>
+      <span data-tok-last-wrap hidden>
+        {' '}· <span class="text-(--fg-dim)">last activity</span> <span data-tok-last></span>
+      </span>
+      {' '}· sources: opencode + antigravity · cost is an estimate
+    </p>
+  </div>
+</BaseLayout>
+
+<script>
+  import '@/scripts/token-burn-page';
+</script>
+
+<style is:global>
+  @keyframes tok-skel-pulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 0.85; }
+  }
+  @keyframes tok-bar-grow {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+  .tok-skel {
+    background: color-mix(in srgb, var(--border) 90%, transparent);
+    animation: tok-skel-pulse 1.2s ease-in-out infinite;
+  }
+  .tok-bar {
+    transform-origin: bottom;
+    background: var(--fg);
+    opacity: 0.4;
+    animation: tok-bar-grow 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    transition: opacity 0.15s ease;
+  }
+  .tok-bar:hover { opacity: 0.85; }
+  .tok-bar.is-peak { opacity: 1; }
+  .tok-bar-group { min-height: 100%; }
+  .tok-model-row {
+    border-bottom: 1px solid var(--border);
+    font-family: ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    transition: background 0.15s ease;
+  }
+  .tok-model-row:last-child { border-bottom: 0; }
+  .tok-model-row:hover { background: color-mix(in srgb, var(--bg-alt) 60%, transparent); }
+  .tok-model-row > span:nth-child(2) { color: var(--fg); }
+  .tok-model-bar { background: var(--fg); opacity: 0.55; }
+  .tok-model-row:first-child .tok-model-bar { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .tok-skel, .tok-bar { animation: none; }
+  }
+</style>

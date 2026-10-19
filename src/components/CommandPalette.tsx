@@ -201,7 +201,6 @@ export default function CommandPalette({
         </a>{' '}
         for this blog.
       </p>
-      {/* resume disabled until static/resume.pdf is back
       <p>
         <a
           className="pal-link"
@@ -212,7 +211,6 @@ export default function CommandPalette({
           View resume
         </a>
       </p>
-      */}
       <p>
         <a className="pal-link" href="/about">
           → About (full version)

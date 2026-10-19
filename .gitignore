@@ -31,3 +31,5 @@ public/search.json
 # generated at build time
 src/build-stats.json
 src/data/books.json
+
+scripts/token-burn.log
