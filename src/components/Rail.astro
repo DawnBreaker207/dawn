@@ -1,6 +1,8 @@
 ---
 import CommitGraph from '@/components/CommitGraph';
 import RecentActivity from '@/components/RecentActivity';
+import TokenBurnRail from '@/components/TokenBurnRail';
+import LabRail from '@/components/LabRail';
 ---
 
 <aside
@@ -19,4 +21,8 @@ import RecentActivity from '@/components/RecentActivity';
     Recent activity
   </div>
   <RecentActivity client:visible />
+
+  <TokenBurnRail client:visible />
+
+  <LabRail client:visible />
 </aside>

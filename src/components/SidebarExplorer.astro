@@ -127,6 +127,17 @@ const inPostDetail =
         <span class="row-label truncate">about.md</span>
       </a>
       <a
+        href="/now"
+        class:list={['explorer-row explorer-row--child no-underline', activePath === '/now' && 'is-active']}
+        aria-current={activePath === '/now' ? 'page' : undefined}
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="markdown" />
+        </span>
+        <span class="row-label truncate">now.md</span>
+      </a>
+      <a
         href="/heatmap"
         class:list={['explorer-row explorer-row--child no-underline', activePath === '/heatmap' && 'is-active']}
         aria-current={activePath === '/heatmap' ? 'page' : undefined}
@@ -136,6 +147,17 @@ const inPostDetail =
           <ExplorerFileIcon type="astro" />
         </span>
         <span class="row-label truncate">heatmap.astro</span>
+      </a>
+      <a
+        href="/tokens"
+        class:list={['explorer-row explorer-row--child no-underline', activePath === '/tokens' && 'is-active']}
+        aria-current={activePath === '/tokens' ? 'page' : undefined}
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="astro" />
+        </span>
+        <span class="row-label truncate">tokens.astro</span>
       </a>
       <a
         href="/books"
@@ -218,7 +240,10 @@ const inPostDetail =
   <nav class="tree-children space-y-0.5 py-1">
     {[
       ['/lab', 'README.md', 'markdown'],
+      ['/lab/sql-plan', 'sql-plan.astro', 'astro'],
+      ['/lab/java', 'java.astro', 'astro'],
       ['/lab/terminal', 'terminal.astro', 'astro'],
+      ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
       ['/lab/spider', 'spider.astro', 'astro'],
     ].map(([href, label, icon]) => (
       <a

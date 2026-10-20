@@ -359,6 +359,125 @@ export default function CommandPalette({
           ),
         }),
     },
+    now: {
+      desc: 'view what DawnBreaker is doing right now',
+      run: () => window.location.assign('/now'),
+    },
+    tokens: {
+      desc: 'open AI token burn telemetry page',
+      run: () => window.location.assign('/tokens'),
+    },
+    sudo: {
+      desc: 'superuser execution',
+      run: (args) => {
+        if (args.join(' ').includes('rm')) {
+          push({ kind: 'err', text: "Permission denied: Nice try! You cannot delete DawnBreaker's blog." });
+        } else {
+          push({ kind: 'err', text: `sudo: ${args.join(' ') || 'command'}: Permission denied. Only DawnBreaker has root access.` });
+        }
+      },
+    },
+    coffee: {
+      desc: 'brew a fresh cup of coffee',
+      run: () =>
+        push({
+          kind: 'txt',
+          text: "   ( (\n    ) )\n  ........\n  |      |]\n  \\      /\n   `----'\nFresh Java brewed for you ☕!",
+        }),
+    },
+    easteregg: {
+      desc: 'celebration confetti easter egg',
+      run: () => {
+        push({ kind: 'txt', text: '🎉 EASTER EGG UNLOCKED! Enjoy the confetti fireworks!' });
+        window.dispatchEvent(new CustomEvent('dawn:confetti'));
+      },
+    },
+    konami: {
+      desc: '30 lives cheat code easter egg',
+      run: () => {
+        push({ kind: 'txt', text: '🎮 30 LIVES GRANTED! Konami cheat code activated!' });
+        window.dispatchEvent(new CustomEvent('dawn:confetti'));
+      },
+    },
+    weather: {
+      desc: 'control atmospheric weather overlay (usage: weather [rain|snow|storm|wind|off])',
+      run: (args) => {
+        const mode = args[0]?.toLowerCase();
+        const validModes = ['rain', 'snow', 'storm', 'wind', 'off'];
+        if (mode && validModes.includes(mode)) {
+          window.dispatchEvent(new CustomEvent('dawn:set-weather', { detail: { mode } }));
+        } else {
+          window.dispatchEvent(new CustomEvent('dawn:toggle-weather'));
+        }
+        setTimeout(() => {
+          const current = localStorage.getItem('dawn_weather_mode') || 'off';
+          const labels: Record<string, string> = {
+            rain: '🌧️ Mưa rào tự nhiên (Rain) phủ nhẹ trang web',
+            snow: '❄️ Tuyết rơi mùa đông (Snow) bay lượn nhẹ nhàng',
+            storm: '⛈️ Mưa bão dữ dội kèm sấm chớp (Storm & Lightning)',
+            wind: '💨 Gió cuốn lá vàng bay (Wind & Autumn Leaves)',
+            off: '⛅ Bầu trời quang đãng, đã tắt hiệu ứng thời tiết',
+          };
+          push({ kind: 'txt', text: `Thời tiết hiện tại: ${labels[current] || current}` });
+        }, 60);
+      },
+    },
+    rain: {
+      desc: 'toggle natural rain overlay (mưa rào tự nhiên)',
+      run: () => {
+        const cur = localStorage.getItem('dawn_weather_mode');
+        const next = cur === 'rain' ? 'off' : 'rain';
+        window.dispatchEvent(new CustomEvent('dawn:set-weather', { detail: { mode: next } }));
+        push({
+          kind: 'txt',
+          text: next === 'rain'
+            ? '🌧️ Mưa rào tự nhiên đã rơi nhẹ trên toàn bộ website!'
+            : '⛅ Đã tắt hiệu ứng thời tiết.',
+        });
+      },
+    },
+    snow: {
+      desc: 'toggle snowfall overlay (tuyết rơi mùa đông)',
+      run: () => {
+        const cur = localStorage.getItem('dawn_weather_mode');
+        const next = cur === 'snow' ? 'off' : 'snow';
+        window.dispatchEvent(new CustomEvent('dawn:set-weather', { detail: { mode: next } }));
+        push({
+          kind: 'txt',
+          text: next === 'snow'
+            ? '❄️ Tuyết rơi mùa đông nhẹ nhàng phủ khắp màn hình!'
+            : '⛅ Đã tắt hiệu ứng thời tiết.',
+        });
+      },
+    },
+    storm: {
+      desc: 'toggle thunderstorm overlay with lightning & thunder (mưa bão sấm chớp)',
+      run: () => {
+        const cur = localStorage.getItem('dawn_weather_mode');
+        const next = cur === 'storm' ? 'off' : 'storm';
+        window.dispatchEvent(new CustomEvent('dawn:set-weather', { detail: { mode: next } }));
+        push({
+          kind: 'txt',
+          text: next === 'storm'
+            ? '⛈️ Mưa bão sấm sét dữ dội đã bắt đầu! Chú ý âm thanh sấm rền.'
+            : '⛅ Bão đã tan, bầu trời quang đãng.',
+        });
+      },
+    },
+    wind: {
+      desc: 'toggle autumn wind & tumbling leaves (gió cuốn lá vàng)',
+      run: () => {
+        const cur = localStorage.getItem('dawn_weather_mode');
+        const next = cur === 'wind' ? 'off' : 'wind';
+        window.dispatchEvent(new CustomEvent('dawn:set-weather', { detail: { mode: next } }));
+        push({
+          kind: 'txt',
+          text: next === 'wind'
+            ? '💨 Cơn gió mùa thu cùng những chiếc lá vàng đang bay lượn!'
+            : '⛅ Gió lặng, đã tắt hiệu ứng.',
+        });
+      },
+    },
   };
 
   const arrays: Record<string, PaletteItem[]> = { blog: blogPosts, projects };
@@ -367,10 +486,15 @@ export default function CommandPalette({
     { title: 'Blog index', desc: 'all posts', route: '/blog' },
     { title: 'Projects', desc: 'projects page', route: '/projects' },
     { title: 'Lab', desc: 'experiments index', route: '/lab' },
+    { title: 'Lab · SQL EXPLAIN Explorer', desc: 'PostgreSQL query execution plan visualizer', route: '/lab/sql-plan' },
+    { title: 'Lab · Java & Spring', desc: 'concurrency, container & proxy mechanism diagrams', route: '/lab/java' },
     { title: 'Lab · Terminal', desc: 'terminal playground', route: '/lab/terminal' },
+    { title: 'Now', desc: 'what I am doing right now', route: '/now' },
     { title: 'About', desc: 'about page', route: '/about' },
     { title: 'Books', desc: 'books list', route: '/books' },
     { title: 'Heatmap', desc: 'activity heatmap', route: '/heatmap' },
+
+    { title: 'Token burn', desc: 'AI token usage telemetry', route: '/tokens' },
     { title: 'Topics', desc: 'topic index', route: '/topics' },
     { title: 'Help', desc: 'site manual', route: '/help' },
   ];
@@ -435,10 +559,11 @@ export default function CommandPalette({
     const cmd = input.trim();
     if (!cmd) return;
     const tokens = cmd.split(/\s+/);
-    const key = tokens[0].toLowerCase();
+    const rawKey = tokens[0].toLowerCase();
+    const key = rawKey.startsWith('/') ? rawKey.slice(1) : rawKey;
     const args = tokens.slice(1);
     const h = historyRef.current;
-    if (h[h.length - 1] !== key) h.push(key);
+    if (h[h.length - 1] !== cmd) h.push(cmd);
     setHistoryPos(-1);
     setInput('');
     setEntries((prev) => [...prev, { kind: 'cmd', text: cmd }]);
