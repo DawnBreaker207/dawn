@@ -60,8 +60,14 @@ const HELP_CMDS: HelpCmd[] = [
   ['blog go <id>', 'open a post by its id'],
   ['projects list', 'list all projects'],
   ['projects go <id>', 'open a project by its id'],
+  ['lab', 'list interactive lab experiments'],
+  ['books', 'open reading list'],
+  ['heatmap', 'open GitHub contribution heatmap'],
+  ['now', 'what DawnBreaker is doing right now'],
+  ['tokens', 'AI token burn telemetry'],
   ['about', 'about the author'],
   ['theme <dark | light | system>', 'switch color scheme'],
+  ['weather [rain|snow|storm|wind|off]', 'toggle weather overlay'],
   ['clear', 'clear the terminal'],
   ['exit', 'close the terminal'],
 ];
@@ -358,6 +364,40 @@ export default function CommandPalette({
     tokens: {
       desc: 'open AI token burn telemetry page',
       run: () => window.location.assign('/tokens'),
+    },
+    heatmap: {
+      desc: 'open GitHub contribution heatmap',
+      run: () => window.location.assign('/heatmap'),
+    },
+    lab: {
+      desc: 'list interactive lab experiments',
+      run: () =>
+        push({
+          kind: 'jsx',
+          node: (
+            <div>
+              <p className="pal-h">Lab experiments</p>
+              <ul className="pal-list">
+                {[
+                  { label: 'SQL EXPLAIN Explorer', route: '/lab/sql' },
+                  { label: 'Java & Spring Lab',    route: '/lab/java' },
+                  { label: 'Pathfinding Viz',      route: '/lab/pathfinding' },
+                  { label: 'Terminal Playground',  route: '/lab/terminal' },
+                  { label: 'Spider Canvas',        route: '/lab/spider' },
+                ].map((item, i) => (
+                  <li key={item.route}>
+                    <span className="pal-item-id">#{i + 1}</span>
+                    <a className="pal-link" href={item.route}>{item.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ),
+        }),
+    },
+    books: {
+      desc: 'show reading list',
+      run: () => window.location.assign('/books'),
     },
     sudo: {
       desc: 'superuser execution',

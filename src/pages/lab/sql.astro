@@ -3,6 +3,10 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import ScenarioPicker from '@/components/lab/sql/ScenarioPicker.astro';
 import ExecutionOrder from '@/components/lab/sql/ExecutionOrder.astro';
 import CaseRouting from '@/components/lab/sql/CaseRouting.astro';
+import BTreeTraversal from '@/components/lab/sql/BTreeTraversal.astro';
+import MvccVisibility from '@/components/lab/sql/MvccVisibility.astro';
+import FootprintCalc from '@/components/lab/sql/FootprintCalc.astro';
+import InfraTools from '@/components/lab/sql/InfraTools.astro';
 import { EO_SQL, EO_STEPS, CASE_BRANCHES } from '@/scripts/lab/sql/execution-order';
 
 export const prerender = true;
@@ -10,11 +14,11 @@ export const prerender = true;
 
 <BaseLayout
   title="Visual SQL EXPLAIN & Query Plan Explorer"
-  description="Interactive PostgreSQL query plan simulator — compare Seq Scan vs B-Tree, fix Hibernate N+1, watch the engine run."
+  description="Interactive PostgreSQL query plan simulator — compare Seq Scan vs B-Tree, fix Hibernate N+1, MVCC isolation, index footprint, connection pool."
 >
-  <header class="mb-6 border-b border-(--border) pb-5">
-    <div class="mb-2 flex items-center gap-2 font-mono text-xs text-(--fg-faint)">
-      <span class="ml-auto inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] text-cyan-400">
+  <header class="mb-5 border-b border-(--border) pb-4">
+    <div class="mb-2 flex items-center">
+      <span class="ml-auto inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] font-mono text-cyan-400">
         <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400"></span>
         PostgreSQL 16 Simulator
       </span>
@@ -22,52 +26,252 @@ export const prerender = true;
     <h1 class="m-0 font-mono text-[clamp(28px,4.5vw,48px)] leading-[0.96] tracking-[-0.06em] text-(--fg)">
       sql explain explorer
     </h1>
-    <p id="sp-explain" class="mt-2 max-w-3xl text-sm leading-relaxed text-(--fg-dim)">
-      Without an index Postgres reads every data block of users sequentially — O(N) — while a B-Tree walks
-      Root → Branch → Leaf in 3–4 buffer hits, O(log N). Press run to watch the same statement run twice and
-      cost 142.5 ms vs 0.08 ms; the theory card below stays collapsed for later.
+    <p class="mt-2 text-sm leading-relaxed text-(--fg-dim)">
+      Five interactive labs — query plans, B-tree internals, MVCC isolation, index sizing, infra rate limiting.
     </p>
   </header>
 
-  <div class="space-y-5">
-    <!-- Theory (collapsed by default) -->
+  <!-- Tab bar -->
+  <div id="sql-tab-bar" class="mb-5 flex flex-wrap gap-1.5 border-b border-(--border) pb-3 font-mono text-xs">
+    <button data-sql-tab="explain"   class="sql-tab sql-tab-active">⚡ EXPLAIN</button>
+    <button data-sql-tab="btree"     class="sql-tab">🌳 B-Tree</button>
+    <button data-sql-tab="mvcc"      class="sql-tab">🔀 MVCC</button>
+    <button data-sql-tab="footprint" class="sql-tab">📐 Footprint</button>
+    <button data-sql-tab="infra"     class="sql-tab">🔌 Infra</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Tab 1 — EXPLAIN Explorer
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div data-sql-pane="explain" class="space-y-5">
+
+    <!-- Visual: Seq Scan vs Index + N+1 vs JOIN in one card -->
+    <div class="sql-visual-card">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+        <!-- Seq Scan vs Index -->
+        <div>
+          <p class="sql-visual-title">Index scan vs Seq Scan</p>
+          <div class="grid grid-cols-1 gap-2">
+            <div class="sql-side sql-side-bad">
+              <div class="sql-side-head">
+                <span class="sql-badge sql-badge-bad">Seq Scan</span>
+                <code class="sql-code-inline">no index</code>
+              </div>
+              <div class="sql-blocks-row">
+                {Array.from({length:8}).map((_, i) => (
+                  <div class:list={["sql-block", i === 5 ? "sql-block-target" : "sql-block-plain"]}>
+                    {i === 5 ? "✓" : ""}
+                  </div>
+                ))}
+                <span class="sql-blocks-label">…1 M blocks</span>
+              </div>
+              <p class="sql-side-note">Reads <strong>every block</strong> — O(N). 142 ms.</p>
+            </div>
+            <div class="sql-side sql-side-good">
+              <div class="sql-side-head">
+                <span class="sql-badge sql-badge-good">Index Scan</span>
+                <code class="sql-code-inline">CREATE INDEX ON users(email)</code>
+              </div>
+              <div class="sql-tree-mini">
+                <div class="sql-tree-node sql-tree-root">[ 50 | 750k ]</div>
+                <div class="sql-tree-row">
+                  <div class="sql-tree-node sql-tree-branch">[ 25 | 37 ]</div>
+                  <div class="sql-tree-node sql-tree-branch">[ 55 | 68 ]</div>
+                </div>
+                <div class="sql-tree-row">
+                  <div class="sql-tree-node sql-tree-leaf sql-tree-leaf-hl">dawn@… ✓</div>
+                  <div class="sql-tree-node sql-tree-leaf sql-tree-leaf-dim">…</div>
+                  <div class="sql-tree-node sql-tree-leaf sql-tree-leaf-dim">…</div>
+                </div>
+                <p class="sql-tree-label">3 buffer hits → root → branch → leaf</p>
+              </div>
+              <p class="sql-side-note">O(log N) regardless of table size. <strong>0.08 ms</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- N+1 vs JOIN -->
+        <div>
+          <p class="sql-visual-title">N+1 vs JOIN FETCH</p>
+          <div class="grid grid-cols-1 gap-2">
+            <div class="sql-side sql-side-bad">
+              <div class="sql-side-head">
+                <span class="sql-badge sql-badge-bad">N+1 (lazy load)</span>
+              </div>
+              <div class="sql-queries-viz">
+                <div class="sql-query-row sql-query-root">SELECT * FROM orders LIMIT 10</div>
+                {Array.from({length:3}).map((_, i) => (
+                  <div class="sql-query-row sql-query-child">
+                    ↳ SELECT * FROM items WHERE order_id = {i+1}
+                  </div>
+                ))}
+                <div class="sql-query-row sql-query-child sql-query-dots">↳ … × 10 total = 11 round-trips</div>
+              </div>
+            </div>
+            <div class="sql-side sql-side-good">
+              <div class="sql-side-head">
+                <span class="sql-badge sql-badge-good">JOIN FETCH</span>
+              </div>
+              <div class="sql-queries-viz">
+                <div class="sql-query-row sql-query-root sql-query-root-good">
+                  SELECT o.*, i.* FROM orders o<br/>
+                  JOIN items i ON i.order_id = o.id
+                </div>
+              </div>
+              <p class="sql-side-note"><strong>1 round-trip</strong> — database joins, not your app loop.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <p id="sp-explain" class="text-xs font-mono text-(--fg-dim)">
+      Pick a scenario below and hit <strong>Run</strong> to watch the engine log both strategies.
+    </p>
+    <ScenarioPicker />
+    <ExecutionOrder eoSql={EO_SQL} eoSteps={EO_STEPS} />
+
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
       <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
-        <span class="flex items-center gap-2"><span class="text-(--accent)">📖 Indexing & query optimization fundamentals</span></span>
+        <span class="text-(--accent)">🔀 CASE routing + More patterns — Hash Join, Covering Index, Anti-Join</span>
         <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
       </summary>
+      <div class="mt-4 border-t border-(--border) pt-3 space-y-4">
+        <CaseRouting caseBranches={CASE_BRANCHES} />
+      </div>
       <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 text-(--fg-dim) md:grid-cols-2">
         <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-          <strong class="text-cyan-400">Seq Scan vs B-Tree</strong>
-          <p class="mt-1">With no index, every data block is read sequentially (O(N)). A B-Tree walks Root → Branch → Leaf in just 3–4 buffer hits (O(log N)).</p>
-          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-200/80">why O(log N) holds: ~500 pointers per level → 1B rows in 4 levels — depth stays flat while the table grows. The price: slower writes and a warmer cache.</p>
-        </div>
-        <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-          <strong class="text-rose-400">Hibernate N+1</strong>
-          <p class="mt-1">1 query to fetch the parent list + N queries per child. Fix with <code class="text-emerald-400">JOIN FETCH</code> / <code class="text-emerald-400">@EntityGraph</code> — one query total.</p>
-          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-200/80">why it hides: every single query looks fast; the cost lives in 51 network roundtrips, invisible per-query. Only the total wall-clock betrays it.</p>
-        </div>
-        <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
           <strong class="text-amber-400">Hash Join vs Nested Loop</strong>
-          <p class="mt-1">Hash Join hashes the small table into RAM, then scans the big one (best for large sets). Nested Loop fits when the outer table is small and the inner one is indexed.</p>
-          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-200/80">why two algorithms: hash buys throughput, nested loop buys early exit — the planner chooses by estimated row counts, so stale statistics flip the pick.</p>
+          <p class="mt-1">Hash Join: hashes the smaller table into RAM, then streams the larger — best when both sides are large. Nested Loop: for each outer row, probe the inner index — best when the outer set is tiny.</p>
+          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-200/80">The planner chooses by row-count estimates — stale statistics (ANALYZE lag) flip the pick silently.</p>
         </div>
         <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
           <strong class="text-emerald-400">Covering Index</strong>
-          <p class="mt-1">Every SELECT/WHERE column already lives inside the index → no trip back to the Table Heap (<code class="text-emerald-400">Heap Fetches: 0</code>).</p>
-          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-200/80">why the heap trip hurts: each fetch is one random page read per row; folding columns into the index turns them into a single sequential range scan.</p>
+          <p class="mt-1">Every column the query touches lives in the index leaf — no heap fetch needed → <code>Heap Fetches: 0</code>.</p>
+          <pre class="sql-pre mt-2">-- include projected columns to skip heap entirely
+CREATE INDEX CONCURRENTLY idx_orders_cov
+  ON orders (customer_id)
+  INCLUDE (total_usd, status);
+
+SELECT total_usd, status
+  FROM orders WHERE customer_id = 42;
+-- → Index Only Scan   Heap Fetches: 0</pre>
+          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-200/80">Each heap fetch = one random page read per row. Folding the columns in converts them to a single sequential range scan.</p>
         </div>
       </div>
     </details>
+  </div>
 
-    <!-- B-tree internals (advanced) -->
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Tab 2 — B-Tree
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div data-sql-pane="btree" hidden class="space-y-5">
+
+    <!-- Visual: what a B-tree looks like -->
+    <div class="sql-visual-card">
+      <p class="sql-visual-title">Anatomy of a B-Tree index — before you use the simulator</p>
+      <div class="sql-btree-diagram">
+
+        <!-- Root -->
+        <div class="sql-btd-level">
+          <div class="sql-btd-label">Root<br/><span class="sql-btd-sub">always cached</span></div>
+          <div class="sql-btd-nodes">
+            <div class="sql-btd-node sql-btd-root">
+              <span>25</span><span class="sql-btd-div">|</span><span>60</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Branch arrows -->
+        <div class="sql-btd-arrows">
+          <span class="sql-btd-arrow-label">&lt; 25</span>
+          <span class="sql-btd-arrow-label">25–60</span>
+          <span class="sql-btd-arrow-label">&gt; 60</span>
+        </div>
+
+        <!-- Branch level -->
+        <div class="sql-btd-level">
+          <div class="sql-btd-label">Branch<br/><span class="sql-btd-sub">usually cached</span></div>
+          <div class="sql-btd-nodes">
+            <div class="sql-btd-node sql-btd-branch"><span>10</span><span class="sql-btd-div">|</span><span>18</span></div>
+            <div class="sql-btd-node sql-btd-branch"><span>35</span><span class="sql-btd-div">|</span><span>47</span></div>
+            <div class="sql-btd-node sql-btd-branch"><span>72</span><span class="sql-btd-div">|</span><span>88</span></div>
+          </div>
+        </div>
+
+        <!-- Leaf level -->
+        <div class="sql-btd-level">
+          <div class="sql-btd-label">Leaf<br/><span class="sql-btd-sub">1 real IO</span></div>
+          <div class="sql-btd-nodes sql-btd-leaves">
+            <div class="sql-btd-node sql-btd-leaf">3·7·9</div>
+            <div class="sql-btd-node sql-btd-leaf sql-btd-leaf-hl">12·<strong>15</strong>·22</div>
+            <div class="sql-btd-node sql-btd-leaf">26·31</div>
+            <div class="sql-btd-node sql-btd-leaf">…</div>
+            <div class="sql-btd-node sql-btd-leaf">…</div>
+            <div class="sql-btd-node sql-btd-leaf">…</div>
+            <div class="sql-btd-node sql-btd-leaf">…</div>
+          </div>
+        </div>
+
+        <!-- Heap -->
+        <div class="sql-btd-level">
+          <div class="sql-btd-label">Heap<br/><span class="sql-btd-sub">actual row</span></div>
+          <div class="sql-btd-nodes">
+            <div class="sql-btd-node sql-btd-heap">ctid → (page 4, slot 2)<br/>email='dawn@dev.com'</div>
+          </div>
+        </div>
+
+        <p class="sql-btd-caption">
+          Searching for key=15: Root (binary search) → branch [10|18] → leaf [12·<strong>15</strong>·22] → fetch heap row by ctid.
+          3 buffer hits. A 1-billion-row table needs just 4 levels.
+        </p>
+      </div>
+
+      <!-- Split explanation -->
+      <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.3)">
+          <strong class="text-amber-400">When does a node split?</strong>
+          <p class="mt-1 text-[11px] text-(--fg-dim)">A node can hold at most 2 keys (in this simulator). When a 3rd key arrives, the middle key <em>bubbles up</em> to the parent and the node splits into two.</p>
+          <div class="sql-split-demo mt-2">
+            <div class="sql-split-before">
+              <span class="sql-btd-node sql-btd-branch" style="font-size:10px">10·<span class="text-amber-300">20</span>·30</span>
+              <span class="sql-split-arrow">+25 →</span>
+            </div>
+            <div class="sql-split-after">
+              <span class="sql-btd-node sql-btd-branch" style="font-size:10px">10·20</span>
+              <span class="text-amber-300 font-mono text-[10px] px-1">↑25 to parent</span>
+              <span class="sql-btd-node sql-btd-branch" style="font-size:10px">30</span>
+            </div>
+          </div>
+        </div>
+        <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.3)">
+          <strong class="text-cyan-400">Random vs sequential keys</strong>
+          <p class="mt-1 text-[11px] text-(--fg-dim)">Random inserts split pages ~50/50 → ~70% fill factor. Sequential inserts (auto-increment IDs, timestamps) always hit the rightmost leaf → 100% fill, smaller index, but writers contend on the same hot page.</p>
+          <pre class="sql-pre mt-2">-- ✓ sequential key — compact, no splits
+CREATE TABLE events (
+  id    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  data  JSONB
+);
+
+-- ✗ UUID — random, 30% more pages, hot-page contention
+id UUID DEFAULT gen_random_uuid() PRIMARY KEY</pre>
+          <p class="mt-1.5 text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Try in the simulator: insert 1, 2, 3, 4… and compare to inserting 50, 10, 80, 30…</p>
+        </div>
+      </div>
+
+    </div>
+
+    <BTreeTraversal />
+
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
       <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
-        <span class="flex items-center gap-2"><span class="text-(--accent)">🌳 B-tree internals — advanced</span></span>
+        <span class="text-(--accent)">📄 Page internals, DDL reference, bloat queries</span>
         <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
       </summary>
       <div class="mt-4 space-y-4 border-t border-(--border) pt-3 text-(--fg-dim)">
-        <pre class="thin-scrollbar overflow-x-auto rounded-lg border border-(--border) bg-black/50 p-3 text-[11px] leading-relaxed text-(--fg)">        ┌───────────────────────────────────────────────┐
+        <pre class="sql-details-pre thin-scrollbar">        ┌───────────────────────────────────────────────┐
         │ header: LSN · high key · right-link → sibling │
         ├───────────────────────────────────────────────┤
  ptr →  │ ItemId 1 · ItemId 2 · ItemId 3 …   (grow down)│
@@ -78,43 +282,490 @@ export const prerender = true;
         internal page: ‹pointer · key› pairs — leaf adds the heap TID</pre>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-            <strong class="text-cyan-400">8 KB page anatomy</strong>
-            <p class="mt-1">Header carries the WAL recovery LSN, the High Key guard and the right-link; ItemId pointers grow down from the front, index tuples grow up from the back, free space sits between them. The leaf tuple stores key + ctid — the heap row address every scan hands back.</p>
+            <strong class="text-cyan-400">Lehman-Yao B-link tree</strong>
+            <p class="mt-1">Every page carries a High Key + right-sibling pointer. A reader that descends and finds itself past the High Key just follows the sibling link — no re-descent, no full-path latch. That is the source of PostgreSQL's high-concurrency index claim.</p>
           </div>
           <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-            <strong class="text-cyan-400">Fanout math (why 3–4 levels is enough)</strong>
-            <p class="mt-1">≈ 300 entries per page → 3 levels hold ~27M rows, 4 levels ~8B. A descent is one binary search per page (~9 comparisons) plus one page read; the root is always cached and branches usually are, so the leaf read is the only real IO — at any table size.</p>
+            <strong class="text-cyan-400">TID, HOT & index bloat</strong>
+            <p class="mt-1">UPDATE on an indexed column inserts a new entry into every index. If no indexed column changed and the new version fits on the same heap page → HOT update: the index still points at the old TID and follows the chain. Bloat = dead index tuples — <code>REINDEX</code> / <code>pg_repack</code> reclaim space.</p>
           </div>
-          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-            <strong class="text-cyan-400">Page splits: 50/50 vs rightmost</strong>
-            <p class="mt-1">Random keys fill a page to ~66% then split 50/50 — the two halves inherit one page. Monotone keys (ids, created_at) always insert at the RIGHTMOST page, so Postgres fast-splits: the old page keeps everything. Sequential keys → ~100% fill, a smaller index — but every writer hammers the same rightmost page (a hotspot, not a bloat).</p>
+        </div>
+        <pre class="sql-details-pre thin-scrollbar">-- Partial index — only rows you actually query
+CREATE INDEX idx_orders_pending ON orders (created_at) WHERE status = 'pending';
+
+-- Covering index — skip heap fetch entirely
+CREATE INDEX idx_orders_cov ON orders (customer_id) INCLUDE (total_usd, status);
+
+-- Multi-column (left-most prefix rule applies)
+CREATE INDEX idx_logs_user_ts ON logs (user_id, created_at DESC);
+
+-- Check usage & bloat
+SELECT indexname, idx_scan FROM pg_stat_user_indexes WHERE relname = 'orders';
+SELECT relname, n_dead_tup FROM pg_stat_user_tables WHERE n_dead_tup > 10000;</pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Tab 3 — MVCC
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div data-sql-pane="mvcc" hidden class="space-y-5">
+
+    <!-- Visual: version chain concept -->
+    <div class="sql-visual-card">
+      <p class="sql-visual-title">How MVCC keeps reads and writes from blocking each other</p>
+
+      <p class="mb-3 text-[11px] font-mono text-(--fg-dim)">
+        PostgreSQL never overwrites a row in place. Every UPDATE writes a <em>new version</em> and marks the old one dead.
+        Each transaction sees only the versions that existed when its snapshot was taken.
+      </p>
+
+      <!-- Version chain timeline -->
+      <div class="sql-mvcc-timeline">
+        <!-- Time axis -->
+        <div class="sql-mvcc-time">
+          <span>xid 99</span><span>→</span><span>xid 100 (Txn A: UPDATE)</span><span>→</span><span>xid 101 (Txn A: COMMIT)</span>
+        </div>
+
+        <!-- Row versions -->
+        <div class="sql-mvcc-chain">
+          <div class="sql-mvcc-ver sql-mvcc-dead">
+            <div class="sql-mvcc-ver-head">Row v1 — DEAD after A commits</div>
+            <div class="sql-mvcc-ver-fields">
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-400">99</span></span>
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-rose-400">100</span></span>
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">Alice · balance 1000</span></span>
+            </div>
           </div>
-          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-            <strong class="text-cyan-400">Really a Lehman-Yao B-link tree</strong>
-            <p class="mt-1">Every page stores a High Key + right-sibling link. A reader that lands past the High Key hops right along the link — a concurrent split never forces re-descending or latching the whole path. That is where the high-concurrency claim in `nbtree` comes from.</p>
+          <div class="sql-mvcc-ver sql-mvcc-live">
+            <div class="sql-mvcc-ver-head">Row v2 — LIVE</div>
+            <div class="sql-mvcc-ver-fields">
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-400">100</span></span>
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-emerald-400">∞</span></span>
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">Alice · balance 500</span></span>
+            </div>
           </div>
-          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-            <strong class="text-cyan-400">TID, HOT &amp; index bloat</strong>
-            <p class="mt-1">UPDATE changing an indexed column inserts a new entry into EVERY index. If no indexed column changed and the new version stays on the same heap page, it becomes HOT: indexes keep pointing at the old TID and follow the forward chain. Bloat = dead index tuples, not deleted rows — REINDEX / pg_repack reclaim.</p>
+        </div>
+
+        <!-- Isolation level comparison -->
+        <div class="grid grid-cols-1 gap-3 mt-4 md:grid-cols-2">
+          <div class="sql-explain-box" style="border-color:rgb(167 139 250/0.35)">
+            <strong class="text-violet-400">READ COMMITTED</strong>
+            <p class="mt-1 text-[11px] text-(--fg-dim)">Txn B takes a fresh snapshot at <em>each statement</em>. A SELECT run before Txn A commits sees v1. Run the same SELECT again after the commit → sees v2. Same query, different result within one transaction.</p>
+            <pre class="sql-pre mt-2">-- Session B (READ COMMITTED, the default)
+BEGIN;
+SELECT balance FROM accounts WHERE name='Alice';
+-- → 1000  (A hasn't committed yet)
+
+-- ... Txn A commits here ...
+
+SELECT balance FROM accounts WHERE name='Alice';
+-- → 500   (sees A's commit — non-repeatable read!)</pre>
+            <div class="sql-vis-row mt-1">
+              <span class="sql-vis-step">B: SELECT before commit</span><span class="sql-vis-arrow">→</span><span class="sql-vis-result sql-vis-old">v1 (balance 1000)</span>
+            </div>
+            <div class="sql-vis-row">
+              <span class="sql-vis-step">B: SELECT after commit</span><span class="sql-vis-arrow">→</span><span class="sql-vis-result sql-vis-new">v2 (balance 500)</span>
+            </div>
           </div>
-          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-            <strong class="text-cyan-400">Ordering &amp; practicals</strong>
-            <p class="mt-1">▸ ORDER BY works only in index order; DESC just walks the same tree backward — mixed ASC/DESC needs per-column DDL order. ▸ INCLUDE adds leaf-covered columns without widening the sort key. ▸ Partial index (WHERE active) for a small hot subset. ▸ Expression index on lower(email). ▸ Dedup (PG13) packs duplicate keys into posting lists.</p>
+          <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+            <strong class="text-cyan-400">REPEATABLE READ</strong>
+            <p class="mt-1 text-[11px] text-(--fg-dim)">Txn B takes one snapshot at its <em>first statement</em>. No matter how many times it queries, it always sees the world as it was when the transaction started — Txn A's commit is invisible.</p>
+            <pre class="sql-pre mt-2">-- Session B (REPEATABLE READ)
+BEGIN ISOLATION LEVEL REPEATABLE READ;
+SELECT balance FROM accounts WHERE name='Alice';
+-- → 1000
+
+-- ... Txn A commits here ...
+
+SELECT balance FROM accounts WHERE name='Alice';
+-- → 1000  (snapshot is frozen — A invisible)
+COMMIT;</pre>
+            <div class="sql-vis-row mt-1">
+              <span class="sql-vis-step">B: SELECT before commit</span><span class="sql-vis-arrow">→</span><span class="sql-vis-result sql-vis-old">v1 (balance 1000)</span>
+            </div>
+            <div class="sql-vis-row">
+              <span class="sql-vis-step">B: SELECT after commit</span><span class="sql-vis-arrow">→</span><span class="sql-vis-result sql-vis-old">v1 (balance 1000) ← same</span>
+            </div>
           </div>
         </div>
       </div>
-    </details>
 
-    <ScenarioPicker />
-    <ExecutionOrder eoSql={EO_SQL} eoSteps={EO_STEPS} />
-    <CaseRouting caseBranches={CASE_BRANCHES} />
+    </div>
+
+    <MvccVisibility />
+
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+      <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
+        <span class="text-(--accent)">🔬 Inspect xmin/xmax yourself — psql queries</span>
+        <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+      </summary>
+      <div class="mt-4 border-t border-(--border) pt-3">
+        <pre class="sql-details-pre thin-scrollbar">-- Hidden system columns on any table
+SELECT xmin, xmax, ctid, * FROM accounts WHERE name = 'Alice';
+-- xmin = xid that created this version
+-- xmax = xid that deleted/updated it  (0 = still live)
+-- ctid  = physical (page, slot) on disk
+
+-- Dead-tuple bloat
+SELECT relname, n_live_tup, n_dead_tup,
+       round(100.0 * n_dead_tup / nullif(n_live_tup+n_dead_tup,0), 1) AS dead_pct
+  FROM pg_stat_user_tables WHERE n_dead_tup > 1000 ORDER BY dead_pct DESC;
+
+VACUUM ANALYZE accounts;  -- autovacuum does this; run manually after bulk writes</pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Tab 4 — Footprint
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div data-sql-pane="footprint" hidden class="space-y-5">
+
+    <div class="sql-visual-card">
+      <p class="sql-visual-title">B-Tree vs BRIN — when does each index type make sense?</p>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+          <strong class="text-cyan-400">B-Tree</strong>
+          <ul class="mt-1 space-y-1 text-[11px] text-(--fg-dim) list-none">
+            <li>✓ Random access, point lookups, range scans</li>
+            <li>✓ ORDER BY, GROUP BY on the indexed column</li>
+            <li>✓ Equality: <code>WHERE email = '…'</code></li>
+            <li>✗ Larger on disk — key + TID per row</li>
+            <li>✗ Random inserts cause page splits and bloat</li>
+          </ul>
+          <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Rule: default choice for any indexed column used in WHERE or JOIN.</p>
+        </div>
+        <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
+          <strong class="text-amber-400">BRIN (Block Range Index)</strong>
+          <ul class="mt-1 space-y-1 text-[11px] text-(--fg-dim) list-none">
+            <li>✓ Tiny — stores only min/max per 128-page range</li>
+            <li>✓ Append-only tables: timestamps, sequential IDs</li>
+            <li>✓ Huge tables where B-Tree would be GBs</li>
+            <li>✗ Useless if data is not correlated with insert order</li>
+            <li>✗ No point lookup — eliminates blocks, not rows</li>
+          </ul>
+          <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Rule: only when physical order matches key order — time-series, log tables, event streams.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <FootprintCalc />
+
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+      <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
+        <span class="text-(--accent)">📋 DDL examples + size inspection queries</span>
+        <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+      </summary>
+      <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 md:grid-cols-2">
+        <div>
+          <p class="mb-1 text-[10px] font-semibold text-cyan-400">B-Tree — 1M rows BIGINT ≈ 35 MB</p>
+          <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_ts ON events (created_at);
+
+SELECT pg_size_pretty(pg_relation_size('idx_events_ts'));
+-- → 35 MB
+
+SELECT * FROM bt_metap('idx_events_ts');
+-- level: 3  (root → branch → leaf)</pre>
+        </div>
+        <div>
+          <p class="mb-1 text-[10px] font-semibold text-amber-400">BRIN — same column ≈ 48 KB (700× smaller)</p>
+          <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_brin
+  ON events USING brin (created_at);
+
+SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
+-- → 48 kB
+
+-- Only eliminates pages, not rows
+-- ✓ WHERE created_at > now() - '7d'
+-- ✗ WHERE user_id = 42  (random dist.)</pre>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Tab 5 — Infra Tools
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div data-sql-pane="infra" hidden class="space-y-5">
+
+    <div class="sql-visual-card">
+      <p class="sql-visual-title">Two primitives every backend hits in production</p>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+        <!-- Connection Pool -->
+        <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+          <strong class="text-cyan-400">Connection Pool</strong>
+          <p class="mt-1 text-[11px] text-(--fg-dim)">
+            Opening a database connection is expensive (~10–50 ms: TCP handshake, auth, SSL). A pool keeps N connections open and reuses them.
+            Workers <em>borrow</em> a slot, run their query, and <em>return</em> it.
+          </p>
+          <div class="sql-pool-diagram mt-3">
+            <div class="sql-pool-row">
+              {Array.from({length:5}).map((_, i) => (
+                <div class:list={["sql-pool-slot-static", i < 3 ? "sql-pool-used" : "sql-pool-free"]}>
+                  {i < 3 ? "W" + (i+1) : "—"}
+                </div>
+              ))}
+            </div>
+            <p class="text-[10px] text-(--fg-faint) mt-1">Pool size = 5 · 3 workers active · 2 slots free</p>
+          </div>
+          <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-rose-500/40 pl-2">
+            When all slots are taken: new requests <em>queue</em>. If the queue fills too — connection timeout. This is what "pool exhaustion" looks like.
+          </p>
+        </div>
+
+        <!-- Token Bucket -->
+        <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
+          <strong class="text-amber-400">Token Bucket (Rate Limiter)</strong>
+          <p class="mt-1 text-[11px] text-(--fg-dim)">
+            A bucket holds up to <em>capacity</em> tokens. It refills at <em>fill rate</em> tokens/second. Each incoming request consumes 1 token. If the bucket is empty, the request is dropped.
+          </p>
+          <div class="sql-bucket-diagram mt-3">
+            <div class="sql-bucket-visual">
+              <div class="sql-bucket-fill" style="height:60%">
+                <span>12</span>
+              </div>
+              <div class="sql-bucket-cap-label">20</div>
+            </div>
+            <div class="sql-bucket-info text-[10px] text-(--fg-dim)">
+              <div>Capacity: 20 tokens</div>
+              <div class="text-emerald-400">Fill: +5 tok/s</div>
+              <div class="text-rose-400">Requests: 8 req/s</div>
+              <div class="text-amber-400">→ 3 req/s dropped</div>
+            </div>
+          </div>
+          <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">
+            Burst traffic up to <em>capacity</em> is absorbed. Sustained traffic above <em>fill rate</em> will always drop some requests.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <InfraTools />
+
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+      <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
+        <span class="text-(--accent)">⚙️ Config reference — HikariCP &amp; Express rate-limit</span>
+        <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+      </summary>
+      <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 md:grid-cols-2">
+        <div>
+          <p class="mb-1 text-[10px] font-semibold text-cyan-400">HikariCP (Spring Boot)</p>
+          <pre class="sql-details-pre thin-scrollbar">spring.datasource.hikari.maximum-pool-size=20
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.connection-timeout=3000
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.max-lifetime=1800000
+
+# Rule: pool = (cores × 2) + disk spindles
+# 4 cores, SSD → ~10 is usually optimal</pre>
+        </div>
+        <div>
+          <p class="mb-1 text-[10px] font-semibold text-amber-400">express-rate-limit (Node.js)</p>
+          <pre class="sql-details-pre thin-scrollbar">{"import rateLimit from 'express-rate-limit';\napp.use('/api/', rateLimit({\n  windowMs: 1000, max: 10,\n  standardHeaders: true,\n  handler: (_req, res) =>\n    res.status(429).json({ error: 'rate limited' })\n}));\n// HTTP 429 + Retry-After header"}</pre>
+        </div>
+      </div>
+    </details>
   </div>
 </BaseLayout>
 
 <style is:global>
+  /* ── Tab bar ───────────────────────────────────────────────────────────── */
+  .sql-tab {
+    border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg); padding: 5px 14px;
+    font-size: 11px; font-family: monospace;
+    color: var(--fg-dim); cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .sql-tab:hover { color: var(--fg); }
+  .sql-tab-active {
+    border-color: var(--accent); color: var(--accent);
+    background: color-mix(in oklch, var(--accent) 8%, transparent);
+  }
+
+  /* ── Shared visual card shell ──────────────────────────────────────────── */
+  .sql-visual-card {
+    border-radius: 12px; border: 1px solid var(--border);
+    background: var(--bg-alt); padding: 16px; font-family: monospace; font-size: 12px;
+  }
+  .sql-visual-title {
+    font-size: 11px; font-weight: 700; color: var(--fg);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px;
+  }
+  .sql-explain-box {
+    border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); padding: 10px 12px; font-size: 12px;
+  }
+  .sql-explain-box p, .sql-explain-box ul { margin: 0; }
+
+  /* ── Seq Scan vs Index ─────────────────────────────────────────────────── */
+  .sql-side { border-radius: 8px; border: 1px solid; background: var(--bg); padding: 10px 12px; }
+  .sql-side-bad  { border-color: rgb(248 113 113/0.35); }
+  .sql-side-good { border-color: rgb(74 222 128/0.35); }
+  .sql-side-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .sql-side-note { font-size: 10px; color: var(--fg-dim); margin: 6px 0 0; line-height: 1.5; }
+  .sql-side-note strong { color: var(--fg); }
+  .sql-badge {
+    border-radius: 4px; padding: 1px 8px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em; border: 1px solid;
+  }
+  .sql-badge-bad  { border-color: rgb(220 38 38/0.5); color: #dc2626; background: rgb(220 38 38/0.08); }
+  .sql-badge-good { border-color: rgb(22 163 74/0.5); color: #16a34a; background: rgb(22 163 74/0.08); }
+  :where(.dark, .dark *) .sql-badge-bad  { border-color: rgb(248 113 113/0.5); color: #f87171; background: rgb(248 113 113/0.1); }
+  :where(.dark, .dark *) .sql-badge-good { border-color: rgb(74 222 128/0.5); color: #4ade80; background: rgb(74 222 128/0.1); }
+  .sql-code-inline { font-size: 10px; color: var(--fg-faint); }
+  .sql-pre {
+    margin-top: 6px; font-size: 10px; line-height: 1.6;
+    background: var(--terminal); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px; color: var(--fg);
+    overflow-x: auto; white-space: pre;
+  }
+  :where(.dark, .dark *) .sql-pre { color: var(--fg-dim); }
+
+  /* Block row for Seq Scan diagram */
+  .sql-blocks-row {
+    display: flex; flex-wrap: wrap; gap: 3px; align-items: center; margin: 6px 0;
+  }
+  .sql-block {
+    width: 22px; height: 22px; border-radius: 3px; border: 1px solid;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+  }
+  .sql-block-plain  { border-color: rgb(148 163 184/0.4); background: rgb(148 163 184/0.1); color: var(--fg-faint); }
+  .sql-block-target { border-color: rgb(220 38 38/0.6); background: rgb(220 38 38/0.12); color: #dc2626; }
+  :where(.dark, .dark *) .sql-block-plain  { border-color: rgb(148 163 184/0.2); background: rgb(148 163 184/0.06); }
+  :where(.dark, .dark *) .sql-block-target { border-color: rgb(248 113 113/0.6); background: rgb(248 113 113/0.15); color: #f87171; }
+  .sql-blocks-label { font-size: 10px; color: var(--fg-faint); }
+
+  /* Mini tree for Index Scan diagram */
+  .sql-tree-mini { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0; }
+  .sql-tree-row  { display: flex; gap: 6px; }
+  .sql-tree-node { border-radius: 5px; border: 1px solid; padding: 3px 8px; font-size: 10px; text-align: center; }
+  .sql-tree-root   { border-color: rgb(8 145 178/0.6); color: #0e7490; background: rgb(8 145 178/0.08); }
+  .sql-tree-branch { border-color: rgb(8 145 178/0.3); color: var(--fg-dim); background: rgb(8 145 178/0.04); }
+  .sql-tree-leaf       { border-color: rgb(148 163 184/0.4); color: var(--fg-faint); background: var(--bg); }
+  .sql-tree-leaf-hl    { border-color: rgb(22 163 74/0.6); color: #16a34a; background: rgb(22 163 74/0.08); font-weight: 700; }
+  .sql-tree-leaf-dim   { opacity: .4; }
+  :where(.dark, .dark *) .sql-tree-root   { border-color: rgb(34 211 238/0.5); color: #67e8f9; background: rgb(34 211 238/0.08); }
+  :where(.dark, .dark *) .sql-tree-branch { border-color: rgb(34 211 238/0.3); background: rgb(34 211 238/0.05); }
+  :where(.dark, .dark *) .sql-tree-leaf       { border-color: rgb(148 163 184/0.2); }
+  :where(.dark, .dark *) .sql-tree-leaf-hl    { border-color: rgb(74 222 128/0.5); color: #4ade80; background: rgb(74 222 128/0.08); }
+  .sql-tree-label { font-size: 9px; color: var(--fg-faint); margin-top: 2px; }
+
+  /* N+1 diagram */
+  .sql-queries-viz { display: flex; flex-direction: column; gap: 2px; margin: 6px 0; }
+  .sql-query-row   {
+    font-size: 10px; border-radius: 4px; border-left: 2px solid;
+    padding: 3px 8px; background: var(--bg); color: var(--fg-dim); line-height: 1.5;
+  }
+  .sql-query-root  { border-color: rgb(220 38 38/0.5); color: var(--fg); }
+  .sql-query-root-good { border-color: rgb(22 163 74/0.5) !important; }
+  .sql-query-child { border-color: rgb(220 38 38/0.3); margin-left: 12px; }
+  :where(.dark, .dark *) .sql-query-root  { border-color: rgb(248 113 113/0.5); }
+  :where(.dark, .dark *) .sql-query-root-good { border-color: rgb(74 222 128/0.4) !important; }
+  :where(.dark, .dark *) .sql-query-child { border-color: rgb(248 113 113/0.25); }
+  .sql-query-dots  { opacity: .6; }
+
+  /* ── B-Tree diagram ────────────────────────────────────────────────────── */
+  .sql-btree-diagram { display: flex; flex-direction: column; gap: 6px; }
+  .sql-btd-level { display: flex; align-items: center; gap: 12px; }
+  .sql-btd-label { font-size: 9px; color: var(--fg-faint); text-align: right; width: 60px; flex-shrink: 0; line-height: 1.4; }
+  .sql-btd-sub   { color: var(--fg-faint); font-weight: 400; }
+  .sql-btd-nodes { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sql-btd-node  {
+    border-radius: 5px; border: 1px solid; padding: 4px 10px;
+    font-size: 11px; display: flex; gap: 4px; align-items: center;
+  }
+  .sql-btd-root   { border-color: rgb(8 145 178/0.6); color: #0e7490; background: rgb(8 145 178/0.1); }
+  .sql-btd-branch { border-color: rgb(8 145 178/0.3); color: var(--fg-dim); background: rgb(8 145 178/0.04); }
+  .sql-btd-leaf   { border-color: rgb(148 163 184/0.4); color: var(--fg-faint); font-size: 10px; padding: 3px 7px; }
+  .sql-btd-leaf-hl { border-color: rgb(22 163 74/0.5); color: #16a34a; background: rgb(22 163 74/0.08); }
+  .sql-btd-leaves { gap: 4px; }
+  .sql-btd-heap   { border-color: rgb(161 98 7/0.5); color: #92400e; background: rgb(161 98 7/0.06); font-size: 10px; line-height: 1.5; }
+  .sql-btd-div    { color: rgb(148 163 184/0.5); }
+  :where(.dark, .dark *) .sql-btd-root   { border-color: rgb(34 211 238/0.6); color: #67e8f9; background: rgb(34 211 238/0.1); }
+  :where(.dark, .dark *) .sql-btd-branch { border-color: rgb(34 211 238/0.3); background: rgb(34 211 238/0.04); }
+  :where(.dark, .dark *) .sql-btd-leaf   { border-color: rgb(148 163 184/0.2); }
+  :where(.dark, .dark *) .sql-btd-leaf-hl { border-color: rgb(74 222 128/0.5); color: #4ade80; background: rgb(74 222 128/0.08); }
+  :where(.dark, .dark *) .sql-btd-heap   { border-color: rgb(251 191 36/0.4); color: #fbbf24; background: rgb(251 191 36/0.06); }
+  :where(.dark, .dark *) .sql-btd-div    { color: rgb(148 163 184/0.3); }
+  .sql-btd-arrows { display: flex; gap: 0; padding-left: 74px; }
+  .sql-btd-arrow-label { flex: 1; text-align: center; font-size: 9px; color: var(--fg-faint); }
+  .sql-btd-caption { font-size: 10px; color: var(--fg-dim); line-height: 1.5; margin-top: 6px; padding-left: 74px; }
+  .sql-split-demo  { display: flex; flex-direction: column; gap: 4px; }
+  .sql-split-before, .sql-split-after { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .sql-split-arrow { font-size: 10px; color: var(--fg-faint); }
+
+  /* ── MVCC timeline ─────────────────────────────────────────────────────── */
+  .sql-mvcc-timeline { display: flex; flex-direction: column; gap: 8px; }
+  .sql-mvcc-time {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    font-size: 10px; color: var(--fg-faint); padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .sql-mvcc-chain { display: flex; flex-direction: column; gap: 6px; }
+  .sql-mvcc-ver {
+    border-radius: 6px; border: 1px solid; padding: 8px 12px;
+  }
+  .sql-mvcc-dead { border-color: rgb(220 38 38/0.35); background: rgb(220 38 38/0.04); }
+  .sql-mvcc-live { border-color: rgb(22 163 74/0.35); background: rgb(22 163 74/0.04); }
+  .sql-mvcc-ver-head { font-size: 10px; font-weight: 700; color: var(--fg-dim); margin-bottom: 4px; }
+  .sql-mvcc-dead .sql-mvcc-ver-head { color: #dc2626; }
+  .sql-mvcc-live .sql-mvcc-ver-head { color: #16a34a; }
+  :where(.dark, .dark *) .sql-mvcc-dead { border-color: rgb(248 113 113/0.35); background: rgb(248 113 113/0.04); }
+  :where(.dark, .dark *) .sql-mvcc-live { border-color: rgb(74 222 128/0.35); background: rgb(74 222 128/0.04); }
+  :where(.dark, .dark *) .sql-mvcc-dead .sql-mvcc-ver-head { color: #f87171; }
+  :where(.dark, .dark *) .sql-mvcc-live .sql-mvcc-ver-head { color: #4ade80; }
+  .sql-mvcc-ver-fields { display: flex; gap: 16px; flex-wrap: wrap; }
+  .sql-mvcc-field { display: flex; flex-direction: column; font-size: 10px; }
+  .sql-mvcc-field-lbl { font-size: 9px; color: var(--fg-faint); text-transform: uppercase; letter-spacing: .05em; }
+  .sql-vis-row { display: flex; align-items: center; gap: 6px; font-size: 10px; flex-wrap: wrap; }
+  .sql-vis-step   { color: var(--fg-dim); }
+  .sql-vis-arrow  { color: var(--fg-faint); }
+  .sql-vis-result { border-radius: 3px; padding: 1px 6px; border: 1px solid; }
+  .sql-vis-old    { border-color: rgb(220 38 38/0.4); color: #dc2626; background: rgb(220 38 38/0.08); }
+  .sql-vis-new    { border-color: rgb(22 163 74/0.4); color: #16a34a; background: rgb(22 163 74/0.08); }
+  :where(.dark, .dark *) .sql-vis-old    { border-color: rgb(248 113 113/0.4); color: #f87171; background: rgb(248 113 113/0.08); }
+  :where(.dark, .dark *) .sql-vis-new    { border-color: rgb(74 222 128/0.4); color: #4ade80; background: rgb(74 222 128/0.08); }
+
+  /* ── Infra diagram ─────────────────────────────────────────────────────── */
+  .sql-pool-diagram { }
+  .sql-pool-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .sql-pool-slot-static {
+    width: 34px; height: 34px; border-radius: 5px; border: 1px solid;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+  }
+  .sql-pool-used { border-color: rgb(220 38 38/0.5); color: #dc2626; background: rgb(220 38 38/0.08); }
+  .sql-pool-free { border-color: rgb(22 163 74/0.4); color: #16a34a; background: rgb(22 163 74/0.04); }
+  :where(.dark, .dark *) .sql-pool-used { border-color: rgb(248 113 113/0.5); color: #f87171; background: rgb(248 113 113/0.1); }
+  :where(.dark, .dark *) .sql-pool-free { border-color: rgb(74 222 128/0.3); color: rgb(74 222 128/0.6); background: rgb(74 222 128/0.04); }
+  .sql-bucket-diagram { display: flex; gap: 12px; align-items: flex-end; }
+  .sql-bucket-visual {
+    position: relative; width: 52px; height: 80px;
+    border: 2px solid var(--border); border-radius: 4px; overflow: hidden; background: var(--bg);
+  }
+  .sql-bucket-fill {
+    position: absolute; bottom: 0; width: 100%;
+    background: rgb(161 98 7/0.2); border-top: 2px solid #b45309;
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .sql-bucket-fill span { font-size: 12px; font-weight: 700; color: #92400e; padding-top: 2px; }
+  :where(.dark, .dark *) .sql-bucket-fill { background: rgb(251 191 36/0.4); border-top-color: #fbbf24; }
+  :where(.dark, .dark *) .sql-bucket-fill span { color: #fbbf24; }
+  .sql-bucket-cap-label {
+    position: absolute; top: 2px; right: 4px;
+    font-size: 9px; color: var(--fg-faint);
+  }
+  .sql-bucket-info { display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
+
+  /* Execution order styles */
   .eo-cl {
-    border-radius: 4px;
-    padding-inline: 2px;
+    border-radius: 4px; padding-inline: 2px;
     transition: background-color 0.25s, opacity 0.25s, box-shadow 0.25s;
   }
   .eo-cl:hover { background: rgb(34 211 238 / 0.12); }
@@ -128,4 +779,45 @@ export const prerender = true;
     color: var(--fg);
   }
   .eo-done { opacity: 0.45; }
+
+  /* ── Details pre blocks — use --terminal token for adaptive bg ─────────── */
+  .sql-details-pre {
+    overflow-x: auto; border-radius: 6px; border: 1px solid var(--border);
+    padding: 10px 12px; font-size: 11px; line-height: 1.65;
+    white-space: pre; background: var(--terminal); color: var(--fg);
+  }
+
+  /* ── Accent color overrides for the explain boxes in light mode ────────── */
+  .sql-explain-box strong { color: inherit; }
+  .sql-side-bad  { border-color: rgb(220 38 38/0.35); }
+  .sql-side-good { border-color: rgb(22 163 74/0.35); }
+  :where(.dark, .dark *) .sql-side-bad  { border-color: rgb(248 113 113/0.35); }
+  :where(.dark, .dark *) .sql-side-good { border-color: rgb(74 222 128/0.35); }
 </style>
+
+<script>
+  function initSqlTabs() {
+    const bar = document.getElementById('sql-tab-bar');
+    if (!bar) return;
+    const tabs  = bar.querySelectorAll<HTMLButtonElement>('[data-sql-tab]');
+    const panes = document.querySelectorAll<HTMLElement>('[data-sql-pane]');
+
+    const activate = (tab: string) => {
+      tabs.forEach(b  => b.classList.toggle('sql-tab-active', b.dataset.sqlTab === tab));
+      panes.forEach(p => { p.hidden = p.dataset.sqlPane !== tab; });
+      try { localStorage.setItem('sql_lab_tab', tab); } catch {}
+    };
+
+    tabs.forEach(btn =>
+      btn.addEventListener('click', () => activate(btn.dataset.sqlTab!))
+    );
+
+    try {
+      const saved = localStorage.getItem('sql_lab_tab');
+      if (saved && [...tabs].some(b => b.dataset.sqlTab === saved)) { activate(saved); return; }
+    } catch {}
+    activate('explain');
+  }
+
+  document.addEventListener('astro:page-load', initSqlTabs);
+</script>

@@ -1,3 +1,53 @@
 ---
-// FootprintCalc — placeholder for a future interactive B-tree vs BRIN footprint calculator.
+// Index Footprint Calculator — B-Tree vs BRIN size estimator
 ---
+
+<div id="fp-panel" class="rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+  <p class="mb-3 border-b border-(--border) pb-2 text-[11px] tracking-widest text-(--fg-faint) uppercase">
+    index footprint calculator
+    <span class="ml-1 normal-case text-(--fg-dim)">estimate B-Tree vs BRIN index size from column types + row count</span>
+  </p>
+
+  <div class="flex flex-wrap items-end gap-3 mb-3">
+    <div class="flex flex-col gap-1">
+      <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Column type</label>
+      <select id="fp-col-type" class="rounded border border-(--border) bg-(--bg) px-2 py-1 text-[11px] text-(--fg)">
+        <option>boolean</option>
+        <option>smallint</option>
+        <option>integer</option>
+        <option selected>bigint</option>
+        <option>float4</option>
+        <option>float8</option>
+        <option>date</option>
+        <option>timestamp</option>
+        <option>timestamptz</option>
+        <option>uuid</option>
+        <option>char(10)</option>
+        <option>varchar(50)</option>
+        <option>varchar(255)</option>
+        <option>numeric(10,2)</option>
+      </select>
+    </div>
+    <button id="fp-add-col" type="button"
+      class="rounded border border-(--border) bg-(--bg) px-3 py-1 text-[11px] text-(--fg-dim) hover:text-(--fg) transition-colors cursor-pointer">
+      + Add column
+    </button>
+    <div class="flex flex-col gap-1">
+      <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Row count</label>
+      <input id="fp-rows" type="number" min="1" max="1000000000" value="1000000"
+        class="w-32 rounded border border-(--border) bg-(--bg) px-2 py-1 text-[11px] text-(--fg) text-right" />
+    </div>
+    <button id="fp-calc" type="button"
+      class="rounded border border-cyan-500 bg-cyan-500/20 px-4 py-1.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/30 transition-colors cursor-pointer">
+      Calculate
+    </button>
+  </div>
+
+  <div id="fp-col-list" class="flex flex-wrap gap-1.5 min-h-[28px] mb-3 rounded border border-(--border) bg-(--bg) p-2"></div>
+  <div id="fp-result"></div>
+</div>
+
+<script>
+  import { initFootprintCalc } from '@/scripts/lab/sql/footprint';
+  document.addEventListener('astro:page-load', initFootprintCalc);
+</script>

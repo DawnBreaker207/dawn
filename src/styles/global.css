@@ -1406,3 +1406,87 @@ pre.has-copy:hover .copy-btn,
   }
 }
 
+/* ── SQL Lab: Index Footprint Calculator ───────────────────────────────────── */
+.fp-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  border-radius: 4px; border: 1px solid var(--border);
+  background: var(--bg); padding: 1px 6px; font-size: 10px; color: var(--fg-dim);
+}
+.fp-tag-rm {
+  background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 0 2px; font-size: 12px; line-height: 1;
+}
+.fp-tag-rm:hover { color: #f87171; }
+.fp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 640px) { .fp-grid { grid-template-columns: 1fr; } }
+.fp-card { border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; }
+.fp-card-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.fp-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--fg-dim); padding: 2px 0; border-bottom: 1px solid rgb(255 255 255/0.04); }
+.fp-row strong { color: var(--fg); }
+.fp-note { margin-top: 6px; font-size: 9px; color: var(--fg-faint); line-height: 1.4; }
+.fp-bars { margin-bottom: 8px; }
+.fp-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.fp-bar-lbl { font-size: 10px; color: var(--fg-faint); width: 36px; flex-shrink: 0; }
+.fp-bar-track { flex: 1; height: 18px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.fp-bar-fill { height: 100%; display: flex; align-items: center; padding-left: 6px; font-size: 9px; color: var(--fg); white-space: nowrap; transition: width .4s ease; border-radius: 4px; }
+.fp-verdict { font-size: 10px; color: var(--fg-dim); line-height: 1.5; padding: 6px 8px; border-left: 2px solid rgb(34 211 238/0.4); }
+.fp-verdict strong { color: #67e8f9; }
+
+/* ── SQL Lab: Connection Pool & Token Bucket ───────────────────────────────── */
+.infra-tab-active { border-color: var(--accent)!important; color: var(--accent)!important; }
+.pool-slot {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 6px; border: 1px solid;
+  font-size: 9px; font-family: monospace; gap: 2px; transition: background .25s, border-color .25s;
+}
+.pool-slot-free { border-color: rgb(74 222 128/0.4); color: rgb(74 222 128/0.7); }
+.pool-slot-used { border-color: rgb(248 113 113/0.5); background: rgb(248 113 113/0.12); color: #f87171; }
+.pool-slot-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pool-stat-ok   { color: #4ade80; }
+.pool-stat-busy { color: #f87171; }
+.pool-stat-queue { color: #facc15; }
+.pool-log-line  { font-size: 10px; color: var(--fg-dim); }
+.pool-log-ok    { color: #4ade80; }
+.pool-log-warn  { color: #facc15; }
+.tb-bucket-outer { position: relative; width: 100%; height: 100%; border: 2px solid var(--border); border-radius: 4px; overflow: hidden; background: var(--bg); }
+.tb-bucket-fill  { position: absolute; bottom: 0; width: 100%; display: flex; align-items: flex-start; justify-content: center; transition: height .15s linear; }
+.tb-bucket-count { font-size: 14px; font-weight: 700; color: var(--fg); padding-top: 4px; }
+.tb-bucket-cap   { position: absolute; top: 2px; right: 4px; font-size: 9px; color: var(--fg-faint); }
+
+/* ── SQL Lab: MVCC Visibility ──────────────────────────────────────────────── */
+.mvcc-btn {
+  border-radius: 4px; border: 1px solid var(--border); background: var(--bg);
+  padding: 3px 10px; font-size: 10px; font-family: monospace; color: var(--fg-dim);
+  cursor: pointer; transition: color .15s, border-color .15s;
+}
+.mvcc-btn:hover:not(:disabled) { color: var(--fg); border-color: var(--fg-dim); }
+.mvcc-btn:disabled { opacity: .35; cursor: default; }
+.mvcc-btn-ok   { border-color: rgb(74 222 128/0.4); color: #4ade80; }
+.mvcc-btn-warn { border-color: rgb(248 113 113/0.4); color: #f87171; }
+.mvcc-tbl { width: 100%; border-collapse: collapse; font-size: 10px; }
+.mvcc-tbl th { text-align: left; padding: 4px 8px; color: var(--fg-faint); font-weight: 600; border-bottom: 1px solid var(--border); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
+.mvcc-tbl td { padding: 4px 8px; border-bottom: 1px solid rgb(255 255 255/0.04); }
+.mvcc-row-live { background: rgb(74 222 128/0.05); }
+.mvcc-row-dead { opacity: .5; }
+.mvcc-xid  { color: #facc15; font-family: monospace; }
+.mvcc-data { color: var(--fg); }
+.mvcc-vis  { text-align: center; }
+.mvcc-y { color: #4ade80; font-weight: 700; }
+.mvcc-n { color: #f87171; font-weight: 700; }
+.mvcc-txn-status { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.mvcc-txn-badge { font-size: 10px; border-radius: 4px; padding: 2px 8px; border: 1px solid; }
+.mvcc-txn-a { border-color: rgb(34 211 238/0.4); color: #67e8f9; background: rgb(34 211 238/0.07); }
+.mvcc-txn-b { border-color: rgb(167 139 250/0.4); color: #c4b5fd; background: rgb(167 139 250/0.07); }
+.mvcc-log-line { display: flex; gap: 6px; font-size: 10px; color: var(--fg-dim); line-height: 1.5; }
+.mvcc-step { color: var(--fg-faint); flex-shrink: 0; min-width: 18px; }
+.mvcc-log-a    { color: #67e8f9; }
+.mvcc-log-b    { color: #c4b5fd; }
+.mvcc-log-warn { color: #facc15; }
+.mvcc-log-init { color: var(--fg-faint); font-style: italic; }
+.mvcc-log-dim  { color: var(--fg-faint); font-size: 9px; }
+
+/* ── SQL Lab: B-Tree Traversal ─────────────────────────────────────────────── */
+.bt-log-line { font-size: 10px; line-height: 1.6; color: var(--fg-dim); }
+.bt-log-ok   { color: #4ade80; }
+.bt-log-warn { color: #facc15; }
+.bt-log-split { color: #fb923c; font-weight: 600; }
+

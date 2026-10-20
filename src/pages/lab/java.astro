@@ -35,7 +35,7 @@ export const prerender = true;
           <span class="text-(--accent)">📚 concepts — 25 tabs</span>
           <span
             data-jx-current
-            class="max-w-[240px] truncate rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-300"
+            class="max-w-[240px] truncate rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-700 dark:text-amber-300"
           >{TABS[0]?.title}</span>
           <span class="hidden text-[10px] font-normal text-(--fg-faint) sm:inline">core java 12 · spring 13 — open to switch</span>
         </span>
@@ -48,7 +48,8 @@ export const prerender = true;
             <button
               type="button"
               data-jx-tab={tab.id}
-              class:list={['jx-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)', tab.tone]}
+              data-jx-tone={tab.tone}
+              class:list={['jx-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold transition-colors hover:border-(--fg-dim)', tab.tone]}
             >{tab.title}</button>
           ))}
         </div>
@@ -58,7 +59,8 @@ export const prerender = true;
             <button
               type="button"
               data-jx-tab={tab.id}
-              class:list={['jx-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)', tab.tone]}
+              data-jx-tone={tab.tone}
+              class:list={['jx-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold transition-colors hover:border-(--fg-dim)', tab.tone]}
             >{tab.title}</button>
           ))}
         </div>

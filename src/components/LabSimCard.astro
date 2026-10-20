@@ -35,7 +35,7 @@ const { topic, cases = [], code = '', track: introTrack = [] } = Astro.props;
     <button
       type="button"
       data-sim-replay
-      class="cursor-pointer rounded-lg border border-amber-400/50 bg-amber-500/5 px-2.5 py-1.5 text-[10px] text-amber-300 transition-colors hover:bg-amber-500/15 active:scale-95"
+      class="cursor-pointer rounded-lg border border-amber-400/50 bg-amber-500/5 px-2.5 py-1.5 text-[10px] text-amber-600 dark:text-amber-300 transition-colors hover:bg-amber-500/15 active:scale-95"
     >↻ replay</button>
     <span class="mx-1 h-5 w-px bg-(--border)"></span>
     <label
@@ -77,7 +77,7 @@ const { topic, cases = [], code = '', track: introTrack = [] } = Astro.props;
   </div>
   <pre
     data-sim-code
-    class:list={['mt-2 overflow-auto rounded-lg border border-(--border) bg-black/50 p-3 font-mono text-[11px] leading-relaxed text-(--fg)', code ? '' : 'hidden']}
+    class:list={['mt-2 overflow-auto rounded-lg border border-(--border) bg-(--terminal) p-3 font-mono text-[11px] leading-relaxed text-(--fg)', code ? '' : 'hidden']}
   >
     {code ? code.split('\n').map((l, li) => (
       <div class="px-1 text-(--fg-faint)">{String(li + 1).padStart(2, '0') + ' │ ' + l}</div>
@@ -86,6 +86,6 @@ const { topic, cases = [], code = '', track: introTrack = [] } = Astro.props;
   <div data-sim-banner class="hidden"></div>
   <div
     data-sim-log
-    class="mt-2 max-h-40 space-y-0.5 overflow-y-auto rounded-lg border border-(--border) bg-black/40 p-2 font-mono text-[11px] leading-snug text-(--fg-faint)"
+    class="mt-2 max-h-40 space-y-0.5 overflow-y-auto rounded-lg border border-(--border) bg-(--terminal) p-2 font-mono text-[11px] leading-snug text-(--fg-faint)"
   >[sim] pick a case above — steps stream here; the banner explains each one.</div>
 </div>

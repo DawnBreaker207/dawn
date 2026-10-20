@@ -47,10 +47,10 @@ export function bootEngine(): void {
   const paint = (on: boolean, btn: HTMLElement) => {
     const base =
       'jx-btn cursor-pointer rounded-lg border px-3 py-1.5 font-semibold transition-colors ';
+    const tone = btn.dataset.jxTone ?? 'text-(--fg-dim)';
     btn.className = on
       ? base + 'border-(--fg) bg-(--fg) text-(--bg)'
-      : base +
-        'border-(--border) bg-(--bg) text-(--fg-dim) hover:border-(--fg-dim) hover:text-(--fg)';
+      : base + `border-(--border) bg-(--bg) ${tone} hover:border-(--fg-dim)`;
   };
 
   tabs.forEach((tab) => {
@@ -90,13 +90,14 @@ export function bootEngine(): void {
     const banner = card.querySelector<HTMLElement>('[data-sim-banner]');
     const nextBtn = card.querySelector<HTMLButtonElement>('[data-sim-next]');
     let resume: (() => void) | null = null;
+    let currentRunId = 0;
 
     nextBtn?.addEventListener('click', () => {
       resume?.();
       resume = null;
     });
 
-    const stepWait = () => {
+    const stepWait = (runId: number) => {
       const mode =
         card.querySelector<HTMLInputElement>('[data-step-mode]')?.checked ?? false;
       if (mode && nextBtn) {
@@ -118,14 +119,18 @@ export function bootEngine(): void {
       banner.className =
         'mt-2 rounded-lg border px-4 py-2 font-mono text-xs ' +
         (step.tone === 'error'
-          ? 'border-rose-500 bg-rose-950/40 text-rose-300'
+          ? 'border-rose-500 bg-rose-950/40 text-rose-600 dark:text-rose-300'
           : step.tone === 'warn'
-            ? 'border-amber-500 bg-amber-950/40 text-amber-300'
-            : 'border-sky-500 bg-sky-950/30 text-sky-300');
+            ? 'border-amber-500 bg-amber-950/40 text-amber-700 dark:text-amber-300'
+            : 'border-sky-500 bg-sky-950/30 text-sky-700 dark:text-sky-300');
     };
 
     const runCase = async (c?: SimCase, cfg?: VizCfg) => {
-      if (!c || !logEl || card.dataset.busy === '1') return;
+      if (!c || !logEl) return;
+      // Cancel previous run: unblock any pending stepWait, then assign new runId
+      if (resume) { resume(); resume = null; }
+      nextBtn?.classList.add('hidden');
+      const myRunId = ++currentRunId;
       card.dataset.busy = '1';
       logEl.textContent = '';
 
@@ -172,6 +177,7 @@ export function bootEngine(): void {
       }
 
       for (let i = 0; i < c.steps.length; i++) {
+        if (currentRunId !== myRunId) return; // cancelled by a newer run
         const step = c.steps[i];
         showBanner(step);
         const at = cfg?.at?.[i] ?? -1;
@@ -181,25 +187,25 @@ export function bootEngine(): void {
             BOX_BASE +
             (bi === at
               ? step.tone === 'error'
-                ? 'border-rose-500 bg-rose-950/40 text-rose-300'
-                : 'border-amber-400 bg-amber-500/10 text-amber-300'
+                ? 'border-rose-500 bg-rose-950/40 text-rose-600 dark:text-rose-300'
+                : 'border-amber-400 bg-amber-500/10 text-amber-700 dark:text-amber-300'
               : bi < lastAt
-                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300'
+                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
                 : 'border-(--border) bg-(--bg) text-(--fg-faint)');
         });
         const ln = cfg?.line?.[i] ?? -1;
         codeRows.forEach((row, li) => {
           row.className =
-            'px-1 ' + (li === ln - 1 ? 'bg-amber-500/10 text-amber-300' : 'text-(--fg-faint)');
+            'px-1 ' + (li === ln - 1 ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300' : 'text-(--fg-faint)');
         });
         const row = document.createElement('div');
         row.textContent = `[${String(i + 1).padStart(2, '0')}] ${step.log}`;
-        row.className = i === c.steps.length - 1 ? 'text-amber-300' : 'text-slate-400';
+        row.className = i === c.steps.length - 1 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-600 dark:text-slate-400';
         logEl.appendChild(row);
         logEl.scrollTop = logEl.scrollHeight;
-        await stepWait();
+        await stepWait(myRunId);
       }
-      delete card.dataset.busy;
+      if (currentRunId === myRunId) delete card.dataset.busy;
     };
 
     let lastIdx = 0;

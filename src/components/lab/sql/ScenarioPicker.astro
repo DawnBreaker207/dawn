@@ -27,7 +27,7 @@
       </div>
       <p class="mt-1 text-[11px] text-(--fg-dim)">Runs both strategies in sequence — the numbers on the two cards below count up on their own.</p>
     </div>
-    <button type="button" id="btn-simulate-run" class="cursor-pointer rounded-lg border border-cyan-500 bg-cyan-500/20 px-4 py-2 font-semibold text-cyan-300 transition-all hover:bg-cyan-500/30 active:scale-95">▶ Run simulation</button>
+    <button type="button" id="btn-simulate-run" class="cursor-pointer rounded-lg border border-cyan-500 bg-cyan-500/20 px-4 py-2 font-semibold text-cyan-700 dark:text-cyan-300 transition-all hover:bg-cyan-500/30 active:scale-95">▶ Run simulation</button>
     <button type="button" id="btn-simulate-replay" class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-2 font-semibold text-(--fg-dim) transition-colors hover:text-(--fg) active:scale-95">↻ Replay</button>
   </div>
   <div class="mt-2 flex flex-wrap items-center gap-4 border-b border-cyan-500/20 pb-2.5">
@@ -43,7 +43,7 @@
     </label>
     <button type="button" id="sp-next" class="hidden cursor-pointer rounded border border-(--accent) bg-(--accent)/10 px-2.5 py-1 text-[10px] text-(--accent)">▶ next step ▸</button>
   </div>
-  <div id="engine-log-stream" class="thin-scrollbar mt-3 max-h-40 overflow-y-auto rounded-lg bg-black/60 p-3 font-mono text-[11px] text-(--fg-dim)">
+  <div id="engine-log-stream" class="thin-scrollbar mt-3 max-h-40 overflow-y-auto rounded-lg bg-(--terminal) p-3 font-mono text-[11px] text-(--fg-dim)">
     <div class="text-(--fg-faint)">[Engine Log] Pick a scenario, then hit run…</div>
   </div>
 </div>
@@ -53,7 +53,7 @@
   <div id="card-strategy-a" class="rounded-xl border border-rose-500/30 bg-rose-950/10 p-4 font-mono text-xs">
     <div class="mb-2.5 flex items-center justify-between">
       <span class="text-xs font-bold uppercase tracking-wider text-rose-400" id="title-strategy-a">No Index (Seq Scan)</span>
-      <span class="rounded bg-rose-500/20 px-2 py-0.5 text-[10px] font-semibold text-rose-300" id="badge-strategy-a">Sequential Scan</span>
+      <span class="rounded bg-rose-500/20 px-2 py-0.5 text-[10px] font-semibold text-rose-600 dark:text-rose-300" id="badge-strategy-a">Sequential Scan</span>
     </div>
     <pre class="overflow-x-auto rounded-lg border border-(--border) bg-(--bg) p-3 text-[11px] text-(--fg)" id="code-strategy-a">-- Full scan of the users table (1M rows)
 EXPLAIN ANALYZE
@@ -69,7 +69,7 @@ WHERE email = 'dawn@dev.com';</pre>
   <div id="card-strategy-b" class="rounded-xl border border-emerald-500/30 bg-emerald-950/10 p-4 font-mono text-xs">
     <div class="mb-2.5 flex items-center justify-between">
       <span class="text-xs font-bold uppercase tracking-wider text-emerald-400" id="title-strategy-b">With a B-Tree Index</span>
-      <span class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300" id="badge-strategy-b">Index Scan (B-Tree)</span>
+      <span class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300" id="badge-strategy-b">Index Scan (B-Tree)</span>
     </div>
     <pre class="overflow-x-auto rounded-lg border border-(--border) bg-(--bg) p-3 text-[11px] text-(--fg)" id="code-strategy-b">-- Create index, then query
 CREATE INDEX idx_users_email ON users(email);

@@ -1,4 +1,54 @@
 ---
-// BTreeTraversal — placeholder for a future interactive B-tree traversal panel.
-// The static B-tree internals content lives in the Theory details block in sql.astro.
+// B-Tree (order 3) interactive visualizer — insert, search, page-split animation
 ---
+
+<div id="btree-panel" class="rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+  <p class="mb-3 border-b border-(--border) pb-2 text-[11px] tracking-widest text-(--fg-faint) uppercase">
+    b-tree traversal simulator
+    <span class="ml-1 normal-case text-(--fg-dim)">insert keys, watch splits propagate, search highlights the descent path</span>
+  </p>
+
+  <div class="flex flex-wrap items-end gap-2 mb-3">
+    <div class="flex flex-col gap-1">
+      <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Insert key</label>
+      <input id="bt-insert-val" type="number" min="0" max="9999" placeholder="e.g. 42"
+        class="w-24 rounded border border-(--border) bg-(--bg) px-2 py-1 text-right text-[11px] text-(--fg)" />
+    </div>
+    <button id="bt-insert" type="button"
+      class="rounded border border-cyan-500 bg-cyan-500/20 px-3 py-1.5 text-[11px] font-semibold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-500/30 cursor-pointer transition-colors">
+      Insert
+    </button>
+
+    <div class="ml-2 flex flex-col gap-1">
+      <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Search key</label>
+      <input id="bt-search-val" type="number" min="0" max="9999" placeholder="e.g. 15"
+        class="w-24 rounded border border-(--border) bg-(--bg) px-2 py-1 text-right text-[11px] text-(--fg)" />
+    </div>
+    <button id="bt-search" type="button"
+      class="rounded border border-violet-500 bg-violet-500/15 px-3 py-1.5 text-[11px] font-semibold text-violet-600 dark:text-violet-300 hover:bg-violet-500/25 cursor-pointer transition-colors">
+      Search
+    </button>
+
+    <button id="bt-bulk" type="button"
+      class="ml-2 rounded border border-(--border) bg-(--bg) px-3 py-1.5 text-[11px] font-semibold text-(--fg-dim) hover:text-(--fg) cursor-pointer transition-colors">
+      Load demo
+    </button>
+    <button id="bt-reset" type="button"
+      class="rounded border border-(--border) bg-(--bg) px-3 py-1.5 text-[11px] font-semibold text-(--fg-dim) hover:text-(--fg) cursor-pointer transition-colors">
+      Clear
+    </button>
+  </div>
+
+  <!-- SVG tree canvas -->
+  <div class="thin-scrollbar mb-3 overflow-x-auto rounded border border-(--border) bg-(--terminal) p-3 min-h-[80px]">
+    <svg id="bt-svg" xmlns="http://www.w3.org/2000/svg" width="400" height="60"></svg>
+  </div>
+
+  <!-- Log -->
+  <div id="bt-log" class="thin-scrollbar max-h-28 overflow-y-auto rounded bg-(--terminal) p-2 text-[10px] leading-5 space-y-0.5 text-(--fg-dim)"></div>
+</div>
+
+<script>
+  import { initBTreeSimulator } from '@/scripts/lab/sql/btree';
+  document.addEventListener('astro:page-load', initBTreeSimulator);
+</script>

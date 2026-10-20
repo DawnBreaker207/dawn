@@ -619,6 +619,14 @@ function setupKeymap(): void {
       return;
     }
 
+    if (kLower === 'r') {
+      e.preventDefault();
+      const cur = localStorage.getItem('dawn_weather_mode');
+      const next = cur === 'rain' ? 'off' : 'rain';
+      window.dispatchEvent(new CustomEvent('dawn:set-weather', { detail: { mode: next } }));
+      return;
+    }
+
     if (e.ctrlKey || e.metaKey || e.altKey) return;
 
     const scroller = document.querySelector<HTMLElement>('.studio-content') ?? window;

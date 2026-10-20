@@ -1,3 +1,93 @@
 ---
-// InfraTools — placeholder for a future token bucket + connection pool interactive panel.
+// InfraTools — Connection Pool + Token Bucket interactive simulators
 ---
+
+<div id="infra-panel" class="rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+  <p class="mb-3 border-b border-(--border) pb-2 text-[11px] tracking-widest text-(--fg-faint) uppercase">
+    infra tools
+    <span class="ml-1 normal-case text-(--fg-dim)">connection pool contention · token bucket rate limiting</span>
+  </p>
+
+  <!-- Tab switcher -->
+  <div class="flex gap-2 mb-4">
+    <button data-infra-tab="pool" type="button"
+      class="infra-tab-active rounded border border-(--border) px-3 py-1.5 text-[11px] font-semibold cursor-pointer transition-colors">
+      🔌 Connection Pool
+    </button>
+    <button data-infra-tab="bucket" type="button"
+      class="rounded border border-(--border) px-3 py-1.5 text-[11px] font-semibold text-(--fg-dim) hover:text-(--fg) cursor-pointer transition-colors">
+      🪣 Token Bucket
+    </button>
+  </div>
+
+  <!-- Connection Pool pane -->
+  <div data-infra-pane="pool">
+    <div class="flex flex-wrap items-end gap-3 mb-3">
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Pool size</label>
+        <input id="pool-size" type="number" min="1" max="20" value="5"
+          class="w-16 rounded border border-(--border) bg-(--bg) px-2 py-1 text-right text-[11px] text-(--fg)" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Workers</label>
+        <input id="pool-workers" type="number" min="1" max="30" value="8"
+          class="w-16 rounded border border-(--border) bg-(--bg) px-2 py-1 text-right text-[11px] text-(--fg)" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Avg hold (ms)</label>
+        <input id="pool-delay" type="number" min="200" max="3000" step="100" value="600"
+          class="w-20 rounded border border-(--border) bg-(--bg) px-2 py-1 text-right text-[11px] text-(--fg)" />
+      </div>
+      <button id="pool-start" type="button"
+        class="rounded border border-cyan-500 bg-cyan-500/20 px-4 py-1.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/30 cursor-pointer transition-colors">
+        ▶ Start
+      </button>
+      <button id="pool-stop" type="button"
+        class="rounded border border-(--border) bg-(--bg) px-3 py-1.5 text-[11px] font-semibold text-(--fg-dim) hover:text-(--fg) cursor-pointer transition-colors">
+        ■ Stop
+      </button>
+    </div>
+    <div id="pool-stats" class="mb-2 text-[10px] text-(--fg-dim)">—</div>
+    <div id="pool-slots" class="flex flex-wrap gap-1.5 min-h-[40px] mb-3 rounded border border-(--border) bg-(--bg) p-2"></div>
+    <div id="pool-log" class="thin-scrollbar max-h-32 overflow-y-auto rounded bg-(--terminal) p-2 text-[10px] leading-5 text-(--fg-dim)"></div>
+  </div>
+
+  <!-- Token Bucket pane -->
+  <div data-infra-pane="bucket" hidden>
+    <div class="flex flex-wrap items-end gap-3 mb-3">
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Capacity</label>
+        <input id="tb-capacity" type="number" min="1" max="100" value="20"
+          class="w-16 rounded border border-(--border) bg-(--bg) px-2 py-1 text-right text-[11px] text-(--fg)" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Fill rate (tok/s)</label>
+        <input id="tb-fill-rate" type="number" min="0.1" max="50" step="0.5" value="5"
+          class="w-20 rounded border border-(--border) bg-(--bg) px-2 py-1 text-right text-[11px] text-(--fg)" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Request rate (req/s)</label>
+        <input id="tb-req-rate" type="number" min="0.1" max="30" step="0.5" value="8"
+          class="w-24 rounded border border-(--border) bg-(--bg) px-2 py-1 text-right text-[11px] text-(--fg)" />
+      </div>
+      <button id="tb-start" type="button"
+        class="rounded border border-cyan-500 bg-cyan-500/20 px-4 py-1.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/30 cursor-pointer transition-colors">
+        ▶ Start
+      </button>
+      <button id="tb-stop" type="button"
+        class="rounded border border-(--border) bg-(--bg) px-3 py-1.5 text-[11px] font-semibold text-(--fg-dim) hover:text-(--fg) cursor-pointer transition-colors">
+        ■ Stop
+      </button>
+    </div>
+    <div id="tb-stats" class="mb-2 text-[10px] text-(--fg-dim)">—</div>
+    <div class="flex gap-4 mb-3">
+      <div id="tb-bucket" class="flex items-end" style="height:120px;width:80px"></div>
+      <div id="tb-log" class="thin-scrollbar flex-1 max-h-32 overflow-y-auto rounded bg-(--terminal) p-2 text-[10px] leading-5 text-(--fg-dim)"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { initInfraTools } from '@/scripts/lab/sql/infra-tools';
+  document.addEventListener('astro:page-load', initInfraTools);
+</script>

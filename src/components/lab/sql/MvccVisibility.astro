@@ -1,3 +1,56 @@
 ---
-// MvccVisibility — placeholder for a future interactive MVCC visibility panel.
+// MVCC Visibility — step-through PostgreSQL multi-version concurrency simulator
 ---
+
+<div id="mvcc-panel" class="rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+  <p class="mb-3 border-b border-(--border) pb-2 text-[11px] tracking-widest text-(--fg-faint) uppercase">
+    mvcc visibility simulator
+    <span class="ml-1 normal-case text-(--fg-dim)">step through xmin/xmax version chains — see what each transaction actually reads</span>
+  </p>
+
+  <!-- Isolation level + Reset -->
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+    <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Isolation:</label>
+    <select id="mvcc-iso" class="rounded border border-(--border) bg-(--bg) px-2 py-1 text-[11px] text-(--fg)">
+      <option value="read_committed">READ COMMITTED</option>
+      <option value="repeatable_read">REPEATABLE READ</option>
+    </select>
+    <button id="mvcc-reset" type="button"
+      class="ml-auto rounded border border-(--border) bg-(--bg) px-3 py-1 text-[11px] text-(--fg-dim) hover:text-(--fg) cursor-pointer transition-colors">
+      ↺ Reset
+    </button>
+  </div>
+
+  <!-- Transaction controls -->
+  <div class="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2">
+    <div class="rounded border border-cyan-500/40 bg-cyan-950/10 p-3">
+      <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-cyan-400">Transaction A</p>
+      <div class="flex flex-wrap gap-2">
+        <button id="mvcc-begin-a"  type="button" class="mvcc-btn">BEGIN</button>
+        <button id="mvcc-update-a" type="button" class="mvcc-btn">UPDATE row</button>
+        <button id="mvcc-commit-a" type="button" class="mvcc-btn mvcc-btn-ok">COMMIT</button>
+        <button id="mvcc-abort-a"  type="button" class="mvcc-btn mvcc-btn-warn">ROLLBACK</button>
+      </div>
+    </div>
+    <div class="rounded border border-violet-500/40 bg-violet-950/10 p-3">
+      <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-violet-400">Transaction B</p>
+      <div class="flex flex-wrap gap-2">
+        <button id="mvcc-begin-b"  type="button" class="mvcc-btn">BEGIN</button>
+        <button id="mvcc-select-b" type="button" class="mvcc-btn">SELECT *</button>
+        <button id="mvcc-commit-b" type="button" class="mvcc-btn mvcc-btn-ok">COMMIT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Version chain table -->
+  <div id="mvcc-table" class="mb-3 overflow-x-auto thin-scrollbar"></div>
+
+  <!-- Step log -->
+  <div class="text-[10px] uppercase tracking-wider text-(--fg-faint) mb-1">Step log</div>
+  <div id="mvcc-log" class="thin-scrollbar max-h-44 overflow-y-auto rounded bg-(--terminal) p-2 text-[10px] leading-5 space-y-0.5"></div>
+</div>
+
+<script>
+  import { initMvccSimulator } from '@/scripts/lab/sql/mvcc';
+  document.addEventListener('astro:page-load', initMvccSimulator);
+</script>
