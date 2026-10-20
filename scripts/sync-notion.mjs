@@ -291,6 +291,83 @@ async function syncTimeline() {
   console.log(`✅ Synced ${items.length} timeline entries -> src/data/timeline.json`);
 }
 
+// ---------------------------------------------------------------------------
+// Now page sync from Notion
+// ---------------------------------------------------------------------------
+const NOW_OUT = path.join(root, 'src', 'data', 'now.json');
+
+async function syncNow() {
+  const pageId = process.env.NOW_PAGE_ID;
+  if (!pageId) {
+    console.log('[sync-notion] Missing NOW_PAGE_ID — keeping local src/data/now.json.');
+    return;
+  }
+
+  try {
+    const page = await notion.pages.retrieve({ page_id: pageId });
+    const blocks = await notion.blocks.children.list({ block_id: pageId, page_size: 100 });
+
+    const props = page.properties ?? {};
+    const updatedAt = text(props['UpdatedAt']) || fmtMonth(new Date().toISOString());
+    const location = text(props['Location']) || 'Hanoi, Vietnam';
+    const status = text(props['Status']) || '';
+
+    const building = [];
+    const studying = [];
+    const games = [];
+    let currentSection = '';
+
+    for (const b of blocks.results) {
+      if (b.type === 'heading_2' || b.type === 'heading_1' || b.type === 'heading_3') {
+        const hText = (b[b.type]?.rich_text ?? []).map((t) => t.plain_text).join('').toLowerCase();
+        if (hText.includes('build') || hText.includes('project') || hText.includes('dự án')) currentSection = 'building';
+        else if (hText.includes('study') || hText.includes('learn') || hText.includes('nghiên cứu')) currentSection = 'studying';
+        else if (hText.includes('game') || hText.includes('chơi')) currentSection = 'games';
+        else currentSection = '';
+        continue;
+      }
+
+      if (b.type === 'bulleted_list_item' || b.type === 'numbered_list_item' || b.type === 'paragraph') {
+        const itemText = (b[b.type]?.rich_text ?? []).map((t) => t.plain_text).join('').trim();
+        if (!itemText) continue;
+
+        if (currentSection === 'building') {
+          const parts = itemText.split(':');
+          if (parts.length > 1) {
+            building.push({ title: parts[0].trim(), tag: 'Active', desc: parts.slice(1).join(':').trim() });
+          } else {
+            building.push({ title: itemText, tag: 'Active', desc: '' });
+          }
+        } else if (currentSection === 'studying') {
+          studying.push(itemText);
+        } else if (currentSection === 'games') {
+          const parts = itemText.split(':');
+          games.push({ name: parts[0].trim(), detail: parts[1]?.trim() || '' });
+        }
+      }
+    }
+
+    const currentNow = fs.existsSync(NOW_OUT) ? JSON.parse(fs.readFileSync(NOW_OUT, 'utf8')) : {};
+    const updated = {
+      updatedAt: updatedAt || currentNow.updatedAt,
+      location: location || currentNow.location,
+      status: status || currentNow.status,
+      building: building.length ? building : currentNow.building,
+      studying: studying.length ? studying : currentNow.studying,
+      entertainment: {
+        games: games.length ? games : currentNow.entertainment?.games,
+        music: currentNow.entertainment?.music || 'Lo-Fi and City Pop playlists',
+      },
+    };
+
+    fs.writeFileSync(NOW_OUT, JSON.stringify(updated, null, 2) + '\n');
+    console.log(`✅ Synced Notion Now page -> src/data/now.json`);
+  } catch (e) {
+    console.warn(`[sync-notion] Failed to sync Now page from Notion: ${e.message}`);
+  }
+}
+
 await syncBlogs();
 await syncProjects();
 await syncTimeline();
+await syncNow();
