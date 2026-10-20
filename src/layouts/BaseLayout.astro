@@ -115,6 +115,15 @@ const projects = projectsData
 
     <CommandPalette client:load blogPosts={blogPosts} projects={projects} />
 
+    <!-- Global Atmospheric Weather Overlay (Rain, Snow, Storm & Lightning, Wind & Falling Leaves) -->
+    <canvas
+      id="global-weather-canvas"
+      transition:persist="weather-canvas"
+      class="pointer-events-none fixed inset-0 z-30 h-full w-full opacity-0 transition-opacity duration-700"
+      style="display: none;"
+      aria-hidden="true"
+    ></canvas>
+
     {SITE.analytics.umamiWebsiteId && (
       <script is:inline async defer data-website-id={SITE.analytics.umamiWebsiteId} src="/stats/script.js"></script>
     )}

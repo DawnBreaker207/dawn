@@ -14,7 +14,14 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
 <footer
   class="studio-statusbar flex min-w-0 items-center justify-between gap-2 border-t border-(--border) bg-(--bg-alt) px-3 font-mono text-[12px] text-(--fg-dim)"
 >
-  <div class="flex min-w-0 items-center gap-1 whitespace-nowrap">
+  <div class="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+    <span
+      id="statusbar-vim-mode"
+      class="rounded border border-(--border) px-1.5 py-0.5 text-[10px] font-semibold text-(--accent) bg-(--bg) select-none"
+      title="Vim Mode (Press ? for shortcuts)"
+    >
+      NORMAL
+    </span>
     <a
       href="/lab/terminal"
       class="shrink-0 text-(--fg-faint) hover:text-(--fg)"
@@ -90,6 +97,50 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
     </a>
     <span class="text-(--fg-faint)" aria-hidden="true">·</span>
 
+    <a
+      href="/tokens"
+      class="hidden sm:inline-flex items-center gap-1 text-(--fg-dim) hover:text-(--accent) no-underline"
+      title="View AI Token Burn Telemetry"
+    >
+      <span class="text-amber-500">🔥</span>
+      <span data-footer-tokens class="text-[11px]">tokens</span>
+    </a>
+    <span class="hidden sm:inline text-(--fg-faint)" aria-hidden="true">·</span>
+
+    <button
+      type="button"
+      id="btn-keyboard-sound"
+      class="hidden sm:inline-flex items-center gap-1 text-[11px] text-(--fg-faint) hover:text-(--fg) cursor-pointer select-none no-underline"
+      title="Toggle Mechanical Keyboard Typing Sounds (Thock mode)"
+      aria-label="Toggle mechanical keyboard sounds"
+    >
+      <span aria-hidden="true">⌨️</span>
+      <span id="keyboard-sound-label" class="text-[10px] font-mono">sound: off</span>
+    </button>
+    <span class="hidden sm:inline text-(--fg-faint)" aria-hidden="true">·</span>
+
+    <button
+      type="button"
+      id="btn-global-weather"
+      class="hidden sm:inline-flex items-center gap-1 text-[11px] text-(--fg-faint) hover:text-sky-400 cursor-pointer select-none no-underline transition-colors"
+      title="Atmospheric Weather Engine: Cycle Rain 🌧️ -> Snow ❄️ -> Storm ⛈️ -> Wind 💨 -> Off ⛅"
+      aria-label="Toggle atmospheric weather overlay"
+    >
+      <span aria-hidden="true" class="weather-icon text-[11px]">⛅</span>
+      <span id="weather-label" class="text-[10px] font-mono">weather: off</span>
+    </button>
+    <input
+      type="range"
+      id="weather-vol"
+      min="0"
+      max="100"
+      value="100"
+      class="hidden sm:block h-1 w-16 cursor-pointer align-middle accent-sky-400"
+      title="Weather ambience volume (rain/storm audio)"
+      aria-label="Weather ambience volume"
+    />
+    <span class="hidden sm:inline text-(--fg-faint)" aria-hidden="true">·</span>
+
     <button
       id="toggle-theme"
       data-theme-toggle
@@ -100,6 +151,16 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
       aria-label="Toggle light/dark theme"
     >
       ◐
+    </button>
+
+    <button
+      type="button"
+      id="btn-keyboard-help"
+      class="hidden sm:inline-flex items-center justify-center w-4.5 h-4.5 rounded border border-(--border) text-[10px] text-(--fg-faint) hover:text-(--fg) cursor-pointer select-none"
+      title="Keyboard Shortcuts (?)"
+      aria-label="Show keyboard shortcuts"
+    >
+      ?
     </button>
 
     <div class="version-menu" data-version-menu>
