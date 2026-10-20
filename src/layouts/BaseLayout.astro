@@ -124,7 +124,7 @@ const projects = projectsData
       aria-hidden="true"
     ></canvas>
 
-    {SITE.analytics.umamiWebsiteId && (
+    {SITE.analytics.umamiWebsiteId && import.meta.env.PROD && (
       <script is:inline async defer data-website-id={SITE.analytics.umamiWebsiteId} src="/stats/script.js"></script>
     )}
     <script>import '@/scripts/site.ts';</script>
