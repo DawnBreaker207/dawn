@@ -292,78 +292,109 @@ async function syncTimeline() {
 }
 
 // ---------------------------------------------------------------------------
-// Now page sync from Notion
+// Now page sync from Notion (database-based, mirrors scripts/sync-now.mjs)
 // ---------------------------------------------------------------------------
 const NOW_OUT = path.join(root, 'src', 'data', 'now.json');
 
+const bodyLines = (blocks) => {
+  const out = [];
+  for (const b of blocks.results) {
+    if (b.type !== 'paragraph' && b.type !== 'bulleted_list_item' && b.type !== 'numbered_list_item') continue;
+    for (const seg of b[b.type].rich_text.map((r) => r.plain_text).join('').split('\n')) {
+      const t = seg.replace(/^[-•*]\s*/, '').trim();
+      if (t) out.push(t);
+    }
+  }
+  return out;
+};
+
 async function syncNow() {
-  const pageId = process.env.NOW_PAGE_ID;
-  if (!pageId) {
-    console.log('[sync-notion] Missing NOW_PAGE_ID — keeping local src/data/now.json.');
+  const dbId = process.env.NOW_DATABASE_ID;
+  if (!dbId) {
+    console.log('[sync-notion] Missing NOW_DATABASE_ID — keeping local src/data/now.json.');
     return;
   }
 
   try {
-    const page = await notion.pages.retrieve({ page_id: pageId });
-    const blocks = await notion.blocks.children.list({ block_id: pageId, page_size: 100 });
+    const previous = fs.existsSync(NOW_OUT) ? JSON.parse(fs.readFileSync(NOW_OUT, 'utf8')) : {};
 
-    const props = page.properties ?? {};
-    const updatedAt = text(props['UpdatedAt']) || fmtMonth(new Date().toISOString());
-    const location = text(props['Location']) || 'Hanoi, Vietnam';
-    const status = text(props['Status']) || '';
+    const db = await notion.databases.retrieve({ database_id: dbId });
+    const sourceId = db.data_sources?.[0]?.id;
+    if (!sourceId) {
+      console.warn('[sync-notion] No data source found for Now — skipping.');
+      return;
+    }
+    const desc = (db.description ?? []).map((t) => t.plain_text).join('');
 
-    const building = [];
-    const studying = [];
-    const games = [];
-    let currentSection = '';
+    const res = await notion.dataSources.query({ data_source_id: sourceId, page_size: 200 });
 
-    for (const b of blocks.results) {
-      if (b.type === 'heading_2' || b.type === 'heading_1' || b.type === 'heading_3') {
-        const hText = (b[b.type]?.rich_text ?? []).map((t) => t.plain_text).join('').toLowerCase();
-        if (hText.includes('build') || hText.includes('project') || hText.includes('dự án')) currentSection = 'building';
-        else if (hText.includes('study') || hText.includes('learn') || hText.includes('nghiên cứu')) currentSection = 'studying';
-        else if (hText.includes('game') || hText.includes('chơi')) currentSection = 'games';
-        else currentSection = '';
-        continue;
-      }
+    const out = {
+      updatedAt: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+      location: previous.location ?? 'Hanoi, Vietnam',
+      status: desc || previous.status || '',
+      building: [],
+      studying: [],
+      entertainment: { games: [], music: previous.entertainment?.music ?? '' },
+    };
 
-      if (b.type === 'bulleted_list_item' || b.type === 'numbered_list_item' || b.type === 'paragraph') {
-        const itemText = (b[b.type]?.rich_text ?? []).map((t) => t.plain_text).join('').trim();
-        if (!itemText) continue;
+    for (const page of res.results) {
+      const props = page.properties ?? {};
+      const name = (props['Name']?.title ?? []).map((t) => t.plain_text).join('').trim();
+      const type = props['Type']?.select?.name ?? '';
+      const stage = props['Stage']?.select?.name ?? '';
+      const status = props['Status']?.status?.name ?? props['Status']?.select?.name ?? '';
+      if (status !== 'Public') continue;
 
-        if (currentSection === 'building') {
-          const parts = itemText.split(':');
-          if (parts.length > 1) {
-            building.push({ title: parts[0].trim(), tag: 'Active', desc: parts.slice(1).join(':').trim() });
-          } else {
-            building.push({ title: itemText, tag: 'Active', desc: '' });
+      if (type === 'Building' && stage !== 'Done') {
+        const body = bodyLines(await notion.blocks.children.list({ block_id: page.id, page_size: 100 }));
+        out.building.push({
+          title: name,
+          tag: (props['Tags']?.multi_select ?? []).map((o) => o.name).join(' '),
+          desc: body[0] ?? '',
+        });
+      } else if (type === 'Studying') {
+        out.studying.push(...bodyLines(await notion.blocks.children.list({ block_id: page.id, page_size: 100 })));
+      } else if (type === 'Hobbies') {
+        const key = name.toLowerCase();
+        const rawBlocks = await notion.blocks.children.list({ block_id: page.id, page_size: 100 });
+        const body = bodyLines(rawBlocks);
+        if (key.includes('game')) {
+          for (const line of body) {
+            const i = line.indexOf(':');
+            if (i < 0) continue;
+            out.entertainment.games.push({ name: line.slice(0, i).trim(), detail: line.slice(i + 1).trim() });
           }
-        } else if (currentSection === 'studying') {
-          studying.push(itemText);
-        } else if (currentSection === 'games') {
-          const parts = itemText.split(':');
-          games.push({ name: parts[0].trim(), detail: parts[1]?.trim() || '' });
+        } else if (key.includes('music')) {
+          const musicItems = [];
+          for (const b of rawBlocks.results) {
+            if (b.type !== 'bulleted_list_item' && b.type !== 'paragraph') continue;
+            const t = b[b.type].rich_text.map((r) => r.plain_text).join('').trim();
+            if (!t) continue;
+            if (b.has_children) {
+              const childBlocks = await notion.blocks.children.list({ block_id: b.id, page_size: 100 });
+              const children = childBlocks.results
+                .filter((c) => c.type === 'bulleted_list_item' || c.type === 'paragraph')
+                .map((c) => c[c.type].rich_text.map((r) => r.plain_text).join('').trim())
+                .filter(Boolean);
+              musicItems.push({ label: t, items: children });
+            } else {
+              musicItems.push(t);
+            }
+          }
+          out.entertainment.music = musicItems;
         }
+      } else if (type === 'Downtime') {
+        out.entertainment.games.push({ name, detail: (props['Desc']?.rich_text ?? []).map((r) => r.plain_text).join('') });
       }
     }
 
-    const currentNow = fs.existsSync(NOW_OUT) ? JSON.parse(fs.readFileSync(NOW_OUT, 'utf8')) : {};
-    const updated = {
-      updatedAt: updatedAt || currentNow.updatedAt,
-      location: location || currentNow.location,
-      status: status || currentNow.status,
-      building: building.length ? building : currentNow.building,
-      studying: studying.length ? studying : currentNow.studying,
-      entertainment: {
-        games: games.length ? games : currentNow.entertainment?.games,
-        music: currentNow.entertainment?.music || 'Lo-Fi and City Pop playlists',
-      },
-    };
-
-    fs.writeFileSync(NOW_OUT, JSON.stringify(updated, null, 2) + '\n');
-    console.log(`✅ Synced Notion Now page -> src/data/now.json`);
+    fs.writeFileSync(NOW_OUT, JSON.stringify(out, null, 2) + '\n');
+    console.log(
+      `✅ Synced Now database -> src/data/now.json · ${out.building.length} building · ` +
+        `${out.studying.length} studying · ${out.entertainment.games.length} games`,
+    );
   } catch (e) {
-    console.warn(`[sync-notion] Failed to sync Now page from Notion: ${e.message}`);
+    console.warn(`[sync-notion] Failed to sync Now from Notion: ${e.message}`);
   }
 }
 
