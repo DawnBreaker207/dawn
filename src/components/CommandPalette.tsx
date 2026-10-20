@@ -486,7 +486,7 @@ export default function CommandPalette({
     { title: 'Blog index', desc: 'all posts', route: '/blog' },
     { title: 'Projects', desc: 'projects page', route: '/projects' },
     { title: 'Lab', desc: 'experiments index', route: '/lab' },
-    { title: 'Lab · SQL EXPLAIN Explorer', desc: 'PostgreSQL query execution plan visualizer', route: '/lab/sql-plan' },
+    { title: 'Lab · SQL EXPLAIN Explorer', desc: 'PostgreSQL query execution plan visualizer', route: '/lab/sql' },
     { title: 'Lab · Java & Spring', desc: 'concurrency, container & proxy mechanism diagrams', route: '/lab/java' },
     { title: 'Lab · Terminal', desc: 'terminal playground', route: '/lab/terminal' },
     { title: 'Now', desc: 'what I am doing right now', route: '/now' },

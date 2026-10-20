@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 // Terminal is excluded (it's an inline overlay, not a standalone page).
 const LABS: { href: string; title: string; tag: string; intro: string; tone?: 'amber' | 'cyan' }[] = [
   {
-    href: '/lab/sql-plan',
+    href: '/lab/sql',
     title: 'SQL EXPLAIN Explorer',
     tag: 'Postgres Engine',
     tone: 'cyan',
