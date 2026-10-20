@@ -1,0 +1,146 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import nowData from '@/data/now.json';
+import booksData from '@/data/books.json';
+
+export const prerender = true;
+
+const currentlyReading = (booksData.currentlyReading ?? []).slice(0, 3) as Array<{
+  title: string;
+  link: string;
+  authorName: string;
+  bookMediumImageUrl?: string;
+}>;
+---
+
+<BaseLayout title="Now" description="What I'm doing right now — projects, learning focus, books, and hobbies. Inspired by Derek Sivers.">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <div class="flex items-center gap-2 mb-2 font-mono text-xs text-(--fg-faint)">
+      <span class="text-(--accent)">●</span>
+      <span>Live Status</span>
+      <span class="text-(--border)">/</span>
+      <span>{nowData.location}</span>
+      <span class="ml-auto rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] text-(--fg-dim)">
+        Last updated: {nowData.updatedAt}
+      </span>
+    </div>
+    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      now
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      A snapshot of what I'm focused on right now — this is my <a href="https://nownownow.com/about" target="_blank" rel="noopener noreferrer" class="text-(--fg) underline hover:text-(--accent)">/now page</a>.
+    </p>
+  </header>
+
+  <div class="space-y-12">
+    <!-- Currently Building -->
+    <section>
+      <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
+        <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🛠️ What I'm Building</h2>
+        <span class="flex-1"></span>
+        <span class="font-mono text-xs text-(--fg-faint)">{nowData.building.length} active</span>
+      </div>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {
+          nowData.building.map((item) => (
+            <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5 transition-colors hover:border-(--fg-dim)">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="m-0 font-mono text-sm font-semibold text-(--fg)">{item.title}</h3>
+                <span class="rounded border border-(--border) px-1.5 py-0.5 font-mono text-[10px] text-(--fg-faint)">
+                  {item.tag}
+                </span>
+              </div>
+              <p class="m-0 text-xs leading-relaxed text-(--fg-dim)">{item.desc}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Currently Studying -->
+    <section>
+      <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
+        <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🧠 What I'm Studying & Exploring</h2>
+      </div>
+      <ul class="space-y-3 font-mono text-xs">
+        {
+          nowData.studying.map((item) => (
+            <li class="flex items-start gap-3 rounded-lg border border-(--border) bg-(--bg-alt) p-3 text-(--fg-dim)">
+              <span class="text-(--accent) mt-0.5">▹</span>
+              <span class="leading-relaxed">{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <!-- Currently Reading -->
+    {
+      currentlyReading.length > 0 && (
+        <section>
+          <div class="mb-5 flex items-center justify-between border-b border-(--border) pb-2">
+            <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">📚 Currently Reading</h2>
+            <a href="/books" class="font-mono text-xs text-(--fg-dim) hover:text-(--accent) no-underline">
+              View all shelf →
+            </a>
+          </div>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {currentlyReading.map((book) => (
+              <a
+                href={book.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-3 rounded-xl border border-(--border) bg-(--bg-alt) p-3 no-underline transition-colors hover:border-(--fg-dim)"
+              >
+                {book.bookMediumImageUrl ? (
+                  <img
+                    src={book.bookMediumImageUrl}
+                    alt={book.title}
+                    class="h-14 w-10 shrink-0 rounded object-cover shadow-sm border border-(--border)"
+                  />
+                ) : (
+                  <div class="h-14 w-10 shrink-0 rounded bg-(--border) flex items-center justify-center font-mono text-xs text-(--fg-faint)">
+                    📖
+                  </div>
+                )}
+                <div class="min-w-0">
+                  <h4 class="m-0 truncate font-mono text-xs font-semibold text-(--fg)">{book.title}</h4>
+                  <p class="m-0 truncate text-[11px] text-(--fg-faint)">{book.authorName}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Entertainment & Gaming -->
+    <section>
+      <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
+        <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🎮 Chilling & Downtime</h2>
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5">
+          <h3 class="m-0 mb-3 font-mono text-xs font-semibold uppercase text-(--fg-dim)">Current Games</h3>
+          <div class="space-y-2">
+            {
+              nowData.entertainment.games.map((g) => (
+                <div class="flex items-center justify-between font-mono text-xs">
+                  <span class="font-semibold text-(--fg)">{g.name}</span>
+                  <span class="text-[11px] text-(--fg-faint)">{g.detail}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5">
+          <h3 class="m-0 mb-3 font-mono text-xs font-semibold uppercase text-(--fg-dim)">Music & Soundtracks</h3>
+          <p class="m-0 font-mono text-xs leading-relaxed text-(--fg-dim)">
+            {nowData.entertainment.music}
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
