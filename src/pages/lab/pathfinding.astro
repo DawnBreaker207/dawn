@@ -1,0 +1,397 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout title="Pathfinding Visualizer" description="Interactive algorithm visualizer for A* Search, Dijkstra, and BFS on HTML5 Canvas.">
+  <header class="mb-9 border-b border-(--border) pb-7">
+    <div class="flex items-center gap-2 mb-2 font-mono text-xs text-(--fg-faint)">
+      <span class="ml-auto inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] text-(--accent)">
+        A* & Dijkstra
+      </span>
+    </div>
+    <h1 class="m-0 font-mono text-[clamp(36px,5.5vw,68px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
+      pathfinding visualizer
+    </h1>
+    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+      Drag on the grid to place walls, pick an algorithm, and watch the search propagate in real time.
+    </p>
+  </header>
+
+  <div class="space-y-4">
+    <!-- Controls Toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--bg-alt) p-3 font-mono text-xs">
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          id="pf-run"
+          class="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-(--border) bg-(--fg) text-(--bg) px-3 py-1.5 font-medium transition-transform active:scale-95"
+        >
+          <span>▶ Visualize</span>
+        </button>
+        <button
+          type="button"
+          id="pf-maze"
+          class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg) hover:border-(--fg-dim)"
+        >
+          Generate Maze
+        </button>
+        <button
+          type="button"
+          id="pf-clear-path"
+          class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg-dim) hover:text-(--fg)"
+        >
+          Clear Path
+        </button>
+        <button
+          type="button"
+          id="pf-clear-walls"
+          class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg-faint) hover:text-(--fg)"
+        >
+          Clear Walls
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5">
+          <span class="text-(--fg-faint) text-[11px]">Algorithm:</span>
+          <select id="pf-algo" class="rounded border border-(--border) bg-(--bg) px-2 py-1 text-[11px] text-(--fg) focus:outline-hidden">
+            <option value="astar">A* Search (Heuristic)</option>
+            <option value="dijkstra">Dijkstra's Algorithm</option>
+            <option value="bfs">Breadth-First Search (BFS)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="flex flex-wrap items-center gap-4 px-2 font-mono text-[11px] text-(--fg-dim)">
+      <div class="flex items-center gap-1.5">
+        <span class="h-3 w-3 rounded-sm bg-emerald-500"></span>
+        <span>Start Node</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="h-3 w-3 rounded-sm bg-rose-500"></span>
+        <span>Target Node</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="h-3 w-3 rounded-sm bg-[#334155]"></span>
+        <span>Wall / Obstacle</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="h-3 w-3 rounded-sm bg-[#82aaff]/60"></span>
+        <span>Visited Nodes</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="h-3 w-3 rounded-sm bg-amber-400"></span>
+        <span>Shortest Path</span>
+      </div>
+    </div>
+
+    <!-- Canvas Container -->
+    <div class="relative overflow-hidden rounded-xl border border-(--border) bg-(--bg) shadow-[3px_3px_0_var(--border)]">
+      <canvas id="pf-canvas" class="block w-full cursor-crosshair" style="height: 480px;"></canvas>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  function initPathfinding() {
+    const canvas = document.getElementById('pf-canvas') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const runBtn = document.getElementById('pf-run');
+    const mazeBtn = document.getElementById('pf-maze');
+    const clearPathBtn = document.getElementById('pf-clear-path');
+    const clearWallsBtn = document.getElementById('pf-clear-walls');
+    const algoSelect = document.getElementById('pf-algo') as HTMLSelectElement | null;
+
+    const CELL_SIZE = 16;
+    let cols = 0;
+    let rows = 0;
+    let walls = new Set<number>();
+    let visited = new Set<number>();
+    let shortestPath: number[] = [];
+
+    let startC = 4;
+    let startR = 10;
+    let endC = 26;
+    let endR = 10;
+
+    let isInteracting = false;
+    let mode: 'wall' | 'erase' | 'drag-start' | 'drag-end' = 'wall';
+    let isRunning = false;
+
+    function resize() {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      cols = Math.floor(rect.width / CELL_SIZE);
+      rows = Math.floor(rect.height / CELL_SIZE);
+
+      startC = Math.min(startC, cols - 2);
+      startR = Math.min(startR, rows - 2);
+      endC = Math.min(Math.floor(cols * 0.75), cols - 2);
+      endR = Math.min(Math.floor(rows / 2), rows - 2);
+
+      draw();
+    }
+
+    function cellId(c: number, r: number): number {
+      return r * cols + c;
+    }
+
+    function draw() {
+      if (!ctx || !canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const isDark = document.documentElement.classList.contains('dark');
+
+      ctx.fillStyle = isDark ? '#0d1117' : '#ffffff';
+      ctx.fillRect(0, 0, rect.width, rect.height);
+
+      // Grid Lines
+      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let c = 0; c <= cols; c++) {
+        ctx.moveTo(c * CELL_SIZE, 0);
+        ctx.lineTo(c * CELL_SIZE, rows * CELL_SIZE);
+      }
+      for (let r = 0; r <= rows; r++) {
+        ctx.moveTo(0, r * CELL_SIZE);
+        ctx.lineTo(cols * CELL_SIZE, r * CELL_SIZE);
+      }
+      ctx.stroke();
+
+      // Visited nodes
+      ctx.fillStyle = isDark ? 'rgba(130, 170, 255, 0.4)' : 'rgba(59, 130, 246, 0.35)';
+      visited.forEach((id) => {
+        const c = id % cols;
+        const r = Math.floor(id / cols);
+        ctx.fillRect(c * CELL_SIZE + 1, r * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+      });
+
+      // Shortest path
+      ctx.fillStyle = '#facc15'; // Amber 400
+      shortestPath.forEach((id) => {
+        const c = id % cols;
+        const r = Math.floor(id / cols);
+        ctx.fillRect(c * CELL_SIZE + 1, r * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+      });
+
+      // Walls
+      ctx.fillStyle = isDark ? '#334155' : '#475569';
+      walls.forEach((id) => {
+        const c = id % cols;
+        const r = Math.floor(id / cols);
+        ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      });
+
+      // Start Node (Green)
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(startC * CELL_SIZE + 1, startR * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+
+      // End Node (Red)
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(endC * CELL_SIZE + 1, endR * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+    }
+
+    async function runSearch() {
+      if (isRunning) return;
+      isRunning = true;
+      visited.clear();
+      shortestPath = [];
+
+      const start = cellId(startC, startR);
+      const target = cellId(endC, endR);
+      const algo = algoSelect?.value || 'astar';
+
+      const dist = new Map<number, number>();
+      const prev = new Map<number, number>();
+      const openSet = [start];
+      dist.set(start, 0);
+
+      function h(id: number): number {
+        const c = id % cols;
+        const r = Math.floor(id / cols);
+        return Math.abs(c - endC) + Math.abs(r - endR); // Manhattan distance
+      }
+
+      const stepBatch = 6;
+      let stepsInBatch = 0;
+
+      while (openSet.length > 0) {
+        // Pick best node
+        let currentIdx = 0;
+        if (algo === 'astar') {
+          let minF = Infinity;
+          for (let i = 0; i < openSet.length; i++) {
+            const f = (dist.get(openSet[i]) ?? Infinity) + h(openSet[i]);
+            if (f < minF) {
+              minF = f;
+              currentIdx = i;
+            }
+          }
+        } else if (algo === 'dijkstra') {
+          let minDist = Infinity;
+          for (let i = 0; i < openSet.length; i++) {
+            const d = dist.get(openSet[i]) ?? Infinity;
+            if (d < minDist) {
+              minDist = d;
+              currentIdx = i;
+            }
+          }
+        }
+
+        const curr = openSet.splice(currentIdx, 1)[0];
+        visited.add(curr);
+
+        if (curr === target) {
+          // Reconstruct path
+          let p: number | undefined = target;
+          while (p !== undefined && p !== start) {
+            shortestPath.unshift(p);
+            p = prev.get(p);
+          }
+          break;
+        }
+
+        const c = curr % cols;
+        const r = Math.floor(curr / cols);
+        const neighbors = [
+          [c + 1, r],
+          [c - 1, r],
+          [c, r + 1],
+          [c, r - 1],
+        ];
+
+        for (const [nc, nr] of neighbors) {
+          if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) continue;
+          const nid = cellId(nc, nr);
+          if (walls.has(nid) || visited.has(nid)) continue;
+
+          const tentativeDist = (dist.get(curr) ?? Infinity) + 1;
+          if (tentativeDist < (dist.get(nid) ?? Infinity)) {
+            dist.set(nid, tentativeDist);
+            prev.set(nid, curr);
+            if (!openSet.includes(nid)) openSet.push(nid);
+          }
+        }
+
+        stepsInBatch++;
+        if (stepsInBatch >= stepBatch) {
+          stepsInBatch = 0;
+          draw();
+          await new Promise((resolve) => setTimeout(resolve, 8));
+        }
+      }
+
+      draw();
+      isRunning = false;
+    }
+
+    runBtn?.addEventListener('click', runSearch);
+
+    clearPathBtn?.addEventListener('click', () => {
+      visited.clear();
+      shortestPath = [];
+      draw();
+    });
+
+    clearWallsBtn?.addEventListener('click', () => {
+      walls.clear();
+      visited.clear();
+      shortestPath = [];
+      draw();
+    });
+
+    mazeBtn?.addEventListener('click', () => {
+      walls.clear();
+      visited.clear();
+      shortestPath = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if ((c !== startC || r !== startR) && (c !== endC || r !== endR)) {
+            if (Math.random() < 0.28) {
+              walls.add(cellId(c, r));
+            }
+          }
+        }
+      }
+      draw();
+    });
+
+    function handlePointer(e: PointerEvent) {
+      if (!canvas || isRunning) return;
+      const rect = canvas.getBoundingClientRect();
+      const c = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+      const r = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+      if (c < 0 || c >= cols || r < 0 || r >= rows) return;
+
+      const id = cellId(c, r);
+
+      if (mode === 'drag-start') {
+        if (!walls.has(id) && id !== cellId(endC, endR)) {
+          startC = c;
+          startR = r;
+          draw();
+        }
+      } else if (mode === 'drag-end') {
+        if (!walls.has(id) && id !== cellId(startC, startR)) {
+          endC = c;
+          endR = r;
+          draw();
+        }
+      } else if (mode === 'wall') {
+        if (id !== cellId(startC, startR) && id !== cellId(endC, endR)) {
+          walls.add(id);
+          draw();
+        }
+      } else if (mode === 'erase') {
+        walls.delete(id);
+        draw();
+      }
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      if (isRunning) return;
+      isInteracting = true;
+      const rect = canvas.getBoundingClientRect();
+      const c = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+      const r = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+      const id = cellId(c, r);
+
+      if (c === startC && r === startR) {
+        mode = 'drag-start';
+      } else if (c === endC && r === endR) {
+        mode = 'drag-end';
+      } else if (walls.has(id)) {
+        mode = 'erase';
+        handlePointer(e);
+      } else {
+        mode = 'wall';
+        handlePointer(e);
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (isInteracting) handlePointer(e);
+    });
+
+    window.addEventListener('pointerup', () => {
+      isInteracting = false;
+    });
+
+    window.addEventListener('resize', resize);
+    resize();
+  }
+
+  document.addEventListener('astro:page-load', initPathfinding);
+</script>
