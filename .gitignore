@@ -34,4 +34,9 @@ public/search.json
 src/build-stats.json
 src/data/books.json
 
+# synced from Notion — auto-generated, not committed manually
+src/data/now.json
+src/data/timeline.json
+projectsData.json
+
 scripts/token-burn.log
