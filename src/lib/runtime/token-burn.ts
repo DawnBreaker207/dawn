@@ -103,8 +103,8 @@ function buildTokenBurnPayload(summary: TokenBurnSummary): TokenBurnPayload {
     last30Days,
     topModels: modelSlices(todayRow?.byModel, 10),
     machines,
-    // The rail sparkline also reads the daily series; ~29 rows is still tiny.
-    daily: toDailyPoints(daily),
+    // Rail sparkline only shows the last 14 days; slice server-side to keep the payload lean.
+    daily: toDailyPoints(daily).slice(-14),
     lastActivity: summary.lastActivity ?? undefined,
   };
 }
