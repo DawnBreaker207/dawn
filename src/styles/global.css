@@ -6,7 +6,7 @@
 @theme {
   /* Font families */
   --font-sans:
-    var(--font-outfit) var(--font-outfit), var(--font-space-grotesk), ui-sans-serif, system-ui,
+    var(--font-outfit), var(--font-space-grotesk), ui-sans-serif, system-ui,
     sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   /* Primary colors - converted to OKLCH for better color interpolation */
@@ -1060,6 +1060,14 @@ body {
 
 .pal-vhist li::marker {
   color: var(--fg-faint);
+}
+
+.pal-vhist .pal-item-id {
+  color: var(--fg-faint);
+  font-variant-numeric: tabular-nums;
+  margin-right: 0.5ch;
+  min-width: 2.5ch;
+  display: inline-block;
 }
 
 .pal-vhist .pal-item-title {

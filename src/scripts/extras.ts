@@ -411,7 +411,6 @@ function recordKeyForEasterEgg(key: string, code: string, keyCode = 0): void {
   if (keyHistory.length > 30) keyHistory.shift();
 
   const joined = keyHistory.join(',');
-  console.log('🎮 [EasterEgg Key]:', norm, '| Buffer:', joined);
 
   const patterns = [
     'up,up,down,down,left,right,left,right,b,a',
@@ -863,74 +862,83 @@ if (typeof window !== 'undefined') {
 // Backward-compatibility alias
 export const getKeyAudioContext = getDawnAudioContext;
 
+type SoundProfile = 'thock' | 'clicky' | 'tactile' | 'cream';
+let currentSoundProfile: SoundProfile = 'thock';
+
 /**
- * High-End Mechanical Switch Sound Synthesizer (Creamy Lubed Linear / Tactile Thock)
- * Synthesizes:
- * 1. Initial downstroke impact snap (plastic stem hitting upper housing)
- * 2. Keycap cavity Helmholtz acoustic resonance (the deep "thock")
- * 3. Switch bottom-out chassis vibration
- * 4. Subtle delayed upstroke release tick (spring return)
+ * High-End Mechanical Switch Sound Synthesizer
+ * Key types: normal, space, enter, backspace, modifier (Shift/Ctrl/Alt/Tab/CapsLock), function (F1-F12), arrow
+ * Sound profiles: thock (lubed linear), clicky (Blue switch), tactile (Brown switch), cream (deep POM linear)
  */
 export function playKeystrokeSound(keyOrSpecial: string | boolean = false): void {
   try {
     const ctx = getDawnAudioContext();
     if (!ctx) return;
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
 
     const now = ctx.currentTime;
+    const profile = currentSoundProfile;
 
-    let keyType: 'normal' | 'space' | 'enter' | 'backspace' = 'normal';
+    // --- Determine key type ---
+    let keyType: 'normal' | 'space' | 'enter' | 'backspace' | 'modifier' | 'function' | 'arrow' = 'normal';
     if (typeof keyOrSpecial === 'string') {
       const k = keyOrSpecial.toLowerCase();
       if (k === ' ' || k === 'space' || k === 'spacebar') keyType = 'space';
       else if (k === 'enter') keyType = 'enter';
       else if (k === 'backspace' || k === 'delete') keyType = 'backspace';
+      else if (['shift', 'control', 'alt', 'meta', 'capslock', 'tab'].includes(k)) keyType = 'modifier';
+      else if (/^f\d{1,2}$/.test(k)) keyType = 'function';
+      else if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) keyType = 'arrow';
     } else if (keyOrSpecial === true) {
       keyType = 'space';
     }
 
-    // Acoustic parameters based on key size and stabilizer acoustics
-    let fCavity = 380;   // Hz: PBT keycap hollow resonance
-    let fBottom = 160;   // Hz: Switch housing bottom-out
-    let fSnap = 3400;    // Hz: Plastic stem impact click
-    let snapGain = 0.16;
-    let thockGain = 0.32;
-    let decay = 0.048;   // seconds
+    // --- Base acoustic parameters by key type ---
+    let fCavity: number, fBottom: number, fSnap: number, snapGain: number, thockGain: number, decay: number;
 
-    if (keyType === 'space') {
-      // Spacebar: Heavy stabilizer wire & large hollow 6.25u keycap
-      fCavity = 195;
-      fBottom = 110;
-      fSnap = 2200;
-      snapGain = 0.22;
-      thockGain = 0.46;
-      decay = 0.075;
-    } else if (keyType === 'enter') {
-      fCavity = 270;
-      fBottom = 135;
-      fSnap = 2800;
-      snapGain = 0.19;
-      thockGain = 0.38;
-      decay = 0.058;
-    } else if (keyType === 'backspace') {
-      fCavity = 300;
-      fBottom = 145;
-      fSnap = 3000;
-      snapGain = 0.18;
-      thockGain = 0.35;
-      decay = 0.052;
-    } else {
-      // Natural pitch jitter per keypress
-      const jitter = (Math.random() - 0.5) * 50;
-      fCavity += jitter;
-      fBottom += jitter * 0.4;
-      fSnap += jitter * 4;
+    switch (keyType) {
+      case 'space':
+        // 6.25u stabilized spacebar — large hollow keycap + stabilizer wire rattle
+        fCavity = 195; fBottom = 110; fSnap = 2200; snapGain = 0.22; thockGain = 0.46; decay = 0.075; break;
+      case 'enter':
+        // 2.25u enter — stabilized, medium mass keycap
+        fCavity = 270; fBottom = 135; fSnap = 2800; snapGain = 0.19; thockGain = 0.38; decay = 0.058; break;
+      case 'backspace':
+        // 2u backspace — slightly smaller stabilized key
+        fCavity = 300; fBottom = 145; fSnap = 3000; snapGain = 0.18; thockGain = 0.35; decay = 0.052; break;
+      case 'modifier':
+        // 1.25u–2.25u modifier keys — larger than alpha, no stabilizer
+        fCavity = 250; fBottom = 125; fSnap = 2600; snapGain = 0.20; thockGain = 0.40; decay = 0.060; break;
+      case 'function':
+        // F1–F12 function row — thin ABS keycaps, tight acoustic cavity, high snap
+        fCavity = 520; fBottom = 200; fSnap = 4200; snapGain = 0.12; thockGain = 0.22; decay = 0.035; break;
+      case 'arrow':
+        // Arrow keys — small 1u stepped keycaps, crisp high-pitched resonance
+        fCavity = 440; fBottom = 185; fSnap = 3800; snapGain = 0.13; thockGain = 0.26; decay = 0.038; break;
+      default: {
+        // Standard alphanumeric — natural pitch jitter per key for organic feel
+        fCavity = 380; fBottom = 160; fSnap = 3400; snapGain = 0.16; thockGain = 0.32; decay = 0.048;
+        const jitter = (Math.random() - 0.5) * 50;
+        fCavity += jitter; fBottom += jitter * 0.4; fSnap += jitter * 4;
+        break;
+      }
     }
 
+    // --- Apply sound profile multipliers on top of key-type base ---
+    if (profile === 'clicky') {
+      // Blue-switch: sharp, high-pitched snap + click jacket, reduced resonance body
+      fSnap *= 1.4; snapGain *= 1.8; thockGain *= 0.65; decay *= 0.65;
+    } else if (profile === 'tactile') {
+      // Brown-switch: pronounced tactile snap bump, moderate depth
+      fCavity *= 1.1; fSnap *= 1.2; snapGain *= 1.4; thockGain *= 0.85; decay *= 0.85;
+    } else if (profile === 'cream') {
+      // Creamy POM linear: deep, smooth, long resonance tail — famous Taeha Types sound
+      fCavity *= 0.85; fBottom *= 0.85; fSnap *= 0.7; snapGain *= 0.75; thockGain *= 1.35; decay *= 1.35;
+    }
+    // 'thock' = baseline lubed linear, no multiplier
+
     // ----------------------------------------------------
-    // 1. Tactile Impact Snap (High-passed plastic transient)
+    // 1. Tactile Impact Snap (high-passed plastic transient)
     // ----------------------------------------------------
     const snapLen = Math.floor(ctx.sampleRate * 0.007);
     const snapBuf = ctx.createBuffer(1, snapLen, ctx.sampleRate);
@@ -940,38 +948,51 @@ export function playKeystrokeSound(keyOrSpecial: string | boolean = false): void
     }
     const snapNode = ctx.createBufferSource();
     snapNode.buffer = snapBuf;
-
     const snapFilter = ctx.createBiquadFilter();
     snapFilter.type = 'bandpass';
     snapFilter.frequency.setValueAtTime(fSnap, now);
     snapFilter.Q.setValueAtTime(2.4, now);
-
     const snapGainNode = ctx.createGain();
     snapGainNode.gain.setValueAtTime(snapGain, now);
     snapGainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.007);
-
     snapNode.connect(snapFilter);
     snapFilter.connect(snapGainNode);
     snapGainNode.connect(ctx.destination);
     snapNode.start(now);
 
+    // Clicky profile: extra oscillator click transient (Blue-switch tactile click jacket)
+    if (profile === 'clicky') {
+      const clickOsc = ctx.createOscillator();
+      clickOsc.type = 'square';
+      clickOsc.frequency.setValueAtTime(fSnap * 0.55, now);
+      clickOsc.frequency.exponentialRampToValueAtTime(fSnap * 0.18, now + 0.009);
+      const clickHpf = ctx.createBiquadFilter();
+      clickHpf.type = 'highpass';
+      clickHpf.frequency.setValueAtTime(1800, now);
+      const clickGain = ctx.createGain();
+      clickGain.gain.setValueAtTime(0.26, now);
+      clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.013);
+      clickOsc.connect(clickHpf);
+      clickHpf.connect(clickGain);
+      clickGain.connect(ctx.destination);
+      clickOsc.start(now);
+      clickOsc.stop(now + 0.015);
+    }
+
     // ----------------------------------------------------
-    // 2. Keycap Cavity Helmholtz Resonance (The Deep "Thock")
+    // 2. Keycap Cavity Helmholtz Resonance (the deep "thock")
     // ----------------------------------------------------
     const oscCavity = ctx.createOscillator();
     oscCavity.type = 'triangle';
     oscCavity.frequency.setValueAtTime(fCavity, now);
     oscCavity.frequency.exponentialRampToValueAtTime(fBottom, now + decay);
-
     const cavityFilter = ctx.createBiquadFilter();
     cavityFilter.type = 'bandpass';
     cavityFilter.frequency.setValueAtTime(fCavity, now);
-    cavityFilter.Q.setValueAtTime(4.6, now);
-
+    cavityFilter.Q.setValueAtTime(profile === 'cream' ? 6.2 : 4.6, now);
     const cavityGain = ctx.createGain();
     cavityGain.gain.setValueAtTime(thockGain, now);
     cavityGain.gain.exponentialRampToValueAtTime(0.001, now + decay);
-
     oscCavity.connect(cavityFilter);
     cavityFilter.connect(cavityGain);
     cavityGain.connect(ctx.destination);
@@ -979,24 +1000,22 @@ export function playKeystrokeSound(keyOrSpecial: string | boolean = false): void
     oscCavity.stop(now + decay + 0.01);
 
     // ----------------------------------------------------
-    // 3. Switch bottom-out low end thud
+    // 3. Switch bottom-out low-end thud
     // ----------------------------------------------------
     const oscBottom = ctx.createOscillator();
     oscBottom.type = 'sine';
     oscBottom.frequency.setValueAtTime(fBottom, now);
     oscBottom.frequency.exponentialRampToValueAtTime(40, now + decay);
-
     const bottomGain = ctx.createGain();
     bottomGain.gain.setValueAtTime(thockGain * 0.7, now);
     bottomGain.gain.exponentialRampToValueAtTime(0.001, now + decay);
-
     oscBottom.connect(bottomGain);
     bottomGain.connect(ctx.destination);
     oscBottom.start(now);
     oscBottom.stop(now + decay + 0.01);
 
     // ----------------------------------------------------
-    // 4. Subtle Key Return Upstroke Tick (+30ms after bottom out)
+    // 4. Key return upstroke tick (+30ms after bottom-out)
     // ----------------------------------------------------
     const upTime = now + 0.030;
     const upLen = Math.floor(ctx.sampleRate * 0.005);
@@ -1007,16 +1026,13 @@ export function playKeystrokeSound(keyOrSpecial: string | boolean = false): void
     }
     const upNode = ctx.createBufferSource();
     upNode.buffer = upBuf;
-
     const upFilter = ctx.createBiquadFilter();
     upFilter.type = 'bandpass';
     upFilter.frequency.setValueAtTime(fSnap * 0.82, upTime);
     upFilter.Q.setValueAtTime(2.0, upTime);
-
     const upGainNode = ctx.createGain();
     upGainNode.gain.setValueAtTime(snapGain * 0.4, upTime);
     upGainNode.gain.exponentialRampToValueAtTime(0.001, upTime + 0.005);
-
     upNode.connect(upFilter);
     upFilter.connect(upGainNode);
     upGainNode.connect(ctx.destination);
@@ -1049,18 +1065,44 @@ export function playTactileButtonClick(): void {
   } catch {}
 }
 
+const SOUND_CYCLE = ['off', 'thock', 'clicky', 'tactile', 'cream'] as const;
+type ProfileState = typeof SOUND_CYCLE[number];
+
+const PROFILE_LABEL: Record<ProfileState, string> = {
+  off:     'sound: off',
+  thock:   'sound: thock',
+  clicky:  'sound: clicky',
+  tactile: 'sound: tactile',
+  cream:   'sound: cream',
+};
+
+function getStoredProfile(): ProfileState {
+  // Migrate legacy dawn_thock_sound boolean flag → new profile key
+  const legacy = localStorage.getItem('dawn_thock_sound');
+  if (legacy !== null) {
+    const migrated: ProfileState = legacy === 'true' ? 'thock' : 'off';
+    localStorage.removeItem('dawn_thock_sound');
+    localStorage.setItem('dawn_sound_profile', migrated);
+    return migrated;
+  }
+  return (localStorage.getItem('dawn_sound_profile') as ProfileState | null) ?? 'off';
+}
+
 function setupMechanicalKeyboardSound(): void {
   const btn = document.getElementById('btn-keyboard-sound');
   const label = document.getElementById('keyboard-sound-label');
 
-  const isEnabled = () => localStorage.getItem('dawn_thock_sound') === 'true';
+  const getProfile = (): ProfileState => getStoredProfile();
+
   const updateUI = () => {
-    const on = isEnabled();
-    if (label) label.textContent = on ? 'sound: thock' : 'sound: off';
+    const p = getProfile();
+    if (label) label.textContent = PROFILE_LABEL[p] ?? 'sound: off';
+    const on = p !== 'off';
     if (btn) {
       btn.classList.toggle('text-(--accent)', on);
       btn.classList.toggle('text-(--fg-faint)', !on);
     }
+    currentSoundProfile = on ? (p as SoundProfile) : 'thock';
   };
 
   updateUI();
@@ -1069,14 +1111,15 @@ function setupMechanicalKeyboardSound(): void {
     btn.onclick = (e) => {
       e.preventDefault();
       const ctx = getDawnAudioContext();
-      if (ctx && ctx.state === 'suspended') {
-        ctx.resume().catch(() => {});
-      }
-      const next = !isEnabled();
-      localStorage.setItem('dawn_thock_sound', next ? 'true' : 'false');
+      if (ctx?.state === 'suspended') ctx.resume().catch(() => {});
+
+      const cur = getProfile();
+      const idx = SOUND_CYCLE.indexOf(cur);
+      const next = SOUND_CYCLE[(idx + 1) % SOUND_CYCLE.length];
+      localStorage.setItem('dawn_sound_profile', next);
       updateUI();
-      if (next) {
-        // Play an authentic double-tap mechanical keycap preview
+
+      if (next !== 'off') {
         playKeystrokeSound('a');
         setTimeout(() => playKeystrokeSound('space'), 90);
       } else {
@@ -1086,7 +1129,7 @@ function setupMechanicalKeyboardSound(): void {
   }
 
   const handleKeydown = (e: KeyboardEvent) => {
-    if (!isEnabled()) return;
+    if (getProfile() === 'off') return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     playKeystrokeSound(e.key);
   };
