@@ -1,0 +1,140 @@
+---
+interface Props {
+  beforeTitle?: string;
+  afterTitle?: string;
+  beforeCode: string;
+  afterCode: string;
+  filename?: string;
+  lang?: string;
+}
+
+const {
+  beforeTitle = 'Before (Bad Practice)',
+  afterTitle = 'After (Refactored)',
+  beforeCode,
+  afterCode,
+  filename = 'DiffViewer',
+  lang = 'java',
+} = Astro.props;
+
+// Split into lines for line number rendering
+const beforeLines = beforeCode.trim().split('\n');
+const afterLines = afterCode.trim().split('\n');
+---
+
+<div class="code-diff-container my-6 rounded-xl border border-(--border) bg-(--bg-alt) overflow-hidden shadow-[3px_3px_0_var(--border)] font-mono text-xs">
+  <!-- Diff Header -->
+  <div class="flex items-center justify-between border-b border-(--border) bg-(--bg) px-4 py-2.5">
+    <div class="flex items-center gap-2">
+      <span class="h-2.5 w-2.5 rounded-full bg-rose-500/70 inline-block"></span>
+      <span class="h-2.5 w-2.5 rounded-full bg-amber-500/70 inline-block"></span>
+      <span class="h-2.5 w-2.5 rounded-full bg-emerald-500/70 inline-block"></span>
+      <span class="ml-2 font-semibold text-(--fg) text-[11px]">{filename}</span>
+      <span class="rounded bg-(--bg-alt) px-1.5 py-0.5 text-[10px] text-(--fg-faint) uppercase">{lang}</span>
+    </div>
+
+    <!-- View Mode Switcher -->
+    <div class="diff-mode-toggles flex items-center rounded-lg border border-(--border) bg-(--bg-alt) p-0.5">
+      <button
+        type="button"
+        data-diff-mode="split"
+        class="diff-mode-btn cursor-pointer rounded px-2 py-1 text-[10px] text-(--fg) bg-(--bg) shadow-xs transition-colors"
+      >
+        Split
+      </button>
+      <button
+        type="button"
+        data-diff-mode="before"
+        class="diff-mode-btn cursor-pointer rounded px-2 py-1 text-[10px] text-(--fg-dim) hover:text-(--fg) transition-colors"
+      >
+        Before
+      </button>
+      <button
+        type="button"
+        data-diff-mode="after"
+        class="diff-mode-btn cursor-pointer rounded px-2 py-1 text-[10px] text-(--fg-dim) hover:text-(--fg) transition-colors"
+      >
+        After
+      </button>
+    </div>
+  </div>
+
+  <!-- Content Panels -->
+  <div class="diff-panels grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-(--border)">
+    <!-- Before Panel -->
+    <div class="diff-panel-before p-3 bg-rose-950/5">
+      <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-rose-400">
+        <span class="text-rose-500 font-bold">−</span>
+        <span>{beforeTitle}</span>
+      </div>
+      <div class="overflow-x-auto thin-scrollbar">
+        <pre class="m-0 p-0 text-[11px] leading-5"><code class={`language-${lang}`}>{beforeLines.map((line, idx) => (
+          <div class="flex hover:bg-rose-500/10 px-1 rounded">
+            <span class="w-7 select-none text-right pr-3 text-(--fg-faint) opacity-60">{idx + 1}</span>
+            <span class="text-rose-200/90 whitespace-pre">{line}</span>
+          </div>
+        ))}</code></pre>
+      </div>
+    </div>
+
+    <!-- After Panel -->
+    <div class="diff-panel-after p-3 bg-emerald-950/5">
+      <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+        <span class="text-emerald-500 font-bold">+</span>
+        <span>{afterTitle}</span>
+      </div>
+      <div class="overflow-x-auto thin-scrollbar">
+        <pre class="m-0 p-0 text-[11px] leading-5"><code class={`language-${lang}`}>{afterLines.map((line, idx) => (
+          <div class="flex hover:bg-emerald-500/10 px-1 rounded">
+            <span class="w-7 select-none text-right pr-3 text-(--fg-faint) opacity-60">{idx + 1}</span>
+            <span class="text-emerald-200/90 whitespace-pre">{line}</span>
+          </div>
+        ))}</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function initCodeDiffs() {
+    document.querySelectorAll<HTMLElement>('.code-diff-container').forEach((container) => {
+      const splitBtn = container.querySelector<HTMLButtonElement>('[data-diff-mode="split"]');
+      const beforeBtn = container.querySelector<HTMLButtonElement>('[data-diff-mode="before"]');
+      const afterBtn = container.querySelector<HTMLButtonElement>('[data-diff-mode="after"]');
+      const beforePanel = container.querySelector<HTMLElement>('.diff-panel-before');
+      const afterPanel = container.querySelector<HTMLElement>('.diff-panel-after');
+      const panels = container.querySelector<HTMLElement>('.diff-panels');
+
+      const setMode = (mode: 'split' | 'before' | 'after') => {
+        container.querySelectorAll<HTMLButtonElement>('.diff-mode-btn').forEach((b) => {
+          const isActive = b.dataset.diffMode === mode;
+          b.classList.toggle('bg-(--bg)', isActive);
+          b.classList.toggle('text-(--fg)', isActive);
+          b.classList.toggle('shadow-xs', isActive);
+          b.classList.toggle('text-(--fg-dim)', !isActive);
+        });
+
+        if (mode === 'split') {
+          panels?.classList.add('md:grid-cols-2');
+          beforePanel?.classList.remove('hidden');
+          afterPanel?.classList.remove('hidden');
+        } else if (mode === 'before') {
+          panels?.classList.remove('md:grid-cols-2');
+          beforePanel?.classList.remove('hidden');
+          afterPanel?.classList.add('hidden');
+        } else {
+          panels?.classList.remove('md:grid-cols-2');
+          beforePanel?.classList.add('hidden');
+          afterPanel?.classList.remove('hidden');
+        }
+      };
+
+      splitBtn?.addEventListener('click', () => setMode('split'));
+      beforeBtn?.addEventListener('click', () => setMode('before'));
+      afterBtn?.addEventListener('click', () => setMode('after'));
+    });
+  }
+
+  initCodeDiffs();
+  document.addEventListener('astro:page-load', initCodeDiffs);
+</script>
