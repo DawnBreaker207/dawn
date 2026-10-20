@@ -1,0 +1,91 @@
+---
+// One reusable lab simulation card, aligned 1:1 with the JVM GC visualizer:
+// one merged controls row (cases + replay + step control) · SSR code panel
+// (SQL-plan line highlight) · station track arena · banner · running log.
+export interface SimStep {
+  log: string;
+  explain: string;
+  tone?: 'info' | 'warn' | 'error';
+}
+export interface SimCase {
+  label: string;
+  steps: SimStep[];
+}
+interface Props {
+  topic: string;
+  cases?: SimCase[];
+  // First case's illustration, server-rendered so the panel is visible
+  // before any click — the engine rebuilds both when a case runs.
+  code?: string;
+  track?: string[];
+}
+const { topic, cases = [], code = '', track: introTrack = [] } = Astro.props;
+---
+
+<div data-sim-card={topic} class="mt-3 rounded-xl border border-(--border) bg-(--bg-alt) p-3 font-mono text-xs">
+  <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+    <span class="mr-1 text-[11px] uppercase tracking-wider text-(--fg-faint)">cases:</span>
+    {cases.map((c, i) => (
+      <button
+        type="button"
+        data-case-run={i}
+        class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg) transition-colors hover:border-(--fg-dim) hover:text-(--accent) active:scale-95"
+      >{c.label}</button>
+    ))}
+    <button
+      type="button"
+      data-sim-replay
+      class="cursor-pointer rounded-lg border border-amber-400/50 bg-amber-500/5 px-2.5 py-1.5 text-[10px] text-amber-300 transition-colors hover:bg-amber-500/15 active:scale-95"
+    >↻ replay</button>
+    <span class="mx-1 h-5 w-px bg-(--border)"></span>
+    <label
+      class="flex cursor-pointer select-none items-center gap-1.5 text-[11px] text-(--fg-dim)"
+      title="pause at every step — click ▶ next to advance"
+    >
+      <input type="checkbox" data-step-mode checked class="accent-(--accent)" />
+      step mode
+    </label>
+    <label class="flex items-center gap-1 text-[11px] text-(--fg-dim)">
+      delay
+      <input
+        type="number"
+        data-sim-delay
+        min="60"
+        max="3000"
+        step="50"
+        value="350"
+        class="w-14 rounded border border-(--border) bg-(--bg) px-1 py-0.5 text-center text-[10px] text-(--fg)"
+      />
+      ms
+    </label>
+    <button
+      type="button"
+      data-sim-next
+      class="hidden cursor-pointer rounded-lg border border-(--accent) bg-(--accent)/10 px-3 py-1 text-[11px] text-(--accent)"
+    >▶ next ▸</button>
+  </div>
+  <div
+    data-sim-track
+    class:list={['mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-2', introTrack.length ? '' : 'hidden']}
+  >
+    {introTrack.map((name, ti) => (
+      <>
+        {ti > 0 && <span class="font-mono text-[10px] text-(--fg-faint)">→</span>}
+        <span class="rounded-lg border border-(--border) bg-(--bg) px-2 py-1.5 font-mono text-[10px] leading-none text-(--fg-faint)">{name}</span>
+      </>
+    ))}
+  </div>
+  <pre
+    data-sim-code
+    class:list={['mt-2 overflow-auto rounded-lg border border-(--border) bg-black/50 p-3 font-mono text-[11px] leading-relaxed text-(--fg)', code ? '' : 'hidden']}
+  >
+    {code ? code.split('\n').map((l, li) => (
+      <div class="px-1 text-(--fg-faint)">{String(li + 1).padStart(2, '0') + ' │ ' + l}</div>
+    )) : null}
+  </pre>
+  <div data-sim-banner class="hidden"></div>
+  <div
+    data-sim-log
+    class="mt-2 max-h-40 space-y-0.5 overflow-y-auto rounded-lg border border-(--border) bg-black/40 p-2 font-mono text-[11px] leading-snug text-(--fg-faint)"
+  >[sim] pick a case above — steps stream here; the banner explains each one.</div>
+</div>
