@@ -307,7 +307,13 @@ function initViewCounter() {
   fetchStats(slug).then((stats) => {
     const views = stats?.views;
     el.textContent = typeof views === 'number' && views > 0 ? formatNumber(views) : fallback;
-    if (typeof views === 'number') bumpStat(slug, 'views', views + 1);
+    if (typeof views === 'number') {
+      const sessionKey = `dawn_viewed_${slug}`;
+      if (!sessionStorage.getItem(sessionKey)) {
+        sessionStorage.setItem(sessionKey, '1');
+        bumpStat(slug, 'views', views + 1);
+      }
+    }
   });
 }
 

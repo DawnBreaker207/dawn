@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import timelineData from '@/data/timeline.json';
 
 interface PaletteEntry {
   kind: 'cmd' | 'txt' | 'jsx' | 'err';
@@ -33,24 +34,14 @@ const ShellPrompt = (): React.JSX.Element => (
   </span>
 );
 
-const career = [
-  {
-    org: 'FPT Software',
-    role: 'Intern Web Developer',
-    period: 'Aug 2025 – Jan 2026',
-    details: [
-      'Developed and maintained a web-based healthcare system to manage patient records, appointments, and medical reports for a Japan-based client.',
-      'Supported the development of web features using Angular, Spring, and SQL Server.',
-      'Participated in Agile methodologies processes to improve team efficiency and project delivery.',
-    ],
-  },
-  {
-    org: 'University of Transport and Communications',
-    role: 'Undergraduate Student at UTC',
-    period: 'Sep 2022 – Present',
-    details: ['Undergraduate student.'],
-  },
-];
+const stripHtml = (s: string) => s.replace(/<[^>]*>/g, '');
+
+const career = timelineData.items.map((item) => ({
+  org: item.org,
+  role: item.title,
+  period: `${item.start} – ${item.end}`,
+  details: item.details.map(stripHtml),
+}));
 
 const techStack = [
   'Astro v5 + Node adapter — static posts & SSR endpoints',
@@ -228,6 +219,7 @@ export default function CommandPalette({
             <ol className="pal-vhist">
               {items.map((it, i) => (
                 <li key={it.route}>
+                  <span className="pal-item-id">#{i + 1}</span>
                   <span className="pal-item-title">{it.title}</span>
                   {it.desc && <span className="pal-item-desc">{it.desc}</span>}
                 </li>
