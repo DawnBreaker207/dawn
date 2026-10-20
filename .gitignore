@@ -11,6 +11,7 @@
 # local env files
 .env
 .env.local
+token-burn.dry-run.json
 .env.development.local
 .env.test.local
 .env.production.local
