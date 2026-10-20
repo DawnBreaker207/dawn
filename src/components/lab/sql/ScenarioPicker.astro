@@ -1,0 +1,91 @@
+---
+// ScenarioPicker — scenario buttons + A/B strategy cards + engine log + step controls
+// The script block drives all interactivity via initScenarioEngine().
+---
+
+<!-- Scenario picker -->
+<div class="flex flex-wrap items-center gap-2 rounded-xl border border-(--border) bg-(--bg-alt) p-3 font-mono text-xs">
+  <span class="mr-1 text-[11px] uppercase tracking-wider text-(--fg-faint)">Scenario:</span>
+  <button type="button" data-plan-preset="index_vs_seq" class="plan-btn cursor-pointer rounded-lg border border-(--fg) bg-(--fg) px-3 py-1.5 font-semibold text-(--bg)">⚡ Seq Scan vs Index</button>
+  <button type="button" data-plan-preset="hibernate_n_plus_1" class="plan-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)">💣 N+1 vs JOIN FETCH</button>
+  <button type="button" data-plan-preset="hash_vs_nested" class="plan-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)">🔄 Hash vs Nested Loop</button>
+  <button type="button" data-plan-preset="index_only" class="plan-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)">💎 Covering Index</button>
+  <button type="button" data-plan-preset="join_anti" class="plan-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)">🧲 Anti-Join</button>
+  <button type="button" data-plan-preset="topn_window" class="plan-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)">🥇 Top-N per Group</button>
+  <button type="button" data-plan-preset="keyset_page" class="plan-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)">📜 Keyset Pagination</button>
+  <button type="button" data-plan-preset="composite_prefix" class="plan-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)">🧱 Composite Prefix</button>
+  <button type="button" data-plan-preset="execution_order" class="plan-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 font-semibold text-(--fg-dim) transition-colors hover:border-(--fg-dim) hover:text-(--fg)">🧩 Execution Order</button>
+</div>
+
+<!-- Engine: run button + log stream -->
+<div class="rounded-xl border border-cyan-500/40 bg-cyan-950/10 p-4 font-mono text-xs">
+  <div class="flex flex-col items-stretch gap-3 border-b border-cyan-500/20 pb-3 sm:flex-row sm:items-center">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-(--fg)">Postgres Execution Engine</span>
+        <span id="engine-status-badge" class="rounded border border-cyan-500/50 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold text-cyan-400">STANDBY</span>
+      </div>
+      <p class="mt-1 text-[11px] text-(--fg-dim)">Runs both strategies in sequence — the numbers on the two cards below count up on their own.</p>
+    </div>
+    <button type="button" id="btn-simulate-run" class="cursor-pointer rounded-lg border border-cyan-500 bg-cyan-500/20 px-4 py-2 font-semibold text-cyan-300 transition-all hover:bg-cyan-500/30 active:scale-95">▶ Run simulation</button>
+    <button type="button" id="btn-simulate-replay" class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-2 font-semibold text-(--fg-dim) transition-colors hover:text-(--fg) active:scale-95">↻ Replay</button>
+  </div>
+  <div class="mt-2 flex flex-wrap items-center gap-4 border-b border-cyan-500/20 pb-2.5">
+    <span class="text-[10px] uppercase tracking-wider text-(--fg-faint)">⚙ step control:</span>
+    <label class="flex cursor-pointer select-none items-center gap-1.5 text-[10px] text-(--fg-dim)">
+      <input type="checkbox" id="sp-step-mode" checked class="accent-cyan-400" />
+      step mode — pause after every log line
+    </label>
+    <label class="flex items-center gap-1.5 text-[10px] text-(--fg-dim)">
+      delay
+      <input type="number" id="sp-delay" min="50" max="3000" step="50" value="420" class="w-16 rounded border border-(--border) bg-(--bg) px-1.5 py-0.5 text-center text-(--fg)" />
+      ms/line
+    </label>
+    <button type="button" id="sp-next" class="hidden cursor-pointer rounded border border-(--accent) bg-(--accent)/10 px-2.5 py-1 text-[10px] text-(--accent)">▶ next step ▸</button>
+  </div>
+  <div id="engine-log-stream" class="thin-scrollbar mt-3 max-h-40 overflow-y-auto rounded-lg bg-black/60 p-3 font-mono text-[11px] text-(--fg-dim)">
+    <div class="text-(--fg-faint)">[Engine Log] Pick a scenario, then hit run…</div>
+  </div>
+</div>
+
+<!-- Strategy A vs B -->
+<div data-ab-grid class="grid grid-cols-1 gap-4 md:grid-cols-2">
+  <div id="card-strategy-a" class="rounded-xl border border-rose-500/30 bg-rose-950/10 p-4 font-mono text-xs">
+    <div class="mb-2.5 flex items-center justify-between">
+      <span class="text-xs font-bold uppercase tracking-wider text-rose-400" id="title-strategy-a">No Index (Seq Scan)</span>
+      <span class="rounded bg-rose-500/20 px-2 py-0.5 text-[10px] font-semibold text-rose-300" id="badge-strategy-a">Sequential Scan</span>
+    </div>
+    <pre class="overflow-x-auto rounded-lg border border-(--border) bg-(--bg) p-3 text-[11px] text-(--fg)" id="code-strategy-a">-- Full scan of the users table (1M rows)
+EXPLAIN ANALYZE
+SELECT * FROM users
+WHERE email = 'dawn@dev.com';</pre>
+    <div class="mt-3 grid grid-cols-3 gap-2 border-t border-(--border) pt-2.5">
+      <div><div class="text-[10px] uppercase text-(--fg-faint)">Time</div><div class="mt-0.5 text-sm font-bold text-rose-400" id="time-strategy-a">—</div></div>
+      <div><div class="text-[10px] uppercase text-(--fg-faint)">Cost</div><div class="mt-0.5 text-sm font-bold text-(--fg)" id="cost-strategy-a">—</div></div>
+      <div><div class="text-[10px] uppercase text-(--fg-faint)">Rows</div><div class="mt-0.5 text-sm font-bold text-(--fg)" id="rows-strategy-a">—</div></div>
+    </div>
+  </div>
+
+  <div id="card-strategy-b" class="rounded-xl border border-emerald-500/30 bg-emerald-950/10 p-4 font-mono text-xs">
+    <div class="mb-2.5 flex items-center justify-between">
+      <span class="text-xs font-bold uppercase tracking-wider text-emerald-400" id="title-strategy-b">With a B-Tree Index</span>
+      <span class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300" id="badge-strategy-b">Index Scan (B-Tree)</span>
+    </div>
+    <pre class="overflow-x-auto rounded-lg border border-(--border) bg-(--bg) p-3 text-[11px] text-(--fg)" id="code-strategy-b">-- Create index, then query
+CREATE INDEX idx_users_email ON users(email);
+
+EXPLAIN ANALYZE
+SELECT * FROM users
+WHERE email = 'dawn@dev.com';</pre>
+    <div class="mt-3 grid grid-cols-3 gap-2 border-t border-(--border) pt-2.5">
+      <div><div class="text-[10px] uppercase text-(--fg-faint)">Time</div><div class="mt-0.5 text-sm font-bold text-emerald-400" id="time-strategy-b">—</div></div>
+      <div><div class="text-[10px] uppercase text-(--fg-faint)">Cost</div><div class="mt-0.5 text-sm font-bold text-(--fg)" id="cost-strategy-b">—</div></div>
+      <div><div class="text-[10px] uppercase text-(--fg-faint)">Rows</div><div class="mt-0.5 text-sm font-bold text-(--fg)" id="rows-strategy-b">—</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { initScenarioEngine } from '@/scripts/lab/sql/scenario-engine'
+  document.addEventListener('astro:page-load', initScenarioEngine)
+</script>

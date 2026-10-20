@@ -227,6 +227,17 @@ const SIMCASES: Record<string, SimCaseData[]> = {
         { log: 'carriers rotate 1M VTs · 820 ms wall', explain: 'Same load, same four threads — the collapse is gone.', tone: 'info' },
       ],
     },
+    {
+      label: '⚙ scheduler internals',
+      steps: [
+        { log: 'ForkJoinPool.commonPool: 4 carrier threads (= CPU cores)', explain: 'The carrier pool is sized to physical cores; the VT scheduler sits on top as a cooperative layer.', tone: 'info' },
+        { log: 'VT scheduler: work-stealing deque per carrier', explain: 'Each carrier has its own task queue; idle carriers steal from busy ones.', tone: 'info' },
+        { log: 'VT-1 mounts carrier-0, runs until IO', explain: 'Mount = copy heap stack to carrier stack frame, resume execution.', tone: 'info' },
+        { log: 'IO → UNMOUNT: continuation parked in heap', explain: 'Continuation object holds the entire stack in a byte array ~few KB.', tone: 'info' },
+        { log: 'carrier-0 free → steals VT-47 from carrier-2 deque', explain: 'Work-stealing keeps all carriers busy without a central scheduler.', tone: 'info' },
+        { log: 'IO completes → VT-1 rescheduled to whichever carrier is free', explain: 'Thread affinity is LOST after unmount — do NOT use ThreadLocal for state you need post-IO.', tone: 'warn' },
+      ],
+    },
   ],
   string: [
     {
@@ -471,6 +482,39 @@ const SIMCASES: Record<string, SimCaseData[]> = {
         { log: 'ctx.refresh() skips the @Lazy definition', explain: 'Instantiation is deferred until the first touch.', tone: 'info' },
         { log: 'first client call → bean built on demand', explain: 'Startup time shrinks; the cost moves to first use.', tone: 'info' },
         { log: 'beware: broken lazy beans surface mid-traffic', explain: 'Boot failures become runtime failures — tradeoff worth naming.', tone: 'warn' },
+      ],
+    },
+  ],
+  scope: [
+    {
+      label: '🔁 singleton shared',
+      steps: [
+        { log: 'ctx.getBean(BillingService.class) first call', explain: 'Spring instantiates the bean once and stores it in the singleton pool indexed by type/name.', tone: 'info' },
+        { log: 's1 = ctx.getBean(BillingService.class)', explain: 'Returns the pooled instance; no new object is created.', tone: 'info' },
+        { log: 's2 = ctx.getBean(BillingService.class)', explain: 'Returns the SAME pooled instance — same object identity.', tone: 'info' },
+        { log: 's1 == s2 → true (same instance, same ID)', explain: 'Singleton scope guarantees one shared instance per ApplicationContext for the bean\'s lifetime.', tone: 'info' },
+        { log: 'BillingService$$EnhancerBySpringCGLib$xxxx1 lives once in the singleton pool', explain: 'If wrapped by a proxy (@Transactional), the proxy is the singleton — the raw class lives inside it.', tone: 'info' },
+        { log: 'state mutation on s1 visible to s2 — share carefully', explain: 'All callers share mutable state; field-level concurrency bugs are the classic singleton pitfall.', tone: 'warn' },
+      ],
+    },
+    {
+      label: '🆕 prototype fresh',
+      steps: [
+        { log: '@Scope(PROTOTYPE) → new instance per getBean()', explain: 'Spring creates a brand-new object every time the bean is requested or injected.', tone: 'info' },
+        { log: 'id1 = BillingService@7f3d9c2 · id2 = BillingService@4a1b2c3 — different', explain: 'Different heap addresses confirm two separate instances; no state is shared.', tone: 'info' },
+        { log: 'Spring injects · then FORGETS it — no lifecycle management after creation', explain: 'Unlike singletons, Spring does not track prototype beans after handing them out.', tone: 'warn' },
+        { log: '@PostConstruct runs · @PreDestroy NEVER fires for prototype', explain: 'Init callbacks run, but the container never calls destroy — callers own the cleanup.', tone: 'warn' },
+        { log: 'prototype leaks into singleton = classic scope widening bug', explain: 'Injecting a prototype into a singleton field freezes it — the singleton holds one prototype forever.', tone: 'error' },
+      ],
+    },
+    {
+      label: '🕸 scope widening',
+      steps: [
+        { log: 'singleton OrderService @Autowired BillingService (PROTOTYPE)', explain: 'Spring injects the prototype once when the singleton is created — that one instance is captured forever.', tone: 'warn' },
+        { log: 'every call through OrderService uses the SAME BillingService instance', explain: 'Widening defeats the prototype intent — the prototype behaves like a singleton inside the singleton.', tone: 'error' },
+        { log: 'fix: @Lookup or ObjectProvider<Proto> or scoped proxy', explain: '@Lookup forces Spring to create a new prototype on every call; ObjectProvider.getObject() does the same.', tone: 'info' },
+        { log: '@Scope(proxyMode = TARGET_CLASS) wraps prototype in a singleton-shaped proxy', explain: 'The proxy IS a singleton in the context map but delegates every call to a freshly created prototype.', tone: 'info' },
+        { log: 'proxy IS a singleton in the context map — widening closed', explain: 'Callers hold one stable proxy reference while underlying instances are created per call — the widening trap is gone.', tone: 'info' },
       ],
     },
   ],
@@ -1100,6 +1144,17 @@ try { jdbc.query(sql); } finally { lock.unlock(); }
       track: ['ReentrantLock', 'clean UNMOUNT', 'no collapse'],
       at: [0, 1, 2],
     },
+    {
+      code: `// ForkJoinPool.commonPool: 4 carrier threads ≈ CPU cores
+// VT scheduler: work-stealing deque per carrier (idle steals from busy)
+// VT-1 mounts carrier-0 → runs until IO → UNMOUNT (stack → byte[] in heap)
+// continuation parked in heap (stack as byte array ~few KB)
+// carrier-0 free → steals VT-47 from carrier-2 deque (no central scheduler)
+// IO completes → VT-1 rescheduled to free carrier — affinity LOST: no ThreadLocal`,
+      line: [1, 2, 3, 4, 5, 6],
+      track: ['4 carriers', 'work-stealing', 'VT-1 mounts', 'IO → UNMOUNT', 'carrier steals', 'affinity LOST'],
+      at: [0, 1, 2, 3, 4, 5],
+    },
   ],
   string: [
     {
@@ -1368,6 +1423,41 @@ report.generate();   // first touch → created on demand, right now
       line: [2, 3, 4],
       track: ['refresh skips', 'first touch build', 'late-failure risk'],
       at: [0, 1, 2],
+    },
+  ],
+  scope: [
+    {
+      code: `ApplicationContext ctx = new AnnotationConfigApplicationContext(Cfg.class);
+BillingService s1 = ctx.getBean(BillingService.class);  // pool entry returned
+BillingService s2 = ctx.getBean(BillingService.class);  // SAME entry returned
+System.out.println(s1 == s2);   // true — one instance, shared state
+// BillingService$$EnhancerBySpringCGLib$xxxx1 lives once in the singleton pool
+// state mutation on s1 is visible to s2 — design for statelessness`,
+      line: [2, 3, 4, 5, 6],
+      track: ['ctx ready', 'getBean #1', 'getBean #2', 's1 == s2 true', 'singleton pool', 'share carefully'],
+      at: [0, 1, 2, 3, 4, 5],
+    },
+    {
+      code: `@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+@Service class BillingService { ... }          // new instance per injection
+BillingService id1 = ctx.getBean(BillingService.class); // BillingService@7f3d9c2
+BillingService id2 = ctx.getBean(BillingService.class); // BillingService@4a1b2c3
+// id1 != id2 — @PostConstruct runs; @PreDestroy NEVER fires for prototype
+// prototype injected into singleton = scope widening bug (one frozen instance)`,
+      line: [1, 3, 4, 5, 6],
+      track: ['@Scope(PROTOTYPE)', 'getBean fresh', 'id1 != id2', '@PreDestroy never', 'widening risk'],
+      at: [0, 1, 2, 3, 4],
+    },
+    {
+      code: `@Service                                    // SINGLETON (default)
+class OrderService {
+    @Autowired BillingService billing;          // PROTOTYPE — frozen here forever
+}   // OrderService created ONCE → billing captured as one instance forever
+// fix: @Scope(proxyMode = ScopedProxyMode.TARGET_CLASS) on BillingService
+// proxy IS a singleton in the context map; each call fetches a fresh prototype`,
+      line: [3, 4, 5, 6],
+      track: ['singleton holds proto', 'proto frozen forever', 'scoped proxy fix', 'widening closed'],
+      at: [0, 1, 2, 3, 4],
     },
   ],
   aop: [
@@ -2188,6 +2278,27 @@ class BillingService {
 }`,
   },
   {
+    id: 'scope',
+    title: 'Bean Scope',
+    badge: 'SCOPE',
+    tone: 'text-violet-400',
+    explain:
+      'Spring beans live by a scope rule: singleton (default) means ONE shared instance per ApplicationContext — every getBean() hands back the same proxy; prototype means a brand-new instance every injection; request/session scope ties the lifetime to an HTTP boundary. Scopes exist because most beans are stateless (singleton wins), but some hold per-caller state that must never bleed between users.',
+    why: 'Why not just always use prototype? Because object creation is not free and stateless logic never needs fresh state — sharing one instance costs zero allocation after boot. The prototype scope pays allocation on every call, and more critically, Spring releases its tracking immediately after hand-off (no @PreDestroy fires), so callers own cleanup — a footgun missed every interview.',
+    flow: 'Read left to right: the ApplicationContext holds a singleton pool keyed by bean name. getBean() on a singleton returns the same map entry every time. A prototype skips the pool and calls the factory fresh each time — Spring hands the result to the caller and forgets it. Scope widening sneaks in when a singleton captures a prototype field at startup; the scoped proxy fix wraps the prototype in a singleton-shaped shell that calls the factory per delegation.',
+    diagram: `
+      <div class="jx-row"><span class="jx-n hot">singleton</span><span class="jx-a">→</span><span class="jx-n">ctx pool</span><span class="jx-tag">one instance · callers share state</span></div>
+      <div class="jx-row"><span class="jx-n">prototype</span><span class="jx-a">→</span><span class="jx-n bad">new() per injection</span><span class="jx-tag">Spring forgets it · no @PreDestroy</span></div>
+      <div class="jx-row"><span class="jx-n bad">singleton holds proto field</span><span class="jx-a">→</span><span class="jx-n">scope widening</span><span class="jx-tag">fix: scoped proxy or ObjectProvider</span></div>
+    `,
+    code: `@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)  // new instance per injection
+@Service class BillingService { ... }
+
+// widening fix — proxy IS a singleton, delegates to a fresh prototype per call:
+@Scope(value = SCOPE_PROTOTYPE, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@Service class BillingService { ... }`,
+  },
+  {
     id: 'aop',
     title: 'Spring AOP — Proxy',
     badge: 'CGLIB/JDK',
@@ -2448,7 +2559,7 @@ const TAB_ORDER = [
   'collections', 'string', 'errors', 'generics', 'lambda', 'streams',
   'modern', 'io', 'concurrency', 'jmm', 'jvm', 'jit',
   // spring: foundations → container → web/data → ops/infra → meta
-  'ioc', 'aop', 'config', 'autoconfig', 'web', 'jpa', 'testing',
+  'ioc', 'scope', 'aop', 'config', 'autoconfig', 'web', 'jpa', 'testing',
   'tx', 'security', 'async', 'messaging', 'metaprog',
 ];
 TABS.sort((a, b) => TAB_ORDER.indexOf(a.id) - TAB_ORDER.indexOf(b.id));
@@ -2467,7 +2578,7 @@ TABS.sort((a, b) => TAB_ORDER.indexOf(a.id) - TAB_ORDER.indexOf(b.id));
     </div>
     <h1 class="m-0 font-mono text-[clamp(28px,4.5vw,48px)] leading-[0.96] tracking-[-0.06em] text-(--fg)">java &amp; spring lab</h1>
     <p class="mt-2 text-sm text-(--fg-dim)">
-      24 tabs, one concept each. The Java/Spring tabs condense to: one line of theory, one drawn mechanism,
+      25 tabs, one concept each. The Java/Spring tabs condense to: one line of theory, one drawn mechanism,
       one code sliver, one run-able simulation — concurrency packs 4 engines behind a select, and the JVM tab
       carries the full HotSpot heap &amp; GC simulator.
     </p>
@@ -2477,12 +2588,12 @@ TABS.sort((a, b) => TAB_ORDER.indexOf(a.id) - TAB_ORDER.indexOf(b.id));
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-3 font-mono text-xs">
       <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
         <span class="flex items-center gap-2">
-          <span class="text-(--accent)">📚 concepts — 24 tabs</span>
+          <span class="text-(--accent)">📚 concepts — 25 tabs</span>
           <span
             data-jx-current
             class="max-w-[240px] truncate rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-300"
           >{TABS[0]?.title}</span>
-          <span class="hidden text-[10px] font-normal text-(--fg-faint) sm:inline">core java 12 · spring 12 — open to switch</span>
+          <span class="hidden text-[10px] font-normal text-(--fg-faint) sm:inline">core java 12 · spring 13 — open to switch</span>
         </span>
         <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
       </summary>
@@ -2822,452 +2933,25 @@ TABS.sort((a, b) => TAB_ORDER.indexOf(a.id) - TAB_ORDER.indexOf(b.id));
   </div>
 </BaseLayout>
 
-<script>
-  interface SimStep {
-    log: string;
-    explain: string;
-    tone?: 'info' | 'warn' | 'error';
-  }
-  interface SimCase {
-    label: string;
-    steps: SimStep[];
-  }
-  interface VizCfg {
-    code: string;
-    line: number[];
-    track: string[];
-    at: number[];
-  }
 
-  function initJavaLab() {
-    const simsRoot = document.querySelector<HTMLElement>('[data-sims]');
-    let SIMCASES: Record<string, SimCase[]> = {};
-    let SIMVIZ: Record<string, VizCfg[]> = {};
-    try {
-      const payload = JSON.parse(simsRoot?.dataset.sims ?? '{}');
-      SIMCASES = payload.cases ?? {};
-      SIMVIZ = payload.viz ?? {};
-    } catch {
-      SIMCASES = {};
-      SIMVIZ = {};
+<script>
+  import { registerTab, bootEngine, initJVMVisualizer } from '@/scripts/lab/java/sim-engine';
+
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector<HTMLElement>('[data-sims]');
+    if (root) {
+      try {
+        const p = JSON.parse(root.dataset.sims ?? '{}');
+        const cases: Record<string, unknown[]> = p.cases ?? {};
+        const viz: Record<string, unknown[]> = p.viz ?? {};
+        for (const topic of Object.keys(cases)) {
+          registerTab(topic, { cases: cases[topic] as never, viz: (viz[topic] ?? []) as never });
+        }
+      } catch { /* malformed JSON — skip */ }
     }
-    const tabs = Array.from(document.querySelectorAll<HTMLElement>('[data-jx-tab]'));
-    const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-jx-panel]'));
-    const paint = (on: boolean, btn: HTMLElement) => {
-      const base = 'jx-btn cursor-pointer rounded-lg border px-3 py-1.5 font-semibold transition-colors ';
-      btn.className = on
-        ? base + 'border-(--fg) bg-(--fg) text-(--bg)'
-        : base + 'border-(--border) bg-(--bg) text-(--fg-dim) hover:border-(--fg-dim) hover:text-(--fg)';
-    };
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const id = tab.dataset.jxTab;
-        tabs.forEach((btn) => paint(btn === tab, btn));
-        panels.forEach((panel) => {
-          panel.hidden = panel.dataset.jxPanel !== id;
-        });
-        // summary mirrors the live tab; nav collapses after each pick
-        const mirror = document.querySelector<HTMLElement>('[data-jx-current]');
-        if (mirror) mirror.textContent = tab.textContent ?? '';
-        tab.closest('details')?.removeAttribute('open');
-      });
-    });
-    // One engine card per topic: case buttons + step control + banner + log.
-    document.querySelectorAll<HTMLElement>('[data-sim-card]').forEach((card) => {
-      const topic = card.dataset.simCard ?? '';
-      const cases = SIMCASES[topic] ?? [];
-      const logEl = card.querySelector<HTMLElement>('[data-sim-log]');
-      const banner = card.querySelector<HTMLElement>('[data-sim-banner]');
-      const nextBtn = card.querySelector<HTMLButtonElement>('[data-sim-next]');
-      let resume: (() => void) | null = null;
-      nextBtn?.addEventListener('click', () => {
-        resume?.();
-        resume = null;
-      });
-      // Step control: pause-and-Next when the checkbox is on, plain delay otherwise.
-      const stepWait = () => {
-        const mode = card.querySelector<HTMLInputElement>('[data-step-mode]')?.checked ?? false;
-        if (mode && nextBtn) {
-          nextBtn.classList.remove('hidden');
-          return new Promise<void>((resolve) => {
-            resume = resolve;
-          }).then(() => nextBtn.classList.add('hidden'));
-        }
-        const delay = Math.max(60, Number(card.querySelector<HTMLInputElement>('[data-sim-delay]')?.value) || 350);
-        return new Promise<void>((resolve) => setTimeout(resolve, delay));
-      };
-      const showBanner = (step: SimStep) => {
-        if (!banner) return;
-        banner.textContent = step.explain;
-        banner.className =
-          'mt-2 rounded-lg border px-4 py-2 font-mono text-xs ' +
-          (step.tone === 'error'
-            ? 'border-rose-500 bg-rose-950/40 text-rose-300'
-            : step.tone === 'warn'
-              ? 'border-amber-500 bg-amber-950/40 text-amber-300'
-              : 'border-sky-500 bg-sky-950/30 text-sky-300');
-      };
-      const runCase = async (c?: SimCase, cfg?: VizCfg) => {
-        if (!c || !logEl || card.dataset.busy === '1') return;
-        card.dataset.busy = '1';
-        logEl.textContent = '';
-        // Arena: track stations light up as the steps advance (JVM-dashboard style).
-        const trackEl = card.querySelector<HTMLElement>('[data-sim-track]');
-        const BOX_BASE = 'rounded-lg border px-2 py-1.5 font-mono text-[10px] leading-none transition-all duration-300 ';
-        const boxes: HTMLElement[] = [];
-        if (trackEl && cfg?.track?.length) {
-          trackEl.classList.remove('hidden');
-          trackEl.replaceChildren();
-          cfg.track.forEach((name, ti) => {
-            if (ti > 0) {
-              const arrow = document.createElement('span');
-              arrow.textContent = '→';
-              arrow.className = 'font-mono text-[10px] text-(--fg-faint)';
-              trackEl.appendChild(arrow);
-            }
-            const box = document.createElement('span');
-            box.textContent = name;
-            box.className = BOX_BASE + 'border-(--border) bg-(--bg) text-(--fg-faint)';
-            boxes.push(box);
-            trackEl.appendChild(box);
-          });
-        } else if (trackEl) {
-          trackEl.classList.add('hidden');
-          trackEl.replaceChildren();
-        }
-        let lastAt = -1;
-        // Code panel: the case's Java snippet, one row per line — active step
-        // highlights its line (SQL-plan style).
-        const codeEl = card.querySelector<HTMLElement>('[data-sim-code]');
-        const codeRows: HTMLElement[] = [];
-        if (codeEl && cfg?.code) {
-          codeEl.classList.remove('hidden');
-          codeEl.replaceChildren();
-          cfg.code.split('\n').forEach((text, li) => {
-            const row = document.createElement('div');
-            row.textContent = String(li + 1).padStart(2, '0') + ' │ ' + text;
-            codeRows.push(row);
-            codeEl.appendChild(row);
-          });
-        } else if (codeEl) {
-          codeEl.classList.add('hidden');
-          codeEl.replaceChildren();
-        }
-        for (let i = 0; i < c.steps.length; i++) {
-          const step = c.steps[i];
-          showBanner(step);
-          const at = cfg?.at?.[i] ?? -1;
-          if (at >= 0) lastAt = at;
-          boxes.forEach((box, bi) => {
-            box.className =
-              BOX_BASE +
-              (bi === at
-                ? step.tone === 'error'
-                  ? 'border-rose-500 bg-rose-950/40 text-rose-300'
-                  : 'border-amber-400 bg-amber-500/10 text-amber-300'
-                : bi < lastAt
-                  ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300'
-                  : 'border-(--border) bg-(--bg) text-(--fg-faint)');
-          });
-          const ln = cfg?.line?.[i] ?? -1;
-          codeRows.forEach((row, li) => {
-            row.className =
-              'px-1 ' + (li === ln - 1 ? 'bg-amber-500/10 text-amber-300' : 'text-(--fg-faint)');
-          });
-          const row = document.createElement('div');
-          row.textContent = `[${String(i + 1).padStart(2, '0')}] ${step.log}`;
-          row.className = i === c.steps.length - 1 ? 'text-amber-300' : 'text-slate-400';
-          logEl.appendChild(row);
-          logEl.scrollTop = logEl.scrollHeight;
-          await stepWait();
-        }
-        delete card.dataset.busy;
-      };
-      let lastIdx = 0;
-      const run = (idx: number) => {
-        lastIdx = idx;
-        runCase(cases[idx], SIMVIZ[topic]?.[idx]);
-      };
-      card.querySelectorAll<HTMLButtonElement>('[data-case-run]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          run(Number(btn.dataset.caseRun ?? 0));
-        });
-      });
-      // Replay: re-run the last (or first) case — code highlight + arena from step 0.
-      card.querySelector<HTMLButtonElement>('[data-sim-replay]')?.addEventListener('click', () => {
-        run(lastIdx);
-      });
-    });
-    // Selecting an engine sub-topic swaps the panel and auto-runs its first case.
-    const sel = document.querySelector<HTMLSelectElement>('[data-conc-select]');
-    sel?.addEventListener('change', () => {
-      const id = sel.value;
-      document.querySelectorAll<HTMLElement>('[data-conc-sub]').forEach((p) => {
-        p.hidden = p.dataset.concSub !== id;
-      });
-      const btn = document.querySelector<HTMLButtonElement>(`[data-conc-sub="${id}"] [data-case-run]`);
-      btn?.click();
-    });
-  }
-  document.addEventListener('astro:page-load', initJavaLab);
-</script>
-
-<script>
-  interface SimulatedObject {
-    id: number;
-    sizeMb: number;
-    age: number;
-    isLeaked: boolean;
-    isAlive?: boolean;
-  }
-
-  function initJVMVisualizer() {
-    let nextId = 1;
-    let eden: SimulatedObject[] = [];
-    let s0: SimulatedObject[] = [];
-    let s1: SimulatedObject[] = [];
-    let tenured: SimulatedObject[] = [];
-
-    let activeSurvivorIndex = 0;
-    let minorCount = 0;
-    let majorCount = 0;
-    let totalStwMs = 0;
-    let isProcessing = false;
-
-    const EDEN_CAP_MB = 64;
-    const SURVIVOR_CAP_MB = 16;
-    const TENURED_CAP_MB = 128;
-    const MAX_HEAP_MB = EDEN_CAP_MB + SURVIVOR_CAP_MB * 2 + TENURED_CAP_MB;
-    const sumSize = (arr: SimulatedObject[]) => arr.reduce((acc, o) => acc + o.sizeMb, 0);
-
-    // Step setting: step mode pauses between phases until Next is clicked;
-    // otherwise every pause lasts the configured delay.
-    let resumeStep: (() => void) | null = null;
-    const nextBtn = document.getElementById('jvm-next');
-    const stepMode = () => (document.getElementById('jvm-step-mode') as HTMLInputElement | null)?.checked ?? false;
-    const stepDelay = () =>
-      Math.max(60, Number((document.getElementById('jvm-delay') as HTMLInputElement | null)?.value) || 600);
-    const stepWait = () => {
-      if (!nextBtn) return Promise.resolve();
-      if (stepMode()) {
-        nextBtn.classList.remove('hidden');
-        return new Promise<void>((resolve) => {
-          resumeStep = resolve;
-        }).then(() => nextBtn.classList.add('hidden'));
-      }
-      return new Promise<void>((resolve) => setTimeout(resolve, stepDelay()));
-    };
-    const advanceStep = () => {
-      resumeStep?.();
-      resumeStep = null;
-    };
-
-    const showBanner = (msg: string, type: 'info' | 'warn' | 'error' = 'info') => {
-      const banner = document.getElementById('gc-status-banner');
-      const text = document.getElementById('gc-status-msg');
-      if (!banner || !text) return;
-      text.textContent = msg;
-      banner.className =
-        type === 'error'
-          ? 'rounded-lg border border-rose-500 bg-rose-950/40 px-4 py-2 font-mono text-xs text-rose-300'
-          : type === 'warn'
-            ? 'rounded-lg border border-amber-500 bg-amber-950/40 px-4 py-2 font-mono text-xs text-amber-300'
-            : 'rounded-lg border border-sky-500 bg-sky-950/30 px-4 py-2 font-mono text-xs text-sky-300';
-    };
-
-    const updateMetrics = () => {
-      const edenUsed = sumSize(eden);
-      const s0Used = sumSize(s0);
-      const s1Used = sumSize(s1);
-      const tenuredUsed = sumSize(tenured);
-      const totalUsed = edenUsed + s0Used + s1Used + tenuredUsed;
-
-      const set = (id: string, v: string) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = v;
-      };
-      const bar = (id: string, used: number, cap: number) => {
-        const el = document.getElementById(id);
-        if (el) el.style.width = `${Math.min(100, (used / cap) * 100)}%`;
-      };
-
-      set('metric-heap-pct', `${Math.min(100, Math.round((totalUsed / MAX_HEAP_MB) * 100))}%`);
-      set('metric-heap-bytes', `${totalUsed} / ${MAX_HEAP_MB} MB`);
-      set('metric-minor-count', `${minorCount}`);
-      set('metric-minor-time', `${minorCount * 4} ms pause`);
-      set('metric-major-count', `${majorCount}`);
-      set('metric-major-time', `${majorCount * 18} ms pause`);
-      set('metric-stw-total', `${totalStwMs.toFixed(1)} ms`);
-      set('metric-live-objects', `${eden.length + s0.length + s1.length + tenured.length} objects`);
-
-      bar('bar-eden', edenUsed, EDEN_CAP_MB);
-      bar('bar-s0', s0Used, SURVIVOR_CAP_MB);
-      bar('bar-s1', s1Used, SURVIVOR_CAP_MB);
-      bar('bar-tenured', tenuredUsed, TENURED_CAP_MB);
-      set('label-eden', `${edenUsed} / ${EDEN_CAP_MB} MB`);
-      set('label-s0', `${s0Used} / ${SURVIVOR_CAP_MB} MB`);
-      set('label-s1', `${s1Used} / ${SURVIVOR_CAP_MB} MB`);
-      set('label-tenured', `${tenuredUsed} / ${TENURED_CAP_MB} MB`);
-
-      renderObjectBadges();
-    };
-
-    const renderObjectBadges = () => {
-      const renderList = (elId: string, items: SimulatedObject[], colorCls: string) => {
-        const el = document.getElementById(elId);
-        if (!el) return;
-        el.innerHTML = items
-          .slice(0, 36)
-          .map((o) => {
-            let borderCls = o.isLeaked ? 'border-rose-500 bg-rose-500/20 text-rose-300' : colorCls;
-            if (o.isAlive === false) borderCls = 'border-slate-700 bg-slate-900/60 text-slate-500 line-through opacity-40';
-            else if (o.isAlive === true) borderCls = 'border-emerald-400 bg-emerald-500/30 text-emerald-300 shadow-[0_0_8px_#34d399]';
-            return `<span class="inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[9px] ${borderCls}" title="Object #${o.id} | Size: ${o.sizeMb}MB | Age: ${o.age}">
-              #${o.id}<sub class="text-[8px] opacity-75">${o.age}</sub>
-            </span>`;
-          })
-          .join('');
-      };
-
-      renderList('eden-objects', eden, 'border-sky-500/50 bg-sky-500/10 text-sky-300');
-      renderList('s0-objects', s0, 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300');
-      renderList('s1-objects', s1, 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300');
-      renderList('tenured-objects', tenured, 'border-amber-500/50 bg-amber-500/10 text-amber-300');
-    };
-
-    const allocateObjects = (count: number, isLeaked = false) => {
-      for (let i = 0; i < count; i++) {
-        eden.push({ id: nextId++, sizeMb: 1, age: 0, isLeaked });
-      }
-      showBanner(
-        `Allocated ${count} objects into Eden — ${eden.length} MB/${EDEN_CAP_MB} MB${isLeaked ? ' (leaked: pinned root, never collected)' : ''}.`,
-        isLeaked ? 'warn' : 'info',
-      );
-      updateMetrics();
-
-      if (sumSize(eden) >= EDEN_CAP_MB * 0.85 && !isProcessing) {
-        showBanner('Eden crossed the 85% threshold — Minor GC auto-triggered…', 'warn');
-        setTimeout(runMinorGC, 400);
-      }
-    };
-
-    // Minor GC phases: STW → mark → copy → promote
-    const runMinorGC = async () => {
-      if (isProcessing) return;
-      isProcessing = true;
-
-      const stwPause = 3.5 + Math.random() * 2.5;
-      totalStwMs += stwPause;
-      showBanner(`Minor GC #${minorCount + 1}: Stop-The-World — paused ${stwPause.toFixed(1)} ms. Scanning roots…`, 'warn');
-      await stepWait();
-
-      // Root tracing: ~85% of objects die young
-      eden.forEach((o) => {
-        o.isAlive = o.isLeaked || Math.random() < 0.2;
-      });
-      const activeSurvivor = activeSurvivorIndex === 0 ? s0 : s1;
-      activeSurvivor.forEach((o) => {
-        o.isAlive = o.isLeaked || Math.random() < 0.6;
-      });
-      showBanner('Root tracing: struck-through cards = dead objects, glowing borders = still alive.');
-      updateMetrics();
-      await stepWait();
-
-      // Copy survivors to To-space
-      const toSpace = activeSurvivorIndex === 0 ? s1 : s0;
-      eden.filter((o) => o.isAlive).forEach((o) => {
-        o.age += 1;
-        o.isAlive = undefined;
-        toSpace.push(o);
-      });
-      activeSurvivor.filter((o) => o.isAlive).forEach((o) => {
-        o.age += 1;
-        o.isAlive = undefined;
-        toSpace.push(o);
-      });
-      eden = [];
-      if (activeSurvivorIndex === 0) s0 = [];
-      else s1 = [];
-      showBanner('Copying surviving objects to To Space (age++). Eden is now empty.');
-      updateMetrics();
-      await stepWait();
-
-      // Promotion & sweep
-      const promoted: SimulatedObject[] = [];
-      const keepInSurvivor: SimulatedObject[] = [];
-      toSpace.forEach((o) => {
-        if (o.age >= 3 || o.isLeaked) promoted.push(o);
-        else keepInSurvivor.push(o);
-      });
-      tenured.push(...promoted);
-      if (activeSurvivorIndex === 0) s1 = keepInSurvivor;
-      else s0 = keepInSurvivor;
-
-      activeSurvivorIndex = activeSurvivorIndex === 0 ? 1 : 0;
-      minorCount++;
-      updateMetrics();
-
-      showBanner(`Minor GC #${minorCount} done: promoted ${promoted.length} objects to Old Gen, total STW ${totalStwMs.toFixed(1)} ms.`);
-      isProcessing = false;
-
-      if (sumSize(tenured) >= TENURED_CAP_MB * 0.88) {
-        showBanner('Old Gen full (>88%) — Full GC auto-triggered…', 'warn');
-        setTimeout(runFullGC, 600);
-      }
-    };
-
-    const runFullGC = async () => {
-      if (isProcessing) return;
-      isProcessing = true;
-
-      const stwPause = 14.5 + Math.random() * 8.5;
-      totalStwMs += stwPause;
-      majorCount++;
-
-      showBanner(`FULL GC: Stop-The-World froze the entire system ${stwPause.toFixed(1)} ms! Scanning Old + Young…`, 'warn');
-      await stepWait();
-
-      // Only leaked objects survive yet keep hogging the heap
-      tenured = tenured.filter((o) => o.isLeaked);
-      eden = [];
-      s0 = [];
-      s1 = [];
-
-      updateMetrics();
-      if (sumSize(tenured) >= TENURED_CAP_MB * 0.9) {
-        showBanner('java.lang.OutOfMemoryError: Java heap space — leaked objects cannot be freed!', 'error');
-      } else {
-        showBanner(`Full GC #${majorCount} done: Young + Old reclaimed, compacted. Total STW ${totalStwMs.toFixed(1)} ms.`);
-      }
-      isProcessing = false;
-    };
-
-    const bind = (id: string, fn: () => void) => document.getElementById(id)?.addEventListener('click', fn);
-    bind('btn-alloc-10', () => allocateObjects(10));
-    bind('btn-alloc-50', () => allocateObjects(50));
-    bind('btn-minor-gc', runMinorGC);
-    bind('btn-major-gc', runFullGC);
-    bind('btn-leak-sim', () => allocateObjects(20, true));
-    document.getElementById('jvm-next')?.addEventListener('click', advanceStep);
-    bind('btn-reset-heap', () => {
-      eden = [];
-      s0 = [];
-      s1 = [];
-      tenured = [];
-      minorCount = 0;
-      majorCount = 0;
-      totalStwMs = 0;
-      activeSurvivorIndex = 0;
-      showBanner('JVM heap reset to its initial state.');
-      advanceStep();
-      nextBtn?.classList.add('hidden');
-      updateMetrics();
-    });
-
-    updateMetrics();
-  }
-
-  document.addEventListener('astro:page-load', initJVMVisualizer);
+    bootEngine();
+    initJVMVisualizer();
+  });
 </script>
 
 <style is:global>

@@ -11,68 +11,90 @@ const currentlyReading = (booksData.currentlyReading ?? []).slice(0, 3) as Array
   authorName: string;
   bookMediumImageUrl?: string;
 }>;
+
+type MusicItem = string | { label: string; items: string[] };
+const musicItems: MusicItem[] = Array.isArray(nowData.entertainment.music)
+  ? (nowData.entertainment.music as MusicItem[])
+  : nowData.entertainment.music
+    ? [nowData.entertainment.music as string]
+    : [];
 ---
 
 <BaseLayout title="Now" description="What I'm doing right now — projects, learning focus, books, and hobbies. Inspired by Derek Sivers.">
   <header class="mb-9 border-b border-(--border) pb-7">
-    <div class="flex items-center gap-2 mb-2 font-mono text-xs text-(--fg-faint)">
+    <div class="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-(--fg-faint)">
       <span class="text-(--accent)">●</span>
       <span>Live Status</span>
       <span class="text-(--border)">/</span>
       <span>{nowData.location}</span>
-      <span class="ml-auto rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] text-(--fg-dim)">
+      <span class="ml-auto shrink-0 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] text-(--fg-dim)">
         Last updated: {nowData.updatedAt}
       </span>
     </div>
     <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
       now
     </h1>
-    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
+    {nowData.status && (
+      <p class="mt-3 max-w-[42.5rem] font-mono text-sm text-(--accent)">
+        → {nowData.status}
+      </p>
+    )}
+    <p class="mt-2 max-w-[42.5rem] text-base text-(--fg-dim)">
       A snapshot of what I'm focused on right now — this is my <a href="https://nownownow.com/about" target="_blank" rel="noopener noreferrer" class="text-(--fg) underline hover:text-(--accent)">/now page</a>.
     </p>
   </header>
 
   <div class="space-y-12">
     <!-- Currently Building -->
-    <section>
-      <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
-        <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🛠️ What I'm Building</h2>
-        <span class="flex-1"></span>
-        <span class="font-mono text-xs text-(--fg-faint)">{nowData.building.length} active</span>
-      </div>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {
-          nowData.building.map((item) => (
-            <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5 transition-colors hover:border-(--fg-dim)">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="m-0 font-mono text-sm font-semibold text-(--fg)">{item.title}</h3>
-                <span class="rounded border border-(--border) px-1.5 py-0.5 font-mono text-[10px] text-(--fg-faint)">
-                  {item.tag}
-                </span>
+    {nowData.building.length > 0 && (
+      <section>
+        <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
+          <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🛠️ What I'm Building</h2>
+          <span class="flex-1"></span>
+          <span class="font-mono text-xs text-(--fg-faint)">{nowData.building.length} active</span>
+        </div>
+        <div class={`grid grid-cols-1 gap-4 ${nowData.building.length === 2 ? 'md:grid-cols-2' : nowData.building.length >= 3 ? 'md:grid-cols-3' : ''}`}>
+          {
+            nowData.building.map((item) => (
+              <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5 transition-colors hover:border-(--fg-dim)">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <h3 class="m-0 font-mono text-sm font-semibold text-(--fg)">{item.title}</h3>
+                  {item.tag && (
+                    <div class="flex flex-wrap gap-1 justify-end shrink-0">
+                      {item.tag.split(' ').filter(Boolean).map((t) => (
+                        <span class="rounded border border-(--border) px-1.5 py-0.5 font-mono text-[10px] text-(--fg-faint)">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {item.desc && <p class="m-0 text-xs leading-relaxed text-(--fg-dim)">{item.desc}</p>}
               </div>
-              <p class="m-0 text-xs leading-relaxed text-(--fg-dim)">{item.desc}</p>
-            </div>
-          ))
-        }
-      </div>
-    </section>
+            ))
+          }
+        </div>
+      </section>
+    )}
 
     <!-- Currently Studying -->
-    <section>
-      <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
-        <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🧠 What I'm Studying & Exploring</h2>
-      </div>
-      <ul class="space-y-3 font-mono text-xs">
-        {
-          nowData.studying.map((item) => (
-            <li class="flex items-start gap-3 rounded-lg border border-(--border) bg-(--bg-alt) p-3 text-(--fg-dim)">
-              <span class="text-(--accent) mt-0.5">▹</span>
-              <span class="leading-relaxed">{item}</span>
-            </li>
-          ))
-        }
-      </ul>
-    </section>
+    {nowData.studying.length > 0 && (
+      <section>
+        <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
+          <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🧠 What I'm Studying & Exploring</h2>
+        </div>
+        <ul class="space-y-3 font-mono text-xs">
+          {
+            nowData.studying.map((item) => (
+              <li class="flex items-start gap-3 rounded-lg border border-(--border) bg-(--bg-alt) p-3 text-(--fg-dim)">
+                <span class="text-(--accent) mt-0.5">▹</span>
+                <span class="leading-relaxed">{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    )}
 
     <!-- Currently Reading -->
     {
@@ -115,32 +137,56 @@ const currentlyReading = (booksData.currentlyReading ?? []).slice(0, 3) as Array
     }
 
     <!-- Entertainment & Gaming -->
-    <section>
-      <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
-        <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🎮 Chilling & Downtime</h2>
-      </div>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5">
-          <h3 class="m-0 mb-3 font-mono text-xs font-semibold uppercase text-(--fg-dim)">Current Games</h3>
-          <div class="space-y-2">
-            {
-              nowData.entertainment.games.map((g) => (
-                <div class="flex items-center justify-between font-mono text-xs">
-                  <span class="font-semibold text-(--fg)">{g.name}</span>
-                  <span class="text-[11px] text-(--fg-faint)">{g.detail}</span>
-                </div>
-              ))
-            }
-          </div>
+    {(nowData.entertainment.games.length > 0 || nowData.entertainment.music) && (
+      <section>
+        <div class="mb-5 flex items-center gap-3 border-b border-(--border) pb-2">
+          <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">🎮 Chilling & Downtime</h2>
         </div>
-
-        <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5">
-          <h3 class="m-0 mb-3 font-mono text-xs font-semibold uppercase text-(--fg-dim)">Music & Soundtracks</h3>
-          <p class="m-0 font-mono text-xs leading-relaxed text-(--fg-dim)">
-            {nowData.entertainment.music}
-          </p>
+        <div class={`grid grid-cols-1 gap-4 ${nowData.entertainment.games.length > 0 && nowData.entertainment.music ? 'sm:grid-cols-2' : ''}`}>
+          {nowData.entertainment.games.length > 0 && (
+            <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5">
+              <h3 class="m-0 mb-3 font-mono text-xs font-semibold uppercase text-(--fg-dim)">Current Games</h3>
+              <div class="space-y-2">
+                {
+                  nowData.entertainment.games.map((g) => (
+                    <div class="flex items-center justify-between font-mono text-xs">
+                      <span class="font-semibold text-(--fg)">{g.name}</span>
+                      {g.detail && <span class="text-[11px] text-(--fg-faint)">{g.detail}</span>}
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          )}
+          {musicItems.length > 0 && (
+            <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-5">
+              <h3 class="m-0 mb-3 font-mono text-xs font-semibold uppercase text-(--fg-dim)">Music & Soundtracks</h3>
+              <ul class="space-y-2">
+                {musicItems.map((item) =>
+                  typeof item === 'string' ? (
+                    <li class="flex items-start gap-2 font-mono text-xs text-(--fg-dim)">
+                      <span class="text-(--accent) mt-0.5 shrink-0">♪</span>
+                      <span class="leading-relaxed">{item}</span>
+                    </li>
+                  ) : (
+                    <li>
+                      <p class="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-(--fg-faint)">{item.label.replace(/:$/, '')}</p>
+                      <ul class="space-y-1 pl-3 border-l border-(--border)">
+                        {item.items.map((sub) => (
+                          <li class="flex items-start gap-2 font-mono text-xs text-(--fg-dim)">
+                            <span class="text-(--accent) mt-0.5 shrink-0">♪</span>
+                            <span class="leading-relaxed">{sub}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+          )}
         </div>
-      </div>
-    </section>
+      </section>
+    )}
   </div>
 </BaseLayout>
