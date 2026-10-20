@@ -1,0 +1,179 @@
+---
+import type { JavaTab } from '@/scripts/lab/java/java-tabs';
+
+interface Props {
+  tab: JavaTab;
+}
+const { tab } = Astro.props;
+---
+
+<div class="mt-3 space-y-5">
+  <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+    <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
+      <span class="flex items-center gap-2"><span class="text-(--accent)">📖 Heap architecture &amp; GC mechanics</span></span>
+      <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+    </summary>
+    <p class="mt-3 border-t border-(--border) pt-3 font-sans text-sm leading-relaxed text-(--fg-dim)"><strong class="mr-1 text-(--fg)">🎯 the idea, in plain words —</strong>{tab.explain}</p>
+    <p class="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 font-sans text-sm leading-relaxed">
+      <strong class="mr-1 text-amber-400">why does it work this way?</strong>
+      <span class="text-(--fg-dim)">{tab.why}</span>
+    </p>
+    <p class="mt-4 text-[10px] font-semibold uppercase tracking-wider text-(--fg-faint)">⚙ mechanism — read the four cards in order</p>
+    <p class="mt-1 font-sans text-xs leading-relaxed text-(--fg-faint)">{tab.flow}</p>
+    <div class="mt-4 grid grid-cols-1 gap-4 text-(--fg-dim) md:grid-cols-2">
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+        <strong class="text-sky-400">Generational Hypothesis</strong>
+        <p class="mt-1">~90% of objects die young → the heap splits into <strong>Young Gen</strong> (new) and <strong>Old Gen</strong> (long-lived) so GC scans efficiently.</p>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+        <strong class="text-emerald-400">Minor GC &amp; Survivor Swap</strong>
+        <p class="mt-1">Eden full → trace live roots, copy survivors into Survivor (To) with <code class="text-emerald-400">age++</code>, everything else is swept away.</p>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+        <strong class="text-amber-400">Promotion</strong>
+        <p class="mt-1">Objects surviving to <code class="text-amber-400">age ≥ 3</code> (or leaked) get promoted into <strong>Old Gen</strong>.</p>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+        <strong class="text-rose-400">Major GC &amp; Stop-The-World</strong>
+        <p class="mt-1">Old Gen full → Full GC stops all threads (STW) to scan + compact — the prime suspect behind latency.</p>
+      </div>
+    </div>
+    <div>
+      <p class="mt-3 text-[10px] font-semibold uppercase tracking-wider text-(--fg-faint)">⌨ code in half a screen</p>
+      <pre
+        class="thin-scrollbar overflow-auto rounded-lg border border-(--border) bg-black/50 p-3 font-mono text-[11px] leading-relaxed text-(--fg)"
+        set:text={tab.code}
+      />
+    </div>
+    <p class="mt-3 text-[11px] text-(--accent)">▶ watch it live — run Minor / Full GC in the heap simulator below, step mode included.</p>
+  </details>
+
+  <div class="grid grid-cols-2 gap-2.5 font-mono text-xs sm:grid-cols-4">
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3">
+      <div class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Heap Utilization</div>
+      <div id="metric-heap-pct" class="mt-0.5 text-lg font-bold text-(--fg)">0%</div>
+      <div id="metric-heap-bytes" class="text-[10px] text-(--fg-dim)">0 / 224 MB</div>
+    </div>
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3">
+      <div class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Minor GCs</div>
+      <div id="metric-minor-count" class="mt-0.5 text-lg font-bold text-emerald-400">0</div>
+      <div id="metric-minor-time" class="text-[10px] text-(--fg-dim)">0 ms pause</div>
+    </div>
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3">
+      <div class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Full GCs</div>
+      <div id="metric-major-count" class="mt-0.5 text-lg font-bold text-amber-400">0</div>
+      <div id="metric-major-time" class="text-[10px] text-(--fg-dim)">0 ms pause</div>
+    </div>
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3">
+      <div class="text-[10px] uppercase tracking-wider text-(--fg-faint)">STW Total</div>
+      <div id="metric-stw-total" class="mt-0.5 text-lg font-bold text-rose-400">0 ms</div>
+      <div id="metric-live-objects" class="text-[10px] text-(--fg-dim)">0 objects</div>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 rounded-xl border border-(--border) bg-(--bg-alt) p-3 font-mono text-xs">
+    <span class="mr-1 text-[11px] uppercase tracking-wider text-(--fg-faint)">heap:</span>
+    <button type="button" id="btn-alloc-10" class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg) transition-colors hover:border-(--fg-dim) hover:text-(--accent) active:scale-95">+10 obj</button>
+    <button type="button" id="btn-alloc-50" class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg) transition-colors hover:border-(--fg-dim) hover:text-(--accent) active:scale-95">+50 obj</button>
+    <button type="button" id="btn-minor-gc" class="cursor-pointer rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-emerald-400 transition-colors hover:bg-emerald-500/20 active:scale-95">▶ Minor GC</button>
+    <button type="button" id="btn-major-gc" class="cursor-pointer rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-amber-400 transition-colors hover:bg-amber-500/20 active:scale-95">🧹 Full GC</button>
+    <button type="button" id="btn-leak-sim" class="cursor-pointer rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-1.5 text-rose-400 transition-colors hover:bg-rose-500/20 active:scale-95">💧 Leak ×20</button>
+    <button type="button" id="btn-reset-heap" class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg-dim) transition-colors hover:text-(--fg)">↻ Reset</button>
+    <div class="mt-3 flex w-full flex-wrap items-center gap-4 border-t border-(--border) pt-2.5">
+      <span class="text-[11px] uppercase tracking-wider text-(--fg-faint)">⚙ step control:</span>
+      <label class="flex cursor-pointer select-none items-center gap-1.5 text-[11px] text-(--fg-dim)">
+        <input type="checkbox" id="jvm-step-mode" class="accent-(--accent)" />
+        step mode — GC pauses at every phase, click Next to advance
+      </label>
+      <label class="flex items-center gap-1.5 text-[11px] text-(--fg-dim)">
+        delay
+        <input
+          type="number" id="jvm-delay" min="60" max="3000" step="50" value="600"
+          class="w-16 rounded border border-(--border) bg-(--bg) px-1.5 py-0.5 text-center text-(--fg)"
+        />
+        ms/step
+      </label>
+      <button
+        type="button" id="jvm-next"
+        class="hidden cursor-pointer rounded-lg border border-(--accent) bg-(--accent)/10 px-3 py-1 text-[11px] text-(--accent)"
+      >▶ next step ▸</button>
+    </div>
+  </div>
+
+  <div id="gc-status-banner" class="hidden rounded-lg border px-4 py-2 font-mono text-xs">
+    <span id="gc-status-msg"></span>
+  </div>
+
+  <div class="space-y-4 rounded-xl border border-(--border) bg-(--bg) p-4">
+    <div class="flex items-center justify-between border-b border-(--border) pb-2.5">
+      <h2 class="font-mono text-xs font-semibold uppercase tracking-wider text-(--fg)">JVM Heap — Generational</h2>
+      <span class="font-mono text-[11px] text-(--fg-faint)">Max 224 MB</span>
+    </div>
+    <div class="rounded-xl border border-sky-500/30 bg-sky-950/10 p-3.5">
+      <div class="mb-2 flex items-center justify-between font-mono text-xs text-sky-400">
+        <span class="font-semibold uppercase tracking-wider">Young Generation (96 MB)</span>
+        <span class="text-[11px] text-(--fg-faint)">Eden 64 · S0 16 · S1 16</span>
+      </div>
+      <div class="grid grid-cols-1 gap-3 font-mono text-xs md:grid-cols-3">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-(--fg)">Eden</span>
+            <span id="label-eden" class="text-[10px] text-sky-400">0 / 64 MB</span>
+          </div>
+          <div class="mt-2 w-full overflow-hidden rounded border border-(--border) bg-(--bg-alt)">
+            <div id="bar-eden" class="h-2.5 bg-sky-500 transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div id="eden-objects" class="mt-2.5 flex min-h-[52px] flex-wrap content-start gap-1"></div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-(--fg)">Survivor 0</span>
+            <span id="label-s0" class="text-[10px] text-emerald-400">0 / 16 MB</span>
+          </div>
+          <div class="mt-2 w-full overflow-hidden rounded border border-(--border) bg-(--bg-alt)">
+            <div id="bar-s0" class="h-2.5 bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div id="s0-objects" class="mt-2.5 flex min-h-[52px] flex-wrap content-start gap-1"></div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-(--fg)">Survivor 1</span>
+            <span id="label-s1" class="text-[10px] text-emerald-400">0 / 16 MB</span>
+          </div>
+          <div class="mt-2 w-full overflow-hidden rounded border border-(--border) bg-(--bg-alt)">
+            <div id="bar-s1" class="h-2.5 bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div id="s1-objects" class="mt-2.5 flex min-h-[52px] flex-wrap content-start gap-1"></div>
+        </div>
+      </div>
+    </div>
+    <div class="rounded-xl border border-amber-500/30 bg-amber-950/10 p-3.5">
+      <div class="mb-2 flex items-center justify-between font-mono text-xs text-amber-400">
+        <span class="font-semibold uppercase tracking-wider">Old Generation (128 MB)</span>
+        <span class="text-[11px] text-(--fg-faint)">promoted survivors &amp; leaks</span>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-3 font-mono text-xs">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-(--fg)">Tenured</span>
+          <span id="label-tenured" class="text-[10px] text-amber-400">0 / 128 MB</span>
+        </div>
+        <div class="mt-2 w-full overflow-hidden rounded border border-(--border) bg-(--bg-alt)">
+          <div id="bar-tenured" class="h-3 bg-amber-500 transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div id="tenured-objects" class="mt-2.5 flex min-h-[60px] flex-wrap content-start gap-1"></div>
+      </div>
+    </div>
+    <div class="rounded-xl border border-purple-500/30 bg-purple-950/10 p-3.5 font-mono text-xs">
+      <div class="mb-1.5 flex items-center justify-between text-purple-400">
+        <span class="font-semibold uppercase tracking-wider">Metaspace (32 MB)</span>
+        <span class="text-[11px] text-(--fg-faint)">class metadata — static filler</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="h-2 flex-1 overflow-hidden rounded border border-(--border) bg-(--bg)">
+          <div class="h-full bg-purple-500" style="width: 45%"></div>
+        </div>
+        <span class="text-[11px] text-(--fg-dim)">14.4 / 32 MB</span>
+      </div>
+    </div>
+  </div>
+</div>

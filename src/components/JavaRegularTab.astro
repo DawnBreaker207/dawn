@@ -1,0 +1,43 @@
+---
+import LabSimCard from '@/components/LabSimCard.astro';
+import type { JavaTab } from '@/scripts/lab/java/java-tabs';
+import type { SimCase, VizCfg } from '@/scripts/lab/java/sim-engine';
+
+interface Props {
+  tab: JavaTab;
+  cases: SimCase[];
+  viz: VizCfg[];
+}
+const { tab, cases, viz } = Astro.props;
+---
+
+<details class="group mt-3 rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
+  <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
+    <span class="flex items-center gap-2">
+      <span class={tab.tone}>📖 theory &amp; mechanism</span>
+      <span class="text-[10px] font-normal text-(--fg-faint)">plain words · why · mechanism · code</span>
+    </span>
+    <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+  </summary>
+  <div class="mt-4 space-y-3 border-t border-(--border) pt-3">
+    <p class="font-sans text-sm leading-relaxed text-(--fg-dim)"><strong class="mr-1 text-(--fg)">🎯 the idea, in plain words —</strong>{tab.explain}</p>
+    <p class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 font-sans text-sm leading-relaxed">
+      <strong class="mr-1 text-amber-400">why does it work this way?</strong>
+      <span class="text-(--fg-dim)">{tab.why}</span>
+    </p>
+    <div>
+      <p class="text-[10px] font-semibold uppercase tracking-wider text-(--fg-faint)">⚙ mechanism — follow the arrows</p>
+      <p class="mt-1 font-sans text-xs leading-relaxed text-(--fg-faint)">{tab.flow}</p>
+      <div class="mt-1.5" set:html={tab.diagram} />
+    </div>
+    <div>
+      <p class="text-[10px] font-semibold uppercase tracking-wider text-(--fg-faint)">⌨ code in half a screen</p>
+      <pre
+        class="thin-scrollbar overflow-auto rounded-lg border border-(--border) bg-black/50 p-3 font-mono text-[11px] leading-relaxed text-(--fg)"
+        set:text={tab.code}
+      />
+    </div>
+    <p class="text-[11px] text-(--accent)">▶ watch it live in the sim below — pick a case, tick step mode to pause at every stage.</p>
+  </div>
+</details>
+<LabSimCard topic={tab.id} cases={cases} code={viz[0]?.code} track={viz[0]?.track} />

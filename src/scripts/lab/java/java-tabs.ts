@@ -12,7 +12,7 @@ export interface JavaTab {
   code: string;
 }
 
-interface SubTopic {
+export interface SubTopic {
   id: string;
   label: string;
   explain: string;
