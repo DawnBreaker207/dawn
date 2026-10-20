@@ -103,6 +103,8 @@ function buildTokenBurnPayload(summary: TokenBurnSummary): TokenBurnPayload {
     last30Days,
     topModels: modelSlices(todayRow?.byModel, 10),
     machines,
+    // The rail sparkline also reads the daily series; ~29 rows is still tiny.
+    daily: toDailyPoints(daily),
     lastActivity: summary.lastActivity ?? undefined,
   };
 }
@@ -115,6 +117,12 @@ function toDailyPoints(daily: TokenBurnDailyRow[]): TokenBurnDailyPoint[] {
       tokens: row.tokens ?? 0,
       cost: row.cost ?? 0,
       sessions: row.sessions ?? 0,
+      byModel: Object.fromEntries(
+        Object.entries(row.byModel ?? {}).map(([model, slice]) => [
+          model,
+          { tokens: slice.tokens ?? 0, cost: slice.cost ?? 0 },
+        ]),
+      ),
     }));
 }
 

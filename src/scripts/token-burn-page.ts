@@ -1,4 +1,12 @@
 // /tokens hydration: fetch view=full after first paint, fill the static skeleton.
+import {
+  formatApproxUsd,
+  formatTokens,
+  INLINE_MODEL_ICONS,
+  modelBrandIcon,
+  modelColor,
+  shortModelName,
+} from '@/lib/runtime/llm-format';
 import type { TokenBurnFullPayload, TokenBurnModelSlice, TokenBurnWindow } from '@/types/token-burn';
 
 const CHART_DAYS = 90;
@@ -14,23 +22,8 @@ function show(selector: string, visible: boolean, root: ParentNode = document) {
   if (element) element.hidden = !visible;
 }
 
-export function formatTokens(value: number | null | undefined): string {
-  const tokens = value ?? 0;
-  if (tokens >= 1e9) return `${(tokens / 1e9).toFixed(2)}B`;
-  if (tokens >= 1e6) return `${(tokens / 1e6).toFixed(1)}M`;
-  if (tokens >= 1e3) return `${(tokens / 1e3).toFixed(1)}K`;
-  return tokens.toLocaleString();
-}
-
-// Cost is an estimated retail figure, so round to whole dollars.
-function formatUsd(value: number | null | undefined): string {
-  const cost = value ?? 0;
-  if (cost > 0 && cost < 1) return '~<$1';
-  return `~$${Math.round(cost).toLocaleString()}`;
-}
-
 function costLabel(cost: number): string {
-  return cost > 0 ? formatUsd(cost) : '—';
+  return cost > 0 ? formatApproxUsd(cost) : '—';
 }
 
 function windowMeta(window: TokenBurnWindow): string {
@@ -39,9 +32,9 @@ function windowMeta(window: TokenBurnWindow): string {
 
 function updateHero(root: HTMLElement, tb: TokenBurnFullPayload) {
   text('[data-tok-hero-tokens]', tb.allTime.tokens.toLocaleString(), root);
-  text('[data-tok-meta="spend"]', formatUsd(tb.allTime.cost), root);
-  text('[data-tok-meta="sessions"]', tb.allTime.sessions.toLocaleString(), root);
-  text('[data-tok-meta="messages"]', tb.allTime.messages.toLocaleString(), root);
+  text('[data-tok-stat="spend"]', `${formatApproxUsd(tb.allTime.cost)} est`, root);
+  text('[data-tok-stat="sessions"]', tb.allTime.sessions.toLocaleString(), root);
+  text('[data-tok-stat="machines"]', String(tb.machines.length || '—'), root);
 }
 
 function updateWindows(root: HTMLElement, tb: TokenBurnFullPayload) {
@@ -56,16 +49,39 @@ function updateWindows(root: HTMLElement, tb: TokenBurnFullPayload) {
   }
 }
 
-function buildChartBar(tokens: number, maxTokens: number, isPeak: boolean, delayMs: number, tooltip: string) {
+function buildChartBar(day: TokenBurnFullPayload['daily'][number], maxTokens: number, isPeak: boolean, delayMs: number) {
   const group = document.createElement('div');
-  group.className = 'tok-bar-group relative flex h-full flex-1 items-end';
-  const bar = document.createElement('div');
-  const height = Math.max(1.5, (tokens / maxTokens) * 100);
-  bar.className = `tok-bar w-full rounded-t-xs ${isPeak ? 'is-peak' : ''}`;
-  bar.style.height = `${height}%`;
-  bar.style.animationDelay = `${delayMs}ms`;
-  bar.setAttribute('title', tooltip);
-  group.append(bar);
+  group.className = 'tok-bar-group relative flex h-full flex-1 items-end justify-end';
+
+  // Stacked per-model segments (Leo has none — this is the house diff).
+  const stack = document.createElement('div');
+  stack.className = `tok-stack w-full ${isPeak ? 'is-peak' : ''}`;
+  stack.style.animationDelay = `${delayMs}ms`;
+
+  const segments = Object.entries(day.byModel ?? {})
+    .sort((a, b) => b[1].tokens - a[1].tokens);
+  if (segments.length === 0) {
+    const seg = document.createElement('span');
+    seg.className = 'tok-seg';
+    seg.style.height = `${Math.max(1.5, (day.tokens / maxTokens) * 100)}%`;
+    seg.style.background = 'var(--fg)';
+    stack.append(seg);
+  } else {
+    for (const [model, slice] of segments) {
+      const seg = document.createElement('span');
+      seg.className = 'tok-seg';
+      seg.style.height = `${(slice.tokens / maxTokens) * 100}%`;
+      seg.style.background = modelColor(model);
+      seg.setAttribute('title', `${shortModelName(model)} · ${formatTokens(slice.tokens)}`);
+      stack.append(seg);
+    }
+  }
+
+  const tooltip = document.createElement('span');
+  tooltip.className = 'tok-tooltip';
+  tooltip.textContent = `${day.date} · ${formatTokens(day.tokens)} · ${costLabel(day.cost)}`;
+
+  group.append(stack, tooltip);
   return group;
 }
 
@@ -84,13 +100,7 @@ function updateChart(root: HTMLElement, tb: TokenBurnFullPayload) {
 
   bars.replaceChildren(
     ...series.map((day, index) =>
-      buildChartBar(
-        day.tokens,
-        maxTokens,
-        index === peakIndex,
-        200 + index * 9,
-        `${day.date} · ${formatTokens(day.tokens)} · ${costLabel(day.cost)}`,
-      ),
+      buildChartBar(day, maxTokens, index === peakIndex, 200 + index * 9),
     ),
   );
 
@@ -104,15 +114,31 @@ function updateChart(root: HTMLElement, tb: TokenBurnFullPayload) {
 
 function buildModelRow(model: TokenBurnModelSlice, rank: number, maxTokens: number, totalTokens: number) {
   const row = document.createElement('div');
-  row.className = 'tok-model-row flex items-center gap-3 sm:gap-4 px-4 py-2.5';
+  row.className = 'tok-model-row flex items-center gap-3 px-4 py-2.5';
 
   const rankEl = document.createElement('span');
   rankEl.className = 'w-5 shrink-0 font-mono text-[11px] text-(--fg-faint)';
   rankEl.textContent = String(rank).padStart(2, '0');
 
+  const dot = document.createElement('span');
+  dot.className = 'h-2 w-2 shrink-0 rounded-full';
+  dot.style.background = modelColor(model.model);
+
+  const brand = modelBrandIcon(model.model);
+  const icon = document.createElement(brand.type === 'cdn' ? 'img' : 'span');
+  if (brand.type === 'cdn') {
+    icon.setAttribute('src', `https://cdn.simpleicons.org/${brand.slug}`);
+    icon.setAttribute('alt', '');
+    icon.setAttribute('loading', 'lazy');
+    icon.className = 'h-4 w-4 shrink-0';
+  } else {
+    icon.className = 'inline-flex h-4 w-4 shrink-0 items-center justify-center text-(--fg)';
+    icon.innerHTML = INLINE_MODEL_ICONS[brand.key] ?? '';
+  }
+
   const name = document.createElement('span');
-  name.className = 'min-w-0 flex-1 truncate text-sm sm:flex-none sm:w-64';
-  name.textContent = model.model;
+  name.className = 'min-w-0 flex-1 truncate text-sm sm:flex-none sm:w-60';
+  name.textContent = shortModelName(model.model);
   name.setAttribute('title', model.model);
 
   const barWrap = document.createElement('span');
@@ -133,15 +159,15 @@ function buildModelRow(model: TokenBurnModelSlice, rank: number, maxTokens: numb
 
   const cost = document.createElement('span');
   cost.className = 'w-20 shrink-0 text-right font-mono text-xs text-(--fg-faint)';
-  cost.textContent = model.cost > 0 ? formatUsd(model.cost) : '—';
+  cost.textContent = model.cost > 0 ? formatApproxUsd(model.cost) : '—';
 
-  row.append(rankEl, name, barWrap, tokens, share, cost);
+  row.append(rankEl, dot, icon, name, barWrap, tokens, share, cost);
   return row;
 }
 
 function buildMoreRows(models: TokenBurnModelSlice[], startRank: number, maxTokens: number, totalTokens: number) {
   const details = document.createElement('details');
-  details.className = 'tok-more group';
+  details.className = 'group/tokmore';
 
   const summary = document.createElement('summary');
   summary.className =
@@ -199,6 +225,7 @@ async function hydrateTokenBurn() {
     const response = await fetch('/api/token-burn.json?view=full');
     const tb = (await response.json()) as TokenBurnFullPayload;
     if (typeof tb === 'object' && tb !== null && tb.ok === true) {
+      show('[data-tok-error]', false, root);
       updateHero(root, tb);
       updateWindows(root, tb);
       updateChart(root, tb);

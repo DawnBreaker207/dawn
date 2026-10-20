@@ -34,6 +34,7 @@ export function tabsFor(pathname: string) {
   if (pathname.startsWith('/about')) return [{ id: 'about', label: 'about.md', path: '/about' }];
   if (pathname.startsWith('/topics')) return [{ id: 'topics', label: 'topics.astro', path: '/topics' }];
   if (pathname.startsWith('/heatmap')) return [{ id: 'heatmap', label: 'heatmap.astro', path: '/heatmap' }];
+  if (pathname.startsWith('/tokens')) return [{ id: 'tokens', label: 'tokens.astro', path: '/tokens' }];
   if (pathname.startsWith('/books')) return [{ id: 'books', label: 'books.astro', path: '/books' }];
   if (pathname.startsWith('/lab')) {
     const exp = pathname.match(/^\/lab\/([^/]+)/)?.[1];

@@ -12,12 +12,14 @@ export interface TokenBurnModelSlice {
   tokens: number;
 }
 
-// One published day; dates are local Hanoi calendar days.
+// A single published day; dates are local Hanoi calendar days. `byModel` is
+// the per-day per-machine-merged breakdown (used for stacked charts).
 export interface TokenBurnDailyPoint {
   date: string;
   tokens: number;
   cost: number;
   sessions: number;
+  byModel?: Record<string, { tokens: number; cost: number }>;
 }
 
 /** Compact payload; windows are derived server-side (Hanoi calendar). */
@@ -29,6 +31,7 @@ export interface TokenBurnPayload {
   last30Days: TokenBurnWindow;
   topModels: TokenBurnModelSlice[];
   machines: string[];
+  daily?: TokenBurnDailyPoint[];
   lastActivity?: string;
   error?: string;
 }
