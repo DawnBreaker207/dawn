@@ -167,6 +167,7 @@ export function initScenarioEngine(): void {
   const $ = (id: string) => document.getElementById(id);
 
   let resumeStep: (() => void) | null = null;
+  let runSeq = 0;
   const nextBtn = $('sp-next');
   const stepMode = () => ($('sp-step-mode') as HTMLInputElement | null)?.checked ?? false;
   const stepDelay = () => Math.max(50, Number(($('sp-delay') as HTMLInputElement | null)?.value) || 420);
@@ -174,7 +175,11 @@ export function initScenarioEngine(): void {
     if (!nextBtn) return Promise.resolve();
     if (stepMode()) {
       nextBtn.classList.remove('hidden');
-      return new Promise<void>((resolve) => { resumeStep = resolve; }).then(() => nextBtn.classList.add('hidden'));
+      const seq = runSeq;
+      return new Promise<void>((resolve) => { resumeStep = resolve; }).then(() => {
+        // hide only if this run is still current — a newer run may have re-shown the button
+        if (seq === runSeq) nextBtn.classList.add('hidden');
+      });
     }
     return new Promise<void>((resolve) => setTimeout(resolve, stepDelay()));
   };
@@ -182,6 +187,11 @@ export function initScenarioEngine(): void {
   nextBtn?.addEventListener('click', advanceStep);
 
   const renderScenario = (sc: Scenario) => {
+    // cancel any in-flight simulation so its loop stops touching the UI
+    runSeq++;
+    advanceStep();
+    nextBtn?.classList.add('hidden');
+    isSimulating = false;
     currentScenario = sc;
     const set = (id: string, v: string) => { const el = $(id); if (el) el.textContent = v; };
     set('title-strategy-a', sc.titleA);
@@ -209,6 +219,7 @@ export function initScenarioEngine(): void {
   const runSimulation = async () => {
     if (isSimulating) return;
     isSimulating = true;
+    const seq = ++runSeq;
     const badge = $('engine-status-badge');
     const stream = $('engine-log-stream');
     if (badge) { badge.textContent = 'EXECUTING…'; badge.className = 'rounded border border-amber-500 bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 animate-pulse'; }
@@ -236,6 +247,7 @@ export function initScenarioEngine(): void {
         const last = i === steps.length - 1;
         appendLog(`[EO] ${String(i + 1).padStart(2, '0')}/${steps.length} ${li.dataset.title} — ${li.dataset.rows}`, last);
         await stepWait();
+        if (seq !== runSeq) return;
       }
       appendLog('[EO] written order ≠ execution order — ORDER BY/LIMIT act on output, not source.', true);
       if (badge) { badge.textContent = 'DONE — pipeline walked ✓'; badge.className = 'rounded border border-emerald-500 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300'; }
@@ -243,11 +255,12 @@ export function initScenarioEngine(): void {
       return;
     }
     appendLog('== PHASE 1: unoptimized ==');
-    for (const line of d.logStepsA) { appendLog(line); await stepWait(); }
+    for (const line of d.logStepsA) { appendLog(line); await stepWait(); if (seq !== runSeq) return; }
     tween($('time-strategy-a'), d.timeA); tween($('cost-strategy-a'), d.costA); tween($('rows-strategy-a'), d.rowsA);
     await stepWait();
+    if (seq !== runSeq) return;
     appendLog('== PHASE 2: optimized ==', true);
-    for (const line of d.logStepsB) { appendLog(line, true); await stepWait(); }
+    for (const line of d.logStepsB) { appendLog(line, true); await stepWait(); if (seq !== runSeq) return; }
     tween($('time-strategy-b'), d.timeB); tween($('cost-strategy-b'), d.costB); tween($('rows-strategy-b'), d.rowsB);
     if (badge) { badge.textContent = 'DONE — faster ✓'; badge.className = 'rounded border border-emerald-500 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300'; }
     isSimulating = false;

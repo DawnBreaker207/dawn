@@ -104,7 +104,10 @@ export function bootEngine(): void {
         nextBtn.classList.remove('hidden');
         return new Promise<void>((resolve) => {
           resume = resolve;
-        }).then(() => nextBtn.classList.add('hidden'));
+        }).then(() => {
+          // hide only if this run is still current — a newer run may have re-shown the button
+          if (currentRunId === runId) nextBtn.classList.add('hidden');
+        });
       }
       const delay = Math.max(
         60,
@@ -131,7 +134,6 @@ export function bootEngine(): void {
       if (resume) { resume(); resume = null; }
       nextBtn?.classList.add('hidden');
       const myRunId = ++currentRunId;
-      card.dataset.busy = '1';
       logEl.textContent = '';
 
       const trackEl = card.querySelector<HTMLElement>('[data-sim-track]');
@@ -205,7 +207,6 @@ export function bootEngine(): void {
         logEl.scrollTop = logEl.scrollHeight;
         await stepWait(myRunId);
       }
-      if (currentRunId === myRunId) delete card.dataset.busy;
     };
 
     let lastIdx = 0;
