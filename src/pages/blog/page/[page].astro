@@ -8,8 +8,9 @@ export const prerender = true;
 export async function getStaticPaths() {
   const posts = await getPosts();
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
-  return Array.from({ length: totalPages }, (_, i) => ({
-    params: { page: String(i + 1) },
+  // page 1 = /blog — chỉ build trang 2 trở đi để tránh trùng canonical
+  return Array.from({ length: Math.max(0, totalPages - 1) }, (_, i) => ({
+    params: { page: String(i + 2) },
   }));
 }
 
@@ -22,7 +23,7 @@ const initialDisplayPosts = posts.slice(
 );
 ---
 
-<BaseLayout title="Blog">
+<BaseLayout title={currentPage > 1 ? `Blog — Page ${currentPage}` : "Blog"}>
   <ListLayout
     title="All Posts"
     posts={initialDisplayPosts}

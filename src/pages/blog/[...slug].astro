@@ -3,6 +3,7 @@ import { render } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PostLayout from '@/layouts/PostLayout.astro';
 import { getPosts, readingMinutes } from '@/lib/utils/blog';
+import { SITE, SITE_URL } from '@/lib/site';
 
 export const prerender = true;
 
@@ -36,7 +37,24 @@ let related = posts
 if (related.length === 0) related = posts.filter((p) => p.id !== post.id).slice(0, 3);
 ---
 
-<BaseLayout title={post.data.title} description={post.data.summary} ogImage={post.id}>
+<BaseLayout
+  title={post.data.title}
+  description={post.data.summary}
+  ogImage={post.id}
+  type="article"
+  publishedTime={post.data.date.toISOString()}
+  jsonLd={{
+    '@type': 'BlogPosting',
+    headline: post.data.title,
+    description: post.data.summary ?? SITE.description,
+    url: `${SITE_URL}/blog/${post.id}`,
+    datePublished: post.data.date.toISOString(),
+    dateModified: post.data.date.toISOString(),
+    image: `${SITE_URL}/og/${post.id}.png`,
+    mainEntityOfPage: `${SITE_URL}/blog/${post.id}`,
+    author: { '@type': 'Person', name: SITE.fullName },
+  }}
+>
   <PostLayout
     title={post.data.title}
     tags={post.data.tags}

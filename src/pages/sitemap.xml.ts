@@ -10,8 +10,11 @@ const staticRoutes = [
   '/heatmap',
   '/topics',
   '/lab',
+  '/lab/java',
+  '/lab/sql',
   '/lab/spider',
   '/lab/terminal',
+  '/lab/pathfinding',
   '/help',
 ];
 
@@ -24,15 +27,17 @@ export const GET: APIRoute = async () => {
   const posts = await getPosts();
   const tags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))];
   const pageCount = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+  const built = new Date().toISOString();
 
   const urls: Url[] = [
-    ...staticRoutes.map((l) => ({ loc: l })),
+    ...staticRoutes.map((l) => ({ loc: l, lastmod: built })),
     ...posts.map((p) => ({ loc: `/blog/${p.id}`, lastmod: p.data.date.toISOString() })),
     ...Array.from({ length: Math.max(0, pageCount - 1) }, (_, i) => ({
       loc: `/blog/page/${i + 2}`,
+      lastmod: built,
     })),
-    ...tags.map((t) => ({ loc: `/topics/${slugify(t)}` })),
-  ];
+    ...tags.map((t) => ({ loc: `/topics/${slugify(t)}`, lastmod: built })),
+  ].filter((u, i, all) => all.findIndex((x) => x.loc === u.loc) === i);
 
   const body =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +

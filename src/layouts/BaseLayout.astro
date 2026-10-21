@@ -27,11 +27,23 @@ interface Props {
   title?: string;
   description?: string;
   ogImage?: string;
+  type?: string;
+  publishedTime?: string;
+  jsonLd?: Record<string, unknown>;
 }
 
-const { title = SITE.title, description = SITE.description, ogImage } = Astro.props;
-const ogUrl = ogImage ? `${SITE_URL}/og/${ogImage}.png` : SITE.socialBanner;
+const {
+  title = SITE.title,
+  description = SITE.description,
+  ogImage,
+  type: ogType = 'website',
+  publishedTime,
+  jsonLd,
+} = Astro.props;
+const ogUrl = ogImage ? `${SITE_URL}/og/${ogImage}.png` : `${SITE_URL}${SITE.socialBanner}`;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
+const canonicalUrl = `${SITE_URL}${Astro.url.pathname}`;
+const jsonLdGraph = [{ '@type': 'WebSite', name: SITE.title, url: SITE_URL }, ...(jsonLd ? [jsonLd] : [])];
 
 const activePath = Astro.url.pathname;
 const tabs = tabsFor(activePath);
@@ -61,24 +73,39 @@ const projects = projectsData
     <meta name="generator" content={Astro.generator} />
     <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
     <meta name="description" content={description} />
-    <link rel="canonical" href={`${SITE_URL}${Astro.url.pathname}`} />
+    <link rel="canonical" href={canonicalUrl} />
 
-    <link rel="apple-touch-icon" sizes="76x76" href="/static/favicons/apple-touch-icon.png" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Ctext%20x='18'%20y='27'%20font-family='Consolas,Menlo,monospace'%20font-size='24'%20font-weight='700'%20text-anchor='middle'%20fill='%2382aaff'%3E%E2%9D%AF_%3C/text%3E%3C/svg%3E" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicons/apple-touch-icon.png" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/static/favicons/site.webmanifest" />
-    <link rel="mask-icon" href="/static/favicons/safari-pinned-tab.svg" color="#5bbad5" />
+    <link rel="mask-icon" href="/static/favicons/safari-pinned-tab.svg" color="#82aaff" />
     <meta name="msapplication-TileColor" content="#000000" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
 
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content={SITE.title} />
     <meta property="og:image" content={ogUrl} />
+    <meta property="og:image:alt" content={pageTitle} />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
+    {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+    <meta name="author" content={SITE.fullName} />
     <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogUrl} />
+    <meta name="twitter:image:alt" content={pageTitle} />
+
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': jsonLdGraph })}
+    />
 
     <script is:inline>
       (function () {
