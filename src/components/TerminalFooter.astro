@@ -110,24 +110,24 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
     <button
       type="button"
       id="btn-keyboard-sound"
-      class="hidden sm:inline-flex items-center gap-1 text-[11px] text-(--fg-faint) hover:text-(--fg) cursor-pointer select-none no-underline"
+      class="inline-flex items-center gap-1 text-[11px] text-(--fg-faint) hover:text-(--fg) cursor-pointer select-none no-underline px-0.5"
       title="Click to cycle keyboard sound: thock → clicky → tactile → cream → off"
       aria-label="Cycle keyboard sound profile"
     >
       <span aria-hidden="true">⌨️</span>
-      <span id="keyboard-sound-label" class="text-[10px] font-mono">sound: off</span>
+      <span id="keyboard-sound-label" class="hidden text-[10px] font-mono sm:inline">sound: off</span>
     </button>
     <span class="hidden sm:inline text-(--fg-faint)" aria-hidden="true">·</span>
 
     <button
       type="button"
       id="btn-global-weather"
-      class="hidden sm:inline-flex items-center gap-1 text-[11px] text-(--fg-faint) hover:text-sky-400 cursor-pointer select-none no-underline transition-colors"
+      class="inline-flex items-center gap-1 text-[11px] text-(--fg-faint) hover:text-sky-400 cursor-pointer select-none no-underline transition-colors px-0.5"
       title="Atmospheric Weather Engine: Cycle Rain 🌧️ -> Snow ❄️ -> Storm ⛈️ -> Wind 💨 -> Off ⛅"
       aria-label="Toggle atmospheric weather overlay"
     >
       <span aria-hidden="true" class="weather-icon text-[11px]">⛅</span>
-      <span id="weather-label" class="text-[10px] font-mono">weather: off</span>
+      <span id="weather-label" class="hidden text-[10px] font-mono sm:inline">weather: off</span>
     </button>
     <input
       type="range"

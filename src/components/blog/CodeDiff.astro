@@ -63,7 +63,7 @@ const afterLines = afterCode.trim().split('\n');
   <div class="diff-panels grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-(--border)">
     <!-- Before Panel -->
     <div class="diff-panel-before p-3 bg-rose-950/5">
-      <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-rose-400">
+      <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400">
         <span class="text-rose-500 font-bold">−</span>
         <span>{beforeTitle}</span>
       </div>
@@ -71,7 +71,7 @@ const afterLines = afterCode.trim().split('\n');
         <pre class="m-0 p-0 text-[11px] leading-5"><code class={`language-${lang}`}>{beforeLines.map((line, idx) => (
           <div class="flex hover:bg-rose-500/10 px-1 rounded">
             <span class="w-7 select-none text-right pr-3 text-(--fg-faint) opacity-60">{idx + 1}</span>
-            <span class="text-rose-200/90 whitespace-pre">{line}</span>
+            <span class="text-rose-800 dark:text-rose-200/90 whitespace-pre">{line}</span>
           </div>
         ))}</code></pre>
       </div>
@@ -79,7 +79,7 @@ const afterLines = afterCode.trim().split('\n');
 
     <!-- After Panel -->
     <div class="diff-panel-after p-3 bg-emerald-950/5">
-      <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+      <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
         <span class="text-emerald-500 font-bold">+</span>
         <span>{afterTitle}</span>
       </div>
@@ -87,7 +87,7 @@ const afterLines = afterCode.trim().split('\n');
         <pre class="m-0 p-0 text-[11px] leading-5"><code class={`language-${lang}`}>{afterLines.map((line, idx) => (
           <div class="flex hover:bg-emerald-500/10 px-1 rounded">
             <span class="w-7 select-none text-right pr-3 text-(--fg-faint) opacity-60">{idx + 1}</span>
-            <span class="text-emerald-200/90 whitespace-pre">{line}</span>
+            <span class="text-emerald-800 dark:text-emerald-200/90 whitespace-pre">{line}</span>
           </div>
         ))}</code></pre>
       </div>

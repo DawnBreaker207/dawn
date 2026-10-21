@@ -13,8 +13,8 @@ const { tab, cases, viz } = Astro.props;
 
 <details class="group mt-3 rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
   <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
-    <span class="flex items-center gap-2">
-      <span class={tab.tone}>📖 theory &amp; mechanism</span>
+    <span class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+      <span class:list={[tab.tone, 'whitespace-nowrap']}>📖 theory &amp; mechanism</span>
       <span class="text-[10px] font-normal text-(--fg-faint)">plain words · why · mechanism · code</span>
     </span>
     <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
@@ -22,7 +22,7 @@ const { tab, cases, viz } = Astro.props;
   <div class="mt-4 space-y-3 border-t border-(--border) pt-3">
     <p class="font-sans text-sm leading-relaxed text-(--fg-dim)"><strong class="mr-1 text-(--fg)">🎯 the idea, in plain words —</strong>{tab.explain}</p>
     <p class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 font-sans text-sm leading-relaxed">
-      <strong class="mr-1 text-amber-400">why does it work this way?</strong>
+      <strong class="mr-1 text-amber-600 dark:text-amber-400">why does it work this way?</strong>
       <span class="text-(--fg-dim)">{tab.why}</span>
     </p>
     <div>

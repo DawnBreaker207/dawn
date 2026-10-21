@@ -1418,7 +1418,7 @@ export function setupWeatherEngine(): void {
     const cfg = configs[mode] || configs.off;
     if (label) label.textContent = cfg.label;
     if (btn) {
-      btn.className = `hidden sm:inline-flex items-center gap-1 text-[11px] ${cfg.cls} cursor-pointer select-none no-underline transition-colors`;
+      btn.className = `inline-flex items-center gap-1 text-[11px] px-0.5 ${cfg.cls} cursor-pointer select-none no-underline transition-colors`;
       btn.title = `Weather: ${mode.toUpperCase()} (Click to cycle: Rain 🌧️ → Snow ❄️ → Storm ⛈️ → Wind 💨 → Off ⛅)`;
       const icon = btn.querySelector('.weather-icon, .rain-icon') as HTMLElement | null;
       if (icon) {

@@ -150,7 +150,7 @@ export function bootEngine(): void {
           }
           const box = document.createElement('span');
           box.textContent = name;
-          box.className = BOX_BASE + 'border-(--border) bg-(--bg) text-(--fg-faint)';
+          box.className = BOX_BASE + 'border-(--border) bg-(--bg) text-(--fg-dim)';
           boxes.push(box);
           trackEl.appendChild(box);
         });
@@ -191,7 +191,7 @@ export function bootEngine(): void {
                 : 'border-amber-400 bg-amber-500/10 text-amber-700 dark:text-amber-300'
               : bi < lastAt
                 ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                : 'border-(--border) bg-(--bg) text-(--fg-faint)');
+                : 'border-(--border) bg-(--bg) text-(--fg-dim)');
         });
         const ln = cfg?.line?.[i] ?? -1;
         codeRows.forEach((row, li) => {
@@ -300,10 +300,10 @@ export function initJVMVisualizer(): void {
     text.textContent = msg;
     banner.className =
       type === 'error'
-        ? 'rounded-lg border border-rose-500 bg-rose-950/40 px-4 py-2 font-mono text-xs text-rose-300'
+        ? 'rounded-lg border border-rose-500 bg-rose-950/40 px-4 py-2 font-mono text-xs text-rose-700 dark:text-rose-300'
         : type === 'warn'
-          ? 'rounded-lg border border-amber-500 bg-amber-950/40 px-4 py-2 font-mono text-xs text-amber-300'
-          : 'rounded-lg border border-sky-500 bg-sky-950/30 px-4 py-2 font-mono text-xs text-sky-300';
+          ? 'rounded-lg border border-amber-500 bg-amber-950/40 px-4 py-2 font-mono text-xs text-amber-700 dark:text-amber-300'
+          : 'rounded-lg border border-sky-500 bg-sky-950/30 px-4 py-2 font-mono text-xs text-sky-700 dark:text-sky-300';
   };
 
   const updateMetrics = () => {
@@ -354,14 +354,14 @@ export function initJVMVisualizer(): void {
         .slice(0, 36)
         .map((o) => {
           let borderCls = o.isLeaked
-            ? 'border-rose-500 bg-rose-500/20 text-rose-300'
+            ? 'border-rose-500 bg-rose-500/20 text-rose-700 dark:text-rose-300'
             : colorCls;
           if (o.isAlive === false)
             borderCls =
               'border-slate-700 bg-slate-900/60 text-slate-500 line-through opacity-40';
           else if (o.isAlive === true)
             borderCls =
-              'border-emerald-400 bg-emerald-500/30 text-emerald-300 shadow-[0_0_8px_#34d399]';
+              'border-emerald-400 bg-emerald-500/30 text-emerald-700 dark:text-emerald-300 shadow-[0_0_8px_#34d399]';
           return `<span class="inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[9px] ${borderCls}" title="Object #${o.id} | Size: ${o.sizeMb}MB | Age: ${o.age}">
             #${o.id}<sub class="text-[8px] opacity-75">${o.age}</sub>
           </span>`;
@@ -369,13 +369,13 @@ export function initJVMVisualizer(): void {
         .join('');
     };
 
-    renderList('eden-objects', eden, 'border-sky-500/50 bg-sky-500/10 text-sky-300');
-    renderList('s0-objects', s0, 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300');
-    renderList('s1-objects', s1, 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300');
+    renderList('eden-objects', eden, 'border-sky-500/50 bg-sky-500/10 text-sky-700 dark:text-sky-300');
+    renderList('s0-objects', s0, 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300');
+    renderList('s1-objects', s1, 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300');
     renderList(
       'tenured-objects',
       tenured,
-      'border-amber-500/50 bg-amber-500/10 text-amber-300',
+      'border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300',
     );
   };
 

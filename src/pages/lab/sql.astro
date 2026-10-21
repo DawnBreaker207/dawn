@@ -18,7 +18,7 @@ export const prerender = true;
 >
   <header class="mb-5 border-b border-(--border) pb-4">
     <div class="mb-2 flex items-center">
-      <span class="ml-auto inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] font-mono text-cyan-400">
+      <span class="ml-auto inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
         <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400"></span>
         PostgreSQL 16 Simulator
       </span>
@@ -143,12 +143,12 @@ export const prerender = true;
       </div>
       <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 text-(--fg-dim) md:grid-cols-2">
         <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-          <strong class="text-amber-400">Hash Join vs Nested Loop</strong>
+          <strong class="text-amber-600 dark:text-amber-400">Hash Join vs Nested Loop</strong>
           <p class="mt-1">Hash Join: hashes the smaller table into RAM, then streams the larger — best when both sides are large. Nested Loop: for each outer row, probe the inner index — best when the outer set is tiny.</p>
-          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-200/80">The planner chooses by row-count estimates — stale statistics (ANALYZE lag) flip the pick silently.</p>
+          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-800 dark:text-amber-200/80">The planner chooses by row-count estimates — stale statistics (ANALYZE lag) flip the pick silently.</p>
         </div>
         <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-          <strong class="text-emerald-400">Covering Index</strong>
+          <strong class="text-emerald-600 dark:text-emerald-400">Covering Index</strong>
           <p class="mt-1">Every column the query touches lives in the index leaf — no heap fetch needed → <code>Heap Fetches: 0</code>.</p>
           <pre class="sql-pre mt-2">-- include projected columns to skip heap entirely
 CREATE INDEX CONCURRENTLY idx_orders_cov
@@ -158,7 +158,7 @@ CREATE INDEX CONCURRENTLY idx_orders_cov
 SELECT total_usd, status
   FROM orders WHERE customer_id = 42;
 -- → Index Only Scan   Heap Fetches: 0</pre>
-          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-200/80">Each heap fetch = one random page read per row. Folding the columns in converts them to a single sequential range scan.</p>
+          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-800 dark:text-amber-200/80">Each heap fetch = one random page read per row.Folding the columns in converts them to a single sequential range scan.</p>
         </div>
       </div>
     </details>
@@ -232,22 +232,22 @@ SELECT total_usd, status
       <!-- Split explanation -->
       <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
         <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.3)">
-          <strong class="text-amber-400">When does a node split?</strong>
+          <strong class="text-amber-600 dark:text-amber-400">When does a node split?</strong>
           <p class="mt-1 text-[11px] text-(--fg-dim)">A node can hold at most 2 keys (in this simulator). When a 3rd key arrives, the middle key <em>bubbles up</em> to the parent and the node splits into two.</p>
           <div class="sql-split-demo mt-2">
             <div class="sql-split-before">
-              <span class="sql-btd-node sql-btd-branch" style="font-size:10px">10·<span class="text-amber-300">20</span>·30</span>
+              <span class="sql-btd-node sql-btd-branch" style="font-size:10px">10·<span class="text-amber-700 dark:text-amber-300">20</span>·30</span>
               <span class="sql-split-arrow">+25 →</span>
             </div>
             <div class="sql-split-after">
               <span class="sql-btd-node sql-btd-branch" style="font-size:10px">10·20</span>
-              <span class="text-amber-300 font-mono text-[10px] px-1">↑25 to parent</span>
+              <span class="text-amber-700 dark:text-amber-300 font-mono text-[10px] px-1">↑25 to parent</span>
               <span class="sql-btd-node sql-btd-branch" style="font-size:10px">30</span>
             </div>
           </div>
         </div>
         <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.3)">
-          <strong class="text-cyan-400">Random vs sequential keys</strong>
+          <strong class="text-cyan-600 dark:text-cyan-400">Random vs sequential keys</strong>
           <p class="mt-1 text-[11px] text-(--fg-dim)">Random inserts split pages ~50/50 → ~70% fill factor. Sequential inserts (auto-increment IDs, timestamps) always hit the rightmost leaf → 100% fill, smaller index, but writers contend on the same hot page.</p>
           <pre class="sql-pre mt-2">-- ✓ sequential key — compact, no splits
 CREATE TABLE events (
@@ -282,11 +282,11 @@ id UUID DEFAULT gen_random_uuid() PRIMARY KEY</pre>
         internal page: ‹pointer · key› pairs — leaf adds the heap TID</pre>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-            <strong class="text-cyan-400">Lehman-Yao B-link tree</strong>
+            <strong class="text-cyan-600 dark:text-cyan-400">Lehman-Yao B-link tree</strong>
             <p class="mt-1">Every page carries a High Key + right-sibling pointer. A reader that descends and finds itself past the High Key just follows the sibling link — no re-descent, no full-path latch. That is the source of PostgreSQL's high-concurrency index claim.</p>
           </div>
           <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-            <strong class="text-cyan-400">TID, HOT & index bloat</strong>
+            <strong class="text-cyan-600 dark:text-cyan-400">TID, HOT & index bloat</strong>
             <p class="mt-1">UPDATE on an indexed column inserts a new entry into every index. If no indexed column changed and the new version fits on the same heap page → HOT update: the index still points at the old TID and follows the chain. Bloat = dead index tuples — <code>REINDEX</code> / <code>pg_repack</code> reclaim space.</p>
           </div>
         </div>
@@ -332,16 +332,16 @@ SELECT relname, n_dead_tup FROM pg_stat_user_tables WHERE n_dead_tup > 10000;</p
           <div class="sql-mvcc-ver sql-mvcc-dead">
             <div class="sql-mvcc-ver-head">Row v1 — DEAD after A commits</div>
             <div class="sql-mvcc-ver-fields">
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-400">99</span></span>
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-rose-400">100</span></span>
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-600 dark:text-amber-400">99</span></span>
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-rose-600 dark:text-rose-400">100</span></span>
               <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">Alice · balance 1000</span></span>
             </div>
           </div>
           <div class="sql-mvcc-ver sql-mvcc-live">
             <div class="sql-mvcc-ver-head">Row v2 — LIVE</div>
             <div class="sql-mvcc-ver-fields">
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-400">100</span></span>
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-emerald-400">∞</span></span>
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-600 dark:text-amber-400">100</span></span>
+              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-emerald-600 dark:text-emerald-400">∞</span></span>
               <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">Alice · balance 500</span></span>
             </div>
           </div>
@@ -350,7 +350,7 @@ SELECT relname, n_dead_tup FROM pg_stat_user_tables WHERE n_dead_tup > 10000;</p
         <!-- Isolation level comparison -->
         <div class="grid grid-cols-1 gap-3 mt-4 md:grid-cols-2">
           <div class="sql-explain-box" style="border-color:rgb(167 139 250/0.35)">
-            <strong class="text-violet-400">READ COMMITTED</strong>
+            <strong class="text-violet-600 dark:text-violet-400">READ COMMITTED</strong>
             <p class="mt-1 text-[11px] text-(--fg-dim)">Txn B takes a fresh snapshot at <em>each statement</em>. A SELECT run before Txn A commits sees v1. Run the same SELECT again after the commit → sees v2. Same query, different result within one transaction.</p>
             <pre class="sql-pre mt-2">-- Session B (READ COMMITTED, the default)
 BEGIN;
@@ -369,7 +369,7 @@ SELECT balance FROM accounts WHERE name='Alice';
             </div>
           </div>
           <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
-            <strong class="text-cyan-400">REPEATABLE READ</strong>
+            <strong class="text-cyan-600 dark:text-cyan-400">REPEATABLE READ</strong>
             <p class="mt-1 text-[11px] text-(--fg-dim)">Txn B takes one snapshot at its <em>first statement</em>. No matter how many times it queries, it always sees the world as it was when the transaction started — Txn A's commit is invisible.</p>
             <pre class="sql-pre mt-2">-- Session B (REPEATABLE READ)
 BEGIN ISOLATION LEVEL REPEATABLE READ;
@@ -426,7 +426,7 @@ VACUUM ANALYZE accounts;  -- autovacuum does this; run manually after bulk write
       <p class="sql-visual-title">B-Tree vs BRIN — when does each index type make sense?</p>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
-          <strong class="text-cyan-400">B-Tree</strong>
+          <strong class="text-cyan-600 dark:text-cyan-400">B-Tree</strong>
           <ul class="mt-1 space-y-1 text-[11px] text-(--fg-dim) list-none">
             <li>✓ Random access, point lookups, range scans</li>
             <li>✓ ORDER BY, GROUP BY on the indexed column</li>
@@ -437,7 +437,7 @@ VACUUM ANALYZE accounts;  -- autovacuum does this; run manually after bulk write
           <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Rule: default choice for any indexed column used in WHERE or JOIN.</p>
         </div>
         <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
-          <strong class="text-amber-400">BRIN (Block Range Index)</strong>
+          <strong class="text-amber-600 dark:text-amber-400">BRIN (Block Range Index)</strong>
           <ul class="mt-1 space-y-1 text-[11px] text-(--fg-dim) list-none">
             <li>✓ Tiny — stores only min/max per 128-page range</li>
             <li>✓ Append-only tables: timestamps, sequential IDs</li>
@@ -460,7 +460,7 @@ VACUUM ANALYZE accounts;  -- autovacuum does this; run manually after bulk write
       </summary>
       <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 md:grid-cols-2">
         <div>
-          <p class="mb-1 text-[10px] font-semibold text-cyan-400">B-Tree — 1M rows BIGINT ≈ 35 MB</p>
+          <p class="mb-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">B-Tree — 1M rows BIGINT ≈ 35 MB</p>
           <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_ts ON events (created_at);
 
 SELECT pg_size_pretty(pg_relation_size('idx_events_ts'));
@@ -470,7 +470,7 @@ SELECT * FROM bt_metap('idx_events_ts');
 -- level: 3  (root → branch → leaf)</pre>
         </div>
         <div>
-          <p class="mb-1 text-[10px] font-semibold text-amber-400">BRIN — same column ≈ 48 KB (700× smaller)</p>
+          <p class="mb-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">BRIN — same column ≈ 48 KB (700× smaller)</p>
           <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_brin
   ON events USING brin (created_at);
 
@@ -496,7 +496,7 @@ SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
 
         <!-- Connection Pool -->
         <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
-          <strong class="text-cyan-400">Connection Pool</strong>
+          <strong class="text-cyan-600 dark:text-cyan-400">Connection Pool</strong>
           <p class="mt-1 text-[11px] text-(--fg-dim)">
             Opening a database connection is expensive (~10–50 ms: TCP handshake, auth, SSL). A pool keeps N connections open and reuses them.
             Workers <em>borrow</em> a slot, run their query, and <em>return</em> it.
@@ -518,7 +518,7 @@ SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
 
         <!-- Token Bucket -->
         <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
-          <strong class="text-amber-400">Token Bucket (Rate Limiter)</strong>
+          <strong class="text-amber-600 dark:text-amber-400">Token Bucket (Rate Limiter)</strong>
           <p class="mt-1 text-[11px] text-(--fg-dim)">
             A bucket holds up to <em>capacity</em> tokens. It refills at <em>fill rate</em> tokens/second. Each incoming request consumes 1 token. If the bucket is empty, the request is dropped.
           </p>
@@ -531,9 +531,9 @@ SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
             </div>
             <div class="sql-bucket-info text-[10px] text-(--fg-dim)">
               <div>Capacity: 20 tokens</div>
-              <div class="text-emerald-400">Fill: +5 tok/s</div>
-              <div class="text-rose-400">Requests: 8 req/s</div>
-              <div class="text-amber-400">→ 3 req/s dropped</div>
+              <div class="text-emerald-600 dark:text-emerald-400">Fill: +5 tok/s</div>
+              <div class="text-rose-600 dark:text-rose-400">Requests: 8 req/s</div>
+              <div class="text-amber-600 dark:text-amber-400">→ 3 req/s dropped</div>
             </div>
           </div>
           <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">
@@ -553,7 +553,7 @@ SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
       </summary>
       <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 md:grid-cols-2">
         <div>
-          <p class="mb-1 text-[10px] font-semibold text-cyan-400">HikariCP (Spring Boot)</p>
+          <p class="mb-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">HikariCP (Spring Boot)</p>
           <pre class="sql-details-pre thin-scrollbar">spring.datasource.hikari.maximum-pool-size=20
 spring.datasource.hikari.minimum-idle=5
 spring.datasource.hikari.connection-timeout=3000
@@ -564,7 +564,7 @@ spring.datasource.hikari.max-lifetime=1800000
 # 4 cores, SSD → ~10 is usually optimal</pre>
         </div>
         <div>
-          <p class="mb-1 text-[10px] font-semibold text-amber-400">express-rate-limit (Node.js)</p>
+          <p class="mb-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">express-rate-limit (Node.js)</p>
           <pre class="sql-details-pre thin-scrollbar">{"import rateLimit from 'express-rate-limit';\napp.use('/api/', rateLimit({\n  windowMs: 1000, max: 10,\n  standardHeaders: true,\n  handler: (_req, res) =>\n    res.status(429).json({ error: 'rate limited' })\n}));\n// HTTP 429 + Retry-After header"}</pre>
         </div>
       </div>

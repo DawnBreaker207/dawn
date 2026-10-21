@@ -193,7 +193,7 @@ export function initScenarioEngine(): void {
     $('sp-explain')?.replaceChildren(sc.explain ?? '');
     ['time-strategy-a', 'cost-strategy-a', 'rows-strategy-a', 'time-strategy-b', 'cost-strategy-b', 'rows-strategy-b'].forEach((id) => set(id, '—'));
     const badge = $('engine-status-badge');
-    if (badge) { badge.textContent = 'STANDBY'; badge.className = 'rounded border border-cyan-500/50 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold text-cyan-400'; }
+    if (badge) { badge.textContent = 'STANDBY'; badge.className = 'rounded border border-cyan-500/50 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400'; }
     const stream = $('engine-log-stream');
     if (stream) stream.innerHTML = `<div class="text-(--fg-faint)">[Engine Log] Scenario "${sc.name}" loaded. Hit run…</div>`;
     const isEo = sc.id === 'execution_order';
@@ -211,13 +211,13 @@ export function initScenarioEngine(): void {
     isSimulating = true;
     const badge = $('engine-status-badge');
     const stream = $('engine-log-stream');
-    if (badge) { badge.textContent = 'EXECUTING…'; badge.className = 'rounded border border-amber-500 bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 animate-pulse'; }
+    if (badge) { badge.textContent = 'EXECUTING…'; badge.className = 'rounded border border-amber-500 bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 animate-pulse'; }
     if (stream) stream.innerHTML = '';
     const d = currentScenario;
     const appendLog = (line: string, ok = false) => {
       if (!stream) return;
       const div = document.createElement('div');
-      div.className = ok ? 'text-emerald-400' : 'text-rose-400';
+      div.className = ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
       div.textContent = line;
       stream.append(div);
       stream.scrollTop = stream.scrollHeight;
@@ -238,7 +238,7 @@ export function initScenarioEngine(): void {
         await stepWait();
       }
       appendLog('[EO] written order ≠ execution order — ORDER BY/LIMIT act on output, not source.', true);
-      if (badge) { badge.textContent = 'DONE — pipeline walked ✓'; badge.className = 'rounded border border-emerald-500 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300'; }
+      if (badge) { badge.textContent = 'DONE — pipeline walked ✓'; badge.className = 'rounded border border-emerald-500 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300'; }
       isSimulating = false;
       return;
     }
@@ -249,7 +249,7 @@ export function initScenarioEngine(): void {
     appendLog('== PHASE 2: optimized ==', true);
     for (const line of d.logStepsB) { appendLog(line, true); await stepWait(); }
     tween($('time-strategy-b'), d.timeB); tween($('cost-strategy-b'), d.costB); tween($('rows-strategy-b'), d.rowsB);
-    if (badge) { badge.textContent = 'DONE — faster ✓'; badge.className = 'rounded border border-emerald-500 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300'; }
+    if (badge) { badge.textContent = 'DONE — faster ✓'; badge.className = 'rounded border border-emerald-500 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300'; }
     isSimulating = false;
   };
 
@@ -270,7 +270,7 @@ export function initScenarioEngine(): void {
       const idx = Number(pill.dataset.caseIdx);
       pillBtns.forEach((btn) => {
         const on = btn === pill;
-        btn.className = `cursor-pointer rounded-full border px-3 py-1 text-[11px] transition-colors ${on ? 'border-amber-400 bg-amber-500/20 text-amber-200' : 'border-amber-500/40 text-(--fg-dim) hover:text-(--fg)'}`;
+        btn.className = `cursor-pointer rounded-full border px-3 py-1 text-[11px] transition-colors ${on ? 'border-amber-400 bg-amber-500/20 text-amber-800 dark:text-amber-200' : 'border-amber-500/40 text-(--fg-dim) hover:text-(--fg)'}`;
       });
       caseBlocks.forEach((block) => { block.hidden = Number(block.dataset.caseIdx) !== idx; });
     });

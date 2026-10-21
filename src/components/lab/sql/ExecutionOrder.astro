@@ -33,7 +33,7 @@ const { eoSql, eoSteps } = Astro.props;
             data-rows={step.rows}
             class="rounded-lg border border-transparent px-3 py-1.5 text-[11px] text-(--fg-dim)"
           >
-            <span class="mr-2 font-bold text-cyan-400">{String(index + 1).padStart(2, '0')}</span>
+            <span class="mr-2 font-bold text-cyan-600 dark:text-cyan-400">{String(index + 1).padStart(2, '0')}</span>
             <span class="font-semibold text-(--fg)">{step.title}</span>
             <span class="float-right font-mono text-[10px] text-(--fg-faint)">{step.rows}</span>
             <span class="mt-0.5 block pl-7 text-[10px] leading-snug">{step.detail}</span>

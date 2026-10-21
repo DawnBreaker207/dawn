@@ -71,7 +71,7 @@ const { topic, cases = [], code = '', track: introTrack = [] } = Astro.props;
     {introTrack.map((name, ti) => (
       <>
         {ti > 0 && <span class="font-mono text-[10px] text-(--fg-faint)">→</span>}
-        <span class="rounded-lg border border-(--border) bg-(--bg) px-2 py-1.5 font-mono text-[10px] leading-none text-(--fg-faint)">{name}</span>
+        <span class="rounded-lg border border-(--border) bg-(--bg) px-2 py-1.5 font-mono text-[10px] leading-none text-(--fg-dim)">{name}</span>
       </>
     ))}
   </div>
