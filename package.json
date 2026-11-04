@@ -48,5 +48,10 @@
     "prisma": "^6.19.3",
     "satori": "^0.33.4",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "c12": {
+      "magicast": "^0.5.4"
+    }
   }
 }
