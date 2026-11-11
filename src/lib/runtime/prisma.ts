@@ -7,6 +7,14 @@ import { PrismaClient } from '@prisma/client';
 function loadLocalEnv() {
   if (process.env.DATABASE_URL) return;
   try {
+    const metaEnv = (import.meta as { env?: Record<string, string> }).env;
+    if (metaEnv?.DATABASE_URL) {
+      process.env.DATABASE_URL = metaEnv.DATABASE_URL;
+      return;
+    }
+  } catch {}
+
+  try {
     const file = new URL('../../../.env.local', import.meta.url);
     if (!existsSync(file)) return;
     for (const line of readFileSync(file, 'utf8').split('\n')) {

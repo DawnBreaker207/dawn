@@ -17,17 +17,28 @@ async function getBlogStats(slug: string, type: StatsType): Promise<Stats> {
   return result;
 }
 
-async function updateBlogStats(type: StatsType, slug: string, updates: Partial<Stats>): Promise<Stats> {
+async function updateBlogStats(type: StatsType, slug: string, updates: Record<string, unknown>): Promise<Stats> {
   const current = await getBlogStats(slug, type);
+  const updateClause: Record<string, { increment: number }> = {};
+
   for (const key of NUMERIC_FIELDS) {
     const value = updates[key];
-    if (typeof value === 'number' && value < current[key]) {
-      updates[key] = current[key];
+    if (typeof value === 'number') {
+      const delta = Math.round(value - (current[key] ?? 0));
+      // Ensure positive change and cap to at most 10 per request to prevent spoofing
+      if (delta > 0 && delta <= 10) {
+        updateClause[key] = { increment: delta };
+      }
     }
   }
+
+  if (Object.keys(updateClause).length === 0) {
+    return current;
+  }
+
   return prisma.stats.update({
     where: { type_slug: { slug, type } },
-    data: updates,
+    data: updateClause,
   });
 }
 

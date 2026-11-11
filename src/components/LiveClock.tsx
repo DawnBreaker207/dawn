@@ -19,7 +19,7 @@ export default function LiveClock() {
   }, []);
 
   return (
-    <span className="tip" data-tip="Giờ Hà Nội (GMT+7)" suppressHydrationWarning>
+    <span className="tip" data-tip="Hanoi Time (GMT+7)" suppressHydrationWarning>
       {now ?? '--:--'}
     </span>
   );

@@ -46,11 +46,10 @@ export function bootEngine(): void {
 
   const paint = (on: boolean, btn: HTMLElement) => {
     const base =
-      'jx-btn cursor-pointer rounded-lg border px-3 py-1.5 font-semibold transition-colors ';
-    const tone = btn.dataset.jxTone ?? 'text-(--fg-dim)';
+      'jx-btn cursor-pointer rounded-lg border px-2.5 py-1 font-mono text-xs font-semibold transition-all ';
     btn.className = on
-      ? base + 'border-(--fg) bg-(--fg) text-(--bg)'
-      : base + `border-(--border) bg-(--bg) ${tone} hover:border-(--fg-dim)`;
+      ? base + 'border-(--fg) bg-(--fg) text-(--bg) shadow-sm'
+      : base + 'border-(--border) bg-(--bg) text-(--fg-dim) hover:text-(--fg) hover:border-(--fg-dim)';
   };
 
   tabs.forEach((tab) => {
@@ -63,8 +62,21 @@ export function bootEngine(): void {
       const mirror = document.querySelector<HTMLElement>('[data-jx-current]');
       if (mirror) mirror.textContent = tab.textContent ?? '';
       tab.closest('details')?.removeAttribute('open');
+
+      if (id && window.location.hash.slice(1) !== id) {
+        try {
+          history.replaceState(null, '', '#' + id);
+        } catch {}
+      }
     });
   });
+
+  // Activate tab from URL hash if provided, otherwise default to first tab
+  const initialHash = window.location.hash.slice(1);
+  const targetTab = initialHash ? tabs.find((t) => t.dataset.jxTab === initialHash) : tabs[0];
+  if (targetTab) {
+    targetTab.click();
+  }
 
   // Inject case buttons and wire each sim-card from the registry.
   document.querySelectorAll<HTMLElement>('[data-sim-card]').forEach((card) => {

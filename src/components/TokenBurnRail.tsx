@@ -35,16 +35,27 @@ function Sparkline({ series }: { series: { tokens: number }[] }) {
   );
 }
 
+const TTL_MS = 5 * 60 * 1000;
+let cachedBurnData: TokenBurnPayload | null = null;
+let cachedBurnAt = 0;
+
 export default function TokenBurnRail() {
-  const [data, setData] = useState<TokenBurnPayload | null>(null);
+  const [data, setData] = useState<TokenBurnPayload | null>(
+    cachedBurnData && Date.now() - cachedBurnAt < TTL_MS ? cachedBurnData : null
+  );
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (cachedBurnData && Date.now() - cachedBurnAt < TTL_MS) return;
     let alive = true;
     fetch('/api/token-burn.json')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: TokenBurnPayload) => {
-        if (alive && d.ok) setData(d);
+        if (d.ok) {
+          cachedBurnData = d;
+          cachedBurnAt = Date.now();
+          if (alive) setData(d);
+        }
       })
       .catch(() => {
         if (alive) setError(true);

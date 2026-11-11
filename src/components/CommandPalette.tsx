@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import timelineData from '@/data/timeline.json';
+import { LABS } from '@/lib/labs';
 
 interface PaletteEntry {
   kind: 'cmd' | 'txt' | 'jsx' | 'err';
@@ -67,7 +68,7 @@ const HELP_CMDS: HelpCmd[] = [
   ['tokens', 'AI token burn telemetry'],
   ['about', 'about the author'],
   ['theme <dark | light | system>', 'switch color scheme'],
-  ['weather [rain|snow|storm|wind|off]', 'toggle weather overlay'],
+  ['weather [rain|snow|storm|wind|off]', 'toggle weather overlay — shorthand: rain, snow, storm, wind'],
   ['clear', 'clear the terminal'],
   ['exit', 'close the terminal'],
 ];
@@ -378,16 +379,10 @@ export default function CommandPalette({
             <div>
               <p className="pal-h">Lab experiments</p>
               <ul className="pal-list">
-                {[
-                  { label: 'SQL EXPLAIN Explorer', route: '/lab/sql' },
-                  { label: 'Java & Spring Lab',    route: '/lab/java' },
-                  { label: 'Pathfinding Viz',      route: '/lab/pathfinding' },
-                  { label: 'Terminal Playground',  route: '/lab/terminal' },
-                  { label: 'Spider Canvas',        route: '/lab/spider' },
-                ].map((item, i) => (
-                  <li key={item.route}>
+                {[{ title: 'Terminal Playground', href: '/lab/terminal' }, ...LABS].map((item, i) => (
+                  <li key={item.href}>
                     <span className="pal-item-id">#{i + 1}</span>
-                    <a className="pal-link" href={item.route}>{item.label}</a>
+                    <a className="pal-link" href={item.href}>{item.title}</a>
                   </li>
                 ))}
               </ul>
@@ -444,18 +439,18 @@ export default function CommandPalette({
         setTimeout(() => {
           const current = localStorage.getItem('dawn_weather_mode') || 'off';
           const labels: Record<string, string> = {
-            rain: '🌧️ Mưa rào tự nhiên (Rain) phủ nhẹ trang web',
-            snow: '❄️ Tuyết rơi mùa đông (Snow) bay lượn nhẹ nhàng',
-            storm: '⛈️ Mưa bão dữ dội kèm sấm chớp (Storm & Lightning)',
-            wind: '💨 Gió cuốn lá vàng bay (Wind & Autumn Leaves)',
-            off: '⛅ Bầu trời quang đãng, đã tắt hiệu ứng thời tiết',
+            rain: '🌧️ Natural rain overlay active',
+            snow: '❄️ Winter snowfall overlay active',
+            storm: '⛈️ Thunderstorm with lightning & thunder active',
+            wind: '💨 Autumn wind & tumbling leaves active',
+            off: '⛅ Weather effects disabled',
           };
-          push({ kind: 'txt', text: `Thời tiết hiện tại: ${labels[current] || current}` });
+          push({ kind: 'txt', text: `Current weather: ${labels[current] || current}` });
         }, 60);
       },
     },
     rain: {
-      desc: 'toggle natural rain overlay (mưa rào tự nhiên)',
+      desc: 'toggle natural rain overlay',
       run: () => {
         const cur = localStorage.getItem('dawn_weather_mode');
         const next = cur === 'rain' ? 'off' : 'rain';
@@ -463,13 +458,13 @@ export default function CommandPalette({
         push({
           kind: 'txt',
           text: next === 'rain'
-            ? '🌧️ Mưa rào tự nhiên đã rơi nhẹ trên toàn bộ website!'
-            : '⛅ Đã tắt hiệu ứng thời tiết.',
+            ? '🌧️ Natural rain overlay enabled.'
+            : '⛅ Weather effects disabled.',
         });
       },
     },
     snow: {
-      desc: 'toggle snowfall overlay (tuyết rơi mùa đông)',
+      desc: 'toggle snowfall overlay',
       run: () => {
         const cur = localStorage.getItem('dawn_weather_mode');
         const next = cur === 'snow' ? 'off' : 'snow';
@@ -477,13 +472,13 @@ export default function CommandPalette({
         push({
           kind: 'txt',
           text: next === 'snow'
-            ? '❄️ Tuyết rơi mùa đông nhẹ nhàng phủ khắp màn hình!'
-            : '⛅ Đã tắt hiệu ứng thời tiết.',
+            ? '❄️ Winter snowfall overlay enabled.'
+            : '⛅ Weather effects disabled.',
         });
       },
     },
     storm: {
-      desc: 'toggle thunderstorm overlay with lightning & thunder (mưa bão sấm chớp)',
+      desc: 'toggle thunderstorm overlay with lightning & thunder',
       run: () => {
         const cur = localStorage.getItem('dawn_weather_mode');
         const next = cur === 'storm' ? 'off' : 'storm';
@@ -491,13 +486,13 @@ export default function CommandPalette({
         push({
           kind: 'txt',
           text: next === 'storm'
-            ? '⛈️ Mưa bão sấm sét dữ dội đã bắt đầu! Chú ý âm thanh sấm rền.'
-            : '⛅ Bão đã tan, bầu trời quang đãng.',
+            ? '⛈️ Thunderstorm overlay enabled with ambient lightning.'
+            : '⛅ Weather effects disabled.',
         });
       },
     },
     wind: {
-      desc: 'toggle autumn wind & tumbling leaves (gió cuốn lá vàng)',
+      desc: 'toggle autumn wind & tumbling leaves',
       run: () => {
         const cur = localStorage.getItem('dawn_weather_mode');
         const next = cur === 'wind' ? 'off' : 'wind';
@@ -505,8 +500,8 @@ export default function CommandPalette({
         push({
           kind: 'txt',
           text: next === 'wind'
-            ? '💨 Cơn gió mùa thu cùng những chiếc lá vàng đang bay lượn!'
-            : '⛅ Gió lặng, đã tắt hiệu ứng.',
+            ? '💨 Autumn wind with tumbling leaves enabled.'
+            : '⛅ Weather effects disabled.',
         });
       },
     },
@@ -518,14 +513,12 @@ export default function CommandPalette({
     { title: 'Blog index', desc: 'all posts', route: '/blog' },
     { title: 'Projects', desc: 'projects page', route: '/projects' },
     { title: 'Lab', desc: 'experiments index', route: '/lab' },
-    { title: 'Lab · SQL EXPLAIN Explorer', desc: 'PostgreSQL query execution plan visualizer', route: '/lab/sql' },
-    { title: 'Lab · Java & Spring', desc: 'concurrency, container & proxy mechanism diagrams', route: '/lab/java' },
     { title: 'Lab · Terminal', desc: 'terminal playground', route: '/lab/terminal' },
+    ...LABS.map((lab) => ({ title: `Lab · ${lab.title}`, desc: lab.intro, route: lab.href })),
     { title: 'Now', desc: 'what I am doing right now', route: '/now' },
     { title: 'About', desc: 'about page', route: '/about' },
     { title: 'Books', desc: 'books list', route: '/books' },
     { title: 'Heatmap', desc: 'activity heatmap', route: '/heatmap' },
-
     { title: 'Token burn', desc: 'AI token usage telemetry', route: '/tokens' },
     { title: 'Topics', desc: 'topic index', route: '/topics' },
     { title: 'Help', desc: 'site manual', route: '/help' },

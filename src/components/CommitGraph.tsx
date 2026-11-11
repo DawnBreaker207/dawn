@@ -63,22 +63,32 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
+let cachedDays: Day[] | null = null;
+let cachedTodayDetail: DayDetail | null = null;
+
 export default function CommitGraph({ total = 28, cols = 14, simple = false, grass = false }: Props) {
-  const [days, setDays] = useState<Day[] | null>(null);
+  const [days, setDays] = useState<Day[] | null>(cachedDays);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
-  const [detail, setDetail] = useState<DayDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [detail, setDetail] = useState<DayDetail | null>(cachedTodayDetail);
+  const [loading, setLoading] = useState(!cachedTodayDetail);
   const fetched = useRef(false);
 
   useEffect(() => {
     let alive = true;
+    if (cachedDays && cachedTodayDetail) {
+      setLoading(false);
+      return;
+    }
     if (fetched.current) return;
     fetched.current = true;
     fetch('/api/github/today')
       .then((r) => (r.ok ? r.json() : null))
       .then((d: DayDetail | null) => {
-        if (alive && d) setDetail(d);
+        if (d) {
+          cachedTodayDetail = d;
+          if (alive) setDetail(d);
+        }
       })
       .catch(() => {})
       .finally(() => {
@@ -87,6 +97,7 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, gra
     fetch('/api/github/contributions')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((data: Day[]) => {
+        cachedDays = data;
         if (alive) setDays(data);
       })
       .catch(() => {
@@ -136,6 +147,43 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, gra
   const detailView = detail && detail.date === activeDate ? detail : null;
   const loadingView = loading || (!!activeDate && !detailView);
 
+  const renderSquares = () =>
+    squares.map((d, i) =>
+      d ? (
+        simple ? (
+          <span
+            key={d.date}
+            title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
+            className="aspect-square w-full rounded-[3px] border"
+            style={{
+              backgroundColor: GREEN[Math.min(4, d.level)],
+              borderColor: GREEN_BORDER[Math.min(4, d.level)],
+            }}
+          />
+        ) : (
+          <button
+            key={d.date}
+            type="button"
+            onClick={() => setSelected((s) => (s === d.date ? null : d.date))}
+            aria-pressed={activeDate === d.date}
+            title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
+            data-umami-event="commit-day"
+            className="aspect-square w-full cursor-pointer rounded-[3px] border transition focus:outline-none"
+            style={{
+              backgroundColor: GREEN[Math.min(4, d.level)],
+              borderColor: GREEN_BORDER[Math.min(4, d.level)],
+              ...(activeDate === d.date ? { boxShadow: '0 0 0 2px var(--accent)' } : {}),
+            }}
+          />
+        )
+      ) : (
+        <span
+          key={`skel-${i}`}
+          className="aspect-square w-full animate-pulse rounded-[3px] border border-(--border) bg-(--bg)"
+        />
+      )
+    );
+
   return (
     <div className="rounded-2xl border border-(--border) bg-(--bg-alt) p-3.5">
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -148,99 +196,23 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, gra
       </div>
 
       {grass ? (
-      <div className="w-full overflow-x-auto py-1 pl-0 pr-1">
+        <div className="w-full overflow-x-auto py-1 pl-0 pr-1">
+          <div
+            className="git-grass-grid grid w-max min-w-full gap-1"
+            style={{ gridTemplateColumns: `repeat(${cols}, var(--git-grass-cell))` }}
+            aria-label="GitHub contribution heatmap"
+          >
+            {renderSquares()}
+          </div>
+        </div>
+      ) : (
         <div
-          className="git-grass-grid grid w-max min-w-full gap-1"
-          style={{
-            gridTemplateColumns: `repeat(${cols}, var(--git-grass-cell))`,
-          }}
+          className="grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
           aria-label="GitHub contribution heatmap"
         >
-        {squares.map((d, i) =>
-          d ? (
-            simple ? (
-              <span
-                key={d.date}
-                title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
-                className="aspect-square w-full rounded-[3px] border"
-                style={{
-                  backgroundColor: GREEN[Math.min(4, d.level)],
-                  borderColor: GREEN_BORDER[Math.min(4, d.level)],
-                }}
-              />
-            ) : (
-            <button
-              key={d.date}
-              type="button"
-              onClick={() => setSelected((s) => (s === d.date ? null : d.date))}
-              aria-pressed={activeDate === d.date}
-              title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
-              data-umami-event="commit-day"
-              className="aspect-square w-full cursor-pointer rounded-[3px] border transition focus:outline-none"
-              style={{
-                backgroundColor: GREEN[Math.min(4, d.level)],
-                borderColor: GREEN_BORDER[Math.min(4, d.level)],
-                ...(activeDate === d.date
-                  ? { boxShadow: '0 0 0 2px var(--accent)' }
-                  : {}),
-              }}
-            />
-            )
-          ) : (
-            <span
-              key={`skel-${i}`}
-              className="aspect-square w-full animate-pulse rounded-[3px] border border-(--border) bg-(--bg)"
-            />
-          )
-        )}
+          {renderSquares()}
         </div>
-      </div>
-      ) : (
-      <div
-        className="grid gap-1"
-        style={{
-          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-        }}
-        aria-label="GitHub contribution heatmap"
-      >
-        {squares.map((d, i) =>
-          d ? (
-            simple ? (
-              <span
-                key={d.date}
-                title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
-                className="aspect-square w-full rounded-[3px] border"
-                style={{
-                  backgroundColor: GREEN[Math.min(4, d.level)],
-                  borderColor: GREEN_BORDER[Math.min(4, d.level)],
-                }}
-              />
-            ) : (
-            <button
-              key={d.date}
-              type="button"
-              onClick={() => setSelected((s) => (s === d.date ? null : d.date))}
-              aria-pressed={activeDate === d.date}
-              title={`${d.date}: ${d.count} contribution${d.count === 1 ? '' : 's'}`}
-              data-umami-event="commit-day"
-              className="aspect-square w-full cursor-pointer rounded-[3px] border transition focus:outline-none"
-              style={{
-                backgroundColor: GREEN[Math.min(4, d.level)],
-                borderColor: GREEN_BORDER[Math.min(4, d.level)],
-                ...(activeDate === d.date
-                  ? { boxShadow: '0 0 0 2px var(--accent)' }
-                  : {}),
-              }}
-            />
-            )
-          ) : (
-            <span
-              key={`skel-${i}`}
-              className="aspect-square w-full animate-pulse rounded-[3px] border border-(--border) bg-(--bg)"
-            />
-          )
-        )}
-      </div>
       )}
 
       {!simple && (

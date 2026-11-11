@@ -7,15 +7,24 @@ const DOT: Record<string, string> = {
   github: 'bg-blue-500',
 };
 
+const TTL_MS = 5 * 60 * 1000;
+let cachedActivity: ActivityItem[] | null = null;
+let cachedActivityAt = 0;
+
 export default function RecentActivity() {
-  const [items, setItems] = useState<ActivityItem[] | null>(null);
+  const [items, setItems] = useState<ActivityItem[] | null>(
+    cachedActivity && Date.now() - cachedActivityAt < TTL_MS ? cachedActivity : null
+  );
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (cachedActivity && Date.now() - cachedActivityAt < TTL_MS) return;
     let alive = true;
     fetch('/api/activity.json')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: ActivityItem[]) => {
+        cachedActivity = d;
+        cachedActivityAt = Date.now();
         if (alive) setItems(d);
       })
       .catch(() => {

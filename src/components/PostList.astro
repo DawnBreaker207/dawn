@@ -18,7 +18,7 @@ const { posts } = Astro.props;
           {post.data.date.toISOString().slice(0, 10)}
         </time>
         <span class="text-(--fg-faint)"> / </span>
-        {readingMinutes(post)} phút đọc
+        {readingMinutes(post)} min read
       </p>
       <h2 class="mb-2 text-xl font-bold tracking-tight text-(--fg) md:text-2xl">
         <a
@@ -34,7 +34,7 @@ const { posts } = Astro.props;
         href={`/blog/${post.id}`}
         class="mt-3 inline-block text-sm font-medium text-(--accent) hover:no-underline"
       >
-        Đọc tiếp →
+        Read post →
       </a>
     </li>
   ))}
