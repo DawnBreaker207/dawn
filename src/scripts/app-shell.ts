@@ -328,8 +328,29 @@ document.addEventListener('astro:page-load', bindShell);
    defaults (rail open), and re-applying afterwards plays the collapse animation on
    every navigation — carry the attribute onto the incoming doc before the swap. */
 document.addEventListener('astro:before-swap', (e) => {
-  const hidden = document.documentElement.dataset.rail === 'hidden';
-  (e as unknown as { detail?: { newDocument?: Document } }).detail?.newDocument
-    ?.querySelector(':root')
-    ?.toggleAttribute('data-rail', hidden);
+  const isRailHidden = localStorage.getItem('dawn:railHidden') === 'true' || document.documentElement.dataset.rail === 'hidden';
+  const ev = e as unknown as { newDocument?: Document; detail?: { newDocument?: Document } };
+  const newDoc = ev.newDocument || ev.detail?.newDocument;
+  const newRoot = newDoc?.documentElement;
+  if (newRoot) {
+    if (isRailHidden) {
+      newRoot.setAttribute('data-rail', 'hidden');
+    } else {
+      newRoot.removeAttribute('data-rail');
+    }
+  }
+
+  // Save sidebar scroll position so it survives page navigation
+  const sidebarInner = document.getElementById('sidebar')?.querySelector<HTMLElement>('.thin-scrollbar');
+  if (sidebarInner && sidebarInner.scrollTop > 0) {
+    sessionStorage.setItem('dawn:sidebarScroll', String(sidebarInner.scrollTop));
+  }
+});
+
+// Restore sidebar scroll position after navigation
+document.addEventListener('astro:page-load', () => {
+  const saved = sessionStorage.getItem('dawn:sidebarScroll');
+  if (!saved) return;
+  const sidebarInner = document.getElementById('sidebar')?.querySelector<HTMLElement>('.thin-scrollbar');
+  if (sidebarInner) sidebarInner.scrollTop = Number(saved);
 });
