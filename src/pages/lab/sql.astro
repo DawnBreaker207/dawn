@@ -7,6 +7,8 @@ import BTreeTraversal from '@/components/lab/sql/BTreeTraversal.astro';
 import MvccVisibility from '@/components/lab/sql/MvccVisibility.astro';
 import FootprintCalc from '@/components/lab/sql/FootprintCalc.astro';
 import InfraTools from '@/components/lab/sql/InfraTools.astro';
+import ExplainOverviewCard from '@/components/lab/sql/ExplainOverviewCard.astro';
+import EnginePipeline from '@/components/lab/sql/EnginePipeline.astro';
 import { EO_SQL, EO_STEPS, CASE_BRANCHES } from '@/scripts/lab/sql/execution-order';
 
 export const prerender = true;
@@ -17,148 +19,126 @@ export const prerender = true;
   description="Interactive PostgreSQL query plan simulator — compare Seq Scan vs B-Tree, fix Hibernate N+1, MVCC isolation, index footprint, connection pool."
 >
   <header class="mb-5 border-b border-(--border) pb-4">
-    <div class="mb-2 flex items-center">
-      <span class="ml-auto inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
+    <div class="mb-2 flex items-center gap-2">
+      <h1 class="m-0 font-mono text-[clamp(28px,4.5vw,48px)] leading-[0.96] tracking-[-0.06em] text-(--fg)">
+        sql explain explorer
+      </h1>
+      <span class="inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
         <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400"></span>
-        PostgreSQL 16 Simulator
+        PostgreSQL 16
       </span>
     </div>
-    <h1 class="m-0 font-mono text-[clamp(28px,4.5vw,48px)] leading-[0.96] tracking-[-0.06em] text-(--fg)">
-      sql explain explorer
-    </h1>
-    <p class="mt-2 text-sm leading-relaxed text-(--fg-dim)">
-      Five interactive labs — query plans, B-tree internals, MVCC isolation, index sizing, infra rate limiting.
+    <p class="mt-1 text-sm text-(--fg-dim)">
+      Query plans, B-tree, MVCC, index sizing, infra — 5 interactive simulations.
     </p>
   </header>
 
-  <!-- Tab bar -->
-  <div id="sql-tab-bar" class="mb-5 flex flex-wrap gap-1.5 border-b border-(--border) pb-3 font-mono text-xs">
-    <button data-sql-tab="explain"   class="sql-tab sql-tab-active">⚡ EXPLAIN</button>
-    <button data-sql-tab="btree"     class="sql-tab">🌳 B-Tree</button>
-    <button data-sql-tab="mvcc"      class="sql-tab">🔀 MVCC</button>
-    <button data-sql-tab="footprint" class="sql-tab">📐 Footprint</button>
-    <button data-sql-tab="infra"     class="sql-tab">🔌 Infra</button>
+  <!-- Tab bar (Sticky, horizontal-scroll on mobile) -->
+  <div id="sql-tab-bar" class="sticky top-0 z-20 mb-5 overflow-x-auto border-b border-(--border) bg-(--bg)/90 backdrop-blur-sm pb-3 pt-2" style="-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory">
+    <div class="flex gap-1.5 font-mono text-xs whitespace-nowrap">
+      <button data-sql-tab="engine"    class="sql-tab sql-tab-active">Engine</button>
+      <button data-sql-tab="explain"   class="sql-tab">EXPLAIN</button>
+      <button data-sql-tab="btree"     class="sql-tab">B-Tree</button>
+      <button data-sql-tab="mvcc"      class="sql-tab">MVCC</button>
+      <button data-sql-tab="footprint" class="sql-tab">Footprint</button>
+      <button data-sql-tab="infra"     class="sql-tab">Infra</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Tab 0 — Engine Pipeline
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div data-sql-pane="engine" class="space-y-4">
+
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🗺️</div>
+        <div class="mt-0.5 font-bold text-cyan-500">5 stages</div>
+        <div class="text-[10px] text-(--fg-faint)">per query</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">📦</div>
+        <div class="mt-0.5 font-bold text-amber-500">shared_buffers</div>
+        <div class="text-[10px] text-(--fg-faint)">page cache</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">📜</div>
+        <div class="mt-0.5 font-bold text-emerald-500">WAL</div>
+        <div class="text-[10px] text-(--fg-faint)">durability</div>
+      </div>
+    </div>
+
+    <EnginePipeline />
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 1 — EXPLAIN Explorer
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="explain" class="space-y-5">
+  <div data-sql-pane="explain" hidden class="space-y-4">
 
-    <!-- Visual: Seq Scan vs Index + N+1 vs JOIN in one card -->
-    <div class="sql-visual-card">
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-
-        <!-- Seq Scan vs Index -->
-        <div>
-          <p class="sql-visual-title">Index scan vs Seq Scan</p>
-          <div class="grid grid-cols-1 gap-2">
-            <div class="sql-side sql-side-bad">
-              <div class="sql-side-head">
-                <span class="sql-badge sql-badge-bad">Seq Scan</span>
-                <code class="sql-code-inline">no index</code>
-              </div>
-              <div class="sql-blocks-row">
-                {Array.from({length:8}).map((_, i) => (
-                  <div class:list={["sql-block", i === 5 ? "sql-block-target" : "sql-block-plain"]}>
-                    {i === 5 ? "✓" : ""}
-                  </div>
-                ))}
-                <span class="sql-blocks-label">…1 M blocks</span>
-              </div>
-              <p class="sql-side-note">Reads <strong>every block</strong> — O(N). 142 ms.</p>
-            </div>
-            <div class="sql-side sql-side-good">
-              <div class="sql-side-head">
-                <span class="sql-badge sql-badge-good">Index Scan</span>
-                <code class="sql-code-inline">CREATE INDEX ON users(email)</code>
-              </div>
-              <div class="sql-tree-mini">
-                <div class="sql-tree-node sql-tree-root">[ 50 | 750k ]</div>
-                <div class="sql-tree-row">
-                  <div class="sql-tree-node sql-tree-branch">[ 25 | 37 ]</div>
-                  <div class="sql-tree-node sql-tree-branch">[ 55 | 68 ]</div>
-                </div>
-                <div class="sql-tree-row">
-                  <div class="sql-tree-node sql-tree-leaf sql-tree-leaf-hl">dawn@… ✓</div>
-                  <div class="sql-tree-node sql-tree-leaf sql-tree-leaf-dim">…</div>
-                  <div class="sql-tree-node sql-tree-leaf sql-tree-leaf-dim">…</div>
-                </div>
-                <p class="sql-tree-label">3 buffer hits → root → branch → leaf</p>
-              </div>
-              <p class="sql-side-note">O(log N) regardless of table size. <strong>0.08 ms</strong>.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- N+1 vs JOIN -->
-        <div>
-          <p class="sql-visual-title">N+1 vs JOIN FETCH</p>
-          <div class="grid grid-cols-1 gap-2">
-            <div class="sql-side sql-side-bad">
-              <div class="sql-side-head">
-                <span class="sql-badge sql-badge-bad">N+1 (lazy load)</span>
-              </div>
-              <div class="sql-queries-viz">
-                <div class="sql-query-row sql-query-root">SELECT * FROM orders LIMIT 10</div>
-                {Array.from({length:3}).map((_, i) => (
-                  <div class="sql-query-row sql-query-child">
-                    ↳ SELECT * FROM items WHERE order_id = {i+1}
-                  </div>
-                ))}
-                <div class="sql-query-row sql-query-child sql-query-dots">↳ … × 10 total = 11 round-trips</div>
-              </div>
-            </div>
-            <div class="sql-side sql-side-good">
-              <div class="sql-side-head">
-                <span class="sql-badge sql-badge-good">JOIN FETCH</span>
-              </div>
-              <div class="sql-queries-viz">
-                <div class="sql-query-row sql-query-root sql-query-root-good">
-                  SELECT o.*, i.* FROM orders o<br/>
-                  JOIN items i ON i.order_id = o.id
-                </div>
-              </div>
-              <p class="sql-side-note"><strong>1 round-trip</strong> — database joins, not your app loop.</p>
-            </div>
-          </div>
-        </div>
-
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🐌</div>
+        <div class="mt-0.5 font-bold text-rose-500">O(n)</div>
+        <div class="text-[10px] text-(--fg-faint)">Seq Scan</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">⚡</div>
+        <div class="mt-0.5 font-bold text-emerald-500">O(log n)</div>
+        <div class="text-[10px] text-(--fg-faint)">Index Scan</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">💣</div>
+        <div class="mt-0.5 font-bold text-amber-500">N+1</div>
+        <div class="text-[10px] text-(--fg-faint)">queries/row</div>
       </div>
     </div>
 
-    <p id="sp-explain" class="text-xs font-mono text-(--fg-dim)">
-      Pick a scenario below and hit <strong>Run</strong> to watch the engine log both strategies.
-    </p>
     <ScenarioPicker />
     <ExecutionOrder eoSql={EO_SQL} eoSteps={EO_STEPS} />
 
-    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
-      <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
-        <span class="text-(--accent)">🔀 CASE routing + More patterns — Hash Join, Covering Index, Anti-Join</span>
-        <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Visual overview — Seq Scan vs Index, N+1 vs JOIN FETCH</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
-      <div class="mt-4 border-t border-(--border) pt-3 space-y-4">
-        <CaseRouting caseBranches={CASE_BRANCHES} />
+      <div class="border-t border-(--border) p-4">
+        <ExplainOverviewCard />
       </div>
-      <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 text-(--fg-dim) md:grid-cols-2">
-        <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-          <strong class="text-amber-600 dark:text-amber-400">Hash Join vs Nested Loop</strong>
-          <p class="mt-1">Hash Join: hashes the smaller table into RAM, then streams the larger — best when both sides are large. Nested Loop: for each outer row, probe the inner index — best when the outer set is tiny.</p>
-          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-800 dark:text-amber-200/80">The planner chooses by row-count estimates — stale statistics (ANALYZE lag) flip the pick silently.</p>
-        </div>
-        <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
-          <strong class="text-emerald-600 dark:text-emerald-400">Covering Index</strong>
-          <p class="mt-1">Every column the query touches lives in the index leaf — no heap fetch needed → <code>Heap Fetches: 0</code>.</p>
-          <pre class="sql-pre mt-2">-- include projected columns to skip heap entirely
-CREATE INDEX CONCURRENTLY idx_orders_cov
+    </details>
+
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">More patterns — Hash Join, Covering Index, Anti-Join</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-4 font-mono text-xs">
+        <CaseRouting caseBranches={CASE_BRANCHES} />
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+            <div class="mb-1.5 flex items-center gap-1.5">
+              <span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">Hash Join</span>
+              <span class="text-(--fg-faint)">vs</span>
+              <span class="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">Nested Loop</span>
+            </div>
+            <ul class="space-y-1 text-[11px] text-(--fg-dim) list-none">
+              <li>🔶 Hash: build hash table from small side → stream large side. Good for large×large joins.</li>
+              <li>🔷 Nested Loop: for each outer row, probe inner index. Good when outer set is tiny.</li>
+            </ul>
+            <p class="mt-2 border-l-2 border-amber-500/50 pl-2 text-[10px] text-amber-700 dark:text-amber-300">Planner chooses by cost estimate — stale stats silently flip the pick.</p>
+          </div>
+          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+            <div class="mb-1.5">
+              <span class="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Covering Index</span>
+            </div>
+            <p class="text-[11px] text-(--fg-dim)">All projected columns live in the index leaf — no heap fetch needed.</p>
+            <pre class="sql-pre mt-2">CREATE INDEX idx_orders_cov
   ON orders (customer_id)
   INCLUDE (total_usd, status);
-
-SELECT total_usd, status
-  FROM orders WHERE customer_id = 42;
--- → Index Only Scan   Heap Fetches: 0</pre>
-          <p class="mt-1.5 border-l-2 border-amber-500/60 pl-2 text-amber-800 dark:text-amber-200/80">Each heap fetch = one random page read per row.Folding the columns in converts them to a single sequential range scan.</p>
+-- → Index Only Scan  Heap Fetches: 0</pre>
+          </div>
         </div>
       </div>
     </details>
@@ -167,11 +147,37 @@ SELECT total_usd, status
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 2 — B-Tree
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="btree" hidden class="space-y-5">
+  <div data-sql-pane="btree" hidden class="space-y-4">
 
-    <!-- Visual: what a B-tree looks like -->
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🌳</div>
+        <div class="mt-0.5 font-bold text-cyan-500">≤ 4 levels</div>
+        <div class="text-[10px] text-(--fg-faint)">even at 1B rows</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">📄</div>
+        <div class="mt-0.5 font-bold text-amber-500">8 KB</div>
+        <div class="text-[10px] text-(--fg-faint)">per page</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">⚡</div>
+        <div class="mt-0.5 font-bold text-emerald-500">O(log n)</div>
+        <div class="text-[10px] text-(--fg-faint)">lookup cost</div>
+      </div>
+    </div>
+
+    <BTreeTraversal />
+
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">B-Tree anatomy — Root → Branch → Leaf → Heap</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4">
     <div class="sql-visual-card">
-      <p class="sql-visual-title">Anatomy of a B-Tree index — before you use the simulator</p>
+      <p class="sql-visual-title">Anatomy of a B-Tree index</p>
       <div class="sql-btree-diagram">
 
         <!-- Root -->
@@ -262,15 +268,14 @@ id UUID DEFAULT gen_random_uuid() PRIMARY KEY</pre>
       </div>
 
     </div>
+    </div></details>
 
-    <BTreeTraversal />
-
-    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
-      <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
-        <span class="text-(--accent)">📄 Page internals, DDL reference, bloat queries</span>
-        <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Page internals, DDL reference, bloat queries</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
-      <div class="mt-4 space-y-4 border-t border-(--border) pt-3 text-(--fg-dim)">
+      <div class="border-t border-(--border) p-4 space-y-4 font-mono text-xs text-(--fg-dim)">
         <pre class="sql-details-pre thin-scrollbar">        ┌───────────────────────────────────────────────┐
         │ header: LSN · high key · right-link → sibling │
         ├───────────────────────────────────────────────┤
@@ -309,110 +314,109 @@ SELECT relname, n_dead_tup FROM pg_stat_user_tables WHERE n_dead_tup > 10000;</p
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 3 — MVCC
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="mvcc" hidden class="space-y-5">
+  <div data-sql-pane="mvcc" hidden class="space-y-4">
 
-    <!-- Visual: version chain concept -->
-    <div class="sql-visual-card">
-      <p class="sql-visual-title">How MVCC keeps reads and writes from blocking each other</p>
-
-      <p class="mb-3 text-[11px] font-mono text-(--fg-dim)">
-        PostgreSQL never overwrites a row in place. Every UPDATE writes a <em>new version</em> and marks the old one dead.
-        Each transaction sees only the versions that existed when its snapshot was taken.
-      </p>
-
-      <!-- Version chain timeline -->
-      <div class="sql-mvcc-timeline">
-        <!-- Time axis -->
-        <div class="sql-mvcc-time">
-          <span>xid 99</span><span>→</span><span>xid 100 (Txn A: UPDATE)</span><span>→</span><span>xid 101 (Txn A: COMMIT)</span>
-        </div>
-
-        <!-- Row versions -->
-        <div class="sql-mvcc-chain">
-          <div class="sql-mvcc-ver sql-mvcc-dead">
-            <div class="sql-mvcc-ver-head">Row v1 — DEAD after A commits</div>
-            <div class="sql-mvcc-ver-fields">
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-600 dark:text-amber-400">99</span></span>
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-rose-600 dark:text-rose-400">100</span></span>
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">Alice · balance 1000</span></span>
-            </div>
-          </div>
-          <div class="sql-mvcc-ver sql-mvcc-live">
-            <div class="sql-mvcc-ver-head">Row v2 — LIVE</div>
-            <div class="sql-mvcc-ver-fields">
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-600 dark:text-amber-400">100</span></span>
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-emerald-600 dark:text-emerald-400">∞</span></span>
-              <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">Alice · balance 500</span></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Isolation level comparison -->
-        <div class="grid grid-cols-1 gap-3 mt-4 md:grid-cols-2">
-          <div class="sql-explain-box" style="border-color:rgb(167 139 250/0.35)">
-            <strong class="text-violet-600 dark:text-violet-400">READ COMMITTED</strong>
-            <p class="mt-1 text-[11px] text-(--fg-dim)">Txn B takes a fresh snapshot at <em>each statement</em>. A SELECT run before Txn A commits sees v1. Run the same SELECT again after the commit → sees v2. Same query, different result within one transaction.</p>
-            <pre class="sql-pre mt-2">-- Session B (READ COMMITTED, the default)
-BEGIN;
-SELECT balance FROM accounts WHERE name='Alice';
--- → 1000  (A hasn't committed yet)
-
--- ... Txn A commits here ...
-
-SELECT balance FROM accounts WHERE name='Alice';
--- → 500   (sees A's commit — non-repeatable read!)</pre>
-            <div class="sql-vis-row mt-1">
-              <span class="sql-vis-step">B: SELECT before commit</span><span class="sql-vis-arrow">→</span><span class="sql-vis-result sql-vis-old">v1 (balance 1000)</span>
-            </div>
-            <div class="sql-vis-row">
-              <span class="sql-vis-step">B: SELECT after commit</span><span class="sql-vis-arrow">→</span><span class="sql-vis-result sql-vis-new">v2 (balance 500)</span>
-            </div>
-          </div>
-          <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
-            <strong class="text-cyan-600 dark:text-cyan-400">REPEATABLE READ</strong>
-            <p class="mt-1 text-[11px] text-(--fg-dim)">Txn B takes one snapshot at its <em>first statement</em>. No matter how many times it queries, it always sees the world as it was when the transaction started — Txn A's commit is invisible.</p>
-            <pre class="sql-pre mt-2">-- Session B (REPEATABLE READ)
-BEGIN ISOLATION LEVEL REPEATABLE READ;
-SELECT balance FROM accounts WHERE name='Alice';
--- → 1000
-
--- ... Txn A commits here ...
-
-SELECT balance FROM accounts WHERE name='Alice';
--- → 1000  (snapshot is frozen — A invisible)
-COMMIT;</pre>
-            <div class="sql-vis-row mt-1">
-              <span class="sql-vis-step">B: SELECT before commit</span><span class="sql-vis-arrow">→</span><span class="sql-vis-result sql-vis-old">v1 (balance 1000)</span>
-            </div>
-            <div class="sql-vis-row">
-              <span class="sql-vis-step">B: SELECT after commit</span><span class="sql-vis-arrow">→</span><span class="sql-vis-result sql-vis-old">v1 (balance 1000) ← same</span>
-            </div>
-          </div>
-        </div>
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🔓</div>
+        <div class="mt-0.5 font-bold text-emerald-500">No lock</div>
+        <div class="text-[10px] text-(--fg-faint)">on reads</div>
       </div>
-
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🏷️</div>
+        <div class="mt-0.5 font-bold text-amber-500">xmin / xmax</div>
+        <div class="text-[10px] text-(--fg-faint)">per tuple</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🧹</div>
+        <div class="mt-0.5 font-bold text-cyan-500">VACUUM</div>
+        <div class="text-[10px] text-(--fg-faint)">reclaims dead</div>
+      </div>
     </div>
 
     <MvccVisibility />
 
-    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
-      <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
-        <span class="text-(--accent)">🔬 Inspect xmin/xmax yourself — psql queries</span>
-        <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+    <!-- Version chain + isolation levels -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Version chain — xmin, xmax, READ COMMITTED vs REPEATABLE READ</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
-      <div class="mt-4 border-t border-(--border) pt-3">
-        <pre class="sql-details-pre thin-scrollbar">-- Hidden system columns on any table
+      <div class="border-t border-(--border) p-4 space-y-4 font-mono text-xs">
+        <p class="text-[11px] text-(--fg-dim)">PostgreSQL <strong class="text-(--fg)">never overwrites a row in place</strong>. Every UPDATE writes a new version and marks the old one dead. Each transaction sees only versions that existed when its snapshot was taken.</p>
+
+        <!-- Version chain -->
+        <div class="sql-mvcc-timeline">
+          <div class="sql-mvcc-time">
+            <span>xid 99</span><span>→</span><span>xid 100 (Txn A: UPDATE)</span><span>→</span><span>xid 101 (COMMIT)</span>
+          </div>
+          <div class="sql-mvcc-chain">
+            <div class="sql-mvcc-ver sql-mvcc-dead">
+              <div class="sql-mvcc-ver-head">v1 — DEAD after commit</div>
+              <div class="sql-mvcc-ver-fields">
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-600 dark:text-amber-400">99</span></span>
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-rose-600 dark:text-rose-400">100</span></span>
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">balance 1000</span></span>
+              </div>
+            </div>
+            <div class="sql-mvcc-ver sql-mvcc-live">
+              <div class="sql-mvcc-ver-head">v2 — LIVE</div>
+              <div class="sql-mvcc-ver-fields">
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-600 dark:text-amber-400">100</span></span>
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-emerald-600 dark:text-emerald-400">∞</span></span>
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">balance 500</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Isolation levels -->
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="sql-explain-box" style="border-color:rgb(167 139 250/0.35)">
+            <div class="mb-1.5 flex items-center gap-1.5">
+              <span class="rounded bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-bold text-violet-600 dark:text-violet-400">READ COMMITTED</span>
+              <span class="text-[10px] text-(--fg-faint)">default</span>
+            </div>
+            <p class="text-[11px] text-(--fg-dim)">Fresh snapshot at <em>each statement</em> — same query, different result within one transaction.</p>
+            <pre class="sql-pre mt-2">BEGIN;
+SELECT balance WHERE name='Alice'; -- 1000
+-- A commits here
+SELECT balance WHERE name='Alice'; -- 500 ← non-repeatable!</pre>
+          </div>
+          <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+            <div class="mb-1.5">
+              <span class="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">REPEATABLE READ</span>
+            </div>
+            <p class="text-[11px] text-(--fg-dim)">One snapshot at <em>first statement</em> — A's commit invisible for the entire transaction.</p>
+            <pre class="sql-pre mt-2">BEGIN ISOLATION LEVEL REPEATABLE READ;
+SELECT balance WHERE name='Alice'; -- 1000
+-- A commits here
+SELECT balance WHERE name='Alice'; -- 1000 ← frozen</pre>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- psql reference -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Inspect xmin/xmax — psql queries</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 font-mono text-xs">
+        <pre class="sql-details-pre thin-scrollbar">-- Hidden system columns
 SELECT xmin, xmax, ctid, * FROM accounts WHERE name = 'Alice';
 -- xmin = xid that created this version
 -- xmax = xid that deleted/updated it  (0 = still live)
 -- ctid  = physical (page, slot) on disk
 
--- Dead-tuple bloat
+-- Dead-tuple bloat monitor
 SELECT relname, n_live_tup, n_dead_tup,
-       round(100.0 * n_dead_tup / nullif(n_live_tup+n_dead_tup,0), 1) AS dead_pct
+       round(100.0 * n_dead_tup / nullif(n_live_tup+n_dead_tup,0),1) AS dead_pct
   FROM pg_stat_user_tables WHERE n_dead_tup > 1000 ORDER BY dead_pct DESC;
 
-VACUUM ANALYZE accounts;  -- autovacuum does this; run manually after bulk writes</pre>
+VACUUM ANALYZE accounts; -- autovacuum does this automatically</pre>
       </div>
     </details>
   </div>
@@ -420,66 +424,90 @@ VACUUM ANALYZE accounts;  -- autovacuum does this; run manually after bulk write
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 4 — Footprint
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="footprint" hidden class="space-y-5">
+  <div data-sql-pane="footprint" hidden class="space-y-4">
 
-    <div class="sql-visual-card">
-      <p class="sql-visual-title">B-Tree vs BRIN — when does each index type make sense?</p>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
-          <strong class="text-cyan-600 dark:text-cyan-400">B-Tree</strong>
-          <ul class="mt-1 space-y-1 text-[11px] text-(--fg-dim) list-none">
-            <li>✓ Random access, point lookups, range scans</li>
-            <li>✓ ORDER BY, GROUP BY on the indexed column</li>
-            <li>✓ Equality: <code>WHERE email = '…'</code></li>
-            <li>✗ Larger on disk — key + TID per row</li>
-            <li>✗ Random inserts cause page splits and bloat</li>
-          </ul>
-          <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Rule: default choice for any indexed column used in WHERE or JOIN.</p>
-        </div>
-        <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
-          <strong class="text-amber-600 dark:text-amber-400">BRIN (Block Range Index)</strong>
-          <ul class="mt-1 space-y-1 text-[11px] text-(--fg-dim) list-none">
-            <li>✓ Tiny — stores only min/max per 128-page range</li>
-            <li>✓ Append-only tables: timestamps, sequential IDs</li>
-            <li>✓ Huge tables where B-Tree would be GBs</li>
-            <li>✗ Useless if data is not correlated with insert order</li>
-            <li>✗ No point lookup — eliminates blocks, not rows</li>
-          </ul>
-          <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Rule: only when physical order matches key order — time-series, log tables, event streams.</p>
-        </div>
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🌲</div>
+        <div class="mt-0.5 font-bold text-cyan-500">B-Tree</div>
+        <div class="text-[10px] text-(--fg-faint)">35 MB / 1M rows</div>
       </div>
-
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">⚡</div>
+        <div class="mt-0.5 font-bold text-amber-500">BRIN</div>
+        <div class="text-[10px] text-(--fg-faint)">48 KB (700×)</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🔥</div>
+        <div class="mt-0.5 font-bold text-rose-500">HOT update</div>
+        <div class="text-[10px] text-(--fg-faint)">no index write</div>
+      </div>
     </div>
 
     <FootprintCalc />
 
-    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
-      <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
-        <span class="text-(--accent)">📋 DDL examples + size inspection queries</span>
-        <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+    <!-- B-Tree vs BRIN comparison -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">B-Tree vs BRIN — when each type fits</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
-      <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 md:grid-cols-2">
-        <div>
-          <p class="mb-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">B-Tree — 1M rows BIGINT ≈ 35 MB</p>
-          <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_ts ON events (created_at);
+      <div class="border-t border-(--border) p-4 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+            <div class="mb-1.5"><span class="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">B-Tree</span></div>
+            <ul class="space-y-1 text-[11px] text-(--fg-dim) list-none">
+              <li>✓ Point lookups, range scans, ORDER BY</li>
+              <li>✓ Equality: <code>WHERE email = '…'</code></li>
+              <li>✗ Larger on disk — key + TID per row</li>
+              <li>✗ Random inserts cause page splits</li>
+            </ul>
+            <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Default choice for any column in WHERE / JOIN.</p>
+          </div>
+          <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
+            <div class="mb-1.5"><span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">BRIN</span></div>
+            <ul class="space-y-1 text-[11px] text-(--fg-dim) list-none">
+              <li>✓ Tiny — min/max per 128-page range</li>
+              <li>✓ Append-only: timestamps, sequential IDs</li>
+              <li>✗ Useless if data not correlated with insert order</li>
+              <li>✗ Eliminates blocks, not rows</li>
+            </ul>
+            <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Only when physical order matches key order.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- DDL reference -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">DDL examples + size inspection queries</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <p class="mb-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">B-Tree — 1M rows BIGINT ≈ 35 MB</p>
+            <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_ts ON events (created_at);
 
 SELECT pg_size_pretty(pg_relation_size('idx_events_ts'));
 -- → 35 MB
 
 SELECT * FROM bt_metap('idx_events_ts');
 -- level: 3  (root → branch → leaf)</pre>
-        </div>
-        <div>
-          <p class="mb-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">BRIN — same column ≈ 48 KB (700× smaller)</p>
-          <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_brin
+          </div>
+          <div>
+            <p class="mb-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">BRIN — same column ≈ 48 KB (700×)</p>
+            <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_brin
   ON events USING brin (created_at);
 
 SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
 -- → 48 kB
 
--- Only eliminates pages, not rows
 -- ✓ WHERE created_at > now() - '7d'
 -- ✗ WHERE user_id = 42  (random dist.)</pre>
+          </div>
         </div>
       </div>
     </details>
@@ -488,73 +516,84 @@ SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 5 — Infra Tools
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="infra" hidden class="space-y-5">
+  <div data-sql-pane="infra" hidden class="space-y-4">
 
-    <div class="sql-visual-card">
-      <p class="sql-visual-title">Two primitives every backend hits in production</p>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-
-        <!-- Connection Pool -->
-        <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
-          <strong class="text-cyan-600 dark:text-cyan-400">Connection Pool</strong>
-          <p class="mt-1 text-[11px] text-(--fg-dim)">
-            Opening a database connection is expensive (~10–50 ms: TCP handshake, auth, SSL). A pool keeps N connections open and reuses them.
-            Workers <em>borrow</em> a slot, run their query, and <em>return</em> it.
-          </p>
-          <div class="sql-pool-diagram mt-3">
-            <div class="sql-pool-row">
-              {Array.from({length:5}).map((_, i) => (
-                <div class:list={["sql-pool-slot-static", i < 3 ? "sql-pool-used" : "sql-pool-free"]}>
-                  {i < 3 ? "W" + (i+1) : "—"}
-                </div>
-              ))}
-            </div>
-            <p class="text-[10px] text-(--fg-faint) mt-1">Pool size = 5 · 3 workers active · 2 slots free</p>
-          </div>
-          <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-rose-500/40 pl-2">
-            When all slots are taken: new requests <em>queue</em>. If the queue fills too — connection timeout. This is what "pool exhaustion" looks like.
-          </p>
-        </div>
-
-        <!-- Token Bucket -->
-        <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
-          <strong class="text-amber-600 dark:text-amber-400">Token Bucket (Rate Limiter)</strong>
-          <p class="mt-1 text-[11px] text-(--fg-dim)">
-            A bucket holds up to <em>capacity</em> tokens. It refills at <em>fill rate</em> tokens/second. Each incoming request consumes 1 token. If the bucket is empty, the request is dropped.
-          </p>
-          <div class="sql-bucket-diagram mt-3">
-            <div class="sql-bucket-visual">
-              <div class="sql-bucket-fill" style="height:60%">
-                <span>12</span>
-              </div>
-              <div class="sql-bucket-cap-label">20</div>
-            </div>
-            <div class="sql-bucket-info text-[10px] text-(--fg-dim)">
-              <div>Capacity: 20 tokens</div>
-              <div class="text-emerald-600 dark:text-emerald-400">Fill: +5 tok/s</div>
-              <div class="text-rose-600 dark:text-rose-400">Requests: 8 req/s</div>
-              <div class="text-amber-600 dark:text-amber-400">→ 3 req/s dropped</div>
-            </div>
-          </div>
-          <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">
-            Burst traffic up to <em>capacity</em> is absorbed. Sustained traffic above <em>fill rate</em> will always drop some requests.
-          </p>
-        </div>
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🔄</div>
+        <div class="mt-0.5 font-bold text-cyan-500">Pool</div>
+        <div class="text-[10px] text-(--fg-faint)">reuse N conns</div>
       </div>
-
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🪣</div>
+        <div class="mt-0.5 font-bold text-amber-500">Bucket</div>
+        <div class="text-[10px] text-(--fg-faint)">burst → drop</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">⚙️</div>
+        <div class="mt-0.5 font-bold text-emerald-500">HikariCP</div>
+        <div class="text-[10px] text-(--fg-faint)">cores×2 + disks</div>
+      </div>
     </div>
 
     <InfraTools />
 
-    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
-      <summary class="flex cursor-pointer select-none items-center justify-between font-semibold text-(--fg)">
-        <span class="text-(--accent)">⚙️ Config reference — HikariCP &amp; Express rate-limit</span>
-        <span class="text-(--fg-faint) transition-transform group-open:rotate-180">▼</span>
+    <!-- Pool + Token bucket explanation -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Connection pool &amp; token bucket — how they work</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
-      <div class="mt-4 grid grid-cols-1 gap-4 border-t border-(--border) pt-3 md:grid-cols-2">
-        <div>
-          <p class="mb-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">HikariCP (Spring Boot)</p>
-          <pre class="sql-details-pre thin-scrollbar">spring.datasource.hikari.maximum-pool-size=20
+      <div class="border-t border-(--border) p-4 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+            <div class="mb-1.5"><span class="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">Connection Pool</span></div>
+            <p class="text-[11px] text-(--fg-dim)">Opening a DB connection costs ~10–50 ms (TCP + auth + SSL). A pool keeps N connections open and <em>reuses</em> them — workers borrow a slot, run the query, return it.</p>
+            <div class="sql-pool-diagram mt-3">
+              <div class="sql-pool-row">
+                {Array.from({length:5}).map((_, i) => (
+                  <div class:list={["sql-pool-slot-static", i < 3 ? "sql-pool-used" : "sql-pool-free"]}>
+                    {i < 3 ? "W" + (i+1) : "—"}
+                  </div>
+                ))}
+              </div>
+              <p class="text-[10px] text-(--fg-faint) mt-1">Pool 5 · 3 active · 2 free</p>
+            </div>
+            <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-rose-500/40 pl-2">All slots taken → requests queue → timeout. That is pool exhaustion.</p>
+          </div>
+          <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
+            <div class="mb-1.5"><span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">Token Bucket</span></div>
+            <p class="text-[11px] text-(--fg-dim)">Bucket holds up to <em>capacity</em> tokens, refills at <em>fill rate</em>/s. Each request consumes 1 token. Empty bucket → request dropped.</p>
+            <div class="sql-bucket-diagram mt-3">
+              <div class="sql-bucket-visual">
+                <div class="sql-bucket-fill" style="height:60%"><span>12</span></div>
+                <div class="sql-bucket-cap-label">20</div>
+              </div>
+              <div class="sql-bucket-info text-[10px] text-(--fg-dim)">
+                <div>Capacity: 20 tokens</div>
+                <div class="text-emerald-600 dark:text-emerald-400">Fill: +5 tok/s</div>
+                <div class="text-rose-600 dark:text-rose-400">Requests: 8 req/s</div>
+                <div class="text-amber-600 dark:text-amber-400">→ 3 req/s dropped</div>
+              </div>
+            </div>
+            <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Burst up to capacity is absorbed. Sustained above fill rate always drops.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Config reference -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Config reference — HikariCP &amp; Express rate-limit</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <p class="mb-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">HikariCP (Spring Boot)</p>
+            <pre class="sql-details-pre thin-scrollbar">spring.datasource.hikari.maximum-pool-size=20
 spring.datasource.hikari.minimum-idle=5
 spring.datasource.hikari.connection-timeout=3000
 spring.datasource.hikari.idle-timeout=600000
@@ -562,10 +601,11 @@ spring.datasource.hikari.max-lifetime=1800000
 
 # Rule: pool = (cores × 2) + disk spindles
 # 4 cores, SSD → ~10 is usually optimal</pre>
-        </div>
-        <div>
-          <p class="mb-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">express-rate-limit (Node.js)</p>
-          <pre class="sql-details-pre thin-scrollbar">{"import rateLimit from 'express-rate-limit';\napp.use('/api/', rateLimit({\n  windowMs: 1000, max: 10,\n  standardHeaders: true,\n  handler: (_req, res) =>\n    res.status(429).json({ error: 'rate limited' })\n}));\n// HTTP 429 + Retry-After header"}</pre>
+          </div>
+          <div>
+            <p class="mb-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">express-rate-limit (Node.js)</p>
+            <pre class="sql-details-pre thin-scrollbar">{"import rateLimit from 'express-rate-limit';\napp.use('/api/', rateLimit({\n  windowMs: 1000, max: 10,\n  standardHeaders: true,\n  handler: (_req, res) =>\n    res.status(429).json({ error: 'rate limited' })\n}));\n// HTTP 429 + Retry-After header"}</pre>
+          </div>
         </div>
       </div>
     </details>
@@ -580,6 +620,11 @@ spring.datasource.hikari.max-lifetime=1800000
     font-size: 11px; font-family: monospace;
     color: var(--fg-dim); cursor: pointer;
     transition: color .15s, border-color .15s, background .15s;
+    touch-action: manipulation;
+    scroll-snap-align: start;
+    min-height: 36px;
+    white-space: nowrap;
+    display: inline-flex; align-items: center;
   }
   .sql-tab:hover { color: var(--fg); }
   .sql-tab-active {
@@ -802,21 +847,38 @@ spring.datasource.hikari.max-lifetime=1800000
     const tabs  = bar.querySelectorAll<HTMLButtonElement>('[data-sql-tab]');
     const panes = document.querySelectorAll<HTMLElement>('[data-sql-pane]');
 
-    const activate = (tab: string) => {
+    const activate = (tab: string, updateHash = true) => {
       tabs.forEach(b  => b.classList.toggle('sql-tab-active', b.dataset.sqlTab === tab));
       panes.forEach(p => { p.hidden = p.dataset.sqlPane !== tab; });
-      try { localStorage.setItem('sql_lab_tab', tab); } catch {}
+      try {
+        localStorage.setItem('sql_lab_tab', tab);
+        if (updateHash && window.location.hash.slice(1) !== tab) {
+          history.replaceState(null, '', '#' + tab);
+        }
+      } catch {}
     };
 
     tabs.forEach(btn =>
       btn.addEventListener('click', () => activate(btn.dataset.sqlTab!))
     );
 
+    // 1. Prioritize URL hash (e.g. /lab/sql#btree)
+    const hash = window.location.hash.slice(1);
+    if (hash && [...tabs].some(b => b.dataset.sqlTab === hash)) {
+      activate(hash, false);
+      return;
+    }
+
+    // 2. Fallback to localStorage
     try {
       const saved = localStorage.getItem('sql_lab_tab');
-      if (saved && [...tabs].some(b => b.dataset.sqlTab === saved)) { activate(saved); return; }
+      if (saved && [...tabs].some(b => b.dataset.sqlTab === saved)) {
+        activate(saved, false);
+        return;
+      }
     } catch {}
-    activate('explain');
+
+    activate('engine', false);
   }
 
   document.addEventListener('astro:page-load', initSqlTabs);

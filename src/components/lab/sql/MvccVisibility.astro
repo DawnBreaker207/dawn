@@ -1,53 +1,160 @@
 ---
 // MVCC Visibility — step-through PostgreSQL multi-version concurrency simulator
+// Infographic timeline & version chain inspired by backend communication patterns
 ---
 
-<div id="mvcc-panel" class="rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs">
-  <p class="mb-3 border-b border-(--border) pb-2 text-[11px] tracking-widest text-(--fg-faint) uppercase">
-    mvcc visibility simulator
-    <span class="ml-1 normal-case text-(--fg-dim)">step through xmin/xmax version chains — see what each transaction actually reads</span>
-  </p>
+<div id="mvcc-panel" class="rounded-2xl border border-(--border) bg-(--bg-alt) p-5 font-mono text-xs shadow-sm">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-(--border) pb-3">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-(--fg)">
+          PostgreSQL MVCC &amp; Snapshot Isolation Simulator
+        </h3>
+      </div>
+      <p class="mt-1 text-[11px] text-(--fg-dim)">
+        Step through xmin/xmax version chains, evaluate snapshot visibility rules, and contrast <strong>READ COMMITTED</strong> vs <strong>REPEATABLE READ</strong>.
+      </p>
+    </div>
 
-  <!-- Isolation level + Reset -->
-  <div class="flex flex-wrap items-center gap-3 mb-4">
-    <label class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Isolation:</label>
-    <select id="mvcc-iso" class="rounded border border-(--border) bg-(--bg) px-2 py-1 text-[11px] text-(--fg)">
-      <option value="read_committed">READ COMMITTED</option>
-      <option value="repeatable_read">REPEATABLE READ</option>
-    </select>
-    <button id="mvcc-reset" type="button"
-      class="ml-auto rounded border border-(--border) bg-(--bg) px-3 py-1 text-[11px] text-(--fg-dim) hover:text-(--fg) cursor-pointer transition-colors">
-      ↺ Reset
-    </button>
+    <!-- Quick Scenario Presets -->
+    <div class="flex flex-wrap items-center gap-1.5">
+      <span class="text-[10px] text-(--fg-faint) uppercase">Scenarios:</span>
+      <button
+        id="mvcc-preset-rc"
+        type="button"
+        class="cursor-pointer rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-500 hover:bg-amber-500/20 transition-all font-semibold"
+      >
+        ⚡ Demo Read Committed
+      </button>
+      <button
+        id="mvcc-preset-rr"
+        type="button"
+        class="cursor-pointer rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-500 hover:bg-cyan-500/20 transition-all font-semibold"
+      >
+        🛡️ Demo Repeatable Read
+      </button>
+      <button
+        id="mvcc-reset"
+        type="button"
+        class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1 text-[11px] text-(--fg-dim) hover:text-(--fg) hover:border-(--accent) transition-all"
+      >
+        ↺ Reset
+      </button>
+    </div>
   </div>
 
-  <!-- Transaction controls -->
-  <div class="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2">
-    <div class="rounded border border-cyan-500/40 bg-cyan-950/10 p-3">
-      <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Transaction A</p>
-      <div class="flex flex-wrap gap-2">
-        <button id="mvcc-begin-a"  type="button" class="mvcc-btn">BEGIN</button>
-        <button id="mvcc-update-a" type="button" class="mvcc-btn">UPDATE row</button>
-        <button id="mvcc-commit-a" type="button" class="mvcc-btn mvcc-btn-ok">COMMIT</button>
-        <button id="mvcc-abort-a"  type="button" class="mvcc-btn mvcc-btn-warn">ROLLBACK</button>
-      </div>
+  <!-- Isolation Level & Global Snapshot Info Bar -->
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--bg) p-3">
+    <div class="flex items-center gap-3">
+      <label class="text-[11px] uppercase tracking-wider text-(--fg-faint) font-semibold">Isolation Level:</label>
+      <select id="mvcc-iso" class="cursor-pointer rounded-lg border border-(--border) bg-(--bg-alt) px-3 py-1.5 text-xs text-(--fg) font-semibold focus:border-cyan-400 outline-none">
+        <option value="read_committed">READ COMMITTED (PG Default)</option>
+        <option value="repeatable_read">REPEATABLE READ (Frozen Snapshot)</option>
+      </select>
     </div>
-    <div class="rounded border border-violet-500/40 bg-violet-950/10 p-3">
-      <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">Transaction B</p>
-      <div class="flex flex-wrap gap-2">
-        <button id="mvcc-begin-b"  type="button" class="mvcc-btn">BEGIN</button>
-        <button id="mvcc-select-b" type="button" class="mvcc-btn">SELECT *</button>
-        <button id="mvcc-commit-b" type="button" class="mvcc-btn mvcc-btn-ok">COMMIT</button>
+
+    <div id="mvcc-snapshot-badge" class="flex items-center gap-2 text-[11px]">
+      <span class="text-(--fg-faint)">Snapshot Status:</span>
+      <span class="rounded bg-(--bg-alt) px-2 py-0.5 font-mono text-(--accent) border border-(--border)">
+        Statement Level
+      </span>
+    </div>
+  </div>
+
+  <!-- Concurrent Execution Timeline Swimlanes -->
+  <div class="mb-4 rounded-xl border border-(--border) bg-(--bg) p-3.5">
+    <div class="mb-2 flex items-center justify-between">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-(--fg-faint)">
+        Concurrent Execution Timeline (Swimlanes)
+      </span>
+      <span class="text-[10px] text-(--fg-faint)">Timeline t0 ➔ t5</span>
+    </div>
+
+    <div class="space-y-2">
+      <!-- Lane A: Txn A (Writer) -->
+      <div class="flex items-center gap-2">
+        <div class="w-20 shrink-0 text-[10px] font-bold text-cyan-400">Txn A (Writer)</div>
+        <div id="mvcc-lane-a" class="flex-1 flex items-center gap-1.5 overflow-x-auto py-1 thin-scrollbar">
+          <span class="rounded border border-dashed border-(--border) px-2 py-1 text-[10px] text-(--fg-faint)">Not started</span>
+        </div>
+      </div>
+      <!-- Lane B: Txn B (Reader) -->
+      <div class="flex items-center gap-2 border-t border-(--border)/60 pt-2">
+        <div class="w-20 shrink-0 text-[10px] font-bold text-violet-400">Txn B (Reader)</div>
+        <div id="mvcc-lane-b" class="flex-1 flex items-center gap-1.5 overflow-x-auto py-1 thin-scrollbar">
+          <span class="rounded border border-dashed border-(--border) px-2 py-1 text-[10px] text-(--fg-faint)">Not started</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Version chain table -->
-  <div id="mvcc-table" class="mb-3 overflow-x-auto thin-scrollbar"></div>
+  <!-- Interactive Action Controls -->
+  <div class="grid grid-cols-1 gap-3.5 mb-4 sm:grid-cols-2">
+    <!-- Transaction A -->
+    <div class="rounded-xl border border-cyan-500/30 bg-cyan-950/10 p-3.5">
+      <div class="mb-2.5 flex items-center justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Transaction A (Writer)</span>
+        <span id="mvcc-badge-a" class="rounded px-1.5 py-0.5 text-[9px] font-bold bg-cyan-500/20 text-cyan-300">IDLE</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button id="mvcc-begin-a"  type="button" class="mvcc-btn cursor-pointer rounded-lg border border-cyan-500/40 bg-(--bg) px-3 py-1.5 text-xs text-(--fg) hover:border-cyan-400">BEGIN</button>
+        <button id="mvcc-update-a" type="button" class="mvcc-btn cursor-pointer rounded-lg border border-cyan-500/40 bg-(--bg) px-3 py-1.5 text-xs text-(--fg) hover:border-cyan-400">UPDATE Alice=500</button>
+        <button id="mvcc-commit-a" type="button" class="mvcc-btn cursor-pointer rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:border-emerald-400">COMMIT</button>
+        <button id="mvcc-abort-a"  type="button" class="mvcc-btn cursor-pointer rounded-lg border border-rose-500/40 bg-rose-950/30 px-3 py-1.5 text-xs font-bold text-rose-400 hover:border-rose-400">ROLLBACK</button>
+      </div>
+    </div>
 
-  <!-- Step log -->
-  <div class="text-[10px] uppercase tracking-wider text-(--fg-faint) mb-1">Step log</div>
-  <div id="mvcc-log" class="thin-scrollbar max-h-44 overflow-y-auto rounded bg-(--terminal) p-2 text-[10px] leading-5 space-y-0.5"></div>
+    <!-- Transaction B -->
+    <div class="rounded-xl border border-violet-500/30 bg-violet-950/10 p-3.5">
+      <div class="mb-2.5 flex items-center justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">Transaction B (Reader)</span>
+        <span id="mvcc-badge-b" class="rounded px-1.5 py-0.5 text-[9px] font-bold bg-violet-500/20 text-violet-300">IDLE</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button id="mvcc-begin-b"  type="button" class="mvcc-btn cursor-pointer rounded-lg border border-violet-500/40 bg-(--bg) px-3 py-1.5 text-xs text-(--fg) hover:border-violet-400">BEGIN</button>
+        <button id="mvcc-select-b" type="button" class="mvcc-btn cursor-pointer rounded-lg border border-violet-500/40 bg-violet-950/30 px-3 py-1.5 text-xs font-bold text-violet-300 hover:border-violet-400">SELECT * (Read Alice)</button>
+        <button id="mvcc-commit-b" type="button" class="mvcc-btn cursor-pointer rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:border-emerald-400">COMMIT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tuple Version Chain Table -->
+  <div class="mb-4">
+    <div class="mb-2 flex items-center justify-between">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-(--fg-faint)">
+        Physical Heap Tuple Version Chain (xmin / xmax)
+      </span>
+      <span class="text-[10px] text-(--fg-faint)">
+        xmin: row creator XID · xmax: row updater/deleter XID
+      </span>
+    </div>
+    <div id="mvcc-table" class="overflow-x-auto thin-scrollbar rounded-xl border border-(--border)"></div>
+  </div>
+
+  <!-- Step Log & Architectural Takeaway -->
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <div>
+      <div class="text-[10px] uppercase tracking-wider text-(--fg-faint) mb-1.5 font-bold">Execution Step Log</div>
+      <div id="mvcc-log" class="thin-scrollbar h-36 overflow-y-auto rounded-xl border border-(--border) bg-(--terminal) p-2.5 text-[11px] leading-5 space-y-1"></div>
+    </div>
+
+    <!-- Mechanism Infographic Callout -->
+    <div class="rounded-xl border border-(--border) bg-(--bg) p-3.5 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase text-amber-500 mb-1.5">
+          <span>💡 Core Mechanism (PostgreSQL MVCC)</span>
+        </div>
+        <p class="text-[11px] text-(--fg-dim) leading-relaxed">
+          PostgreSQL <strong>never overwrites data in-place</strong> on UPDATE. Instead, the engine creates an updated tuple version (new xmin) and sets the old tuple's xmax to the modifying transaction's XID.
+        </p>
+      </div>
+      <div class="mt-2.5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 text-[10px] text-(--fg-dim) space-y-1">
+        <div>• <strong>Read Committed:</strong> Each query takes a brand new snapshot, seeing tuples committed by other concurrent transactions.</div>
+        <div>• <strong>Repeatable Read:</strong> Snapshot is frozen at transaction inception, guaranteeing zero non-repeatable reads.</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
