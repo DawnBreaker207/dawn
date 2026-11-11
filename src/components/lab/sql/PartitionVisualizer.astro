@@ -1,0 +1,165 @@
+---
+// PartitionVisualizer — demonstrates partition pruning for a range-partitioned table
+---
+
+<div id="pv-root" class="rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs space-y-3">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div>
+      <span class="font-bold text-(--fg)">Partition Pruning Visualizer</span>
+      <p class="mt-0.5 text-[10px] text-(--fg-faint)">orders (1M rows) — RANGE partitioned by created_at</p>
+    </div>
+    <span id="pv-badge" class="rounded border border-cyan-500/50 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">READY</span>
+  </div>
+
+  <!-- Preset selector -->
+  <div class="flex flex-wrap gap-1.5">
+    {[
+      { label: '⚡ Q1 only',   q: 'q1' },
+      { label: '📅 Q2–Q3',     q: 'q2q3' },
+      { label: '🗓️ Full year', q: 'full' },
+      { label: '🚫 No filter', q: 'none' },
+    ].map(p => (
+      <button type="button" data-pv-preset={p.q}
+        class="pv-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-[11px] font-semibold text-(--fg-dim) transition-all hover:border-(--fg-dim) hover:text-(--fg) touch-manipulation min-h-[34px]">
+        {p.label}
+      </button>
+    ))}
+  </div>
+
+  <!-- Generated query -->
+  <pre id="pv-query" class="rounded-lg border border-(--border) bg-(--terminal) p-3 text-[11px] text-(--fg) whitespace-pre-wrap"><span class="text-(--fg-faint)">-- select a preset above, then hit ▶ Run</span></pre>
+
+  <!-- 4 partition boxes -->
+  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    {(['q1','q2','q3','q4'] as const).map((q, i) => (
+      <div data-pv-part={q} class="rounded-lg border border-(--border) bg-(--bg) p-3 text-center transition-all duration-200">
+        <div class="text-[10px] font-bold text-(--fg-faint) uppercase">Q{i+1} 2024</div>
+        <div class="mt-0.5 text-[9px] text-(--fg-faint)">{['Jan–Mar','Apr–Jun','Jul–Sep','Oct–Dec'][i]}</div>
+        <div data-pv-status={q} class="mt-2 rounded px-1 py-0.5 text-[9px] font-bold">—</div>
+        <div data-pv-rows={q} class="mt-1 text-[11px] font-bold text-(--fg-faint)">—</div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Summary -->
+  <div id="pv-summary" class="hidden rounded-lg border border-(--border) bg-(--bg) p-3 space-y-1.5 text-[11px]">
+    <div class="flex flex-wrap gap-4">
+      <span class="text-(--fg-dim)">Scanned: <strong id="pv-scanned" class="text-rose-400">—</strong></span>
+      <span class="text-(--fg-dim)">Pruned: <strong id="pv-pruned" class="text-emerald-400">—</strong></span>
+      <span class="text-(--fg-dim)">Rows examined: <strong id="pv-rows-total" class="text-(--fg)">—</strong></span>
+    </div>
+    <p id="pv-hint" class="text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2"></p>
+  </div>
+
+  <!-- Run + Replay -->
+  <div class="flex items-center gap-2 border-t border-(--border) pt-3">
+    <button type="button" id="pv-run"
+      class="cursor-pointer rounded-lg border border-cyan-500 bg-cyan-500/20 px-4 py-2 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 touch-manipulation min-h-[38px] hover:bg-cyan-500/30 transition-all active:scale-95">
+      ▶ Run
+    </button>
+    <button type="button" id="pv-replay"
+      class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-2 text-[11px] font-semibold text-(--fg-dim) touch-manipulation min-h-[38px] hover:text-(--fg) transition-colors active:scale-95">
+      ↻ Replay
+    </button>
+  </div>
+</div>
+
+<script>
+  interface PartitionInfo { scanned: boolean; rows: number }
+  interface Preset { sql: string; parts: Record<string, PartitionInfo> }
+
+  const PRESETS: Record<string, Preset> = {
+    q1: {
+      sql: `SELECT * FROM orders\nWHERE created_at BETWEEN '2024-01-01' AND '2024-03-31';`,
+      parts: { q1:{scanned:true,rows:248_000}, q2:{scanned:false,rows:0}, q3:{scanned:false,rows:0}, q4:{scanned:false,rows:0} },
+    },
+    q2q3: {
+      sql: `SELECT * FROM orders\nWHERE created_at >= '2024-04-01'\n  AND created_at <  '2024-10-01';`,
+      parts: { q1:{scanned:false,rows:0}, q2:{scanned:true,rows:261_000}, q3:{scanned:true,rows:275_000}, q4:{scanned:false,rows:0} },
+    },
+    full: {
+      sql: `SELECT * FROM orders\nWHERE created_at >= '2024-01-01';\n-- open-ended upper bound: all future partitions scanned`,
+      parts: { q1:{scanned:true,rows:248_000}, q2:{scanned:true,rows:261_000}, q3:{scanned:true,rows:275_000}, q4:{scanned:true,rows:219_000} },
+    },
+    none: {
+      sql: `SELECT count(*) FROM orders;\n-- no WHERE on partition key → ALL partitions scanned`,
+      parts: { q1:{scanned:true,rows:248_000}, q2:{scanned:true,rows:261_000}, q3:{scanned:true,rows:275_000}, q4:{scanned:true,rows:219_000} },
+    },
+  };
+
+  const BASE_BTN  = 'pv-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-[11px] font-semibold text-(--fg-dim) transition-all hover:border-(--fg-dim) hover:text-(--fg) touch-manipulation min-h-[34px]';
+  const ACTIVE_BTN = 'pv-btn cursor-pointer rounded-lg border border-(--fg) bg-(--fg) px-3 py-1.5 text-[11px] font-semibold text-(--bg) touch-manipulation min-h-[34px]';
+
+  let selectedKey = '';
+
+  function initPartitionVisualizer() {
+    if (!document.getElementById('pv-root')) return;
+
+    document.querySelectorAll<HTMLButtonElement>('[data-pv-preset]').forEach(btn => {
+      btn.addEventListener('click', () => selectPreset(btn.dataset.pvPreset!));
+    });
+    document.getElementById('pv-run')?.addEventListener('click', () => {
+      if (selectedKey) applyPreset(selectedKey);
+    });
+    document.getElementById('pv-replay')?.addEventListener('click', () => {
+      if (selectedKey) applyPreset(selectedKey);
+    });
+
+    // default select first
+    selectPreset('q1');
+  }
+
+  function selectPreset(key: string) {
+    selectedKey = key;
+    const preset = PRESETS[key];
+    if (!preset) return;
+
+    document.querySelectorAll<HTMLElement>('[data-pv-preset]').forEach(b => {
+      b.className = b.dataset.pvPreset === key ? ACTIVE_BTN : BASE_BTN;
+    });
+    document.getElementById('pv-query')!.textContent = preset.sql;
+    document.getElementById('pv-badge')!.textContent = 'READY';
+  }
+
+  function applyPreset(key: string) {
+    const preset = PRESETS[key];
+    if (!preset) return;
+
+    let scanned = 0, pruned = 0, totalRows = 0;
+    for (const q of ['q1','q2','q3','q4']) {
+      const partEl = document.querySelector<HTMLElement>(`[data-pv-part="${q}"]`);
+      const statEl = document.querySelector<HTMLElement>(`[data-pv-status="${q}"]`);
+      const rowsEl = document.querySelector<HTMLElement>(`[data-pv-rows="${q}"]`);
+      const info   = preset.parts[q];
+      if (!partEl || !statEl || !rowsEl) continue;
+
+      if (info.scanned) {
+        partEl.style.cssText = 'border-color:rgb(248 113 113/.5);background:rgb(248 113 113/.06)';
+        statEl.className = 'mt-2 rounded px-1 py-0.5 text-[9px] font-bold bg-rose-500/15 text-rose-400';
+        statEl.textContent = '▶ SCAN';
+        rowsEl.className = 'mt-1 text-[11px] font-bold text-rose-400';
+        rowsEl.textContent = info.rows.toLocaleString();
+        scanned++; totalRows += info.rows;
+      } else {
+        partEl.style.cssText = '';
+        statEl.className = 'mt-2 rounded px-1 py-0.5 text-[9px] font-bold bg-emerald-500/10 text-emerald-500';
+        statEl.textContent = '✗ PRUNED';
+        rowsEl.className = 'mt-1 text-[11px] font-bold text-emerald-500';
+        rowsEl.textContent = 'skipped';
+        pruned++;
+      }
+    }
+
+    const summary = document.getElementById('pv-summary')!;
+    summary.classList.remove('hidden');
+    document.getElementById('pv-scanned')!.textContent    = String(scanned);
+    document.getElementById('pv-pruned')!.textContent     = String(pruned);
+    document.getElementById('pv-rows-total')!.textContent = totalRows.toLocaleString();
+    document.getElementById('pv-hint')!.textContent = pruned > 0
+      ? `Planner uses constraint_exclusion to skip ${pruned} of 4 partitions — ${Math.round(pruned/4*100)}% rows never touched.`
+      : `No date filter on partition key: all 4 partitions scanned. WHERE on created_at enables pruning.`;
+    document.getElementById('pv-badge')!.textContent = 'DONE';
+  }
+
+  document.addEventListener('astro:page-load', initPartitionVisualizer);
+</script>

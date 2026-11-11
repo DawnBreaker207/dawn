@@ -1,0 +1,194 @@
+---
+// ReplicationTimeline — visualizes WAL streaming + sync commit modes
+---
+
+<div id="rt-root" class="rounded-xl border border-(--border) bg-(--bg-alt) p-4 font-mono text-xs space-y-3">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div>
+      <span class="font-bold text-(--fg)">Replication Timeline</span>
+      <p class="mt-0.5 text-[10px] text-(--fg-faint)">When does the client get its COMMIT ACK?</p>
+    </div>
+    <!-- synchronous_commit mode buttons -->
+    <div class="flex gap-1.5 flex-wrap">
+      <button type="button" data-rt-mode="async"        data-rt-color="amber"   class="rt-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-[10px] font-semibold text-amber-500  touch-manipulation min-h-[32px] transition-all">off (async)</button>
+      <button type="button" data-rt-mode="on"           data-rt-color="cyan"    class="rt-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-[10px] font-semibold text-cyan-400   touch-manipulation min-h-[32px] transition-all">on (default)</button>
+      <button type="button" data-rt-mode="remote_apply" data-rt-color="emerald" class="rt-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-[10px] font-semibold text-emerald-400 touch-manipulation min-h-[32px] transition-all">remote_apply</button>
+    </div>
+  </div>
+
+  <!-- Mode description -->
+  <div id="rt-desc" class="rounded-lg border border-(--border) bg-(--bg) p-2.5 text-[11px] text-(--fg-dim)">
+    Pick a <code class="text-(--fg)">synchronous_commit</code> mode, then hit ▶ Run.
+  </div>
+
+  <!-- Primary + Standby boxes -->
+  <div class="grid grid-cols-2 gap-2">
+    <div class="rounded-lg border-2 border-cyan-500/40 bg-cyan-950/15 p-3 space-y-1">
+      <div class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Primary</div>
+      <div class="text-[9px] text-(--fg-faint)">R/W · WAL writer</div>
+      <div id="rt-primary-state" class="mt-1 text-[11px] text-(--fg-dim)">—</div>
+    </div>
+    <div class="rounded-lg border-2 border-violet-500/35 bg-violet-950/15 p-3 space-y-1">
+      <div class="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Standby</div>
+      <div class="text-[9px] text-(--fg-faint)">R/O · WAL receiver</div>
+      <div id="rt-standby-state" class="mt-1 text-[11px] text-(--fg-dim)">—</div>
+    </div>
+  </div>
+
+  <!-- WAL flow log -->
+  <div id="rt-flow" class="rounded-lg border border-(--border) bg-(--terminal) p-3 min-h-[96px] text-[11px] text-(--fg-dim) overflow-y-auto space-y-0.5 thin-scrollbar" style="max-height:160px">
+    <span class="text-(--fg-faint)">— select mode and run —</span>
+  </div>
+
+  <!-- LSN / lag row -->
+  <div id="rt-lsn" class="hidden rounded-lg border border-(--border) bg-(--bg) p-2.5 flex flex-wrap gap-4 text-[10px] text-(--fg-dim)">
+    <span>write_lsn <code id="rt-wlsn" class="text-cyan-400">—</code></span>
+    <span>flush_lsn <code id="rt-flsn" class="text-amber-400">—</code></span>
+    <span>replay_lsn <code id="rt-rlsn" class="text-emerald-400">—</code></span>
+    <span class="ml-auto">lag <strong id="rt-lag" class="text-rose-400">—</strong></span>
+  </div>
+
+  <!-- Run + Replay (ScenarioPicker pattern) -->
+  <div class="flex items-center gap-2 border-t border-(--border) pt-3">
+    <button type="button" id="rt-run"
+      class="cursor-pointer rounded-lg border border-cyan-500 bg-cyan-500/20 px-4 py-2 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 touch-manipulation min-h-[38px] hover:bg-cyan-500/30 transition-all active:scale-95">
+      ▶ Simulate COMMIT
+    </button>
+    <button type="button" id="rt-replay"
+      class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-2 text-[11px] font-semibold text-(--fg-dim) touch-manipulation min-h-[38px] hover:text-(--fg) transition-colors active:scale-95">
+      ↻ Replay
+    </button>
+  </div>
+</div>
+
+<script>
+  type Mode = 'async' | 'on' | 'remote_apply';
+  type Accent = 'amber' | 'cyan' | 'emerald';
+
+  interface StepDef { text: string; primary?: string; standby?: string; ack?: boolean }
+
+  const MODES: Record<Mode, { desc: string; lag: string; steps: StepDef[] }> = {
+    async: {
+      desc: 'synchronous_commit = off — Primary ACKs the client right after local WAL fsync, before the standby receives anything. Fastest; may lose up to ~200 ms of commits on hard crash.',
+      lag: '~0 ms (risk: ~200 ms lost)',
+      steps: [
+        { text: '① Client → PRIMARY: COMMIT', primary: 'writing WAL…' },
+        { text: '② Primary writes + fsyncs WAL locally', primary: 'fsync ✓' },
+        { text: '③ ✓ ACK → client  (standby not yet notified)', ack: true, primary: 'committed' },
+        { text: '④ [background] WAL record streamed to standby', standby: 'receiving…' },
+        { text: '⑤ [background] Standby flushes WAL', standby: 'flushed' },
+        { text: '⑥ [background] Standby replays WAL into data files', standby: 'applied' },
+      ],
+    },
+    on: {
+      desc: 'synchronous_commit = on (default) — Primary waits for the standby to flush WAL to disk before ACKing. Zero data loss on failover. Cost: 1 × network RTT added to commit latency.',
+      lag: '1 RTT (~1–5 ms LAN)',
+      steps: [
+        { text: '① Client → PRIMARY: COMMIT', primary: 'writing WAL…' },
+        { text: '② Primary writes + fsyncs WAL locally', primary: 'fsync ✓' },
+        { text: '③ WAL record streamed to standby', standby: 'receiving…' },
+        { text: '④ Standby flushes WAL to disk → sends flush ACK', standby: 'flushed ✓' },
+        { text: '⑤ Primary receives flush ACK', primary: 'ack received' },
+        { text: '⑥ ✓ ACK → client  (standby WAL durable)', ack: true, primary: 'committed' },
+        { text: '⑦ [later] Standby replays WAL into data files', standby: 'applied' },
+      ],
+    },
+    remote_apply: {
+      desc: 'synchronous_commit = remote_apply — Strongest guarantee. Primary waits until standby has applied WAL (data queryable on standby). Instant failover with no lag. Cost: 1 RTT + standby apply time.',
+      lag: '1 RTT + apply time',
+      steps: [
+        { text: '① Client → PRIMARY: COMMIT', primary: 'writing WAL…' },
+        { text: '② Primary writes + fsyncs WAL locally', primary: 'fsync ✓' },
+        { text: '③ WAL record streamed to standby', standby: 'receiving…' },
+        { text: '④ Standby flushes WAL to disk', standby: 'flushed' },
+        { text: '⑤ Standby replays WAL — data now visible on standby', standby: 'applied ✓' },
+        { text: '⑥ Standby sends apply ACK to primary', primary: 'apply ack received' },
+        { text: '⑦ ✓ ACK → client  (data live on BOTH nodes)', ack: true, primary: 'committed' },
+      ],
+    },
+  };
+
+  // Per-accent active class — keeps each button's own text color
+  const ACTIVE_CLASS: Record<Accent, string> = {
+    amber:   'rt-btn cursor-pointer rounded-lg border border-amber-500/70   bg-amber-500/15   px-2.5 py-1.5 text-[10px] font-semibold text-amber-500   touch-manipulation min-h-[32px] transition-all',
+    cyan:    'rt-btn cursor-pointer rounded-lg border border-cyan-500/70    bg-cyan-500/15    px-2.5 py-1.5 text-[10px] font-semibold text-cyan-400    touch-manipulation min-h-[32px] transition-all',
+    emerald: 'rt-btn cursor-pointer rounded-lg border border-emerald-500/70 bg-emerald-500/15 px-2.5 py-1.5 text-[10px] font-semibold text-emerald-400 touch-manipulation min-h-[32px] transition-all',
+  };
+  const IDLE_CLASS: Record<Accent, string> = {
+    amber:   'rt-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-[10px] font-semibold text-amber-500   touch-manipulation min-h-[32px] transition-all',
+    cyan:    'rt-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-[10px] font-semibold text-cyan-400    touch-manipulation min-h-[32px] transition-all',
+    emerald: 'rt-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-[10px] font-semibold text-emerald-400 touch-manipulation min-h-[32px] transition-all',
+  };
+
+  let activeMode: Mode = 'on';
+  let busy = false;
+
+  function initReplicationTimeline() {
+    if (!document.getElementById('rt-root')) return;
+    document.querySelectorAll<HTMLButtonElement>('[data-rt-mode]').forEach(btn =>
+      btn.addEventListener('click', () => setMode(btn.dataset.rtMode as Mode))
+    );
+    document.getElementById('rt-run')?.addEventListener('click', runSim);
+    document.getElementById('rt-replay')?.addEventListener('click', runSim);
+    setMode('on');
+  }
+
+  function setMode(mode: Mode) {
+    activeMode = mode;
+    document.getElementById('rt-desc')!.textContent = MODES[mode].desc;
+
+    document.querySelectorAll<HTMLElement>('[data-rt-mode]').forEach(b => {
+      const accent = (b.dataset.rtColor ?? 'cyan') as Accent;
+      b.className = b.dataset.rtMode === mode ? ACTIVE_CLASS[accent] : IDLE_CLASS[accent];
+    });
+
+    resetFlow();
+  }
+
+  function resetFlow() {
+    document.getElementById('rt-flow')!.innerHTML = '<span class="text-(--fg-faint)">— hit ▶ Simulate COMMIT to run —</span>';
+    document.getElementById('rt-lsn')!.classList.add('hidden');
+    document.getElementById('rt-primary-state')!.textContent = '—';
+    document.getElementById('rt-standby-state')!.textContent = '—';
+  }
+
+  async function runSim() {
+    if (busy) return;
+    busy = true;
+
+    const runBtn    = document.getElementById('rt-run')    as HTMLButtonElement;
+    const replayBtn = document.getElementById('rt-replay') as HTMLButtonElement;
+    runBtn.disabled = replayBtn.disabled = true;
+    runBtn.textContent = '⏳ Running…';
+    resetFlow();
+
+    const flow = document.getElementById('rt-flow')!;
+    flow.innerHTML = '';
+
+    for (const step of MODES[activeMode].steps) {
+      await delay(380);
+      const el = document.createElement('div');
+      el.className = step.ack ? 'text-emerald-400 font-bold' : 'text-(--fg-dim)';
+      el.textContent = step.text;
+      flow.appendChild(el);
+      flow.scrollTop = flow.scrollHeight;
+      if (step.primary) document.getElementById('rt-primary-state')!.textContent = step.primary;
+      if (step.standby) document.getElementById('rt-standby-state')!.textContent = step.standby;
+    }
+
+    await delay(300);
+    const lsnEl = document.getElementById('rt-lsn')!;
+    lsnEl.classList.remove('hidden');
+    document.getElementById('rt-wlsn')!.textContent = '0/3A6B2F8';
+    document.getElementById('rt-flsn')!.textContent = activeMode === 'async' ? '0/3A5C000' : '0/3A6B2F8';
+    document.getElementById('rt-rlsn')!.textContent = activeMode === 'remote_apply' ? '0/3A6B2F8' : '0/3A4E000';
+    document.getElementById('rt-lag')!.textContent  = MODES[activeMode].lag;
+
+    runBtn.disabled = replayBtn.disabled = false;
+    runBtn.textContent = '▶ Simulate COMMIT';
+    busy = false;
+  }
+
+  const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+  document.addEventListener('astro:page-load', initReplicationTimeline);
+</script>

@@ -9,6 +9,8 @@ import FootprintCalc from '@/components/lab/sql/FootprintCalc.astro';
 import InfraTools from '@/components/lab/sql/InfraTools.astro';
 import ExplainOverviewCard from '@/components/lab/sql/ExplainOverviewCard.astro';
 import EnginePipeline from '@/components/lab/sql/EnginePipeline.astro';
+import PartitionVisualizer from '@/components/lab/sql/PartitionVisualizer.astro';
+import ReplicationTimeline from '@/components/lab/sql/ReplicationTimeline.astro';
 import { EO_SQL, EO_STEPS, CASE_BRANCHES } from '@/scripts/lab/sql/execution-order';
 
 export const prerender = true;
@@ -29,7 +31,7 @@ export const prerender = true;
       </span>
     </div>
     <p class="mt-1 text-sm text-(--fg-dim)">
-      Query plans, B-tree, MVCC, index sizing, infra — 5 interactive simulations.
+      Query plans, B-tree, MVCC, index sizing, infra, partitioning, replication — 8 interactive simulations.
     </p>
   </header>
 
@@ -40,8 +42,10 @@ export const prerender = true;
       <button data-sql-tab="explain"   class="sql-tab">EXPLAIN</button>
       <button data-sql-tab="btree"     class="sql-tab">B-Tree</button>
       <button data-sql-tab="mvcc"      class="sql-tab">MVCC</button>
-      <button data-sql-tab="footprint" class="sql-tab">Footprint</button>
-      <button data-sql-tab="infra"     class="sql-tab">Infra</button>
+      <button data-sql-tab="footprint"   class="sql-tab">Footprint</button>
+      <button data-sql-tab="infra"       class="sql-tab">Infra</button>
+      <button data-sql-tab="partition"   class="sql-tab">Partition</button>
+      <button data-sql-tab="replication" class="sql-tab">Replication</button>
     </div>
   </div>
 
@@ -70,6 +74,167 @@ export const prerender = true;
     </div>
 
     <EnginePipeline />
+
+    <!-- Theory: 5-stage pipeline -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Query pipeline — 5 stages explained</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs">
+
+        <!-- Stage rows -->
+        <div class="space-y-1.5">
+          {[
+            { n:'1', icon:'📝', name:'Parse',   color:'text-violet-400', detail:'Lexer tokenises SQL → Parser builds ParseTree. Grammar check only — no catalog lookup. Typically < 0.1 ms.' },
+            { n:'2', icon:'🔎', name:'Analyze', color:'text-sky-400',    detail:'Resolve table/column names to OIDs from pg_class / pg_attribute. Acquire AccessShareLock. Expand views via rewrite rules.' },
+            { n:'3', icon:'🗺️', name:'Plan',   color:'text-amber-400',  detail:'Cost model picks the cheapest plan: SeqScan = pages × 1.0, IndexScan = levels × 4.0. Stats from pg_statistic (n_distinct, correlation).' },
+            { n:'4', icon:'⚙️', name:'Execute', color:'text-cyan-400',   detail:'Volcano/iterator model — each node calls GetNext() on its child. Reads pages from shared_buffers; spills to temp file if result > work_mem.' },
+            { n:'5', icon:'💾', name:'Commit',  color:'text-emerald-400',detail:'Write WAL commit record → fsync(). Dirty buffer pages flushed later by bgwriter. Release all locks. Read-only queries skip this stage.' },
+          ].map(s => (
+            <div class="flex items-start gap-3 rounded-lg border border-(--border) bg-(--bg) px-3 py-2.5">
+              <span class={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-black text-[10px] ${s.color} border-current/30`}>{s.n}</span>
+              <div class="min-w-0">
+                <span class={`font-bold ${s.color}`}>{s.icon} {s.name}</span>
+                <span class="ml-2 text-[11px] text-(--fg-dim)">{s.detail}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <!-- Volcano + Cost side by side -->
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+            <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-(--fg-faint)">Volcano iterator model</p>
+            <pre class="overflow-x-auto text-[10px] leading-relaxed text-(--fg-dim) thin-scrollbar">{`Sort
+ └─ HashAgg
+      └─ HashJoin
+           ├─ SeqScan users   ← build hash table
+           └─ SeqScan orders  ← probe each row
+
+Each node pulls rows lazily via GetNext().
+Spills to disk if HashJoin > work_mem.`}</pre>
+          </div>
+          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+            <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-(--fg-faint)">Cost model (planner)</p>
+            <div class="space-y-2 text-[10px] text-(--fg-dim)">
+              <div>
+                <span class="text-rose-400 font-semibold">Seq Scan</span>
+                <pre class="mt-0.5 text-[10px]">{`cost = pages × seq_page_cost(1.0)
+     = 4,255 × 1.0 = 4,255`}</pre>
+                <p class="text-(--fg-faint)">Use when selectivity &gt; ~5%</p>
+              </div>
+              <div>
+                <span class="text-emerald-400 font-semibold">Index Scan</span>
+                <pre class="mt-0.5 text-[10px]">{`cost = levels × random_page_cost(4.0)
+     = 3 × 4.0 + 1 heap = 16`}</pre>
+                <p class="text-(--fg-faint)">Set random_page_cost=1.1 on SSD</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Theory: Shared Buffers -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Shared Buffers — page cache internals</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs text-(--fg-dim)">
+        <p class="text-[11px]"><strong class="text-(--fg)">Shared Buffers</strong> is PostgreSQL's in-process page cache — a fixed pool of 8 KB slots shared across all backend processes. The OS page cache provides a second layer below it.</p>
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="rounded-lg border border-(--border) bg-(--bg) p-3 space-y-1.5">
+            <p class="text-[10px] font-semibold text-cyan-400">Buffer lifecycle</p>
+            <div class="space-y-1 text-[10px]">
+              <div class="flex gap-2"><span class="shrink-0 text-(--fg-faint)">1.</span><span>Read request arrives: check buffer hash table (OID + page#)</span></div>
+              <div class="flex gap-2"><span class="shrink-0 text-emerald-400">HIT</span><span>Page found → pin it, return pointer. Zero I/O.</span></div>
+              <div class="flex gap-2"><span class="shrink-0 text-rose-400">MISS</span><span>Evict a victim (clock-sweep) → read from OS/disk → insert.</span></div>
+              <div class="flex gap-2"><span class="shrink-0 text-(--fg-faint)">Write</span><span>Mark page dirty → bgwriter or checkpoint flushes later.</span></div>
+            </div>
+          </div>
+          <div class="rounded-lg border border-(--border) bg-(--bg) p-3 space-y-1.5">
+            <p class="text-[10px] font-semibold text-amber-400">Sizing & tuning</p>
+            <pre class="text-[10px] text-(--fg-dim)">{`shared_buffers = 25% of RAM   # recommended
+                               # (OS page cache = second layer)
+work_mem       = 4MB           # per sort / hash — multiply by
+                               # max_connections × queries
+effective_cache_size = 75%     # tells planner how much is cached`}</pre>
+            <p class="text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Raising shared_buffers beyond 40% of RAM rarely helps — the OS cache is already doing the work.</p>
+          </div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+          <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-(--fg-faint)">Monitor buffer hit ratio (should be &gt; 99%)</p>
+          <pre class="sql-details-pre thin-scrollbar">{`SELECT sum(heap_blks_hit) / nullif(sum(heap_blks_hit + heap_blks_read), 0) AS hit_ratio
+  FROM pg_statio_user_tables;
+-- < 95% → shared_buffers too small or query does full scans
+
+SELECT buffers_checkpoint, buffers_clean, buffers_backend
+  FROM pg_stat_bgwriter;
+-- buffers_backend high → bgwriter can't keep up → tune bgwriter_lru_maxpages`}</pre>
+        </div>
+      </div>
+    </details>
+
+    <!-- Theory: WAL + Locks -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">WAL &amp; Lock Table — durability and concurrency control</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs text-(--fg-dim)">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <!-- WAL -->
+          <div class="space-y-2">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-400">WAL — Write-Ahead Log</p>
+            <p class="text-[11px]">Every change is written to WAL <strong class="text-(--fg)">before</strong> the heap page is modified. Sequential append → safe to crash at any point.</p>
+            <pre class="sql-details-pre thin-scrollbar">{`WAL record structure:
+  LSN      uint64   — monotonic log position
+  XID      uint32   — transaction id
+  op       uint8    — INSERT / UPDATE / DELETE / COMMIT
+  rel      OID      — table / index
+  blkno    uint32   — heap page number
+  offset   uint16   — slot on the page
+  data     bytes[]  — before + after images
+
+Crash recovery: replay WAL from last checkpoint.
+Replication: standby streams WAL records → apply.`}</pre>
+            <div class="rounded-lg border border-amber-500/25 bg-amber-500/5 p-2.5">
+              <p class="text-[10px] text-amber-400 font-semibold mb-1">synchronous_commit options</p>
+              <div class="space-y-0.5 text-[10px]">
+                <div><code class="text-amber-300">on</code> <span class="text-(--fg-faint)">— fsync WAL before ACK (safe, default)</span></div>
+                <div><code class="text-amber-300">off</code> <span class="text-(--fg-faint)">— ACK before fsync (up to 3×faster, may lose ~60ms)</span></div>
+                <div><code class="text-amber-300">remote_apply</code> <span class="text-(--fg-faint)">— standby applied before ACK (zero data loss)</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- Lock table -->
+          <div class="space-y-2">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-violet-400">Lock Table — 8 modes</p>
+            <div class="space-y-1 rounded-lg border border-(--border) bg-(--bg) p-3">
+              {[
+                { mode:'AccessShare',     by:'SELECT',                   blocks:'AccessExclusive only',      safe: true },
+                { mode:'RowShare',        by:'SELECT FOR UPDATE/SHARE',  blocks:'Exclusive+',                safe: true },
+                { mode:'RowExclusive',    by:'INSERT / UPDATE / DELETE', blocks:'Share+',                   safe: true },
+                { mode:'ShareUpdateEx',   by:'VACUUM, ANALYZE',          blocks:'ShareUpdateEx+',            safe: true },
+                { mode:'Share',           by:'CREATE INDEX',             blocks:'RowExclusive+',             safe: true },
+                { mode:'ShareRowEx',      by:'SELECT FOR NO KEY UPDATE', blocks:'ShareUpdateEx+',            safe: false },
+                { mode:'Exclusive',       by:'Internal (index ops)',      blocks:'RowShare+',                safe: false },
+                { mode:'AccessExclusive', by:'DROP / ALTER / TRUNCATE',  blocks:'Everything — full block',  safe: false },
+              ].map(r => (
+                <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[10px]">
+                  <code class="shrink-0 text-violet-400">{r.mode}</code>
+                  <span class="text-(--fg-faint)">← {r.by}</span>
+                  <span class={`ml-auto shrink-0 ${r.safe ? 'text-(--fg-faint)' : 'text-rose-400'}`}>blocks: {r.blocks}</span>
+                </div>
+              ))}
+            </div>
+            <p class="text-[10px] text-(--fg-faint) border-l-2 border-violet-500/40 pl-2">ALTER TABLE / DROP TABLE take AccessExclusiveLock — blocks even a plain SELECT until the DDL finishes.</p>
+          </div>
+        </div>
+      </div>
+    </details>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
@@ -537,6 +702,94 @@ SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
       </div>
     </div>
 
+    <!-- Theory: Connection Pool -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Connection Pool — why and how</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="space-y-2 text-[11px] text-(--fg-dim)">
+            <p>Opening a DB connection is <strong class="text-(--fg)">expensive</strong>: TCP 3-way handshake → TLS negotiation → PostgreSQL auth → server allocates backend process (~5 MB). Total: <strong class="text-rose-400">10–50 ms per connection</strong>.</p>
+            <p>A pool keeps <code class="text-cyan-400">N</code> connections open permanently. App threads <em>borrow</em> a slot, run their query, and return it. No new TCP connection per request.</p>
+            <div class="rounded-lg border border-cyan-500/25 bg-cyan-950/10 p-2.5">
+              <p class="mb-1 text-[10px] font-semibold text-cyan-400">Pool sizing formula (HikariCP)</p>
+              <pre class="text-[10px] text-cyan-300">{`pool_size = (core_count × 2) + disk_spindles
+
+4 cores, SSD (1 spindle):  (4 × 2) + 1 = 9
+8 cores, SSD:              (8 × 2) + 1 = 17
+4 cores, 4 HDD spindles:   (4 × 2) + 4 = 12`}</pre>
+              <p class="mt-1.5 text-[10px] text-(--fg-faint)">Counter-intuitive: bigger pool ≠ faster. PostgreSQL processes compete for CPU and lock tables. Beyond the formula you get context-switch overhead.</p>
+            </div>
+          </div>
+          <div class="space-y-2 text-[11px] text-(--fg-dim)">
+            <p><strong class="text-(--fg)">What happens when pool is full:</strong></p>
+            <div class="rounded-lg border border-(--border) bg-(--bg) p-2.5 space-y-1 text-[10px]">
+              <div class="flex gap-2"><span class="text-amber-400">1.</span><span>New request waits in queue up to <code>connectionTimeout</code> (3 s default)</span></div>
+              <div class="flex gap-2"><span class="text-rose-400">2.</span><span>Timeout → <code>SQLTimeoutException</code> thrown to caller</span></div>
+              <div class="flex gap-2"><span class="text-(--fg-faint)">→</span><span>This is <strong class="text-rose-400">pool exhaustion</strong> — symptom of too many slow queries or pool too small</span></div>
+            </div>
+            <div class="rounded-lg border border-(--border) bg-(--bg) p-2.5">
+              <p class="mb-1 text-[10px] font-semibold text-(--fg-faint)">PgBouncer pooling modes</p>
+              <div class="space-y-0.5 text-[10px]">
+                <div><span class="text-cyan-400 w-28 inline-block">Session</span><span class="text-(--fg-dim)">1 conn per client session (safest)</span></div>
+                <div><span class="text-amber-400 w-28 inline-block">Transaction</span><span class="text-(--fg-dim)">1 conn per txn (most efficient — recommended)</span></div>
+                <div><span class="text-rose-400 w-28 inline-block">Statement</span><span class="text-(--fg-dim)">1 conn per statement (breaks txns — avoid)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Theory: Token Bucket -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Token Bucket — rate limiting algorithm</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="space-y-2 text-[11px] text-(--fg-dim)">
+            <p>The token bucket is the dominant rate-limiting algorithm. It allows <strong class="text-(--fg)">bursting</strong> up to capacity while enforcing a <strong class="text-(--fg)">sustained average</strong> equal to the fill rate.</p>
+            <div class="rounded-lg border border-amber-500/25 bg-amber-950/10 p-2.5">
+              <p class="mb-1 text-[10px] font-semibold text-amber-400">Algorithm</p>
+              <pre class="text-[10px] text-amber-300">{`state = { tokens: capacity, last_refill: now() }
+
+on each request:
+  elapsed = now() - state.last_refill
+  state.tokens = min(capacity,
+    state.tokens + elapsed × fill_rate)
+  state.last_refill = now()
+  if state.tokens >= 1:
+    state.tokens -= 1
+    return ALLOW
+  else:
+    return DENY (HTTP 429)`}</pre>
+            </div>
+          </div>
+          <div class="space-y-2 text-[11px] text-(--fg-dim)">
+            <p><strong class="text-(--fg)">Why this works:</strong></p>
+            <div class="rounded-lg border border-(--border) bg-(--bg) p-2.5 space-y-1.5 text-[10px]">
+              <div><span class="text-emerald-400">Burst:</span> <span>capacity=20 → first 20 requests pass instantly even if fill_rate=5/s</span></div>
+              <div><span class="text-amber-400">Sustained:</span> <span>after burst, only 5 req/s allowed — excess dropped</span></div>
+              <div><span class="text-rose-400">Penalty-free idle:</span> <span>bucket refills during quiet periods — burst credit accumulates</span></div>
+            </div>
+            <div class="rounded-lg border border-(--border) bg-(--bg) p-2.5">
+              <p class="mb-1 text-[10px] font-semibold text-(--fg-faint)">Comparison: alternatives</p>
+              <div class="space-y-0.5 text-[10px]">
+                <div><span class="text-(--fg) w-28 inline-block">Fixed Window</span><span class="text-(--fg-dim)">simple but boundary-burst problem</span></div>
+                <div><span class="text-(--fg) w-28 inline-block">Sliding Window</span><span class="text-(--fg-dim)">accurate, expensive (log per request)</span></div>
+                <div><span class="text-amber-400 w-28 inline-block">Token Bucket</span><span class="text-(--fg-dim)">O(1) state, allows burst — industry standard</span></div>
+                <div><span class="text-(--fg) w-28 inline-block">Leaky Bucket</span><span class="text-(--fg-dim)">constant output rate, no burst absorption</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
     <InfraTools />
 
     <!-- Pool + Token bucket explanation -->
@@ -607,6 +860,255 @@ spring.datasource.hikari.max-lifetime=1800000
             <pre class="sql-details-pre thin-scrollbar">{"import rateLimit from 'express-rate-limit';\napp.use('/api/', rateLimit({\n  windowMs: 1000, max: 10,\n  standardHeaders: true,\n  handler: (_req, res) =>\n    res.status(429).json({ error: 'rate limited' })\n}));\n// HTTP 429 + Retry-After header"}</pre>
           </div>
         </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Tab 6 — Partitioning
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div data-sql-pane="partition" hidden class="space-y-4">
+
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🗂️</div>
+        <div class="mt-0.5 font-bold text-cyan-500">Range/List/Hash</div>
+        <div class="text-[10px] text-(--fg-faint)">3 strategies</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">✂️</div>
+        <div class="mt-0.5 font-bold text-emerald-500">Pruning</div>
+        <div class="text-[10px] text-(--fg-faint)">skip partitions</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">📦</div>
+        <div class="mt-0.5 font-bold text-amber-500">Sub-tables</div>
+        <div class="text-[10px] text-(--fg-faint)">own indexes/stats</div>
+      </div>
+    </div>
+
+    <PartitionVisualizer />
+
+    <!-- Theory: partition types DDL -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Partition types — Range, List, Hash</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div class="rounded-lg border border-cyan-500/30 bg-(--bg) p-3 space-y-2">
+            <p class="text-[10px] font-semibold text-cyan-400">RANGE — time series</p>
+            <pre class="sql-details-pre thin-scrollbar text-[10px]">{`CREATE TABLE orders (
+  id         BIGINT,
+  created_at TIMESTAMPTZ
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE orders_2024_q1
+  PARTITION OF orders
+  FOR VALUES FROM ('2024-01-01')
+            TO   ('2024-04-01');
+
+CREATE TABLE orders_2024_q2
+  PARTITION OF orders
+  FOR VALUES FROM ('2024-04-01')
+            TO   ('2024-07-01');`}</pre>
+            <p class="text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Best for time-based data with rolling deletes — drop a partition instead of DELETE.</p>
+          </div>
+          <div class="rounded-lg border border-amber-500/30 bg-(--bg) p-3 space-y-2">
+            <p class="text-[10px] font-semibold text-amber-400">LIST — categorical</p>
+            <pre class="sql-details-pre thin-scrollbar text-[10px]">{`CREATE TABLE orders (
+  id      BIGINT,
+  country TEXT
+) PARTITION BY LIST (country);
+
+CREATE TABLE orders_vn
+  PARTITION OF orders
+  FOR VALUES IN ('VN');
+
+CREATE TABLE orders_us
+  PARTITION OF orders
+  FOR VALUES IN ('US', 'CA');
+
+CREATE TABLE orders_other
+  PARTITION OF orders
+  DEFAULT;`}</pre>
+            <p class="text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Best when you query by a low-cardinality column. DEFAULT catches stragglers.</p>
+          </div>
+          <div class="rounded-lg border border-violet-500/30 bg-(--bg) p-3 space-y-2">
+            <p class="text-[10px] font-semibold text-violet-400">HASH — sharding</p>
+            <pre class="sql-details-pre thin-scrollbar text-[10px]">{`CREATE TABLE orders (
+  id      BIGINT,
+  user_id BIGINT
+) PARTITION BY HASH (user_id);
+
+-- 4 even shards
+CREATE TABLE orders_0
+  PARTITION OF orders
+  FOR VALUES WITH (MODULUS 4, REMAINDER 0);
+
+CREATE TABLE orders_1
+  PARTITION OF orders
+  FOR VALUES WITH (MODULUS 4, REMAINDER 1);
+-- ... 2, 3`}</pre>
+            <p class="text-[10px] text-(--fg-faint) border-l-2 border-violet-500/40 pl-2">Even distribution. No pruning on range queries — only equality on the hash key.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Theory: when to use / pitfalls -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">When to partition — pitfalls & monitoring</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs text-(--fg-dim)">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="space-y-2">
+            <p class="text-[10px] font-semibold text-emerald-400">When to partition</p>
+            <ul class="space-y-1 text-[11px] list-none">
+              <li>✓ Table &gt; 100 GB — planner stats degrade</li>
+              <li>✓ Rolling deletes (drop old partitions in O(1))</li>
+              <li>✓ Every query filters on the partition key</li>
+              <li>✓ VACUUM can't keep up — partition = smaller table</li>
+            </ul>
+            <p class="text-[10px] font-semibold text-rose-400 mt-2">When NOT to partition</p>
+            <ul class="space-y-1 text-[11px] list-none">
+              <li>✗ Table &lt; 10 GB — overhead, no benefit</li>
+              <li>✗ Queries rarely filter on partition key</li>
+              <li>✗ Foreign keys to partitioned table (limited)</li>
+              <li>✗ You need UPDATE to move a row between partitions</li>
+            </ul>
+          </div>
+          <div class="space-y-2">
+            <p class="text-[10px] font-semibold text-(--fg-faint)">Check pruning is working</p>
+            <pre class="sql-details-pre thin-scrollbar text-[10px]">{`-- Should show only matching child tables
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM orders
+WHERE created_at = '2024-06-15';
+
+-- If you see ALL partitions → pruning disabled
+-- Check: partition key must be in WHERE exactly
+-- enable_partition_pruning = on  (default)`}</pre>
+            <pre class="sql-details-pre thin-scrollbar mt-2 text-[10px]">{`-- Partition sizes
+SELECT
+  child.relname AS partition,
+  pg_size_pretty(pg_relation_size(child.oid)) AS size
+FROM pg_inherits
+JOIN pg_class parent ON pg_inherits.inhparent = parent.oid
+JOIN pg_class child  ON pg_inherits.inhrelid  = child.oid
+WHERE parent.relname = 'orders'
+ORDER BY pg_relation_size(child.oid) DESC;`}</pre>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Tab 7 — Replication
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div data-sql-pane="replication" hidden class="space-y-4">
+
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">📡</div>
+        <div class="mt-0.5 font-bold text-cyan-500">WAL Stream</div>
+        <div class="text-[10px] text-(--fg-faint)">byte-for-byte</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">⏱️</div>
+        <div class="mt-0.5 font-bold text-amber-500">Sync vs Async</div>
+        <div class="text-[10px] text-(--fg-faint)">latency trade-off</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
+        <div class="text-base">🔁</div>
+        <div class="mt-0.5 font-bold text-emerald-500">Logical</div>
+        <div class="text-[10px] text-(--fg-faint)">row-level, selective</div>
+      </div>
+    </div>
+
+    <ReplicationTimeline />
+
+    <!-- Theory: Streaming vs Logical -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Streaming vs Logical replication</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs text-(--fg-dim)">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="rounded-lg border border-cyan-500/30 bg-(--bg) p-3 space-y-2">
+            <p class="text-[10px] font-semibold text-cyan-400">Physical (Streaming) Replication</p>
+            <ul class="space-y-1 text-[11px] list-none">
+              <li>✓ Streams raw WAL bytes — exact block-level copy</li>
+              <li>✓ Standby is byte-for-byte identical to primary</li>
+              <li>✓ Used for HA failover (pg_basebackup + streaming)</li>
+              <li>✗ Same PG major version required</li>
+              <li>✗ Cannot replicate a subset of tables</li>
+            </ul>
+            <pre class="sql-details-pre thin-scrollbar mt-2 text-[10px]">{`-- primary pg_hba.conf
+host replication replicator standby_ip/32 md5
+
+-- standby postgresql.conf
+primary_conninfo = 'host=primary ...'
+hot_standby = on`}</pre>
+          </div>
+          <div class="rounded-lg border border-violet-500/30 bg-(--bg) p-3 space-y-2">
+            <p class="text-[10px] font-semibold text-violet-400">Logical Replication</p>
+            <ul class="space-y-1 text-[11px] list-none">
+              <li>✓ Row-level changes (INSERT/UPDATE/DELETE decoded)</li>
+              <li>✓ Selective — replicate specific tables or schemas</li>
+              <li>✓ Cross-version, cross-platform</li>
+              <li>✓ Used for migrations, read-scaling, event streaming</li>
+              <li>✗ DDL not replicated automatically</li>
+              <li>✗ Sequences not synced</li>
+            </ul>
+            <pre class="sql-details-pre thin-scrollbar mt-2 text-[10px]">{`-- on publisher
+CREATE PUBLICATION my_pub FOR TABLE orders, users;
+
+-- on subscriber
+CREATE SUBSCRIPTION my_sub
+  CONNECTION 'host=publisher ...'
+  PUBLICATION my_pub;`}</pre>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Theory: monitoring lag -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Monitor replication lag — psql queries</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 font-mono text-xs text-(--fg-dim)">
+        <pre class="sql-details-pre thin-scrollbar">{`-- On PRIMARY: check standby lag
+SELECT client_addr,
+       state,
+       sent_lsn,
+       write_lsn,
+       flush_lsn,
+       replay_lsn,
+       write_lag,
+       flush_lag,
+       replay_lag
+  FROM pg_stat_replication;
+
+-- replay_lag > 0 → standby is behind
+-- flush_lag  > write_lag → standby disk is slow
+-- sync_state = 'async' | 'sync' | 'quorum'
+
+-- On STANDBY: how far behind am I?
+SELECT now() - pg_last_xact_replay_timestamp() AS replication_lag;
+-- > 30s → investigate primary load or network
+
+-- Bytes of WAL not yet applied on standby
+SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn) AS lag_bytes
+  FROM pg_stat_replication;`}</pre>
       </div>
     </details>
   </div>
