@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { LABS } from '@/lib/labs';
 
 export const prerender = true;
 ---
@@ -16,6 +17,7 @@ export const prerender = true;
   </header>
 
   <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <!-- Terminal is special: overlay button, not a standalone page -->
     <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-6">
       <div class="flex items-center gap-2.5">
         <span class="text-[20px] font-semibold tracking-[-0.02em] text-(--fg)">Terminal</span>
@@ -42,90 +44,27 @@ export const prerender = true;
       </button>
     </div>
 
-    <a
-      href="/lab/sql"
-      class="block rounded-xl border border-(--border) bg-(--bg-alt) p-6 no-underline transition-colors hover:border-(--accent) group"
-    >
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <span class="text-[20px] font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent) transition-colors">SQL EXPLAIN Explorer</span>
-          <span class="rounded-sm border border-cyan-500 px-1.5 py-0.5 font-mono text-[10px] text-cyan-500">
-            Postgres Engine
-          </span>
+    {LABS.map((lab) => (
+      <a
+        href={lab.href}
+        class="group block rounded-xl border border-(--border) bg-(--bg-alt) p-6 no-underline transition-colors hover:border-(--accent)"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="text-[20px] font-semibold tracking-[-0.02em] text-(--fg) transition-colors group-hover:text-(--accent)">
+              {lab.title}
+            </span>
+            <span class={`rounded-sm border px-1.5 py-0.5 font-mono text-[10px] ${lab.tagClass}`}>
+              {lab.tag}
+            </span>
+          </div>
         </div>
-      </div>
-      <p class="mt-1.5 text-sm text-(--fg-dim)">
-        Visual query execution plans — compare Seq Scan vs B-Tree, dissect Hash Joins, and fix Hibernate N+1 queries.
-      </p>
-      <span class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-(--fg) group-hover:text-(--accent)">
-        <span>Inspect query plans</span>
-        <span aria-hidden="true">→</span>
-      </span>
-    </a>
-
-    <a
-      href="/lab/java"
-      class="block rounded-xl border border-(--border) bg-(--bg-alt) p-6 no-underline transition-colors hover:border-(--accent) group"
-    >
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <span class="text-[20px] font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent) transition-colors">Java &amp; Spring Lab</span>
-          <span class="rounded-sm border border-amber-500 px-1.5 py-0.5 font-mono text-[10px] text-amber-500">
-            Concepts
-          </span>
-        </div>
-      </div>
-      <p class="mt-1.5 text-sm text-(--fg-dim)">
-        Threads, pools, virtual threads, HashMap internals, JVM memory & GC — then Spring mechanics: container lifecycle, AOP proxies, JPA and Security, each drawn.
-      </p>
-      <span class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-(--fg) group-hover:text-(--accent)">
-        <span>Open concept tabs</span>
-        <span aria-hidden="true">→</span>
-      </span>
-    </a>
-
-    <a
-      href="/lab/pathfinding"
-      class="block rounded-xl border border-(--border) bg-(--bg-alt) p-6 no-underline transition-colors hover:border-(--accent) group"
-    >
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <span class="text-[20px] font-semibold tracking-[-0.02em] text-(--fg) group-hover:text-(--accent) transition-colors">Pathfinding</span>
-          <span class="rounded-sm border border-(--accent) px-1.5 py-0.5 font-mono text-[10px] text-(--accent)">
-            Interactive
-          </span>
-        </div>
-      </div>
-      <p class="mt-1.5 text-sm text-(--fg-dim)">
-        Real-time algorithm visualizer for A* Search, Dijkstra, and BFS with maze generation and wall drawing.
-      </p>
-      <span class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-(--fg) group-hover:text-(--accent)">
-        <span>Visualize algorithms</span>
-        <span aria-hidden="true">→</span>
-      </span>
-    </a>
-
-    <a
-      href="/lab/spider"
-      class="block rounded-xl border border-(--border) bg-(--bg-alt) p-6 no-underline"
-    >
-      <div class="flex items-center gap-2.5">
-        <span class="text-[20px] font-semibold tracking-[-0.02em] text-(--fg)">Spider</span>
-        <span class="rounded-sm border border-(--accent) px-1.5 py-0.5 font-mono text-[10px] text-(--accent)">
-          Playable
+        <p class="mt-1.5 text-sm text-(--fg-dim)">{lab.desc}</p>
+        <span class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-(--fg) transition-colors group-hover:text-(--accent)">
+          <span>{lab.cta}</span>
+          <span aria-hidden="true">→</span>
         </span>
-      </div>
-      <p class="mt-1.5 text-sm text-(--fg-dim)">
-        Interactive web drawing — two spiders follow your cursor. Move to draw.
-      </p>
-      <span class="mt-4 inline-flex items-center gap-1 font-mono text-xs text-(--accent)">
-        <span aria-hidden="true">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M7 17 17 7M8 7h9v9" />
-          </svg>
-        </span>
-        <span>Open spider</span>
-      </span>
-    </a>
+      </a>
+    ))}
   </section>
 </BaseLayout>

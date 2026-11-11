@@ -1,50 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { LABS } from '@/lib/labs';
 
-// shortcut: title/tag/intro duplicated from lab/index.astro markup —
-// lift both into a shared src/lib/labs.ts when the lab list changes.
-// Terminal is excluded (it's an inline overlay, not a standalone page).
-const LABS: { href: string; title: string; tag: string; intro: string; tone?: 'amber' | 'cyan' }[] = [
-  {
-    href: '/lab/sql',
-    title: 'SQL EXPLAIN Explorer',
-    tag: 'Postgres Engine',
-    tone: 'cyan',
-    intro: 'Seq Scan vs B-Tree, Hash Joins, and fixing Hibernate N+1 queries.',
-  },
-  {
-    href: '/lab/java',
-    title: 'Java & Spring Lab',
-    tag: 'Concepts',
-    tone: 'amber',
-    intro: 'One page, one tab per concept — pools, virtual threads, proxy chains and container lifecycle.',
-  },
-  {
-    href: '/lab/pathfinding',
-    title: 'Pathfinding',
-    tag: 'Interactive',
-    intro: 'A*, Dijkstra & BFS visualized on a drawable maze.',
-  },
-  {
-    href: '/lab/spider',
-    title: 'Spider',
-    tag: 'Playable',
-    intro: 'Two spiders follow your cursor. Move to draw.',
-  },
-];
+let persistedPick: number | null = null;
 
-// A random lab each visit: rolls on mount and again on every
-// astro:page-load (the rail survives view transitions via transition:persist).
+// A stable lab pick per session (does not re-roll on every page navigation to prevent flicker)
 export default function LabRail() {
-  const [pick, setPick] = useState<number | null>(null);
+  const [pick, setPick] = useState<number>(0);
 
   useEffect(() => {
-    const roll = () => setPick(Math.floor(Math.random() * LABS.length));
-    roll();
-    document.addEventListener('astro:page-load', roll);
-    return () => document.removeEventListener('astro:page-load', roll);
+    if (persistedPick === null) {
+      persistedPick = Math.floor(Math.random() * LABS.length);
+    }
+    setPick(persistedPick);
   }, []);
 
-  const lab = pick === null ? null : LABS[pick % LABS.length];
+  const lab = LABS[pick % LABS.length];
 
   return (
     <div className="px-3 py-2">
@@ -64,16 +34,7 @@ export default function LabRail() {
               <span className="text-[14px] font-semibold tracking-[-0.01em] text-(--fg) transition-colors group-hover:text-(--accent)">
                 {lab.title}
               </span>
-              <span
-                className={
-                  'rounded-sm border px-1.5 py-0.5 font-mono text-[10px] ' +
-                  (lab.tone === 'amber'
-                    ? 'border-amber-500 text-amber-500'
-                    : lab.tone === 'cyan'
-                      ? 'border-cyan-500 text-cyan-500'
-                      : 'border-(--accent) text-(--accent)')
-                }
-              >
+              <span className={`rounded-sm border px-1.5 py-0.5 font-mono text-[10px] ${lab.tagClass}`}>
                 {lab.tag}
               </span>
             </div>
