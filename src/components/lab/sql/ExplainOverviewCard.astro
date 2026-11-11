@@ -1,0 +1,190 @@
+---
+// Visual Card comparing Index Scan vs Seq Scan, and N+1 vs JOIN FETCH
+// Infographic style inspired by backend communication patterns & execution timelines
+---
+
+<div class="sql-visual-card rounded-2xl border border-(--border) bg-(--bg-alt) p-5 font-mono shadow-sm">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-(--border) pb-3">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+      <h3 class="text-xs font-bold uppercase tracking-wider text-(--fg)">
+        Visual Architecture: Query Cost &amp; Execution Waterfall
+      </h3>
+    </div>
+    <span class="rounded-full border border-(--border) bg-(--bg) px-2.5 py-0.5 text-[10px] text-(--fg-faint)">
+      PostgreSQL 16 Engine Mechanics
+    </span>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+    <!-- 1. Seq Scan vs B-Tree Index: IO Cost Comparison -->
+    <div class="flex flex-col justify-between rounded-xl border border-(--border) bg-(--bg) p-4">
+      <div>
+        <div class="mb-3 flex items-center justify-between">
+          <span class="text-xs font-bold text-amber-500">1. Disk IO Cost: Seq Scan vs B-Tree Index</span>
+          <span class="text-[10px] text-(--fg-faint)">Table: 1,000,000 rows (~80 MB)</span>
+        </div>
+
+        <!-- Strategy 1: Sequential Scan -->
+        <div class="mb-3 rounded-lg border border-red-500/30 bg-red-950/10 p-3">
+          <div class="flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1.5">
+              <span class="rounded bg-red-500/20 px-1.5 py-0.5 font-bold text-red-500 text-[10px]">Seq Scan</span>
+              <span class="text-(--fg-dim)">WHERE email = 'dawn@io.vn'</span>
+            </div>
+            <span class="font-bold text-red-400">142.4 ms</span>
+          </div>
+
+          <!-- IO blocks visualization -->
+          <div class="mt-2.5 flex items-center gap-1">
+            <div class="h-2 flex-1 rounded bg-red-500/30 overflow-hidden relative">
+              <div class="h-full w-full bg-gradient-to-r from-red-500 via-rose-500 to-red-400 animate-pulse"></div>
+            </div>
+            <span class="text-[10px] text-red-400 whitespace-nowrap pl-1 font-semibold">10,240 blocks read (O(N))</span>
+          </div>
+          <p class="mt-2 text-[11px] leading-relaxed text-(--fg-dim)">
+            Scans every disk page sequentially from disk into buffer cache — O(N). CPU inspects every tuple.
+          </p>
+        </div>
+
+        <!-- Strategy 2: B-Tree Index Scan -->
+        <div class="rounded-lg border border-emerald-500/30 bg-emerald-950/10 p-3">
+          <div class="flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1.5">
+              <span class="rounded bg-emerald-500/20 px-1.5 py-0.5 font-bold text-emerald-500 text-[10px]">Index Scan</span>
+              <span class="text-(--fg-dim)">idx_users_email (B-Tree)</span>
+            </div>
+            <span class="font-bold text-emerald-400">0.08 ms (1,780× faster)</span>
+          </div>
+
+          <!-- IO blocks visualization -->
+          <div class="mt-2.5 flex items-center gap-1.5">
+            <div class="flex items-center gap-1">
+              <span class="inline-flex h-4 w-5 items-center justify-center rounded bg-emerald-500/30 text-[9px] font-bold text-emerald-300">Root</span>
+              <span class="text-(--fg-faint) text-[9px]">➔</span>
+              <span class="inline-flex h-4 w-6 items-center justify-center rounded bg-emerald-500/30 text-[9px] font-bold text-emerald-300">Branch</span>
+              <span class="text-(--fg-faint) text-[9px]">➔</span>
+              <span class="inline-flex h-4 w-5 items-center justify-center rounded bg-emerald-500/30 text-[9px] font-bold text-emerald-300">Leaf</span>
+            </div>
+            <span class="text-[10px] text-emerald-400 whitespace-nowrap pl-1 font-semibold">3 buffer hits (O(log N))</span>
+          </div>
+          <p class="mt-2 text-[11px] leading-relaxed text-(--fg-dim)">
+            Traverses 3-level balanced tree hierarchy. Reads only 3 buffer pages (24 KB) instead of full table scan.
+          </p>
+        </div>
+      </div>
+
+      <!-- Comparison Metrics Footer -->
+      <div class="mt-3.5 grid grid-cols-3 gap-2 border-t border-(--border) pt-3 text-center text-[10px]">
+        <div class="rounded bg-(--bg-alt) p-1.5">
+          <span class="text-(--fg-faint) block">Buffer Hit Ratio</span>
+          <span class="font-bold text-emerald-400">99.8%</span>
+        </div>
+        <div class="rounded bg-(--bg-alt) p-1.5">
+          <span class="text-(--fg-faint) block">Disk Page IO</span>
+          <span class="font-bold text-(--fg)">3 vs 10,240</span>
+        </div>
+        <div class="rounded bg-(--bg-alt) p-1.5">
+          <span class="text-(--fg-faint) block">Algorithmic Cost</span>
+          <span class="font-bold text-cyan-400">O(log N) vs O(N)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. N+1 vs JOIN FETCH: Latency Waterfall Timeline -->
+    <div class="flex flex-col justify-between rounded-xl border border-(--border) bg-(--bg) p-4">
+      <div>
+        <div class="mb-3 flex items-center justify-between">
+          <span class="text-xs font-bold text-cyan-500">2. Latency Waterfall: N+1 vs JOIN FETCH</span>
+          <span class="text-[10px] text-(--fg-faint)">10 Orders × Items Query</span>
+        </div>
+
+        <!-- Strategy 1: N+1 Problem Waterfall -->
+        <div class="mb-3 rounded-lg border border-red-500/30 bg-red-950/10 p-3">
+          <div class="flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1.5">
+              <span class="rounded bg-red-500/20 px-1.5 py-0.5 font-bold text-red-500 text-[10px]">N+1 Problem</span>
+              <span class="text-(--fg-dim)">11 round-trips (Chatty protocol)</span>
+            </div>
+            <span class="font-bold text-red-400">~95 ms latency</span>
+          </div>
+
+          <!-- Waterfall timeline preview -->
+          <div class="mt-2.5 space-y-1">
+            <!-- Order query -->
+            <div class="flex items-center gap-2 text-[9px]">
+              <span class="w-16 text-(--fg-faint)">Q0: Orders</span>
+              <div class="flex-1 bg-(--border) rounded h-2.5 overflow-hidden">
+                <div class="h-full bg-red-500/80 rounded" style="width: 25%"></div>
+              </div>
+              <span class="text-red-300 w-8 text-right">8ms</span>
+            </div>
+            <!-- Item queries cascade -->
+            <div class="flex items-center gap-2 text-[9px]">
+              <span class="w-16 text-(--fg-faint)">Q1: Item #1</span>
+              <div class="flex-1 bg-(--border) rounded h-2 overflow-hidden">
+                <div class="h-full bg-red-400/60 rounded" style="width: 20%; margin-left: 20%"></div>
+              </div>
+              <span class="text-(--fg-faint) w-8 text-right">7ms</span>
+            </div>
+            <div class="flex items-center gap-2 text-[9px]">
+              <span class="w-16 text-(--fg-faint)">Q2..Q10: Items</span>
+              <div class="flex-1 bg-(--border) rounded h-2 overflow-hidden">
+                <div class="h-full bg-red-400/40 rounded" style="width: 55%; margin-left: 40%"></div>
+              </div>
+              <span class="text-red-400 font-bold w-8 text-right">80ms</span>
+            </div>
+          </div>
+          <p class="mt-2 text-[11px] leading-relaxed text-(--fg-dim)">
+            Application loop executes separate SQL queries per child entity. High TCP packet round-trips and pool contention.
+          </p>
+        </div>
+
+        <!-- Strategy 2: JOIN FETCH / Eager Loading Single Stream -->
+        <div class="rounded-lg border border-emerald-500/30 bg-emerald-950/10 p-3">
+          <div class="flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1.5">
+              <span class="rounded bg-emerald-500/20 px-1.5 py-0.5 font-bold text-emerald-500 text-[10px]">JOIN FETCH</span>
+              <span class="text-(--fg-dim)">1 single round-trip (Streamed)</span>
+            </div>
+            <span class="font-bold text-emerald-400">12 ms (8× faster)</span>
+          </div>
+
+          <!-- Single Stream Timeline -->
+          <div class="mt-2.5">
+            <div class="flex items-center gap-2 text-[9px]">
+              <span class="w-16 text-(--fg-faint)">JOIN Stream</span>
+              <div class="flex-1 bg-(--border) rounded h-3 overflow-hidden">
+                <div class="h-full bg-emerald-500/90 rounded flex items-center justify-center text-[8px] font-bold text-black" style="width: 35%">
+                  Orders ⨝ Items (1 round-trip)
+                </div>
+              </div>
+              <span class="text-emerald-300 w-8 text-right">12ms</span>
+            </div>
+          </div>
+          <p class="mt-2 text-[11px] leading-relaxed text-(--fg-dim)">
+            Database executes Hash Join or Nested Loop in-engine, returning all joined records in a single network stream.
+          </p>
+        </div>
+      </div>
+
+      <!-- Network Round-Trip Comparison Footer -->
+      <div class="mt-3.5 grid grid-cols-3 gap-2 border-t border-(--border) pt-3 text-center text-[10px]">
+        <div class="rounded bg-(--bg-alt) p-1.5">
+          <span class="text-(--fg-faint) block">Round Trips</span>
+          <span class="font-bold text-emerald-400">1 vs 11</span>
+        </div>
+        <div class="rounded bg-(--bg-alt) p-1.5">
+          <span class="text-(--fg-faint) block">App Latency</span>
+          <span class="font-bold text-(--fg)">12ms vs 95ms</span>
+        </div>
+        <div class="rounded bg-(--bg-alt) p-1.5">
+          <span class="text-(--fg-faint) block">Connection Hold</span>
+          <span class="font-bold text-cyan-400">Short vs Long</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

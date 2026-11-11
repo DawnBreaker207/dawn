@@ -1,0 +1,455 @@
+---
+// EnginePipeline.astro — SQL query lifecycle visualizer (Parse → Analyze → Plan → Execute → Commit)
+---
+
+<div id="ep-wrap" class="space-y-4 font-mono text-xs">
+
+  <!-- Command picker -->
+  <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3 space-y-2">
+    <span class="mb-1 block text-[10px] uppercase tracking-wider text-(--fg-faint)">SQL Command</span>
+    <div class="flex flex-wrap items-center gap-1.5">
+      <span class="w-12 shrink-0 text-[10px] text-(--fg-faint)">Read</span>
+      <button type="button" data-ep="point_lookup" class="ep-pick ep-pick-on cursor-pointer rounded-lg border px-2.5 py-1 font-semibold">Point Lookup</button>
+      <button type="button" data-ep="range_scan"   class="ep-pick cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1 font-semibold text-(--fg-dim) hover:text-(--fg)">Range Scan</button>
+      <button type="button" data-ep="hash_join"    class="ep-pick cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1 font-semibold text-(--fg-dim) hover:text-(--fg)">Hash Join</button>
+    </div>
+    <div class="flex flex-wrap items-center gap-1.5">
+      <span class="w-12 shrink-0 text-[10px] text-(--fg-faint)">Write</span>
+      <button type="button" data-ep="insert" class="ep-pick cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1 font-semibold text-(--fg-dim) hover:text-(--fg)">INSERT</button>
+      <button type="button" data-ep="update" class="ep-pick cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1 font-semibold text-(--fg-dim) hover:text-(--fg)">UPDATE</button>
+      <button type="button" data-ep="delete" class="ep-pick cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1 font-semibold text-(--fg-dim) hover:text-(--fg)">DELETE</button>
+    </div>
+  </div>
+
+  <!-- SQL + Plan display -->
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <div>
+      <div class="mb-1 text-[10px] uppercase tracking-wider text-(--fg-faint)">SQL</div>
+      <pre id="ep-sql" class="min-h-[90px] overflow-x-auto rounded-lg border border-(--border) bg-(--terminal) p-3 text-[11px] leading-relaxed"></pre>
+    </div>
+    <div>
+      <div class="mb-1 text-[10px] uppercase tracking-wider text-(--fg-faint)">Query Plan</div>
+      <pre id="ep-plan" class="min-h-[90px] overflow-x-auto rounded-lg border border-cyan-500/25 bg-cyan-950/10 p-3 text-[11px] leading-relaxed text-cyan-400"></pre>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="flex items-center gap-2.5">
+    <button id="ep-run" type="button" class="cursor-pointer rounded-lg border border-cyan-500 bg-cyan-500/15 px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 transition-all hover:bg-cyan-500/25 active:scale-95 touch-manipulation min-h-[40px]">▶ Execute</button>
+    <button id="ep-reset" type="button" class="hidden cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-2 text-(--fg-dim) hover:text-(--fg) touch-manipulation min-h-[40px]">↺ Reset</button>
+    <span id="ep-status" class="text-[10px] text-(--fg-faint)">pick a command and run</span>
+  </div>
+
+  <!-- Pipeline stages (JS renders) -->
+  <div id="ep-pipeline" class="flex overflow-x-auto rounded-xl border border-(--border)" style="-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory"></div>
+
+  <!-- Stage detail -->
+  <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3">
+    <div id="ep-stage-label" class="mb-1 text-[10px] uppercase tracking-wider text-(--fg-faint)">Stage Detail</div>
+    <p id="ep-stage-text" class="text-[11px] leading-relaxed text-(--fg-dim)">Select a command and press Execute to trace the engine pipeline.</p>
+  </div>
+
+  <!-- Engine state: 3 panels -->
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+    <!-- Shared Buffers -->
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-[10px] uppercase tracking-wider text-(--fg-faint)">Shared Buffers</span>
+        <span id="ep-buf-count" class="text-[10px] text-(--fg-faint)">0 / 12</span>
+      </div>
+      <div id="ep-bufs" class="grid grid-cols-4 gap-1"></div>
+    </div>
+
+    <!-- WAL -->
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3">
+      <div class="mb-2 text-[10px] uppercase tracking-wider text-(--fg-faint)">WAL Buffer</div>
+      <div class="space-y-1 text-[11px]">
+        <div class="flex justify-between"><span class="text-(--fg-faint)">LSN</span><code id="ep-lsn" class="text-amber-500">0/00000000</code></div>
+        <div class="flex justify-between"><span class="text-(--fg-faint)">written</span><code id="ep-wal-written" class="text-(--fg)">0 B</code></div>
+        <div class="flex justify-between"><span class="text-(--fg-faint)">fsynced</span><span id="ep-fsync" class="text-(--fg-faint)">—</span></div>
+      </div>
+      <div id="ep-wal-log" class="mt-2 max-h-24 overflow-y-auto space-y-0.5 text-[10px] text-(--fg-faint)"></div>
+    </div>
+
+    <!-- Lock Table -->
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3">
+      <div class="mb-2 text-[10px] uppercase tracking-wider text-(--fg-faint)">Lock Table</div>
+      <div id="ep-locks" class="space-y-1 text-[10px] text-(--fg-faint)">none</div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .ep-pick-on {
+    border-color: var(--fg); background: var(--fg); color: var(--bg);
+  }
+  .ep-pick {
+    touch-action: manipulation;
+    min-height: 36px;
+  }
+  .ep-stage-pill {
+    flex: 1; min-width: 90px; display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    padding: 10px 8px 8px;
+    border-right: 1px solid var(--border);
+    background: var(--bg-alt);
+    transition: background .2s, border-color .2s;
+    position: relative; overflow: hidden;
+    scroll-snap-align: start;
+    touch-action: manipulation;
+  }
+  .ep-stage-pill:last-child { border-right: none; }
+  .ep-stage-pill .ep-s-icon  { font-size: 16px; line-height: 1; }
+  .ep-stage-pill .ep-s-name  { font-size: 10px; font-weight: 700; color: var(--fg-faint); }
+  .ep-stage-pill .ep-s-ms    { font-size: 9px; color: var(--fg-faint); }
+  .ep-stage-pill .ep-s-bar   {
+    position: absolute; bottom: 0; left: 0; height: 2px;
+    background: var(--accent); width: 0%; transition: width linear;
+  }
+  .ep-stage-pill.ep-s-active { background: rgb(34 211 238 / 0.06); }
+  .ep-stage-pill.ep-s-active .ep-s-name { color: #67e8f9; }
+  .ep-stage-pill.ep-s-done   { background: rgb(74 222 128 / 0.05); }
+  .ep-stage-pill.ep-s-done   .ep-s-name { color: #4ade80; }
+
+  /* Buffer slot colors */
+  .ep-buf { border-radius: 4px; border: 1px solid var(--border); height: 28px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--fg-faint); background: var(--bg-alt); transition: all .2s; }
+  .ep-buf-sys  { border-color: rgb(99 102 241 / 0.5); background: rgb(99 102 241 / 0.08); color: #818cf8; }
+  .ep-buf-idx  { border-color: rgb(34 211 238 / 0.5); background: rgb(34 211 238 / 0.08); color: #67e8f9; }
+  .ep-buf-heap { border-color: rgb(251 191 36 / 0.5); background: rgb(251 191 36 / 0.08); color: #fbbf24; }
+  .ep-buf-hash { border-color: rgb(192 132 252 / 0.5); background: rgb(192 132 252 / 0.08); color: #c084fc; }
+
+  /* SQL keyword highlight */
+  .sql-kw   { color: #7dd3fc; }
+  .sql-str  { color: #fbbf24; }
+  .sql-num  { color: #c084fc; }
+  .sql-cmt  { color: var(--fg-faint); font-style: italic; }
+  .sql-fn   { color: #86efac; }
+</style>
+
+<script>
+  interface BufSlot { label: string; kind: 'sys' | 'idx' | 'heap' | 'hash' }
+  interface WalRec  { lsn: string; desc: string }
+  interface Lock    { mode: string; relation: string }
+  interface Stage {
+    name: string; icon: string; simMs: number; detail: string;
+    addBufs?: BufSlot[]; walBytes?: number; walRec?: WalRec;
+    addLocks?: Lock[]; clearLocks?: true; fsync?: true;
+  }
+  interface Preset { sql: string; plan: string; stages: Stage[] }
+
+  /* ── Preset data ──────────────────────────────────────────────── */
+  const P: Record<string, Preset> = {
+    point_lookup: {
+      sql: `SELECT id, name, email\nFROM   users\nWHERE  id = 42;`,
+      plan: `Index Scan using users_pkey on users\n  Index Cond: (id = 42)\n  Rows: 1\n  Buffers: shared hit=3\n  Planning: 0.12 ms  Execution: 0.08 ms`,
+      stages: [
+        { name:'Parse',   icon:'📝', simMs:60,  detail:'Lexer splits SQL into tokens. Parser validates grammar and builds a parse tree: SelectStmt → TargetList(id,name,email) → FromClause(users) → WhereClause(id=42). No catalog lookup yet — purely syntactic.' },
+        { name:'Analyze', icon:'🔎', simMs:90,  detail:'Resolve "users" → OID 16384 in pg_class. Load pg_attribute: id=INT8 (attrno 1, PK), name=TEXT, email=TEXT. Acquire AccessShareLock — prevents DROP TABLE or schema change while query runs. 2 buffer hits on system catalog pages.',
+          addBufs:[{label:'pg_cls',kind:'sys'},{label:'pg_att',kind:'sys'}], addLocks:[{mode:'AccessShareLock',relation:'users'}] },
+        { name:'Plan',    icon:'🗺️', simMs:110, detail:'Cost model: SeqScan = pages×seq_page_cost = 184.0. IndexScan = 3 buffer hits × random_page_cost = 8.27. Statistics from pg_statistic: n_distinct=-1 (unique), correlation=1.0. Planner picks Index Scan on users_pkey.',
+          addBufs:[{label:'pg_stat',kind:'sys'}] },
+        { name:'Execute', icon:'⚙️', simMs:350, detail:'IndexScan node: descend B-tree → root page (cached) → branch → leaf page. Found key=42, ctid=(4,2). Fetch heap page 4 slot 2. Apply projection (id,name,email). 3 buffer hits: 1 idx root + 1 idx leaf + 1 heap page.',
+          addBufs:[{label:'idx·R',kind:'idx'},{label:'idx·L',kind:'idx'},{label:'heap·4',kind:'heap'}] },
+        { name:'Return',  icon:'✅', simMs:40,  detail:'1 row: {id:42, name:"Alice", email:"alice@dev.com"}. ProjectionNode strips system columns. Release AccessShareLock. Free executor memory context. Total: 3 buffer hits, 0 WAL bytes (read-only).',
+          clearLocks:true },
+      ]
+    },
+    range_scan: {
+      sql: `SELECT event_id, payload, created_at\nFROM   events\nWHERE  created_at > now() - '7 days'::interval\nORDER  BY created_at DESC;`,
+      plan: `Sort  (cost=9680.52)\n  → Seq Scan on events\n       Filter: (created_at > now()-'7 days')\n       Rows Removed by Filter: 940182\n       Buffers: shared hit=4255\n  Planning: 0.21 ms  Execution: 348.7 ms`,
+      stages: [
+        { name:'Parse',   icon:'📝', simMs:65,  detail:'Parser recognises interval literal "7 days". Builds parse tree: SelectStmt with RangeVar(events), WhereClause(created_at > now()-interval), SortClause(created_at DESC).' },
+        { name:'Analyze', icon:'🔎', simMs:100, detail:'Resolve "events" → OID 16512. created_at = TIMESTAMPTZ. Acquire AccessShareLock. Load pg_class + pg_attribute for the table (2 sys buffer hits).',
+          addBufs:[{label:'pg_cls',kind:'sys'},{label:'pg_att',kind:'sys'}], addLocks:[{mode:'AccessShareLock',relation:'events'}] },
+        { name:'Plan',    icon:'🗺️', simMs:160, detail:'Selectivity of created_at > now()-7d ≈ 6% of 1M rows = 60K rows. IndexScan would need 60K random heap fetches — cost > SeqScan at 4255 sequential pages (seq_page_cost=1 vs random_page_cost=4). Planner picks Seq Scan + Sort node.',
+          addBufs:[{label:'pg_stat',kind:'sys'}] },
+        { name:'Execute', icon:'⚙️', simMs:900, detail:'Seq Scan: read all 4255 heap pages sequentially (kernel read-ahead helps). Apply filter — 940K rows discarded, 59K pass. Sort node: sort in memory if 59K × avg_row_width < work_mem (4MB default), else spill to temp file on disk.',
+          addBufs:[{label:'h·0',kind:'heap'},{label:'h·1',kind:'heap'},{label:'h·2',kind:'heap'},{label:'h·3',kind:'heap'},{label:'h·4',kind:'heap'},{label:'h·5',kind:'heap'}] },
+        { name:'Return',  icon:'✅', simMs:40,  detail:'59,818 rows returned to client via portal in chunks (default 100 rows/fetch). Release AccessShareLock. Memory context freed. If sort spilled: temp files deleted.',
+          clearLocks:true },
+      ]
+    },
+    hash_join: {
+      sql: `SELECT u.name, SUM(o.total_usd) AS revenue\nFROM   users   u\nJOIN   orders  o ON o.user_id = u.id\nGROUP  BY u.id, u.name\nHAVING SUM(o.total_usd) > 1000\nORDER  BY revenue DESC;`,
+      plan: `Sort  (cost=12480.52)\n  → HashAggregate  (Group Key: u.id)\n     → Hash Join  (cost=4820.00)\n          Hash Cond: (o.user_id = u.id)\n          → Seq Scan on orders  (probe)\n          → Hash\n               → Seq Scan on users  (build)`,
+      stages: [
+        { name:'Parse',   icon:'📝', simMs:70,  detail:'Two RangeVars (users, orders), JoinExpr(INNER, o.user_id=u.id), TargetList(u.name, SUM(o.total_usd)), GroupClause(u.id,u.name), HavingClause(SUM>1000), SortClause(revenue DESC).' },
+        { name:'Analyze', icon:'🔎', simMs:110, detail:'Resolve both relations. users → OID 16384, orders → OID 16640. Load pg_attribute for user_id FK. Acquire AccessShareLock on both tables.',
+          addBufs:[{label:'pg_cls',kind:'sys'},{label:'pg_att',kind:'sys'}], addLocks:[{mode:'AccessShareLock',relation:'users'},{mode:'AccessShareLock',relation:'orders'}] },
+        { name:'Plan',    icon:'🗺️', simMs:180, detail:'users(10K rows) is smaller — build hash table in memory (< work_mem). orders(500K rows) streams as probe side. Plan: HashJoin → HashAgg(group) → Sort. Hash join avoids per-row random index lookup — optimal for large×large.',
+          addBufs:[{label:'pg_stat',kind:'sys'}] },
+        { name:'Execute', icon:'⚙️', simMs:700, detail:'Build phase: Seq Scan users → hash table keyed on u.id (fits in work_mem). Probe phase: Seq Scan orders → for each row, hash(user_id) → lookup in hash table → emit joined tuple. HashAgg groups and sums. HAVING filters. Sort descending.',
+          addBufs:[{label:'u·h0',kind:'heap'},{label:'u·h1',kind:'heap'},{label:'hash',kind:'hash'},{label:'o·h0',kind:'heap'},{label:'o·h1',kind:'heap'},{label:'o·h2',kind:'heap'}] },
+        { name:'Return',  icon:'✅', simMs:50,  detail:'7,230 qualifying users (revenue > 1000) returned sorted. Release AccessShareLock on users and orders. Hash table memory freed.',
+          clearLocks:true },
+      ]
+    },
+    insert: {
+      sql: `INSERT INTO orders (user_id, total_usd, status)\nVALUES (42, 199.99, 'pending')\nRETURNING id, created_at;`,
+      plan: `Insert on orders\n  → Result\n  Triggers: check_user_fk (RI)\n  Buffers: shared hit=5  dirtied=2\n  WAL: records=2  bytes=164\n  Execution Time: 1.2 ms`,
+      stages: [
+        { name:'Parse',   icon:'📝', simMs:55,  detail:'INSERT INTO ... VALUES parse tree with RETURNING clause. RETURNING attaches a ProjectionNode on top of the insert executor node.' },
+        { name:'Analyze', icon:'🔎', simMs:90,  detail:'Resolve "orders" → OID 16640. Check pg_constraint: NOT NULL on user_id, FK referencing users(id). Acquire RowExclusiveLock — compatible with concurrent SELECTs (AccessShareLock), blocks only DDL.',
+          addBufs:[{label:'pg_cls',kind:'sys'},{label:'pg_con',kind:'sys'}], addLocks:[{mode:'RowExclusiveLock',relation:'orders'}] },
+        { name:'Plan',    icon:'🗺️', simMs:90,  detail:'ModifyTablePlan wrapping a Result node (constant VALUES). Planner identifies indexes to maintain: orders_pkey (BIGINT), idx_orders_user (user_id). No explicit plan needed for constant insert.' },
+        { name:'Execute', icon:'⚙️', simMs:450, detail:'Pin target heap page (last segment, free slot). Write new tuple: xmin=txid_current, xmax=0, cmin=0, (user_id=42, total_usd=199.99, status=pending). Insert index entry into orders_pkey leaf + idx_orders_user leaf. Write WAL record to WAL buffer (in-memory, not yet on disk). Mark heap page and index pages dirty.',
+          addBufs:[{label:'heap·N',kind:'heap'},{label:'idx·pk',kind:'idx'},{label:'idx·u',kind:'idx'}],
+          walBytes:136, walRec:{lsn:'0/00001A40',desc:'INSERT orders ctid=(77,3) xid=12345'}, addLocks:[{mode:'ExclusiveLock',relation:'orders_pkey'}] },
+        { name:'Commit',  icon:'💾', simMs:200, detail:'Write WAL commit record (28 bytes). Call fsync() — WAL flushed to disk. Durability guaranteed: even if server crashes now, WAL replay will re-apply the insert. Release RowExclusiveLock + ExclusiveLock on index. Dirty buffer pages flushed later by bgwriter/checkpoint.',
+          walBytes:28, walRec:{lsn:'0/00001B5C',desc:'COMMIT xid=12345'}, clearLocks:true, fsync:true },
+      ]
+    },
+    update: {
+      sql: `UPDATE accounts\nSET    balance = balance - 500\nWHERE  id = 1\nRETURNING balance;`,
+      plan: `Update on accounts\n  → Index Scan using accounts_pkey\n       Index Cond: (id = 1)\n  Buffers: shared hit=5  dirtied=2\n  WAL: records=2  bytes=172\n  Execution Time: 1.5 ms`,
+      stages: [
+        { name:'Parse',   icon:'📝', simMs:60,  detail:'UPDATE parse tree: ModifyTableStmt → target=accounts, SET=[(balance, balance-500)], WHERE=(id=1), RETURNING=[balance]. The SET expression is a simple arithmetic over the existing column value.' },
+        { name:'Analyze', icon:'🔎', simMs:85,  detail:'Resolve "accounts". balance has no index — no index contention on the update. Acquire RowExclusiveLock. Check triggers: none defined. Acquire row-level lock via xmax mechanism during execute.',
+          addBufs:[{label:'pg_cls',kind:'sys'},{label:'pg_att',kind:'sys'}], addLocks:[{mode:'RowExclusiveLock',relation:'accounts'}] },
+        { name:'Plan',    icon:'🗺️', simMs:100, detail:'ModifyTable → IndexScan(accounts_pkey, id=1). Planner generates: read old row via index, compute balance-500, write new tuple (MVCC never overwrites in place). No index on balance → no secondary index update needed.',
+          addBufs:[{label:'pg_stat',kind:'sys'}] },
+        { name:'Execute', icon:'⚙️', simMs:500, detail:'IndexScan finds old tuple ctid=(2,1). Set xmax=txid on old tuple (now "dead" for txns started after this). Write NEW tuple at ctid=(2,4): xmin=txid, xmax=0, balance=500. MVCC: both versions co-exist on the page — concurrent readers with older snapshots still see v1 (balance=1000). WAL record written.',
+          addBufs:[{label:'idx·R',kind:'idx'},{label:'heap·2',kind:'heap'},{label:'new·v2',kind:'heap'}],
+          walBytes:144, walRec:{lsn:'0/00002C10',desc:'UPDATE accounts ctid new=(2,4) old=(2,1) xid=12346'}, addLocks:[{mode:'RowShareLock',relation:'accounts row'}] },
+        { name:'Commit',  icon:'💾', simMs:200, detail:'Commit record fsynced. Old v1 (xmax=12346) becomes invisible to all future transactions. New v2 (xmin=12346) becomes visible. VACUUM will later reclaim v1 heap space and prune the dead index entry pointing to ctid=(2,1).',
+          walBytes:28, walRec:{lsn:'0/00002D2C',desc:'COMMIT xid=12346'}, clearLocks:true, fsync:true },
+      ]
+    },
+    delete: {
+      sql: `DELETE FROM sessions\nWHERE  expires_at < now();\n\n-- rows not physically removed — VACUUM reclaims later`,
+      plan: `Delete on sessions\n  → Seq Scan on sessions\n       Filter: (expires_at < now())\n       Rows Removed: 892,145\n  Buffers: hit=3820  dirtied=58\n  WAL: records=58  bytes=4,640\n  Execution Time: 312.4 ms`,
+      stages: [
+        { name:'Parse',   icon:'📝', simMs:55,  detail:'DELETE parse tree: ModifyTableStmt, target=sessions, WhereClause=(expires_at < now()). No RETURNING. The filter is applied during Seq Scan and matching rows passed to the Delete executor node.' },
+        { name:'Analyze', icon:'🔎', simMs:80,  detail:'Resolve "sessions". No FK references point to sessions. No triggers. Acquire RowExclusiveLock.',
+          addBufs:[{label:'pg_cls',kind:'sys'},{label:'pg_att',kind:'sys'}], addLocks:[{mode:'RowExclusiveLock',relation:'sessions'}] },
+        { name:'Plan',    icon:'🗺️', simMs:95,  detail:'Selectivity: expires_at < now() ≈ 89% of rows. Index scan + 892K random heap fetches would cost more than Seq Scan at 3820 pages. Planner picks Seq Scan with filter. ModifyTable wraps the scan.',
+          addBufs:[{label:'pg_stat',kind:'sys'}] },
+        { name:'Execute', icon:'⚙️', simMs:600, detail:'For each matching tuple: set xmax=txid on the heap tuple — the row is now DEAD but NOT physically removed. Data still on disk. Concurrent readers with snapshots before this txid still see the rows. 58 heap pages marked dirty. WAL records written (one per dirty page group).',
+          addBufs:[{label:'h·0',kind:'heap'},{label:'h·1',kind:'heap'},{label:'h·2',kind:'heap'},{label:'h·3',kind:'heap'}],
+          walBytes:4512, walRec:{lsn:'0/00004A80',desc:'DELETE sessions — 7855 tuples, 58 pages xid=12347'} },
+        { name:'Commit',  icon:'💾', simMs:190, detail:'Commit fsynced. Dead tuples (xmax=12347) invisible to all future readers. VACUUM (manual or autovacuum) will: 1) reclaim heap pages, 2) remove dead index entries, 3) update pg_stat_user_tables.n_dead_tup. Without VACUUM → table bloat.',
+          walBytes:28, walRec:{lsn:'0/00004B9C',desc:'COMMIT xid=12347'}, clearLocks:true, fsync:true },
+      ]
+    },
+  };
+
+  /* ── State ────────────────────────────────────────────────────── */
+  let cur = 'point_lookup';
+  let running = false;
+  let bufUsed = 0;
+  let walTotal = 0;
+  let lsnHex = 0;
+  let activeLocks: Lock[] = [];
+  let aborted = false;
+
+  /* ── DOM helpers ──────────────────────────────────────────────── */
+  const $ = (id: string) => document.getElementById(id)!;
+  const delay = (ms: number) => new Promise<void>(r => { const t = setTimeout(r, ms); if (aborted) clearTimeout(t); });
+
+  function hl(sql: string): string {
+    const KW = /\b(SELECT|FROM|WHERE|JOIN|ON|GROUP\s+BY|ORDER\s+BY|HAVING|INSERT\s+INTO|VALUES|UPDATE|SET|DELETE|RETURNING|INTO|AND|OR|NOT|IN|AS|BY|INNER|LEFT|RIGHT|OUTER|USING|LIMIT|OFFSET|WITH|DISTINCT|UNION|ALL|CASE|WHEN|THEN|ELSE|END|CREATE|INDEX|TABLE|ON|CONCURRENTLY|INCLUDE|USING|NOW|DESC|ASC|INTERVAL)\b/gi;
+    const FN  = /\b(now|sum|count|min|max|avg|coalesce|nullif|round|date_trunc|pg_size_pretty|pg_relation_size)\b(?=\s*\()/gi;
+    return sql
+      .replace(/--[^\n]*/g, m => `<span class="sql-cmt">${m}</span>`)
+      .replace(/'[^']*'/g, m => `<span class="sql-str">${m}</span>`)
+      .replace(/\b\d+(\.\d+)?\b/g, m => `<span class="sql-num">${m}</span>`)
+      .replace(FN,  m => `<span class="sql-fn">${m}</span>`)
+      .replace(KW,  m => `<span class="sql-kw">${m}</span>`);
+  }
+
+  /* ── Buffer pool ──────────────────────────────────────────────── */
+  function buildBufs() {
+    const el = $('ep-bufs');
+    el.innerHTML = '';
+    for (let i = 0; i < 12; i++) {
+      const d = document.createElement('div');
+      d.className = 'ep-buf';
+      d.id = `ep-buf-${i}`;
+      el.appendChild(d);
+    }
+    bufUsed = 0;
+    $('ep-buf-count').textContent = '0 / 12';
+  }
+
+  async function addBuf(slot: BufSlot) {
+    if (bufUsed >= 12) return;
+    const el = $(`ep-buf-${bufUsed}`);
+    if (!el) return;
+    el.textContent = slot.label;
+    el.className = `ep-buf ep-buf-${slot.kind}`;
+    bufUsed++;
+    $('ep-buf-count').textContent = `${bufUsed} / 12`;
+    await delay(80);
+  }
+
+  /* ── WAL ──────────────────────────────────────────────────────── */
+  function addWal(bytes: number, rec?: WalRec) {
+    walTotal += bytes;
+    lsnHex  += bytes;
+    const lsnStr = `0/${lsnHex.toString(16).toUpperCase().padStart(8, '0')}`;
+    $('ep-lsn').textContent = lsnStr;
+    $('ep-wal-written').textContent = walTotal >= 1024
+      ? `${(walTotal / 1024).toFixed(1)} KB`
+      : `${walTotal} B`;
+    if (rec) {
+      const line = document.createElement('div');
+      line.className = 'truncate';
+      line.textContent = `· ${rec.desc}`;
+      $('ep-wal-log').appendChild(line);
+      $('ep-wal-log').scrollTop = 999;
+    }
+  }
+
+  /* ── Locks ────────────────────────────────────────────────────── */
+  function renderLocks() {
+    const el = $('ep-locks');
+    if (!activeLocks.length) { el.textContent = 'none'; return; }
+    el.innerHTML = activeLocks.map(l =>
+      `<div class="flex flex-col gap-0.5"><span class="text-amber-600 dark:text-amber-400">${l.mode}</span><span class="pl-1 text-(--fg-faint)">${l.relation}</span></div>`
+    ).join('');
+  }
+
+  /* ── Pipeline render ──────────────────────────────────────────── */
+  function renderPipeline(preset: Preset) {
+    const el = $('ep-pipeline');
+    el.innerHTML = '';
+    preset.stages.forEach((s, i) => {
+      const pill = document.createElement('div');
+      pill.className = 'ep-stage-pill';
+      pill.id = `ep-pill-${i}`;
+      pill.innerHTML = `
+        <span class="ep-s-icon">${s.icon}</span>
+        <span class="ep-s-name">${s.name}</span>
+        <span class="ep-s-ms">${s.simMs} ms</span>
+        <div class="ep-s-bar" id="ep-bar-${i}"></div>`;
+      el.appendChild(pill);
+    });
+  }
+
+  function setPillActive(i: number, preset: Preset) {
+    for (let j = 0; j < preset.stages.length; j++) {
+      const p = $(`ep-pill-${j}`);
+      if (!p) continue;
+      p.classList.remove('ep-s-active', 'ep-s-done');
+      if (j < i)  p.classList.add('ep-s-done');
+      if (j === i) p.classList.add('ep-s-active');
+    }
+    const bar = $(`ep-bar-${i}`) as HTMLElement;
+    if (bar) {
+      bar.style.transition = `width ${preset.stages[i].simMs * 1.8}ms linear`;
+      requestAnimationFrame(() => { bar.style.width = '100%'; });
+    }
+    $('ep-stage-label').textContent = `${preset.stages[i].icon} ${preset.stages[i].name}`;
+    $('ep-stage-text').textContent  = preset.stages[i].detail;
+    $('ep-status').textContent = `${preset.stages[i].icon} ${preset.stages[i].name}...`;
+  }
+
+  /* ── Render preset (SQL + plan) ───────────────────────────────── */
+  function renderPreset(id: string) {
+    const p = P[id];
+    $('ep-sql').innerHTML  = hl(p.sql);
+    $('ep-plan').textContent = p.plan;
+    $('ep-stage-label').textContent = 'Stage Detail';
+    $('ep-stage-text').textContent  = 'Press Execute to trace the engine pipeline.';
+    $('ep-status').textContent      = 'ready';
+  }
+
+  /* ── Run pipeline ─────────────────────────────────────────────── */
+  async function runPipeline() {
+    const preset = P[cur];
+    aborted = false;
+    for (const [i, s] of preset.stages.entries()) {
+      if (aborted) break;
+      setPillActive(i, preset);
+      // animate buffers
+      for (const b of (s.addBufs ?? [])) { if (aborted) break; await addBuf(b); }
+      // WAL
+      if ((s.walBytes ?? 0) > 0) addWal(s.walBytes!, s.walRec);
+      // fsync
+      if (s.fsync) {
+        await delay(100);
+        $('ep-fsync').textContent = '✓ fsynced';
+        ($('ep-fsync') as HTMLElement).style.color = '#4ade80';
+      }
+      // locks
+      if (s.clearLocks) { activeLocks = []; }
+      else if (s.addLocks?.length) { activeLocks.push(...s.addLocks); }
+      renderLocks();
+      await delay(Math.min(s.simMs * 1.8, 1800));
+      // mark done
+      $(`ep-pill-${i}`)?.classList.replace('ep-s-active', 'ep-s-done');
+    }
+    if (!aborted) {
+      $('ep-status').textContent = '✓ done';
+      running = false;
+    }
+  }
+
+  /* ── Reset ────────────────────────────────────────────────────── */
+  function resetState() {
+    aborted   = true;
+    running   = false;
+    walTotal  = 0;
+    lsnHex    = 0;
+    activeLocks = [];
+    $('ep-lsn').textContent = '0/00000000';
+    $('ep-wal-written').textContent = '0 B';
+    $('ep-wal-log').innerHTML = '';
+    $('ep-fsync').textContent = '—';
+    ($('ep-fsync') as HTMLElement).style.color = '';
+    renderLocks();
+    buildBufs();
+  }
+
+  /* ── Boot ─────────────────────────────────────────────────────── */
+  function initEP() {
+    buildBufs();
+    renderPipeline(P[cur]);
+    renderPreset(cur);
+
+    document.querySelectorAll<HTMLButtonElement>('[data-ep]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (running) return;
+        cur = btn.dataset.ep!;
+        document.querySelectorAll<HTMLElement>('[data-ep]').forEach(b => {
+          b.classList.remove('ep-pick-on');
+          b.style.borderColor = '';
+          b.style.background  = '';
+          b.style.color       = '';
+        });
+        btn.classList.add('ep-pick-on');
+        resetState();
+        renderPipeline(P[cur]);
+        renderPreset(cur);
+        $('ep-run').classList.remove('hidden');
+        $('ep-reset').classList.add('hidden');
+      });
+    });
+
+    $('ep-run').addEventListener('click', () => {
+      if (running) return;
+      running = true;
+      resetState();
+      buildBufs();
+      running = true;
+      aborted = false;
+      $('ep-run').classList.add('hidden');
+      $('ep-reset').classList.remove('hidden');
+      runPipeline();
+    });
+
+    $('ep-reset').addEventListener('click', () => {
+      aborted = true;
+      running = false;
+      resetState();
+      renderPipeline(P[cur]);
+      renderPreset(cur);
+      $('ep-run').classList.remove('hidden');
+      $('ep-reset').classList.add('hidden');
+    });
+  }
+
+  document.addEventListener('astro:page-load', initEP);
+</script>
