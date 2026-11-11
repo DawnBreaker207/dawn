@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Architecture Design - dawn.io.vn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #03060c;
+      color: #e2e8f0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+    .header-box {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: rgba(20, 184, 166, 0.1);
+      color: #14b8a6;
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      margin-bottom: 8px;
+    }
+    .header-title {
+      font-size: clamp(20px, 2.8vw, 32px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+    .header-desc {
+      font-size: 13.5px;
+      color: #94a3b8;
+      max-width: 860px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* Toolbar */
+    .toolbar-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: #080d1a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .mode-btn {
+      background: #0e1626;
+      color: #94a3b8;
+      border: 1px solid #233048;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .mode-btn:hover {
+      background: #162238;
+      color: #f1f5f9;
+      border-color: #38bdf8;
+    }
+    .mode-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border-color: #38bdf8;
+    }
+    .pause-btn {
+      background: #0e1626;
+      color: #94a3b8;
+      border: 1px solid #233048;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+    }
+
+    .svg-wrapper {
+      width: 100%;
+      background: #050811;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+      position: relative;
+    }
+    .system-architecture-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Flow stream animation */
+    .stream-packet {
+      animation: packetFlow 1.25s linear infinite;
+    }
+    @keyframes packetFlow {
+      from { stroke-dashoffset: 20; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* Scenario Dimming */
+    .filter-data .c4-card:not(.tier-data),
+    .filter-data .flow-route:not(.tier-data) {
+      opacity: 0.15 !important;
+      transition: opacity 0.3s ease;
+    }
+    .filter-control .c4-card:not(.tier-control),
+    .filter-control .flow-route:not(.tier-control) {
+      opacity: 0.15 !important;
+      transition: opacity 0.3s ease;
+    }
+    .filter-vault .c4-card:not(.tier-vault),
+    .filter-vault .flow-route:not(.tier-vault) {
+      opacity: 0.15 !important;
+      transition: opacity 0.3s ease;
+    }
+
+    .is-paused .stream-packet {
+      animation-play-state: paused !important;
+    }
+    .is-paused circle animateMotion,
+    .is-paused circle animate {
+      animation-play-state: paused !important;
+    }
+
+    /* Interactive Step Walkthrough List */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+      width: 100%;
+    }
+    .step-card {
+      background: #080d1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+    .step-card:hover {
+      border-color: #38bdf8;
+      background: #0d1527;
+    }
+    .step-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .step-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stream-packet {
+        animation: none !important;
+      }
+      circle animateMotion, circle animate {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-box">
+      <div class="header-badge">
+        <span>⚡</span> Architecture · Cloudflare Edge-First &amp; C4 Model
+      </div>
+      <h1 class="header-title">System Architecture Design</h1>
+      <p class="header-desc">End-to-end cloud architecture decoupling the Data Plane, Control Plane, and Zero-Trust Persistence.</p>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar-bar">
+      <div class="btn-group">
+        <button class="mode-btn active" data-filter="all">🌐 Overview (All)</button>
+        <button class="mode-btn" data-filter="data">⚡ Data Plane (Reader)</button>
+        <button class="mode-btn" data-filter="control">✍️ Control Plane (Notion CMS)</button>
+        <button class="mode-btn" data-filter="vault">🔒 Vault Plane (Zero-Trust &amp; DB)</button>
+      </div>
+      <button class="pause-btn" id="btn-pause">❚❚ Pause Animation</button>
+    </div>
+
+    <div class="svg-wrapper" id="svg-container">
+      
+    <svg viewBox="0 0 1440 780" fill="none" xmlns="http://www.w3.org/2000/svg" class="system-architecture-svg" id="system-architecture-svg">
+      <defs>
+        <pattern id="sd-grid-dots" width="24" height="24" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="1.1" fill="rgba(255, 255, 255, 0.04)" />
+        </pattern>
+
+        <filter id="sd-shadow-card" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#000000" flood-opacity="0.65" />
+        </filter>
+        <filter id="sd-shadow-pill" x="-15%" y="-20%" width="130%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.8" />
+        </filter>
+        <filter id="sd-glow-particle" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        
+          <marker id="sd-arrow-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 1 2 L 8 5 L 1 8 z" fill="#f97316" />
+          </marker>
+        
+          <marker id="sd-arrow-teal" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 1 2 L 8 5 L 1 8 z" fill="#14b8a6" />
+          </marker>
+        
+          <marker id="sd-arrow-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 1 2 L 8 5 L 1 8 z" fill="#a855f7" />
+          </marker>
+        
+          <marker id="sd-arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 1 2 L 8 5 L 1 8 z" fill="#38bdf8" />
+          </marker>
+        
+          <marker id="sd-arrow-gray" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 1 2 L 8 5 L 1 8 z" fill="#64748b" />
+          </marker>
+        
+
+        
+          <linearGradient id="sd-grad-orange" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#1b0f08" />
+            <stop offset="100%" stop-color="#261309" />
+          </linearGradient>
+        
+          <linearGradient id="sd-grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#04171a" />
+            <stop offset="100%" stop-color="#072429" />
+          </linearGradient>
+        
+          <linearGradient id="sd-grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#170c26" />
+            <stop offset="100%" stop-color="#221138" />
+          </linearGradient>
+        
+          <linearGradient id="sd-grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#071526" />
+            <stop offset="100%" stop-color="#0b2039" />
+          </linearGradient>
+        
+          <linearGradient id="sd-grad-gray" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#0e1422" />
+            <stop offset="100%" stop-color="#151d30" />
+          </linearGradient>
+        
+      </defs>
+
+      <!-- Base Canvas -->
+      <rect width="1440" height="780" fill="#050811" />
+      <rect width="1440" height="780" fill="url(#sd-grid-dots)" />
+
+      <!-- 1. TRUST ZONES -->
+      
+        <g class="trust-zone" id="zone-zone_public">
+          <rect x="35" y="45" width="250" height="690" rx="14"
+                fill="rgba(8, 12, 22, 0.75)" stroke="rgba(56, 189, 248, 0.4)" stroke-width="1.3" stroke-dasharray="6 4" />
+
+          <rect x="49" y="57" width="185" height="22" rx="4"
+                fill="#082f49" stroke="#38bdf8" stroke-width="0.8" stroke-opacity="0.8" />
+          <text x="59" y="71.5" fill="#e0f2fe"
+                font-size="9.5" font-weight="800" letter-spacing="0.08em" font-family="'JetBrains Mono', monospace">
+            PUBLIC INTERNET (CLIENTS)
+          </text>
+        </g>
+        <g class="trust-zone" id="zone-zone_edge">
+          <rect x="315" y="45" width="570" height="690" rx="14"
+                fill="rgba(8, 12, 22, 0.75)" stroke="rgba(168, 85, 247, 0.4)" stroke-width="1.3" stroke-dasharray="6 4" />
+
+          <rect x="329" y="57" width="297.2" height="22" rx="4"
+                fill="#3b0764" stroke="#a855f7" stroke-width="0.8" stroke-opacity="0.8" />
+          <text x="339" y="71.5" fill="#f3e8ff"
+                font-size="9.5" font-weight="800" letter-spacing="0.08em" font-family="'JetBrains Mono', monospace">
+            EDGE CDN & INGESTION (CLOUDFLARE / VERCEL)
+          </text>
+        </g>
+        <g class="trust-zone" id="zone-zone_origin">
+          <rect x="915" y="45" width="490" height="690" rx="14"
+                fill="rgba(8, 12, 22, 0.75)" stroke="rgba(20, 184, 166, 0.4)" stroke-width="1.3" stroke-dasharray="6 4" />
+
+          <rect x="929" y="57" width="264.2" height="22" rx="4"
+                fill="#134e4a" stroke="#14b8a6" stroke-width="0.8" stroke-opacity="0.8" />
+          <text x="939" y="71.5" fill="#ccfbf1"
+                font-size="9.5" font-weight="800" letter-spacing="0.08em" font-family="'JetBrains Mono', monospace">
+            PROTECTED ORIGIN & VAULT (ZERO TRUST)
+          </text>
+        </g>
+
+      <!-- 2. FLOW ROUTES & PRECISE STEP BADGES -->
+      
+        <g class="flow-route tier-data" id="flow-1" data-tier="data">
+          <!-- Static Base Trace -->
+          <path d="M 265 215 L 345 215" fill="none" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round" />
+
+          <!-- Flowing Stream Line -->
+          <path d="M 265 215 L 345 215" fill="none" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.95"
+                stroke-linecap="round" stroke-dasharray="5 4"
+                class="stream-packet" marker-end="url(#sd-arrow-blue)" />
+
+          <!-- Energy Particle -->
+          <circle r="4" fill="#38bdf8" filter="url(#sd-glow-particle)">
+            <animateMotion
+              path="M 265 215 L 345 215"
+              dur="1.25s"
+              begin="0s; 10s; 20s"
+              repeatCount="indefinite"
+              restart="always"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+            />
+            <animate
+              attributeName="opacity"
+              values="0; 1; 1; 0"
+              dur="1.25s"
+              begin="0s; 10s; 20s"
+              repeatCount="indefinite"
+              keyTimes="0; 0.2; 0.8; 1"
+            />
+          </circle>
+
+          <!-- Step Badge: Circular Step + Protocol Tag (Zero Collision) -->
+          <g transform="translate(305, 215)" filter="url(#sd-shadow-pill)" class="step-badge-group">
+            <rect x="-33" y="-11" width="66" height="22" rx="11" fill="#040711" stroke="#38bdf8" stroke-width="1.3" />
+            <!-- Number circle -->
+            <circle cx="-23" cy="0" r="7" fill="#082f49" stroke="#38bdf8" stroke-width="1" />
+            <text x="-23" y="3" fill="#e0f2fe" font-size="8.5" font-weight="900" text-anchor="middle" font-family="'JetBrains Mono', monospace">
+              1
+            </text>
+            <!-- Protocol Tag -->
+            <text x="-12" y="3.2" fill="#f8fafc" font-size="8.5" font-weight="700" text-anchor="start" font-family="'JetBrains Mono', monospace">
+              HTTPS
+            </text>
+          </g>
+        </g>
+        <g class="flow-route tier-data" id="flow-2" data-tier="data">
+          <!-- Static Base Trace -->
+          <path d="M 565 215 L 940 215" fill="none" stroke="#14b8a6" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round" />
+
+          <!-- Flowing Stream Line -->
+          <path d="M 565 215 L 940 215" fill="none" stroke="#14b8a6" stroke-width="2" stroke-opacity="0.95"
+                stroke-linecap="round" stroke-dasharray="5 4"
+                class="stream-packet" marker-end="url(#sd-arrow-teal)" />
+
+          <!-- Energy Particle -->
+          <circle r="4" fill="#2dd4bf" filter="url(#sd-glow-particle)">
+            <animateMotion
+              path="M 565 215 L 940 215"
+              dur="1.25s"
+              begin="1.25s; 11.25s; 21.25s"
+              repeatCount="indefinite"
+              restart="always"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+            />
+            <animate
+              attributeName="opacity"
+              values="0; 1; 1; 0"
+              dur="1.25s"
+              begin="1.25s; 11.25s; 21.25s"
+              repeatCount="indefinite"
+              keyTimes="0; 0.2; 0.8; 1"
+            />
+          </circle>
+
+          <!-- Step Badge: Circular Step + Protocol Tag (Zero Collision) -->
+          <g transform="translate(752, 215)" filter="url(#sd-shadow-pill)" class="step-badge-group">
+            <rect x="-39" y="-11" width="78" height="22" rx="11" fill="#040711" stroke="#14b8a6" stroke-width="1.3" />
+            <!-- Number circle -->
+            <circle cx="-29" cy="0" r="7" fill="#134e4a" stroke="#14b8a6" stroke-width="1" />
+            <text x="-29" y="3" fill="#ccfbf1" font-size="8.5" font-weight="900" text-anchor="middle" font-family="'JetBrains Mono', monospace">
+              2
+            </text>
+            <!-- Protocol Tag -->
+            <text x="-18" y="3.2" fill="#f8fafc" font-size="8.5" font-weight="700" text-anchor="start" font-family="'JetBrains Mono', monospace">
+              EDGE SSR
+            </text>
+          </g>
+        </g>
+        <g class="flow-route tier-data" id="flow-3" data-tier="data">
+          <!-- Static Base Trace -->
+          <path d="M 1042 320 L 1042 440" fill="none" stroke="#14b8a6" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round" />
+
+          <!-- Flowing Stream Line -->
+          <path d="M 1042 320 L 1042 440" fill="none" stroke="#14b8a6" stroke-width="2" stroke-opacity="0.95"
+                stroke-linecap="round" stroke-dasharray="5 4"
+                class="stream-packet" marker-end="url(#sd-arrow-teal)" />
+
+          <!-- Energy Particle -->
+          <circle r="4" fill="#2dd4bf" filter="url(#sd-glow-particle)">
+            <animateMotion
+              path="M 1042 320 L 1042 440"
+              dur="1.25s"
+              begin="2.5s; 12.5s; 22.5s"
+              repeatCount="indefinite"
+              restart="always"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+            />
+            <animate
+              attributeName="opacity"
+              values="0; 1; 1; 0"
+              dur="1.25s"
+              begin="2.5s; 12.5s; 22.5s"
+              repeatCount="indefinite"
+              keyTimes="0; 0.2; 0.8; 1"
+            />
+          </circle>
+
+          <!-- Step Badge: Circular Step + Protocol Tag (Zero Collision) -->
+          <g transform="translate(1042, 380)" filter="url(#sd-shadow-pill)" class="step-badge-group">
+            <rect x="-38" y="-11" width="76" height="22" rx="11" fill="#040711" stroke="#14b8a6" stroke-width="1.3" />
+            <!-- Number circle -->
+            <circle cx="-28" cy="0" r="7" fill="#134e4a" stroke="#14b8a6" stroke-width="1" />
+            <text x="-28" y="3" fill="#ccfbf1" font-size="8.5" font-weight="900" text-anchor="middle" font-family="'JetBrains Mono', monospace">
+              3
+            </text>
+            <!-- Protocol Tag -->
+            <text x="-17" y="3.2" fill="#f8fafc" font-size="8.5" font-weight="700" text-anchor="start" font-family="'JetBrains Mono', monospace">
+              SQL POOL
+            </text>
+          </g>
+        </g>
+        <g class="flow-route tier-control" id="flow-4" data-tier="control">
+          <!-- Static Base Trace -->
+          <path d="M 265 545 L 345 545" fill="none" stroke="#a855f7" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round" />
+
+          <!-- Flowing Stream Line -->
+          <path d="M 265 545 L 345 545" fill="none" stroke="#a855f7" stroke-width="2" stroke-opacity="0.95"
+                stroke-linecap="round" stroke-dasharray="7 5"
+                class="stream-packet" marker-end="url(#sd-arrow-purple)" />
+
+          <!-- Energy Particle -->
+          <circle r="4" fill="#c084fc" filter="url(#sd-glow-particle)">
+            <animateMotion
+              path="M 265 545 L 345 545"
+              dur="1.25s"
+              begin="3.75s; 13.75s; 23.75s"
+              repeatCount="indefinite"
+              restart="always"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+            />
+            <animate
+              attributeName="opacity"
+              values="0; 1; 1; 0"
+              dur="1.25s"
+              begin="3.75s; 13.75s; 23.75s"
+              repeatCount="indefinite"
+              keyTimes="0; 0.2; 0.8; 1"
+            />
+          </circle>
+
+          <!-- Step Badge: Circular Step + Protocol Tag (Zero Collision) -->
+          <g transform="translate(305, 545)" filter="url(#sd-shadow-pill)" class="step-badge-group">
+            <rect x="-34" y="-11" width="68" height="22" rx="11" fill="#040711" stroke="#a855f7" stroke-width="1.3" />
+            <!-- Number circle -->
+            <circle cx="-24" cy="0" r="7" fill="#3b0764" stroke="#a855f7" stroke-width="1" />
+            <text x="-24" y="3" fill="#f3e8ff" font-size="8.5" font-weight="900" text-anchor="middle" font-family="'JetBrains Mono', monospace">
+              4
+            </text>
+            <!-- Protocol Tag -->
+            <text x="-13" y="3.2" fill="#f8fafc" font-size="8.5" font-weight="700" text-anchor="start" font-family="'JetBrains Mono', monospace">
+              NOTION
+            </text>
+          </g>
+        </g>
+        <g class="flow-route tier-control" id="flow-5" data-tier="control">
+          <!-- Static Base Trace -->
+          <path d="M 565 545 L 655 545" fill="none" stroke="#a855f7" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round" />
+
+          <!-- Flowing Stream Line -->
+          <path d="M 565 545 L 655 545" fill="none" stroke="#a855f7" stroke-width="2" stroke-opacity="0.95"
+                stroke-linecap="round" stroke-dasharray="7 5"
+                class="stream-packet" marker-end="url(#sd-arrow-purple)" />
+
+          <!-- Energy Particle -->
+          <circle r="4" fill="#c084fc" filter="url(#sd-glow-particle)">
+            <animateMotion
+              path="M 565 545 L 655 545"
+              dur="1.25s"
+              begin="5s; 15s; 25s"
+              repeatCount="indefinite"
+              restart="always"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+            />
+            <animate
+              attributeName="opacity"
+              values="0; 1; 1; 0"
+              dur="1.25s"
+              begin="5s; 15s; 25s"
+              repeatCount="indefinite"
+              keyTimes="0; 0.2; 0.8; 1"
+            />
+          </circle>
+
+          <!-- Step Badge: Circular Step + Protocol Tag (Zero Collision) -->
+          <g transform="translate(610, 545)" filter="url(#sd-shadow-pill)" class="step-badge-group">
+            <rect x="-30" y="-11" width="60" height="22" rx="11" fill="#040711" stroke="#a855f7" stroke-width="1.3" />
+            <!-- Number circle -->
+            <circle cx="-20" cy="0" r="7" fill="#3b0764" stroke="#a855f7" stroke-width="1" />
+            <text x="-20" y="3" fill="#f3e8ff" font-size="8.5" font-weight="900" text-anchor="middle" font-family="'JetBrains Mono', monospace">
+              5
+            </text>
+            <!-- Protocol Tag -->
+            <text x="-9" y="3.2" fill="#f8fafc" font-size="8.5" font-weight="700" text-anchor="start" font-family="'JetBrains Mono', monospace">
+              CRON
+            </text>
+          </g>
+        </g>
+        <g class="flow-route tier-control" id="flow-6" data-tier="control">
+          <!-- Static Base Trace -->
+          <path d="M 730 440 C 730 370, 565 350, 565 275" fill="none" stroke="#64748b" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round" />
+
+          <!-- Flowing Stream Line -->
+          <path d="M 730 440 C 730 370, 565 350, 565 275" fill="none" stroke="#64748b" stroke-width="2" stroke-opacity="0.95"
+                stroke-linecap="round" stroke-dasharray="5 4"
+                class="stream-packet" marker-end="url(#sd-arrow-gray)" />
+
+          <!-- Energy Particle -->
+          <circle r="4" fill="#94a3b8" filter="url(#sd-glow-particle)">
+            <animateMotion
+              path="M 730 440 C 730 370, 565 350, 565 275"
+              dur="1.25s"
+              begin="6.25s; 16.25s; 26.25s"
+              repeatCount="indefinite"
+              restart="always"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+            />
+            <animate
+              attributeName="opacity"
+              values="0; 1; 1; 0"
+              dur="1.25s"
+              begin="6.25s; 16.25s; 26.25s"
+              repeatCount="indefinite"
+              keyTimes="0; 0.2; 0.8; 1"
+            />
+          </circle>
+
+          <!-- Step Badge: Circular Step + Protocol Tag (Zero Collision) -->
+          <g transform="translate(635, 355)" filter="url(#sd-shadow-pill)" class="step-badge-group">
+            <rect x="-34" y="-11" width="68" height="22" rx="11" fill="#040711" stroke="#64748b" stroke-width="1.3" />
+            <!-- Number circle -->
+            <circle cx="-24" cy="0" r="7" fill="#1e293b" stroke="#64748b" stroke-width="1" />
+            <text x="-24" y="3" fill="#f1f5f9" font-size="8.5" font-weight="900" text-anchor="middle" font-family="'JetBrains Mono', monospace">
+              6
+            </text>
+            <!-- Protocol Tag -->
+            <text x="-13" y="3.2" fill="#f8fafc" font-size="8.5" font-weight="700" text-anchor="start" font-family="'JetBrains Mono', monospace">
+              DEPLOY
+            </text>
+          </g>
+        </g>
+        <g class="flow-route tier-vault" id="flow-7" data-tier="vault">
+          <!-- Static Base Trace -->
+          <path d="M 1235 440 L 1235 320" fill="none" stroke="#f97316" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round" />
+
+          <!-- Flowing Stream Line -->
+          <path d="M 1235 440 L 1235 320" fill="none" stroke="#f97316" stroke-width="2" stroke-opacity="0.95"
+                stroke-linecap="round" stroke-dasharray="7 5"
+                class="stream-packet" marker-end="url(#sd-arrow-orange)" />
+
+          <!-- Energy Particle -->
+          <circle r="4" fill="#fb923c" filter="url(#sd-glow-particle)">
+            <animateMotion
+              path="M 1235 440 L 1235 320"
+              dur="1.25s"
+              begin="7.5s; 17.5s; 27.5s"
+              repeatCount="indefinite"
+              restart="always"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+            />
+            <animate
+              attributeName="opacity"
+              values="0; 1; 1; 0"
+              dur="1.25s"
+              begin="7.5s; 17.5s; 27.5s"
+              repeatCount="indefinite"
+              keyTimes="0; 0.2; 0.8; 1"
+            />
+          </circle>
+
+          <!-- Step Badge: Circular Step + Protocol Tag (Zero Collision) -->
+          <g transform="translate(1235, 355)" filter="url(#sd-shadow-pill)" class="step-badge-group">
+            <rect x="-32" y="-11" width="64" height="22" rx="11" fill="#040711" stroke="#f97316" stroke-width="1.3" />
+            <!-- Number circle -->
+            <circle cx="-22" cy="0" r="7" fill="#431407" stroke="#f97316" stroke-width="1" />
+            <text x="-22" y="3" fill="#ffedd5" font-size="8.5" font-weight="900" text-anchor="middle" font-family="'JetBrains Mono', monospace">
+              7
+            </text>
+            <!-- Protocol Tag -->
+            <text x="-11" y="3.2" fill="#f8fafc" font-size="8.5" font-weight="700" text-anchor="start" font-family="'JetBrains Mono', monospace">
+              VAULT
+            </text>
+          </g>
+        </g>
+        <g class="flow-route tier-vault" id="flow-8" data-tier="vault">
+          <!-- Static Base Trace -->
+          <path d="M 1320 320 L 1320 440" fill="none" stroke="#f97316" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round" />
+
+          <!-- Flowing Stream Line -->
+          <path d="M 1320 320 L 1320 440" fill="none" stroke="#f97316" stroke-width="2" stroke-opacity="0.95"
+                stroke-linecap="round" stroke-dasharray="7 5"
+                class="stream-packet" marker-end="url(#sd-arrow-orange)" />
+
+          <!-- Energy Particle -->
+          <circle r="4" fill="#fb923c" filter="url(#sd-glow-particle)">
+            <animateMotion
+              path="M 1320 320 L 1320 440"
+              dur="1.25s"
+              begin="8.75s; 18.75s; 28.75s"
+              repeatCount="indefinite"
+              restart="always"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+            />
+            <animate
+              attributeName="opacity"
+              values="0; 1; 1; 0"
+              dur="1.25s"
+              begin="8.75s; 18.75s; 28.75s"
+              repeatCount="indefinite"
+              keyTimes="0; 0.2; 0.8; 1"
+            />
+          </circle>
+
+          <!-- Step Badge: Circular Step + Protocol Tag (Zero Collision) -->
+          <g transform="translate(1320, 405)" filter="url(#sd-shadow-pill)" class="step-badge-group">
+            <rect x="-36" y="-11" width="72" height="22" rx="11" fill="#040711" stroke="#f97316" stroke-width="1.3" />
+            <!-- Number circle -->
+            <circle cx="-26" cy="0" r="7" fill="#431407" stroke="#f97316" stroke-width="1" />
+            <text x="-26" y="3" fill="#ffedd5" font-size="8.5" font-weight="900" text-anchor="middle" font-family="'JetBrains Mono', monospace">
+              8
+            </text>
+            <!-- Protocol Tag -->
+            <text x="-15" y="3.2" fill="#f8fafc" font-size="8.5" font-weight="700" text-anchor="start" font-family="'JetBrains Mono', monospace">
+              AI TOKEN
+            </text>
+          </g>
+        </g>
+
+      <!-- 3. C4 CONTAINERS -->
+      
+        <g class="c4-card tier-data" id="card-reader" filter="url(#sd-shadow-card)">
+          <rect x="55" y="110" width="210" height="210" rx="10"
+                fill="url(#sd-grad-blue)"
+                stroke="#38bdf8" stroke-width="1.4" />
+
+          <rect x="55" y="110" width="210" height="38" rx="10" fill="rgba(56, 189, 248, 0.2)" />
+          <rect x="55" y="128" width="210" height="20" fill="rgba(56, 189, 248, 0.2)" />
+          <line x1="55" y1="148" x2="265" y2="148" stroke="rgba(56, 189, 248, 0.4)" stroke-width="1" />
+
+          <!-- Tech Icon in Header -->
+          
+      <g transform="translate(67, 121)">
+        <rect x="0" y="0" width="20" height="15" rx="3" fill="none" stroke="#38bdf8" stroke-width="1.4"/>
+        <line x1="0" y1="4.5" x2="20" y2="4.5" stroke="#38bdf8" stroke-width="1.2"/>
+        <circle cx="3" cy="2.2" r="0.9" fill="#38bdf8"/>
+        <circle cx="6" cy="2.2" r="0.9" fill="#38bdf8"/>
+        <circle cx="9" cy="2.2" r="0.9" fill="#38bdf8"/>
+      </g>
+
+          <!-- C4 Tech Tag -->
+          <rect x="93" y="120" width="102.8" height="17" rx="3.5"
+                fill="#082f49" stroke="#38bdf8" stroke-width="0.8" />
+          <text x="100" y="131.5" fill="#e0f2fe"
+                font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">
+            [Browser Client]
+          </text>
+
+          <text x="67" y="170" fill="#f8fafc" font-size="13.5" font-weight="700">
+            Web Browser (Reader)
+          </text>
+
+          
+            <g transform="translate(67, 192)">
+              <circle cx="3" cy="-4" r="1.8" fill="#38bdf8" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Read tech posts & CS labs
+              </text>
+            </g>
+          
+            <g transform="translate(67, 211)">
+              <circle cx="3" cy="-4" r="1.8" fill="#38bdf8" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Command Palette (Ctrl+K)
+              </text>
+            </g>
+          
+            <g transform="translate(67, 230)">
+              <circle cx="3" cy="-4" r="1.8" fill="#38bdf8" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Live view & reaction events
+              </text>
+            </g>
+          
+        </g>
+        <g class="c4-card tier-data" id="card-vercel_edge" filter="url(#sd-shadow-card)">
+          <rect x="345" y="110" width="220" height="210" rx="10"
+                fill="url(#sd-grad-gray)"
+                stroke="#64748b" stroke-width="1.4" />
+
+          <rect x="345" y="110" width="220" height="38" rx="10" fill="rgba(100, 116, 139, 0.2)" />
+          <rect x="345" y="128" width="220" height="20" fill="rgba(100, 116, 139, 0.2)" />
+          <line x1="345" y1="148" x2="565" y2="148" stroke="rgba(100, 116, 139, 0.4)" stroke-width="1" />
+
+          <!-- Tech Icon in Header -->
+          
+      <g transform="translate(357, 121)">
+        <polygon points="10,1 19,16 1,16" fill="#64748b" fill-opacity="0.25" stroke="#64748b" stroke-width="1.4" stroke-linejoin="round"/>
+      </g>
+
+          <!-- C4 Tech Tag -->
+          <rect x="383" y="120" width="115.2" height="17" rx="3.5"
+                fill="#1e293b" stroke="#64748b" stroke-width="0.8" />
+          <text x="390" y="131.5" fill="#f1f5f9"
+                font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">
+            [Edge CDN · Cache]
+          </text>
+
+          <text x="357" y="170" fill="#f8fafc" font-size="13.5" font-weight="700">
+            Vercel Edge & Cache
+          </text>
+
+          
+            <g transform="translate(357, 192)">
+              <circle cx="3" cy="-4" r="1.8" fill="#64748b" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Global edge asset caching
+              </text>
+            </g>
+          
+            <g transform="translate(357, 211)">
+              <circle cx="3" cy="-4" r="1.8" fill="#64748b" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Sub-30ms TTFB responses
+              </text>
+            </g>
+          
+            <g transform="translate(357, 230)">
+              <circle cx="3" cy="-4" r="1.8" fill="#64748b" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Route dynamic SSR APIs
+              </text>
+            </g>
+          
+        </g>
+        <g class="c4-card tier-data" id="card-astro_app" filter="url(#sd-shadow-card)">
+          <rect x="940" y="110" width="440" height="210" rx="10"
+                fill="url(#sd-grad-teal)"
+                stroke="#14b8a6" stroke-width="1.4" />
+
+          <rect x="940" y="110" width="440" height="38" rx="10" fill="rgba(20, 184, 166, 0.2)" />
+          <rect x="940" y="128" width="440" height="20" fill="rgba(20, 184, 166, 0.2)" />
+          <line x1="940" y1="148" x2="1380" y2="148" stroke="rgba(20, 184, 166, 0.4)" stroke-width="1" />
+
+          <!-- Tech Icon in Header -->
+          
+      <g transform="translate(952, 121)">
+        <path d="M 10 1 C 7 3.5, 5 7, 5 13 L 15 13 C 15 7, 13 3.5, 10 1 Z" fill="none" stroke="#14b8a6" stroke-width="1.4"/>
+        <polygon points="10,5 7,12 13,12" fill="#14b8a6" fill-opacity="0.3"/>
+        <circle cx="10" cy="15.5" r="1.3" fill="#14b8a6"/>
+      </g>
+
+          <!-- C4 Tech Tag -->
+          <rect x="978" y="120" width="115.2" height="17" rx="3.5"
+                fill="#134e4a" stroke="#14b8a6" stroke-width="0.8" />
+          <text x="985" y="131.5" fill="#ccfbf1"
+                font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">
+            [Astro 5 · Engine]
+          </text>
+
+          <text x="952" y="170" fill="#f8fafc" font-size="13.5" font-weight="700">
+            Astro 5 Core & CS Labs
+          </text>
+
+          
+            <g transform="translate(952, 192)">
+              <circle cx="3" cy="-4" r="1.8" fill="#14b8a6" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Compile MDX via Content Collections
+              </text>
+            </g>
+          
+            <g transform="translate(952, 211)">
+              <circle cx="3" cy="-4" r="1.8" fill="#14b8a6" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Interactive React Islands for CS labs
+              </text>
+            </g>
+          
+            <g transform="translate(952, 230)">
+              <circle cx="3" cy="-4" r="1.8" fill="#14b8a6" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Serverless API endpoints (/api/stats)
+              </text>
+            </g>
+          
+        </g>
+        <g class="c4-card tier-control" id="card-author" filter="url(#sd-shadow-card)">
+          <rect x="55" y="440" width="210" height="210" rx="10"
+                fill="url(#sd-grad-blue)"
+                stroke="#38bdf8" stroke-width="1.4" />
+
+          <rect x="55" y="440" width="210" height="38" rx="10" fill="rgba(56, 189, 248, 0.2)" />
+          <rect x="55" y="458" width="210" height="20" fill="rgba(56, 189, 248, 0.2)" />
+          <line x1="55" y1="478" x2="265" y2="478" stroke="rgba(56, 189, 248, 0.4)" stroke-width="1" />
+
+          <!-- Tech Icon in Header -->
+          
+      <g transform="translate(67, 451)">
+        <circle cx="10" cy="5.5" r="4" fill="none" stroke="#38bdf8" stroke-width="1.4"/>
+        <path d="M 2 16 C 2 12, 6 11, 10 11 C 14 11, 18 12, 18 16" fill="none" stroke="#38bdf8" stroke-width="1.4" stroke-linecap="round"/>
+      </g>
+
+          <!-- C4 Tech Tag -->
+          <rect x="93" y="450" width="96.60000000000001" height="17" rx="3.5"
+                fill="#082f49" stroke="#38bdf8" stroke-width="0.8" />
+          <text x="100" y="461.5" fill="#e0f2fe"
+                font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">
+            [Notion Client]
+          </text>
+
+          <text x="67" y="500" fill="#f8fafc" font-size="13.5" font-weight="700">
+            Author (Notion App)
+          </text>
+
+          
+            <g transform="translate(67, 522)">
+              <circle cx="3" cy="-4" r="1.8" fill="#38bdf8" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Write technical MDX drafts
+              </text>
+            </g>
+          
+            <g transform="translate(67, 541)">
+              <circle cx="3" cy="-4" r="1.8" fill="#38bdf8" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Manage roadmap & timeline
+              </text>
+            </g>
+          
+            <g transform="translate(67, 560)">
+              <circle cx="3" cy="-4" r="1.8" fill="#38bdf8" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Update Now status & bookshelf
+              </text>
+            </g>
+          
+        </g>
+        <g class="c4-card tier-control" id="card-notion_cms" filter="url(#sd-shadow-card)">
+          <rect x="345" y="440" width="220" height="210" rx="10"
+                fill="url(#sd-grad-purple)"
+                stroke="#a855f7" stroke-width="1.4" />
+
+          <rect x="345" y="440" width="220" height="38" rx="10" fill="rgba(168, 85, 247, 0.2)" />
+          <rect x="345" y="458" width="220" height="20" fill="rgba(168, 85, 247, 0.2)" />
+          <line x1="345" y1="478" x2="565" y2="478" stroke="rgba(168, 85, 247, 0.4)" stroke-width="1" />
+
+          <!-- Tech Icon in Header -->
+          
+      <g transform="translate(357, 451)">
+        <rect x="1" y="0.5" width="17" height="17" rx="3" fill="none" stroke="#a855f7" stroke-width="1.4"/>
+        <path d="M 5 14 L 5 4 L 7.5 4 L 12.5 12 L 12.5 4 L 14.5 4 L 14.5 14 L 12 14 L 7 6 L 7 14 Z" fill="#a855f7"/>
+      </g>
+
+          <!-- C4 Tech Tag -->
+          <rect x="383" y="450" width="90.4" height="17" rx="3.5"
+                fill="#3b0764" stroke="#a855f7" stroke-width="0.8" />
+          <text x="390" y="461.5" fill="#f3e8ff"
+                font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">
+            [Headless CMS]
+          </text>
+
+          <text x="357" y="500" fill="#f8fafc" font-size="13.5" font-weight="700">
+            Notion API Databases
+          </text>
+
+          
+            <g transform="translate(357, 522)">
+              <circle cx="3" cy="-4" r="1.8" fill="#a855f7" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Headless posts & tags store
+              </text>
+            </g>
+          
+            <g transform="translate(357, 541)">
+              <circle cx="3" cy="-4" r="1.8" fill="#a855f7" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Structured roadmap schemas
+              </text>
+            </g>
+          
+            <g transform="translate(357, 560)">
+              <circle cx="3" cy="-4" r="1.8" fill="#a855f7" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Bearer token API security
+              </text>
+            </g>
+          
+        </g>
+        <g class="c4-card tier-control" id="card-gh_actions" filter="url(#sd-shadow-card)">
+          <rect x="655" y="440" width="210" height="210" rx="10"
+                fill="url(#sd-grad-gray)"
+                stroke="#64748b" stroke-width="1.4" />
+
+          <rect x="655" y="440" width="210" height="38" rx="10" fill="rgba(100, 116, 139, 0.2)" />
+          <rect x="655" y="458" width="210" height="20" fill="rgba(100, 116, 139, 0.2)" />
+          <line x1="655" y1="478" x2="865" y2="478" stroke="rgba(100, 116, 139, 0.4)" stroke-width="1" />
+
+          <!-- Tech Icon in Header -->
+          
+      <g transform="translate(667, 451)">
+        <circle cx="5" cy="5" r="2.8" fill="none" stroke="#64748b" stroke-width="1.3"/>
+        <circle cx="5" cy="13" r="2.8" fill="none" stroke="#64748b" stroke-width="1.3"/>
+        <circle cx="14" cy="5" r="2.8" fill="none" stroke="#64748b" stroke-width="1.3"/>
+        <line x1="5" y1="7.8" x2="5" y2="10.2" stroke="#64748b" stroke-width="1.3"/>
+        <path d="M 5 10 C 5 7.5, 14 7.5, 14 7.8" fill="none" stroke="#64748b" stroke-width="1.3"/>
+      </g>
+
+          <!-- C4 Tech Tag -->
+          <rect x="693" y="450" width="90.4" height="17" rx="3.5"
+                fill="#1e293b" stroke="#64748b" stroke-width="0.8" />
+          <text x="700" y="461.5" fill="#f1f5f9"
+                font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">
+            [CI/CD Runner]
+          </text>
+
+          <text x="667" y="500" fill="#f8fafc" font-size="13.5" font-weight="700">
+            GitHub Actions CI
+          </text>
+
+          
+            <g transform="translate(667, 522)">
+              <circle cx="3" cy="-4" r="1.8" fill="#64748b" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Daily cron sync (00:00 UTC+7)
+              </text>
+            </g>
+          
+            <g transform="translate(667, 541)">
+              <circle cx="3" cy="-4" r="1.8" fill="#64748b" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Run sync-notion.mjs parser
+              </text>
+            </g>
+          
+            <g transform="translate(667, 560)">
+              <circle cx="3" cy="-4" r="1.8" fill="#64748b" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Build bundle, commit & push
+              </text>
+            </g>
+          
+        </g>
+        <g class="c4-card tier-vault" id="card-postgres" filter="url(#sd-shadow-card)">
+          <rect x="940" y="440" width="205" height="210" rx="10"
+                fill="url(#sd-grad-orange)"
+                stroke="#f97316" stroke-width="1.4" />
+
+          <rect x="940" y="440" width="205" height="38" rx="10" fill="rgba(249, 115, 22, 0.2)" />
+          <rect x="940" y="458" width="205" height="20" fill="rgba(249, 115, 22, 0.2)" />
+          <line x1="940" y1="478" x2="1145" y2="478" stroke="rgba(249, 115, 22, 0.4)" stroke-width="1" />
+
+          <!-- Tech Icon in Header -->
+          
+      <g transform="translate(952, 451)">
+        <ellipse cx="10" cy="4.5" rx="8" ry="3" fill="none" stroke="#f97316" stroke-width="1.4"/>
+        <path d="M 2 4.5 L 2 12 C 2 14.5, 18 14.5, 18 12 L 18 4.5" fill="none" stroke="#f97316" stroke-width="1.4"/>
+        <path d="M 2 8.5 C 2 11, 18 11, 18 8.5" fill="none" stroke="#f97316" stroke-width="1.2"/>
+      </g>
+
+          <!-- C4 Tech Tag -->
+          <rect x="978" y="450" width="96.60000000000001" height="17" rx="3.5"
+                fill="#431407" stroke="#f97316" stroke-width="0.8" />
+          <text x="985" y="461.5" fill="#ffedd5"
+                font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">
+            [PostgreSQL DB]
+          </text>
+
+          <text x="952" y="500" fill="#f8fafc" font-size="13.5" font-weight="700">
+            PostgreSQL Database
+          </text>
+
+          
+            <g transform="translate(952, 522)">
+              <circle cx="3" cy="-4" r="1.8" fill="#f97316" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Persist views & reactions
+              </text>
+            </g>
+          
+            <g transform="translate(952, 541)">
+              <circle cx="3" cy="-4" r="1.8" fill="#f97316" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Prisma connection pool
+              </text>
+            </g>
+          
+            <g transform="translate(952, 560)">
+              <circle cx="3" cy="-4" r="1.8" fill="#f97316" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Thread-safe atomic count
+              </text>
+            </g>
+          
+        </g>
+        <g class="c4-card tier-vault" id="card-vault" filter="url(#sd-shadow-card)">
+          <rect x="1175" y="440" width="205" height="210" rx="10"
+                fill="url(#sd-grad-orange)"
+                stroke="#f97316" stroke-width="1.4" />
+
+          <rect x="1175" y="440" width="205" height="38" rx="10" fill="rgba(249, 115, 22, 0.2)" />
+          <rect x="1175" y="458" width="205" height="20" fill="rgba(249, 115, 22, 0.2)" />
+          <line x1="1175" y1="478" x2="1380" y2="478" stroke="rgba(249, 115, 22, 0.4)" stroke-width="1" />
+
+          <!-- Tech Icon in Header -->
+          
+      <g transform="translate(1187, 451)">
+        <path d="M 10 1.5 L 18 4.5 L 18 10 C 18 14.5, 10 17.5, 10 17.5 C 10 17.5, 2 14.5, 2 10 L 2 4.5 Z" fill="none" stroke="#f97316" stroke-width="1.4"/>
+        <circle cx="10" cy="8.5" r="1.8" fill="#f97316"/>
+        <line x1="10" y1="10.3" x2="10" y2="13" stroke="#f97316" stroke-width="1.4"/>
+      </g>
+
+          <!-- C4 Tech Tag -->
+          <rect x="1213" y="450" width="90.4" height="17" rx="3.5"
+                fill="#431407" stroke="#f97316" stroke-width="0.8" />
+          <text x="1220" y="461.5" fill="#ffedd5"
+                font-size="8.5" font-weight="800" font-family="'JetBrains Mono', monospace">
+            [Secret Vault]
+          </text>
+
+          <text x="1187" y="500" fill="#f8fafc" font-size="13.5" font-weight="700">
+            Environment Vault
+          </text>
+
+          
+            <g transform="translate(1187, 522)">
+              <circle cx="3" cy="-4" r="1.8" fill="#f97316" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Encrypted DATABASE_URL
+              </text>
+            </g>
+          
+            <g transform="translate(1187, 541)">
+              <circle cx="3" cy="-4" r="1.8" fill="#f97316" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                Protected NOTION_TOKEN
+              </text>
+            </g>
+          
+            <g transform="translate(1187, 560)">
+              <circle cx="3" cy="-4" r="1.8" fill="#f97316" />
+              <text x="11" y="0" fill="#94a3b8" font-size="10.5" font-weight="400">
+                LLM token spend tracking
+              </text>
+            </g>
+          
+        </g>
+
+      <!-- 4. BOTTOM LEGEND BAR -->
+      <g id="sd-legend-panel" transform="translate(35, 680)" filter="url(#sd-shadow-card)">
+        <rect x="0" y="0" width="1370" height="55" rx="10" fill="#060911" stroke="#1e293b" stroke-width="1.3" />
+
+        <text x="18" y="32" fill="#64748b" font-size="9.5" font-weight="800" letter-spacing="0.08em" font-family="'JetBrains Mono', monospace">
+          ARCHITECTURAL PLANES:
+        </text>
+
+        <g transform="translate(240, 19)">
+          <line x1="0" y1="12" x2="22" y2="12" stroke="#14b8a6" stroke-width="2.5" />
+          <circle cx="11" cy="12" r="3.5" fill="#2dd4bf" />
+          <text x="30" y="15" fill="#99f6e4" font-size="11" font-weight="700">
+            Data Plane (Reader Traffic · Edge CDN)
+          </text>
+        </g>
+
+        <g transform="translate(620, 19)">
+          <line x1="0" y1="12" x2="22" y2="12" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="5 3" />
+          <circle cx="11" cy="12" r="3.5" fill="#c084fc" />
+          <text x="30" y="15" fill="#e9d5ff" font-size="11" font-weight="700">
+            Control Plane (Notion CMS &amp; CI/CD)
+          </text>
+        </g>
+
+        <g transform="translate(1010, 19)">
+          <line x1="0" y1="12" x2="22" y2="12" stroke="#f97316" stroke-width="2.5" stroke-dasharray="5 3" />
+          <circle cx="11" cy="12" r="3.5" fill="#fb923c" />
+          <text x="30" y="15" fill="#fed7aa" font-size="11" font-weight="700">
+            Vault Plane (Zero-Trust &amp; DB)
+          </text>
+        </g>
+      </g>
+    </svg>
+  
+    </div>
+
+    <!-- Step Walkthrough Grid -->
+    <div class="steps-grid">
+      
+        <div class="step-card" data-step-id="flow-1">
+          <span class="step-badge" style="background: #082f49; color: #e0f2fe; border: 1px solid #38bdf8;">
+            1 · HTTPS
+          </span>
+          <p class="step-desc">
+            <strong style="color: #bae6fd;">HTTPS:</strong> Reader requests technical articles over secure HTTPS
+          </p>
+        </div>
+        <div class="step-card" data-step-id="flow-2">
+          <span class="step-badge" style="background: #134e4a; color: #ccfbf1; border: 1px solid #14b8a6;">
+            2 · EDGE SSR
+          </span>
+          <p class="step-desc">
+            <strong style="color: #99f6e4;">EDGE SSR:</strong> Vercel Edge serves cached static HTML or proxies dynamic SSR requests
+          </p>
+        </div>
+        <div class="step-card" data-step-id="flow-3">
+          <span class="step-badge" style="background: #134e4a; color: #ccfbf1; border: 1px solid #14b8a6;">
+            3 · SQL POOL
+          </span>
+          <p class="step-desc">
+            <strong style="color: #99f6e4;">SQL POOL:</strong> Astro serverless API increments views & reactions via Prisma connection pool
+          </p>
+        </div>
+        <div class="step-card" data-step-id="flow-4">
+          <span class="step-badge" style="background: #3b0764; color: #f3e8ff; border: 1px solid #a855f7;">
+            4 · NOTION
+          </span>
+          <p class="step-desc">
+            <strong style="color: #e9d5ff;">NOTION:</strong> Author creates and edits technical articles within Notion CMS workspace
+          </p>
+        </div>
+        <div class="step-card" data-step-id="flow-5">
+          <span class="step-badge" style="background: #3b0764; color: #f3e8ff; border: 1px solid #a855f7;">
+            5 · CRON
+          </span>
+          <p class="step-desc">
+            <strong style="color: #e9d5ff;">CRON:</strong> GitHub Actions daily cron (00:00 UTC+7) fetches updated MDX from Notion
+          </p>
+        </div>
+        <div class="step-card" data-step-id="flow-6">
+          <span class="step-badge" style="background: #1e293b; color: #f1f5f9; border: 1px solid #64748b;">
+            6 · DEPLOY
+          </span>
+          <p class="step-desc">
+            <strong style="color: #e2e8f0;">DEPLOY:</strong> Automated workflow validates MDX, builds static bundle, and triggers edge deployment
+          </p>
+        </div>
+        <div class="step-card" data-step-id="flow-7">
+          <span class="step-badge" style="background: #431407; color: #ffedd5; border: 1px solid #f97316;">
+            7 · VAULT
+          </span>
+          <p class="step-desc">
+            <strong style="color: #fed7aa;">VAULT:</strong> Secure environment vault injects encrypted runtime secrets & DATABASE_URL into Astro
+          </p>
+        </div>
+        <div class="step-card" data-step-id="flow-8">
+          <span class="step-badge" style="background: #431407; color: #ffedd5; border: 1px solid #f97316;">
+            8 · AI TOKEN
+          </span>
+          <p class="step-desc">
+            <strong style="color: #fed7aa;">AI TOKEN:</strong> Astro queries private telemetry store for LLM token usage and spend tracking
+          </p>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    const container = document.getElementById('svg-container');
+    const buttons = document.querySelectorAll('.mode-btn');
+    const pauseBtn = document.getElementById('btn-pause');
+    let paused = false;
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        container.className = 'svg-wrapper';
+        if (filter !== 'all') {
+          container.classList.add('filter-' + filter);
+        }
+      });
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      paused = !paused;
+      container.classList.toggle('is-paused', paused);
+      pauseBtn.textContent = paused ? '▶ Resume' : '❚❚ Pause Animation';
+    });
+  </script>
+</body>
+</html>

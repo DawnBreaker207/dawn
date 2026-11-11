@@ -1,0 +1,374 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { systemArchitecture } from '@/lib/system-architecture';
+
+export const prerender = true;
+
+// ByteByteGo-inspired flat color palette — no gradients
+const COLOR_MAP: Record<string, {
+  fill: string; border: string; borderMuted: string;
+  text: string; label: string; iconBg: string; dot: string;
+}> = {
+  orange:  { fill: '#2d1206', border: '#f97316', borderMuted: 'rgba(249,115,22,0.35)',  text: '#fed7aa', label: '#fff7ed', iconBg: '#7c2d12', dot: '#fb923c' },
+  teal:    { fill: '#042220', border: '#14b8a6', borderMuted: 'rgba(20,184,166,0.35)',   text: '#99f6e4', label: '#f0fdfa', iconBg: '#134e4a', dot: '#2dd4bf' },
+  purple:  { fill: '#1e0d3a', border: '#a855f7', borderMuted: 'rgba(168,85,247,0.35)',  text: '#e9d5ff', label: '#faf5ff', iconBg: '#4c1d95', dot: '#c084fc' },
+  blue:    { fill: '#071a38', border: '#38bdf8', borderMuted: 'rgba(56,189,248,0.35)',   text: '#bae6fd', label: '#f0f9ff', iconBg: '#082f49', dot: '#38bdf8' },
+  gray:    { fill: '#0d1626', border: '#64748b', borderMuted: 'rgba(100,116,139,0.35)', text: '#e2e8f0', label: '#f8fafc', iconBg: '#1e293b', dot: '#94a3b8' },
+};
+
+const ICON: Record<string, string> = {
+  reader: '🌐', vercel_edge: '⚡', astro_app: '🚀',
+  author: '✍️', notion_cms: '📝', gh_actions: '⚙️',
+  postgres: '🗄', vault: '🔐',
+};
+
+const TIER_STYLE = {
+  data:    { border: 'border-l-sky-500',    text: 'text-sky-400',    color: '#38bdf8' },
+  control: { border: 'border-l-violet-500', text: 'text-violet-400', color: '#a855f7' },
+  vault:   { border: 'border-l-orange-500', text: 'text-orange-400', color: '#f97316' },
+} as const;
+
+const PLANE_SUMMARY = [
+  {
+    tier: 'data' as const, border: 'border-l-sky-500', text: 'text-sky-400',
+    title: 'Data Plane', count: 3,
+    desc: 'Reader → Edge CDN → Astro SSR',
+    kv: [['TTFB', '<30ms'], ['Cache', 'Edge global'], ['Protocol', 'HTTPS / SSR']],
+  },
+  {
+    tier: 'control' as const, border: 'border-l-violet-500', text: 'text-violet-400',
+    title: 'Control Plane', count: 3,
+    desc: 'Author → Notion CMS → CI/CD → Vercel',
+    kv: [['Trigger', 'Daily cron'], ['Runner', 'GitHub Actions'], ['Protocol', 'Notion API']],
+  },
+  {
+    tier: 'vault' as const, border: 'border-l-orange-500', text: 'text-orange-400',
+    title: 'Vault Plane', count: 2,
+    desc: 'Env secrets → Astro ↔ PostgreSQL',
+    kv: [['DB', 'Prisma pool'], ['Secrets', 'Encrypted'], ['Perimeters', '3 zones']],
+  },
+];
+
+const totalCycle = 10.0;
+const stepDur = 1.25;
+---
+
+<BaseLayout
+  title="System Architecture"
+  description="End-to-end cloud architecture — Cloudflare Edge-First & C4 Container Model."
+>
+
+  <!-- Header -->
+  <header class="mb-6">
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <span class="rounded-full border border-(--border) bg-(--bg-alt) px-2.5 py-0.5 font-mono text-[10px] text-(--fg-faint)">v{systemArchitecture.version}</span>
+      <span class="rounded-full border border-sky-500/30 bg-sky-500/5 px-2.5 py-0.5 font-mono text-[10px] text-sky-400">C4 Container</span>
+      <span class="rounded-full border border-violet-500/30 bg-violet-500/5 px-2.5 py-0.5 font-mono text-[10px] text-violet-400">Cloudflare Edge</span>
+    </div>
+    <div class="flex flex-wrap items-end gap-4">
+      <h1 class="m-0 font-mono text-[clamp(28px,5vw,52px)] leading-none tracking-[-0.04em] text-(--fg)">
+        system architecture
+      </h1>
+      <p class="mb-1 text-sm text-(--fg-dim)">
+        3 planes · 7 services · 8 flows — hover a step to trace on canvas
+      </p>
+    </div>
+  </header>
+
+  <!-- Filter toolbar -->
+  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <div class="flex flex-wrap gap-1" role="tablist">
+      {[
+        { filter: 'all',     label: 'All Planes' },
+        { filter: 'data',    label: 'Data' },
+        { filter: 'control', label: 'Control' },
+        { filter: 'vault',   label: 'Vault' },
+      ].map(({ filter, label }) => (
+        <button
+          class="sd-filter-btn rounded-md border border-(--border) bg-(--bg-alt) px-3 py-1 font-mono text-xs text-(--fg-dim) transition-all hover:border-(--accent) hover:text-(--fg)"
+          data-filter={filter}
+          role="tab"
+          aria-selected={filter === 'all' ? 'true' : 'false'}
+        >{label}</button>
+      ))}
+    </div>
+    <button id="sd-pause-btn" class="rounded-md border border-(--border) bg-(--bg-alt) px-3 py-1 font-mono text-xs text-(--fg-dim) transition-all hover:border-(--accent) hover:text-(--fg)">
+      pause
+    </button>
+  </div>
+
+  <!-- SVG Canvas — ByteByteGo flat style, horizontally scrollable on mobile -->
+  <div class="mb-2 overflow-x-auto rounded-xl border border-(--border) shadow-xl" style="background:#0a1120">
+    <div class="min-w-[640px]">
+      <div id="sd-svg-wrapper">
+        <svg viewBox={systemArchitecture.viewBox} fill="none" xmlns="http://www.w3.org/2000/svg" class="block w-full h-auto">
+          <defs>
+            <pattern id="sd-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.03)" />
+            </pattern>
+            <filter id="sd-card-shadow" x="-8%" y="-8%" width="116%" height="116%">
+              <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5" />
+            </filter>
+            <filter id="sd-glow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            {Object.entries(COLOR_MAP).map(([key, col]) => (
+              <marker id={`arr-${key}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 1 2 L 8 5 L 1 8 z" fill={col.border} />
+              </marker>
+            ))}
+          </defs>
+
+          <rect width="1440" height="780" fill="#0a1120" />
+          <rect width="1440" height="780" fill="url(#sd-grid)" />
+
+          <!-- Trust Zones -->
+          {systemArchitecture.zones.map((z) => {
+            const col = COLOR_MAP[z.color];
+            return (
+              <g class="trust-zone" id={`zone-${z.id}`}>
+                <rect x={z.x} y={z.y} width={z.width} height={z.height} rx="16"
+                  fill="rgba(255,255,255,0.015)" stroke={col.borderMuted} stroke-width="1.5" stroke-dasharray="8 5" />
+                <rect x={z.x + 16} y={z.y + 14} width={z.title.length * 6 + 24} height="20" rx="4" fill={col.iconBg} />
+                <text x={z.x + 28} y={z.y + 27.5} fill={col.label} font-size="9" font-weight="800"
+                  letter-spacing="0.1em" font-family="'JetBrains Mono', monospace">
+                  {z.title}
+                </text>
+              </g>
+            );
+          })}
+
+          <!-- Flow Routes -->
+          {systemArchitecture.flows.map((f) => {
+            const col = COLOR_MAP[f.color];
+            const stepDelay = (f.step - 1) * 1.25;
+            const bw = f.badgeW || 68;
+            return (
+              <g class={`flow-route tier-${f.tier}`} id={f.id} data-tier={f.tier}>
+                <path d={f.d} fill="none" stroke={col.border} stroke-width="1.5" stroke-opacity="0.18" stroke-linecap="round" />
+                <path d={f.d} fill="none" stroke={col.border} stroke-width="2" stroke-opacity="0.9" stroke-linecap="round"
+                  stroke-dasharray="6 5" class="stream-packet" marker-end={`url(#arr-${f.color})`} />
+                <circle r="4.5" fill={col.dot} filter="url(#sd-glow)">
+                  <animateMotion path={f.d} dur={`${stepDur}s`}
+                    begin={`${stepDelay}s; ${stepDelay + totalCycle}s`}
+                    repeatCount="indefinite" restart="always" keyPoints="0;1" keyTimes="0;1" calcMode="linear" />
+                  <animate attributeName="opacity" values="0;1;1;0" dur={`${stepDur}s`}
+                    begin={`${stepDelay}s; ${stepDelay + totalCycle}s`}
+                    repeatCount="indefinite" keyTimes="0;0.15;0.85;1" />
+                </circle>
+                <rect x={f.mid.x - bw / 2} y={f.mid.y - 11} width={bw} height="22" rx="11"
+                  fill={col.fill} stroke={col.border} stroke-width="1.5" />
+                <text x={f.mid.x - bw / 2 + 10} y={f.mid.y + 3.5} fill={col.dot} font-size="9" font-weight="900"
+                  font-family="'JetBrains Mono', monospace">{f.stepNumber}</text>
+                <text x={f.mid.x - bw / 2 + 20} y={f.mid.y + 3.5} fill={col.label} font-size="9" font-weight="700"
+                  font-family="'JetBrains Mono', monospace">{f.protoTag}</text>
+              </g>
+            );
+          })}
+
+          <!-- C4 Container Cards — ByteByteGo flat cards with emoji icons -->
+          {systemArchitecture.containers.map((node) => {
+            const colorKey = node.type === 'sensitive' ? 'orange' : node.type === 'safe' ? 'teal'
+              : node.type === 'agent' ? 'purple' : node.type === 'user' ? 'blue' : 'gray';
+            const col = COLOR_MAP[colorKey];
+            const icon = ICON[node.id] ?? '📦';
+            return (
+              <g class={`c4-card tier-${node.tier}`} id={`card-${node.id}`} filter="url(#sd-card-shadow)">
+                <rect x={node.x} y={node.y} width={node.width} height={node.height} rx="12"
+                  fill={col.fill} stroke={col.border} stroke-width="2" />
+                <!-- Top accent strip -->
+                <rect x={node.x + 2} y={node.y} width={node.width - 4} height="5" rx="4" fill={col.border} />
+                <!-- Header divider -->
+                <line x1={node.x} y1={node.y + 44} x2={node.x + node.width} y2={node.y + 44}
+                  stroke={col.borderMuted} stroke-width="1" />
+                <!-- Icon -->
+                <circle cx={node.x + 22} cy={node.y + 24} r="13" fill={col.iconBg} stroke={col.border} stroke-width="1" />
+                <text x={node.x + 22} y={node.y + 29} text-anchor="middle" font-size="13">{icon}</text>
+                <!-- C4 tag -->
+                <text x={node.x + 42} y={node.y + 20} fill={col.dot} font-size="8.5" font-weight="800"
+                  letter-spacing="0.06em" font-family="'JetBrains Mono', monospace">
+                  [{node.c4Tag}]
+                </text>
+                <!-- Title -->
+                <text x={node.x + 14} y={node.y + 60} fill="#f1f5f9" font-size="13" font-weight="700"
+                  font-family="'JetBrains Mono', monospace">
+                  {node.title}
+                </text>
+                <!-- Description -->
+                {node.desc.map((line, idx) => (
+                  <g transform={`translate(${node.x + 14},${node.y + 80 + idx * 19})`}>
+                    <circle cx="3.5" cy="-3" r="2" fill={col.dot} />
+                    <text x="12" y="0" fill="#94a3b8" font-size="10" font-family="'JetBrains Mono', monospace">{line}</text>
+                  </g>
+                ))}
+              </g>
+            );
+          })}
+
+          <!-- Legend -->
+          <g transform="translate(35,678)">
+            <rect x="0" y="0" width="1370" height="52" rx="10" fill="#0d1626" stroke="#1e293b" stroke-width="1.5" />
+            <text x="20" y="31" fill="#475569" font-size="9" font-weight="800" letter-spacing="0.1em"
+              font-family="'JetBrains Mono', monospace">PLANES</text>
+            {([
+              { x: 110, color: '#38bdf8', label: 'Data Plane (Edge CDN)',          dash: false },
+              { x: 370, color: '#a855f7', label: 'Control Plane (Notion → CI/CD)', dash: true  },
+              { x: 710, color: '#f97316', label: 'Vault Plane (Zero-Trust)',        dash: true  },
+            ] as const).map((item) => (
+              <g transform={`translate(${item.x},17)`}>
+                <line x1="0" y1="12" x2="22" y2="12" stroke={item.color} stroke-width="2.5"
+                  stroke-dasharray={item.dash ? '6 3' : 'none'} />
+                <circle cx="11" cy="12" r="3.5" fill={item.color} />
+                <text x="30" y="16" fill="#cbd5e1" font-size="11" font-weight="600">{item.label}</text>
+              </g>
+            ))}
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <p class="mb-4 text-center font-mono text-[10px] text-(--fg-faint) md:hidden">← swipe to explore →</p>
+
+  <!-- Plane summary cards -->
+  <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+    {PLANE_SUMMARY.map((p) => (
+      <div class={`rounded-xl border border-(--border) border-l-4 bg-(--bg-alt) p-4 font-mono ${p.border}`}>
+        <div class={`mb-1 text-[10px] font-bold uppercase tracking-widest ${p.text}`}>{p.title}</div>
+        <p class="mt-0.5 text-[11px] text-(--fg-dim)">{p.desc}</p>
+        <div class="mt-3 grid grid-cols-3 gap-2 border-t border-(--border) pt-2.5">
+          {p.kv.map(([k, v]) => (
+            <div>
+              <div class="text-[9px] uppercase tracking-wider text-(--fg-faint)">{k}</div>
+              <div class={`mt-0.5 text-[11px] font-bold ${p.text}`}>{v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Sequential Flow — compact pills -->
+  <div class="mb-6">
+    <div class="mb-2 flex items-center justify-between border-b border-(--border) pb-2">
+      <span class="font-mono text-[10px] font-semibold uppercase tracking-widest text-(--fg-faint)">flow sequence</span>
+      <span class="font-mono text-[10px] text-(--fg-faint)">hover to trace</span>
+    </div>
+    <div class="flex flex-wrap gap-1.5">
+      {systemArchitecture.flows.map((f) => {
+        const col = COLOR_MAP[f.color];
+        const tier = TIER_STYLE[f.tier as keyof typeof TIER_STYLE];
+        return (
+          <button
+            class={`sd-step-card group flex cursor-default items-center gap-1.5 rounded-lg border border-(--border) bg-(--bg-alt) px-2.5 py-1.5 transition-all hover:border-(--accent)/50 hover:bg-(--bg)`}
+            data-step-card={f.id}
+            title={f.fullLabel}
+          >
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-black"
+              style={`background:${col.iconBg};color:${col.dot};border:1px solid ${col.border};`}>
+              {f.stepNumber}
+            </span>
+            <code class="font-mono text-[10px] text-(--fg-dim) group-hover:text-(--fg)">{f.protoTag}</code>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+
+  <!-- Technical notes -->
+  <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+    <summary class="flex cursor-pointer items-center justify-between gap-3 p-4 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+      <span class="font-semibold uppercase tracking-widest">architectural notes</span>
+      <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </summary>
+    <div class="grid grid-cols-1 gap-4 border-t border-(--border) p-4 lg:grid-cols-2">
+      <div>
+        <h4 class="mb-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-sky-400">01 · Plane Decoupling</h4>
+        <ul class="space-y-2 text-[13px] text-(--fg-dim) leading-relaxed">
+          <li><strong class="text-(--fg)">Data Plane</strong> — Vercel Edge Cache, sub-30ms TTFB, static + dynamic SSR endpoints.</li>
+          <li><strong class="text-(--fg)">Control Plane</strong> — out-of-band Notion sync via GitHub Actions cron; zero reader latency impact.</li>
+          <li><strong class="text-(--fg)">Zero-Trust</strong> — 3 network perimeters; DB connection pool never publicly exposed.</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="mb-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-violet-400">02 · C4 Container Standards</h4>
+        <ul class="space-y-2 text-[13px] text-(--fg-dim) leading-relaxed">
+          <li><strong class="text-(--fg)">Containers</strong> — each node is an autonomous runtime: Browser, Edge CDN, Astro Core, PostgreSQL, CI/CD VM.</li>
+          <li><strong class="text-(--fg)">Tech Stack</strong> — <code class="font-mono text-[12px]">[Astro 5]</code>, <code class="font-mono text-[12px]">[PostgreSQL]</code>, <code class="font-mono text-[12px]">[Prisma ORM]</code>, <code class="font-mono text-[12px]">[Vercel Edge]</code>.</li>
+          <li><strong class="text-(--fg)">Protocol Wires</strong> — HTTPS REST, Prisma TCP Pool, Environment Secret Injection.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+</BaseLayout>
+
+<script>
+  function setup() {
+    const wrapper = document.getElementById('sd-svg-wrapper');
+    const filterBtns = document.querySelectorAll<HTMLButtonElement>('.sd-filter-btn');
+    const pauseBtn   = document.getElementById('sd-pause-btn');
+    const stepCards  = document.querySelectorAll<HTMLElement>('[data-step-card]');
+    if (!wrapper) return;
+
+    filterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach((b) => {
+          b.style.removeProperty('border-color');
+          b.style.removeProperty('color');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.style.borderColor = 'var(--accent)';
+        btn.style.color = 'var(--accent)';
+        btn.setAttribute('aria-selected', 'true');
+        const filter = btn.dataset.filter ?? 'all';
+        wrapper.classList.remove('filter-data', 'filter-control', 'filter-vault');
+        if (filter !== 'all') wrapper.classList.add(`filter-${filter}`);
+      });
+    });
+    const first = filterBtns[0];
+    if (first) { first.style.borderColor = 'var(--accent)'; first.style.color = 'var(--accent)'; }
+
+    if (pauseBtn) {
+      let paused = false;
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        wrapper.classList.toggle('is-paused', paused);
+        pauseBtn.textContent = paused ? 'resume' : 'pause';
+      });
+    }
+
+    stepCards.forEach((card) => {
+      card.addEventListener('mouseenter', () => document.getElementById(card.dataset.stepCard ?? '')?.classList.add('route-highlight'));
+      card.addEventListener('mouseleave', () => document.getElementById(card.dataset.stepCard ?? '')?.classList.remove('route-highlight'));
+    });
+  }
+
+  setup();
+  document.addEventListener('astro:page-load', setup);
+</script>
+
+<style>
+  .stream-packet {
+    animation: sd-dash 1.25s linear infinite;
+  }
+  @keyframes sd-dash {
+    from { stroke-dashoffset: 22; }
+    to   { stroke-dashoffset: 0;  }
+  }
+
+  #sd-svg-wrapper.filter-data .c4-card:not(.tier-data),
+  #sd-svg-wrapper.filter-data .flow-route:not(.tier-data)       { opacity: 0.1; transition: opacity 0.3s; }
+  #sd-svg-wrapper.filter-control .c4-card:not(.tier-control),
+  #sd-svg-wrapper.filter-control .flow-route:not(.tier-control) { opacity: 0.1; transition: opacity 0.3s; }
+  #sd-svg-wrapper.filter-vault .c4-card:not(.tier-vault),
+  #sd-svg-wrapper.filter-vault .flow-route:not(.tier-vault)     { opacity: 0.1; transition: opacity 0.3s; }
+
+  .route-highlight path.stream-packet { stroke-width: 3.5; filter: drop-shadow(0 0 6px currentColor); }
+  #sd-svg-wrapper.is-paused .stream-packet { animation-play-state: paused; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stream-packet { animation: none; }
+  }
+</style>
