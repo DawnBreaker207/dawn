@@ -1,0 +1,57 @@
+---
+interface Props {
+  lessonId: string;
+}
+
+const { lessonId } = Astro.props;
+---
+
+<div class="dts-lab-native is-embedded w-full h-full flex flex-col flex-1 min-h-0 bg-(--bg) overflow-hidden relative">
+  <iframe
+    id="dts-iframe"
+    src={`/dts/index.html#/${lessonId}/1`}
+    title={`${lessonId} Interactive Simulation`}
+    class="w-full h-full flex-1 border-0 bg-transparent block"
+    allow="fullscreen"
+    loading="eager"
+  ></iframe>
+</div>
+
+<script>
+  function syncThemeToIframe() {
+    const iframe = document.getElementById('dts-iframe') as HTMLIFrameElement | null;
+    if (!iframe?.contentWindow) return;
+    const isDark =
+      document.documentElement.classList.contains('dark') ||
+      document.documentElement.dataset.theme === 'dark';
+    iframe.contentWindow.postMessage({ type: 'SET_THEME', theme: isDark ? 'dark' : 'light' }, '*');
+  }
+
+  function initLabEmbed() {
+    const iframe = document.getElementById('dts-iframe') as HTMLIFrameElement | null;
+    if (!iframe) return;
+
+    iframe.onload = () => {
+      syncThemeToIframe();
+    };
+
+    const observer = new MutationObserver(syncThemeToIframe);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme']
+    });
+
+    window.addEventListener('hashchange', () => {
+      if (iframe.contentWindow && window.location.hash) {
+        try {
+          iframe.contentWindow.location.hash = window.location.hash;
+        } catch (_) {}
+      }
+    });
+
+    syncThemeToIframe();
+  }
+
+  initLabEmbed();
+  document.addEventListener('astro:page-load', initLabEmbed);
+</script>

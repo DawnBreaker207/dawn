@@ -1,0 +1,451 @@
+/* ==========================================================================
+   DAWN STUDIO — DTS EMBEDDED THEME OVERRIDES (LINEAR RUBY CRIMSON)
+   ==========================================================================
+   Synchronized strictly with src/styles/theme-colors.css tokens.
+   ========================================================================== */
+
+/* ── 1. DARK MODE PALETTE (Charcoal Dark + Linear Ruby Crimson) ────────── */
+:root[data-theme="dark"],
+html[data-theme="dark"],
+body.dark,
+html.dark {
+  --paper: #18181b !important;
+  --paper-2: #141416 !important;
+  --sheet: #212126 !important;
+  --card: #212126 !important;
+  --card-2: #27272a !important;
+  --line: #2e2e36 !important;
+  --line-soft: rgba(255, 255, 255, 0.05) !important;
+  --line-strong: #3f3f46 !important;
+  --edge: #e4e4e7 !important;
+  --ink: #f4f4f5 !important;
+  --ink-2: #a1a1aa !important;
+  --muted: #a1a1aa !important;
+  --muted-2: #71717a !important;
+  --green: #e11d48 !important;
+  --green-2: #be123c !important;
+  --green-3: #f43f5e !important;
+  --green-tile: #27171e !important;
+  --green-tile-line: #4c1d2d !important;
+  --violet: #c792ea !important;
+  --violet-tile: #2e2340 !important;
+  --violet-tile-line: #473466 !important;
+  --orange: #fb7185 !important;
+  --mint: #38ef7d !important;
+  --rust: #e11d48 !important;
+  --rust-2: #f43f5e !important;
+  --drop: rgba(0, 0, 0, 0.5) !important;
+  --drop-2: rgba(0, 0, 0, 0.35) !important;
+  --radius: 14px !important;
+}
+
+/* ── 2. LIGHT MODE PALETTE (Soft Zinc Neutral — Eye Friendly, Non-Glare) ─── */
+:root:not([data-theme="dark"]),
+html:not([data-theme="dark"]) {
+  --paper: #ececed !important;
+  --paper-2: #f7f7f9 !important;
+  --sheet: #f7f7f9 !important;
+  --card: #f7f7f9 !important;
+  --card-2: #ececed !important;
+  --line: #d4d4d9 !important;
+  --line-soft: #dedee3 !important;
+  --line-strong: #c4c4cb !important;
+  --edge: #18181b !important;
+  --ink: #18181b !important;
+  --ink-2: #27272a !important;
+  --muted: #52525b !important;
+  --muted-2: #71717a !important;
+  --green: #e11d48 !important;
+  --green-2: #be123c !important;
+  --green-3: #f43f5e !important;
+  --green-tile: #fff1f2 !important;
+  --green-tile-line: #fecdd3 !important;
+  --violet: #e7ddf5 !important;
+  --violet-tile: #ebe3f1 !important;
+  --violet-tile-line: #d5c8e2 !important;
+  --orange: #f43f5e !important;
+  --mint: #dff0de !important;
+  --rust: #e11d48 !important;
+  --drop: rgba(9, 9, 11, 0.06) !important;
+  --drop-2: rgba(9, 9, 11, 0.03) !important;
+  --radius: 14px !important;
+}
+
+/* ── 3. CARD & CONTAINER OVERRIDES (LIGHT MODE) ────────────────────────── */
+:root:not([data-theme="dark"]) .sheet,
+html:not([data-theme="dark"]) .sheet {
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+}
+
+:root:not([data-theme="dark"]) .guide,
+html:not([data-theme="dark"]) .guide {
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+}
+
+:root:not([data-theme="dark"]) #next,
+html:not([data-theme="dark"]) #next {
+  background: #e11d48 !important;
+  color: #ffffff !important;
+  border: 1px solid #e11d48 !important;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+:root:not([data-theme="dark"]) #next:hover,
+html:not([data-theme="dark"]) #next:hover {
+  background: #be123c !important;
+  border-color: #be123c !important;
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+:root:not([data-theme="dark"]) #back,
+html:not([data-theme="dark"]) #back {
+  background: #ffffff !important;
+  color: #18181b !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+:root:not([data-theme="dark"]) #back:hover,
+html:not([data-theme="dark"]) #back:hover {
+  background: #f4f4f5 !important;
+  border-color: #d4d4d8 !important;
+}
+
+/* ── 4. CARD & CONTAINER OVERRIDES (DARK MODE) ─────────────────────────── */
+:root[data-theme="dark"] #next,
+html[data-theme="dark"] #next {
+  background: #e11d48 !important;
+  color: #ffffff !important;
+  border: 1px solid #e11d48 !important;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+:root[data-theme="dark"] #next:hover,
+html[data-theme="dark"] #next:hover {
+  background: #f43f5e !important;
+  border-color: #f43f5e !important;
+  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+:root[data-theme="dark"] #back,
+html[data-theme="dark"] #back {
+  background: #212126 !important;
+  color: #e4e4e7 !important;
+  border: 1px solid #3f3f46 !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+:root[data-theme="dark"] #back:hover,
+html[data-theme="dark"] #back:hover {
+  background: #2e2e36 !important;
+  border-color: #52525b !important;
+}
+
+/* ── 5. EMBEDDED MODE LAYOUT & CARD REFINEMENTS ────────────────────────── */
+html.is-embedded,
+html.is-embedded body {
+  overflow: hidden;
+  height: 100vh;
+  background: transparent !important;
+}
+
+html.is-embedded .topbar,
+html.is-embedded .sidebar {
+  display: none !important;
+}
+
+html.is-embedded .window {
+  zoom: 1 !important;
+  transform: none !important;
+  width: 100% !important;
+  height: 100vh !important;
+  grid-template-rows: 1fr !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+html.is-embedded .body {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) clamp(280px, 26vw, 340px) !important;
+  height: 100vh !important;
+  padding: 10px !important;
+  margin: 0 !important;
+  gap: 10px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Left Card: 3D Stage Sheet */
+html.is-embedded .sheet {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - 20px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  border: 1px solid #e4e4e7 !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+}
+
+:root[data-theme="dark"] html.is-embedded .sheet,
+html[data-theme="dark"].is-embedded .sheet {
+  border-color: #2e2e36 !important;
+  background: #212126 !important;
+  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Lesson Header */
+html.is-embedded .lesson-head {
+  order: 1 !important;
+  padding: 12px 18px 10px !important;
+  margin: 0 !important;
+  border-radius: 13px 13px 0 0 !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  flex-shrink: 0 !important;
+  background: #ffffff !important;
+}
+
+:root[data-theme="dark"] html.is-embedded .lesson-head,
+html[data-theme="dark"].is-embedded .lesson-head {
+  border-bottom-color: #2e2e36 !important;
+  background: #212126 !important;
+}
+
+html.is-embedded .lesson-head .crumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  margin-bottom: 3px !important;
+}
+
+html.is-embedded .lesson-head .crumb::before {
+  content: "Lab \00a0/\00a0 Architecture \00a0/\00a0 ";
+  opacity: 0.65;
+  font-weight: 500;
+}
+
+html.is-embedded .lesson-head .title {
+  font-size: 19px !important;
+  line-height: 1.2 !important;
+}
+
+html.is-embedded .lesson-head .summary,
+html.is-embedded .lesson-head p {
+  font-size: 12.5px !important;
+  margin-top: 2px !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+/* Stage */
+html.is-embedded .stage {
+  order: 2 !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  border: none !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+/* Timeline ("In this lesson") at bottom of sheet */
+html.is-embedded .timeline {
+  order: 3 !important;
+  padding: 6px 14px 6px !important;
+  margin: 0 !important;
+  border-top: 1px solid #e4e4e7 !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 0 13px 13px !important;
+  flex-shrink: 0 !important;
+  background: #f4f4f5 !important;
+}
+
+:root[data-theme="dark"] html.is-embedded .timeline,
+html[data-theme="dark"].is-embedded .timeline {
+  border-top-color: #2e2e36 !important;
+  background: #18181b !important;
+}
+
+html.is-embedded .timeline__track {
+  margin: 2px 0 0 !important;
+  padding: 0 !important;
+}
+
+html.is-embedded .timeline__steps {
+  margin: 0 !important;
+  padding-bottom: 2px !important;
+}
+
+/* Right Column: Cards */
+html.is-embedded .rail {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  height: calc(100vh - 20px) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  background: transparent !important;
+}
+
+html.is-embedded .guide {
+  flex: 1 1 auto !important;
+  border-radius: 14px !important;
+  border: 1px solid #e4e4e7 !important;
+  padding: 16px 18px !important;
+  margin: 0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+:root[data-theme="dark"] html.is-embedded .guide,
+html[data-theme="dark"].is-embedded .guide {
+  border-color: #2e2e36 !important;
+  background: #212126 !important;
+  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.is-embedded .goals {
+  flex-shrink: 0 !important;
+  border-radius: 14px !important;
+  border: 1px solid #e4e4e7 !important;
+  padding: 14px 18px !important;
+  margin: 0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+}
+
+:root[data-theme="dark"] html.is-embedded .goals,
+html[data-theme="dark"].is-embedded .goals {
+  border-color: #2e2e36 !important;
+  background: #212126 !important;
+  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Guide navigation buttons */
+html.is-embedded .guide__nav {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin-top: 14px !important;
+}
+
+html.is-embedded #back {
+  flex: 0 0 auto !important;
+  min-width: 70px !important;
+  height: 38px !important;
+  padding: 0 14px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+}
+
+html.is-embedded #next {
+  flex: 1 1 auto !important;
+  min-width: 140px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+}
+
+/* ── 6. MOBILE RESPONSIVE OPTIMIZATIONS (< 768px) ──────────────────────── */
+@media (max-width: 768px) {
+  html.is-embedded .body {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    padding: 6px !important;
+    gap: 8px !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  html.is-embedded .sheet {
+    width: 100% !important;
+    height: 48vh !important;
+    min-height: 280px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+  }
+
+  html.is-embedded .rail {
+    width: 100% !important;
+    height: auto !important;
+    flex: 1 1 auto !important;
+    overflow-y: visible !important;
+  }
+
+  html.is-embedded .lesson-head {
+    padding: 8px 12px !important;
+  }
+
+  html.is-embedded .lesson-head .title {
+    font-size: 15px !important;
+  }
+
+  html.is-embedded .guide {
+    padding: 12px 14px !important;
+  }
+
+  html.is-embedded .guide__nav {
+    margin-top: 10px !important;
+  }
+}
+
+/* ── 9. CRITICAL ACCESSIBILITY FIX: ELIMINATE BLACK-ON-RED TEXT ─────────── */
+/* Force crisp white text on all Ruby Crimson / accent red surfaces */
+.btn-pop.is-active,
+button.is-active,
+a.btn-pop,
+a.btn-pop.is-active,
+.nav__item.btn-pop.is-active,
+.timeline__dot,
+.timeline__dot.chapter-dot--red,
+[class*="chapter-dot"],
+.badge--red,
+.tag--red {
+  color: #ffffff !important;
+}
+
+.timeline__dot.chapter-dot--red {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Ensure any element using red accent background gets pure white text */
+button[style*="background"],
+span[style*="background"],
+div[style*="background"] {
+  color: inherit;
+}

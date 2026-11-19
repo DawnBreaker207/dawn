@@ -1,0 +1,43 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ArchitectureChapterPicker from '@/components/lab/ArchitectureChapterPicker.astro';
+import DtsNativeLab from '@/components/lab/architecture/DtsNativeLab.astro';
+
+export const prerender = true;
+
+interface Props {
+  title: string;
+  description: string;
+  lessonId: string;
+}
+
+const { title, description, lessonId } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} fullBleed={true}>
+  <!-- Topbar Action Slot (Placed into TabBar next to tabs) -->
+  <div slot="topbar-actions" class="topbar-lab-controls">
+    <ArchitectureChapterPicker currentLessonId={lessonId} />
+  </div>
+
+  <!-- Full-Bleed Native Interactive Architecture Simulation -->
+  <DtsNativeLab lessonId={lessonId} />
+</BaseLayout>
+
+<style>
+  .topbar-lab-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+
+<script>
+  function setupLabPage() {
+    // Hide empty blog rail on lab pages
+    document.documentElement.setAttribute('data-rail', 'hidden');
+  }
+
+  setupLabPage();
+  document.addEventListener('astro:page-load', setupLabPage);
+</script>

@@ -1,0 +1,402 @@
+---
+import { DTS_MODULES, type Module, type Lesson } from '@/data/dts-lessons';
+
+interface Props {
+  currentLessonId: string;
+}
+
+const { currentLessonId } = Astro.props;
+
+let activeLessonTitle = '01 · Request Lifecycle';
+for (const mod of DTS_MODULES) {
+  const found = mod.lessons.find((l) => l.id === currentLessonId);
+  if (found) {
+    activeLessonTitle = `${mod.num} · ${found.title}`;
+    break;
+  }
+}
+---
+
+<!-- Dropdown Root -->
+<div class="chapter-dropdown-root" id="chapter-picker-root">
+  <button
+    id="btn-chapter-dropdown"
+    type="button"
+    class="chapter-dropdown-trigger"
+    aria-haspopup="true"
+    aria-expanded="false"
+    title="Browse all 41 interactive architecture chapters"
+  >
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+      <path d="M6 6h10"></path>
+      <path d="M6 10h10"></path>
+    </svg>
+    <span id="chapter-active-title" class="chapter-name font-mono">{activeLessonTitle}</span>
+    <span class="chapter-tag font-mono">41 Chapters ▾</span>
+  </button>
+
+  <!-- Dropdown Menu (Floating Panel) -->
+  <div id="chapter-dropdown-menu" class="chapter-dropdown-menu" hidden>
+    <!-- Search filter inside dropdown -->
+    <div class="dropdown-search-wrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        id="dropdown-search-input"
+        type="text"
+        placeholder="Filter chapters (e.g. dns, cache, sharding)..."
+        autocomplete="off"
+      />
+    </div>
+
+    <!-- Streamlined Lessons List Grouped by Modules -->
+    <div class="dropdown-list-scroll thin-scrollbar">
+      {DTS_MODULES.map((mod: Module) => (
+        <div class="dropdown-module-group" data-module-id={mod.id}>
+          <div class="dropdown-module-header">
+            <span class="mod-num font-mono">{mod.num}</span>
+            <span class="mod-title">{mod.title}</span>
+            <span class="mod-count font-mono">{mod.lessons.length}</span>
+          </div>
+          <div class="dropdown-lessons-list">
+            {mod.lessons.map((lesson: Lesson) => (
+              <button
+                type="button"
+                class:list={[
+                  'dropdown-lesson-btn',
+                  lesson.id === currentLessonId && 'is-current'
+                ]}
+                data-lesson-id={lesson.id}
+                data-lesson-title={`${mod.num} · ${lesson.title}`}
+              >
+                <span class="lesson-dot">●</span>
+                <span class="lesson-text">{lesson.title}</span>
+                <span class="active-pill" data-lesson-pill={lesson.id} hidden={lesson.id !== currentLessonId}>Active</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .chapter-dropdown-root {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .chapter-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    font-weight: 600;
+    font-family: var(--font-mono, monospace);
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.15s ease;
+  }
+
+  .chapter-dropdown-trigger:hover,
+  .chapter-dropdown-trigger[aria-expanded="true"] {
+    background: var(--bg-alt);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chapter-name {
+    max-width: 170px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chapter-tag {
+    font-size: 9.5px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .chapter-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    width: 320px;
+    max-height: 420px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.15s ease-out;
+  }
+
+  @keyframes dropdownFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .dropdown-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-alt);
+    color: var(--fg-dim);
+  }
+
+  .dropdown-search-wrap input {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 11px;
+    font-family: var(--font-mono, monospace);
+    color: var(--fg);
+    width: 100%;
+  }
+
+  .dropdown-list-scroll {
+    overflow-y: auto;
+    max-height: 360px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .dropdown-module-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dropdown-module-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--fg-faint);
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .mod-num {
+    color: var(--accent);
+  }
+
+  .mod-title {
+    flex: 1;
+  }
+
+  .mod-count {
+    font-size: 9px;
+    opacity: 0.7;
+  }
+
+  .dropdown-lessons-list {
+    display: flex;
+    flex-direction: column;
+    padding: 2px 0;
+  }
+
+  .dropdown-lesson-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-family: var(--font-mono, monospace);
+    color: var(--fg-dim);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: all 0.12s ease;
+  }
+
+  .dropdown-lesson-btn:hover {
+    background: var(--bg-hover);
+    color: var(--fg);
+  }
+
+  .dropdown-lesson-btn.is-current {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lesson-dot {
+    font-size: 6px;
+    opacity: 0.6;
+    color: currentColor;
+  }
+
+  .lesson-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .active-pill {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: 700;
+  }
+</style>
+
+<script>
+  function setupChapterDropdown() {
+    const root = document.getElementById('chapter-picker-root');
+    const trigger = document.getElementById('btn-chapter-dropdown');
+    const menu = document.getElementById('chapter-dropdown-menu');
+    const searchInput = document.getElementById('dropdown-search-input') as HTMLInputElement | null;
+    const titleDisplay = document.getElementById('chapter-active-title');
+    const lessonBtns = document.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
+
+    if (!root || !trigger || !menu) return;
+
+    const toggleMenu = (open?: boolean) => {
+      const isCurrentlyOpen = !menu.hidden;
+      const willOpen = open !== undefined ? open : !isCurrentlyOpen;
+      menu.hidden = !willOpen;
+      trigger.setAttribute('aria-expanded', String(willOpen));
+      if (willOpen && searchInput) {
+        setTimeout(() => searchInput.focus(), 50);
+      }
+    };
+
+    if (trigger.dataset.bound !== 'true') {
+      trigger.dataset.bound = 'true';
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!root.contains(e.target as Node)) {
+          toggleMenu(false);
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !menu.hidden) {
+          toggleMenu(false);
+          trigger.focus();
+        }
+      });
+    }
+
+    if (searchInput && searchInput.dataset.bound !== 'true') {
+      searchInput.dataset.bound = 'true';
+      searchInput.addEventListener('input', (e) => {
+        const q = (e.target as HTMLInputElement).value.trim().toLowerCase();
+        const groups = menu.querySelectorAll<HTMLElement>('.dropdown-module-group');
+        groups.forEach((grp) => {
+          let matchCount = 0;
+          const btns = grp.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
+          btns.forEach((btn) => {
+            const text = (btn.dataset.lessonTitle || btn.textContent || '').toLowerCase();
+            const match = !q || text.includes(q);
+            btn.style.display = match ? 'flex' : 'none';
+            if (match) matchCount++;
+          });
+          grp.style.display = matchCount > 0 ? 'flex' : 'none';
+        });
+      });
+    }
+
+    lessonBtns.forEach((btn) => {
+      if (btn.dataset.bound !== 'true') {
+        btn.dataset.bound = 'true';
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const lessonId = btn.dataset.lessonId;
+          const lessonTitle = btn.dataset.lessonTitle;
+          if (!lessonId) return;
+
+          lessonBtns.forEach((b) => {
+            const isTarget = b === btn;
+            b.classList.toggle('is-current', isTarget);
+            const pill = b.querySelector<HTMLElement>('[data-lesson-pill]');
+            if (pill) pill.hidden = !isTarget;
+          });
+
+          if (titleDisplay && lessonTitle) {
+            titleDisplay.textContent = lessonTitle;
+          }
+
+          const nativeLabs = ['system-design', 'request-lifecycle', 'aws-cloud', 'microservices'];
+          if (nativeLabs.includes(lessonId)) {
+            if (window.location.pathname !== `/lab/${lessonId}`) {
+              window.location.href = `/lab/${lessonId}`;
+              return;
+            }
+          } else {
+            window.location.href = `/lab/request-lifecycle#${lessonId}`;
+            return;
+          }
+
+          try {
+            window.location.hash = `#/${lessonId}/1`;
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          } catch (_) {}
+
+          toggleMenu(false);
+        });
+      }
+    });
+
+    // Auto-select lesson if URL contains a hash
+    const hash = window.location.hash.replace(/^#\/?/, '');
+    if (hash) {
+      const matchBtn = Array.from(lessonBtns).find((b) => b.dataset.lessonId === hash);
+      if (matchBtn) {
+        const lessonTitle = matchBtn.dataset.lessonTitle;
+        if (titleDisplay && lessonTitle) {
+          titleDisplay.textContent = lessonTitle;
+        }
+        lessonBtns.forEach((b) => {
+          const isTarget = b === matchBtn;
+          b.classList.toggle('is-current', isTarget);
+          const pill = b.querySelector<HTMLElement>('[data-lesson-pill]');
+          if (pill) pill.hidden = !isTarget;
+        });
+      }
+    }
+  }
+
+  setupChapterDropdown();
+  document.addEventListener('astro:page-load', setupChapterDropdown);
+</script>
