@@ -38,9 +38,20 @@ export function tabsFor(pathname: string) {
   if (pathname.startsWith('/books')) return [{ id: 'books', label: 'books.astro', path: '/books' }];
   if (pathname.startsWith('/lab')) {
     const exp = pathname.match(/^\/lab\/([^/]+)/)?.[1];
-    return exp
-      ? [{ id: exp, label: `${exp}.astro`, path: `/lab/${exp}` }]
-      : [{ id: 'lab', label: 'lab.astro', path: '/lab' }];
+    if (exp) {
+      const isArch = ['request-lifecycle', 'aws-cloud', 'microservices'].includes(exp);
+      if (isArch) {
+        return [{ id: exp, label: `${exp}.arch`, path: `/lab/${exp}` }];
+      }
+      if (exp === 'sql') {
+        return [{ id: 'sql', label: 'explain-query.sql', path: '/lab/sql' }];
+      }
+      if (exp === 'java') {
+        return [{ id: 'java', label: 'concurrency-jvm.java', path: '/lab/java' }];
+      }
+      return [{ id: exp, label: `${exp}.lab`, path: `/lab/${exp}` }];
+    }
+    return [{ id: 'lab', label: 'labs.workspace', path: '/lab' }];
   }
   return [];
 }

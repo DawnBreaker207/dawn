@@ -67,7 +67,7 @@ export default function TokenBurnRail() {
 
   return (
     <div className="px-3 py-2">
-      <div className="rounded-xl border border-(--border) bg-(--bg) p-3.5">
+      <div className="rounded-xl border border-(--border) bg-(--bg-alt) p-3.5">
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <h3 className="m-0 font-mono text-[11px] tracking-[0.08em] text-(--fg-faint) uppercase">token burn</h3>
           {error ? (

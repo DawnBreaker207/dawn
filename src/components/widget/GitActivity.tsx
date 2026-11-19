@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import CommitGraph from '@/components/CommitGraph';
+import CommitGraph from '@/components/widget/CommitGraph';
 
 type Granularity = 'day' | 'week' | 'month';
 

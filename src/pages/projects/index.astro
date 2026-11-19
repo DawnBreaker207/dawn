@@ -2,7 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ProjectCard from '@/components/project/ProjectCard.astro';
 import { slugify } from '@/lib/utils/blog';
-import projectsData from '../../../projectsData.json';
+import projectsData from '@/data/projectsData.json';
 import { fetchRepoData, type GithubRepository } from '@/lib/runtime/github';
 
 export const prerender = true;

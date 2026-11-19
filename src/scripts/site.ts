@@ -33,6 +33,8 @@ function setTheme(next: string) {
   localStorage.setItem(STORAGE_KEY, next);
   const resolved = resolveTheme();
   document.documentElement.classList.toggle('dark', resolved === 'dark');
+  document.documentElement.setAttribute('data-theme', resolved);
+  document.documentElement.setAttribute('data-theme', resolved);
   syncThemeIcons(resolved);
   applyGiscusTheme(resolved);
 }
@@ -89,6 +91,7 @@ function initThemeSwitch() {
 
   const resolved = resolveTheme();
   document.documentElement.classList.toggle('dark', resolved === 'dark');
+  document.documentElement.setAttribute('data-theme', resolved);
 
   if (!toggleBtn) return;
 

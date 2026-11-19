@@ -72,10 +72,10 @@ const mainLanguage = repository
           width="40"
           height="40"
           loading="lazy"
-          class="h-10 w-10 shrink-0 rounded-lg object-cover"
+          class="h-10 w-10 shrink-0 rounded-lg object-cover bg-transparent"
         />
       ) : (
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-(--border) bg-(--bg-alt) text-(--fg-faint)">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-(--border) bg-transparent text-(--fg-faint)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
           </svg>
@@ -164,7 +164,7 @@ const mainLanguage = repository
                 alt={tool}
                 title={tool}
                 loading="lazy"
-                class="h-6 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)"
+                class="h-6 w-auto shrink-0 bg-transparent p-0.5"
               />
             );
           }

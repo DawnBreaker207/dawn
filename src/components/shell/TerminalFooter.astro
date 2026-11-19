@@ -97,49 +97,86 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
     </a>
     <span class="text-(--fg-faint)" aria-hidden="true">·</span>
 
-    <a
-      href="/tokens"
-      class="hidden sm:inline-flex items-center gap-1 text-(--fg-dim) hover:text-(--accent) no-underline"
-      title="View AI Token Burn Telemetry"
-    >
-      <span class="text-amber-500">🔥</span>
-      <span data-footer-tokens class="text-[11px]">tokens</span>
-    </a>
-    <span class="hidden sm:inline text-(--fg-faint)" aria-hidden="true">·</span>
+    <!-- Streamlined Ambient Settings Dropdown (Sound, Weather, Tokens) -->
+    <details class="relative">
+      <summary
+        class="inline-flex items-center gap-1 cursor-pointer select-none px-1 text-[11px] text-(--fg-faint) hover:text-(--fg) list-none [&::-webkit-details-marker]:hidden"
+        title="Settings (Sound, Weather, Tokens)"
+        aria-label="Settings"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="hidden sm:inline text-[11px]">Settings</span>
+      </summary>
 
-    <button
-      type="button"
-      id="btn-keyboard-sound"
-      class="inline-flex items-center gap-1 text-[11px] text-(--fg-faint) hover:text-(--fg) cursor-pointer select-none no-underline px-0.5"
-      title="Click to cycle keyboard sound: thock → clicky → tactile → cream → off"
-      aria-label="Cycle keyboard sound profile"
-    >
-      <span aria-hidden="true">⌨️</span>
-      <span id="keyboard-sound-label" class="hidden text-[10px] font-mono sm:inline">sound: off</span>
-    </button>
-    <span class="hidden sm:inline text-(--fg-faint)" aria-hidden="true">·</span>
+      <div class="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-(--border) bg-(--bg-alt) p-3 shadow-lg flex flex-col gap-2.5 z-50 text-[11px]">
+        <div class="text-[10px] font-bold text-(--fg-faint) uppercase tracking-wider pb-1 border-b border-(--border)">
+          Environment & Ambience
+        </div>
 
-    <button
-      type="button"
-      id="btn-global-weather"
-      class="inline-flex min-h-[28px] min-w-[28px] sm:min-w-0 items-center justify-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-(--fg-faint) hover:text-sky-400 hover:bg-(--border)/20 cursor-pointer select-none no-underline transition-colors active:scale-95 touch-manipulation"
-      title="Atmospheric Weather Engine: Cycle Rain 🌧️ -> Snow ❄️ -> Storm ⛈️ -> Wind 💨 -> Off ⛅"
-      aria-label="Toggle atmospheric weather overlay"
-    >
-      <span aria-hidden="true" class="weather-icon text-[13px] sm:text-[11px]">⛅</span>
-      <span id="weather-label" class="hidden text-[10px] font-mono sm:inline">weather: off</span>
-    </button>
-    <input
-      type="range"
-      id="weather-vol"
-      min="0"
-      max="100"
-      value="100"
-      class="hidden sm:block h-1 w-16 cursor-pointer align-middle accent-sky-400"
-      title="Weather ambience volume (rain/storm audio)"
-      aria-label="Weather ambience volume"
-    />
-    <span class="hidden sm:inline text-(--fg-faint)" aria-hidden="true">·</span>
+        <!-- Keyboard Sound -->
+        <div class="flex items-center justify-between">
+          <span class="text-(--fg-dim)">Keyboard:</span>
+          <button
+            type="button"
+            id="btn-keyboard-sound"
+            class="inline-flex items-center gap-1.5 rounded px-2 py-1 bg-(--bg) border border-(--border) text-(--fg) hover:border-(--accent) cursor-pointer select-none"
+            title="Cycle keyboard sound"
+            aria-label="Cycle keyboard sound profile"
+          >
+            <span>⌨️</span>
+            <span id="keyboard-sound-label" class="font-mono text-[10px]">sound: off</span>
+          </button>
+        </div>
+
+        <!-- Weather Engine -->
+        <div class="flex items-center justify-between">
+          <span class="text-(--fg-dim)">Weather:</span>
+          <button
+            type="button"
+            id="btn-global-weather"
+            class="inline-flex items-center gap-1.5 rounded px-2 py-1 bg-(--bg) border border-(--border) text-(--fg) hover:border-sky-400 cursor-pointer select-none"
+            title="Cycle weather overlay"
+            aria-label="Toggle atmospheric weather overlay"
+          >
+            <span class="weather-icon">⛅</span>
+            <span id="weather-label" class="font-mono text-[10px]">weather: off</span>
+          </button>
+        </div>
+
+        <!-- Weather Volume -->
+        <div class="flex items-center justify-between pt-1">
+          <span class="text-(--fg-faint) text-[10px]">Audio Vol:</span>
+          <input
+            type="range"
+            id="weather-vol"
+            min="0"
+            max="100"
+            value="100"
+            class="h-1 w-20 cursor-pointer align-middle accent-sky-400"
+            title="Weather ambience volume"
+            aria-label="Weather ambience volume"
+          />
+        </div>
+
+        <!-- Token Burn Telemetry -->
+        <div class="pt-1 border-t border-(--border) flex items-center justify-between">
+          <span class="text-(--fg-dim)">AI Telemetry:</span>
+          <a
+            href="/tokens"
+            class="inline-flex items-center gap-1 text-(--fg) hover:text-(--accent) no-underline font-mono text-[10px]"
+            title="View AI Token Burn Telemetry"
+          >
+            <span>🔥</span>
+            <span data-footer-tokens>tokens</span>
+            <span>→</span>
+          </a>
+        </div>
+      </div>
+    </details>
+    <span class="text-(--fg-faint)" aria-hidden="true">·</span>
 
     <button
       id="toggle-theme"

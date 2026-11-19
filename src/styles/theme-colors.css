@@ -1,0 +1,83 @@
+/* ==========================================================================
+   DAWN STUDIO — CENTRALIZED THEME COLORS (SINGLE SOURCE OF TRUTH)
+   ==========================================================================
+   All color tokens for both Light Mode and Dark Mode are managed strictly
+   in this file. Modify colors here to update the entire application.
+   ========================================================================== */
+
+/* ── 1. LIGHT MODE (Soft Slate / Zinc — Eye-Friendly, Non-Glare) ────────── */
+:root {
+  /* Surfaces & Backgrounds — Soft Zinc (Apple/macOS Non-glare Eye-Comfort Neutral) */
+  --bg: #ececed;                /* Soft Zinc-150: lowers harsh luminance, eliminates glare */
+  --bg-alt: #f7f7f9;            /* Non-glare elevated cards/panels (replaces harsh #ffffff) */
+  --bg-subtle: #e0e0e4;         /* Subtle element backgrounds */
+  --bg-hover: #dcdce2;          /* Hover states */
+  --terminal: #ececed;
+
+  /* Borders & Dividers */
+  --border: #d4d4d9;            /* Clean, distinct border */
+  --border-subtle: #dedee3;     /* Faint inner borders */
+  --border-hover: #c4c4cb;      /* Focused / Hovered borders */
+
+  /* Typography / Foregrounds */
+  --fg: #18181b;                /* Deep soft charcoal, comfortable reading */
+  --fg-dim: #52525b;            /* Zinc 600: balanced secondary text */
+  --fg-faint: #71717a;          /* Zinc 500: muted captions, icons */
+  --fg-inverted: #ffffff;
+
+  /* Brand Accent: LINEAR RUBY CRIMSON */
+  --accent: #e11d48;            /* Rose 600: iconic ruby red */
+  --accent-hover: #be123c;      /* Rose 700: deep ruby on hover */
+  --accent-dim: #be123c;        /* Rose 700: deep readable accent on light backgrounds */
+  --accent-subtle: rgba(225, 29, 72, 0.08);
+
+  /* Unified Button Tokens */
+  --btn-primary-bg: #e11d48;
+  --btn-primary-fg: #ffffff;
+  --btn-primary-hover: #be123c;
+
+  --btn-secondary-bg: #f7f7f9;
+  --btn-secondary-border: #d4d4d9;
+  --btn-secondary-fg: #18181b;
+  --btn-secondary-hover: #e0e0e4;
+}
+
+/* ── 2. DARK MODE (Deep Space Charcoal + Linear Ruby Crimson) ────────── */
+:root.dark,
+.dark,
+html.dark,
+[data-theme='dark'] {
+  /* Surfaces & Backgrounds */
+  --bg: #18181b;                /* Deep Zinc 900 base */
+  --bg-alt: #212126;            /* Elevated card surface */
+  --bg-subtle: #27272a;         /* Subtle backgrounds */
+  --bg-hover: #2e2e36;          /* Hover states */
+  --terminal: #141416;
+
+  /* Borders & Dividers */
+  --border: #2e2e36;            /* Deep slate-charcoal border */
+  --border-subtle: #27272a;     /* Inner borders */
+  --border-hover: #3f3f46;      /* Focused / Hovered borders */
+
+  /* Typography / Foregrounds */
+  --fg: #f4f4f5;                /* Zinc 100: soft silvery white (non-glaring) */
+  --fg-dim: #a1a1aa;            /* Zinc 400: secondary text */
+  --fg-faint: #71717a;          /* Zinc 500: muted text */
+  --fg-inverted: #09090b;
+
+  /* Brand Accent: LINEAR RUBY CRIMSON (Warm, Glowing, Non-glaring) */
+  --accent: #e11d48;            /* Rose 600: ruby glow on dark */
+  --accent-hover: #f43f5e;      /* Rose 500: brighter ruby on hover */
+  --accent-dim: #fb7185;        /* Rose 400: bright readable rose on dark backgrounds */
+  --accent-subtle: rgba(225, 29, 72, 0.15);
+
+  /* Unified Button Tokens */
+  --btn-primary-bg: #e11d48;
+  --btn-primary-fg: #ffffff;
+  --btn-primary-hover: #f43f5e;
+
+  --btn-secondary-bg: #212126;
+  --btn-secondary-border: #3f3f46;
+  --btn-secondary-fg: #e4e4e7;
+  --btn-secondary-hover: #2e2e36;
+}

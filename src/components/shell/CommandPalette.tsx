@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import timelineData from '@/data/timeline.json';
-import { LABS } from '@/lib/labs';
+import { LABS } from '@/data/labs';
 
 interface PaletteEntry {
   kind: 'cmd' | 'txt' | 'jsx' | 'err';

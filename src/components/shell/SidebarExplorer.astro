@@ -238,10 +238,48 @@ const inPostDetail =
     </summary>
 
   <nav class="tree-children space-y-0.5 py-1">
+    <div class="px-2 pt-1 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
+      <span>Architecture</span>
+      <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--accent)">41 labs</span>
+    </div>
+    {[
+      ['/lab/request-lifecycle', 'request-lifecycle.arch', '🌐'],
+      ['/lab/request-lifecycle#load-balancing', 'load-balancing.arch', '⚖️'],
+      ['/lab/request-lifecycle#caching', 'caching-cdn.arch', '⚡'],
+      ['/lab/request-lifecycle#sharding', 'sharding-storage.arch', '🗄️'],
+      ['/lab/microservices', 'microservices.arch', '🧩'],
+      ['/lab/aws-cloud', 'aws-cloud.arch', '☁️'],
+    ].map(([href, label, emoji]) => (
+      <a
+        href={href}
+        class:list={['explorer-row no-underline font-medium', activePath === href && 'is-active']}
+        aria-current={activePath === href ? 'page' : undefined}
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon text-xs leading-none mr-0.5">{emoji}</span>
+        <span class="row-label truncate">{label}</span>
+      </a>
+    ))}
+    <button
+      type="button"
+      id="sidebar-btn-all-chapters"
+      onclick="event.stopPropagation(); const btn = document.getElementById('btn-chapter-dropdown'); if (btn) { btn.click(); } else { window.location.href = '/lab/request-lifecycle'; }"
+      class="explorer-row w-full text-left bg-transparent border-0 cursor-pointer font-medium text-(--accent) hover:text-(--accent) transition-colors"
+      title="Open the full 41-chapter Architecture Knowledge Map"
+    >
+      <span class="explorer-caret" aria-hidden="true"></span>
+      <span class="explorer-icon text-xs leading-none mr-0.5">📚</span>
+      <span class="row-label truncate font-mono text-[11px]">all-41-chapters.map ↗</span>
+    </button>
+
+    <div class="px-2 pt-2.5 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80">
+      Algorithms & Extras
+    </div>
     {[
       ['/lab', 'README.md', 'markdown'],
       ['/lab/sql', 'sql.astro', 'astro'],
       ['/lab/java', 'java.astro', 'astro'],
+      ['/lab/system-design', 'system-design.astro', 'astro'],
       ['/lab/terminal', 'terminal.astro', 'astro'],
       ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
       ['/lab/spider', 'spider.astro', 'astro'],
@@ -278,49 +316,49 @@ const inPostDetail =
     </button>
     <ul id="sidebar-ext-list" class="sidebar-ext-list" hidden>
       <li class="sidebar-ext-item">
-        <img src="/static/icons/java.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)" />
+        <img src="/static/icons/java.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
         <span>Java</span>
         <span class="text-(--fg-faint)">20</span>
         <span class="ext-check ml-auto" aria-hidden="true">☑</span>
       </li>
       <li class="sidebar-ext-item">
-        <img src="/static/icons/typescript.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)" />
+        <img src="/static/icons/typescript.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
         <span>TypeScript</span>
         <span class="text-(--fg-faint)">5</span>
         <span class="ext-check ml-auto" aria-hidden="true">☑</span>
       </li>
       <li class="sidebar-ext-item">
-        <img src="/static/icons/spring.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)" />
+        <img src="/static/icons/spring.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
         <span>Spring Boot</span>
         <span class="text-(--fg-faint)">3.4</span>
         <span class="ext-check ml-auto" aria-hidden="true">☑</span>
       </li>
       <li class="sidebar-ext-item">
-        <img src="/static/icons/angular.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)" />
+        <img src="/static/icons/angular.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
         <span>Angular</span>
         <span class="text-(--fg-faint)">20</span>
         <span class="ext-check ml-auto" aria-hidden="true">☑</span>
       </li>
       <li class="sidebar-ext-item">
-        <img src="/static/icons/react.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)" />
+        <img src="/static/icons/react.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
         <span>React</span>
         <span class="text-(--fg-faint)">19</span>
         <span class="ext-check ml-auto" aria-hidden="true">☑</span>
       </li>
       <li class="sidebar-ext-item">
-        <img src="/static/icons/postgres.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)" />
+        <img src="/static/icons/postgres.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
         <span>PostgreSQL</span>
         <span class="text-(--fg-faint)">16</span>
         <span class="ext-check ml-auto" aria-hidden="true">☑</span>
       </li>
       <li class="sidebar-ext-item">
-        <img src="/static/icons/mysql.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)" />
+        <img src="/static/icons/mysql.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
         <span>MySQL</span>
         <span class="text-(--fg-faint)">8</span>
         <span class="ext-check ml-auto" aria-hidden="true">☑</span>
       </li>
       <li class="sidebar-ext-item">
-        <img src="/static/icons/redis.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-white p-0.5 dark:bg-(--bg-alt)" />
+        <img src="/static/icons/redis.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
         <span>Redis</span>
         <span class="text-(--fg-faint)">7</span>
         <span class="ext-check ml-auto" aria-hidden="true">☑</span>

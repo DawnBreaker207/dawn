@@ -9,17 +9,18 @@ import '@fontsource/space-grotesk/500.css';
 import '@fontsource/space-grotesk/600.css';
 import '@fontsource/space-grotesk/700.css';
 import '../styles/global.css';
+import '../styles/shell.css';
 import '../styles/prism.css';
 import '../styles/twemoji.css';
 import { ClientRouter } from 'astro:transitions';
-import SidebarExplorer from '@/components/SidebarExplorer.astro';
-import TabBar from '@/components/TabBar.astro';
-import Breadcrumb from '@/components/Breadcrumb.astro';
-import Rail from '@/components/Rail.astro';
-import TerminalFooter from '@/components/TerminalFooter.astro';
-import CommandPalette from '@/components/CommandPalette.tsx';
+import SidebarExplorer from '@/components/shell/SidebarExplorer.astro';
+import TabBar from '@/components/shell/TabBar.astro';
+import Breadcrumb from '@/components/shell/Breadcrumb.astro';
+import Rail from '@/components/shell/Rail.astro';
+import TerminalFooter from '@/components/shell/TerminalFooter.astro';
+import CommandPalette from '@/components/shell/CommandPalette.tsx';
 import { getPosts, slugify } from '@/lib/utils/blog';
-import projectsData from '../../projectsData.json';
+import projectsData from '@/data/projectsData.json';
 import { SITE, SITE_URL, tabsFor } from '@/lib/site';
 import { headerNavLinks } from '@/lib/nav';
 
@@ -30,6 +31,7 @@ interface Props {
   type?: string;
   publishedTime?: string;
   jsonLd?: Record<string, unknown>;
+  fullBleed?: boolean;
 }
 
 const {
@@ -39,6 +41,7 @@ const {
   type: ogType = 'website',
   publishedTime,
   jsonLd,
+  fullBleed = false,
 } = Astro.props;
 const ogUrl = ogImage ? `${SITE_URL}/og/${ogImage}.png` : `${SITE_URL}${SITE.socialBanner}`;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
@@ -112,6 +115,7 @@ const projects = projectsData
         var t = localStorage.getItem('theme');
         var d = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.classList.toggle('dark', !!d);
+        document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
         if (localStorage.getItem('dawn:railHidden') === 'true')
           document.documentElement.dataset.rail = 'hidden';
       })();
@@ -124,12 +128,16 @@ const projects = projectsData
       <div class="studio-workspace">
         <SidebarExplorer activePath={activePath} />
         <main class="studio-main">
-          <TabBar tabs={tabs} />
-          <div class="studio-content thin-scrollbar pt-6">
-            <div class="px-4 pb-1 sm:px-6 xl:px-10">
-              <Breadcrumb activePath={activePath} />
-            </div>
-            <div class="px-4 pb-16 sm:px-6 xl:px-10">
+          <TabBar tabs={tabs}>
+            <slot name="topbar-actions" />
+          </TabBar>
+          <div class:list={['studio-content thin-scrollbar', !fullBleed && 'pt-6', fullBleed && '!overflow-hidden !h-full flex flex-col [scrollbar-gutter:auto]']}>
+            {!fullBleed && (
+              <div class="px-4 pb-1 sm:px-6 xl:px-10">
+                <Breadcrumb activePath={activePath} />
+              </div>
+            )}
+            <div class:list={[!fullBleed && 'px-4 pb-16 sm:px-6 xl:px-10', fullBleed && 'flex-1 h-full w-full flex flex-col min-h-0']}>
               <slot />
             </div>
           </div>
