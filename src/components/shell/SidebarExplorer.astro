@@ -17,6 +17,46 @@ const latestHref = latestPostId ? `/blog/${latestPostId}` : '/blog';
 const inBlogIndex = activePath === '/blog' || activePath.startsWith('/blog/page/');
 const inPostDetail =
   activePath.startsWith('/blog/') && !activePath.startsWith('/blog/page/');
+
+const TRACK_SLUG_MAP: Record<string, string[]> = {
+  '/lab/foundations': [
+    'foundations', 'request-lifecycle', 'latency-throughput', 'napkin-math',
+    'vertical-horizontal', 'load-balancing', 'stateless', 'caching', 'cdn',
+  ],
+  '/lab/storage-engines': [
+    'storage-engines', 'sql-engine', 'indexes', 'sql-nosql',
+    'transactions', 'files',
+  ],
+  '/lab/distributed': [
+    'distributed', 'replication', 'sharding', 'consistent-hashing',
+    'unique-ids', 'cap', 'consensus',
+  ],
+  '/lab/microservices': [
+    'microservices', 'service-discovery', 'sagas', 'apis', 'queues', 'pubsub', 'realtime',
+  ],
+  '/lab/system-design': [
+    'system-design', 'hld-lld', 'design-url-shortener', 'design-news-feed',
+    'design-chat', 'batch-stream', 'redundancy', 'rate-limiting', 'timeouts-retries', 'observability',
+  ],
+  '/lab/aws-cloud': [
+    'aws-cloud', 'aws-vpc', 'aws-ha', 'aws-storage-db', 'aws-serverless',
+  ],
+};
+
+const labSlug = activePath.startsWith('/lab/') ? activePath.replace('/lab/', '') : '';
+const isSpecializedRoute = ['sql', 'java', 'architecture', '', 'terminal', 'pathfinding', 'spider'].includes(labSlug);
+
+const CURRICULUM_TRACK_ITEMS = [
+  { href: '/lab/foundations', label: 'network.sim', iconType: 'network', title: '1. Networking & Web Scale (8 labs)' },
+  { href: '/lab/storage-engines', label: 'storage.sim', iconType: 'storage', title: '2. Database & Storage Tier (8 labs)' },
+  { href: '/lab/distributed', label: 'distributed.sim', iconType: 'distributed', title: '3. Distributed Systems Core (6 labs)' },
+  { href: '/lab/microservices', label: 'microservices.sim', iconType: 'microservices', title: '4. Microservices & Event-Driven (7 labs)' },
+  { href: '/lab/system-design', label: 'system-design.sim', iconType: 'system', title: '5. System Design & Case Studies (9 labs)' },
+  { href: '/lab/aws-cloud', label: 'aws-cloud.sim', iconType: 'cloud', title: '6. AWS Cloud Architecture SAA-C03 (5 labs)' },
+].map((item) => ({
+  ...item,
+  isActive: activePath === item.href || (!isSpecializedRoute && !!TRACK_SLUG_MAP[item.href]?.includes(labSlug)),
+}));
 ---
 
 <aside
@@ -259,25 +299,18 @@ const inPostDetail =
       <span>Curriculum Tracks</span>
       <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--fg-dim)">44 labs</span>
     </div>
-    {[
-      ['/lab/foundations', 'network.sim', 'network', '1. Networking & Web Scale (8 labs)'],
-      ['/lab/storage-engines', 'storage.sim', 'storage', '2. Database & Storage Tier (8 labs)'],
-      ['/lab/distributed', 'distributed.sim', 'distributed', '3. Distributed Systems Core (6 labs)'],
-      ['/lab/microservices', 'microservices.sim', 'microservices', '4. Microservices & Event-Driven (7 labs)'],
-      ['/lab/system-design', 'system-design.sim', 'system', '5. System Design & Case Studies (9 labs)'],
-      ['/lab/aws-cloud', 'aws-cloud.sim', 'cloud', '6. AWS Cloud Architecture SAA-C03 (5 labs)'],
-    ].map(([href, label, iconType, title]) => (
+    {CURRICULUM_TRACK_ITEMS.map((item) => (
       <a
-        href={href}
-        class:list={['explorer-row no-underline font-medium', (activePath === href || (href === '/lab/foundations' && activePath === '/lab/request-lifecycle') || (href === '/lab/system-design' && activePath === '/lab/hld-lld')) && 'is-active']}
-        aria-current={activePath === href ? 'page' : undefined}
-        title={title}
+        href={item.href}
+        class:list={['explorer-row no-underline font-medium', item.isActive && 'is-active']}
+        aria-current={item.isActive ? 'page' : undefined}
+        title={item.title}
       >
         <span class="explorer-caret" aria-hidden="true"></span>
         <span class="explorer-icon">
-          <ExplorerFileIcon type={iconType as any} />
+          <ExplorerFileIcon type={item.iconType as any} />
         </span>
-        <span class="row-label truncate">{label}</span>
+        <span class="row-label truncate">{item.label}</span>
       </a>
     ))}
 

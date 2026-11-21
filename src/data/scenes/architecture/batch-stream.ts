@@ -30,26 +30,26 @@ const tl = { x0: -16, x1: -6, y0: -3, y1: 9 };
 
 const nl = () => p(el, 13, `viewers`);
 
-const rl = () => d(0, -11, { label: [`Video`, `App`] });
+const rl = () => d(0, -5, { label: [`Video`, `App`] });
 
 const il = (e = {}) => b(0, 0, { r: 2, h: 42, label: `production DB`, ...e });
 
-const al = (e = []) => d(0, 15, { color: `slab`, glyph: `chartLine`, label: [`Dashboard`], tags: e });
+const al = (e = []) => d(0, 6, { color: `slab`, glyph: `chartLine`, label: [`Dashboard`], tags: e });
 
 const ol = (e = `NIGHTLY BATCH JOB`, t = {}) => ({
-    logs: b(-11, -11, { r: 1.8, h: 36, glyph: `box`, label: `event logs` }),
+    logs: b(-5, -5, { r: 1.8, h: 36, glyph: `box`, label: `event logs` }),
     batch: x(tl, e),
     w1: d(-13.5, 0, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w1 || [] }),
     w2: d(-8.5, 0, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w2 || [] }),
     w3: d(-13.5, 6, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w3 || [] }),
     w4: d(-8.5, 6, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w4 || [] }),
-    wh: b(-11, 15, { r: 1.8, h: 36, glyph: `chart`, label: `warehouse` }),
+    wh: b(-5, 6, { r: 1.8, h: 36, glyph: `chart`, label: `warehouse` }),
   });
 
 const sl = (e = [], t = []) => ({
-    kafka: d(11, -11, { color: `slab`, glyph: `waves`, label: [`Event`, `Stream`], tags: t }),
+    kafka: d(5, -5, { color: `slab`, glyph: `waves`, label: [`Event`, `Stream`], tags: t }),
     proc: d(11, 3, { color: `green`, glyph: `activity`, label: [`Stream`, `Processor`], tags: e }),
-    live: b(11, 15, { r: 1.8, h: 36, glyph: `zap`, label: `live counts` }),
+    live: b(5, 6, { r: 1.8, h: 36, glyph: `zap`, label: `live counts` }),
   });
 
 const z = {
@@ -95,7 +95,7 @@ const B = {
 
 const cl = (e, t, n, r = {}) => S({ x: 0, y: 0, z: 0, dx: 75, dy: 25 }, e, t, { icon: n, ...r });
 
-const ll = (e, t, n, r = {}) => S({ x: -11, y: -11, z: 0, dx: -40, dy: -215 }, e, t, { icon: n, ...r });
+const ll = (e, t, n, r = {}) => S({ x: -5, y: -5, z: 0, dx: -40, dy: -215 }, e, t, { icon: n, ...r });
 
 const ul = {
     id: `batch-stream`,
@@ -497,7 +497,7 @@ const ul = {
               [{ text: `partitions 0–1` }],
               [{ text: `4 partitions · lag 2 s`, tone: `green`, icon: `layers` }],
             ),
-            proc2: d(17, 3, {
+            proc2: d(6, 0, {
               color: `green`,
               glyph: `activity`,
               label: [`Stream`, `Processor`],

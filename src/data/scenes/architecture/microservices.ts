@@ -41,10 +41,10 @@ const fc = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 },
     }),
   hc = (e = {}, t = {}, n = {}) => ({
     users: pc(),
-    lb: f(0, -12),
+    lb: f(0, -5),
     m1: mc(-5, e),
     m2: mc(5, t),
-    mdb: b(0, 11, { r: 2.2, h: 44, label: `one database`, ...n }),
+    mdb: b(0, 6, { r: 2.2, h: 44, label: `one database`, ...n }),
   }),
   gc = {
     ul: h(`users`, `lb`, [`users`, `lb`], { heads: `both` }),
@@ -64,7 +64,7 @@ const fc = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 },
   },
   yc = Object.keys(vc),
   bc = (e = []) =>
-    d(0, -12, {
+    d(0, -5, {
       color: `orange`,
       glyph: `route`,
       label: [`API`, `Gateway`],
@@ -179,12 +179,12 @@ export const microservicesLesson = {
             users: pc(),
             gw: bc(),
             ...xc(),
-            mdb: b(0, 11, { r: 2.2, h: 44, label: `one database` }),
+            mdb: b(0, 6, { r: 2.2, h: 44, label: `one database` }),
           },
           links: {
             ...Cc(),
             ...Object.fromEntries(
-              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, [vc[e].x, 11], `mdb`], { heads: `both` })]),
+              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, [vc[e].x, 6], `mdb`], { heads: `both` })]),
             ),
           },
           flows: [
@@ -281,13 +281,13 @@ export const microservicesLesson = {
             users: pc(),
             gw: bc([{ text: `release train: all 4 together`, tone: `red`, icon: `alert` }]),
             ...xc(),
-            mdb: b(0, 11, { r: 2.2, h: 44, label: `shared tables`, heat: 0.6 }),
+            mdb: b(0, 6, { r: 2.2, h: 44, label: `shared tables`, heat: 0.6 }),
           },
           links: {
             ...Cc(),
             ...Tc({ label: `chatty calls` }),
             ...Object.fromEntries(
-              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, [vc[e].x, 11], `mdb`], { heads: `both` })]),
+              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, [vc[e].x, 6], `mdb`], { heads: `both` })]),
             ),
           },
           flows: [
@@ -454,7 +454,7 @@ export const microservicesLesson = {
             users: pc(),
             gw: bc(),
             m1: mc(-6, { tags: [{ text: `users · catalog · orders` }] }),
-            mdb: b(-6, 11, { r: 2.2, h: 44, label: `monolith DB` }),
+            mdb: b(-4, 6, { r: 2.2, h: 44, label: `monolith DB` }),
             pay: d(9, 0, { ...vc.pay, tags: [{ text: `new`, tone: `green` }] }),
             paydb: b(9, 10, { r: 1.5, h: 30, label: `` }),
           },

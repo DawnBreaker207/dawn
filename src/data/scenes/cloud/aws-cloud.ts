@@ -33,7 +33,7 @@ export const awsCloudLesson = {
     summary: `Explore how a fault-tolerant AWS architecture handles traffic, auto-scales across AZs, and self-heals when a full data center goes dark.`,
     minutes: 12,
     level: `intermediate`,
-    metrics: [`az_health`, `latency`, `ecs_tasks`, `aurora_lag`, `total_uptime`],
+    metrics: [`dns`, `connect`, `az_health`, `ecs_tasks`, `aurora_lag`],
     legend: [`req`, `res`, [`ping`, `health check`], `fail`],
     goals: [
       { text: `Single AZ fragility: why 1 instance in 1 AZ is a single point of failure`, step: 1 },
@@ -62,25 +62,25 @@ export const awsCloudLesson = {
           `! High downtime risk`,
         ],
         metrics: {
+          dns: `15 ms`,
+          connect: `42 ms`,
           az_health: `100%`,
-          latency: 85,
           ecs_tasks: `1 task`,
           aurora_lag: `—`,
-          total_uptime: `99.0%`,
         },
         scene: {
           entities: {
-            client: y(0, -12, {
+            client: y(-6, -4, {
               label: `users`,
               tags: [{ text: `https://app.io`, icon: `globe` }],
             }),
-            ec2: d(8, -2, {
+            ec2: d(0, 0, {
               color: `yellow`,
               glyph: `server`,
               label: [`EC2`, `us-east-1a`],
               cpu: 0.85,
             }),
-            db: b(16, 8, { label: `MySQL Single`, cpu: 0.6 }),
+            db: b(6, 4, { label: `MySQL Single`, cpu: 0.6 }),
           },
           links: {
             c1: h(`client`, `ec2`, [`client`, `ec2`], { label: `Direct Traffic`, heads: `both` }),
@@ -107,28 +107,28 @@ export const awsCloudLesson = {
           `+ TTFB drops to 18 ms`,
         ],
         metrics: {
+          dns: `10 ms`,
+          connect: `18 ms`,
           az_health: `100%`,
-          latency: 18,
           ecs_tasks: `1 task`,
           aurora_lag: `—`,
-          total_uptime: `99.9%`,
         },
         scene: {
           entities: {
-            client: y(0, -12, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
-            r53: d(0, 0, {
+            client: y(-6, -4, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
+            r53: d(-2, -2, {
               color: `yellow`,
               glyph: `globe`,
               label: [`Route 53`],
               sub: `Latency Routing`,
             }),
-            cf: d(8, -6, {
+            cf: d(2, -1, {
               color: `purple`,
               glyph: `shield`,
               label: [`CloudFront`],
               sub: `Edge Cache`,
             }),
-            ec2: d(16, -2, { color: `blue`, glyph: `server`, label: [`Origin VPC`], cpu: 0.35 }),
+            ec2: d(6, 2, { color: `blue`, glyph: `server`, label: [`Origin VPC`], cpu: 0.35 }),
           },
           links: {
             dns: h(`client`, `r53`, [`client`, `r53`], { label: `DNS Query`, heads: `both` }),
@@ -152,23 +152,23 @@ export const awsCloudLesson = {
           `+ Continuous health checking`,
         ],
         metrics: {
+          dns: `10 ms`,
+          connect: `20 ms`,
           az_health: `100%`,
-          latency: 22,
           ecs_tasks: `2 tasks`,
           aurora_lag: `—`,
-          total_uptime: `99.95%`,
         },
         scene: {
           entities: {
-            client: y(0, -12, { label: `users` }),
-            alb: f(0, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            srv_a: d(10, -6, {
+            client: y(-6, -4, { label: `users` }),
+            alb: f(-2, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            srv_a: d(4, -3, {
               color: `blue`,
               glyph: `server`,
               label: [`Target AZ-1a`],
               cpu: 0.25,
             }),
-            srv_b: d(10, 6, { color: `blue`, glyph: `server`, label: [`Target AZ-1b`], cpu: 0.25 }),
+            srv_b: d(4, 3, { color: `blue`, glyph: `server`, label: [`Target AZ-1b`], cpu: 0.25 }),
           },
           links: {
             in: h(`client`, `alb`, [`client`, `alb`], { label: `HTTPS`, heads: `both` }),
@@ -199,19 +199,19 @@ export const awsCloudLesson = {
           `+ 4 Container Tasks balanced`,
         ],
         metrics: {
+          dns: `10 ms`,
+          connect: `20 ms`,
           az_health: `100%`,
-          latency: 24,
           ecs_tasks: `4 tasks`,
           aurora_lag: `—`,
-          total_uptime: `99.99%`,
         },
         scene: {
           entities: {
-            alb: f(0, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs1: d(10, -8, { color: `blue`, glyph: `server`, label: [`ECS-1 (AZ-a)`], cpu: 0.3 }),
-            ecs2: d(10, -2, { color: `blue`, glyph: `server`, label: [`ECS-2 (AZ-a)`], cpu: 0.3 }),
-            ecs3: d(10, 4, { color: `blue`, glyph: `server`, label: [`ECS-3 (AZ-b)`], cpu: 0.3 }),
-            ecs4: d(10, 10, { color: `blue`, glyph: `server`, label: [`ECS-4 (AZ-b)`], cpu: 0.3 }),
+            alb: f(-4, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs1: d(2, -4, { color: `blue`, glyph: `server`, label: [`ECS-1 (AZ-a)`], cpu: 0.3 }),
+            ecs2: d(2, -1, { color: `blue`, glyph: `server`, label: [`ECS-2 (AZ-a)`], cpu: 0.3 }),
+            ecs3: d(2, 2, { color: `blue`, glyph: `server`, label: [`ECS-3 (AZ-b)`], cpu: 0.3 }),
+            ecs4: d(2, 5, { color: `blue`, glyph: `server`, label: [`ECS-4 (AZ-b)`], cpu: 0.3 }),
           },
           links: {
             l1: h(`alb`, `ecs1`, [`alb`, `ecs1`]),
@@ -239,18 +239,18 @@ export const awsCloudLesson = {
           `+ 85% cache hit ratio`,
         ],
         metrics: {
+          dns: `10 ms`,
+          connect: `20 ms`,
           az_health: `100%`,
-          latency: 6,
           ecs_tasks: `4 tasks`,
           aurora_lag: `< 1 ms`,
-          total_uptime: `99.99%`,
         },
         scene: {
           entities: {
-            ecs_a: d(0, -6, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1a`] }),
-            ecs_b: d(0, 6, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1b`] }),
-            redis_p: d(10, -6, { color: `green`, glyph: `zap`, label: [`Redis Master`, `AZ-1a`] }),
-            redis_r: d(10, 6, { color: `green`, glyph: `zap`, label: [`Redis Replica`, `AZ-1b`] }),
+            ecs_a: d(-4, -2, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1a`] }),
+            ecs_b: d(-4, 2, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1b`] }),
+            redis_p: d(4, -2, { color: `green`, glyph: `zap`, label: [`Redis Master`, `AZ-1a`] }),
+            redis_r: d(4, 2, { color: `green`, glyph: `zap`, label: [`Redis Replica`, `AZ-1b`] }),
           },
           links: {
             r1: h(`ecs_a`, `redis_p`, [`ecs_a`, `redis_p`], {
@@ -287,22 +287,22 @@ export const awsCloudLesson = {
           `+ 6-way distributed SSD storage`,
         ],
         metrics: {
+          dns: `10 ms`,
+          connect: `20 ms`,
           az_health: `100%`,
-          latency: 8,
           ecs_tasks: `4 tasks`,
           aurora_lag: `8 ms`,
-          total_uptime: `99.99%`,
         },
         scene: {
           entities: {
-            ecs_a: d(0, -6, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
-            ecs_b: d(0, 6, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
-            db_p: b(12, -6, {
+            ecs_a: d(-4, -2, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
+            ecs_b: d(-4, 2, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
+            db_p: b(4, -2, {
               label: `Aurora Writer`,
               cpu: 0.35,
               tags: [{ text: `Primary`, tone: `green` }],
             }),
-            db_r: b(12, 6, {
+            db_r: b(4, 2, {
               label: `Aurora Replica`,
               cpu: 0.2,
               tags: [{ text: `Standby`, tone: `blue` }],
@@ -340,35 +340,35 @@ export const awsCloudLesson = {
           `! Primary DB unreachable`,
         ],
         metrics: {
+          dns: `10 ms`,
+          connect: `24 ms`,
           az_health: `50% (AZ-a DOWN)`,
-          latency: 35,
           ecs_tasks: `2 tasks`,
           aurora_lag: `Failover…`,
-          total_uptime: `99.99%`,
         },
         scene: {
           entities: {
-            alb: f(0, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs_a: d(10, -6, {
+            alb: f(-4, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs_a: d(0, -3, {
               color: `slab`,
               glyph: `skull`,
               dead: 1,
               label: [`ECS AZ-1a (DOWN)`],
               tags: [{ text: `DOWN`, tone: `red`, icon: `alert` }],
             }),
-            ecs_b: d(10, 6, {
+            ecs_b: d(0, 3, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-1b (HEALTHY)`],
               cpu: 0.75,
             }),
-            db_a: b(20, -6, {
+            db_a: b(6, -3, {
               label: `Writer AZ-a (DOWN)`,
               dead: 1,
               heat: 0.9,
               tags: [{ text: `FAILED`, tone: `red` }],
             }),
-            db_b: b(20, 6, {
+            db_b: b(6, 3, {
               label: `Replica AZ-b`,
               tags: [{ text: `Promoting…`, tone: `amber` }],
             }),
@@ -404,32 +404,32 @@ export const awsCloudLesson = {
           `+ 100% traffic serving normally`,
         ],
         metrics: {
+          dns: `10 ms`,
+          connect: `20 ms`,
           az_health: `Resilient on AZ-b`,
-          latency: 22,
           ecs_tasks: `4 tasks in AZ-b`,
           aurora_lag: `0 ms (New Master)`,
-          total_uptime: `99.99%`,
         },
         scene: {
           entities: {
-            client: y(0, -12, {
+            client: y(-6, -4, {
               label: `users`,
               tags: [{ text: `0 downtime`, tone: `green`, icon: `check` }],
             }),
-            alb: f(0, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Healthy`] }),
-            ecs_b1: d(10, 2, {
+            alb: f(-2, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Healthy`] }),
+            ecs_b1: d(2, 0, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-b (#1)`],
               cpu: 0.35,
             }),
-            ecs_b2: d(10, 8, {
+            ecs_b2: d(2, 4, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-b (#2)`],
               cpu: 0.35,
             }),
-            db_b: b(20, 5, {
+            db_b: b(6, 2, {
               label: `Aurora New Writer`,
               cpu: 0.4,
               tags: [{ text: `PRIMARY WRITER`, tone: `green` }],
@@ -459,20 +459,20 @@ export const awsCloudLesson = {
           text: `Next lab: <b>Microservices & Distributed Sagas</b> — learn how services communicate and rollback transactions.`,
         },
         metrics: {
+          dns: `10 ms`,
+          connect: `20 ms`,
           az_health: `100% Ready`,
-          latency: 15,
           ecs_tasks: `Dynamic`,
           aurora_lag: `0 ms`,
-          total_uptime: `99.999%`,
         },
         scene: {
           entities: {
-            client: y(0, -12, { label: `users`, tags: [{ text: `resilient`, tone: `green` }] }),
-            alb: f(0, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs_a: d(10, -6, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
-            ecs_b: d(10, 6, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
-            db_a: b(20, -6, { label: `Aurora Writer`, tags: [{ text: `Active`, tone: `green` }] }),
-            db_b: b(20, 6, { label: `Aurora Standby`, tags: [{ text: `Replica`, tone: `blue` }] }),
+            client: y(-6, -4, { label: `users`, tags: [{ text: `resilient`, tone: `green` }] }),
+            alb: f(-3, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs_a: d(1, -3, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
+            ecs_b: d(1, 3, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
+            db_a: b(6, -3, { label: `Aurora Writer`, tags: [{ text: `Active`, tone: `green` }] }),
+            db_b: b(6, 3, { label: `Aurora Standby`, tags: [{ text: `Replica`, tone: `blue` }] }),
           },
           links: {
             c: h(`client`, `alb`, [`client`, `alb`], { heads: `both` }),

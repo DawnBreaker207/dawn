@@ -1,5 +1,6 @@
 ---
 import ArchitectureLabLayout from '@/layouts/ArchitectureLabLayout.astro';
+import ThreadStateDiagram from '@/components/lab/java/ThreadStateDiagram.astro';
 
 export const prerender = true;
 ---
@@ -10,4 +11,6 @@ export const prerender = true;
   lessonId="java-concurrency"
   moduleId="java-runtime"
   trackId="microservices"
-/>
+>
+  <ThreadStateDiagram slot="visualizer-2d" />
+</ArchitectureLabLayout>

@@ -1,5 +1,6 @@
 ---
 import ArchitectureLabLayout from '@/layouts/ArchitectureLabLayout.astro';
+import SqlPipelineDiagram from '@/components/lab/sql/SqlPipelineDiagram.astro';
 
 export const prerender = true;
 ---
@@ -10,4 +11,6 @@ export const prerender = true;
   lessonId="sql-engine"
   moduleId="storage"
   trackId="storage-tier"
-/>
+>
+  <SqlPipelineDiagram slot="visualizer-2d" />
+</ArchitectureLabLayout>

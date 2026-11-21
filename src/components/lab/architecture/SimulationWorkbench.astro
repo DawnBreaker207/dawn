@@ -165,6 +165,42 @@ const METRIC_CONFIGS: Record<string, { label: string; icon: string }> = {
     label: 'Uptime',
     icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
   },
+  lon: {
+    label: 'London Edge',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>`,
+  },
+  syd: {
+    label: 'Sydney Edge',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>`,
+  },
+  origin: {
+    label: 'Origin Load',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect></svg>`,
+  },
+  hitRate: {
+    label: 'Cache Hit %',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+  },
+  rps: {
+    label: 'RPS Rate',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`,
+  },
+  p95: {
+    label: 'p95 Latency',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>`,
+  },
+  errors: {
+    label: 'Errors',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+  },
+  healthy: {
+    label: 'Healthy',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+  },
+  users: {
+    label: 'Users',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>`,
+  },
 };
 
 const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.metrics : ['dns', 'connect', 'request', 'download', 'total'];
@@ -217,6 +253,10 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
 
       <!-- Stage Tools -->
       <div class="stage__tools">
+        <div class="view-mode-toggle" id="view-mode-toggle" hidden>
+          <button type="button" class="mode-btn is-active" data-view-mode="3d" title="3D Isometric Simulation">3D View</button>
+          <button type="button" class="mode-btn" data-view-mode="2d" title="2D Deep-Dive Visualizer">2D Deep-Dive</button>
+        </div>
         <button class="tool tool--fit" id="fit" data-t-title="Back to the whole diagram (0)" title="Back to the whole diagram (0)" hidden="">
           <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line><line x1="8" x2="14" y1="11" y2="11"></line></svg>
           <span data-t="Fit">Fit</span>
@@ -237,6 +277,11 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
       <!-- Canvas Area for DtsSceneRenderer -->
       <div class="stage__canvas" id="canvas">
         <slot name="canvas" />
+      </div>
+
+      <!-- Optional 2D Deep-Dive Visualizer Area -->
+      <div class="stage__2d-visualizer" id="visualizer-2d" hidden>
+        <slot name="visualizer-2d" />
       </div>
 
       <!-- Stage Legend -->
@@ -662,6 +707,28 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
     };
     root.addEventListener('wb:navigate', onNavigate, { signal: controller.signal });
     window.addEventListener('wb:navigate', onNavigate, { signal: controller.signal });
+
+    // View Mode Toggle (3D Simulator vs 2D Deep-Dive Visualizer)
+    const elViewToggle = document.getElementById('view-mode-toggle');
+    const elCanvas = document.getElementById('canvas');
+    const elViz2d = document.getElementById('visualizer-2d');
+    if (elViz2d && elViz2d.firstElementChild && elViewToggle) {
+      elViewToggle.hidden = false;
+      const btns = elViewToggle.querySelectorAll<HTMLButtonElement>('[data-view-mode]');
+      btns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-view-mode');
+          btns.forEach((b) => b.classList.toggle('is-active', b === btn));
+          if (mode === '2d') {
+            if (elCanvas) elCanvas.hidden = true;
+            elViz2d.hidden = false;
+          } else {
+            if (elCanvas) elCanvas.hidden = false;
+            elViz2d.hidden = true;
+          }
+        });
+      });
+    }
 
     // Keyboard shortcuts: ArrowLeft / ArrowRight / R (replay) / Space (pause) / 0 (fit)
     window.addEventListener('keydown', (e) => {
