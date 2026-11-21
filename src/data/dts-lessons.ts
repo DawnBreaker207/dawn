@@ -166,7 +166,8 @@ export const DTS_MODULES: Module[] = [
     color: 'orange',
     lessons: [
       { id: 'aws-cloud', title: 'AWS Multi-AZ Resilience' },
-      { id: 'system-design', title: 'Dawn Blog System Architecture' },
+      { id: 'architecture', title: 'Dawn Blog Architecture' },
+      { id: 'system-design', title: 'Distributed Systems' },
     ],
   },
 ];

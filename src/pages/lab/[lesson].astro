@@ -7,6 +7,8 @@ export const prerender = true;
 
 export async function getStaticPaths() {
   const EXCLUDED_ROUTES = new Set([
+    'architecture',
+    'foundations',
     'aws-cloud',
     'microservices',
     'request-lifecycle',

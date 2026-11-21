@@ -3,13 +3,56 @@ import { DTS_MODULES, type Module, type Lesson } from '@/data/dts-lessons';
 
 interface Props {
   currentLessonId: string;
+  trackId?: string;
 }
 
-const { currentLessonId } = Astro.props;
+const { currentLessonId, trackId: propTrackId } = Astro.props;
 
-// All 42 lessons are now native TS labs
-const NATIVE_LESSON_IDS = DTS_MODULES.flatMap((m) => m.lessons.map((l) => l.id));
-const nativeIds = new Set(NATIVE_LESSON_IDS);
+// Determine track scope
+const resolveTrack = (lessonId: string, explicitTrack?: string): string => {
+  if (explicitTrack) return explicitTrack;
+  if (lessonId === 'architecture') return 'architecture';
+  const foundationsIds = ['request-lifecycle', 'latency-throughput', 'napkin-math', 'vertical-horizontal', 'load-balancing', 'stateless', 'caching', 'cdn'];
+  if (foundationsIds.includes(lessonId)) return 'foundations';
+  const awsIds = ['aws-cloud', 'redundancy', 'timeouts-retries', 'observability'];
+  if (awsIds.includes(lessonId)) return 'cloud-aws';
+  return 'system-design';
+};
+
+const activeTrack = resolveTrack(currentLessonId, propTrackId);
+
+const TRACK_MODULE_WHITELIST: Record<string, string[]> = {
+  'architecture': ['cloud'],
+  'foundations': ['foundations', 'scaling'],
+  'cloud-aws': ['reliability', 'cloud'],
+  'system-design': ['data', 'communication', 'architecture', 'design'],
+};
+
+// Filter modules for this track
+const allowedModules = TRACK_MODULE_WHITELIST[activeTrack] ?? [];
+
+const visibleModules = DTS_MODULES
+  .filter((m) => allowedModules.length === 0 || allowedModules.includes(m.id))
+  .map((m) => {
+    // If track is architecture, only show architecture lesson
+    if (activeTrack === 'architecture') {
+      return {
+        ...m,
+        lessons: m.lessons.filter((l) => l.id === 'architecture' || l.id === 'system-design'),
+      };
+    }
+    // If track is cloud-aws, only show aws-cloud and reliability
+    if (activeTrack === 'cloud-aws') {
+      return {
+        ...m,
+        lessons: m.lessons.filter((l) => l.id !== 'architecture'),
+      };
+    }
+    return m;
+  })
+  .filter((m) => m.lessons.length > 0);
+
+const totalVisibleLessons = visibleModules.reduce((acc, m) => acc + m.lessons.length, 0);
 
 let activeLessonTitle = '01 · Request Lifecycle';
 for (const mod of DTS_MODULES) {
@@ -29,7 +72,7 @@ for (const mod of DTS_MODULES) {
     class="chapter-dropdown-trigger"
     aria-haspopup="true"
     aria-expanded="false"
-    title="Browse all 41 interactive architecture chapters"
+    title="Browse track chapters"
   >
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
@@ -37,7 +80,7 @@ for (const mod of DTS_MODULES) {
       <path d="M6 10h10"></path>
     </svg>
     <span id="chapter-active-title" class="chapter-name font-mono">{activeLessonTitle}</span>
-    <span class="chapter-tag font-mono">{nativeIds.size} Chapters ▾</span>
+    <span class="chapter-tag font-mono">{totalVisibleLessons} Chapters ▾</span>
   </button>
 
   <!-- Dropdown Menu (Floating Panel) -->
@@ -58,7 +101,7 @@ for (const mod of DTS_MODULES) {
 
     <!-- Streamlined Lessons List Grouped by Modules -->
     <div class="dropdown-list-scroll thin-scrollbar">
-      {DTS_MODULES.map((mod: Module) => (
+      {visibleModules.map((mod: Module) => (
         <div class="dropdown-module-group" data-module-id={mod.id}>
           <div class="dropdown-module-header">
             <span class="mod-num font-mono">{mod.num}</span>
@@ -67,27 +110,21 @@ for (const mod of DTS_MODULES) {
           </div>
           <div class="dropdown-lessons-list">
             {mod.lessons.map((lesson: Lesson) => {
-              const isNative = nativeIds.has(lesson.id);
+              const isCurrent = lesson.id === currentLessonId;
               return (
                 <button
                   type="button"
                   class:list={[
                     'dropdown-lesson-btn',
-                    lesson.id === currentLessonId && 'is-current',
-                    !isNative && 'is-soon',
+                    isCurrent && 'is-current',
                   ]}
                   data-lesson-id={lesson.id}
                   data-lesson-title={`${mod.num} · ${lesson.title}`}
-                  data-native={isNative ? 'true' : undefined}
-                  disabled={!isNative || undefined}
-                  aria-disabled={!isNative ? 'true' : undefined}
+                  data-native="true"
                 >
                   <span class="lesson-dot">●</span>
                   <span class="lesson-text">{lesson.title}</span>
-                  {isNative
-                    ? <span class="active-pill" data-lesson-pill={lesson.id} hidden={lesson.id !== currentLessonId}>Active</span>
-                    : <span class="soon-pill">Soon</span>
-                  }
+                  <span class="active-pill" data-lesson-pill={lesson.id} hidden={!isCurrent}>Active</span>
                 </button>
               );
             })}
@@ -288,25 +325,6 @@ for (const mod of DTS_MODULES) {
     color: #ffffff;
     font-weight: 700;
   }
-
-  .soon-pill {
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: var(--bg-subtle);
-    color: var(--fg-faint);
-    font-weight: 600;
-  }
-
-  .dropdown-lesson-btn.is-soon {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  .dropdown-lesson-btn.is-soon:hover {
-    background: transparent;
-    color: var(--fg-dim);
-  }
 </style>
 
 <script>
@@ -390,7 +408,7 @@ for (const mod of DTS_MODULES) {
             titleDisplay.textContent = lessonTitle;
           }
 
-          // Navigate to the native lab page (full page load if needed)
+          // Navigate to the native lab page
           if (window.location.pathname !== `/lab/${lessonId}`) {
             window.location.href = `/lab/${lessonId}`;
             return;

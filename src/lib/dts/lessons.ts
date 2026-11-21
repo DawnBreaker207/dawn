@@ -7139,6 +7139,7 @@ export const ALL_DTS_LESSONS: Record<string, any> = {
   'design-chat': designChatLesson,
   'aws-cloud': awsCloudLesson,
   'system-design': systemDesignLesson,
+  'architecture': systemDesignLesson,
 };
 
 
