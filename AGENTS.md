@@ -101,80 +101,115 @@ server-rendered.
 
 ---
 
-## 3. Directory Layout
+## 3. Directory Layout & Folder Responsibilities
+
+### What is "DTS"?
+> **DTS = Designed to Scale**  
+> DTS is the **Interactive Isometric 2.5D Architecture Simulation Engine** ported into this project.  
+> It renders interactive system design architectures (servers, balancers, databases, queues, animated packet flows, real-time metrics, step timelines, and guide rails).  
+> **Why is lesson data located in `src/lib/dts/lessons/` instead of `src/data/`?**  
+> Because DTS lessons are not simple static JSON records — they are **interactive simulation scene graphs** containing SVG coordinates, packet routing vectors, state machine changes, and metric calculators. Static app data (books, projects, metadata catalogs) lives in `src/data/`, while DTS simulation scenes live in `src/lib/dts/lessons/`.
+
+---
+
+### Master Directory Layout
 
 ```
-data/                       ← Content loader sources (intentional root-level placement)
-│   blog/                   ← Blog posts as .mdx — Astro content collection
-│   authors/                ← Author profiles as .mdx
-│   headerNavLinks.ts       ← Legacy config (keep here, do not move)
-│   projectsData.ts/json    ← Projects list (consolidate into src/data/ when touched)
+├── data/                               ← Astro Content Collections (Root-level)
+│   ├── blog/                           ← Blog posts as .mdx files (Astro loader: base './data/blog')
+│   └── authors/                        ← Author profiles as .mdx files
 │
-src/
-├── components/
-│   ├── shell/              ← Studio layout shell
-│   │   SidebarExplorer, TabBar, Rail, TerminalFooter, Breadcrumb
+├── scripts/                            ← Build & Automation CLI Scripts (Node.js / CI only)
+│   ├── sync-notion.mjs                 ← Syncs blog posts from Notion API
+│   ├── build-og.mjs                    ← Generates OpenGraph card images
+│   ├── build-books.mjs                 ← Fetches and updates Goodreads data
+│   ├── build-stats.mjs                 ← Generates site statistics
+│   ├── sync-now.mjs                    ← Syncs now page status
+│   └── token-burn.mjs                  ← LLM token usage calculation
+│
+├── src/
+│   ├── components/                     ← UI Component Library
+│   │   ├── shell/                      ← Studio layout chrome (SidebarExplorer, TabBar, Rail, Breadcrumb, TerminalFooter)
+│   │   ├── widget/                     ← Live runtime widgets (BlogStats, LiveClock, TokenBurnRail, GitActivity, CommitGraph)
+│   │   ├── lab/                        ← Interactive lab UI components
+│   │   │   ├── architecture/           ← DTS Workbench chrome & chapter navigation (DtsWorkbench, ArchitectureChapterPicker)
+│   │   │   ├── sql/                    ← 2D SQL pipeline & B-Tree stage diagrams
+│   │   │   └── java/                   ← 2D JVM thread state & pipeline diagrams
+│   │   ├── blog/                       ← Blog post layouts, cards, and reading UI
+│   │   ├── home/                       ← Homepage-specific showcase components
+│   │   ├── about/                      ← About page bio, timeline, and tech stack items
+│   │   ├── ui/                         ← Generic design primitives (Button, Link, Tag, ThemeToggle, Toast)
+│   │   ├── profile/                    ← Author profile cards
+│   │   └── project/                    ← Project cards and showcases
 │   │
-│   ├── widget/             ← Self-contained runtime widgets (live data, clocks, stats)
-│   │   BlogStats, CommitGraph, GitActivity, RecentActivity,
-│   │   LiveClock, TokenBurnRail, LabRail, LabSimCard
+│   ├── data/                           ← Static Application Data (Not content collections)
+│   │   ├── books.json                  ← Reading list data
+│   │   ├── now.json                    ← Current activity / what I'm doing now
+│   │   ├── timeline.json               ← Career & personal timeline milestones
+│   │   ├── projectsData.json           ← Portfolio projects list
+│   │   ├── labs.ts                     ← Directory list of playable labs
+│   │   └── dts-lessons.ts              ← Curriculum metadata: 6 canonical tracks, 11 modules, titles & IDs
 │   │
-│   ├── lab/                ← Lab feature components
-│   │   ├── sql/            ← SQL lab components
-│   │   └── <name>/         ← One subfolder per lab
+│   ├── layouts/                        ← Top-level page wrappers
+│   │   ├── BaseLayout.astro            ← Global studio layout shell (sidebar + tabbar + rail + terminal)
+│   │   ├── ArchitectureLabLayout.astro ← Standard reusable full-bleed layout for all DTS & Engine labs
+│   │   ├── PostLayout.astro            ← Long-form blog reading layout (TOC, header, tags, giscus)
+│   │   └── AuthorLayout.astro          ← Author profile layout
 │   │
-│   ├── blog/               ← Blog-specific components
-│   ├── home/               ← Homepage-only components
-│   ├── about/              ← About page components
-│   ├── profile/            ← ProfileCard
-│   ├── project/            ← ProjectCard
-│   └── ui/                 ← Generic primitives: Button, Link, Tag, Image, etc.
+│   ├── lib/                            ← Core Application Logic & Services
+│   │   ├── runtime/                    ← Server-only code (DB, Prisma, GitHub API, LLM tokens — NEVER import in client)
+│   │   ├── utils/                      ← Shared utility functions (blog parsing, slugify, date formatting)
+│   │   ├── site.ts                     ← Global site config (SITE, HOST, tabsFor, formatDate)
+│   │   ├── nav.ts                      ← Header navigation definitions
+│   │   ├── api-cache.ts & ttl-cache.ts ← In-memory API caching layers
+│   │   └── dts/                        ← Designed-to-Scale Isometric Architecture Engine
+│   │       ├── lessons/                ← 44 simulation scene definitions grouped by domain (cloud, data, etc.)
+│   │       ├── scene-builders.ts       ← Scene entity factory functions (makeBlock, makeDb, makeBalancer, makeLink)
+│   │       ├── runtime-draw.ts         ← Isometric SVG canvas entity renderers
+│   │       ├── stage-engine.ts         ← Interactive step playback, packet animations & metric state
+│   │       ├── curriculum.ts           ← Runtime lesson navigation, steps & module breadcrumbs
+│   │       └── types.ts                ← DTS domain types (Lesson, Step, Scene, Entity)
+│   │
+│   ├── pages/                          ← Astro File-Based Routing
+│   │   ├── index.astro                 ← Homepage (/)
+│   │   ├── about.astro, now.astro...   ← Static content pages
+│   │   ├── blog/                       ← Blog index & dynamic [...slug].astro
+│   │   ├── lab/                        ← Lab pages: /lab/architecture, /lab/system-design, /lab/sql, /lab/java, /lab/[lesson]
+│   │   └── api/                        ← SSR API routes (/api/token-burn.json, etc. — strictly SSR, no markup)
+│   │
+│   ├── scripts/                        ← Browser Client-Side Modules (Bundled by Astro via <script src="...">)
+│   │   ├── app-shell.ts                ← Studio layout tabs, sidebar toggling, keyboard shortcuts
+│   │   ├── extras.ts                   ← Terminal modal REPL, copy-to-clipboard, theme bridge
+│   │   ├── weather.ts                  ← Atmospheric canvas overlay (rain, snow, storm effects)
+│   │   └── lab/                        ← Interactive client-side algorithms (pathfinding, spider)
+│   │
+│   ├── styles/                         ← CSS Architecture
+│   │   ├── theme-colors.css            ← CSS custom properties (Light & Dark tokens — single source of truth)
+│   │   ├── global.css                  ← Tailwind setup + design tokens + utility classes
+│   │   ├── shell.css                   ← Studio VS Code chrome styles (.studio-*, .tab-bar, .explorer-*)
+│   │   └── designed-to-scale.css       ← DTS isometric lab theme (scoped under .dts-window)
+│   │
+│   └── types/                          ← TypeScript Type Definitions (Strict, no 'any' without comments)
+│       ├── books.ts, server.ts...      ← Domain data contracts
+│       └── giscus.ts                   ← Giscus comment widget configuration types
 │
-├── content.config.ts       ← Astro content collection schema (blog + authors)
-│
-├── data/                   ← Static app data (not content)
-│   books.json, now.json, timeline.json, labs.ts, aws-system-design.ts
-│
-├── layouts/                ← BaseLayout, PostLayout, ListLayout, AuthorLayout
-│
-├── lib/
-│   ├── runtime/            ← Server-only code (never imported by client components)
-│   │   github.ts, prisma.ts, token-burn.ts, hanoi-date.ts, llm-format.ts
-│   ├── utils/
-│   │   blog.ts
-│   ├── site.ts             ← SITE config, tabsFor(), formatDate()
-│   ├── nav.ts              ← Navigation link definitions
-│   ├── dts/                ← DTS isometric rendering stack (runtime-draw, scene-renderer, lessons)
-│   └── ...                 ← Other shared helpers
-│
-├── pages/
-│   ├── api/                ← API endpoints (.ts only, no markup)
-│   ├── blog/
-│   ├── lab/                ← One .astro per lab page
-│   └── ...
-│
-├── scripts/                ← Vanilla TS for <script> tags in .astro files
-│   └── lab/
-│       ├── java/
-│       └── sql/
-│
-├── styles/
-│   ├── global.css          ← Tailwind setup + design tokens + keyframes + reusable utilities
-│   ├── theme-colors.css    ← CSS custom property tokens (light/dark) — single source of truth
-│   ├── shell.css           ← Studio layout only (.studio-*, .explorer-*, .tab-bar, etc.)
-│   ├── designed-to-scale.css ← DTS isometric lab theme (scoped under .dts-window)
-│   ├── prism.css
-│   └── twemoji.css
-│
-└── types/                  ← Shared TypeScript types (one file per domain)
+└── public/                             ← Static Assets Served Directly
+    ├── static/                         ← Images, icons, avatars, favicons
+    └── dts/                            ← Legacy assets (actively migrated to pure TS)
 ```
 
-**Placement rules:**
-- New lab: `src/pages/lab/<name>.astro` + `src/components/lab/<name>/` + `src/scripts/lab/<name>/`
-- New generic utility: `src/lib/`
-- New server-only code (DB, external API): `src/lib/runtime/`
-- Static app data: `src/data/`
-- Blog/author **content** (MDX posts): `data/blog/` or `data/authors/` (root `data/`)
+---
+
+### Data Placement Matrix: Where does data belong?
+
+| Type of Data | Destination Directory | Examples |
+|---|---|---|
+| **MDX Posts & Articles** | `data/blog/`, `data/authors/` | Blog posts, Author profiles |
+| **Static App Data (JSON/TS)** | `src/data/` | `books.json`, `projectsData.json`, `timeline.json`, `labs.ts` |
+| **Curriculum Catalog Metadata** | `src/data/dts-lessons.ts` | List of 6 Tracks, 11 Modules, IDs, Titles |
+| **Architectural Simulation Scenes** | `src/lib/dts/lessons/<domain>/` | `aws-vpc.ts`, `sql-engine.ts`, `consistent-hashing.ts` |
+| **Server Runtime State / DB** | `src/lib/runtime/` | Prisma client, GitHub API tokens |
+| **Static Browser Assets** | `public/static/` | SVGs, WebP images, Favicons |
 
 ---
 
