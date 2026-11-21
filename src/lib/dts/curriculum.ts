@@ -42,6 +42,7 @@ export const MODULES = [
       { id: `sql-nosql`, title: `SQL vs NoSQL` },
       { id: `indexes`, title: `Indexes` },
       { id: `storage-engines`, title: `Storage Engines` },
+      { id: `sql-engine`, title: `PostgreSQL Query Planner & Engine`, ready: true },
       { id: `replication`, title: `Replication` },
       { id: `sharding`, title: `Sharding` },
       { id: `consistent-hashing`, title: `Consistent Hashing` },
@@ -83,6 +84,7 @@ export const MODULES = [
     color: `teal`,
     lessons: [
       { id: `microservices`, title: `Monolith vs Microservices` },
+      { id: `java-concurrency`, title: `Java Concurrency & Thread State`, ready: true },
       { id: `service-discovery`, title: `Service Discovery` },
       { id: `sagas`, title: `Sagas & Distributed Tx` },
       { id: `batch-stream`, title: `Batch & Stream Processing` },
@@ -129,6 +131,10 @@ export const MODULES = [
     lessons: [
       { id: `system-design`, title: `Dawn Blog System Architecture`, ready: true },
       { id: `aws-cloud`, title: `AWS Multi-AZ Resilience`, ready: true },
+      { id: `aws-vpc`, title: `AWS VPC & Network Security`, ready: true },
+      { id: `aws-ha`, title: `High Availability & Auto Scaling`, ready: true },
+      { id: `aws-storage-db`, title: `AWS Storage & Database Tiering`, ready: true },
+      { id: `aws-serverless`, title: `Decoupled & Serverless`, ready: true },
     ],
   },
 ];

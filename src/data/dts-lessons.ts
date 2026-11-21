@@ -80,6 +80,7 @@ export const DTS_MODULES: Module[] = [
       { id: 'sql-nosql', title: 'SQL vs NoSQL' },
       { id: 'indexes', title: 'Indexes' },
       { id: 'storage-engines', title: 'Storage Engines' },
+      { id: 'sql-engine', title: 'PostgreSQL Query Planner & Engine' },
       { id: 'replication', title: 'Replication' },
       { id: 'sharding', title: 'Sharding' },
       { id: 'consistent-hashing', title: 'Consistent Hashing' },
@@ -121,6 +122,7 @@ export const DTS_MODULES: Module[] = [
     color: 'teal',
     lessons: [
       { id: 'microservices', title: 'Monolith vs Microservices' },
+      { id: 'java-concurrency', title: 'Java Concurrency & Thread State' },
       { id: 'service-discovery', title: 'Service Discovery' },
       { id: 'sagas', title: 'Sagas & Distributed Tx' },
       { id: 'batch-stream', title: 'Batch & Stream Processing' },
@@ -162,10 +164,14 @@ export const DTS_MODULES: Module[] = [
   {
     id: 'cloud',
     num: '10',
-    title: 'Cloud Architecture',
+    title: 'AWS Cloud Architecture (SAA-C03)',
     color: 'orange',
     lessons: [
       { id: 'aws-cloud', title: 'AWS Multi-AZ Resilience' },
+      { id: 'aws-vpc', title: 'AWS VPC & Network Security' },
+      { id: 'aws-ha', title: 'High Availability & Auto Scaling' },
+      { id: 'aws-storage-db', title: 'AWS Storage & Database Tiering' },
+      { id: 'aws-serverless', title: 'Decoupled & Serverless' },
       { id: 'architecture', title: 'Dawn Blog Architecture' },
       { id: 'system-design', title: 'Distributed Systems' },
     ],

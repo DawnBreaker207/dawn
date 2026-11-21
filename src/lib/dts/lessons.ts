@@ -22,6 +22,10 @@ import { javaConcurrencyLesson } from './lessons/specialized/java-concurrency';
 import { sqlEngineLesson } from './lessons/specialized/sql-engine';
 import { microservicesLesson } from './lessons/architecture/microservices';
 import { awsCloudLesson } from './lessons/cloud/aws-cloud';
+import { awsVpcLesson } from './lessons/cloud/aws-vpc';
+import { awsHaLesson } from './lessons/cloud/aws-ha';
+import { awsStorageDbLesson } from './lessons/cloud/aws-storage-db';
+import { awsServerlessLesson } from './lessons/cloud/aws-serverless';
 import { systemDesignLesson } from './lessons/cloud/system-design';
 import { consistentHashingLesson } from './lessons/storage/consistent-hashing';
 import { uniqueIdsLesson } from './lessons/storage/unique-ids';
@@ -68,6 +72,10 @@ export {
   sqlEngineLesson,
   microservicesLesson,
   awsCloudLesson,
+  awsVpcLesson,
+  awsHaLesson,
+  awsStorageDbLesson,
+  awsServerlessLesson,
   systemDesignLesson,
   consistentHashingLesson,
   uniqueIdsLesson,
@@ -139,8 +147,16 @@ export const ALL_DTS_LESSONS: Record<string, any> = {
   'design-news-feed': designNewsFeedLesson,
   'design-chat': designChatLesson,
   'aws-cloud': awsCloudLesson,
+  'aws-vpc': awsVpcLesson,
+  'aws-ha': awsHaLesson,
+  'aws-storage-db': awsStorageDbLesson,
+  'aws-serverless': awsServerlessLesson,
   'system-design': systemDesignLesson,
   'architecture': systemDesignLesson,
+  'sql-engine': sqlEngineLesson,
+  'sql': sqlEngineLesson,
+  'java-concurrency': javaConcurrencyLesson,
+  'java': javaConcurrencyLesson,
 };
 
 
