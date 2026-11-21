@@ -160,22 +160,45 @@ Mỗi component: cắm vào `DtsSceneRenderer` hoặc inline SVG isometric có k
 
 ## 7. Kiến Trúc Route & Phân Định Chủ Đề (Tracks & Architecture)
 
-### A. Route miêu tả Blog: `architecture` (`/lab/architecture`)
-* **Tên hiển thị:** Dawn Blog Architecture
-* **Nội dung:** Miêu tả flow thực tế của chính website này (Cloudflare Edge-First, C4 Container Model, Data Plane vs Control Plane, Zero-Trust DB).
-* **Đặc tính:** Độc lập hoàn toàn, không dùng chung dropdown bài học lý thuyết với các môn học khác.
+### A. Phân định rõ ràng: Blog Architecture vs System Design vs Microservices
+* **`architecture` (`/lab/architecture`):** Dành riêng 100% cho **Dawn Blog Architecture** (Cloudflare Edge-First, SSR + Static Astro, Neon Postgres, Zero-Trust DB, Notion Sync). Độc lập hoàn toàn, không nhồi nhét bài học lý thuyết vào đây.
+* **`System Design`:** Môn học thiết kế hệ thống tổng thể cấp cao (HLD/LLD) và các Case Studies thực tế (*URL Shortener, News Feed, Chat System, Rate Limiter*).
+* **`Microservices`:** Phong cách kiến trúc phân tán dịch vụ con (*Monolith vs Microservices, API Gateway, Service Discovery, Event-Driven Queues/Kafka, Sagas, Circuit Breakers*).
+* **`Distributed Core`:** Các nguyên lý nền tảng của hệ thống phân tán (*CAP/PACELC, Raft Consensus, Sharding, Replication, Consistent Hashing, Snowflake ID*).
 
-### B. 6 Trục Chủ Đề Giáo Trình (Curriculum Learning Tracks):
-1. **`foundations`** (`/lab/foundations`): Nền tảng mạng & Web (Request Lifecycle, Latency/Throughput, Napkin Math).
-2. **`system-design`** (`/lab/system-design`): Thiết kế hệ thống phân tán (Consistent Hashing, Caching, Rate Limiter, Message Queues, Snowflake ID, CAP/Consensus).
-3. **`cloud-aws`** (`/lab/aws-cloud`): Điện toán đám mây AWS (Route 53, ALB, ECS Fargate, SQS Queue, ElastiCache, Aurora Multi-AZ).
-4. **`microservices`** (`/lab/microservices`): Kiến trúc phân tán Microservices & Sagas (API Gateway, Sagas, Circuit Breaker).
-5. **`sql`** (`/lab/sql`): Database & Postgres Engine (B-Tree, MVCC, Buffer Pool, Partitioning, Replication, Pipeline).
-6. **`java`** (`/lab/java`): Java & Runtime Internals (Concurrency, Thread Pool, Virtual Threads, JVM Heap/GC).
+### B. Quy Hoạch 6 Cụm Chủ Đề Chuẩn (44 Bài Học Toàn Diện):
 
-### C. Quy cách Navbar & Dropdown:
-* **UI/UX chuẩn `request-lifecycle`:** Giữ nguyên 100% form dáng quen thuộc của `ArchitectureChapterPicker.astro` (trigger font-mono có icon, tên bài, badge đếm bài ▾; floating panel 320px có ô search filter và danh sách bài có dot `●` + pill trạng thái).
-* **Contextual Data Scope:** Ở trang nào thì dropdown chỉ load danh sách các bài học con thuộc riêng trang đó (3–8 bài), thay vì nhét chung toàn bộ 42 bài.
+| Cụm Chủ Đề | Trọng tâm kỹ thuật | Danh sách bài học bao gồm (44 bài) |
+|---|---|---|
+| **I. Networking & Web Scale** *(Nền tảng Mạng & Chia tải)* | Từ lúc user gõ URL đến khi request chạm server | • `request-lifecycle` (How a Request Travels)<br>• `latency-throughput` (Latency & Throughput)<br>• `napkin-math` (Capacity Calculations)<br>• `vertical-horizontal` (Scaling Dimensions)<br>• `load-balancing` (L4/L7 Algorithms)<br>• `stateless` (Stateless Architecture)<br>• `caching` (Multi-layer Caching)<br>• `cdn` (Content Delivery Networks) |
+| **II. Database & Storage Tier** *(Lưu trữ & Truy vấn dữ liệu)* | Bản chất tầng lưu trữ & index của Single Database | • `sql-nosql` (SQL vs NoSQL Trade-offs)<br>• `indexes` (B-Tree, Hash, Inverted)<br>• `storage-engines` (LSM-Tree, Page Buffer)<br>• `transactions` (ACID & Isolation Levels)<br>• `files` (Blob & Object Storage S3) |
+| **III. Distributed Systems Core** *(Nguyên lý Hệ thống phân tán)* | Bài toán đồng thuận & chia tách trên nhiều node | • `replication` (Leader-Follower, WAL sync)<br>• `sharding` (Range, Hash, Directory)<br>• `consistent-hashing` (Virtual Nodes, Ring)<br>• `unique-ids` (Snowflake, UUID v7)<br>• `cap` (Định lý CAP & PACELC)<br>• `consensus` (Raft, Paxos, Quorum) |
+| **IV. Microservices & Event-Driven** *(Kiến trúc Dịch vụ & Giao tiếp)* | Tách service, giao tiếp bất đồng bộ & phục hồi lỗi | • `microservices` (Monolith to Microservices)<br>• `service-discovery` (Registry & API Gateway)<br>• `apis` (REST, gRPC, GraphQL)<br>• `queues` (Message Queues SQS/Rabbit)<br>• `pubsub` (Event Streams & Kafka)<br>• `realtime` (WebSockets & SSE)<br>• `sagas` (Distributed Transactions & Outbox)<br>• `timeouts-retries` (Circuit Breakers)<br>• `observability` (Tracing, Metrics, Logs) |
+| **V. System Design & Case Studies** *(Thiết kế Hệ thống Thực tế)* | Ghép toàn bộ thành phần thành sản phẩm thực tế | • `hld-lld` (Phương pháp tiếp cận HLD/LLD)<br>• `design-url-shortener` (TinyURL Scale)<br>• `design-news-feed` (Twitter/FB Fanout)<br>• `design-chat` (Slack/Discord WebSockets)<br>• `batch-stream` (Lambda/Kappa Architecture)<br>• `rate-limiting` (Token Bucket, Leaky Bucket)<br>• `redundancy` (Multi-AZ Failover)<br>• `aws-cloud` (AWS Cloud Resilience) |
+| **VI. DevSecOps & Quality** *(Vận hành, An ninh & Kiểm thử)* | Bảo vệ hệ thống và quy trình phát hành | • `authentication` (JWT, Sessions, OAuth)<br>• `authorization` (RBAC, ABAC, OPA)<br>• `encryption` (At-rest, In-transit, Secrets)<br>• `testing` (Unit, Contract, E2E)<br>• `cicd` (Canary, Blue-Green, GitOps) |
+
+### C. Quy Cách Bố Trí Điều Hướng (Navbar & Sidebar Explorer):
+
+#### 1. Thanh Sidebar Explorer (Cột điều hướng bên trái):
+* **`[BLOG ARCHITECTURE]`**:
+  * `🏛️ dawn-blog.arch` (`/lab/architecture`): Kiến trúc thực tế Edge-First của Dawn Blog.
+* **`[CURRICULUM TRACKS (44 BÀI HỌC)]`**:
+  * `🌐 1. network-scale.track` (`/lab/foundations` hoặc `/lab/request-lifecycle`)
+  * `🗄️ 2. storage-tier.track` (`/lab/storage-engines` hoặc `/lab/indexes`)
+  * `⚖️ 3. distributed.track` (`/lab/consensus` hoặc `/lab/cap`)
+  * `🧩 4. microservices.track` (`/lab/microservices`)
+  * `📐 5. system-design.track` (`/lab/system-design` hoặc `/lab/hld-lld`)
+  * `🛡️ 6. devsecops.track` (`/lab/authentication`)
+* **`[DEEP-DIVE ENGINES (2 LAB ĐẶC BIỆT)]`**:
+  * `🐘 sql-engine.lab` (`/lab/sql`): Mô phỏng tương tác PostgreSQL Query Planner, B-Tree, MVCC.
+  * `☕ java-concurrency.lab` (`/lab/java`): Mô phỏng tương tác JVM Memory, Concurrency, Virtual Threads.
+* **`[SIMULATORS & EXTRAS]`**:
+  * `README.md` (`/lab`), `terminal.astro`, `pathfinding.astro`, `spider.astro`.
+
+#### 2. Thanh Chapter Picker Dropdown (Trong từng bài Lab):
+* **Header hiển thị:** `[Icon] [Tên Cụm Bài] ▾ (Số bài trong Cụm / 44)` kèm ô Search nhanh.
+* **Popup Dropdown:** Phân chia rõ ràng thành 6 Section tương ứng với 6 Cụm Chủ Đề chuẩn ở bảng trên.
+* **Item hiển thị:** Số thứ tự, Tên bài học, Badge cấp độ (`Beginner` / `Intermediate` / `Advanced`), dot chỉ báo trạng thái bài học hiện tại.
 
 ---
 
