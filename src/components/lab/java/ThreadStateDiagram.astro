@@ -1,0 +1,306 @@
+---
+// ThreadStateDiagram.astro — 2D Split Stage: Visual State Machine + Synced Code Flow Tracker
+// Listens for 'wb:step-change' from LabWorkbench to animate thread states and highlight code.
+
+interface Props {
+  initialState?: string;
+  codeSnippet?: string;
+}
+
+const {
+  initialState = 'NEW',
+  codeSnippet = `Thread t = new Thread(() -> {
+    synchronized(lock) {
+        lock.wait();        // parks in wait set
+        // critical section
+    }
+});
+t.start();                  // NEW → RUNNABLE
+// scheduler picks t        // RUNNABLE
+// lock contended           // RUNNABLE → BLOCKED
+// lock.notify() wakes t    // WAITING → BLOCKED → RUNNABLE
+// t finishes run()         // TERMINATED`,
+} = Astro.props;
+
+const lines = codeSnippet.trim().split('\n');
+---
+
+<div class="split-stage-root thread-stage-root">
+  <!-- Top: 2D Visual Stage (~60%) -->
+  <div class="visual-stage-area">
+    <div class="stage-header">
+      <span class="font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">JVM Thread State Machine</span>
+      <span class="state-badge" id="ts-badge-state">NEW</span>
+    </div>
+
+    <svg class="stage-svg" viewBox="0 0 640 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background connector grid -->
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="var(--border-hover, #71717a)" />
+        </marker>
+        <marker id="arrow-active" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="var(--accent, #e11d48)" />
+        </marker>
+      </defs>
+
+      <!-- Transition Lines -->
+      <path d="M 90 130 L 170 130" stroke="currentColor" stroke-dasharray="3 3" class="edge-line" marker-end="url(#arrow)" />
+      <path d="M 230 110 C 230 60, 310 60, 310 90" stroke="currentColor" class="edge-line" marker-end="url(#arrow)" />
+      <path d="M 330 110 C 330 60, 250 60, 250 90" stroke="currentColor" class="edge-line" marker-end="url(#arrow)" />
+      <path d="M 270 140 L 370 180" stroke="currentColor" class="edge-line" marker-end="url(#arrow)" />
+      <path d="M 370 200 L 270 150" stroke="currentColor" class="edge-line" marker-end="url(#arrow)" />
+      <path d="M 270 130 L 530 130" stroke="currentColor" class="edge-line" marker-end="url(#arrow)" />
+
+      <!-- Nodes -->
+      <!-- NEW -->
+      <g class="state-node is-active" data-state="NEW" transform="translate(40, 105)">
+        <rect width="80" height="50" rx="8" class="node-box" />
+        <text x="40" y="27" text-anchor="middle" class="node-title font-mono font-bold">NEW</text>
+        <text x="40" y="40" text-anchor="middle" class="node-sub font-mono">new Thread()</text>
+      </g>
+
+      <!-- RUNNABLE -->
+      <g class="state-node" data-state="RUNNABLE" transform="translate(180, 105)">
+        <rect width="100" height="50" rx="8" class="node-box" />
+        <text x="50" y="27" text-anchor="middle" class="node-title font-mono font-bold">RUNNABLE</text>
+        <text x="50" y="40" text-anchor="middle" class="node-sub font-mono">Ready / Running</text>
+      </g>
+
+      <!-- BLOCKED -->
+      <g class="state-node" data-state="BLOCKED" transform="translate(320, 65)">
+        <rect width="90" height="48" rx="8" class="node-box" />
+        <text x="45" y="26" text-anchor="middle" class="node-title font-mono font-bold">BLOCKED</text>
+        <text x="45" y="39" text-anchor="middle" class="node-sub font-mono">Waiting lock</text>
+      </g>
+
+      <!-- WAITING -->
+      <g class="state-node" data-state="WAITING" transform="translate(380, 160)">
+        <rect width="95" height="48" rx="8" class="node-box" />
+        <text x="47" y="26" text-anchor="middle" class="node-title font-mono font-bold">WAITING</text>
+        <text x="47" y="39" text-anchor="middle" class="node-sub font-mono">wait() / join()</text>
+      </g>
+
+      <!-- TIMED_WAITING -->
+      <g class="state-node" data-state="TIMED_WAITING" transform="translate(230, 205)">
+        <rect width="110" height="46" rx="8" class="node-box" />
+        <text x="55" y="25" text-anchor="middle" class="node-title font-mono font-bold">TIMED_WAIT</text>
+        <text x="55" y="38" text-anchor="middle" class="node-sub font-mono">sleep(ms)</text>
+      </g>
+
+      <!-- TERMINATED -->
+      <g class="state-node" data-state="TERMINATED" transform="translate(540, 105)">
+        <rect width="80" height="50" rx="8" class="node-box" />
+        <text x="40" y="27" text-anchor="middle" class="node-title font-mono font-bold">DEAD</text>
+        <text x="40" y="40" text-anchor="middle" class="node-sub font-mono">Completed</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Bottom: Code Flow Tracker (~40%) -->
+  <div class="code-tracker-area thin-scrollbar">
+    <div class="code-header">
+      <span class="font-mono text-[10px] text-(--fg-faint)">ThreadExecution.java</span>
+      <span class="font-mono text-[10px] text-(--fg-dim)" id="ts-step-hint">Step 1 — Thread created</span>
+    </div>
+    <pre class="code-pre"><code>{lines.map((line, idx) => (
+      <div class:list={['code-line', idx === 0 && 'line-active']} data-line-idx={idx}>
+        <span class="line-num">{idx + 1}</span>
+        <span class="line-content">{line}</span>
+      </div>
+    ))}</code></pre>
+  </div>
+</div>
+
+<style>
+  .split-stage-root {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 480px;
+    background: var(--bg);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .visual-stage-area {
+    flex: 1 1 58%;
+    min-height: 250px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    background: var(--bg-alt);
+  }
+
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .state-badge {
+    font-family: var(--font-mono, monospace);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  .stage-svg {
+    width: 100%;
+    height: 100%;
+    max-height: 260px;
+    display: block;
+    margin: auto;
+  }
+
+  .edge-line {
+    color: var(--border-hover, #71717a);
+    stroke-width: 1.5;
+    fill: none;
+    transition: stroke 0.25s, stroke-width 0.25s;
+  }
+
+  .node-box {
+    fill: var(--bg);
+    stroke: var(--border);
+    stroke-width: 1.5;
+    transition: all 0.25s ease;
+  }
+
+  .node-title {
+    fill: var(--fg);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .node-sub {
+    fill: var(--fg-dim);
+    font-size: 8.5px;
+  }
+
+  /* Active State Node Glow */
+  .state-node.is-active .node-box {
+    stroke: var(--accent);
+    fill: color-mix(in srgb, var(--accent) 12%, var(--bg));
+    stroke-width: 2.2;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 35%, transparent));
+  }
+
+  .state-node.is-active .node-title {
+    fill: var(--accent);
+  }
+
+  .code-tracker-area {
+    flex: 1 1 42%;
+    min-height: 180px;
+    overflow-y: auto;
+    background: var(--terminal, #121214);
+    color: var(--fg);
+    padding: 10px 14px;
+    font-family: var(--font-mono, monospace);
+  }
+
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  .code-pre {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .code-line {
+    display: flex;
+    align-items: baseline;
+    padding: 1px 6px;
+    border-radius: 4px;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .line-num {
+    width: 24px;
+    text-align: right;
+    margin-right: 12px;
+    color: var(--fg-faint);
+    user-select: none;
+    font-size: 10px;
+  }
+
+  .line-content {
+    flex: 1;
+    white-space: pre;
+  }
+
+  .code-line.line-active {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: inset 2px 0 0 var(--accent);
+    color: #ffffff;
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  function initThreadStateSync() {
+    const root = document.querySelector('.thread-stage-root');
+    if (!root) return;
+
+    const badge = root.querySelector('#ts-badge-state');
+    const hint = root.querySelector('#ts-step-hint');
+    const nodes = root.querySelectorAll<SVGGElement>('.state-node');
+    const lines = root.querySelectorAll<HTMLElement>('.code-line');
+
+    const STEP_STATE_MAP = [
+      { state: 'NEW', line: 0, text: 'Step 1 — Thread created (NEW)' },
+      { state: 'RUNNABLE', line: 6, text: 'Step 2 — start() called (RUNNABLE)' },
+      { state: 'RUNNABLE', line: 7, text: 'Step 3 — Thread executing in run() (RUNNING)' },
+      { state: 'BLOCKED', line: 8, text: 'Step 4 — Contended synchronized block (BLOCKED)' },
+      { state: 'WAITING', line: 2, text: 'Step 5 — wait() parks thread in wait set (WAITING)' },
+      { state: 'RUNNABLE', line: 9, text: 'Step 6 — notify() unparks thread (RUNNABLE)' },
+      { state: 'TERMINATED', line: 10, text: 'Step 7 — Thread run() finished (TERMINATED)' },
+    ];
+
+    const syncToStep = (idx: number) => {
+      const mapping = STEP_STATE_MAP[idx % STEP_STATE_MAP.length];
+      if (!mapping) return;
+
+      if (badge) badge.textContent = mapping.state;
+      if (hint) hint.textContent = mapping.text;
+
+      nodes.forEach((node) => {
+        const isTarget = node.dataset.state === mapping.state;
+        node.classList.toggle('is-active', isTarget);
+      });
+
+      lines.forEach((line) => {
+        const isTarget = Number(line.dataset.lineIdx) === mapping.line;
+        line.classList.toggle('line-active', isTarget);
+      });
+    };
+
+    // Listen to wb:step-change from LabWorkbench
+    const workbenchRoot = root.closest('.wb-root') || document;
+    workbenchRoot.addEventListener('wb:step-change', (e: Event) => {
+      const customEvent = e as CustomEvent<{ idx: number }>;
+      if (typeof customEvent.detail?.idx === 'number') {
+        syncToStep(customEvent.detail.idx);
+      }
+    });
+  }
+
+  initThreadStateSync();
+  document.addEventListener('astro:page-load', initThreadStateSync);
+</script>
