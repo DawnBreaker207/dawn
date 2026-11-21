@@ -129,6 +129,7 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
     position: relative;
     display: inline-flex;
     align-items: center;
+    z-index: 50;
   }
 
   .chapter-dropdown-trigger {
@@ -140,7 +141,7 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
     font-family: var(--font-mono, monospace);
     padding: 3px 9px;
     border-radius: 6px;
-    background: var(--bg);
+    background: var(--bg-alt, var(--bg));
     border: 1px solid var(--border);
     color: var(--fg);
     cursor: pointer;
@@ -150,7 +151,7 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
 
   .chapter-dropdown-trigger:hover,
   .chapter-dropdown-trigger[aria-expanded="true"] {
-    background: var(--bg-alt);
+    background: var(--bg-hover, var(--bg-alt));
     border-color: var(--accent);
     color: var(--accent);
   }
@@ -177,11 +178,11 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
     right: 0;
     width: 320px;
     max-height: 420px;
-    background: var(--bg);
+    background: var(--bg-alt, #ffffff);
     border: 1px solid var(--border);
     border-radius: 10px;
-    box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.05);
-    z-index: 1000;
+    box-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border);
+    z-index: 9999;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -205,7 +206,7 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
     gap: 8px;
     padding: 8px 12px;
     border-bottom: 1px solid var(--border);
-    background: var(--bg-alt);
+    background: var(--bg-subtle, var(--bg));
     color: var(--fg-dim);
   }
 
@@ -226,6 +227,7 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
     display: flex;
     flex-direction: column;
     gap: 6px;
+    background: var(--bg-alt, #ffffff);
   }
 
   .dropdown-module-group {
@@ -313,6 +315,10 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
     background: var(--accent);
     color: #ffffff;
     font-weight: 700;
+  }
+
+  .active-pill[hidden] {
+    display: none !important;
   }
 </style>
 

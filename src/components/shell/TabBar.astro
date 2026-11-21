@@ -9,7 +9,7 @@ const { tabs } = Astro.props;
 const active = tabs.at(-1) ?? { path: '/', label: 'README.md' };
 ---
 
-<nav class="studio-topbar flex min-h-11 shrink-0 items-stretch border-b border-(--border) bg-(--bg)">
+<nav class="studio-topbar relative z-30 flex min-h-11 shrink-0 items-stretch border-b border-(--border) bg-(--bg)">
   <button
     id="toggle-sidebar"
     type="button"
