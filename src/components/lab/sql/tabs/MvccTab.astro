@@ -1,0 +1,115 @@
+---
+import MvccVisibility from '@/components/lab/sql/MvccVisibility.astro';
+---
+
+<div data-sql-pane="mvcc" hidden>
+  <!-- Left Stage Column: Interactive MVCC Simulation -->
+  <div class="sql-stage-col thin-scrollbar space-y-4">
+    <MvccVisibility />
+  </div>
+
+  <!-- Right Guide Column: Version Chain & Isolation Levels -->
+  <div class="sql-guide-col thin-scrollbar">
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">🔓</div>
+        <div class="mt-0.5 font-bold text-emerald-500">No lock</div>
+        <div class="text-[10px] text-(--fg-faint)">on reads</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">🏷️</div>
+        <div class="mt-0.5 font-bold text-amber-500">xmin / xmax</div>
+        <div class="text-[10px] text-(--fg-faint)">per tuple</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">🧹</div>
+        <div class="mt-0.5 font-bold text-cyan-500">VACUUM</div>
+        <div class="text-[10px] text-(--fg-faint)">reclaims dead</div>
+      </div>
+    </div>
+
+    <!-- Version chain + isolation levels -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Version chain — xmin, xmax, READ COMMITTED vs REPEATABLE READ</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-4 font-mono text-xs">
+        <p class="text-[11px] text-(--fg-dim)">PostgreSQL <strong class="text-(--fg)">never overwrites a row in place</strong>. Every UPDATE writes a new version and marks the old one dead. Each transaction sees only versions that existed when its snapshot was taken.</p>
+
+        <!-- Version chain -->
+        <div class="sql-mvcc-timeline">
+          <div class="sql-mvcc-time">
+            <span>xid 99</span><span>→</span><span>xid 100 (Txn A: UPDATE)</span><span>→</span><span>xid 101 (COMMIT)</span>
+          </div>
+          <div class="sql-mvcc-chain">
+            <div class="sql-mvcc-ver sql-mvcc-dead">
+              <div class="sql-mvcc-ver-head">v1 — DEAD after commit</div>
+              <div class="sql-mvcc-ver-fields">
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-600 dark:text-amber-400">99</span></span>
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-rose-600 dark:text-rose-400">100</span></span>
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">balance 1000</span></span>
+              </div>
+            </div>
+            <div class="sql-mvcc-ver sql-mvcc-live">
+              <div class="sql-mvcc-ver-head">v2 — LIVE</div>
+              <div class="sql-mvcc-ver-fields">
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmin</span><span class="text-amber-600 dark:text-amber-400">100</span></span>
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">xmax</span><span class="text-emerald-600 dark:text-emerald-400">∞</span></span>
+                <span class="sql-mvcc-field"><span class="sql-mvcc-field-lbl">data</span><span class="text-(--fg)">balance 500</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Isolation levels -->
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="sql-explain-box" style="border-color:rgb(167 139 250/0.35)">
+            <div class="mb-1.5 flex items-center gap-1.5">
+              <span class="rounded bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-bold text-violet-600 dark:text-violet-400">READ COMMITTED</span>
+              <span class="text-[10px] text-(--fg-faint)">default</span>
+            </div>
+            <p class="text-[11px] text-(--fg-dim)">Fresh snapshot at <em>each statement</em> — same query, different result within one transaction.</p>
+            <pre class="sql-pre mt-2">BEGIN;
+SELECT balance WHERE name='Alice'; -- 1000
+-- A commits here
+SELECT balance WHERE name='Alice'; -- 500 ← non-repeatable!</pre>
+          </div>
+          <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+            <div class="mb-1.5">
+              <span class="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">REPEATABLE READ</span>
+            </div>
+            <p class="text-[11px] text-(--fg-dim)">One snapshot at <em>first statement</em> — A's commit invisible for the entire transaction.</p>
+            <pre class="sql-pre mt-2">BEGIN ISOLATION LEVEL REPEATABLE READ;
+SELECT balance WHERE name='Alice'; -- 1000
+-- A commits here
+SELECT balance WHERE name='Alice'; -- 1000 ← frozen</pre>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- psql reference -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Inspect xmin/xmax — psql queries</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 font-mono text-xs">
+        <pre class="sql-details-pre thin-scrollbar">-- Hidden system columns
+SELECT xmin, xmax, ctid, * FROM accounts WHERE name = 'Alice';
+-- xmin = xid that created this version
+-- xmax = xid that deleted/updated it  (0 = still live)
+-- ctid  = physical (page, slot) on disk
+
+-- Dead-tuple bloat monitor
+SELECT relname, n_live_tup, n_dead_tup,
+       round(100.0 * n_dead_tup / nullif(n_live_tup+n_dead_tup,0),1) AS dead_pct
+  FROM pg_stat_user_tables WHERE n_dead_tup > 1000 ORDER BY dead_pct DESC;
+
+VACUUM ANALYZE accounts; -- autovacuum does this automatically</pre>
+      </div>
+    </details>
+  </div>
+</div>

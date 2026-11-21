@@ -150,3 +150,230 @@
   flex-direction: column;
   gap: 12px;
 }
+
+
+/* ── SQL Lab Global Tab, Pre & Diagram Styles ──────────────────────────────── */
+.sql-tab {
+  border-radius: 5px; border: 1px solid var(--border);
+  background: var(--bg-alt); padding: 3px 9px;
+  font-size: 11px; font-family: var(--font-mono, monospace);
+  color: var(--fg-dim); cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  touch-action: manipulation;
+  scroll-snap-align: start;
+  min-height: 26px;
+  white-space: nowrap;
+  display: inline-flex; align-items: center;
+}
+.sql-tab:hover { color: var(--fg); border-color: var(--border-hover); }
+.sql-tab-active {
+  border-color: var(--accent); color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-weight: 600;
+}
+
+/* ── Shared visual card shell ──────────────────────────────────────────── */
+.sql-visual-card {
+  border-radius: 12px; border: 1px solid var(--border);
+  background: var(--bg-alt); padding: 16px; font-family: monospace; font-size: 12px;
+}
+.sql-visual-title {
+  font-size: 11px; font-weight: 700; color: var(--fg);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px;
+}
+.sql-explain-box {
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); padding: 10px 12px; font-size: 12px;
+}
+.sql-explain-box p, .sql-explain-box ul { margin: 0; }
+
+/* ── Seq Scan vs Index ─────────────────────────────────────────────────── */
+.sql-side { border-radius: 8px; border: 1px solid; background: var(--bg); padding: 10px 12px; }
+.sql-side-bad  { border-color: rgb(248 113 113/0.35); }
+.sql-side-good { border-color: rgb(74 222 128/0.35); }
+.sql-side-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.sql-side-note { font-size: 10px; color: var(--fg-dim); margin: 6px 0 0; line-height: 1.5; }
+.sql-side-note strong { color: var(--fg); }
+.sql-badge {
+  border-radius: 4px; padding: 1px 8px; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; border: 1px solid;
+}
+.sql-badge-bad  { border-color: rgb(220 38 38/0.5); color: #dc2626; background: rgb(220 38 38/0.08); }
+.sql-badge-good { border-color: rgb(22 163 74/0.5); color: #16a34a; background: rgb(22 163 74/0.08); }
+:where(.dark, .dark *) .sql-badge-bad  { border-color: rgb(248 113 113/0.5); color: #f87171; background: rgb(248 113 113/0.1); }
+:where(.dark, .dark *) .sql-badge-good { border-color: rgb(74 222 128/0.5); color: #4ade80; background: rgb(74 222 128/0.1); }
+.sql-code-inline { font-size: 10px; color: var(--fg-faint); }
+.sql-pre {
+  margin-top: 6px; font-size: 10px; line-height: 1.6;
+  background: var(--terminal); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 10px; color: var(--fg);
+  overflow-x: auto; white-space: pre;
+}
+:where(.dark, .dark *) .sql-pre { color: var(--fg-dim); }
+
+/* Block row for Seq Scan diagram */
+.sql-blocks-row {
+  display: flex; flex-wrap: wrap; gap: 3px; align-items: center; margin: 6px 0;
+}
+.sql-block {
+  width: 22px; height: 22px; border-radius: 3px; border: 1px solid;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+}
+.sql-block-plain  { border-color: rgb(148 163 184/0.4); background: rgb(148 163 184/0.1); color: var(--fg-faint); }
+.sql-block-target { border-color: rgb(220 38 38/0.6); background: rgb(220 38 38/0.12); color: #dc2626; }
+:where(.dark, .dark *) .sql-block-plain  { border-color: rgb(148 163 184/0.2); background: rgb(148 163 184/0.06); }
+:where(.dark, .dark *) .sql-block-target { border-color: rgb(248 113 113/0.6); background: rgb(248 113 113/0.15); color: #f87171; }
+.sql-blocks-label { font-size: 10px; color: var(--fg-faint); }
+
+/* Mini tree for Index Scan diagram */
+.sql-tree-mini { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0; }
+.sql-tree-row  { display: flex; gap: 6px; }
+.sql-tree-node { border-radius: 5px; border: 1px solid; padding: 3px 8px; font-size: 10px; text-align: center; }
+.sql-tree-root   { border-color: rgb(8 145 178/0.6); color: #0e7490; background: rgb(8 145 178/0.08); }
+.sql-tree-branch { border-color: rgb(8 145 178/0.3); color: var(--fg-dim); background: rgb(8 145 178/0.04); }
+.sql-tree-leaf       { border-color: rgb(148 163 184/0.4); color: var(--fg-faint); background: var(--bg); }
+.sql-tree-leaf-hl    { border-color: rgb(22 163 74/0.6); color: #16a34a; background: rgb(22 163 74/0.08); font-weight: 700; }
+.sql-tree-leaf-dim   { opacity: .4; }
+:where(.dark, .dark *) .sql-tree-root   { border-color: rgb(34 211 238/0.5); color: #67e8f9; background: rgb(34 211 238/0.08); }
+:where(.dark, .dark *) .sql-tree-branch { border-color: rgb(34 211 238/0.3); background: rgb(34 211 238/0.05); }
+:where(.dark, .dark *) .sql-tree-leaf       { border-color: rgb(148 163 184/0.2); }
+:where(.dark, .dark *) .sql-tree-leaf-hl    { border-color: rgb(74 222 128/0.5); color: #4ade80; background: rgb(74 222 128/0.08); }
+.sql-tree-label { font-size: 9px; color: var(--fg-faint); margin-top: 2px; }
+
+/* N+1 diagram */
+.sql-queries-viz { display: flex; flex-direction: column; gap: 2px; margin: 6px 0; }
+.sql-query-row   {
+  font-size: 10px; border-radius: 4px; border-left: 2px solid;
+  padding: 3px 8px; background: var(--bg); color: var(--fg-dim); line-height: 1.5;
+}
+.sql-query-root  { border-color: rgb(220 38 38/0.5); color: var(--fg); }
+.sql-query-root-good { border-color: rgb(22 163 74/0.5) !important; }
+.sql-query-child { border-color: rgb(220 38 38/0.3); margin-left: 12px; }
+:where(.dark, .dark *) .sql-query-root  { border-color: rgb(248 113 113/0.5); }
+:where(.dark, .dark *) .sql-query-root-good { border-color: rgb(74 222 128/0.4) !important; }
+:where(.dark, .dark *) .sql-query-child { border-color: rgb(248 113 113/0.25); }
+.sql-query-dots  { opacity: .6; }
+
+/* ── B-Tree diagram ────────────────────────────────────────────────────── */
+.sql-btree-diagram { display: flex; flex-direction: column; gap: 6px; }
+.sql-btd-level { display: flex; align-items: center; gap: 12px; }
+.sql-btd-label { font-size: 9px; color: var(--fg-faint); text-align: right; width: 60px; flex-shrink: 0; line-height: 1.4; }
+.sql-btd-sub   { color: var(--fg-faint); font-weight: 400; }
+.sql-btd-nodes { display: flex; gap: 6px; flex-wrap: wrap; }
+.sql-btd-node  {
+  border-radius: 5px; border: 1px solid; padding: 4px 10px;
+  font-size: 11px; display: flex; gap: 4px; align-items: center;
+}
+.sql-btd-root   { border-color: rgb(8 145 178/0.6); color: #0e7490; background: rgb(8 145 178/0.1); }
+.sql-btd-branch { border-color: rgb(8 145 178/0.3); color: var(--fg-dim); background: rgb(8 145 178/0.04); }
+.sql-btd-leaf   { border-color: rgb(148 163 184/0.4); color: var(--fg-faint); font-size: 10px; padding: 3px 7px; }
+.sql-btd-leaf-hl { border-color: rgb(22 163 74/0.5); color: #16a34a; background: rgb(22 163 74/0.08); }
+.sql-btd-leaves { gap: 4px; }
+.sql-btd-heap   { border-color: rgb(161 98 7/0.5); color: #92400e; background: rgb(161 98 7/0.06); font-size: 10px; line-height: 1.5; }
+.sql-btd-div    { color: rgb(148 163 184/0.5); }
+:where(.dark, .dark *) .sql-btd-root   { border-color: rgb(34 211 238/0.6); color: #67e8f9; background: rgb(34 211 238/0.1); }
+:where(.dark, .dark *) .sql-btd-branch { border-color: rgb(34 211 238/0.3); background: rgb(34 211 238/0.04); }
+:where(.dark, .dark *) .sql-btd-leaf   { border-color: rgb(148 163 184/0.2); }
+:where(.dark, .dark *) .sql-btd-leaf-hl { border-color: rgb(74 222 128/0.5); color: #4ade80; background: rgb(74 222 128/0.08); }
+:where(.dark, .dark *) .sql-btd-heap   { border-color: rgb(251 191 36/0.4); color: #fbbf24; background: rgb(251 191 36/0.06); }
+:where(.dark, .dark *) .sql-btd-div    { color: rgb(148 163 184/0.3); }
+.sql-btd-arrows { display: flex; gap: 0; padding-left: 74px; }
+.sql-btd-arrow-label { flex: 1; text-align: center; font-size: 9px; color: var(--fg-faint); }
+.sql-btd-caption { font-size: 10px; color: var(--fg-dim); line-height: 1.5; margin-top: 6px; padding-left: 74px; }
+.sql-split-demo  { display: flex; flex-direction: column; gap: 4px; }
+.sql-split-before, .sql-split-after { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sql-split-arrow { font-size: 10px; color: var(--fg-faint); }
+
+/* ── MVCC timeline ─────────────────────────────────────────────────────── */
+.sql-mvcc-timeline { display: flex; flex-direction: column; gap: 8px; }
+.sql-mvcc-time {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  font-size: 10px; color: var(--fg-faint); padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
+}
+.sql-mvcc-chain { display: flex; flex-direction: column; gap: 6px; }
+.sql-mvcc-ver {
+  border-radius: 6px; border: 1px solid; padding: 8px 12px;
+}
+.sql-mvcc-dead { border-color: rgb(220 38 38/0.35); background: var(--bg); }
+.sql-mvcc-live { border-color: rgb(22 163 74/0.35); background: var(--bg); }
+.sql-mvcc-ver-head { font-size: 10px; font-weight: 700; color: var(--fg-dim); margin-bottom: 4px; }
+.sql-mvcc-dead .sql-mvcc-ver-head { color: #dc2626; }
+.sql-mvcc-live .sql-mvcc-ver-head { color: #16a34a; }
+:where(.dark, .dark *) .sql-mvcc-dead { border-color: rgb(248 113 113/0.35); background: rgb(248 113 113/0.04); }
+:where(.dark, .dark *) .sql-mvcc-live { border-color: rgb(74 222 128/0.35); background: rgb(74 222 128/0.04); }
+:where(.dark, .dark *) .sql-mvcc-dead .sql-mvcc-ver-head { color: #f87171; }
+:where(.dark, .dark *) .sql-mvcc-live .sql-mvcc-ver-head { color: #4ade80; }
+.sql-mvcc-ver-fields { display: flex; gap: 16px; flex-wrap: wrap; }
+.sql-mvcc-field { display: flex; flex-direction: column; font-size: 10px; }
+.sql-mvcc-field-lbl { font-size: 9px; color: var(--fg-faint); text-transform: uppercase; letter-spacing: .05em; }
+.sql-vis-row { display: flex; align-items: center; gap: 6px; font-size: 10px; flex-wrap: wrap; }
+.sql-vis-step   { color: var(--fg-dim); }
+.sql-vis-arrow  { color: var(--fg-faint); }
+.sql-vis-result { border-radius: 3px; padding: 1px 6px; border: 1px solid; }
+.sql-vis-old    { border-color: rgb(220 38 38/0.4); color: #dc2626; background: rgb(220 38 38/0.08); }
+.sql-vis-new    { border-color: rgb(22 163 74/0.4); color: #16a34a; background: rgb(22 163 74/0.08); }
+:where(.dark, .dark *) .sql-vis-old    { border-color: rgb(248 113 113/0.4); color: #f87171; background: rgb(248 113 113/0.08); }
+:where(.dark, .dark *) .sql-vis-new    { border-color: rgb(74 222 128/0.4); color: #4ade80; background: rgb(74 222 128/0.08); }
+
+/* ── Infra diagram ─────────────────────────────────────────────────────── */
+.sql-pool-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.sql-pool-slot-static {
+  width: 34px; height: 34px; border-radius: 5px; border: 1px solid;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+}
+.sql-pool-used { border-color: rgb(220 38 38/0.5); color: #dc2626; background: rgb(220 38 38/0.08); }
+.sql-pool-free { border-color: rgb(22 163 74/0.4); color: #16a34a; background: rgb(22 163 74/0.04); }
+:where(.dark, .dark *) .sql-pool-used { border-color: rgb(248 113 113/0.5); color: #f87171; background: rgb(248 113 113/0.1); }
+:where(.dark, .dark *) .sql-pool-free { border-color: rgb(74 222 128/0.3); color: rgb(74 222 128/0.6); background: rgb(74 222 128/0.04); }
+.sql-bucket-diagram { display: flex; gap: 12px; align-items: flex-end; }
+.sql-bucket-visual {
+  position: relative; width: 52px; height: 80px;
+  border: 2px solid var(--border); border-radius: 4px; overflow: hidden; background: var(--bg);
+}
+.sql-bucket-fill {
+  position: absolute; bottom: 0; width: 100%;
+  background: rgb(161 98 7/0.2); border-top: 2px solid #b45309;
+  display: flex; align-items: flex-start; justify-content: center;
+}
+.sql-bucket-fill span { font-size: 12px; font-weight: 700; color: #92400e; padding-top: 2px; }
+:where(.dark, .dark *) .sql-bucket-fill { background: rgb(251 191 36/0.4); border-top-color: #fbbf24; }
+:where(.dark, .dark *) .sql-bucket-fill span { color: #fbbf24; }
+.sql-bucket-cap-label {
+  position: absolute; top: 2px; right: 4px;
+  font-size: 9px; color: var(--fg-faint);
+}
+.sql-bucket-info { display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
+
+/* Execution order styles */
+.eo-cl {
+  border-radius: 4px; padding-inline: 2px;
+  transition: background-color 0.25s, opacity 0.25s, box-shadow 0.25s;
+}
+.eo-cl:hover { background: rgb(34 211 238 / 0.12); }
+.eo-active {
+  background: rgb(34 211 238 / 0.22);
+  box-shadow: inset 0 0 0 1px rgb(34 211 238 / 0.55);
+}
+li.eo-active {
+  border-color: rgb(34 211 238 / 0.55);
+  background: rgb(34 211 238 / 0.1);
+  color: var(--fg);
+}
+.eo-done { opacity: 0.45; }
+
+/* ── Details pre blocks — use --terminal token for adaptive bg ─────────── */
+.sql-details-pre {
+  overflow-x: auto; border-radius: 6px; border: 1px solid var(--border);
+  padding: 10px 12px; font-size: 11px; line-height: 1.65;
+  white-space: pre; background: var(--terminal); color: var(--fg);
+}
+
+/* ── Accent color overrides for the explain boxes in light mode ────────── */
+.sql-explain-box strong { color: inherit; }
+.sql-side-bad  { border-color: rgb(220 38 38/0.35); }
+.sql-side-good { border-color: rgb(22 163 74/0.35); }
+:where(.dark, .dark *) .sql-side-bad  { border-color: rgb(248 113 113/0.35); }
+:where(.dark, .dark *) .sql-side-good { border-color: rgb(74 222 128/0.35); }

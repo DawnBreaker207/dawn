@@ -1,0 +1,173 @@
+---
+import BTreeTraversal from '@/components/lab/sql/BTreeTraversal.astro';
+---
+
+<div data-sql-pane="btree" hidden>
+  <!-- Left Stage Column: Interactive B-Tree Traversal -->
+  <div class="sql-stage-col thin-scrollbar space-y-4">
+    <BTreeTraversal />
+  </div>
+
+  <!-- Right Guide Column: B-Tree Anatomy & Split Mechanics -->
+  <div class="sql-guide-col thin-scrollbar">
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">🌳</div>
+        <div class="mt-0.5 font-bold text-cyan-500">≤ 4 levels</div>
+        <div class="text-[10px] text-(--fg-faint)">even at 1B rows</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">📄</div>
+        <div class="mt-0.5 font-bold text-amber-500">8 KB</div>
+        <div class="text-[10px] text-(--fg-faint)">per page</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">⚡</div>
+        <div class="mt-0.5 font-bold text-emerald-500">O(log n)</div>
+        <div class="text-[10px] text-(--fg-faint)">lookup cost</div>
+      </div>
+    </div>
+
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">B-Tree anatomy — Root → Branch → Leaf → Heap</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4">
+        <div class="sql-visual-card">
+          <p class="sql-visual-title">Anatomy of a B-Tree index</p>
+          <div class="sql-btree-diagram">
+
+            <!-- Root -->
+            <div class="sql-btd-level">
+              <div class="sql-btd-label">Root<br/><span class="sql-btd-sub">always cached</span></div>
+              <div class="sql-btd-nodes">
+                <div class="sql-btd-node sql-btd-root">
+                  <span>25</span><span class="sql-btd-div">|</span><span>60</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Branch arrows -->
+            <div class="sql-btd-arrows">
+              <span class="sql-btd-arrow-label">&lt; 25</span>
+              <span class="sql-btd-arrow-label">25–60</span>
+              <span class="sql-btd-arrow-label">&gt; 60</span>
+            </div>
+
+            <!-- Branch level -->
+            <div class="sql-btd-level">
+              <div class="sql-btd-label">Branch<br/><span class="sql-btd-sub">usually cached</span></div>
+              <div class="sql-btd-nodes">
+                <div class="sql-btd-node sql-btd-branch"><span>10</span><span class="sql-btd-div">|</span><span>18</span></div>
+                <div class="sql-btd-node sql-btd-branch"><span>35</span><span class="sql-btd-div">|</span><span>47</span></div>
+                <div class="sql-btd-node sql-btd-branch"><span>72</span><span class="sql-btd-div">|</span><span>88</span></div>
+              </div>
+            </div>
+
+            <!-- Leaf level -->
+            <div class="sql-btd-level">
+              <div class="sql-btd-label">Leaf<br/><span class="sql-btd-sub">1 real IO</span></div>
+              <div class="sql-btd-nodes sql-btd-leaves">
+                <div class="sql-btd-node sql-btd-leaf">3·7·9</div>
+                <div class="sql-btd-node sql-btd-leaf sql-btd-leaf-hl">12·<strong>15</strong>·22</div>
+                <div class="sql-btd-node sql-btd-leaf">26·31</div>
+                <div class="sql-btd-node sql-btd-leaf">…</div>
+                <div class="sql-btd-node sql-btd-leaf">…</div>
+                <div class="sql-btd-node sql-btd-leaf">…</div>
+                <div class="sql-btd-node sql-btd-leaf">…</div>
+              </div>
+            </div>
+
+            <!-- Heap -->
+            <div class="sql-btd-level">
+              <div class="sql-btd-label">Heap<br/><span class="sql-btd-sub">actual row</span></div>
+              <div class="sql-btd-nodes">
+                <div class="sql-btd-node sql-btd-heap">ctid → (page 4, slot 2)<br/>email='dawn@dev.com'</div>
+              </div>
+            </div>
+
+            <p class="sql-btd-caption">
+              Searching for key=15: Root (binary search) → branch [10|18] → leaf [12·<strong>15</strong>·22] → fetch heap row by ctid.
+              3 buffer hits. A 1-billion-row table needs just 4 levels.
+            </p>
+          </div>
+
+          <!-- Split explanation -->
+          <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.3)">
+              <strong class="text-amber-600 dark:text-amber-400">When does a node split?</strong>
+              <p class="mt-1 text-[11px] text-(--fg-dim)">A node can hold at most 2 keys (in this simulator). When a 3rd key arrives, the middle key <em>bubbles up</em> to the parent and the node splits into two.</p>
+              <div class="sql-split-demo mt-2">
+                <div class="sql-split-before">
+                  <span class="sql-btd-node sql-btd-branch" style="font-size:10px">10·<span class="text-amber-700 dark:text-amber-300">20</span>·30</span>
+                  <span class="sql-split-arrow">+25 →</span>
+                </div>
+                <div class="sql-split-after">
+                  <span class="sql-btd-node sql-btd-branch" style="font-size:10px">10·20</span>
+                  <span class="text-amber-700 dark:text-amber-300 font-mono text-[10px] px-1">↑25 to parent</span>
+                  <span class="sql-btd-node sql-btd-branch" style="font-size:10px">30</span>
+                </div>
+              </div>
+            </div>
+            <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.3)">
+              <strong class="text-cyan-600 dark:text-cyan-400">Random vs sequential keys</strong>
+              <p class="mt-1 text-[11px] text-(--fg-dim)">Random inserts split pages ~50/50 → ~70% fill factor. Sequential inserts (auto-increment IDs, timestamps) always hit the rightmost leaf → 100% fill, smaller index, but writers contend on the same hot page.</p>
+              <pre class="sql-pre mt-2">-- ✓ sequential key — compact, no splits
+CREATE TABLE events (
+  id    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  data  JSONB
+);
+
+-- ✗ UUID — random, 30% more pages, hot-page contention
+id UUID DEFAULT gen_random_uuid() PRIMARY KEY</pre>
+              <p class="mt-1.5 text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Try in the simulator: insert 1, 2, 3, 4… and compare to inserting 50, 10, 80, 30…</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Page internals, DDL reference, bloat queries</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-4 font-mono text-xs text-(--fg-dim)">
+        <pre class="sql-details-pre thin-scrollbar">        ┌───────────────────────────────────────────────┐
+        │ header: LSN · high key · right-link → sibling │
+        ├───────────────────────────────────────────────┤
+ ptr →  │ ItemId 1 · ItemId 2 · ItemId 3 …   (grow down)│
+        │                  … free space …               │
+        │              (tuples grow up)                 │
+        │ ██ key+TID ██ ██ key+TID ██ ██ key+TID ██     │
+        └───────────────────────────────────────────────┘
+        internal page: ‹pointer · key› pairs — leaf adds the heap TID</pre>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+            <strong class="text-cyan-600 dark:text-cyan-400">Lehman-Yao B-link tree</strong>
+            <p class="mt-1">Every page carries a High Key + right-sibling pointer. A reader that descends and finds itself past the High Key just follows the sibling link — no re-descent, no full-path latch. That is the source of PostgreSQL's high-concurrency index claim.</p>
+          </div>
+          <div class="rounded-lg border border-(--border) bg-(--bg) p-3">
+            <strong class="text-cyan-600 dark:text-cyan-400">TID, HOT & index bloat</strong>
+            <p class="mt-1">UPDATE on an indexed column inserts a new entry into every index. If no indexed column changed and the new version fits on the same heap page → HOT update: the index still points at the old TID and follows the chain. Bloat = dead index tuples — <code>REINDEX</code> / <code>pg_repack</code> reclaim space.</p>
+          </div>
+        </div>
+        <pre class="sql-details-pre thin-scrollbar">-- Partial index — only rows you actually query
+CREATE INDEX idx_orders_pending ON orders (created_at) WHERE status = 'pending';
+
+-- Covering index — skip heap fetch entirely
+CREATE INDEX idx_orders_cov ON orders (customer_id) INCLUDE (total_usd, status);
+
+-- Multi-column (left-most prefix rule applies)
+CREATE INDEX idx_logs_user_ts ON logs (user_id, created_at DESC);
+
+-- Check usage & bloat
+SELECT indexname, idx_scan FROM pg_stat_user_indexes WHERE relname = 'orders';
+SELECT relname, n_dead_tup FROM pg_stat_user_tables WHERE n_dead_tup > 10000;</pre>
+      </div>
+    </details>
+  </div>
+</div>

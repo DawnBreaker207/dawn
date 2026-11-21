@@ -1,0 +1,191 @@
+---
+import InfraTools from '@/components/lab/sql/InfraTools.astro';
+---
+
+<div data-sql-pane="infra" hidden>
+  <!-- Left Stage Column: Interactive Connection Pool & Token Bucket -->
+  <div class="sql-stage-col thin-scrollbar space-y-4">
+    <InfraTools />
+  </div>
+
+  <!-- Right Guide Column: Pool Sizing & Rate Limiting Theory -->
+  <div class="sql-guide-col thin-scrollbar">
+    <!-- Concept strip -->
+    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">🔄</div>
+        <div class="mt-0.5 font-bold text-cyan-500">Pool</div>
+        <div class="text-[10px] text-(--fg-faint)">reuse N conns</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">🪣</div>
+        <div class="mt-0.5 font-bold text-amber-500">Bucket</div>
+        <div class="text-[10px] text-(--fg-faint)">burst → drop</div>
+      </div>
+      <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+        <div class="text-base">⚙️</div>
+        <div class="mt-0.5 font-bold text-emerald-500">HikariCP</div>
+        <div class="text-[10px] text-(--fg-faint)">cores×2 + disks</div>
+      </div>
+    </div>
+
+    <!-- Theory: Connection Pool -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Connection Pool — why and how</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="space-y-2 text-[11px] text-(--fg-dim)">
+            <p>Opening a DB connection is <strong class="text-(--fg)">expensive</strong>: TCP 3-way handshake → TLS negotiation → PostgreSQL auth → server allocates backend process (~5 MB). Total: <strong class="text-rose-400">10–50 ms per connection</strong>.</p>
+            <p>A pool keeps <code class="text-cyan-400">N</code> connections open permanently. App threads <em>borrow</em> a slot, run their query, and return it. No new TCP connection per request.</p>
+            <div class="rounded-lg border border-cyan-500/25 bg-cyan-950/10 p-2.5">
+              <p class="mb-1 text-[10px] font-semibold text-cyan-400">Pool sizing formula (HikariCP)</p>
+              <pre class="text-[10px] text-cyan-300">{`pool_size = (core_count × 2) + disk_spindles
+
+4 cores, SSD (1 spindle):  (4 × 2) + 1 = 9
+8 cores, SSD:              (8 × 2) + 1 = 17
+4 cores, 4 HDD spindles:   (4 × 2) + 4 = 12`}</pre>
+              <p class="mt-1.5 text-[10px] text-(--fg-faint)">Counter-intuitive: bigger pool ≠ faster. PostgreSQL processes compete for CPU and lock tables. Beyond the formula you get context-switch overhead.</p>
+            </div>
+          </div>
+          <div class="space-y-2 text-[11px] text-(--fg-dim)">
+            <p><strong class="text-(--fg)">What happens when pool is full:</strong></p>
+            <div class="rounded-lg border border-(--border) bg-(--bg) p-2.5 space-y-1 text-[10px]">
+              <div class="flex gap-2"><span class="text-amber-400">1.</span><span>New request waits in queue up to <code>connectionTimeout</code> (3 s default)</span></div>
+              <div class="flex gap-2"><span class="text-rose-400">2.</span><span>Timeout → <code>SQLTimeoutException</code> thrown to caller</span></div>
+              <div class="flex gap-2"><span class="text-(--fg-faint)">→</span><span>This is <strong class="text-rose-400">pool exhaustion</strong> — symptom of too many slow queries or pool too small</span></div>
+            </div>
+            <div class="rounded-lg border border-(--border) bg-(--bg) p-2.5">
+              <p class="mb-1 text-[10px] font-semibold text-(--fg-faint)">PgBouncer pooling modes</p>
+              <div class="space-y-0.5 text-[10px]">
+                <div><span class="text-cyan-400 w-28 inline-block">Session</span><span class="text-(--fg-dim)">1 conn per client session (safest)</span></div>
+                <div><span class="text-amber-400 w-28 inline-block">Transaction</span><span class="text-(--fg-dim)">1 conn per txn (most efficient — recommended)</span></div>
+                <div><span class="text-rose-400 w-28 inline-block">Statement</span><span class="text-(--fg-dim)">1 conn per statement (breaks txns — avoid)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Theory: Token Bucket -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Token Bucket — rate limiting algorithm</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 space-y-3 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="space-y-2 text-[11px] text-(--fg-dim)">
+            <p>The token bucket is the dominant rate-limiting algorithm. It allows <strong class="text-(--fg)">bursting</strong> up to capacity while enforcing a <strong class="text-(--fg)">sustained average</strong> equal to the fill rate.</p>
+            <div class="rounded-lg border border-amber-500/25 bg-amber-950/10 p-2.5">
+              <p class="mb-1 text-[10px] font-semibold text-amber-400">Algorithm</p>
+              <pre class="text-[10px] text-amber-300">{`state = { tokens: capacity, last_refill: now() }
+
+on each request:
+  elapsed = now() - state.last_refill
+  state.tokens = min(capacity,
+    state.tokens + elapsed × fill_rate)
+  state.last_refill = now()
+  if state.tokens >= 1:
+    state.tokens -= 1
+    return ALLOW
+  else:
+    return DENY (HTTP 429)`}</pre>
+            </div>
+          </div>
+          <div class="space-y-2 text-[11px] text-(--fg-dim)">
+            <p><strong class="text-(--fg)">Why this works:</strong></p>
+            <div class="rounded-lg border border-(--border) bg-(--bg) p-2.5 space-y-1.5 text-[10px]">
+              <div><span class="text-emerald-400">Burst:</span> <span>capacity=20 → first 20 requests pass instantly even if fill_rate=5/s</span></div>
+              <div><span class="text-amber-400">Sustained:</span> <span>after burst, only 5 req/s allowed — excess dropped</span></div>
+              <div><span class="text-rose-400">Penalty-free idle:</span> <span>bucket refills during quiet periods — burst credit accumulates</span></div>
+            </div>
+            <div class="rounded-lg border border-(--border) bg-(--bg) p-2.5">
+              <p class="mb-1 text-[10px] font-semibold text-(--fg-faint)">Comparison: alternatives</p>
+              <div class="space-y-0.5 text-[10px]">
+                <div><span class="text-(--fg) w-28 inline-block">Fixed Window</span><span class="text-(--fg-dim)">simple but boundary-burst problem</span></div>
+                <div><span class="text-(--fg) w-28 inline-block">Sliding Window</span><span class="text-(--fg-dim)">accurate, expensive (log per request)</span></div>
+                <div><span class="text-amber-400 w-28 inline-block">Token Bucket</span><span class="text-(--fg-dim)">O(1) state, allows burst — industry standard</span></div>
+                <div><span class="text-(--fg) w-28 inline-block">Leaky Bucket</span><span class="text-(--fg-dim)">constant output rate, no burst absorption</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Pool + Token bucket explanation -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Connection pool &amp; token bucket — how they work</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+            <div class="mb-1.5"><span class="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">Connection Pool</span></div>
+            <p class="text-[11px] text-(--fg-dim)">Opening a DB connection costs ~10–50 ms (TCP + auth + SSL). A pool keeps N connections open and <em>reuses</em> them — workers borrow a slot, run the query, return it.</p>
+            <div class="sql-pool-diagram mt-3">
+              <div class="sql-pool-row">
+                {Array.from({length:5}).map((_, i) => (
+                  <div class:list={["sql-pool-slot-static", i < 3 ? "sql-pool-used" : "sql-pool-free"]}>
+                    {i < 3 ? "W" + (i+1) : "—"}
+                  </div>
+                ))}
+              </div>
+              <p class="text-[10px] text-(--fg-faint) mt-1">Pool 5 · 3 active · 2 free</p>
+            </div>
+            <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-rose-500/40 pl-2">All slots taken → requests queue → timeout. That is pool exhaustion.</p>
+          </div>
+          <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
+            <div class="mb-1.5"><span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">Token Bucket</span></div>
+            <p class="text-[11px] text-(--fg-dim)">Bucket holds up to <em>capacity</em> tokens, refills at <em>fill rate</em>/s. Each request consumes 1 token. Empty bucket → request dropped.</p>
+            <div class="sql-bucket-diagram mt-3">
+              <div class="sql-bucket-visual">
+                <div class="sql-bucket-fill" style="height:60%"><span>12</span></div>
+                <div class="sql-bucket-cap-label">20</div>
+              </div>
+              <div class="sql-bucket-info text-[10px] text-(--fg-dim)">
+                <div>Capacity: 20 tokens</div>
+                <div class="text-emerald-600 dark:text-emerald-400">Fill: +5 tok/s</div>
+                <div class="text-rose-600 dark:text-rose-400">Requests: 8 req/s</div>
+                <div class="text-amber-600 dark:text-amber-400">→ 3 req/s dropped</div>
+              </div>
+            </div>
+            <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Burst up to capacity is absorbed. Sustained above fill rate always drops.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Config reference -->
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold">Config reference — HikariCP &amp; Express rate-limit</span>
+        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-(--border) p-4 font-mono text-xs">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <p class="mb-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">HikariCP (Spring Boot)</p>
+            <pre class="sql-details-pre thin-scrollbar">spring.datasource.hikari.maximum-pool-size=20
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.connection-timeout=3000
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.max-lifetime=1800000
+
+# Rule: pool = (cores × 2) + disk spindles
+# 4 cores, SSD → ~10 is usually optimal</pre>
+          </div>
+          <div>
+            <p class="mb-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">express-rate-limit (Node.js)</p>
+            <pre class="sql-details-pre thin-scrollbar">{"import rateLimit from 'express-rate-limit';\napp.use('/api/', rateLimit({\n  windowMs: 1000, max: 10,\n  standardHeaders: true,\n  handler: (_req, res) =>\n    res.status(429).json({ error: 'rate limited' })\n}));\n// HTTP 429 + Retry-After header"}</pre>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
