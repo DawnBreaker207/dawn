@@ -1,0 +1,332 @@
+---
+// BTreeDiagram.astro — 2D Split Stage: B-Tree Index Hierarchy + Descent Code Flow Tracker
+// Visualizes Root (level 0) → Internal (level 1) → Leaves (level 2) with search key descent.
+
+interface Props {
+  initialSearchKey?: number;
+}
+
+const { initialSearchKey = 42 } = Astro.props;
+
+const btreeCode = [
+  'Page root = bufferPool.getPage(index.rootPageId); // Level 0',
+  'Page branch = binarySearchKeys(root, targetKey);   // Level 1: internal branch',
+  'Page leaf = binarySearchKeys(branch, targetKey);   // Level 2: leaf page',
+  'Tuple tuple = leaf.findRowPointer(targetKey);      // Heap TID (block, offset)',
+  'Row row = heap.fetchRow(tuple.tid);                // 1 Heap IO fetch'
+];
+---
+
+<div class="split-stage-root btree-stage-root">
+  <!-- Top: 2D Visual Stage (~60%) -->
+  <div class="visual-stage-area">
+    <div class="stage-header">
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">B-Tree Index Hierarchy</span>
+        <span class="state-badge" id="bt-badge-status">ROOT CACHED</span>
+      </div>
+      <div class="flex items-center gap-2 font-mono text-[11px]">
+        <span class="text-(--fg-dim)">Target key:</span>
+        <div class="flex items-center gap-1">
+          <button type="button" class="bt-key-btn is-active" data-key="42">id=42</button>
+          <button type="button" class="bt-key-btn" data-key="15">id=15</button>
+          <button type="button" class="bt-key-btn" data-key="80">id=80</button>
+        </div>
+      </div>
+    </div>
+
+    <svg class="stage-svg" viewBox="0 0 680 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="bt-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="var(--border-hover, #71717a)" />
+        </marker>
+        <marker id="bt-arrow-hl" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="var(--accent, #06b6d4)" />
+        </marker>
+      </defs>
+
+      <!-- Level 0: Root Page -->
+      <g class="tree-node is-active" id="bt-node-root" transform="translate(290, 15)">
+        <rect width="100" height="40" rx="6" class="node-box" />
+        <text x="50" y="18" text-anchor="middle" class="node-title font-mono font-bold">Root (Page 0)</text>
+        <text x="50" y="32" text-anchor="middle" class="node-keys font-mono font-semibold text-cyan-500">25 | 60</text>
+      </g>
+
+      <!-- Connectors: Root to Branches -->
+      <path id="bt-edge-left" d="M 310 55 L 170 85" stroke="currentColor" class="tree-edge" marker-end="url(#bt-arrow)" />
+      <path id="bt-edge-mid" d="M 340 55 L 340 85" stroke="currentColor" class="tree-edge is-active" marker-end="url(#bt-arrow-hl)" />
+      <path id="bt-edge-right" d="M 370 55 L 510 85" stroke="currentColor" class="tree-edge" marker-end="url(#bt-arrow)" />
+
+      <!-- Level 1: Internal Branches -->
+      <g class="tree-node" id="bt-node-b1" transform="translate(120, 85)">
+        <rect width="100" height="38" rx="6" class="node-box" />
+        <text x="50" y="16" text-anchor="middle" class="node-sub font-mono">Branch &lt;25</text>
+        <text x="50" y="30" text-anchor="middle" class="node-keys font-mono">10 | 18</text>
+      </g>
+      <g class="tree-node is-active" id="bt-node-b2" transform="translate(290, 85)">
+        <rect width="100" height="38" rx="6" class="node-box" />
+        <text x="50" y="16" text-anchor="middle" class="node-sub font-mono">Branch 25–60</text>
+        <text x="50" y="30" text-anchor="middle" class="node-keys font-mono font-semibold text-cyan-500">35 | 47</text>
+      </g>
+      <g class="tree-node" id="bt-node-b3" transform="translate(460, 85)">
+        <rect width="100" height="38" rx="6" class="node-box" />
+        <text x="50" y="16" text-anchor="middle" class="node-sub font-mono">Branch &gt;60</text>
+        <text x="50" y="30" text-anchor="middle" class="node-keys font-mono">72 | 88</text>
+      </g>
+
+      <!-- Connectors: Mid branch to Leaves -->
+      <path id="bt-edge-leaf-1" d="M 310 123 L 260 155" stroke="currentColor" class="tree-edge" marker-end="url(#bt-arrow)" />
+      <path id="bt-edge-leaf-2" d="M 340 123 L 340 155" stroke="currentColor" class="tree-edge is-active" marker-end="url(#bt-arrow-hl)" />
+      <path id="bt-edge-leaf-3" d="M 370 123 L 420 155" stroke="currentColor" class="tree-edge" marker-end="url(#bt-arrow)" />
+
+      <!-- Level 2: Leaf Pages -->
+      <g class="tree-node" id="bt-leaf-1" transform="translate(40, 155)">
+        <rect width="80" height="36" rx="6" class="node-box" />
+        <text x="40" y="22" text-anchor="middle" class="node-keys font-mono">3 · 7 · 9</text>
+      </g>
+      <g class="tree-node" id="bt-leaf-2" transform="translate(130, 155)">
+        <rect width="90" height="36" rx="6" class="node-box" />
+        <text x="45" y="22" text-anchor="middle" class="node-keys font-mono">12 · 15 · 22</text>
+      </g>
+      <g class="tree-node" id="bt-leaf-3" transform="translate(230, 155)">
+        <rect width="80" height="36" rx="6" class="node-box" />
+        <text x="40" y="22" text-anchor="middle" class="node-keys font-mono">26 · 31</text>
+      </g>
+      <g class="tree-node is-active" id="bt-leaf-4" transform="translate(320, 155)">
+        <rect width="90" height="36" rx="6" class="node-box" />
+        <text x="45" y="22" text-anchor="middle" class="node-keys font-mono font-bold text-cyan-500">38 · [42] · 45</text>
+      </g>
+      <g class="tree-node" id="bt-leaf-5" transform="translate(420, 155)">
+        <rect width="80" height="36" rx="6" class="node-box" />
+        <text x="40" y="22" text-anchor="middle" class="node-keys font-mono">50 · 55</text>
+      </g>
+      <g class="tree-node" id="bt-leaf-6" transform="translate(510, 155)">
+        <rect width="80" height="36" rx="6" class="node-box" />
+        <text x="40" y="22" text-anchor="middle" class="node-keys font-mono">65 · 70</text>
+      </g>
+      <g class="tree-node" id="bt-leaf-7" transform="translate(600, 155)">
+        <rect width="70" height="36" rx="6" class="node-box" />
+        <text x="35" y="22" text-anchor="middle" class="node-keys font-mono">75 · 80</text>
+      </g>
+
+      <!-- Leaf Bidirectional Pointers (prev/next) -->
+      <path d="M 120 173 L 130 173" stroke="currentColor" stroke-dasharray="2 2" class="leaf-link" />
+      <path d="M 220 173 L 230 173" stroke="currentColor" stroke-dasharray="2 2" class="leaf-link" />
+      <path d="M 310 173 L 320 173" stroke="currentColor" stroke-dasharray="2 2" class="leaf-link" />
+      <path d="M 410 173 L 420 173" stroke="currentColor" stroke-dasharray="2 2" class="leaf-link" />
+      <path d="M 500 173 L 510 173" stroke="currentColor" stroke-dasharray="2 2" class="leaf-link" />
+      <path d="M 590 173 L 600 173" stroke="currentColor" stroke-dasharray="2 2" class="leaf-link" />
+    </svg>
+  </div>
+
+  <!-- Bottom: Synced Code Flow Tracker (~40%) -->
+  <div class="code-flow-tracker">
+    <div class="tracker-header">
+      <span class="font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">B-Tree Traversal Execution Trace</span>
+      <span class="text-[10px] text-cyan-400 font-mono" id="bt-status-desc">Target key 42 found in Leaf Page 4 at TID (14, 2)</span>
+    </div>
+    <div class="code-lines-container font-mono text-xs">
+      {btreeCode.map((line, idx) => (
+        <div class={`code-line ${idx === 2 ? 'is-active' : ''}`} data-line-idx={idx}>
+          <span class="line-num select-none">{idx + 1}</span>
+          <span class="line-content">{line}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupBTreeDiagram() {
+    const root = document.querySelector('.btree-stage-root');
+    if (!root) return;
+
+    const keyBtns = root.querySelectorAll<HTMLButtonElement>('.bt-key-btn');
+    const badge = root.querySelector('#bt-badge-status');
+    const desc = root.querySelector('#bt-status-desc');
+
+    const nodeB1 = root.querySelector('#bt-node-b1');
+    const nodeB2 = root.querySelector('#bt-node-b2');
+    const nodeB3 = root.querySelector('#bt-node-b3');
+    const edgeLeft = root.querySelector('#bt-edge-left');
+    const edgeMid = root.querySelector('#bt-edge-mid');
+    const edgeRight = root.querySelector('#bt-edge-right');
+
+    const leaf2 = root.querySelector('#bt-leaf-2');
+    const leaf4 = root.querySelector('#bt-leaf-4');
+    const leaf7 = root.querySelector('#bt-leaf-7');
+
+    function selectKey(key: string) {
+      keyBtns.forEach(btn => btn.classList.toggle('is-active', btn.dataset.key === key));
+
+      // Reset active states
+      [nodeB1, nodeB2, nodeB3, leaf2, leaf4, leaf7].forEach(el => el?.classList.remove('is-active'));
+      [edgeLeft, edgeMid, edgeRight].forEach(el => {
+        el?.classList.remove('is-active');
+        el?.setAttribute('marker-end', 'url(#bt-arrow)');
+      });
+
+      if (key === '15') {
+        nodeB1?.classList.add('is-active');
+        edgeLeft?.classList.add('is-active');
+        edgeLeft?.setAttribute('marker-end', 'url(#bt-arrow-hl)');
+        leaf2?.classList.add('is-active');
+        badge && (badge.textContent = 'BRANCH <25');
+        desc && (desc.textContent = 'Target key 15 found in Leaf Page 2 at TID (4, 1)');
+      } else if (key === '80') {
+        nodeB3?.classList.add('is-active');
+        edgeRight?.classList.add('is-active');
+        edgeRight?.setAttribute('marker-end', 'url(#bt-arrow-hl)');
+        leaf7?.classList.add('is-active');
+        badge && (badge.textContent = 'BRANCH >60');
+        desc && (desc.textContent = 'Target key 80 found in Leaf Page 7 at TID (28, 4)');
+      } else {
+        nodeB2?.classList.add('is-active');
+        edgeMid?.classList.add('is-active');
+        edgeMid?.setAttribute('marker-end', 'url(#bt-arrow-hl)');
+        leaf4?.classList.add('is-active');
+        badge && (badge.textContent = 'BRANCH 25–60');
+        desc && (desc.textContent = 'Target key 42 found in Leaf Page 4 at TID (14, 2)');
+      }
+    }
+
+    keyBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectKey(btn.dataset.key || '42');
+      });
+    });
+
+    document.addEventListener('wb:step-change', ((e: CustomEvent) => {
+      const stepIdx = e.detail?.index ?? 0;
+      const lines = root.querySelectorAll('.code-line');
+      lines.forEach((l, idx) => {
+        l.classList.toggle('is-active', idx === (stepIdx % lines.length));
+      });
+    }) as EventListener);
+  }
+
+  document.addEventListener('astro:page-load', setupBTreeDiagram);
+  setupBTreeDiagram();
+</script>
+
+<style>
+  .split-stage-root {
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-alt);
+    overflow: hidden;
+  }
+  .visual-stage-area {
+    padding: 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .stage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .state-badge {
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-family: monospace;
+    font-weight: 700;
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+  }
+  .bt-key-btn {
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-alt);
+    color: var(--fg-dim);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .bt-key-btn:hover {
+    color: var(--fg);
+  }
+  .bt-key-btn.is-active {
+    background: #06b6d4;
+    color: #09090b;
+    border-color: #06b6d4;
+    font-weight: 700;
+  }
+  .stage-svg {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+  }
+  .tree-edge {
+    stroke-width: 1.5;
+    stroke: var(--border-hover, #71717a);
+    transition: all 0.25s ease;
+  }
+  .tree-edge.is-active {
+    stroke: #06b6d4;
+    stroke-width: 2;
+  }
+  .leaf-link {
+    stroke: var(--fg-faint);
+    stroke-width: 1;
+  }
+  .node-box {
+    fill: var(--bg-alt);
+    stroke: var(--border);
+    stroke-width: 1.5;
+    transition: all 0.25s ease;
+  }
+  .tree-node.is-active .node-box {
+    stroke: #06b6d4;
+    fill: rgba(6, 182, 212, 0.1);
+  }
+  .node-title {
+    fill: var(--fg);
+    font-size: 10px;
+  }
+  .node-sub {
+    fill: var(--fg-faint);
+    font-size: 8.5px;
+  }
+  .node-keys {
+    fill: var(--fg);
+    font-size: 10px;
+  }
+  .tree-node.is-active .node-keys {
+    fill: #06b6d4;
+  }
+  .code-flow-tracker {
+    background: var(--terminal, #18181b);
+    padding: 12px 16px;
+  }
+  .tracker-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 6px;
+  }
+  .code-line {
+    display: flex;
+    gap: 12px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    color: var(--fg-dim);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .code-line.is-active {
+    background: rgba(6, 182, 212, 0.15);
+    color: #22d3ee;
+    font-weight: 600;
+  }
+  .line-num {
+    color: var(--fg-faint);
+    width: 20px;
+    text-align: right;
+  }
+</style>

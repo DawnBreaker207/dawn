@@ -1,10 +1,12 @@
 ---
 import MvccVisibility from '@/components/lab/sql/MvccVisibility.astro';
+import MvccTimeline from '@/components/lab/sql/MvccTimeline.astro';
 ---
 
 <div data-sql-pane="mvcc" hidden>
-  <!-- Left Stage Column: Interactive MVCC Simulation -->
+  <!-- Left Stage Column: Interactive MVCC Simulation & 2D Temporal Swimlanes -->
   <div class="sql-stage-col thin-scrollbar space-y-4">
+    <MvccTimeline />
     <MvccVisibility />
   </div>
 

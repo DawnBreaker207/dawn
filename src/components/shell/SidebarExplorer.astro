@@ -239,48 +239,66 @@ const inPostDetail =
 
   <nav class="tree-children space-y-0.5 py-1">
     <div class="px-2 pt-1 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
-      <span>Architecture</span>
-      <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--accent)">41 labs</span>
+      <span>Blog Architecture</span>
+      <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--accent)">Edge-First</span>
+    </div>
+    <a
+      href="/lab/architecture"
+      class:list={['explorer-row no-underline font-medium', activePath === '/lab/architecture' && 'is-active']}
+      aria-current={activePath === '/lab/architecture' ? 'page' : undefined}
+      title="Dawn Blog actual deployment architecture"
+    >
+      <span class="explorer-caret" aria-hidden="true"></span>
+      <span class="explorer-icon text-xs leading-none mr-0.5">🏛️</span>
+      <span class="row-label truncate">dawn-blog.arch</span>
+    </a>
+
+    <div class="px-2 pt-2.5 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
+      <span>Curriculum Tracks</span>
+      <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--fg-dim)">44 labs</span>
     </div>
     {[
-      ['/lab/request-lifecycle', 'request-lifecycle.arch', '🌐'],
-      ['/lab/request-lifecycle#load-balancing', 'load-balancing.arch', '⚖️'],
-      ['/lab/request-lifecycle#caching', 'caching-cdn.arch', '⚡'],
-      ['/lab/request-lifecycle#sharding', 'sharding-storage.arch', '🗄️'],
-      ['/lab/microservices', 'microservices.arch', '🧩'],
-      ['/lab/aws-cloud', 'aws-cloud.arch', '☁️'],
-    ].map(([href, label, emoji]) => (
+      ['/lab/foundations', 'foundations.track', '🌐', 'Networking & Request Lifecycle (8 labs)'],
+      ['/lab/system-design', 'system-design.track', '⚖️', 'Distributed Systems & Data (26 labs)'],
+      ['/lab/microservices', 'microservices.track', '🧩', 'Monolith to Microservices (3 labs)'],
+      ['/lab/aws-cloud', 'cloud-aws.track', '☁️', 'AWS Cloud & Reliability (7 labs)'],
+    ].map(([href, label, emoji, title]) => (
       <a
         href={href}
-        class:list={['explorer-row no-underline font-medium', activePath === href && 'is-active']}
+        class:list={['explorer-row no-underline font-medium', (activePath === href || (href === '/lab/foundations' && activePath === '/lab/request-lifecycle')) && 'is-active']}
         aria-current={activePath === href ? 'page' : undefined}
+        title={title}
       >
         <span class="explorer-caret" aria-hidden="true"></span>
         <span class="explorer-icon text-xs leading-none mr-0.5">{emoji}</span>
         <span class="row-label truncate">{label}</span>
       </a>
     ))}
-    <button
-      type="button"
-      id="sidebar-btn-all-chapters"
-      onclick="event.stopPropagation(); const btn = document.getElementById('btn-chapter-dropdown'); if (btn) { btn.click(); } else { window.location.href = '/lab/request-lifecycle'; }"
-      class="explorer-row w-full text-left bg-transparent border-0 cursor-pointer font-medium text-(--accent) hover:text-(--accent) transition-colors"
-      title="Open the full 41-chapter Architecture Knowledge Map"
-    >
-      <span class="explorer-caret" aria-hidden="true"></span>
-      <span class="explorer-icon text-xs leading-none mr-0.5">📚</span>
-      <span class="row-label truncate font-mono text-[11px]">track-chapters.map ↗</span>
-    </button>
 
     <div class="px-2 pt-2.5 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80">
-      Algorithms & Extras
+      Interactive Engines
+    </div>
+    {[
+      ['/lab/sql', 'sql-engine.lab', '🗄️', 'PostgreSQL Query Planner, B-Tree, MVCC'],
+      ['/lab/java', 'java-concurrency.lab', '☕', 'JVM Memory, Concurrency & Virtual Threads'],
+    ].map(([href, label, emoji, title]) => (
+      <a
+        href={href}
+        class:list={['explorer-row no-underline font-medium', activePath === href && 'is-active']}
+        aria-current={activePath === href ? 'page' : undefined}
+        title={title}
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon text-xs leading-none mr-0.5">{emoji}</span>
+        <span class="row-label truncate">{label}</span>
+      </a>
+    ))}
+
+    <div class="px-2 pt-2.5 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80">
+      Simulators & Extras
     </div>
     {[
       ['/lab', 'README.md', 'markdown'],
-      ['/lab/sql', 'sql.astro', 'astro'],
-      ['/lab/java', 'java.astro', 'astro'],
-      ['/lab/architecture', 'architecture.astro', 'astro'],
-      ['/lab/system-design', 'system-design.astro', 'astro'],
       ['/lab/terminal', 'terminal.astro', 'astro'],
       ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
       ['/lab/spider', 'spider.astro', 'astro'],

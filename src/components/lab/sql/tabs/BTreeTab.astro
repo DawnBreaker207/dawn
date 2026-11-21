@@ -1,10 +1,12 @@
 ---
 import BTreeTraversal from '@/components/lab/sql/BTreeTraversal.astro';
+import BTreeDiagram from '@/components/lab/sql/BTreeDiagram.astro';
 ---
 
 <div data-sql-pane="btree" hidden>
-  <!-- Left Stage Column: Interactive B-Tree Traversal -->
+  <!-- Left Stage Column: Interactive B-Tree Traversal & 2D Hierarchy Diagram -->
   <div class="sql-stage-col thin-scrollbar space-y-4">
+    <BTreeDiagram />
     <BTreeTraversal />
   </div>
 

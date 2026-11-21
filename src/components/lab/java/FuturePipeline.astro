@@ -1,0 +1,296 @@
+---
+// FuturePipeline.astro — 2D Split Stage: CompletableFuture Horizontal Pipeline + Exception Branch
+// Listens for 'wb:step-change' from LabWorkbench or scenario buttons to animate pipeline flow.
+
+interface Props {
+  initialScenario?: 'success' | 'exception';
+}
+
+const { initialScenario = 'success' } = Astro.props;
+
+const successCode = [
+  'CompletableFuture.supplyAsync(() -> fetchOrder(id), pool)',
+  '  .thenApply(order -> enrichInventory(order))',
+  '  .thenApply(order -> calculateDiscount(order))',
+  '  .thenAccept(invoice -> sendInvoice(invoice));'
+];
+
+const exceptionCode = [
+  'CompletableFuture.supplyAsync(() -> fetchOrder(id), pool)',
+  '  .thenApply(order -> chargePayment(order)) // Throws TimeoutException!',
+  '  .exceptionally(ex -> fallbackCashOnDelivery(ex))',
+  '  .thenAccept(order -> notifyCustomer(order));'
+];
+---
+
+<div class="split-stage-root future-stage-root">
+  <!-- Top: 2D Visual Stage (~60%) -->
+  <div class="visual-stage-area">
+    <div class="stage-header">
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">CompletableFuture Pipeline</span>
+        <span class="state-badge" id="fp-badge-scenario">SUCCESS FLOW</span>
+      </div>
+      <div class="scenario-toggles flex items-center gap-1 font-mono text-[10px]">
+        <button type="button" class="scenario-btn is-active" data-scenario="success">Normal (Happy Path)</button>
+        <button type="button" class="scenario-btn" data-scenario="exception">Exception Handled</button>
+      </div>
+    </div>
+
+    <svg class="stage-svg" viewBox="0 0 680 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="fp-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="var(--border-hover, #71717a)" />
+        </marker>
+        <marker id="fp-arrow-active" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="var(--accent, #f59e0b)" />
+        </marker>
+        <marker id="fp-arrow-err" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="#f43f5e" />
+        </marker>
+      </defs>
+
+      <!-- Horizontal Connectors (Happy path) -->
+      <path id="fp-edge-0" d="M 140 75 L 180 75" stroke="currentColor" class="edge-line is-active" marker-end="url(#fp-arrow-active)" />
+      <path id="fp-edge-1" d="M 310 75 L 350 75" stroke="currentColor" class="edge-line is-active" marker-end="url(#fp-arrow-active)" />
+      <path id="fp-edge-2" d="M 480 75 L 520 75" stroke="currentColor" class="edge-line is-active" marker-end="url(#fp-arrow-active)" />
+
+      <!-- Exception Divergent Branch -->
+      <path id="fp-edge-err" d="M 245 105 L 245 155 L 350 155" stroke="#f43f5e" stroke-dasharray="4 4" class="edge-line opacity-30" marker-end="url(#fp-arrow-err)" />
+      <path id="fp-edge-recover" d="M 480 155 L 530 155 L 570 105" stroke="#10b981" stroke-dasharray="4 4" class="edge-line opacity-30" marker-end="url(#fp-arrow-active)" />
+
+      <!-- Stage 0: supplyAsync -->
+      <g class="pipeline-node is-active" data-stage="0" transform="translate(20, 45)">
+        <rect width="120" height="60" rx="8" class="node-box" />
+        <text x="60" y="26" text-anchor="middle" class="node-title font-mono font-bold">supplyAsync()</text>
+        <text x="60" y="44" text-anchor="middle" class="node-sub font-mono">ForkJoinPool-1</text>
+      </g>
+
+      <!-- Stage 1: thenApply -->
+      <g class="pipeline-node is-active" data-stage="1" transform="translate(180, 45)">
+        <rect width="130" height="60" rx="8" class="node-box" />
+        <text x="65" y="26" text-anchor="middle" class="node-title font-mono font-bold" id="fp-title-1">thenApply()</text>
+        <text x="65" y="44" text-anchor="middle" class="node-sub font-mono" id="fp-sub-1">inventory check</text>
+      </g>
+
+      <!-- Stage 2: thenApply / discount -->
+      <g class="pipeline-node is-active" data-stage="2" transform="translate(350, 45)">
+        <rect width="130" height="60" rx="8" class="node-box" />
+        <text x="65" y="26" text-anchor="middle" class="node-title font-mono font-bold" id="fp-title-2">thenApply()</text>
+        <text x="65" y="44" text-anchor="middle" class="node-sub font-mono" id="fp-sub-2">pricing/discount</text>
+      </g>
+
+      <!-- Stage 3: thenAccept / terminal -->
+      <g class="pipeline-node is-active" data-stage="3" transform="translate(520, 45)">
+        <rect width="130" height="60" rx="8" class="node-box" />
+        <text x="65" y="26" text-anchor="middle" class="node-title font-mono font-bold">thenAccept()</text>
+        <text x="65" y="44" text-anchor="middle" class="node-sub font-mono">sendInvoice()</text>
+      </g>
+
+      <!-- Fallback Node: exceptionally() -->
+      <g class="pipeline-node node-fallback opacity-40" data-stage="fallback" transform="translate(350, 125)">
+        <rect width="130" height="55" rx="8" class="node-box border-rose-500" />
+        <text x="65" y="24" text-anchor="middle" class="node-title font-mono font-bold text-rose-500">exceptionally()</text>
+        <text x="65" y="40" text-anchor="middle" class="node-sub font-mono">fallback / COD</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Bottom: Synced Code Flow Tracker (~40%) -->
+  <div class="code-flow-tracker">
+    <div class="tracker-header">
+      <span class="font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">Async Callback Chain Execution</span>
+      <span class="text-[10px] text-(--fg-dim)" id="fp-step-desc">CompletableFuture completed successfully</span>
+    </div>
+    <div class="code-lines-container font-mono text-xs">
+      <div id="fp-code-success" class="code-variant">
+        {successCode.map((line, idx) => (
+          <div class={`code-line ${idx === 0 ? 'is-active' : ''}`} data-line-idx={idx}>
+            <span class="line-num select-none">{idx + 1}</span>
+            <span class="line-content">{line}</span>
+          </div>
+        ))}
+      </div>
+      <div id="fp-code-exception" class="code-variant hidden">
+        {exceptionCode.map((line, idx) => (
+          <div class={`code-line ${idx === 0 ? 'is-active' : ''}`} data-line-idx={idx}>
+            <span class="line-num select-none">{idx + 1}</span>
+            <span class="line-content">{line}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupFuturePipeline() {
+    const root = document.querySelector('.future-stage-root');
+    if (!root) return;
+
+    const toggleBtns = root.querySelectorAll<HTMLButtonElement>('.scenario-btn');
+    const badge = root.querySelector('#fp-badge-scenario');
+    const codeSuccess = root.querySelector('#fp-code-success');
+    const codeException = root.querySelector('#fp-code-exception');
+    const fallbackNode = root.querySelector('.node-fallback');
+    const edgeErr = root.querySelector('#fp-edge-err');
+    const edgeRecover = root.querySelector('#fp-edge-recover');
+    const stage2 = root.querySelector('[data-stage="2"]');
+    const desc = root.querySelector('#fp-step-desc');
+
+    function setScenario(sc: 'success' | 'exception') {
+      toggleBtns.forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.scenario === sc);
+      });
+
+      if (sc === 'success') {
+        badge && (badge.textContent = 'SUCCESS FLOW');
+        codeSuccess?.classList.remove('hidden');
+        codeException?.classList.add('hidden');
+        fallbackNode?.classList.add('opacity-40');
+        fallbackNode?.classList.remove('is-active');
+        edgeErr?.classList.add('opacity-30');
+        edgeRecover?.classList.add('opacity-30');
+        stage2?.classList.remove('opacity-30');
+        desc && (desc.textContent = 'CompletableFuture chain succeeded without error.');
+      } else {
+        badge && (badge.textContent = 'EXCEPTION HANDLED');
+        codeSuccess?.classList.add('hidden');
+        codeException?.classList.remove('hidden');
+        fallbackNode?.classList.remove('opacity-40');
+        fallbackNode?.classList.add('is-active');
+        edgeErr?.classList.remove('opacity-30');
+        edgeRecover?.classList.remove('opacity-30');
+        stage2?.classList.add('opacity-30');
+        desc && (desc.textContent = 'TimeoutException caught -> exceptionally() fallback executed.');
+      }
+    }
+
+    toggleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        setScenario(btn.dataset.scenario as 'success' | 'exception');
+      });
+    });
+
+    document.addEventListener('wb:step-change', ((e: CustomEvent) => {
+      const stepIdx = e.detail?.index ?? 0;
+      const lines = root.querySelectorAll('.code-variant:not(.hidden) .code-line');
+      lines.forEach((l, idx) => {
+        l.classList.toggle('is-active', idx === (stepIdx % lines.length));
+      });
+    }) as EventListener);
+  }
+
+  document.addEventListener('astro:page-load', setupFuturePipeline);
+  setupFuturePipeline();
+</script>
+
+<style>
+  .split-stage-root {
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-alt);
+    overflow: hidden;
+  }
+  .visual-stage-area {
+    padding: 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .stage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .state-badge {
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-family: monospace;
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  .scenario-btn {
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-alt);
+    color: var(--fg-dim);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .scenario-btn:hover {
+    color: var(--fg);
+  }
+  .scenario-btn.is-active {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+    font-weight: 600;
+  }
+  .stage-svg {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+  }
+  .edge-line {
+    stroke-width: 2;
+    transition: all 0.25s ease;
+  }
+  .node-box {
+    fill: var(--bg-alt);
+    stroke: var(--border);
+    stroke-width: 1.5;
+    transition: all 0.25s ease;
+  }
+  .pipeline-node.is-active .node-box {
+    stroke: #f59e0b;
+    fill: rgba(245, 158, 11, 0.08);
+  }
+  .pipeline-node.node-fallback.is-active .node-box {
+    stroke: #f43f5e;
+    fill: rgba(244, 63, 94, 0.12);
+  }
+  .node-title {
+    fill: var(--fg);
+    font-size: 11px;
+  }
+  .node-sub {
+    fill: var(--fg-dim);
+    font-size: 9.5px;
+  }
+  .code-flow-tracker {
+    background: var(--terminal, #18181b);
+    padding: 12px 16px;
+  }
+  .tracker-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 6px;
+  }
+  .code-line {
+    display: flex;
+    gap: 12px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    color: var(--fg-dim);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .code-line.is-active {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    font-weight: 600;
+  }
+  .line-num {
+    color: var(--fg-faint);
+    width: 20px;
+    text-align: right;
+  }
+</style>

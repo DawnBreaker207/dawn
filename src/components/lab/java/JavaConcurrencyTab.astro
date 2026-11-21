@@ -3,6 +3,8 @@ import LabWorkbench from '@/components/lab/LabWorkbench.astro';
 import { buildConcurrencyLesson } from '@/data/labs/java-concurrency-lesson';
 import DtsSceneRenderer from '@/components/widget/DtsSceneRenderer';
 import { javaConcurrencyLesson } from '@/lib/dts/lessons';
+import ThreadStateDiagram from '@/components/lab/java/ThreadStateDiagram.astro';
+import FuturePipeline from '@/components/lab/java/FuturePipeline.astro';
 import type { SubTopic } from '@/scripts/lab/java/java-tabs';
 import type { SimCase } from '@/scripts/lab/java/sim-engine';
 
@@ -81,6 +83,16 @@ const lesson = buildConcurrencyLesson(subs);
             </div>
           </div>
         ))}
+      </div>
+    </div>
+
+    <!-- 2D Split Stage Visuals -->
+    <div class="space-y-4 mt-4">
+      <div id="conc-visual-threads">
+        <ThreadStateDiagram />
+      </div>
+      <div id="conc-visual-future" class="hidden">
+        <FuturePipeline />
       </div>
     </div>
 
@@ -171,6 +183,16 @@ const lesson = buildConcurrencyLesson(subs);
       container.querySelectorAll('[data-conc-cases-group]').forEach(el => {
         el.hidden = el.dataset.concCasesGroup !== sub.id;
       });
+
+      const threadsVis = document.getElementById('conc-visual-threads');
+      const futureVis = document.getElementById('conc-visual-future');
+      if (sub.id === 'completable') {
+        threadsVis?.classList.add('hidden');
+        futureVis?.classList.remove('hidden');
+      } else {
+        threadsVis?.classList.remove('hidden');
+        futureVis?.classList.add('hidden');
+      }
     }
 
     // Listen for LabWorkbench step changes (fired by wb:step-change on wbRoot)

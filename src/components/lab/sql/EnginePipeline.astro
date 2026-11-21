@@ -3,6 +3,7 @@ import LabWorkbench from '@/components/lab/LabWorkbench.astro';
 import { engineLesson } from '@/data/labs/sql-engine-lesson';
 import DtsSceneRenderer from '@/components/widget/DtsSceneRenderer';
 import { sqlEngineLesson } from '@/lib/dts/lessons';
+import SqlPipelineDiagram from '@/components/lab/sql/SqlPipelineDiagram.astro';
 ---
 
 <!-- Cyan accent scoped via CSS cascade -->
@@ -68,6 +69,11 @@ import { sqlEngineLesson } from '@/lib/dts/lessons';
         </div>
       </div>
     </details>
+
+    <!-- 2D Pipeline Stage Diagram -->
+    <div class="mt-4">
+      <SqlPipelineDiagram />
+    </div>
 
   </LabWorkbench>
 </div>
