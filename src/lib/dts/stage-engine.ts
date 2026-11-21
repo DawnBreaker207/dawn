@@ -37,38 +37,55 @@ const of = (e) => {
 const or = () => "en";
 
 // Font width calculation
-const Fr = new Map();
-let Ir = null;
+const fontWidthCache = new Map<string, number>();
+const Fr = fontWidthCache;
+let measureCanvasContext: CanvasRenderingContext2D | null = null;
 let Lr = "";
 if (typeof document !== "undefined" && document.fonts) {
-  document.fonts.addEventListener("loadingdone", () => Fr.clear());
-}
-const Rr = (e, t) => {
-  e = String(e);
-  if (typeof document === "undefined") return e.length * t * 0.6;
-  const n = t + "|" + e;
-  let r = Fr.get(n);
-  if (r === undefined) {
-    if (!Ir) {
-      Ir = document.createElement("canvas").getContext("2d");
-      Lr = getComputedStyle(document.documentElement).getPropertyValue("--font").trim() || "monospace";
-    }
-    Ir.font = "700 " + t + "px " + Lr;
-    r = Ir.measureText(e).width;
-    Fr.set(n, r);
-  }
-  return r;
-};
-const Br = (e) => Math.round(e * 1.3);
-function Vr(e, t) {
-  const n = String(e).split("\n");
-  return { lines: n, tw: Math.max(...n.map((e) => Rr(e, t))), h: 21 + (n.length - 1) * Br(t) };
+  document.fonts.addEventListener("loadingdone", () => fontWidthCache.clear());
 }
 
-// @ts-nocheck
-/* eslint-disable */
-function sf(e) {
-  let t = parseInt(e.slice(1), 16),
+/**
+ * Measures text width in pixels using a 2D canvas context.
+ */
+export function measureTextWidth(text: string | number, fontSize: number): number {
+  const str = String(text);
+  if (typeof document === "undefined") return str.length * fontSize * 0.6;
+  const key = fontSize + "|" + str;
+  let width = fontWidthCache.get(key);
+  if (width === undefined) {
+    if (!measureCanvasContext) {
+      measureCanvasContext = document.createElement("canvas").getContext("2d");
+      Lr = getComputedStyle(document.documentElement).getPropertyValue("--font").trim() || "monospace";
+    }
+    if (measureCanvasContext) {
+      measureCanvasContext.font = "700 " + fontSize + "px " + Lr;
+      width = measureCanvasContext.measureText(str).width;
+      fontWidthCache.set(key, width);
+    } else {
+      width = str.length * fontSize * 0.6;
+    }
+  }
+  return width;
+}
+const Rr = measureTextWidth;
+
+const Br = (e: number) => Math.round(e * 1.3);
+
+/**
+ * Calculates multi-line text block width and height.
+ */
+export function measureMultilineText(text: string | number, fontSize: number): { lines: string[]; tw: number; h: number } {
+  const lines = String(text).split("\n");
+  return { lines, tw: Math.max(...lines.map((l) => measureTextWidth(l, fontSize))), h: 21 + (lines.length - 1) * Br(fontSize) };
+}
+const Vr = measureMultilineText;
+
+/**
+ * Converts a hex color string to HSL components.
+ */
+export function hexToHsl(hex: string): { h: number; s: number; l: number; c: number } {
+  let t = parseInt(hex.slice(1), 16),
     n = ((t >> 16) & 255) / 255,
     r = ((t >> 8) & 255) / 255,
     i = (t & 255) / 255,
@@ -77,35 +94,42 @@ function sf(e) {
     s = a - o,
     c = (a + o) / 2,
     l = 0;
-  s &&
-    ((l = a === n ? ((r - i) / s) % 6 : a === r ? (i - n) / s + 2 : (n - r) / s + 4),
-    (l *= 60),
-    l < 0 && (l += 360));
+  if (s) {
+    l = a === n ? ((r - i) / s) % 6 : a === r ? (i - n) / s + 2 : (n - r) / s + 4;
+    l *= 60;
+    if (l < 0) l += 360;
+  }
   let u = s ? s / (1 - Math.abs(2 * c - 1)) : 0;
   return { h: l, s: u, l: c, c: s };
 }
-function cf(e, t, n) {
-  let r = (1 - Math.abs(2 * n - 1)) * t,
-    i = r * (1 - Math.abs(((e / 60) % 2) - 1)),
-    a = n - r / 2,
-    [o, s, c] =
-      e < 60
+const sf = hexToHsl;
+
+/**
+ * Converts HSL components back to an RGB hex string.
+ */
+export function hslToRgb(h: number, s: number, l: number): string {
+  let r = (1 - Math.abs(2 * l - 1)) * s,
+    i = r * (1 - Math.abs(((h / 60) % 2) - 1)),
+    a = l - r / 2,
+    [o, sColor, c] =
+      h < 60
         ? [r, i, 0]
-        : e < 120
+        : h < 120
           ? [i, r, 0]
-          : e < 180
+          : h < 180
             ? [0, r, i]
-            : e < 240
+            : h < 240
               ? [0, i, r]
-              : e < 300
+              : h < 300
                 ? [i, 0, r]
                 : [r, 0, i],
-    l = (e) =>
+    u = (e: number) =>
       Math.round(Math.max(0, Math.min(1, e + a)) * 255)
         .toString(16)
-        .padStart(2, `0`);
-  return `#${l(o)}${l(s)}${l(c)}`;
+        .padStart(2, "0");
+  return `#${u(o)}${u(sColor)}${u(c)}`;
 }
+const cf = hslToRgb;
 var lf = { css: new Map(), svg: new Map() };
 function uf(e, t = `svg`) {
   let n = of(e),

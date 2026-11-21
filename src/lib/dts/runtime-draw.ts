@@ -32,21 +32,38 @@ var k = `#211e1b`,
     purple: { top: [`#f2eaf9`, `#e6dbf4`], side: [`#d9cbef`, `#cbbae6`] },
     slab: { top: [`#f7f0e7`, `#f0e7dc`], side: [`#ece2d5`, `#e3d7c8`] },
     store: { top: [`#f6f1fa`, `#ece4f4`], side: [`#e2d8ee`, `#d6c9e6`] },
-  },
-  A = (e) => Math.round(e * 100) / 100,
-  j = (e, t, n = 0) => [A(14 * (e + t)), A(7 * (e - t) - n)],
-  yr = (e, t, n) => {
-    let [r, i] = j(e, t, n);
-    return `matrix(1 -0.5 0 1 ${r} ${i})`;
-  },
-  br = (e, t, n) => {
-    let [r, i] = j(e, t, n);
-    return `matrix(1 0.5 -1 0.5 ${r} ${i})`;
-  },
-  xr = (e, t, n) => {
-    let [r, i] = j(e, t, n);
-    return `matrix(1 -0.5 1 0.5 ${r} ${i})`;
   };
+
+/**
+ * Rounds a floating point number to 2 decimal places.
+ */
+export function round(val: number): number {
+  return Math.round(val * 100) / 100;
+}
+const A = round;
+
+/**
+ * Dimetric 2:1 isometric projection from 3D space (x, y, z) to 2D SVG canvas (sx, sy).
+ * Standard: tile half-width = 14, tile half-height = 7.
+ */
+export function isoProject(x: number, y: number, z: number = 0): [number, number] {
+  return [round(14 * (x + y)), round(7 * (x - y) - z)];
+}
+export const projectIso = isoProject;
+const j = isoProject;
+
+const yr = (e: number, t: number, n?: number) => {
+  let [r, i] = j(e, t, n);
+  return `matrix(1 -0.5 0 1 ${r} ${i})`;
+};
+const br = (e: number, t: number, n?: number) => {
+  let [r, i] = j(e, t, n);
+  return `matrix(1 0.5 -1 0.5 ${r} ${i})`;
+};
+const xr = (e: number, t: number, n?: number) => {
+  let [r, i] = j(e, t, n);
+  return `matrix(1 -0.5 1 0.5 ${r} ${i})`;
+};
 function Sr(e, t) {
   let n = e.length,
     r = (e) => (Array.isArray(t) ? t[e] : t),
@@ -983,8 +1000,6 @@ function Mi(e) {
 
 // ── Exports for scene-renderer.ts ──
 export {
-  A as round,
-  j as isoProject,
   k as STROKE,
   vr as COLOR_PALETTE,
   jr as buildDefs,
