@@ -258,10 +258,12 @@ const inPostDetail =
       <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--fg-dim)">44 labs</span>
     </div>
     {[
-      ['/lab/foundations', 'foundations.track', '🌐', 'Networking & Request Lifecycle (8 labs)'],
-      ['/lab/system-design', 'system-design.track', '⚖️', 'Distributed Systems & Data (26 labs)'],
-      ['/lab/microservices', 'microservices.track', '🧩', 'Monolith to Microservices (3 labs)'],
-      ['/lab/aws-cloud', 'cloud-aws.track', '☁️', 'AWS Cloud & Reliability (7 labs)'],
+      ['/lab/foundations', 'network-scale.track', '🌐', '1. Networking & Web Scale (8 labs)'],
+      ['/lab/storage-engines', 'storage-tier.track', '🗄️', '2. Database & Storage Tier (6 labs)'],
+      ['/lab/system-design', 'distributed.track', '⚖️', '3. Distributed Systems Core (6 labs)'],
+      ['/lab/microservices', 'microservices.track', '🧩', '4. Microservices & Event-Driven (8 labs)'],
+      ['/lab/hld-lld', 'system-design.track', '📐', '5. System Design & Case Studies (9 labs)'],
+      ['/lab/aws-cloud', 'cloud-aws.track', '☁️', '6. AWS Cloud Architecture SAA-C03 (5 labs)'],
     ].map(([href, label, emoji, title]) => (
       <a
         href={href}

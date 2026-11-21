@@ -1,5 +1,5 @@
 ---
-import { DTS_MODULES, type Module, type Lesson } from '@/data/dts-lessons';
+import { DTS_TRACKS, DTS_MODULES, type Module, type Lesson } from '@/data/dts-lessons';
 
 interface Props {
   currentLessonId: string;
@@ -12,47 +12,23 @@ const { currentLessonId, trackId: propTrackId } = Astro.props;
 const resolveTrack = (lessonId: string, explicitTrack?: string): string => {
   if (explicitTrack) return explicitTrack;
   if (lessonId === 'architecture') return 'architecture';
-  const foundationsIds = ['request-lifecycle', 'latency-throughput', 'napkin-math', 'vertical-horizontal', 'load-balancing', 'stateless', 'caching', 'cdn'];
-  if (foundationsIds.includes(lessonId)) return 'foundations';
-  const awsIds = ['aws-cloud', 'redundancy', 'timeouts-retries', 'observability'];
-  if (awsIds.includes(lessonId)) return 'cloud-aws';
+  for (const mod of DTS_MODULES) {
+    if (mod.lessons.some((l) => l.id === lessonId)) {
+      return mod.trackId;
+    }
+  }
   return 'system-design';
 };
 
 const activeTrack = resolveTrack(currentLessonId, propTrackId);
 
-const TRACK_MODULE_WHITELIST: Record<string, string[]> = {
-  'architecture': ['cloud'],
-  'foundations': ['foundations', 'scaling'],
-  'cloud-aws': ['reliability', 'cloud'],
-  'system-design': ['data', 'communication', 'architecture', 'design'],
+const getLessonHref = (id: string) => {
+  if (id === 'sql-engine') return '/lab/sql';
+  if (id === 'java-concurrency') return '/lab/java';
+  if (id === 'request-lifecycle') return '/lab/foundations';
+  if (id === 'consistent-hashing') return '/lab/system-design';
+  return `/lab/${id}`;
 };
-
-// Filter modules for this track
-const allowedModules = TRACK_MODULE_WHITELIST[activeTrack] ?? [];
-
-const visibleModules = DTS_MODULES
-  .filter((m) => allowedModules.length === 0 || allowedModules.includes(m.id))
-  .map((m) => {
-    // If track is architecture, only show architecture lesson
-    if (activeTrack === 'architecture') {
-      return {
-        ...m,
-        lessons: m.lessons.filter((l) => l.id === 'architecture' || l.id === 'system-design'),
-      };
-    }
-    // If track is cloud-aws, only show aws-cloud and reliability
-    if (activeTrack === 'cloud-aws') {
-      return {
-        ...m,
-        lessons: m.lessons.filter((l) => l.id !== 'architecture'),
-      };
-    }
-    return m;
-  })
-  .filter((m) => m.lessons.length > 0);
-
-const totalVisibleLessons = visibleModules.reduce((acc, m) => acc + m.lessons.length, 0);
 
 let activeLessonTitle = '01 · Request Lifecycle';
 for (const mod of DTS_MODULES) {
@@ -62,6 +38,8 @@ for (const mod of DTS_MODULES) {
     break;
   }
 }
+
+const totalVisibleLessons = DTS_MODULES.reduce((acc, m) => acc + m.lessons.length, 0);
 ---
 
 <!-- Dropdown Root -->
@@ -94,15 +72,31 @@ for (const mod of DTS_MODULES) {
       <input
         id="dropdown-search-input"
         type="text"
-        placeholder="Filter chapters (e.g. dns, cache, sharding)..."
+        placeholder="Filter chapters (e.g. dns, cache, sharding, vpc)..."
         autocomplete="off"
       />
     </div>
 
+    <!-- Track filter pills -->
+    <div class="dropdown-track-pills thin-scrollbar">
+      <button type="button" class="track-pill is-active" data-track-filter="all">All</button>
+      {DTS_TRACKS.map((t) => (
+        <button
+          type="button"
+          class:list={['track-pill', t.id === activeTrack && 'is-current-track']}
+          data-track-filter={t.id}
+          title={t.subtitle}
+        >
+          <span class="track-emoji">{t.emoji}</span>
+          <span>{t.title.replace(/^\d+\.\s*/, '')}</span>
+        </button>
+      ))}
+    </div>
+
     <!-- Streamlined Lessons List Grouped by Modules -->
-    <div class="dropdown-list-scroll thin-scrollbar">
-      {visibleModules.map((mod: Module) => (
-        <div class="dropdown-module-group" data-module-id={mod.id}>
+    <div class="dropdown-list-scroll thin-scrollbar" id="dropdown-list-container">
+      {DTS_MODULES.map((mod: Module) => (
+        <div class="dropdown-module-group" data-module-id={mod.id} data-track-id={mod.trackId}>
           <div class="dropdown-module-header">
             <span class="mod-num font-mono">{mod.num}</span>
             <span class="mod-title">{mod.title}</span>
@@ -111,6 +105,7 @@ for (const mod of DTS_MODULES) {
           <div class="dropdown-lessons-list">
             {mod.lessons.map((lesson: Lesson) => {
               const isCurrent = lesson.id === currentLessonId;
+              const href = getLessonHref(lesson.id);
               return (
                 <button
                   type="button"
@@ -120,6 +115,7 @@ for (const mod of DTS_MODULES) {
                   ]}
                   data-lesson-id={lesson.id}
                   data-lesson-title={`${mod.num} · ${lesson.title}`}
+                  data-lesson-href={href}
                   data-native="true"
                 >
                   <span class="lesson-dot">●</span>
@@ -186,8 +182,8 @@ for (const mod of DTS_MODULES) {
     position: absolute;
     top: calc(100% + 5px);
     right: 0;
-    width: 320px;
-    max-height: 420px;
+    width: 340px;
+    max-height: 460px;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -228,6 +224,56 @@ for (const mod of DTS_MODULES) {
     font-family: var(--font-mono, monospace);
     color: var(--fg);
     width: 100%;
+  }
+
+  .dropdown-track-pills {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg-alt) 60%, var(--bg));
+    flex-shrink: 0;
+  }
+
+  .track-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: var(--font-mono, monospace);
+    font-weight: 500;
+    white-space: nowrap;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--fg-dim);
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+
+  .track-pill:hover {
+    border-color: var(--accent);
+    color: var(--fg);
+  }
+
+  .track-pill.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+    font-weight: 700;
+  }
+
+  .track-pill.is-current-track:not(.is-active) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .track-emoji {
+    font-size: 11px;
+    line-height: 1;
   }
 
   .dropdown-list-scroll {
@@ -335,8 +381,33 @@ for (const mod of DTS_MODULES) {
     const searchInput = document.getElementById('dropdown-search-input') as HTMLInputElement | null;
     const titleDisplay = document.getElementById('chapter-active-title');
     const lessonBtns = document.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
+    const trackPills = document.querySelectorAll<HTMLButtonElement>('.track-pill');
 
     if (!root || !trigger || !menu) return;
+
+    let currentTrackFilter = 'all';
+
+    const applyFilters = () => {
+      const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const groups = menu.querySelectorAll<HTMLElement>('.dropdown-module-group');
+
+      groups.forEach((grp) => {
+        const trackId = grp.dataset.trackId;
+        const matchesTrack = currentTrackFilter === 'all' || trackId === currentTrackFilter;
+        let matchCount = 0;
+
+        const btns = grp.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
+        btns.forEach((btn) => {
+          const text = (btn.dataset.lessonTitle || btn.textContent || '').toLowerCase();
+          const matchesQuery = !q || text.includes(q);
+          const visible = matchesTrack && matchesQuery;
+          btn.style.display = visible ? 'flex' : 'none';
+          if (visible) matchCount++;
+        });
+
+        grp.style.display = matchCount > 0 ? 'flex' : 'none';
+      });
+    };
 
     const toggleMenu = (open?: boolean) => {
       const isCurrentlyOpen = !menu.hidden;
@@ -369,22 +440,23 @@ for (const mod of DTS_MODULES) {
       });
     }
 
+    trackPills.forEach((pill) => {
+      if (pill.dataset.bound !== 'true') {
+        pill.dataset.bound = 'true';
+        pill.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const filter = pill.dataset.trackFilter || 'all';
+          currentTrackFilter = filter;
+          trackPills.forEach((p) => p.classList.toggle('is-active', p === pill));
+          applyFilters();
+        });
+      }
+    });
+
     if (searchInput && searchInput.dataset.bound !== 'true') {
       searchInput.dataset.bound = 'true';
-      searchInput.addEventListener('input', (e) => {
-        const q = (e.target as HTMLInputElement).value.trim().toLowerCase();
-        const groups = menu.querySelectorAll<HTMLElement>('.dropdown-module-group');
-        groups.forEach((grp) => {
-          let matchCount = 0;
-          const btns = grp.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
-          btns.forEach((btn) => {
-            const text = (btn.dataset.lessonTitle || btn.textContent || '').toLowerCase();
-            const match = !q || text.includes(q);
-            btn.style.display = match ? 'flex' : 'none';
-            if (match) matchCount++;
-          });
-          grp.style.display = matchCount > 0 ? 'flex' : 'none';
-        });
+      searchInput.addEventListener('input', () => {
+        applyFilters();
       });
     }
 
@@ -395,7 +467,8 @@ for (const mod of DTS_MODULES) {
           e.stopPropagation();
           const lessonId = btn.dataset.lessonId;
           const lessonTitle = btn.dataset.lessonTitle;
-          if (!lessonId || btn.dataset.native !== 'true') return;
+          const targetHref = btn.dataset.lessonHref || (lessonId ? `/lab/${lessonId}` : '');
+          if (!lessonId || !targetHref) return;
 
           lessonBtns.forEach((b) => {
             const isTarget = b === btn;
@@ -408,13 +481,13 @@ for (const mod of DTS_MODULES) {
             titleDisplay.textContent = lessonTitle;
           }
 
-          // Navigate to the native lab page
-          if (window.location.pathname !== `/lab/${lessonId}`) {
-            window.location.href = `/lab/${lessonId}`;
+          // Navigate to the target page
+          if (window.location.pathname !== targetHref) {
+            window.location.href = targetHref;
             return;
           }
 
-          // Same page — just reset to step 1 via hash
+          // Same page — reset step
           window.location.hash = `#/${lessonId}/1`;
           toggleMenu(false);
         });
@@ -425,7 +498,7 @@ for (const mod of DTS_MODULES) {
     const currentLesson = window.location.pathname.match(/\/lab\/([\w-]+)/)?.[1];
     if (currentLesson) {
       const matchBtn = Array.from(lessonBtns).find(
-        (b) => b.dataset.lessonId === currentLesson && b.dataset.native === 'true'
+        (b) => b.dataset.lessonId === currentLesson || b.dataset.lessonHref === window.location.pathname
       );
       if (matchBtn) {
         const lessonTitle = matchBtn.dataset.lessonTitle;
