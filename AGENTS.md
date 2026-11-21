@@ -101,25 +101,45 @@ server-rendered.
 
 ---
 
-## 3. Directory Layout & Folder Responsibilities
+## 3. Directory Layout & Functional Architecture
+
+### Functional Separation Principle
+Every directory in this project has **exactly one functional responsibility**.
+Mixing data with logic, server with client, or build scripts with browser modules is strictly forbidden.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. DATA & CONTENT LAYER       → data/ (MDX posts), src/data/ (JSON, scenes) │
+│ 2. CORE ENGINES & LOGIC LAYER → src/lib/ (Engine algorithms, server runtime)│
+│ 3. UI COMPONENTS LAYER        → src/components/ (Shell, widgets, labs, UI)  │
+│ 4. BROWSER RUNTIME SCRIPTS    → src/scripts/ (Client-side TS for browser)   │
+│ 5. BUILD & AUTOMATION LAYER   → scripts/ (Node.js CLI build & sync tools)   │
+│ 6. ROUTING & API LAYER        → src/pages/ (SSG pages & SSR API endpoints)  │
+│ 7. CONTRACTS & STYLING LAYER  → src/types/ (Strict types), src/styles/ (CSS) │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ### What is "DTS"?
 > **DTS = Designed to Scale**  
 > DTS is the **Interactive Isometric 2.5D Architecture Simulation Engine** ported into this project.  
 > It renders interactive system design architectures (servers, balancers, databases, queues, animated packet flows, real-time metrics, step timelines, and guide rails).  
-> **Why is lesson data located in `src/lib/dts/lessons/` instead of `src/data/`?**  
-> Because DTS lessons are not simple static JSON records — they are **interactive simulation scene graphs** containing SVG coordinates, packet routing vectors, state machine changes, and metric calculators. Static app data (books, projects, metadata catalogs) lives in `src/data/`, while DTS simulation scenes live in `src/lib/dts/lessons/`.
+>
+> **CRITICAL ARCHITECTURAL RULE — DATA VS ENGINE:**  
+> - **Engine Logic (`src/lib/dts/`):** Pure mathematical & SVG rendering algorithms (`runtime-draw.ts`, `stage-engine.ts`, `scene-builders.ts`, `scene-renderer.ts`, `curriculum.ts`). **Zero scene content is allowed here.**
+> - **Scene Data (`src/data/scenes/`):** The 44 architectural simulation scene definitions (`aws-vpc.ts`, `sql-engine.ts`, `consistent-hashing.ts`...). These files define layout coordinates, packet flow paths, step texts, and metric states — **they are DATA, not engine code**, and must reside in `src/data/scenes/`.
 
 ---
 
 ### Master Directory Layout
 
 ```
-├── data/                               ← Astro Content Collections (Root-level)
+├── data/                               ← [LAYER 1A: ASTRO CONTENT COLLECTIONS ONLY]
 │   ├── blog/                           ← Blog posts as .mdx files (Astro loader: base './data/blog')
 │   └── authors/                        ← Author profiles as .mdx files
 │
-├── scripts/                            ← Build & Automation CLI Scripts (Node.js / CI only)
+├── scripts/                            ← [LAYER 5: BUILD & CI AUTOMATION (Node.js CLI only)]
 │   ├── sync-notion.mjs                 ← Syncs blog posts from Notion API
 │   ├── build-og.mjs                    ← Generates OpenGraph card images
 │   ├── build-books.mjs                 ← Fetches and updates Goodreads data
@@ -128,11 +148,39 @@ server-rendered.
 │   └── token-burn.mjs                  ← LLM token usage calculation
 │
 ├── src/
-│   ├── components/                     ← UI Component Library
+│   ├── data/                           ← [LAYER 1B: STATIC APPLICATION & SIMULATION DATA]
+│   │   ├── scenes/                     ← 44 DTS Simulation Scene Graphs (layout, coordinates, steps)
+│   │   │   ├── cloud/                  ← aws-vpc.ts, aws-ha.ts, aws-storage-db.ts, aws-serverless.ts
+│   │   │   ├── data/                   ← sql-engine.ts, storage-engines.ts, indexes.ts, sql-nosql.ts
+│   │   │   ├── distributed/            ← sharding.ts, consistent-hashing.ts, consensus.ts, cap.ts
+│   │   │   ├── microservices/          ← microservices.ts, java-concurrency.ts, sagas.ts, apis.ts
+│   │   │   ├── network/                ← request-lifecycle.ts, load-balancing.ts, caching.ts
+│   │   │   └── system-design/          ← hld-lld.ts, design-url-shortener.ts, design-chat.ts
+│   │   ├── dts-lessons.ts              ← Curriculum metadata: 6 canonical tracks, 11 modules, titles & IDs
+│   │   ├── labs.ts                     ← Directory list of playable labs
+│   │   ├── projectsData.json           ← Portfolio projects list
+│   │   ├── books.json                  ← Reading list data
+│   │   ├── timeline.json               ← Career & personal timeline milestones
+│   │   └── now.json                    ← Current activity status
+│   │
+│   ├── lib/                            ← [LAYER 2: CORE ENGINES & LOGIC (Pure Code — No Data)]
+│   │   ├── dts/                        ← DTS Isometric Simulation Engine (SVG renderers, state loop)
+│   │   │   ├── runtime-draw.ts         ← Isometric SVG canvas entity renderers (blocks, dbs, queues)
+│   │   │   ├── stage-engine.ts         ← Interactive step playback, packet animations & metric state
+│   │   │   ├── scene-builders.ts       ← Scene entity factory functions (makeBlock, makeDb, makeBalancer)
+│   │   │   ├── scene-renderer.ts       ← Canvas scene serializer
+│   │   │   ├── curriculum.ts           ← Runtime lesson navigation & breadcrumb resolver
+│   │   │   └── types.ts                ← DTS domain types (Lesson, Step, Scene, Entity)
+│   │   ├── runtime/                    ← Server-only code (DB, Prisma, GitHub API, LLM tokens — NEVER import in client)
+│   │   ├── utils/                      ← Pure shared utility functions (blog parsing, slugify, date formatting)
+│   │   ├── site.ts & nav.ts            ← Global site config & navigation links
+│   │   └── api-cache.ts & ttl-cache.ts ← In-memory API caching layers
+│   │
+│   ├── components/                     ← [LAYER 3: UI COMPONENT LIBRARY]
 │   │   ├── shell/                      ← Studio layout chrome (SidebarExplorer, TabBar, Rail, Breadcrumb, TerminalFooter)
 │   │   ├── widget/                     ← Live runtime widgets (BlogStats, LiveClock, TokenBurnRail, GitActivity, CommitGraph)
 │   │   ├── lab/                        ← Interactive lab UI components
-│   │   │   ├── architecture/           ← DTS Workbench chrome & chapter navigation (DtsWorkbench, ArchitectureChapterPicker)
+│   │   │   ├── architecture/           ← DTS Workbench chrome (DtsWorkbench.astro, DtsSceneRenderer.tsx, ChapterPicker)
 │   │   │   ├── sql/                    ← 2D SQL pipeline & B-Tree stage diagrams
 │   │   │   └── java/                   ← 2D JVM thread state & pipeline diagrams
 │   │   ├── blog/                       ← Blog post layouts, cards, and reading UI
@@ -142,54 +190,32 @@ server-rendered.
 │   │   ├── profile/                    ← Author profile cards
 │   │   └── project/                    ← Project cards and showcases
 │   │
-│   ├── data/                           ← Static Application Data (Not content collections)
-│   │   ├── books.json                  ← Reading list data
-│   │   ├── now.json                    ← Current activity / what I'm doing now
-│   │   ├── timeline.json               ← Career & personal timeline milestones
-│   │   ├── projectsData.json           ← Portfolio projects list
-│   │   ├── labs.ts                     ← Directory list of playable labs
-│   │   └── dts-lessons.ts              ← Curriculum metadata: 6 canonical tracks, 11 modules, titles & IDs
-│   │
 │   ├── layouts/                        ← Top-level page wrappers
 │   │   ├── BaseLayout.astro            ← Global studio layout shell (sidebar + tabbar + rail + terminal)
 │   │   ├── ArchitectureLabLayout.astro ← Standard reusable full-bleed layout for all DTS & Engine labs
 │   │   ├── PostLayout.astro            ← Long-form blog reading layout (TOC, header, tags, giscus)
 │   │   └── AuthorLayout.astro          ← Author profile layout
 │   │
-│   ├── lib/                            ← Core Application Logic & Services
-│   │   ├── runtime/                    ← Server-only code (DB, Prisma, GitHub API, LLM tokens — NEVER import in client)
-│   │   ├── utils/                      ← Shared utility functions (blog parsing, slugify, date formatting)
-│   │   ├── site.ts                     ← Global site config (SITE, HOST, tabsFor, formatDate)
-│   │   ├── nav.ts                      ← Header navigation definitions
-│   │   ├── api-cache.ts & ttl-cache.ts ← In-memory API caching layers
-│   │   └── dts/                        ← Designed-to-Scale Isometric Architecture Engine
-│   │       ├── lessons/                ← 44 simulation scene definitions grouped by domain (cloud, data, etc.)
-│   │       ├── scene-builders.ts       ← Scene entity factory functions (makeBlock, makeDb, makeBalancer, makeLink)
-│   │       ├── runtime-draw.ts         ← Isometric SVG canvas entity renderers
-│   │       ├── stage-engine.ts         ← Interactive step playback, packet animations & metric state
-│   │       ├── curriculum.ts           ← Runtime lesson navigation, steps & module breadcrumbs
-│   │       └── types.ts                ← DTS domain types (Lesson, Step, Scene, Entity)
-│   │
-│   ├── pages/                          ← Astro File-Based Routing
+│   ├── pages/                          ← [LAYER 6: ROUTING & API ENDPOINTS]
 │   │   ├── index.astro                 ← Homepage (/)
 │   │   ├── about.astro, now.astro...   ← Static content pages
 │   │   ├── blog/                       ← Blog index & dynamic [...slug].astro
 │   │   ├── lab/                        ← Lab pages: /lab/architecture, /lab/system-design, /lab/sql, /lab/java, /lab/[lesson]
 │   │   └── api/                        ← SSR API routes (/api/token-burn.json, etc. — strictly SSR, no markup)
 │   │
-│   ├── scripts/                        ← Browser Client-Side Modules (Bundled by Astro via <script src="...">)
+│   ├── scripts/                        ← [LAYER 4: BROWSER CLIENT MODULES (Bundled by Astro)]
 │   │   ├── app-shell.ts                ← Studio layout tabs, sidebar toggling, keyboard shortcuts
 │   │   ├── extras.ts                   ← Terminal modal REPL, copy-to-clipboard, theme bridge
 │   │   ├── weather.ts                  ← Atmospheric canvas overlay (rain, snow, storm effects)
 │   │   └── lab/                        ← Interactive client-side algorithms (pathfinding, spider)
 │   │
-│   ├── styles/                         ← CSS Architecture
+│   ├── styles/                         ← [LAYER 7A: CSS ARCHITECTURE & DESIGN TOKENS]
 │   │   ├── theme-colors.css            ← CSS custom properties (Light & Dark tokens — single source of truth)
 │   │   ├── global.css                  ← Tailwind setup + design tokens + utility classes
 │   │   ├── shell.css                   ← Studio VS Code chrome styles (.studio-*, .tab-bar, .explorer-*)
 │   │   └── designed-to-scale.css       ← DTS isometric lab theme (scoped under .dts-window)
 │   │
-│   └── types/                          ← TypeScript Type Definitions (Strict, no 'any' without comments)
+│   └── types/                          ← [LAYER 7B: STRICT TYPESCRIPT CONTRACTS]
 │       ├── books.ts, server.ts...      ← Domain data contracts
 │       └── giscus.ts                   ← Giscus comment widget configuration types
 │
@@ -207,9 +233,24 @@ server-rendered.
 | **MDX Posts & Articles** | `data/blog/`, `data/authors/` | Blog posts, Author profiles |
 | **Static App Data (JSON/TS)** | `src/data/` | `books.json`, `projectsData.json`, `timeline.json`, `labs.ts` |
 | **Curriculum Catalog Metadata** | `src/data/dts-lessons.ts` | List of 6 Tracks, 11 Modules, IDs, Titles |
-| **Architectural Simulation Scenes** | `src/lib/dts/lessons/<domain>/` | `aws-vpc.ts`, `sql-engine.ts`, `consistent-hashing.ts` |
+| **Architectural Simulation Scenes** | `src/data/scenes/<domain>/` | `aws-vpc.ts`, `sql-engine.ts`, `consistent-hashing.ts` |
 | **Server Runtime State / DB** | `src/lib/runtime/` | Prisma client, GitHub API tokens |
 | **Static Browser Assets** | `public/static/` | SVGs, WebP images, Favicons |
+
+---
+
+### Strict Anti-Patterns (Forbidden Directory Practices)
+
+1. ❌ **NEVER store simulation scene definitions or JSON data inside `src/lib/`**:
+   `src/lib/` is strictly for engine algorithms, math, and utilities. All scene graphs belong in `src/data/scenes/`.
+2. ❌ **NEVER put build-time CLI scripts in `src/scripts/`**:
+   `src/scripts/` is compiled by Vite and delivered to browser clients. Build-time CLI automation belongs in root `scripts/`.
+3. ❌ **NEVER put browser scripts in root `scripts/`**:
+   Root `scripts/` runs exclusively under Node.js CLI.
+4. ❌ **NEVER put non-MDX content in root `data/`**:
+   Root `data/` is strictly reserved for Astro content collection loaders (`data/blog/`, `data/authors/`). App data belongs in `src/data/`.
+5. ❌ **NEVER put simulation canvas components in `src/components/widget/`**:
+   `DtsSceneRenderer.tsx` is an architecture simulation component, not a generic widget. It belongs in `src/components/lab/architecture/`.
 
 ---
 
