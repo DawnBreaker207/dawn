@@ -1,54 +1,43 @@
 ---
-import { DTS_TRACKS, DTS_MODULES, type Module, type Lesson } from '@/data/curriculum';
+import { DTS_MODULES, type Module, type Lesson, getLessonHref } from '@/data/curriculum';
 
 interface Props {
   currentLessonId: string;
   trackId?: string;
+  moduleId?: string;
 }
 
-const { currentLessonId, trackId: propTrackId } = Astro.props;
+const { currentLessonId, trackId: propTrackId, moduleId: propModuleId } = Astro.props;
 
-// Determine track scope
-const resolveTrack = (lessonId: string, explicitTrack?: string): string => {
-  if (explicitTrack) {
-    if (DTS_TRACKS.some((t) => t.id === explicitTrack)) return explicitTrack;
-    const mod = DTS_MODULES.find((m) => m.id === explicitTrack);
-    if (mod) return mod.trackId;
+// Determine module scope (Locked strictly to current Module per user request)
+const resolveModule = (lessonId: string, explicitModuleId?: string, fallbackTrackId?: string): Module => {
+  // 1. Explicit moduleId priority
+  if (explicitModuleId) {
+    const mod = DTS_MODULES.find((m) => m.id === explicitModuleId);
+    if (mod) return mod;
   }
-  if (lessonId === 'architecture') return 'system-design';
+  // 2. Direct match by lessonId
   for (const mod of DTS_MODULES) {
     if (mod.lessons.some((l) => l.id === lessonId)) {
-      return mod.trackId;
+      return mod;
     }
   }
-  return 'network-scale';
-};
-
-const activeTrack = resolveTrack(currentLessonId, propTrackId);
-
-const getLessonHref = (id: string) => {
-  if (id === 'sql-engine') return '/lab/sql';
-  if (id === 'java-concurrency') return '/lab/java';
-  if (id === 'request-lifecycle') return '/lab/foundations';
-  if (id === 'consistent-hashing') return '/lab/system-design';
-  return `/lab/${id}`;
-};
-
-let activeLessonTitle = '01 · Request Lifecycle';
-for (const mod of DTS_MODULES) {
-  const found = mod.lessons.find((l) => l.id === currentLessonId);
-  if (found) {
-    activeLessonTitle = `${mod.num} · ${found.title}`;
-    break;
+  // 3. Fallback match by fallbackTrackId
+  if (fallbackTrackId) {
+    const mod = DTS_MODULES.find((m) => m.trackId === fallbackTrackId);
+    if (mod) return mod;
   }
-}
+  return DTS_MODULES[0];
+};
 
-// Scoped strictly to the active track (Option A)
-const trackModules = DTS_MODULES.filter((m) => m.trackId === activeTrack);
-const effectiveModules = trackModules.length > 0 ? trackModules : DTS_MODULES;
-const activeTrackInfo = DTS_TRACKS.find((t) => t.id === activeTrack);
-const totalVisibleLessons = effectiveModules.reduce((acc, m) => acc + m.lessons.length, 0);
-const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\s*/, '') : 'track';
+const activeModule = resolveModule(currentLessonId, propModuleId, propTrackId);
+const totalVisibleLessons = activeModule.lessons.length;
+
+let activeLessonTitle = `${activeModule.num} · ${activeModule.lessons[0]?.title || activeModule.title}`;
+const foundLesson = activeModule.lessons.find((l) => l.id === currentLessonId);
+if (foundLesson) {
+  activeLessonTitle = `${activeModule.num} · ${foundLesson.title}`;
+}
 ---
 
 <!-- Dropdown Root -->
@@ -59,7 +48,7 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
     class="chapter-dropdown-trigger"
     aria-haspopup="true"
     aria-expanded="false"
-    title={`Browse ${trackTitleClean} chapters`}
+    title={`Browse ${activeModule.title} chapters`}
   >
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
@@ -81,45 +70,43 @@ const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\
       <input
         id="dropdown-search-input"
         type="text"
-        placeholder={`Filter ${trackTitleClean} chapters...`}
+        placeholder={`Filter ${activeModule.title} chapters...`}
         autocomplete="off"
       />
     </div>
 
-    <!-- Scoped Lessons List for Active Track Only -->
+    <!-- Scoped to Single Active Module Only -->
     <div class="dropdown-list-scroll thin-scrollbar" id="dropdown-list-container">
-      {effectiveModules.map((mod: Module) => (
-        <div class="dropdown-module-group" data-module-id={mod.id} data-track-id={mod.trackId}>
-          <div class="dropdown-module-header">
-            <span class="mod-num font-mono">{mod.num}</span>
-            <span class="mod-title">{mod.title}</span>
-            <span class="mod-count font-mono">{mod.lessons.length}</span>
-          </div>
-          <div class="dropdown-lessons-list">
-            {mod.lessons.map((lesson: Lesson) => {
-              const isCurrent = lesson.id === currentLessonId;
-              const href = getLessonHref(lesson.id);
-              return (
-                <button
-                  type="button"
-                  class:list={[
-                    'dropdown-lesson-btn',
-                    isCurrent && 'is-current',
-                  ]}
-                  data-lesson-id={lesson.id}
-                  data-lesson-title={`${mod.num} · ${lesson.title}`}
-                  data-lesson-href={href}
-                  data-native="true"
-                >
-                  <span class="lesson-dot">●</span>
-                  <span class="lesson-text">{lesson.title}</span>
-                  <span class="active-pill" data-lesson-pill={lesson.id} hidden={!isCurrent}>Active</span>
-                </button>
-              );
-            })}
-          </div>
+      <div class="dropdown-module-group" data-module-id={activeModule.id} data-track-id={activeModule.trackId}>
+        <div class="dropdown-module-header">
+          <span class="mod-num font-mono">{activeModule.num}</span>
+          <span class="mod-title">{activeModule.title}</span>
+          <span class="mod-count font-mono">{activeModule.lessons.length}</span>
         </div>
-      ))}
+        <div class="dropdown-lessons-list">
+          {activeModule.lessons.map((lesson: Lesson) => {
+            const isCurrent = lesson.id === currentLessonId;
+            const href = getLessonHref(lesson.id);
+            return (
+              <button
+                type="button"
+                class:list={[
+                  'dropdown-lesson-btn',
+                  isCurrent && 'is-current',
+                ]}
+                data-lesson-id={lesson.id}
+                data-lesson-title={`${activeModule.num} · ${lesson.title}`}
+                data-lesson-href={href}
+                data-native="true"
+              >
+                <span class="lesson-dot">●</span>
+                <span class="lesson-text">{lesson.title}</span>
+                <span class="active-pill" data-lesson-pill={lesson.id} hidden={!isCurrent}>Active</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   </div>
 </div>

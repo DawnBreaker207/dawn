@@ -261,15 +261,15 @@ const inPostDetail =
     </div>
     {[
       ['/lab/foundations', 'network.sim', 'network', '1. Networking & Web Scale (8 labs)'],
-      ['/lab/storage-engines', 'storage.sim', 'storage', '2. Database & Storage Tier (6 labs)'],
-      ['/lab/system-design', 'distributed.sim', 'distributed', '3. Distributed Systems Core (6 labs)'],
-      ['/lab/microservices', 'microservices.sim', 'microservices', '4. Microservices & Event-Driven (8 labs)'],
-      ['/lab/hld-lld', 'system-design.sim', 'system', '5. System Design & Case Studies (9 labs)'],
+      ['/lab/storage-engines', 'storage.sim', 'storage', '2. Database & Storage Tier (8 labs)'],
+      ['/lab/distributed', 'distributed.sim', 'distributed', '3. Distributed Systems Core (6 labs)'],
+      ['/lab/microservices', 'microservices.sim', 'microservices', '4. Microservices & Event-Driven (7 labs)'],
+      ['/lab/system-design', 'system-design.sim', 'system', '5. System Design & Case Studies (9 labs)'],
       ['/lab/aws-cloud', 'aws-cloud.sim', 'cloud', '6. AWS Cloud Architecture SAA-C03 (5 labs)'],
     ].map(([href, label, iconType, title]) => (
       <a
         href={href}
-        class:list={['explorer-row no-underline font-medium', (activePath === href || (href === '/lab/foundations' && activePath === '/lab/request-lifecycle')) && 'is-active']}
+        class:list={['explorer-row no-underline font-medium', (activePath === href || (href === '/lab/foundations' && activePath === '/lab/request-lifecycle') || (href === '/lab/system-design' && activePath === '/lab/hld-lld')) && 'is-active']}
         aria-current={activePath === href ? 'page' : undefined}
         title={title}
       >

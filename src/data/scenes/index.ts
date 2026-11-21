@@ -156,6 +156,16 @@ export const ALL_SCENES: Record<string, any> = {
   'sql-engine': sqlEngineLesson,
   'sql': sqlEngineLesson,
   'java-concurrency': javaConcurrencyLesson,
+  'java-executors': javaConcurrencyLesson,
+  'java-completable': javaConcurrencyLesson,
+  'java-virtual-threads': javaConcurrencyLesson,
+  'java-jvm-memory': javaConcurrencyLesson,
+  'java-collections': javaConcurrencyLesson,
+  'java-streams': javaConcurrencyLesson,
+  'java-spring-ioc': javaConcurrencyLesson,
+  'java-spring-aop': javaConcurrencyLesson,
+  'java-spring-jpa': javaConcurrencyLesson,
+  'java-spring-security': javaConcurrencyLesson,
   'java': javaConcurrencyLesson,
 };
 

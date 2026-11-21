@@ -15,16 +15,17 @@ interface Props {
   description: string;
   lessonId: string;
   trackId?: string;
+  moduleId?: string;
 }
 
-const { title, description, lessonId, trackId } = Astro.props;
+const { title, description, lessonId, trackId, moduleId } = Astro.props;
 
 const dtsLesson = ALL_SCENES[lessonId] as unknown as Lesson;
 ---
 
 <BaseLayout title={title} description={description} fullBleed={true}>
   <div slot="topbar-actions" class="topbar-lab-controls">
-    <ChapterPicker currentLessonId={lessonId} trackId={trackId} />
+    <ChapterPicker currentLessonId={lessonId} trackId={trackId} moduleId={moduleId} />
   </div>
 
   <div id="dts-view-ts" class="dts-window is-embedded dts-view-container w-full h-full flex flex-col flex-1 min-h-0">

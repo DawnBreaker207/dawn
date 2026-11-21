@@ -8,6 +8,13 @@ export interface Track {
 
 export const DTS_TRACKS: Track[] = [
   {
+    id: 'architecture',
+    title: '0. Blog Deployment Architecture',
+    subtitle: 'Cloudflare Edge-First, C4 Container Model & Zero-Trust DB',
+    emoji: '🏛️',
+    moduleIds: ['architecture'],
+  },
+  {
     id: 'network-scale',
     title: '1. Network & Web Scale',
     subtitle: 'Request lifecycle, latency, DNS, TCP/TLS, load balancing & edge scaling',
@@ -33,7 +40,7 @@ export const DTS_TRACKS: Track[] = [
     title: '4. Microservices & Event-Driven',
     subtitle: 'Service discovery, APIs, Kafka pub/sub, message queues, sagas & concurrency',
     emoji: '🧩',
-    moduleIds: ['microservices', 'communication'],
+    moduleIds: ['microservices', 'java-runtime', 'communication'],
   },
   {
     id: 'system-design',
@@ -76,6 +83,16 @@ export interface Module {
 
 export const DTS_MODULES: Module[] = [
   {
+    id: 'architecture',
+    num: '00',
+    title: 'Blog Deployment Architecture',
+    trackId: 'architecture',
+    color: 'emerald',
+    lessons: [
+      { id: 'architecture', title: 'Dawn Blog Architecture & Data Plane' },
+    ],
+  },
+  {
     id: 'foundations',
     num: '01',
     title: 'Network Foundations',
@@ -108,11 +125,13 @@ export const DTS_MODULES: Module[] = [
     trackId: 'storage-tier',
     color: 'violet',
     lessons: [
-      { id: 'sql-nosql', title: 'SQL vs NoSQL' },
+      { id: 'sql-engine', title: 'PostgreSQL Query Planner & Engine' },
       { id: 'indexes', title: 'Indexes & B-Trees' },
       { id: 'storage-engines', title: 'Storage Engines (LSM vs B-Tree)' },
-      { id: 'sql-engine', title: 'PostgreSQL Query Planner & Engine' },
-      { id: 'transactions', title: 'Transactions & Isolation Levels' },
+      { id: 'sql-nosql', title: 'SQL vs NoSQL Architecture' },
+      { id: 'transactions', title: 'Transactions & MVCC Isolation Levels' },
+      { id: 'replication', title: 'Streaming Replication & WAL Durability' },
+      { id: 'sharding', title: 'Sharding & Partitioning' },
       { id: 'files', title: 'Files & Object Storage (S3)' },
     ],
   },
@@ -139,9 +158,28 @@ export const DTS_MODULES: Module[] = [
     color: 'teal',
     lessons: [
       { id: 'microservices', title: 'Monolith vs Microservices' },
-      { id: 'java-concurrency', title: 'Java Concurrency & Thread State' },
       { id: 'service-discovery', title: 'Service Discovery & API Gateway' },
       { id: 'sagas', title: 'Sagas & Distributed Transactions' },
+    ],
+  },
+  {
+    id: 'java-runtime',
+    num: '05B',
+    title: 'Java Runtime & Concurrency Engine',
+    trackId: 'microservices',
+    color: 'sky',
+    lessons: [
+      { id: 'java-concurrency', title: 'Threads, Monitors & Synchronized' },
+      { id: 'java-executors', title: 'Thread Pools & WorkStealingPool' },
+      { id: 'java-completable', title: 'CompletableFuture & Async Pipelines' },
+      { id: 'java-virtual-threads', title: 'Virtual Threads & Project Loom (JDK 21)' },
+      { id: 'java-jvm-memory', title: 'JVM Memory Model, GC & Metaspace' },
+      { id: 'java-collections', title: 'Collections Internals & Hash Bins' },
+      { id: 'java-streams', title: 'Lazy Stream Pipelines & Short-circuiting' },
+      { id: 'java-spring-ioc', title: 'Spring IoC Container & Bean Lifecycle' },
+      { id: 'java-spring-aop', title: 'Spring AOP & Proxy Architecture' },
+      { id: 'java-spring-jpa', title: 'Spring Data JPA, Hibernate & N+1 Patterns' },
+      { id: 'java-spring-security', title: 'Spring Security & Filter Chain Architecture' },
     ],
   },
   {
@@ -227,10 +265,12 @@ export const CURRICULUM_TRACKS = DTS_TRACKS;
 export const CURRICULUM_MODULES = DTS_MODULES;
 
 export function getLessonHref(id: string): string {
-  if (id === 'sql-engine') return '/lab/sql';
-  if (id === 'java-concurrency') return '/lab/java';
-  if (id === 'request-lifecycle') return '/lab/foundations';
-  if (id === 'consistent-hashing') return '/lab/system-design';
+  if (id === 'architecture') return '/lab/architecture';
+  if (id === 'sql' || id === 'sql-engine') return '/lab/sql';
+  if (id === 'java' || id === 'java-concurrency' || id.startsWith('java-')) return '/lab/java';
+  if (id === 'request-lifecycle' || id === 'foundations') return '/lab/foundations';
+  if (id === 'consistent-hashing' || id === 'distributed') return '/lab/distributed';
+  if (id === 'hld-lld' || id === 'system-design') return '/lab/system-design';
   return `/lab/${id}`;
 }
 

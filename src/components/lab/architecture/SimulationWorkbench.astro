@@ -63,6 +63,111 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
   const label = customLabel ?? (def ? def[1] : key);
   return { icon, label };
 });
+
+const METRIC_CONFIGS: Record<string, { label: string; icon: string }> = {
+  dns: {
+    label: 'DNS lookup',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>`,
+  },
+  connect: {
+    label: 'Connect',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="16" y="16" width="6" height="6" rx="1"></rect><rect x="2" y="16" width="6" height="6" rx="1"></rect><rect x="9" y="2" width="6" height="6" rx="1"></rect><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path><path d="M12 12V8"></path></svg>`,
+  },
+  request: {
+    label: 'Request + server',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg>`,
+  },
+  download: {
+    label: 'Download',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>`,
+  },
+  total: {
+    label: 'Total',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" x2="14" y1="2" y2="2"></line><line x1="12" x2="15" y1="14" y2="11"></line><circle cx="12" cy="14" r="8"></circle></svg>`,
+  },
+  subnets: {
+    label: 'Subnets',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1.5"></rect><rect width="7" height="7" x="14" y="3" rx="1.5"></rect><rect width="7" height="7" x="14" y="14" rx="1.5"></rect><rect width="7" height="7" x="3" y="14" rx="1.5"></rect></svg>`,
+  },
+  nat_gw: {
+    label: 'NAT Gateway',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+  },
+  sec_groups: {
+    label: 'Sec Groups',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+  },
+  endpoints: {
+    label: 'Endpoints',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m10 15 5-3-5-3v6z"></path></svg>`,
+  },
+  security_posture: {
+    label: 'Posture',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+  },
+  az_active: {
+    label: 'Active AZs',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`,
+  },
+  asg_capacity: {
+    label: 'ASG Capacity',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M6 12h12"></path></svg>`,
+  },
+  failover_sec: {
+    label: 'Failover',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
+  },
+  stage: {
+    label: 'Stage',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`,
+  },
+  buffers: {
+    label: 'Buffers',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>`,
+  },
+  wal: {
+    label: 'WAL Log',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
+  },
+  locks: {
+    label: 'Locks',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
+  },
+  threads: {
+    label: 'Threads',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>`,
+  },
+  queue: {
+    label: 'Queue',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="8" y1="4" x2="8" y2="20"></line><line x1="16" y1="4" x2="16" y2="20"></line></svg>`,
+  },
+  mode: {
+    label: 'Mode',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+  },
+  queue_depth: {
+    label: 'Queue Depth',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>`,
+  },
+  fanout_topics: {
+    label: 'Fanout',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>`,
+  },
+  lambda_concurrency: {
+    label: 'Concurrency',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`,
+  },
+  dlq_messages: {
+    label: 'DLQ Dead',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+  },
+  serverless_uptime: {
+    label: 'Uptime',
+    icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+  },
+};
+
+const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.metrics : ['dns', 'connect', 'request', 'download', 'total'];
 ---
 
 <div class="body" id="dts-body" data-wb-lesson={JSON.stringify(lesson)} data-next-lesson={nextLessonInfo ? JSON.stringify(nextLessonInfo) : ''}>
@@ -91,28 +196,23 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
     </div>
 
     <section class="card stage">
-      <!-- HUD Chips rendered in place -->
+      <!-- HUD Chips rendered dynamically from activeMetricKeys -->
       <div class="stage__hud is-fresh" id="hud">
-        <div class="chip" data-k="dns" data-level="none">
-          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>DNS lookup</span>
-          <span class="chip__value" data-val="dns">—</span>
-        </div>
-        <div class="chip" data-k="connect" data-level="none">
-          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"></rect><rect x="2" y="16" width="6" height="6" rx="1"></rect><rect x="9" y="2" width="6" height="6" rx="1"></rect><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path><path d="M12 12V8"></path></svg>Connect</span>
-          <span class="chip__value" data-val="connect">—</span>
-        </div>
-        <div class="chip" data-k="request" data-level="none">
-          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg>Request + server</span>
-          <span class="chip__value" data-val="request">—</span>
-        </div>
-        <div class="chip" data-k="download" data-level="none">
-          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>Download</span>
-          <span class="chip__value" data-val="download">—</span>
-        </div>
-        <div class="chip" data-k="total" data-level="none">
-          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" x2="14" y1="2" y2="2"></line><line x1="12" x2="15" y1="14" y2="11"></line><circle cx="12" cy="14" r="8"></circle></svg>Total</span>
-          <span class="chip__value" data-val="total">—</span>
-        </div>
+        {activeMetricKeys.map((k: string) => {
+          const cfg = METRIC_CONFIGS[k] || {
+            label: k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' '),
+            icon: `<svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>`,
+          };
+          const initialVal = (s0?.metrics as any)?.[k];
+          return (
+            <div class="chip" data-k={k} data-level={initialVal == null ? 'none' : 'good'}>
+              <span class="chip__label" set:html={`${cfg.icon}${cfg.label}`} />
+              <span class="chip__value" data-val={k}>
+                {initialVal == null ? '—' : typeof initialVal === 'number' ? `${initialVal} ms` : initialVal}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <!-- Stage Tools -->
@@ -459,7 +559,12 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
       // HUD Metrics with count-up animation & chip-flash
       if (elHud) {
         const metrics = s.metrics || {};
-        ['dns', 'connect', 'request', 'download', 'total'].forEach((k) => {
+        const allKeys = Array.from(new Set([
+          ...(lesson.metrics || []),
+          ...Object.keys(metrics),
+        ]));
+
+        allKeys.forEach((k) => {
           const valEl = elHud.querySelector(`[data-val="${k}"]`) as HTMLElement | null;
           const chipEl = elHud.querySelector(`[data-k="${k}"]`) as HTMLElement | null;
           if (!valEl || !chipEl) return;
@@ -483,8 +588,8 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
               void valEl.offsetWidth;
               valEl.classList.add('is-swap');
             }
-            valEl.textContent = newVal == null ? '—' : `${newVal} ms`;
-            chipEl.setAttribute('data-level', newVal == null ? 'none' : 'good');
+            valEl.textContent = newVal == null ? '—' : typeof newVal === 'number' ? `${newVal} ms` : String(newVal);
+            chipEl.setAttribute('data-level', newVal == null || newVal === '—' ? 'none' : 'good');
           } else {
             const startW = chipEl.offsetWidth;
             valEl.textContent = `${newVal} ms`;
@@ -501,7 +606,7 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
               if ((chipEl as any)._anim !== animId) return;
               const p = Math.min(1, (now - startTime) / duration);
               const ease = 1 - (1 - p) ** 3;
-              const currentVal = Math.round(oldVal + (newVal - oldVal) * ease);
+              const currentVal = Math.round(Number(oldVal) + (Number(newVal) - Number(oldVal)) * ease);
               valEl.textContent = `${currentVal} ms`;
               chipEl.style.width = `${startW + (endW - startW) * ease}px`;
               if (p < 1) {

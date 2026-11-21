@@ -71,9 +71,9 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          producer: d(-8, 0, { s: 2.6, h: 26, color: `teal`, glyph: `server`, label: [`Order API`, `Producer`] }),
+          producer: d(-6, -2, { s: 2.6, h: 26, color: `teal`, glyph: `server`, label: [`Order API`, `Producer`] }),
           sqs: ee(0, 0, { label: [`Amazon SQS Queue`, `Standard Queue`] }),
-          consumer: d(8, 0, { s: 2.6, h: 26, color: `orange`, glyph: `cpu`, label: [`Payment Worker`, `Consumer`] }),
+          consumer: d(6, 2, { s: 2.6, h: 26, color: `orange`, glyph: `cpu`, label: [`Payment Worker`, `Consumer`] }),
         },
         links: {
           send: h(`producer`, `sqs`, [`producer`, `sqs`], { heads: `end`, label: `SendMessage` }),
@@ -115,11 +115,11 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          order_svc: d(-10, 0, { s: 2.5, h: 25, color: `teal`, glyph: `cart`, label: [`Order Service`] }),
-          sns: d(-3, 0, { s: 3.0, h: 30, color: `rose`, glyph: `signpost`, label: [`SNS Topic: OrderPlaced`] }),
-          q_bill: ee(5, -6, { label: [`Billing SQS`] }),
-          q_ship: ee(5, 0, { label: [`Shipping SQS`] }),
-          q_notif: ee(5, 6, { label: [`Email SQS`] }),
+          order_svc: d(-6, 0, { s: 2.5, h: 25, color: `teal`, glyph: `cart`, label: [`Order Service`] }),
+          sns: d(-2, 0, { s: 3.0, h: 30, color: `rose`, glyph: `signpost`, label: [`SNS Topic: OrderPlaced`] }),
+          q_bill: ee(4, -4, { label: [`Billing SQS`] }),
+          q_ship: ee(4, 0, { label: [`Shipping SQS`] }),
+          q_notif: ee(4, 4, { label: [`Email SQS`] }),
         },
         links: {
           pub: h(`order_svc`, `sns`, [`order_svc`, `sns`], { heads: `end`, label: `Publish` }),
@@ -161,10 +161,10 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          client: te(-12, 0, { label: [`Mobile / Web User`] }),
-          apigw: d(-5, 0, { s: 2.6, h: 26, color: `orange`, glyph: `route`, label: [`API Gateway`, `HTTP /api/v1`] }),
-          lambda: d(2, 0, { s: 2.8, h: 28, color: `yellow`, glyph: `zap`, label: [`AWS Lambda`, `Stateless Function`] }),
-          ddb: b(9, 0, { r: 2.0, h: 32, label: `Amazon DynamoDB`, color: `blue` }),
+          client: te(-6, -2, { label: [`Mobile / Web User`] }),
+          apigw: d(-2, -1, { s: 2.6, h: 26, color: `orange`, glyph: `route`, label: [`API Gateway`, `HTTP /api/v1`] }),
+          lambda: d(2, 1, { s: 2.8, h: 28, color: `yellow`, glyph: `zap`, label: [`AWS Lambda`, `Stateless Function`] }),
+          ddb: b(6, 3, { r: 2.0, h: 32, label: `Amazon DynamoDB`, color: `blue` }),
         },
         links: {
           c_gw: h(`client`, `apigw`, [`client`, `apigw`], { heads: `both` }),

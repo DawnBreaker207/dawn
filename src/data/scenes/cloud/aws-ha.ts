@@ -33,7 +33,7 @@ export const awsHaLesson = {
   summary: `Multi-AZ resilience patterns: Route 53 health checks & routing policies, Cross-Zone ALB balancing, Auto Scaling Groups, and Disaster Recovery tiers.`,
   minutes: 15,
   level: `advanced`,
-  metrics: [`az_active`, `asg_capacity`, `rto_target`, `rpo_target`, `failover_sec`],
+  metrics: [`dns`, `connect`, `az_active`, `asg_capacity`, `failover_sec`],
   legend: [`req`, `res`, [`ping`, `health probe`], `fail`],
   goals: [
     { text: `Route 53 Routing Policies: Latency, Weighted, Geolocation, and Failover`, step: 1 },
@@ -64,18 +64,18 @@ export const awsHaLesson = {
         `+ Health Check attached to ALB DNS`,
       ],
       metrics: {
+        dns: `11 ms`,
+        connect: `24 ms`,
         az_active: `2 Regions`,
         asg_capacity: `6 Instances`,
-        rto_target: `< 60s`,
-        rpo_target: `0s`,
         failover_sec: `15s`,
       },
       scene: {
         entities: {
-          users: y(0, -12, { label: `Global Users`, tags: [{ text: `DNS Query`, icon: `globe` }] }),
-          r53: d(-4, -4, { color: `yellow`, glyph: `globe`, label: [`Route 53`, `Failover + Health`] }),
-          reg_pri: d(-8, 6, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `Healthy`] }),
-          reg_sec: d(6, 6, { color: `orange`, glyph: `server`, label: [`DR (us-west-2)`, `Standby`] }),
+          users: y(-6, -4, { label: `Global Users`, tags: [{ text: `DNS Query`, icon: `globe` }] }),
+          r53: d(-2, -2, { color: `yellow`, glyph: `globe`, label: [`Route 53`, `Failover + Health`] }),
+          reg_pri: d(4, -2, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `Healthy`] }),
+          reg_sec: d(4, 4, { color: `orange`, glyph: `server`, label: [`DR (us-west-2)`, `Standby`] }),
         },
         links: {
           u_dns: h(`users`, `r53`, [`users`, `r53`], { heads: `both` }),
@@ -105,18 +105,18 @@ export const awsHaLesson = {
         `+ Deregistration delay (connection draining): 300s`,
       ],
       metrics: {
+        dns: `10 ms`,
+        connect: `20 ms`,
         az_active: `3 AZs (1a, 1b, 1c)`,
         asg_capacity: `6 Targets`,
-        rto_target: `< 10s`,
-        rpo_target: `0s`,
         failover_sec: `Instant`,
       },
       scene: {
         entities: {
-          alb: f(0, -6, { color: `orange`, glyph: `balancer`, label: [`Public ALB`, `Cross-Zone ON`] }),
-          az1: d(-8, 4, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1a)`] }),
-          az2: d(0, 4, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1b)`] }),
-          az3: d(8, 4, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1c)`] }),
+          alb: f(-4, -2, { color: `orange`, glyph: `balancer`, label: [`Public ALB`, `Cross-Zone ON`] }),
+          az1: d(4, -4, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1a)`] }),
+          az2: d(4, 0, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1b)`] }),
+          az3: d(4, 4, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1c)`] }),
         },
         links: {
           l1: h(`alb`, `az1`, [`alb`, `az1`], { heads: `both` }),
@@ -149,19 +149,19 @@ export const awsHaLesson = {
         `+ Default cooldown: 300s`,
       ],
       metrics: {
+        dns: `—`,
+        connect: `4 ms`,
         az_active: `3 AZs`,
         asg_capacity: `Scale 2 → 8`,
-        rto_target: `Auto-recover`,
-        rpo_target: `0s`,
         failover_sec: `60s boot`,
       },
       scene: {
         entities: {
-          alb: f(0, -6, { color: `orange`, glyph: `balancer`, label: [`ALB Fleet`] }),
-          i1: d(-9, 4, { color: `teal`, glyph: `cpu`, label: [`EC2 Node #1`] }),
-          i2: d(-3, 4, { color: `teal`, glyph: `cpu`, label: [`EC2 Node #2`] }),
-          i3: d(3, 4, { color: `yellow`, glyph: `cpu`, label: [`EC2 #3 (Scaled)`] }),
-          i4: d(9, 4, { color: `yellow`, glyph: `cpu`, label: [`EC2 #4 (Scaled)`] }),
+          alb: f(-4, 0, { color: `orange`, glyph: `balancer`, label: [`ALB Fleet`] }),
+          i1: d(2, -4, { color: `teal`, glyph: `cpu`, label: [`EC2 Node #1`] }),
+          i2: d(2, 4, { color: `teal`, glyph: `cpu`, label: [`EC2 Node #2`] }),
+          i3: d(6, -2, { color: `yellow`, glyph: `cpu`, label: [`EC2 #3 (Scaled)`] }),
+          i4: d(6, 2, { color: `yellow`, glyph: `cpu`, label: [`EC2 #4 (Scaled)`] }),
         },
         links: {
           l1: h(`alb`, `i1`, [`alb`, `i1`], { heads: `both` }),
@@ -195,16 +195,16 @@ export const awsHaLesson = {
         `+ Warm Standby active in us-west-2`,
       ],
       metrics: {
+        dns: `12 ms`,
+        connect: `28 ms`,
         az_active: `Multi-Region`,
         asg_capacity: `Warm Standby`,
-        rto_target: `< 5 min`,
-        rpo_target: `< 1 sec`,
         failover_sec: `Sub-minute`,
       },
       scene: {
         entities: {
-          pri_region: d(-7, 0, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `100% Traffic`] }),
-          sec_region: d(7, 0, { color: `yellow`, glyph: `server`, label: [`Warm Standby (us-west-2)`, `Ready to Scale`] }),
+          pri_region: d(-5, 0, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `100% Traffic`] }),
+          sec_region: d(5, 0, { color: `yellow`, glyph: `server`, label: [`Warm Standby (us-west-2)`, `Ready to Scale`] }),
         },
         links: {
           rep: h(`pri_region`, `sec_region`, [`pri_region`, `sec_region`], { heads: `end`, label: `Continuous DB Sync (RPO < 1s)` }),
