@@ -10,14 +10,18 @@ const { currentLessonId, trackId: propTrackId } = Astro.props;
 
 // Determine track scope
 const resolveTrack = (lessonId: string, explicitTrack?: string): string => {
-  if (explicitTrack) return explicitTrack;
-  if (lessonId === 'architecture') return 'architecture';
+  if (explicitTrack) {
+    if (DTS_TRACKS.some((t) => t.id === explicitTrack)) return explicitTrack;
+    const mod = DTS_MODULES.find((m) => m.id === explicitTrack);
+    if (mod) return mod.trackId;
+  }
+  if (lessonId === 'architecture') return 'system-design';
   for (const mod of DTS_MODULES) {
     if (mod.lessons.some((l) => l.id === lessonId)) {
       return mod.trackId;
     }
   }
-  return 'system-design';
+  return 'network-scale';
 };
 
 const activeTrack = resolveTrack(currentLessonId, propTrackId);
@@ -39,7 +43,12 @@ for (const mod of DTS_MODULES) {
   }
 }
 
-const totalVisibleLessons = DTS_MODULES.reduce((acc, m) => acc + m.lessons.length, 0);
+// Scoped strictly to the active track (Option A)
+const trackModules = DTS_MODULES.filter((m) => m.trackId === activeTrack);
+const effectiveModules = trackModules.length > 0 ? trackModules : DTS_MODULES;
+const activeTrackInfo = DTS_TRACKS.find((t) => t.id === activeTrack);
+const totalVisibleLessons = effectiveModules.reduce((acc, m) => acc + m.lessons.length, 0);
+const trackTitleClean = activeTrackInfo ? activeTrackInfo.title.replace(/^\d+\.\s*/, '') : 'track';
 ---
 
 <!-- Dropdown Root -->
@@ -50,7 +59,7 @@ const totalVisibleLessons = DTS_MODULES.reduce((acc, m) => acc + m.lessons.lengt
     class="chapter-dropdown-trigger"
     aria-haspopup="true"
     aria-expanded="false"
-    title="Browse track chapters"
+    title={`Browse ${trackTitleClean} chapters`}
   >
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
@@ -72,30 +81,14 @@ const totalVisibleLessons = DTS_MODULES.reduce((acc, m) => acc + m.lessons.lengt
       <input
         id="dropdown-search-input"
         type="text"
-        placeholder="Filter chapters (e.g. dns, cache, sharding, vpc)..."
+        placeholder={`Filter ${trackTitleClean} chapters...`}
         autocomplete="off"
       />
     </div>
 
-    <!-- Track filter pills -->
-    <div class="dropdown-track-pills thin-scrollbar">
-      <button type="button" class="track-pill is-active" data-track-filter="all">All</button>
-      {DTS_TRACKS.map((t) => (
-        <button
-          type="button"
-          class:list={['track-pill', t.id === activeTrack && 'is-current-track']}
-          data-track-filter={t.id}
-          title={t.subtitle}
-        >
-          <span class="track-emoji">{t.emoji}</span>
-          <span>{t.title.replace(/^\d+\.\s*/, '')}</span>
-        </button>
-      ))}
-    </div>
-
-    <!-- Streamlined Lessons List Grouped by Modules -->
+    <!-- Scoped Lessons List for Active Track Only -->
     <div class="dropdown-list-scroll thin-scrollbar" id="dropdown-list-container">
-      {DTS_MODULES.map((mod: Module) => (
+      {effectiveModules.map((mod: Module) => (
         <div class="dropdown-module-group" data-module-id={mod.id} data-track-id={mod.trackId}>
           <div class="dropdown-module-header">
             <span class="mod-num font-mono">{mod.num}</span>
@@ -182,8 +175,8 @@ const totalVisibleLessons = DTS_MODULES.reduce((acc, m) => acc + m.lessons.lengt
     position: absolute;
     top: calc(100% + 5px);
     right: 0;
-    width: 340px;
-    max-height: 460px;
+    width: 320px;
+    max-height: 420px;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -226,59 +219,9 @@ const totalVisibleLessons = DTS_MODULES.reduce((acc, m) => acc + m.lessons.lengt
     width: 100%;
   }
 
-  .dropdown-track-pills {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 10px;
-    overflow-x: auto;
-    border-bottom: 1px solid var(--border);
-    background: color-mix(in srgb, var(--bg-alt) 60%, var(--bg));
-    flex-shrink: 0;
-  }
-
-  .track-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-family: var(--font-mono, monospace);
-    font-weight: 500;
-    white-space: nowrap;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--fg-dim);
-    cursor: pointer;
-    transition: all 0.12s ease;
-  }
-
-  .track-pill:hover {
-    border-color: var(--accent);
-    color: var(--fg);
-  }
-
-  .track-pill.is-active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #ffffff;
-    font-weight: 700;
-  }
-
-  .track-pill.is-current-track:not(.is-active) {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .track-emoji {
-    font-size: 11px;
-    line-height: 1;
-  }
-
   .dropdown-list-scroll {
     overflow-y: auto;
-    max-height: 360px;
+    max-height: 350px;
     padding: 4px;
     display: flex;
     flex-direction: column;
@@ -381,26 +324,19 @@ const totalVisibleLessons = DTS_MODULES.reduce((acc, m) => acc + m.lessons.lengt
     const searchInput = document.getElementById('dropdown-search-input') as HTMLInputElement | null;
     const titleDisplay = document.getElementById('chapter-active-title');
     const lessonBtns = document.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
-    const trackPills = document.querySelectorAll<HTMLButtonElement>('.track-pill');
 
     if (!root || !trigger || !menu) return;
-
-    let currentTrackFilter = 'all';
 
     const applyFilters = () => {
       const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
       const groups = menu.querySelectorAll<HTMLElement>('.dropdown-module-group');
 
       groups.forEach((grp) => {
-        const trackId = grp.dataset.trackId;
-        const matchesTrack = currentTrackFilter === 'all' || trackId === currentTrackFilter;
         let matchCount = 0;
-
         const btns = grp.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
         btns.forEach((btn) => {
           const text = (btn.dataset.lessonTitle || btn.textContent || '').toLowerCase();
-          const matchesQuery = !q || text.includes(q);
-          const visible = matchesTrack && matchesQuery;
+          const visible = !q || text.includes(q);
           btn.style.display = visible ? 'flex' : 'none';
           if (visible) matchCount++;
         });
@@ -439,19 +375,6 @@ const totalVisibleLessons = DTS_MODULES.reduce((acc, m) => acc + m.lessons.lengt
         }
       });
     }
-
-    trackPills.forEach((pill) => {
-      if (pill.dataset.bound !== 'true') {
-        pill.dataset.bound = 'true';
-        pill.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const filter = pill.dataset.trackFilter || 'all';
-          currentTrackFilter = filter;
-          trackPills.forEach((p) => p.classList.toggle('is-active', p === pill));
-          applyFilters();
-        });
-      }
-    });
 
     if (searchInput && searchInput.dataset.bound !== 'true') {
       searchInput.dataset.bound = 'true';

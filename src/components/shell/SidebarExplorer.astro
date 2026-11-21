@@ -249,7 +249,9 @@ const inPostDetail =
       title="Dawn Blog actual deployment architecture"
     >
       <span class="explorer-caret" aria-hidden="true"></span>
-      <span class="explorer-icon text-xs leading-none mr-0.5">🏛️</span>
+      <span class="explorer-icon">
+        <ExplorerFileIcon type="architecture" />
+      </span>
       <span class="row-label truncate">dawn-blog.arch</span>
     </a>
 
@@ -258,13 +260,13 @@ const inPostDetail =
       <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--fg-dim)">44 labs</span>
     </div>
     {[
-      ['/lab/foundations', 'network-scale.track', '🌐', '1. Networking & Web Scale (8 labs)'],
-      ['/lab/storage-engines', 'storage-tier.track', '🗄️', '2. Database & Storage Tier (6 labs)'],
-      ['/lab/system-design', 'distributed.track', '⚖️', '3. Distributed Systems Core (6 labs)'],
-      ['/lab/microservices', 'microservices.track', '🧩', '4. Microservices & Event-Driven (8 labs)'],
-      ['/lab/hld-lld', 'system-design.track', '📐', '5. System Design & Case Studies (9 labs)'],
-      ['/lab/aws-cloud', 'cloud-aws.track', '☁️', '6. AWS Cloud Architecture SAA-C03 (5 labs)'],
-    ].map(([href, label, emoji, title]) => (
+      ['/lab/foundations', 'network.sim', 'network', '1. Networking & Web Scale (8 labs)'],
+      ['/lab/storage-engines', 'storage.sim', 'storage', '2. Database & Storage Tier (6 labs)'],
+      ['/lab/system-design', 'distributed.sim', 'distributed', '3. Distributed Systems Core (6 labs)'],
+      ['/lab/microservices', 'microservices.sim', 'microservices', '4. Microservices & Event-Driven (8 labs)'],
+      ['/lab/hld-lld', 'system-design.sim', 'system', '5. System Design & Case Studies (9 labs)'],
+      ['/lab/aws-cloud', 'aws-cloud.sim', 'cloud', '6. AWS Cloud Architecture SAA-C03 (5 labs)'],
+    ].map(([href, label, iconType, title]) => (
       <a
         href={href}
         class:list={['explorer-row no-underline font-medium', (activePath === href || (href === '/lab/foundations' && activePath === '/lab/request-lifecycle')) && 'is-active']}
@@ -272,7 +274,9 @@ const inPostDetail =
         title={title}
       >
         <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon text-xs leading-none mr-0.5">{emoji}</span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type={iconType as any} />
+        </span>
         <span class="row-label truncate">{label}</span>
       </a>
     ))}
@@ -281,9 +285,9 @@ const inPostDetail =
       Interactive Engines
     </div>
     {[
-      ['/lab/sql', 'sql-engine.lab', '🗄️', 'PostgreSQL Query Planner, B-Tree, MVCC'],
-      ['/lab/java', 'java-concurrency.lab', '☕', 'JVM Memory, Concurrency & Virtual Threads'],
-    ].map(([href, label, emoji, title]) => (
+      ['/lab/sql', 'sql-engine.lab', 'sql', 'PostgreSQL Query Planner, B-Tree, MVCC'],
+      ['/lab/java', 'java-runtime.lab', 'java', 'JVM Memory, Concurrency & Virtual Threads'],
+    ].map(([href, label, iconType, title]) => (
       <a
         href={href}
         class:list={['explorer-row no-underline font-medium', activePath === href && 'is-active']}
@@ -291,7 +295,9 @@ const inPostDetail =
         title={title}
       >
         <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon text-xs leading-none mr-0.5">{emoji}</span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type={iconType as any} />
+        </span>
         <span class="row-label truncate">{label}</span>
       </a>
     ))}

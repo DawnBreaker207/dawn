@@ -1,6 +1,7 @@
 ---
 import type { Lesson } from '@/lib/simulator/types';
 import { MODULES, CHAPTER_KINDS } from '@/lib/simulator/curriculum';
+import { getNextLessonInTrack } from '@/data/curriculum';
 
 interface Props {
   lesson: Lesson;
@@ -13,6 +14,7 @@ let moduleNum = '01';
 let moduleTitle = 'Foundations';
 let lessonIdxInMod = 1;
 let totalLessonsInMod = 3;
+let currentTrackId: string | undefined;
 
 for (const mod of MODULES) {
   const idx = mod.lessons.findIndex(l => l.id === lesson.id);
@@ -21,9 +23,12 @@ for (const mod of MODULES) {
     moduleTitle = mod.title;
     lessonIdxInMod = idx + 1;
     totalLessonsInMod = mod.lessons.length;
+    currentTrackId = (mod as any).trackId;
     break;
   }
 }
+
+const nextLessonInfo = getNextLessonInTrack(lesson.id, currentTrackId);
 
 const s0 = lesson.steps[0];
 const totalSteps = lesson.steps.length;
@@ -60,7 +65,7 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
 });
 ---
 
-<div class="body" id="dts-body" data-wb-lesson={JSON.stringify(lesson)}>
+<div class="body" id="dts-body" data-wb-lesson={JSON.stringify(lesson)} data-next-lesson={nextLessonInfo ? JSON.stringify(nextLessonInfo) : ''}>
   <!-- LEFT: Sheet (lesson header, 3D stage, bottom timeline) -->
   <main class="sheet">
     <div class="lesson-head is-fresh" id="head">
@@ -221,8 +226,10 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
           <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
           Back
         </button>
-        <button class="btn-pop btn-next" id="next" type="button" disabled={totalSteps <= 1}>
-          <span class="btn-next__label" id="guide-next-label">Next: {lesson.steps[1]?.short || ''}</span>
+        <button class="btn-pop btn-next" id="next" type="button" disabled={totalSteps <= 1 && !nextLessonInfo}>
+          <span class="btn-next__label" id="guide-next-label">
+            {lesson.steps[1]?.short ? `Next: ${lesson.steps[1].short}` : nextLessonInfo ? `Next: ${nextLessonInfo.title}` : 'Finish Track ✓'}
+          </span>
           <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
         </button>
       </div>
@@ -264,6 +271,9 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
     const steps = lesson.steps || [];
     const total = steps.length;
     let curIdx = 0;
+
+    const rawNext = root.getAttribute('data-next-lesson');
+    const nextLesson = rawNext ? JSON.parse(rawNext) : null;
 
     const elStepLabel = document.getElementById('guide-step-label');
     const elChapterBadge = document.getElementById('guide-chapter-badge');
@@ -397,9 +407,28 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
       // Nav buttons
       if (elBtnBack) elBtnBack.disabled = idx === 0;
       if (elBtnNext) {
-        elBtnNext.disabled = idx === total - 1;
-        if (elGuideNextLabel) {
-          elGuideNextLabel.textContent = idx < total - 1 ? `Next: ${steps[idx + 1].short || ''}` : 'Finished';
+        const isLastStep = idx === total - 1;
+        if (!isLastStep) {
+          elBtnNext.disabled = false;
+          elBtnNext.title = '';
+          if (elGuideNextLabel) {
+            elGuideNextLabel.textContent = `Next: ${steps[idx + 1]?.short || ''}`;
+          }
+        } else {
+          if (nextLesson && nextLesson.href) {
+            elBtnNext.disabled = false;
+            elBtnNext.title = `Next lesson: ${nextLesson.title}`;
+            if (elGuideNextLabel) {
+              const displayTitle = nextLesson.title.length <= 18 ? nextLesson.title : `${nextLesson.title.slice(0, 16)}…`;
+              elGuideNextLabel.textContent = `Next: ${displayTitle}`;
+            }
+          } else {
+            elBtnNext.disabled = true;
+            elBtnNext.title = 'You have completed all lessons in this track';
+            if (elGuideNextLabel) {
+              elGuideNextLabel.textContent = 'Finish Track ✓';
+            }
+          }
         }
       }
 
@@ -491,7 +520,13 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
 
     // Button event handlers
     elBtnBack?.addEventListener('click', () => renderStep(curIdx - 1));
-    elBtnNext?.addEventListener('click', () => renderStep(curIdx + 1));
+    elBtnNext?.addEventListener('click', () => {
+      if (curIdx === total - 1 && nextLesson?.href) {
+        window.location.href = nextLesson.href;
+        return;
+      }
+      renderStep(curIdx + 1);
+    });
 
     // Timeline clicks
     elTimeline?.addEventListener('click', (e) => {
@@ -526,7 +561,13 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
     // Keyboard shortcuts: ArrowLeft / ArrowRight / R (replay) / Space (pause) / 0 (fit)
     window.addEventListener('keydown', (e) => {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
-      if (e.key === 'ArrowRight') renderStep(curIdx + 1);
+      if (e.key === 'ArrowRight') {
+        if (curIdx === total - 1 && nextLesson?.href) {
+          window.location.href = nextLesson.href;
+          return;
+        }
+        renderStep(curIdx + 1);
+      }
       if (e.key === 'ArrowLeft') renderStep(curIdx - 1);
       if (e.key === 'r' || e.key === 'R') {
         document.getElementById('replay')?.click();

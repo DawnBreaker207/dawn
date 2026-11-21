@@ -226,3 +226,30 @@ export const DTS_MODULES: Module[] = [
 export const CURRICULUM_TRACKS = DTS_TRACKS;
 export const CURRICULUM_MODULES = DTS_MODULES;
 
+export function getLessonHref(id: string): string {
+  if (id === 'sql-engine') return '/lab/sql';
+  if (id === 'java-concurrency') return '/lab/java';
+  if (id === 'request-lifecycle') return '/lab/foundations';
+  if (id === 'consistent-hashing') return '/lab/system-design';
+  return `/lab/${id}`;
+}
+
+export function getNextLessonInTrack(lessonId: string, trackId?: string): { id: string; title: string; href: string } | null {
+  // Find all lessons in this track (or all lessons if no track)
+  const targetModules = trackId ? DTS_MODULES.filter((m) => m.trackId === trackId) : DTS_MODULES;
+  const allLessons = targetModules.flatMap((m) => m.lessons);
+  const curIdx = allLessons.findIndex((l) => l.id === lessonId);
+  if (curIdx !== -1 && curIdx + 1 < allLessons.length) {
+    const next = allLessons[curIdx + 1];
+    return { id: next.id, title: next.title, href: getLessonHref(next.id) };
+  }
+  // If track ended, check global next lesson in curriculum
+  const globalLessons = DTS_MODULES.flatMap((m) => m.lessons);
+  const gIdx = globalLessons.findIndex((l) => l.id === lessonId);
+  if (gIdx !== -1 && gIdx + 1 < globalLessons.length) {
+    const next = globalLessons[gIdx + 1];
+    return { id: next.id, title: next.title, href: getLessonHref(next.id) };
+  }
+  return null;
+}
+
