@@ -1,4 +1,4 @@
-import type GiscusConfigs from './giscus-config.type';
+import type GiscusConfigs from './giscus';
 
 export * from './data';
 export * from './server';

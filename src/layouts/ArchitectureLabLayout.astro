@@ -1,12 +1,12 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import ArchitectureChapterPicker from '@/components/lab/ArchitectureChapterPicker.astro';
-import DtsSceneRenderer from '@/components/widget/DtsSceneRenderer';
-import DtsWorkbench from '@/components/lab/architecture/DtsWorkbench.astro';
-import '@/styles/designed-to-scale.css';
+import ChapterPicker from '@/components/lab/architecture/ChapterPicker.astro';
+import SceneRenderer from '@/components/lab/architecture/SceneRenderer';
+import SimulationWorkbench from '@/components/lab/architecture/SimulationWorkbench.astro';
+import '@/styles/simulation.css';
 import '@/styles/lab-architecture.css';
-import { ALL_DTS_LESSONS } from '@/lib/dts/lessons';
-import type { Lesson } from '@/lib/dts/types';
+import { ALL_SCENES } from '@/data/scenes';
+import type { Lesson } from '@/lib/simulator/types';
 
 export const prerender = true;
 
@@ -19,18 +19,18 @@ interface Props {
 
 const { title, description, lessonId, trackId } = Astro.props;
 
-const dtsLesson = ALL_DTS_LESSONS[lessonId] as unknown as Lesson;
+const dtsLesson = ALL_SCENES[lessonId] as unknown as Lesson;
 ---
 
 <BaseLayout title={title} description={description} fullBleed={true}>
   <div slot="topbar-actions" class="topbar-lab-controls">
-    <ArchitectureChapterPicker currentLessonId={lessonId} trackId={trackId} />
+    <ChapterPicker currentLessonId={lessonId} trackId={trackId} />
   </div>
 
   <div id="dts-view-ts" class="dts-window is-embedded dts-view-container w-full h-full flex flex-col flex-1 min-h-0">
-    <DtsWorkbench lesson={dtsLesson!}>
-      <DtsSceneRenderer slot="canvas" lesson={dtsLesson!} client:idle />
-    </DtsWorkbench>
+    <SimulationWorkbench lesson={dtsLesson!}>
+      <SceneRenderer slot="canvas" lesson={dtsLesson!} client:idle />
+    </SimulationWorkbench>
   </div>
 </BaseLayout>
 

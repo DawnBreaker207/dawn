@@ -1,7 +1,7 @@
 ---
 import ArchitectureLabLayout from '@/layouts/ArchitectureLabLayout.astro';
-import { DTS_MODULES } from '@/data/dts-lessons';
-import { ALL_DTS_LESSONS } from '@/lib/dts/lessons';
+import { CURRICULUM_MODULES } from '@/data/curriculum';
+import { ALL_SCENES } from '@/data/scenes';
 
 export const prerender = true;
 
@@ -22,11 +22,11 @@ export async function getStaticPaths() {
     'terminal',
   ]);
 
-  return DTS_MODULES.flatMap((mod) =>
+  return CURRICULUM_MODULES.flatMap((mod) =>
     mod.lessons
       .filter((lesson) => !EXCLUDED_ROUTES.has(lesson.id))
       .map((lesson) => {
-        const dts = ALL_DTS_LESSONS[lesson.id];
+        const dts = ALL_SCENES[lesson.id];
         return {
           params: { lesson: lesson.id },
           props: {

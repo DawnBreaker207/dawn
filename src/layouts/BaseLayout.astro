@@ -162,8 +162,8 @@ const projects = projectsData
     {SITE.analytics.umamiWebsiteId && import.meta.env.PROD && (
       <script is:inline async defer data-website-id={SITE.analytics.umamiWebsiteId} src="/stats/script.js"></script>
     )}
-    <script>import '@/scripts/site.ts';</script>
-    <script>import '@/scripts/app-shell.ts';</script>
-    <script>import '@/scripts/extras.ts';</script>
+    <script>import '@/scripts/core/dom-interactions.ts';</script>
+    <script>import '@/scripts/core/app-shell.ts';</script>
+    <script>import '@/scripts/core/extras.ts';</script>
   </body>
 </html>
