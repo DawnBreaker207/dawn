@@ -1,0 +1,39 @@
+.tool--fit {
+  animation: 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) fresh-in;
+}
+::view-transition-old(root) {
+  mix-blend-mode: normal;
+  animation: none;
+}
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: none;
+}
+.menu-btn,
+.drawer-nav,
+.drawer-close,
+.drawer-foot,
+.drawer-backdrop,
+.tool--expand,
+.guide__card {
+  display: none;
+}
+.sx__esc {
+  cursor: pointer;
+}
+:root.cards-inline .guide__card {
+  margin: 2px 0 14px;
+  display: block;
+}
+.guide__card svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+.drawer-nav .nav__item {
+  justify-content: flex-start;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 13px;
+}

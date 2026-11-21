@@ -1,0 +1,211 @@
+.link {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.9px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.5s;
+}
+.link--dashed {
+  stroke-dasharray: 5 4.5;
+}
+.link--off {
+  stroke: var(--c-b0a698);
+  stroke-width: 1.6px;
+  stroke-dasharray: 4 5;
+}
+.link--beat {
+  stroke: var(--c-3fa456);
+  stroke-width: 2px;
+  stroke-dasharray: 1.5 5.5;
+}
+.link--cut {
+  stroke: var(--c-c0392b);
+  stroke-width: 2px;
+  stroke-dasharray: 7 6;
+}
+.pkt {
+  transition: opacity 0.25s;
+}
+.pkt circle,
+.pkt rect {
+  fill: #f3b47f;
+  stroke: var(--ink);
+  stroke-width: 1.5px;
+}
+.pkt--heavy rect {
+  fill: #e8834d;
+  stroke-width: 1.7px;
+}
+.pkt--ping circle {
+  fill: #f4fbef;
+  stroke: #2f8a43;
+  stroke-width: 2.1px;
+}
+.pkt--ping.pkt--back circle {
+  fill: #9fd28f;
+}
+.pkt--slow circle {
+  fill: #efb041;
+}
+.pkt--mine circle {
+  fill: #b79ce6;
+  stroke-width: 1.7px;
+}
+.pkt--write rect {
+  fill: #5d5466;
+  stroke: var(--ink);
+}
+.pkt--kill circle {
+  fill: #fde3df;
+  stroke: #c0392b;
+  stroke-width: 2.1px;
+}
+.pkt--mine.pkt--back circle {
+  fill: #9fd28f;
+}
+.pkt--msg rect {
+  fill: #efb041;
+  stroke: var(--ink);
+  stroke-width: 1.5px;
+}
+.pkt--poison rect {
+  fill: #e5534b;
+  stroke: #5e1b16;
+  stroke-width: 1.6px;
+}
+.pkt--push circle {
+  fill: #9fd28f;
+}
+.pkt--empty circle {
+  fill: #fbf6ef;
+}
+.pkt--empty.pkt--back circle {
+  fill: #d9d0c4;
+}
+.pkt--held circle {
+  animation: 0.8s ease-in-out infinite held;
+}
+@keyframes held {
+  0%,
+  to {
+    stroke-width: 1.5px;
+  }
+  50% {
+    stroke-width: 3.4px;
+  }
+}
+.pkt--req.pkt--back circle,
+.pkt--slow.pkt--back circle {
+  fill: #9fd28f;
+}
+.link-label {
+  pointer-events: none;
+}
+.pkt--leave {
+  opacity: 0;
+}
+.fx-ring,
+.fx-x,
+.spot {
+  transform-box: fill-box;
+  transform-origin: 50%;
+}
+.fx--fail .fx-ring {
+  fill: var(--c-e5534b);
+  stroke: var(--c-8f2a22);
+  stroke-width: 1.4px;
+  animation: 0.65s ease-out forwards fx-burst;
+}
+.fx--fail .fx-x {
+  fill: none;
+  stroke: var(--c-ffffff);
+  stroke-width: 1.9px;
+  stroke-linecap: round;
+  animation: 0.65s ease-out forwards fx-fade;
+}
+.fx--ok .fx-ring {
+  fill: none;
+  stroke: var(--c-3fa456);
+  stroke-width: 1.6px;
+  animation: 0.45s ease-out forwards fx-pop;
+}
+@keyframes fx-burst {
+  0% {
+    opacity: 1;
+    transform: scale(0.7);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.3);
+  }
+}
+@keyframes fx-fade {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes fx-pop {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+.spot {
+  fill: var(--a-18);
+  stroke: var(--c-5fae57);
+  stroke-width: 2.4px;
+  animation: 1.5s ease-out forwards spot;
+}
+@keyframes spot {
+  0% {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+.pulse {
+  animation: 1.3s ease-in-out infinite pulse;
+}
+.moved {
+  transform-box: fill-box;
+  transform-origin: 50%;
+  animation: 1.4s ease-out infinite moved;
+}
+@keyframes moved {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+@keyframes pulse {
+  0%,
+  to {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}

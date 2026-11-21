@@ -1,0 +1,548 @@
+---
+import type { Lesson } from '@/lib/dts/types';
+import { MODULES, CHAPTER_KINDS } from '@/lib/dts/curriculum';
+
+interface Props {
+  lesson: Lesson;
+}
+
+const { lesson } = Astro.props;
+
+// Locate curriculum module info for crumb
+let moduleNum = '01';
+let moduleTitle = 'Foundations';
+let lessonIdxInMod = 1;
+let totalLessonsInMod = 3;
+
+for (const mod of MODULES) {
+  const idx = mod.lessons.findIndex(l => l.id === lesson.id);
+  if (idx !== -1) {
+    moduleNum = mod.num;
+    moduleTitle = mod.title;
+    lessonIdxInMod = idx + 1;
+    totalLessonsInMod = mod.lessons.length;
+    break;
+  }
+}
+
+const s0 = lesson.steps[0];
+const totalSteps = lesson.steps.length;
+const c0Kind = s0?.chapter && CHAPTER_KINDS[s0.chapter as keyof typeof CHAPTER_KINDS]
+  ? CHAPTER_KINDS[s0.chapter as keyof typeof CHAPTER_KINDS]
+  : { label: s0?.chapter || 'STEP', tone: 'sand' };
+
+const LEGEND_DEFS: Record<string, [string, string]> = {
+  req: ['<i class="lg lg--req"></i>', 'request'],
+  res: ['<i class="lg lg--res"></i>', 'response'],
+  slow: ['<i class="lg lg--slow"></i>', 'slow request'],
+  queue: ['<i class="lg lg--slow"></i>', 'waiting'],
+  heavy: ['<i class="lg lg--heavy"></i>', 'heavy request'],
+  mine: ['<i class="lg lg--mine"></i>', 'Alice’s request'],
+  write: ['<i class="lg lg--write"></i>', 'write'],
+  kill: ['<i class="lg lg--kill"></i>', 'invalidate'],
+  msg: ['<i class="lg lg--msg"></i>', 'message'],
+  poison: ['<i class="lg lg--poison"></i>', 'poison message'],
+  push: ['<i class="lg lg--push"></i>', 'server push'],
+  empty: ['<i class="lg lg--empty"></i>', 'empty response'],
+  retry: ['<i class="lg lg--slow"></i>', 'retry'],
+  telemetry: ['<i class="lg lg--write"></i>', 'telemetry'],
+  attack: ['<i class="lg lg--poison"></i>', 'attacker'],
+  ping: ['<i class="lg lg--ping"></i>', 'health check'],
+  fail: ['<i class="lg lg--fail">×</i>', 'failed request'],
+};
+
+const legendItems = (lesson.legend ?? []).map((item: any) => {
+  const [key, customLabel] = Array.isArray(item) ? item : [item, undefined];
+  const def = LEGEND_DEFS[key];
+  const icon = def ? def[0] : `<i class="lg lg--${key}"></i>`;
+  const label = customLabel ?? (def ? def[1] : key);
+  return { icon, label };
+});
+---
+
+<div class="body" id="dts-body" data-wb-lesson={JSON.stringify(lesson)}>
+  <!-- LEFT: Sheet (lesson header, 3D stage, bottom timeline) -->
+  <main class="sheet">
+    <div class="lesson-head is-fresh" id="head">
+      <div class="crumb">{moduleNum}. {moduleTitle} <span>/</span> Lesson {lessonIdxInMod} of {totalLessonsInMod}</div>
+      <div class="lesson-head__row">
+        <h1 class="title">{lesson.title}</h1>
+        <div class="tags">
+          <span class="tag tag--sand">
+            <svg class="i " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            {lesson.minutes} min
+          </span>
+          <span class="tag tag--mint">
+            <svg class="i " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 20h.01"></path><path d="M7 20v-4"></path><path d="M12 20v-8"></path><path d="M17 20V8"></path><path d="M22 4v16"></path></svg>
+            {lesson.level}
+          </span>
+          <span class="tag tag--violet">
+            <svg class="i " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5h10"></path><path d="M11 12h10"></path><path d="M11 19h10"></path><path d="M4 4h1v5"></path><path d="M4 9h2"></path><path d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02"></path></svg>
+            {totalSteps} steps
+          </span>
+        </div>
+      </div>
+      <p class="subtitle" title={lesson.summary}>{lesson.summary}</p>
+    </div>
+
+    <section class="card stage">
+      <!-- HUD Chips rendered in place -->
+      <div class="stage__hud is-fresh" id="hud">
+        <div class="chip" data-k="dns" data-level="none">
+          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>DNS lookup</span>
+          <span class="chip__value" data-val="dns">—</span>
+        </div>
+        <div class="chip" data-k="connect" data-level="none">
+          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"></rect><rect x="2" y="16" width="6" height="6" rx="1"></rect><rect x="9" y="2" width="6" height="6" rx="1"></rect><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path><path d="M12 12V8"></path></svg>Connect</span>
+          <span class="chip__value" data-val="connect">—</span>
+        </div>
+        <div class="chip" data-k="request" data-level="none">
+          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></svg>Request + server</span>
+          <span class="chip__value" data-val="request">—</span>
+        </div>
+        <div class="chip" data-k="download" data-level="none">
+          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>Download</span>
+          <span class="chip__value" data-val="download">—</span>
+        </div>
+        <div class="chip" data-k="total" data-level="none">
+          <span class="chip__label"><svg class="i " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" x2="14" y1="2" y2="2"></line><line x1="12" x2="15" y1="14" y2="11"></line><circle cx="12" cy="14" r="8"></circle></svg>Total</span>
+          <span class="chip__value" data-val="total">—</span>
+        </div>
+      </div>
+
+      <!-- Stage Tools -->
+      <div class="stage__tools">
+        <button class="tool tool--fit" id="fit" data-t-title="Back to the whole diagram (0)" title="Back to the whole diagram (0)" hidden="">
+          <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line><line x1="8" x2="14" y1="11" y2="11"></line></svg>
+          <span data-t="Fit">Fit</span>
+        </button>
+        <button class="tool" id="replay" data-t-title="Replay this step (R)" title="Replay this step (R)">
+          <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          <span data-t="Replay">Replay</span>
+        </button>
+        <button class="tool" id="pause" title="Pause traffic (Space)">
+          <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1"></rect><rect x="5" y="3" width="5" height="18" rx="1"></rect></svg>
+          <span>Pause</span>
+        </button>
+        <button class="tool tool--expand" id="expand" title="Full screen" aria-label="Show the diagram full screen">
+          <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path><path d="M9 21H3v-6"></path></svg>
+        </button>
+      </div>
+
+      <!-- Canvas Area for DtsSceneRenderer -->
+      <div class="stage__canvas" id="canvas">
+        <slot name="canvas" />
+      </div>
+
+      <!-- Stage Legend -->
+      {legendItems.length > 0 && (
+        <div class="stage__legend is-fresh" id="legend">
+          {legendItems.map((item) => (
+            <span><Fragment set:html={item.icon} />{item.label}</span>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- Bottom Horizontal Timeline -->
+    <section class="card timeline is-fresh" id="timeline">
+      <div class="timeline__head">
+        <span class="eyebrow">In this lesson</span>
+        <span class="timeline__count" id="tl-count">Step 1 of {totalSteps}</span>
+      </div>
+      <div class="timeline__track" style={`--n: ${totalSteps}`}>
+        <div class="timeline__rail"><span id="tl-fill" style="width: 0%"></span></div>
+        <ol class="timeline__steps" id="timeline-steps">
+          {lesson.steps.map((step, idx) => {
+            const chp = step.chapter && CHAPTER_KINDS[step.chapter as keyof typeof CHAPTER_KINDS]
+              ? CHAPTER_KINDS[step.chapter as keyof typeof CHAPTER_KINDS]
+              : null;
+            return (
+              <li class={idx === 0 ? 'is-current' : ''} data-step-idx={idx}>
+                <button type="button" data-step={idx} title={step.title}>
+                  <span class={`timeline__dot ${chp ? `chapter-dot--${chp.tone}` : ''}`}>{idx + 1}</span>
+                  <span class="timeline__label">{step.short}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <!-- RIGHT: Rail (Step Guide card & Learning Goals card) -->
+  <aside class="rail">
+    <section class="card guide" id="guide">
+      <div class="guide__meta">
+        <span class="eyebrow" id="guide-step-label">Step 1 / {totalSteps}</span>
+        <div class="guide__meta-end">
+          <span class={`chapter chapter--${c0Kind.tone}`} id="guide-chapter-badge">{c0Kind.label}</span>
+        </div>
+      </div>
+      <div class="guide__content is-in" id="guide-content" style="--slide: 0px;">
+        <h2 class="guide__title" id="guide-title">{s0?.title}</h2>
+        <div class="guide__body" id="guide-body">
+          {s0?.body.map(p => <p set:html={p} />)}
+        </div>
+        
+        <div
+          class={`callout callout--${s0?.callout?.kind || 'insight'}`}
+          id="guide-callout"
+          style={!s0?.callout ? 'display: none;' : ''}
+        >
+          <div class="callout__icon">
+            <svg class="i " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
+          </div>
+          <div>
+            <div class="callout__title" id="guide-callout-title">{s0?.callout?.title || 'Key idea'}</div>
+            <p id="guide-callout-text" set:html={s0?.callout?.text || ''}></p>
+          </div>
+        </div>
+
+        <div
+          class="changes"
+          id="guide-changes"
+          style={!s0?.changes || s0.changes.length === 0 ? 'display: none;' : ''}
+        >
+          <div class="eyebrow">What changed</div>
+          <ul id="guide-changes-list">
+            {(s0?.changes || []).map((chg) => {
+              const t = chg.startsWith('+') ? 'add' : chg.startsWith('−') || chg.startsWith('-') ? 'del' : 'mod';
+              const sym = { add: '+', del: '−', mod: '~' }[t];
+              return <li class={`chg chg--${t}`}><b>{sym}</b><span>{chg.slice(2)}</span></li>;
+            })}
+          </ul>
+        </div>
+      </div>
+
+      <div class="guide__nav">
+        <button class="btn-ghost" id="back" type="button" disabled>
+          <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+          Back
+        </button>
+        <button class="btn-pop btn-next" id="next" type="button" disabled={totalSteps <= 1}>
+          <span class="btn-next__label" id="guide-next-label">Next: {lesson.steps[1]?.short || ''}</span>
+          <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </button>
+      </div>
+
+      <div class="guide__hint">
+        <svg class="i " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 8h.01"></path><path d="M12 12h.01"></path><path d="M14 8h.01"></path><path d="M16 12h.01"></path><path d="M18 8h.01"></path><path d="M6 8h.01"></path><path d="M7 16h10"></path><path d="M8 12h.01"></path><rect width="20" height="16" x="2" y="4" rx="2"></rect></svg>
+        <span><kbd>←</kbd> <kbd>→</kbd> step · <kbd>R</kbd> replay · <kbd>Space</kbd> pause</span>
+      </div>
+    </section>
+
+    {lesson.goals && lesson.goals.length > 0 && (
+      <section class="card goals is-fresh" id="goals">
+        <div class="eyebrow">You’ll learn</div>
+        <ul id="goals-list">
+          {lesson.goals.map((g, idx) => (
+            <li data-goal-step={g.step || idx + 1}>
+              <span class="check">
+                <svg class="i " width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+              </span>
+              {g.text}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </aside>
+</div>
+
+<script>
+  import { CHAPTER_KINDS } from '@/lib/dts/curriculum';
+
+  function initDtsWorkbench() {
+    const root = document.getElementById('dts-body');
+    if (!root) return;
+
+    const lessonData = root.getAttribute('data-wb-lesson');
+    if (!lessonData) return;
+    const lesson = JSON.parse(lessonData);
+    const steps = lesson.steps || [];
+    const total = steps.length;
+    let curIdx = 0;
+
+    const elStepLabel = document.getElementById('guide-step-label');
+    const elChapterBadge = document.getElementById('guide-chapter-badge');
+    const elGuideTitle = document.getElementById('guide-title');
+    const elGuideBody = document.getElementById('guide-body');
+    const elGuideCallout = document.getElementById('guide-callout');
+    const elGuideCalloutTitle = document.getElementById('guide-callout-title');
+    const elGuideCalloutText = document.getElementById('guide-callout-text');
+    const elGuideChanges = document.getElementById('guide-changes');
+    const elGuideChangesList = document.getElementById('guide-changes-list');
+    const elGuideNextLabel = document.getElementById('guide-next-label');
+    const elBtnBack = document.getElementById('back') as HTMLButtonElement | null;
+    const elBtnNext = document.getElementById('next') as HTMLButtonElement | null;
+    const elTimeline = document.getElementById('timeline');
+    const elTimelineCount = document.getElementById('tl-count');
+    const elTimelineRailFill = document.getElementById('tl-fill');
+    const elTimelineSteps = document.getElementById('timeline-steps');
+    const elGoalsList = document.getElementById('goals-list');
+    const elHud = document.getElementById('hud');
+
+    function checkTimelineTightness() {
+      if (!elTimelineSteps || !elTimeline) return;
+      const stepWidth = elTimelineSteps.clientWidth / Math.max(1, elTimelineSteps.children.length);
+      elTimeline.classList.toggle('is-tight', stepWidth > 0 && stepWidth < 70);
+    }
+
+    let isInitialized = false;
+    let prevChapter = '';
+    const prevMetrics: Record<string, number | null | undefined> = {};
+
+    function renderStep(idx: number, force = false) {
+      if (idx < 0 || idx >= total) return;
+      if (!force && isInitialized && idx === curIdx) return;
+      const prevIdx = curIdx;
+      curIdx = idx;
+      const s = steps[idx];
+      if (!s) return;
+
+      // Slide direction for Guide transition (+1 for next, -1 for back, 0 for initial)
+      const dir = !isInitialized ? 0 : Math.sign(idx - prevIdx);
+
+      // Clone ghost for sliding out previous guide content
+      const guideEl = document.getElementById('guide');
+      const contentEl = document.getElementById('guide-content');
+      let ghost: HTMLElement | null = null;
+      let ghostBounds: { top: number; left: number; width: number; height: number; scroll: number } | null = null;
+      if (isInitialized && dir !== 0 && guideEl && contentEl) {
+        ghost = contentEl.cloneNode(true) as HTMLElement;
+        ghostBounds = {
+          top: contentEl.offsetTop,
+          left: contentEl.offsetLeft,
+          width: contentEl.offsetWidth,
+          height: contentEl.offsetHeight,
+          scroll: contentEl.scrollTop,
+        };
+        guideEl.querySelectorAll('.guide__ghost').forEach((e) => e.remove());
+      }
+
+      isInitialized = true;
+
+      // Notify DtsSceneRenderer
+      root.dispatchEvent(new CustomEvent('wb:step-change', { detail: { idx, step: s }, bubbles: true }));
+
+      // Guide meta
+      if (elStepLabel) elStepLabel.textContent = `Step ${idx + 1} / ${total}`;
+      const chp = s.chapter && (CHAPTER_KINDS as any)[s.chapter]
+        ? (CHAPTER_KINDS as any)[s.chapter]
+        : { label: s.chapter ? s.chapter.toUpperCase() : 'STEP', tone: 'sand' };
+      if (elChapterBadge) {
+        elChapterBadge.textContent = chp.label;
+        elChapterBadge.className = `chapter chapter--${chp.tone}`;
+        if (dir !== 0 && prevChapter !== s.chapter) {
+          elChapterBadge.style.setProperty('--slide', `${dir * 14}px`);
+          elChapterBadge.classList.remove('is-in');
+          void elChapterBadge.offsetWidth;
+          elChapterBadge.classList.add('is-in');
+        }
+      }
+      prevChapter = s.chapter || '';
+
+      // Guide Title & Body
+      if (elGuideTitle) elGuideTitle.textContent = s.title;
+      if (elGuideBody) {
+        elGuideBody.innerHTML = (s.body || []).map((p: string) => `<p>${p}</p>`).join('');
+      }
+
+      // Callout
+      if (elGuideCallout) {
+        if (s.callout) {
+          elGuideCallout.style.display = 'flex';
+          elGuideCallout.className = `callout callout--${s.callout.kind || 'insight'}`;
+          if (elGuideCalloutTitle) elGuideCalloutTitle.textContent = s.callout.title || 'Key idea';
+          if (elGuideCalloutText) elGuideCalloutText.innerHTML = s.callout.text || '';
+        } else {
+          elGuideCallout.style.display = 'none';
+        }
+      }
+
+      // Changes ("What changed")
+      if (elGuideChanges && elGuideChangesList) {
+        if (s.changes && s.changes.length > 0) {
+          elGuideChanges.style.display = 'block';
+          elGuideChangesList.innerHTML = s.changes.map((chg: string) => {
+            const t = chg.startsWith('+') ? 'add' : chg.startsWith('−') || chg.startsWith('-') ? 'del' : 'mod';
+            const sym = { add: '+', del: '−', mod: '~' }[t];
+            return `<li class="chg chg--${t}"><b>${sym}</b><span>${chg.slice(2)}</span></li>`;
+          }).join('');
+        } else {
+          elGuideChanges.style.display = 'none';
+          elGuideChangesList.innerHTML = '';
+        }
+      }
+
+      // Slide In animation on new guide content
+      if (contentEl) {
+        contentEl.style.setProperty('--slide', `${dir * 36}px`);
+        contentEl.classList.remove('is-in');
+        void contentEl.offsetWidth;
+        contentEl.classList.add('is-in');
+      }
+
+      // Append and remove sliding ghost
+      if (ghost && ghostBounds && guideEl) {
+        ghost.className = 'guide__content guide__ghost';
+        ghost.style.cssText = `top:${ghostBounds.top}px;left:${ghostBounds.left}px;width:${ghostBounds.width}px;height:${ghostBounds.height}px;--slide:${-dir * 36}px;position:absolute;`;
+        guideEl.appendChild(ghost);
+        ghost.scrollTop = ghostBounds.scroll;
+        setTimeout(() => ghost?.remove(), 200);
+      }
+
+      // Nav buttons
+      if (elBtnBack) elBtnBack.disabled = idx === 0;
+      if (elBtnNext) {
+        elBtnNext.disabled = idx === total - 1;
+        if (elGuideNextLabel) {
+          elGuideNextLabel.textContent = idx < total - 1 ? `Next: ${steps[idx + 1].short || ''}` : 'Finished';
+        }
+      }
+
+      // Timeline
+      if (elTimelineCount) elTimelineCount.textContent = `Step ${idx + 1} of ${total}`;
+      if (elTimelineRailFill) {
+        const pct = total > 1 ? (idx / (total - 1)) * 100 : 0;
+        elTimelineRailFill.style.width = `${pct}%`;
+      }
+      if (elTimelineSteps) {
+        const lis = elTimelineSteps.querySelectorAll('li');
+        lis.forEach((li, i) => {
+          li.classList.toggle('is-done', i < idx);
+          li.classList.toggle('is-current', i === idx);
+        });
+      }
+      checkTimelineTightness();
+
+      // Goals
+      if (elGoalsList) {
+        const lis = elGoalsList.querySelectorAll('li');
+        lis.forEach((li) => {
+          const goalStep = parseInt(li.getAttribute('data-goal-step') || '99', 10);
+          li.classList.toggle('is-hit', goalStep <= idx + 1);
+        });
+      }
+
+      // HUD Metrics with count-up animation & chip-flash
+      if (elHud) {
+        const metrics = s.metrics || {};
+        ['dns', 'connect', 'request', 'download', 'total'].forEach((k) => {
+          const valEl = elHud.querySelector(`[data-val="${k}"]`) as HTMLElement | null;
+          const chipEl = elHud.querySelector(`[data-k="${k}"]`) as HTMLElement | null;
+          if (!valEl || !chipEl) return;
+
+          const oldVal = prevMetrics[k];
+          const newVal = metrics[k];
+          prevMetrics[k] = newVal;
+
+          const changed = oldVal !== undefined && oldVal !== newVal;
+          if (changed && dir !== 0) {
+            chipEl.classList.remove('is-changed');
+            void chipEl.offsetWidth;
+            chipEl.classList.add('is-changed');
+          }
+
+          const isTween = dir !== 0 && typeof oldVal === 'number' && typeof newVal === 'number' && oldVal !== newVal;
+
+          if (!isTween) {
+            if (changed && dir !== 0) {
+              valEl.classList.remove('is-swap');
+              void valEl.offsetWidth;
+              valEl.classList.add('is-swap');
+            }
+            valEl.textContent = newVal == null ? '—' : `${newVal} ms`;
+            chipEl.setAttribute('data-level', newVal == null ? 'none' : 'good');
+          } else {
+            const startW = chipEl.offsetWidth;
+            valEl.textContent = `${newVal} ms`;
+            const endW = chipEl.offsetWidth;
+            valEl.textContent = `${oldVal} ms`;
+            chipEl.style.width = `${startW}px`;
+
+            const startTime = performance.now();
+            const duration = 900;
+            const animId = {};
+            (chipEl as any)._anim = animId;
+
+            const stepAnim = (now: number) => {
+              if ((chipEl as any)._anim !== animId) return;
+              const p = Math.min(1, (now - startTime) / duration);
+              const ease = 1 - (1 - p) ** 3;
+              const currentVal = Math.round(oldVal + (newVal - oldVal) * ease);
+              valEl.textContent = `${currentVal} ms`;
+              chipEl.style.width = `${startW + (endW - startW) * ease}px`;
+              if (p < 1) {
+                requestAnimationFrame(stepAnim);
+              } else {
+                chipEl.style.width = '';
+                valEl.textContent = `${newVal} ms`;
+                chipEl.setAttribute('data-level', 'good');
+              }
+            };
+            requestAnimationFrame(stepAnim);
+          }
+        });
+      }
+    }
+
+    // Button event handlers
+    elBtnBack?.addEventListener('click', () => renderStep(curIdx - 1));
+    elBtnNext?.addEventListener('click', () => renderStep(curIdx + 1));
+
+    // Timeline clicks
+    elTimeline?.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('[data-step]') as HTMLElement | null;
+      if (btn) {
+        const step = parseInt(btn.getAttribute('data-step') || '0', 10);
+        renderStep(step);
+      }
+    });
+
+    // Window event listeners with cleanup
+    if ((window as any).__dts_wb_controller) {
+      (window as any).__dts_wb_controller.abort();
+    }
+    const controller = new AbortController();
+    (window as any).__dts_wb_controller = controller;
+
+    // Recalculate timeline tightness on window resize
+    window.addEventListener('resize', () => {
+      checkTimelineTightness();
+    }, { signal: controller.signal });
+
+    // Custom external event wb:navigate
+    const onNavigate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const step = detail?.idx ?? detail?.step ?? 0;
+      renderStep(step);
+    };
+    root.addEventListener('wb:navigate', onNavigate, { signal: controller.signal });
+    window.addEventListener('wb:navigate', onNavigate, { signal: controller.signal });
+
+    // Keyboard shortcuts: ArrowLeft / ArrowRight / R (replay) / Space (pause) / 0 (fit)
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight') renderStep(curIdx + 1);
+      if (e.key === 'ArrowLeft') renderStep(curIdx - 1);
+      if (e.key === 'r' || e.key === 'R') {
+        document.getElementById('replay')?.click();
+      }
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        document.getElementById('pause')?.click();
+      }
+      if (e.key === '0') {
+        document.getElementById('fit')?.click();
+      }
+    }, { signal: controller.signal });
+
+    // Initialize Step 0
+    renderStep(0);
+  }
+
+  document.addEventListener('astro:page-load', initDtsWorkbench);
+</script>

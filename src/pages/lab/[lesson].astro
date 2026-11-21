@@ -1,0 +1,51 @@
+---
+import ArchitectureLabLayout from '@/layouts/ArchitectureLabLayout.astro';
+import { DTS_MODULES } from '@/data/dts-lessons';
+import { ALL_DTS_LESSONS } from '@/lib/dts/lessons';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const EXCLUDED_ROUTES = new Set([
+    'aws-cloud',
+    'microservices',
+    'request-lifecycle',
+    'system-design',
+    'java',
+    'sql',
+    'pathfinding',
+    'spider',
+    'terminal',
+  ]);
+
+  return DTS_MODULES.flatMap((mod) =>
+    mod.lessons
+      .filter((lesson) => !EXCLUDED_ROUTES.has(lesson.id))
+      .map((lesson) => {
+        const dts = ALL_DTS_LESSONS[lesson.id];
+        return {
+          params: { lesson: lesson.id },
+          props: {
+            lessonId: lesson.id,
+            title: `${lesson.title} · Interactive Visual Architecture Lab`,
+            description: dts?.summary || `Interactive visual architecture lab simulating ${lesson.title}.`,
+          },
+        };
+      })
+  );
+}
+
+interface Props {
+  lessonId: string;
+  title: string;
+  description: string;
+}
+
+const { lessonId, title, description } = Astro.props;
+---
+
+<ArchitectureLabLayout
+  lessonId={lessonId}
+  title={title}
+  description={description}
+/>

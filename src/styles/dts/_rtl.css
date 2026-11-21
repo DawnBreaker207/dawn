@@ -1,0 +1,29 @@
+:root[dir="rtl"] .voice-menu {
+  transform-origin: 0 0;
+}
+:root[dir="rtl"] .nav {
+  transform: translate(20px);
+}
+:root[dir="rtl"]:not([data-layout="desktop"]) .sidebar {
+  transform: translate(105%);
+}
+:root[dir="rtl"].is-drawer .sidebar {
+  transform: none;
+}
+:root[dir="rtl"] .lang__menu {
+  transform-origin: 0 0;
+}
+:root[dir="rtl"] #back .i,
+:root[dir="rtl"] #next .i,
+:root[dir="rtl"] .callout--next .i,
+:root[dir="rtl"] .mod:not(.is-open) .mod__chev,
+:root[dir="rtl"] .progress:not(.is-open) .progress__chev {
+  transform: scaleX(-1);
+}
+:root[dir="rtl"] code,
+:root[dir="rtl"] kbd,
+:root[dir="rtl"] .credit b,
+:root[dir="rtl"] .lang__code {
+  direction: ltr;
+  unicode-bidi: isolate;
+}

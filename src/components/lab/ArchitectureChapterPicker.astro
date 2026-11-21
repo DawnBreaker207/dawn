@@ -7,6 +7,10 @@ interface Props {
 
 const { currentLessonId } = Astro.props;
 
+// All 42 lessons are now native TS labs
+const NATIVE_LESSON_IDS = DTS_MODULES.flatMap((m) => m.lessons.map((l) => l.id));
+const nativeIds = new Set(NATIVE_LESSON_IDS);
+
 let activeLessonTitle = '01 · Request Lifecycle';
 for (const mod of DTS_MODULES) {
   const found = mod.lessons.find((l) => l.id === currentLessonId);
@@ -33,7 +37,7 @@ for (const mod of DTS_MODULES) {
       <path d="M6 10h10"></path>
     </svg>
     <span id="chapter-active-title" class="chapter-name font-mono">{activeLessonTitle}</span>
-    <span class="chapter-tag font-mono">41 Chapters ▾</span>
+    <span class="chapter-tag font-mono">{nativeIds.size} Chapters ▾</span>
   </button>
 
   <!-- Dropdown Menu (Floating Panel) -->
@@ -62,21 +66,31 @@ for (const mod of DTS_MODULES) {
             <span class="mod-count font-mono">{mod.lessons.length}</span>
           </div>
           <div class="dropdown-lessons-list">
-            {mod.lessons.map((lesson: Lesson) => (
-              <button
-                type="button"
-                class:list={[
-                  'dropdown-lesson-btn',
-                  lesson.id === currentLessonId && 'is-current'
-                ]}
-                data-lesson-id={lesson.id}
-                data-lesson-title={`${mod.num} · ${lesson.title}`}
-              >
-                <span class="lesson-dot">●</span>
-                <span class="lesson-text">{lesson.title}</span>
-                <span class="active-pill" data-lesson-pill={lesson.id} hidden={lesson.id !== currentLessonId}>Active</span>
-              </button>
-            ))}
+            {mod.lessons.map((lesson: Lesson) => {
+              const isNative = nativeIds.has(lesson.id);
+              return (
+                <button
+                  type="button"
+                  class:list={[
+                    'dropdown-lesson-btn',
+                    lesson.id === currentLessonId && 'is-current',
+                    !isNative && 'is-soon',
+                  ]}
+                  data-lesson-id={lesson.id}
+                  data-lesson-title={`${mod.num} · ${lesson.title}`}
+                  data-native={isNative ? 'true' : undefined}
+                  disabled={!isNative || undefined}
+                  aria-disabled={!isNative ? 'true' : undefined}
+                >
+                  <span class="lesson-dot">●</span>
+                  <span class="lesson-text">{lesson.title}</span>
+                  {isNative
+                    ? <span class="active-pill" data-lesson-pill={lesson.id} hidden={lesson.id !== currentLessonId}>Active</span>
+                    : <span class="soon-pill">Soon</span>
+                  }
+                </button>
+              );
+            })}
           </div>
         </div>
       ))}
@@ -274,6 +288,25 @@ for (const mod of DTS_MODULES) {
     color: #ffffff;
     font-weight: 700;
   }
+
+  .soon-pill {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--bg-subtle);
+    color: var(--fg-faint);
+    font-weight: 600;
+  }
+
+  .dropdown-lesson-btn.is-soon {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .dropdown-lesson-btn.is-soon:hover {
+    background: transparent;
+    color: var(--fg-dim);
+  }
 </style>
 
 <script>
@@ -344,7 +377,7 @@ for (const mod of DTS_MODULES) {
           e.stopPropagation();
           const lessonId = btn.dataset.lessonId;
           const lessonTitle = btn.dataset.lessonTitle;
-          if (!lessonId) return;
+          if (!lessonId || btn.dataset.native !== 'true') return;
 
           lessonBtns.forEach((b) => {
             const isTarget = b === btn;
@@ -357,36 +390,28 @@ for (const mod of DTS_MODULES) {
             titleDisplay.textContent = lessonTitle;
           }
 
-          const nativeLabs = ['system-design', 'request-lifecycle', 'aws-cloud', 'microservices'];
-          if (nativeLabs.includes(lessonId)) {
-            if (window.location.pathname !== `/lab/${lessonId}`) {
-              window.location.href = `/lab/${lessonId}`;
-              return;
-            }
-          } else {
-            window.location.href = `/lab/request-lifecycle#${lessonId}`;
+          // Navigate to the native lab page (full page load if needed)
+          if (window.location.pathname !== `/lab/${lessonId}`) {
+            window.location.href = `/lab/${lessonId}`;
             return;
           }
 
-          try {
-            window.location.hash = `#/${lessonId}/1`;
-            window.dispatchEvent(new HashChangeEvent('hashchange'));
-          } catch (_) {}
-
+          // Same page — just reset to step 1 via hash
+          window.location.hash = `#/${lessonId}/1`;
           toggleMenu(false);
         });
       }
     });
 
-    // Auto-select lesson if URL contains a hash
-    const hash = window.location.hash.replace(/^#\/?/, '');
-    if (hash) {
-      const matchBtn = Array.from(lessonBtns).find((b) => b.dataset.lessonId === hash);
+    // Auto-select lesson from current pathname
+    const currentLesson = window.location.pathname.match(/\/lab\/([\w-]+)/)?.[1];
+    if (currentLesson) {
+      const matchBtn = Array.from(lessonBtns).find(
+        (b) => b.dataset.lessonId === currentLesson && b.dataset.native === 'true'
+      );
       if (matchBtn) {
         const lessonTitle = matchBtn.dataset.lessonTitle;
-        if (titleDisplay && lessonTitle) {
-          titleDisplay.textContent = lessonTitle;
-        }
+        if (titleDisplay && lessonTitle) titleDisplay.textContent = lessonTitle;
         lessonBtns.forEach((b) => {
           const isTarget = b === matchBtn;
           b.classList.toggle('is-current', isTarget);

@@ -1,0 +1,167 @@
+﻿/* Dawn Studio DTS theme overrides — accent button colors, nav */
+/* â”€â”€ 3. DAWN STUDIO LINEAR RUBY CRIMSON THEME OVERRIDES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ==========================================================================
+   DAWN STUDIO â€” DTS EMBEDDED THEME OVERRIDES (LINEAR RUBY CRIMSON)
+   ==========================================================================
+   Synchronized strictly with src/styles/theme-colors.css tokens.
+   ========================================================================== */
+
+/* â”€â”€ 1. DARK MODE PALETTE (Charcoal Dark + Linear Ruby Crimson) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+:root[data-theme="dark"],
+html[data-theme="dark"],
+body.dark,
+html.dark {
+  --paper: #18181b !important;
+  --paper-2: #141416 !important;
+  --sheet: #212126 !important;
+  --card: #212126 !important;
+  --card-2: #27272a !important;
+  --line: #2e2e36 !important;
+  --line-soft: rgba(255, 255, 255, 0.05) !important;
+  --line-strong: #3f3f46 !important;
+  --edge: #e4e4e7 !important;
+  --ink: #f4f4f5 !important;
+  --ink-2: #a1a1aa !important;
+  --muted: #a1a1aa !important;
+  --muted-2: #71717a !important;
+  --green: #e11d48 !important;
+  --green-2: #be123c !important;
+  --green-3: #f43f5e !important;
+  --green-tile: #27171e !important;
+  --green-tile-line: #4c1d2d !important;
+  --violet: #c792ea !important;
+  --violet-tile: #2e2340 !important;
+  --violet-tile-line: #473466 !important;
+  --orange: #fb7185 !important;
+  --mint: #38ef7d !important;
+  --rust: #e11d48 !important;
+  --rust-2: #f43f5e !important;
+  --drop: rgba(0, 0, 0, 0.5) !important;
+  --drop-2: rgba(0, 0, 0, 0.35) !important;
+  --radius: 14px !important;
+  /* Stage background hex shortcuts — _tokens.css only overrides these via
+     :root[data-theme=”dark”] but blog uses html.dark class. */
+  --c-faf3e9: #292520 !important;
+  --c-f6e6c9: #5d4d32 !important;
+  --c-fbe5bd: #5a4b30 !important;
+}
+
+/* â”€â”€ 2. LIGHT MODE PALETTE (Soft Zinc Neutral â€” Eye Friendly, Non-Glare) â”€â”€â”€ */
+:root:not([data-theme="dark"]),
+html:not([data-theme="dark"]) {
+  --paper: #ececed !important;
+  --paper-2: #f7f7f9 !important;
+  --sheet: #f7f7f9 !important;
+  --card: #f7f7f9 !important;
+  --card-2: #ececed !important;
+  --line: #d4d4d9 !important;
+  --line-soft: #dedee3 !important;
+  --line-strong: #c4c4cb !important;
+  --edge: #18181b !important;
+  --ink: #18181b !important;
+  --ink-2: #27272a !important;
+  --muted: #52525b !important;
+  --muted-2: #71717a !important;
+  --green: #e11d48 !important;
+  --green-2: #be123c !important;
+  --green-3: #f43f5e !important;
+  --green-tile: #fff1f2 !important;
+  --green-tile-line: #fecdd3 !important;
+  --violet: #e7ddf5 !important;
+  --violet-tile: #ebe3f1 !important;
+  --violet-tile-line: #d5c8e2 !important;
+  --orange: #f43f5e !important;
+  --mint: #dff0de !important;
+  --rust: #e11d48 !important;
+  --drop: rgba(9, 9, 11, 0.06) !important;
+  --drop-2: rgba(9, 9, 11, 0.03) !important;
+  --radius: 14px !important;
+}
+
+/* â”€â”€ 3. CARD & CONTAINER OVERRIDES (LIGHT MODE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+:root:not([data-theme="dark"]) .sheet,
+html:not([data-theme="dark"]) .sheet {
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+}
+
+:root:not([data-theme="dark"]) .guide,
+html:not([data-theme="dark"]) .guide {
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+}
+
+:root:not([data-theme="dark"]) #next,
+html:not([data-theme="dark"]) #next {
+  background: #e11d48 !important;
+  color: #ffffff !important;
+  border: 1px solid #e11d48 !important;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+:root:not([data-theme="dark"]) #next:hover,
+html:not([data-theme="dark"]) #next:hover {
+  background: #be123c !important;
+  border-color: #be123c !important;
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+:root:not([data-theme="dark"]) #back,
+html:not([data-theme="dark"]) #back {
+  background: #ffffff !important;
+  color: #18181b !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+:root:not([data-theme="dark"]) #back:hover,
+html:not([data-theme="dark"]) #back:hover {
+  background: #f4f4f5 !important;
+  border-color: #d4d4d8 !important;
+}
+
+/* â”€â”€ 4. CARD & CONTAINER OVERRIDES (DARK MODE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+:root[data-theme="dark"] #next,
+html[data-theme="dark"] #next {
+  background: #e11d48 !important;
+  color: #ffffff !important;
+  border: 1px solid #e11d48 !important;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+:root[data-theme="dark"] #next:hover,
+html[data-theme="dark"] #next:hover {
+  background: #f43f5e !important;
+  border-color: #f43f5e !important;
+  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+:root[data-theme="dark"] #back,
+html[data-theme="dark"] #back {
+  background: #212126 !important;
+  color: #e4e4e7 !important;
+  border: 1px solid #3f3f46 !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+:root[data-theme="dark"] #back:hover,
+html[data-theme="dark"] #back:hover {
+  background: #2e2e36 !important;
+  border-color: #52525b !important;
+}
+

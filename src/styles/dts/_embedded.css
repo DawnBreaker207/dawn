@@ -1,0 +1,340 @@
+﻿/* DTS embedded mode — :is(html.is-embedded, .is-embedded) layout overrides for native integration */
+/* ── 5. EMBEDDED MODE LAYOUT & CARD REFINEMENTS ────────────────────────── */
+:is(html.is-embedded, .is-embedded),
+:is(html.is-embedded, .is-embedded) body {
+  overflow: hidden;
+  height: 100vh;
+  background: transparent !important;
+}
+
+:is(html.is-embedded, .is-embedded) .topbar,
+:is(html.is-embedded, .is-embedded) .sidebar {
+  display: none !important;
+}
+
+:is(html.is-embedded, .is-embedded) .window {
+  zoom: 1 !important;
+  transform: none !important;
+  width: 100% !important;
+  height: 100vh !important;
+  grid-template-rows: 1fr !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+:is(html.is-embedded, .is-embedded) .body {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) clamp(280px, 26vw, 340px) !important;
+  height: 100vh !important;
+  padding: 10px !important;
+  margin: 0 !important;
+  gap: 10px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Left Card: 3D Stage Sheet */
+:is(html.is-embedded, .is-embedded) .sheet {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - 20px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  border: 1px solid #e4e4e7 !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+}
+
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .sheet,
+html[data-theme="dark"].is-embedded .sheet,
+.dark :is(html.is-embedded, .is-embedded) .sheet {
+  border-color: #2e2e36 !important;
+  background: #212126 !important;
+  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Lesson Header */
+:is(html.is-embedded, .is-embedded) .lesson-head {
+  order: 1 !important;
+  padding: 12px 18px 10px !important;
+  margin: 0 !important;
+  border-radius: 13px 13px 0 0 !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  flex-shrink: 0 !important;
+  background: #ffffff !important;
+}
+
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .lesson-head,
+html[data-theme="dark"].is-embedded .lesson-head,
+.dark :is(html.is-embedded, .is-embedded) .lesson-head {
+  border-bottom-color: #2e2e36 !important;
+  background: #212126 !important;
+}
+
+:is(html.is-embedded, .is-embedded) .lesson-head .crumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  margin-bottom: 3px !important;
+}
+
+:is(html.is-embedded, .is-embedded) .lesson-head .crumb::before {
+  content: "Lab \00a0/\00a0 Architecture \00a0/\00a0 ";
+  opacity: 0.65;
+  font-weight: 500;
+}
+
+:is(html.is-embedded, .is-embedded) .lesson-head .title {
+  font-size: 19px !important;
+  line-height: 1.2 !important;
+}
+
+:is(html.is-embedded, .is-embedded) .lesson-head .summary,
+:is(html.is-embedded, .is-embedded) .lesson-head p {
+  font-size: 12.5px !important;
+  margin-top: 2px !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+/* Stage */
+:is(html.is-embedded, .is-embedded) .stage {
+  order: 2 !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  border: none !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+/* Timeline ("In this lesson") at bottom of sheet */
+:is(html.is-embedded, .is-embedded) .timeline {
+  order: 3 !important;
+  padding: 6px 14px 6px !important;
+  margin: 0 !important;
+  border-top: 1px solid #e4e4e7 !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 0 13px 13px !important;
+  flex-shrink: 0 !important;
+  background: #f4f4f5 !important;
+}
+
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .timeline,
+html[data-theme="dark"].is-embedded .timeline,
+.dark :is(html.is-embedded, .is-embedded) .timeline {
+  border-top-color: #2e2e36 !important;
+  background: #18181b !important;
+}
+
+:is(html.is-embedded, .is-embedded) .timeline__track {
+  margin: 2px 0 0 !important;
+  padding: 0 !important;
+}
+
+:is(html.is-embedded, .is-embedded) .timeline__steps {
+  margin: 0 !important;
+  padding-bottom: 2px !important;
+}
+
+/* Light Mode Typography for Timeline ("In this lesson") — black text only, preserving original backgrounds/borders */
+:root:not([data-theme="dark"]) .timeline,
+html:not([data-theme="dark"]) .timeline,
+html:not(.dark) .timeline {
+  color: #18181b !important;
+}
+
+:root:not([data-theme="dark"]) .timeline .eyebrow,
+html:not([data-theme="dark"]) .timeline .eyebrow,
+html:not(.dark) .timeline .eyebrow {
+  color: #18181b !important;
+  font-weight: 600;
+}
+
+:root:not([data-theme="dark"]) .timeline .timeline__count,
+html:not([data-theme="dark"]) .timeline .timeline__count,
+html:not(.dark) .timeline .timeline__count {
+  color: #18181b !important;
+  font-weight: 600;
+}
+
+:root:not([data-theme="dark"]) .timeline__steps li:not(.is-current) .timeline__dot,
+html:not([data-theme="dark"]) .timeline__steps li:not(.is-current) .timeline__dot,
+html:not(.dark) .timeline__steps li:not(.is-current) .timeline__dot {
+  color: #18181b !important;
+}
+
+:root:not([data-theme="dark"]) .timeline__label,
+html:not([data-theme="dark"]) .timeline__label,
+html:not(.dark) .timeline__label {
+  color: #18181b !important;
+}
+
+:root:not([data-theme="dark"]) .timeline__steps li.is-current .timeline__label,
+html:not([data-theme="dark"]) .timeline__steps li.is-current .timeline__label,
+html:not(.dark) .timeline__steps li.is-current .timeline__label {
+  color: #18181b !important;
+  font-weight: 700;
+}
+
+:root:not([data-theme="dark"]) .timeline__steps li.is-current .timeline__dot,
+html:not([data-theme="dark"]) .timeline__steps li.is-current .timeline__dot,
+html:not(.dark) .timeline__steps li.is-current .timeline__dot {
+  color: #ffffff !important;
+}
+
+/* Right Column: Cards */
+:is(html.is-embedded, .is-embedded) .rail {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  height: calc(100vh - 20px) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  background: transparent !important;
+}
+
+:is(html.is-embedded, .is-embedded) .guide {
+  flex: 1 1 auto !important;
+  border-radius: 14px !important;
+  border: 1px solid #e4e4e7 !important;
+  padding: 16px 18px !important;
+  margin: 0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .guide,
+html[data-theme="dark"].is-embedded .guide,
+.dark :is(html.is-embedded, .is-embedded) .guide {
+  border-color: #2e2e36 !important;
+  background: #212126 !important;
+  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+:is(html.is-embedded, .is-embedded) .goals {
+  flex-shrink: 0 !important;
+  border-radius: 14px !important;
+  border: 1px solid #e4e4e7 !important;
+  padding: 14px 18px !important;
+  margin: 0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
+}
+
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .goals,
+html[data-theme="dark"].is-embedded .goals,
+.dark :is(html.is-embedded, .is-embedded) .goals {
+  border-color: #2e2e36 !important;
+  background: #212126 !important;
+  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Guide navigation buttons */
+:is(html.is-embedded, .is-embedded) .guide__nav {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin-top: 14px !important;
+}
+
+:is(html.is-embedded, .is-embedded) #back {
+  flex: 0 0 auto !important;
+  min-width: 70px !important;
+  height: 38px !important;
+  padding: 0 14px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+}
+
+:is(html.is-embedded, .is-embedded) #next {
+  flex: 1 1 auto !important;
+  min-width: 140px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+}
+
+/* ── 6. MOBILE RESPONSIVE OPTIMIZATIONS (< 768px) ──────────────────────── */
+@media (max-width: 768px) {
+  :is(html.is-embedded, .is-embedded) .body {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    padding: 6px !important;
+    gap: 8px !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  :is(html.is-embedded, .is-embedded) .sheet {
+    width: 100% !important;
+    height: 48vh !important;
+    min-height: 280px !important;
+    max-height: 420px !important;
+    flex: 0 0 auto !important;
+  }
+
+  :is(html.is-embedded, .is-embedded) .rail {
+    width: 100% !important;
+    height: auto !important;
+    flex: 1 1 auto !important;
+    overflow-y: visible !important;
+  }
+
+  :is(html.is-embedded, .is-embedded) .lesson-head {
+    padding: 8px 12px !important;
+  }
+
+  :is(html.is-embedded, .is-embedded) .lesson-head .title {
+    font-size: 15px !important;
+  }
+
+  :is(html.is-embedded, .is-embedded) .guide {
+    padding: 12px 14px !important;
+  }
+
+  :is(html.is-embedded, .is-embedded) .guide__nav {
+    margin-top: 10px !important;
+  }
+}
+
+/* ── 9. CRITICAL ACCESSIBILITY FIX: ELIMINATE BLACK-ON-RED TEXT ─────────── */
+.btn-pop.is-active,
+button.is-active,
+a.btn-pop,
+a.btn-pop.is-active,
+.nav__item.btn-pop.is-active,
+.timeline__steps li.is-current .timeline__dot,
+.badge--red,
+.tag--red {
+  color: #ffffff !important;
+}
+
+.timeline__steps li.is-current .timeline__dot {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  background-color: #e11d48 !important;
+}
+
+button[style*="background"],
+span[style*="background"],
+div[style*="background"] {
+  color: inherit;
+}

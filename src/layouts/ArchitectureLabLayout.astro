@@ -2,6 +2,13 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ArchitectureChapterPicker from '@/components/lab/ArchitectureChapterPicker.astro';
 import DtsNativeLab from '@/components/lab/architecture/DtsNativeLab.astro';
+import DtsSceneRenderer from '@/components/widget/DtsSceneRenderer';
+import DtsWorkbench from '@/components/lab/architecture/DtsWorkbench.astro';
+import '@/styles/designed-to-scale.css';
+import '@/styles/lab-architecture.css';
+import { ALL_DTS_LESSONS } from '@/lib/dts/lessons';
+import type { Lesson } from '@/lib/dts/types';
+import type { WorkbenchLesson } from '@/types/workbench';
 
 export const prerender = true;
 
@@ -12,32 +19,77 @@ interface Props {
 }
 
 const { title, description, lessonId } = Astro.props;
+
+const dtsLesson = ALL_DTS_LESSONS[lessonId] as unknown as Lesson;
+
+
+// Convert DTS Lesson → WorkbenchLesson for LabWorkbench navigation
+const wbLesson: WorkbenchLesson | null = dtsLesson
+  ? {
+      title:    dtsLesson.title,
+      subtitle: dtsLesson.summary,
+      minutes:  dtsLesson.minutes,
+      level:    dtsLesson.level,
+      steps: dtsLesson.steps.map(s => ({
+        title: s.title,
+        short: s.short,
+        body:  s.body,
+        why:   s.callout?.text,
+        // null metrics render as an em dash, same as the bundle HUD
+        metrics: s.metrics
+          ? Object.fromEntries(
+              Object.entries(s.metrics).map(([k, v]) => [k, v == null ? '—' : String(v)]),
+            )
+          : undefined,
+      })),
+      goals: (dtsLesson.goals ?? []) as WorkbenchLesson['goals'],
+    }
+  : null;
 ---
 
 <BaseLayout title={title} description={description} fullBleed={true}>
-  <!-- Topbar Action Slot (Placed into TabBar next to tabs) -->
   <div slot="topbar-actions" class="topbar-lab-controls">
     <ArchitectureChapterPicker currentLessonId={lessonId} />
   </div>
 
-  <!-- Full-Bleed Native Interactive Architecture Simulation -->
-  <DtsNativeLab lessonId={lessonId} />
+  <div id="dts-view-ts" class="dts-window is-embedded dts-view-container w-full h-full flex flex-col flex-1 min-h-0">
+    <DtsWorkbench lesson={dtsLesson!}>
+      <DtsSceneRenderer slot="canvas" lesson={dtsLesson!} client:idle />
+    </DtsWorkbench>
+  </div>
 </BaseLayout>
 
 <style>
   .topbar-lab-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 </style>
 
 <script>
+  const getLayout = (w: number, h: number) =>
+    w >= 1200 && h >= 560 ? 'desktop' : w >= 960 && h >= 600 ? 'tablet' : 'stack';
+
+  function updateDtsLayout() {
+    const tsView = document.getElementById('dts-view-ts');
+    const w = tsView && tsView.clientWidth > 0 ? tsView.clientWidth : window.innerWidth;
+    const h = tsView && tsView.clientHeight > 0 ? tsView.clientHeight : window.innerHeight;
+    document.documentElement.dataset.layout = getLayout(w, h);
+  }
+
   function setupLabPage() {
     // Hide empty blog rail on lab pages
     document.documentElement.setAttribute('data-rail', 'hidden');
+    updateDtsLayout();
+    window.addEventListener('resize', updateDtsLayout);
   }
 
   setupLabPage();
   document.addEventListener('astro:page-load', setupLabPage);
+  document.addEventListener('astro:before-swap', () => {
+    window.removeEventListener('resize', updateDtsLayout);
+    document.documentElement.removeAttribute('data-layout');
+    document.documentElement.removeAttribute('data-rail');
+  });
 </script>

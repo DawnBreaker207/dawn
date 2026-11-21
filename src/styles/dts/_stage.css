@@ -1,0 +1,347 @@
+.sheet {
+  background: linear-gradient(var(--a-2), var(--a-4) 220px), var(--sheet);
+  border: 1px solid var(--line);
+  min-height: 0;
+  box-shadow:
+    inset 0 1px 0 var(--a-13),
+    0 1px 0 var(--a-14),
+    0 18px 40px -30px var(--a-6);
+  border-radius: 14px;
+  flex-direction: column;
+  margin-block: 12px 14px;
+  margin-inline: 2px 0;
+  padding: 0 16px 16px;
+  display: flex;
+}
+.lesson-head {
+  padding-block: 18px 0;
+  padding-inline: 18px 2px;
+}
+.lesson-head__row {
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-top: 6px;
+  display: flex;
+}
+.crumb {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.crumb span {
+  color: var(--muted-2);
+  margin: 0 4px;
+}
+.title {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  letter-spacing: -0.015em;
+  min-width: 0;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.12;
+  overflow: hidden;
+}
+.subtitle {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+.tags {
+  flex: none;
+  gap: 9px;
+  display: flex;
+}
+.tag {
+  border: 1.3px solid var(--ink-2);
+  height: 25px;
+  box-shadow:
+    inset 0 1px 0 var(--a-5),
+    0 1.5px 0 var(--drop-2);
+  border-radius: 13px;
+  align-items: center;
+  gap: 7px;
+  padding-block: 0;
+  padding-inline: 10px 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  display: inline-flex;
+}
+.tag--sand {
+  background: var(--c-f6e6c9);
+}
+.tag--violet {
+  background: var(--violet);
+}
+.tag--mint {
+  background: var(--mint);
+}
+.stage {
+  background: var(--c-faf3e9);
+  flex: 1;
+  min-height: 0;
+  margin-top: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.stage__canvas {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  position: absolute;
+  inset: 58px 14px 34px;
+}
+.stage__canvas.is-zoomed {
+  touch-action: none;
+  cursor: grab;
+}
+.stage__canvas.is-dragging {
+  cursor: grabbing;
+}
+.tool[hidden] {
+  display: none !important;
+}
+.stage__canvas.is-zoomed ~ .stage__legend {
+  background: var(--c-faf3e9);
+  border-radius: 8px;
+  margin-inline-start: -6px;
+  padding: 3px 8px;
+}
+.tool--fit {
+  animation: 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) fresh-in;
+}
+.stage-svg {
+  width: 100%;
+  height: 100%;
+  font-family: var(--font);
+  display: block;
+  overflow: visible;
+}
+.stage__hud {
+  top: 12px;
+  z-index: 2;
+  pointer-events: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  display: flex;
+  position: absolute;
+  inset-inline: 12px 210px;
+}
+.chip {
+  border: 1px solid var(--line-strong);
+  background: var(--a-15);
+  min-width: 112px;
+  box-shadow: 0 1px 0 var(--a-11);
+  border-radius: 9px;
+  flex-direction: column;
+  gap: 2px;
+  padding-block: 6px 7px;
+  padding-inline: 12px 11px;
+  display: flex;
+  position: relative;
+}
+.chip:before {
+  content: "";
+  inset-inline-start: -1px;
+  background: 0 0;
+  border-start-start-radius: 0;
+  border-start-end-radius: 3px;
+  border-end-end-radius: 3px;
+  border-end-start-radius: 0;
+  width: 3px;
+  transition: background 0.4s;
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+}
+.chip[data-level="good"]:before {
+  background: var(--c-4caf50);
+}
+.chip[data-level="warn"]:before {
+  background: var(--c-e8a33a);
+}
+.chip[data-level="bad"]:before {
+  background: var(--c-e5534b);
+}
+.chip__label {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  display: flex;
+}
+.chip__value {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 800;
+  transition: color 0.4s;
+  overflow: hidden;
+}
+.chip__value.is-swap {
+  animation: 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) value-in;
+}
+@keyframes value-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes fresh-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.chip[data-level="warn"] .chip__value {
+  color: var(--c-a5650c);
+}
+.chip[data-level="bad"] .chip__value {
+  color: var(--c-c0392b);
+}
+.chip.is-changed {
+  animation: 1.5s ease-out chip-flash;
+}
+@keyframes chip-flash {
+  0% {
+    box-shadow: 0 0 0 0 var(--a-16);
+    transform: translateY(0);
+  }
+  15% {
+    box-shadow: 0 0 0 4px var(--a-17);
+    transform: translateY(-2px);
+  }
+  to {
+    box-shadow: 0 0 0 10px var(--a-16);
+    transform: translateY(0);
+  }
+}
+.stage__tools {
+  top: 12px;
+  z-index: 2;
+  gap: 8px;
+  display: flex;
+  position: absolute;
+  inset-inline-end: 12px;
+}
+.tool {
+  border: 1.3px solid var(--ink-2);
+  background: var(--c-fbf7f1);
+  height: 30px;
+  box-shadow: 0 1.5px 0 var(--drop-2);
+  border-radius: 8px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+}
+.tool:hover {
+  background: var(--c-ffffff);
+}
+.tool:active {
+  box-shadow: 0 0.5px 0 var(--drop-2);
+  transform: translateY(1px);
+}
+.tool.is-on {
+  background: var(--green);
+}
+.stage__legend {
+  inset-inline-start: 14px;
+  z-index: 2;
+  color: var(--muted);
+  gap: 16px;
+  font-size: 11px;
+  display: flex;
+  position: absolute;
+  bottom: 10px;
+}
+.stage__legend span {
+  align-items: center;
+  gap: 6px;
+  display: inline-flex;
+}
+.lg {
+  border: 1.4px solid var(--ink);
+  background: #f3b47f;
+  border-radius: 50%;
+  place-items: center;
+  width: 10px;
+  height: 10px;
+  font-style: normal;
+  display: inline-grid;
+}
+.lg--heavy {
+  background: #e8834d;
+  border-radius: 3px;
+  width: 12px;
+  height: 12px;
+}
+.lg--res {
+  background: #9fd28f;
+}
+.lg--slow {
+  background: #efb041;
+}
+.lg--mine {
+  background: #b79ce6;
+}
+.lg--write {
+  background: #5d5466;
+  border-radius: 2px;
+}
+.lg--msg {
+  background: #efb041;
+  border-radius: 2.5px;
+}
+.lg--poison {
+  background: #e5534b;
+  border-radius: 2.5px;
+}
+.lg--push {
+  background: #9fd28f;
+}
+.lg--empty {
+  background: #fbf6ef;
+}
+.lg--kill {
+  background: #fde3df;
+  border: 2px solid #c0392b;
+}
+.lg--ping {
+  background: #f4fbef;
+  border: 2px solid #2f8a43;
+}
+.lg--fail {
+  color: #fff;
+  background: #e5534b;
+  border-color: #8f2a22;
+  width: 13px;
+  height: 13px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+.stage-svg text {
+  white-space: pre;
+}
+.stage.is-full {
+  z-index: 50;
+  border-radius: 0;
+  margin: 0;
+  position: fixed;
+  inset: 0;
+  height: auto !important;
+}
+.stage-svg {
+  direction: ltr;
+}

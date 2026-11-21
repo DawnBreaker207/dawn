@@ -69,7 +69,7 @@ const projects = projectsData
 ---
 
 <!doctype html>
-<html lang={SITE.language} class="scroll-smooth">
+<html lang={SITE.language} class:list={['scroll-smooth', fullBleed && 'is-embedded']} data-rail={fullBleed ? 'hidden' : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
@@ -131,7 +131,7 @@ const projects = projectsData
           <TabBar tabs={tabs}>
             <slot name="topbar-actions" />
           </TabBar>
-          <div class:list={['studio-content thin-scrollbar', !fullBleed && 'pt-6', fullBleed && '!overflow-hidden !h-full flex flex-col [scrollbar-gutter:auto]']}>
+          <div class:list={['studio-content thin-scrollbar', !fullBleed && 'pt-6', fullBleed && '!overflow-y-auto !overflow-x-hidden !h-full flex flex-col [scrollbar-gutter:auto]']}>
             {!fullBleed && (
               <div class="px-4 pb-1 sm:px-6 xl:px-10">
                 <Breadcrumb activePath={activePath} />

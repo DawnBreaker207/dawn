@@ -1,0 +1,76 @@
+*,
+:before,
+:after {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings:
+    "calt" 0,
+    "liga" 0;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+button,
+input,
+output {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  background: 0 0;
+  border: 0;
+  padding: 0;
+}
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+h1,
+h2,
+p {
+  margin: 0;
+}
+.i {
+  flex: none;
+  display: block;
+}
+.btn-pop {
+  background: var(--green);
+  border: 1.5px solid var(--ink);
+  box-shadow:
+    inset 0 1px 0 var(--a-1),
+    var(--pop-shadow);
+  border-radius: 8px;
+  font-weight: 700;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+}
+.eyebrow {
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.muted-copy {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}

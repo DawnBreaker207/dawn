@@ -1,0 +1,175 @@
+﻿/* ==========================================================================
+   DESIGNED TO SCALE (DTS) â€” 100% COMPLETE AUTHENTIC WORKBENCH STYLES
+   ========================================================================== */
+
+/* â”€â”€ 1. KEYFRAME ANIMATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@keyframes value-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes fresh-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes chip-flash {
+  0% {
+    box-shadow: 0 0 0 0 var(--a-16);
+    transform: translateY(0);
+  }
+  15% {
+    box-shadow: 0 0 0 4px var(--a-17);
+    transform: translateY(-2px);
+  }
+  to {
+    box-shadow: 0 0 0 10px var(--a-16);
+    transform: translateY(0);
+  }
+}
+
+@keyframes held {
+  0%,
+  to {
+    stroke-width: 1.5px;
+  }
+  50% {
+    stroke-width: 3.4px;
+  }
+}
+
+@keyframes fx-burst {
+  0% {
+    opacity: 1;
+    transform: scale(0.7);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.3);
+  }
+}
+
+@keyframes fx-fade {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fx-pop {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+@keyframes spot {
+  0% {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes moved {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  to {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes speak-wave {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes chip-in {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--slide, 0));
+  }
+}
+
+@keyframes guide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--slide, 0));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes guide-out {
+  to {
+    opacity: 0;
+    transform: translateX(var(--slide, 0));
+  }
+}
+
+@keyframes ent-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ent-leave {
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(.96);
+  }
+}
+
+@keyframes link-enter {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 120;
+  }
+  100% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+

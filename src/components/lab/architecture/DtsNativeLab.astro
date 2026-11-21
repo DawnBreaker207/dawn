@@ -9,12 +9,12 @@ const { lessonId } = Astro.props;
 <div class="dts-lab-native is-embedded w-full h-full flex flex-col flex-1 min-h-0 bg-(--bg) overflow-hidden relative">
   <iframe
     id="dts-iframe"
-    src={`/dts/index.html#/${lessonId}/1`}
+    src={`/dts/index.html?embed=1#/${lessonId}/1`}
     title={`${lessonId} Interactive Simulation`}
     class="w-full h-full flex-1 border-0 bg-transparent block"
     allow="fullscreen"
     loading="eager"
-  ></iframe>
+  />
 </div>
 
 <script>
@@ -31,21 +31,19 @@ const { lessonId } = Astro.props;
     const iframe = document.getElementById('dts-iframe') as HTMLIFrameElement | null;
     if (!iframe) return;
 
-    iframe.onload = () => {
-      syncThemeToIframe();
-    };
+    iframe.onload = () => syncThemeToIframe();
 
     const observer = new MutationObserver(syncThemeToIframe);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class', 'data-theme']
+      attributeFilter: ['class', 'data-theme'],
     });
 
     window.addEventListener('hashchange', () => {
       if (iframe.contentWindow && window.location.hash) {
         try {
           iframe.contentWindow.location.hash = window.location.hash;
-        } catch (_) {}
+        } catch {}
       }
     });
 
