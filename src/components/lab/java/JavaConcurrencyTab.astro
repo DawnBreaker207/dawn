@@ -1,0 +1,210 @@
+---
+import LabWorkbench from '@/components/lab/LabWorkbench.astro';
+import { buildConcurrencyLesson } from '@/data/labs/java-concurrency-lesson';
+import DtsSceneRenderer from '@/components/widget/DtsSceneRenderer';
+import { javaConcurrencyLesson } from '@/lib/dts/lessons';
+import type { SubTopic } from '@/scripts/lab/java/java-tabs';
+import type { SimCase } from '@/scripts/lab/java/sim-engine';
+
+interface Props {
+  tab: unknown;
+  subs: SubTopic[];
+  simcases: Record<string, SimCase[]>;
+  simviz: Record<string, unknown[]>;
+}
+const { subs, simcases } = Astro.props;
+const lesson = buildConcurrencyLesson(subs);
+---
+
+<!-- Accent tokens scoped to this tab via CSS cascade -->
+<div id="conc-wb-container" style="--wb-accent: #f59e0b; --wb-accent-rgb: 245 158 11;">
+  <LabWorkbench lesson={lesson}>
+
+    <DtsSceneRenderer slot="canvas" lesson={javaConcurrencyLesson} client:idle />
+
+    <!-- controls slot: sub picker + Run Flow -->
+    <div slot="controls" class="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-(--bg-alt)">
+      <div class="flex flex-wrap items-center gap-1.5">
+        <span class="text-[10px] uppercase tracking-wider text-(--fg-faint) font-mono mr-1">Engine:</span>
+        {subs.map((sub, i) => (
+          <button
+            type="button"
+            data-conc-btn={sub.id}
+            data-conc-idx={i}
+            class:list={[
+              'conc-pick-btn cursor-pointer rounded-lg border px-2.5 py-1 font-mono text-xs font-semibold transition-all',
+              i === 0
+                ? 'conc-pick-on border-(--fg) bg-(--fg) text-(--bg)'
+                : 'border-(--border) bg-(--bg) text-(--fg-dim) hover:text-(--fg)'
+            ]}
+          >
+            {sub.label}
+          </button>
+        ))}
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          id="conc-btn-run"
+          type="button"
+          class="cursor-pointer rounded-lg border border-amber-500 bg-amber-500/15 px-4 py-1.5 font-mono text-xs font-semibold text-amber-600 dark:text-amber-400 transition-all hover:bg-amber-500/25 active:scale-95"
+        >
+          ▶ Run Flow
+        </button>
+        <span id="conc-status" class="font-mono text-[10px] text-(--fg-faint)">ready</span>
+      </div>
+    </div>
+
+    <!-- default slot: simcases card + Technical Specs accordion -->
+    <div class="conc-simcases-card mt-4">
+      <div class="mb-2 flex items-center justify-between font-mono text-[11px] text-(--fg-dim)">
+        <span class="font-semibold uppercase tracking-wider">Interactive Test Cases</span>
+        <span class="text-[10px] text-(--fg-faint)">Live Execution</span>
+      </div>
+      <div id="conc-cases-container" class="space-y-2">
+        {subs.map((sub, i) => (
+          <div data-conc-cases-group={sub.id} hidden={i !== 0} class="space-y-2 font-mono text-xs">
+            <div class="flex flex-wrap gap-1.5">
+              {(simcases[sub.id] ?? []).map((sc: SimCase, scIdx: number) => (
+                <button
+                  type="button"
+                  data-case-btn={scIdx}
+                  class:list={[
+                    'cursor-pointer rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all',
+                    scIdx === 0
+                      ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      : 'border-(--border) bg-(--bg) text-(--fg-dim) hover:text-(--fg)'
+                  ]}
+                >
+                  {sc.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <details class="group rounded-xl border border-(--border) bg-(--bg-alt) transition-colors mt-4">
+      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-4 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+        <span class="font-semibold tracking-wide">Technical Specs: Java 21 Code Snippet & Mechanism Flow</span>
+        <svg class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180 text-(--fg-dim)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </summary>
+      <div class="grid grid-cols-1 gap-4 border-t border-(--border) p-4 md:grid-cols-2">
+        <div>
+          <div class="mb-1 text-[10px] font-mono uppercase tracking-wider text-(--fg-faint)">Java 21 Code Snippet</div>
+          <pre id="conc-spec-code" class="min-h-[110px] overflow-x-auto rounded-lg border border-(--border) bg-(--terminal) p-3 font-mono text-[11px] leading-relaxed text-(--fg)">{subs[0]?.code}</pre>
+        </div>
+        <div>
+          <div class="mb-1 text-[10px] font-mono uppercase tracking-wider text-(--fg-faint)">Mechanism Flow</div>
+          <div id="conc-spec-flow" class="rounded-lg border border-(--border) bg-(--bg) p-3 font-sans text-xs leading-relaxed text-(--fg-dim)">
+            <p id="conc-spec-flow-text" class="font-mono text-xs text-(--fg) mb-2">{subs[0]?.flow}</p>
+            <div id="conc-spec-diagram" set:html={subs[0]?.diagram} />
+          </div>
+        </div>
+      </div>
+    </details>
+
+  </LabWorkbench>
+</div>
+
+<style>
+  .stage-canvas-placeholder {
+    flex: 1;
+    min-height: 220px;
+    background: var(--bg-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .conc-simcases-card {
+    background: var(--bg-alt);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+  }
+
+  .conc-pick-on {
+    border-color: var(--fg) !important;
+    background: var(--fg) !important;
+    color: var(--bg) !important;
+  }
+</style>
+
+<script is:inline define:vars={{ subs }}>
+  function initConcWorkbench() {
+    const container = document.getElementById('conc-wb-container');
+    if (!container) return;
+    const wbRoot = container.querySelector('.wb-root');
+    if (!wbRoot) return;
+
+    let curIdx = 0;
+
+    function updatePickerUI(idx) {
+      container.querySelectorAll('[data-conc-btn]').forEach((btn, i) => {
+        btn.classList.toggle('conc-pick-on', i === idx);
+        if (i === idx) {
+          btn.className = 'conc-pick-btn cursor-pointer rounded-lg border px-2.5 py-1 font-mono text-xs font-semibold transition-all conc-pick-on';
+        } else {
+          btn.className = 'conc-pick-btn cursor-pointer rounded-lg border px-2.5 py-1 font-mono text-xs font-semibold transition-all border-(--border) bg-(--bg) text-(--fg-dim) hover:text-(--fg)';
+        }
+      });
+    }
+
+    function updateAccordion(idx) {
+      const sub = subs[idx];
+      if (!sub) return;
+      const codeEl = document.getElementById('conc-spec-code');
+      if (codeEl) codeEl.textContent = sub.code;
+      const flowEl = document.getElementById('conc-spec-flow-text');
+      if (flowEl) flowEl.textContent = sub.flow;
+      const diagramEl = document.getElementById('conc-spec-diagram');
+      if (diagramEl) diagramEl.innerHTML = sub.diagram ?? '';
+    }
+
+    function updateCasesGroup(idx) {
+      const sub = subs[idx];
+      if (!sub) return;
+      container.querySelectorAll('[data-conc-cases-group]').forEach(el => {
+        el.hidden = el.dataset.concCasesGroup !== sub.id;
+      });
+    }
+
+    // Listen for LabWorkbench step changes (fired by wb:step-change on wbRoot)
+    wbRoot.addEventListener('wb:step-change', (e) => {
+      const idx = e.detail?.idx;
+      if (typeof idx !== 'number') return;
+      curIdx = idx;
+      updatePickerUI(idx);
+      updateCasesGroup(idx);
+      updateAccordion(idx);
+    });
+
+    // Sub picker → navigate LabWorkbench
+    container.querySelectorAll('[data-conc-btn]').forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        wbRoot.dispatchEvent(new CustomEvent('wb:navigate', { detail: { idx: i }, bubbles: true }));
+      });
+    });
+
+    // Run Flow button
+    const runBtn = document.getElementById('conc-btn-run');
+    const statusEl = document.getElementById('conc-status');
+    if (runBtn) {
+      runBtn.addEventListener('click', async () => {
+        if (statusEl) statusEl.textContent = '▶ running...';
+        for (let i = 0; i < subs.length; i++) {
+          wbRoot.dispatchEvent(new CustomEvent('wb:navigate', { detail: { idx: i }, bubbles: true }));
+          await new Promise(r => setTimeout(r, 900));
+        }
+        if (statusEl) statusEl.textContent = '✓ flow done';
+      });
+    }
+  }
+
+  document.addEventListener('astro:page-load', initConcWorkbench);
+  initConcWorkbench();
+</script>

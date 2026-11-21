@@ -2,140 +2,59 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { SUBS, TABS } from '@/scripts/lab/java/java-tabs';
 import { SIMCASES, SIM_VIZ } from '@/scripts/lab/java/java-data';
-import JavaRegularTab from '@/components/JavaRegularTab.astro';
-import JavaConcurrencyTab from '@/components/JavaConcurrencyTab.astro';
-import JavaJvmTab from '@/components/JavaJvmTab.astro';
+import JavaRegularTab from '@/components/lab/java/JavaRegularTab.astro';
+import JavaConcurrencyTab from '@/components/lab/java/JavaConcurrencyTab.astro';
+import JavaJvmTab from '@/components/lab/java/JavaJvmTab.astro';
+import JavaConceptPicker from '@/components/lab/java/JavaConceptPicker.astro';
+import '@/styles/lab-java.css';
 
 export const prerender = true;
-
-// Segment 1: Core Java (12 concepts)
-const JAVA_GROUPS = [
-  { short: 'Runtime', ids: ['concurrency', 'jvm', 'jmm', 'io'] },
-  { short: 'Memory', ids: ['collections', 'string'] },
-  { short: 'Language', ids: ['streams', 'lambda', 'modern', 'generics', 'jit', 'errors'] },
-];
-
-// Segment 2: Spring Boot (13 concepts)
-const SPRING_GROUPS = [
-  { short: 'Core', ids: ['ioc', 'scope', 'aop', 'autoconfig'] },
-  { short: 'Data', ids: ['jpa', 'tx'] },
-  { short: 'Enterprise', ids: ['security', 'web', 'async', 'messaging', 'config', 'testing', 'metaprog'] },
-];
-
-const SHORT: Record<string, string> = {
-  concurrency: 'Concurrency', jvm: 'JVM/GC', jmm: 'JMM', io: 'IO/NIO',
-  collections: 'Collections', string: 'String',
-  streams: 'Streams', lambda: 'Lambda', modern: 'Records', generics: 'Generics', jit: 'JIT', errors: 'Errors',
-  ioc: 'IoC', scope: 'Scope', aop: 'AOP', autoconfig: 'Autoconfig',
-  jpa: 'JPA', tx: 'Transactions',
-  security: 'Security', web: 'Web/REST', async: 'Async', messaging: 'Messaging', config: 'Config', testing: 'Testing', metaprog: 'Meta',
-};
 ---
 
 <BaseLayout
   title="Java & Spring Lab"
   description="Java concurrency, collections, strings, streams, lambdas, generics, exceptions, classloading and JIT, IO, JVM memory, Spring IoC, AOP, JPA, Security, meta-programming, Web/REST, testing, auto-configuration, transactions, async events, messaging and externalized config — one route, tab by concept, every mechanism drawn."
+  fullBleed={true}
 >
-  <header class="mb-6 border-b border-(--border) pb-5">
-    <div class="mb-2 flex items-center gap-2">
-      <h1 class="m-0 font-mono text-[clamp(28px,4.5vw,48px)] leading-[0.96] tracking-[-0.06em] text-(--fg)">
-        java &amp; spring lab
-      </h1>
-      <span class="inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2.5 py-0.5 text-[10px] text-amber-500 font-mono">
-        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500"></span>
-        Java 21 · Spring 6
-      </span>
+  <!-- Topbar Action Slot: Segment Switcher + Concept Dropdown Picker + Version Badge -->
+  <div slot="topbar-actions" class="flex items-center gap-2">
+    <div class="inline-flex rounded-lg border border-(--border) bg-(--bg-alt) p-0.5 font-mono text-[11px] shadow-sm">
+      <button
+        type="button"
+        data-jx-segment="java"
+        class="jx-seg-btn cursor-pointer rounded-md px-2 py-0.5 font-mono font-semibold transition-all bg-(--fg) text-(--bg) shadow-sm"
+      >
+        ☕ Java
+      </button>
+      <button
+        type="button"
+        data-jx-segment="spring"
+        class="jx-seg-btn cursor-pointer rounded-md px-2 py-0.5 font-mono font-semibold transition-all text-(--fg-dim) hover:text-(--fg)"
+      >
+        🍃 Spring
+      </button>
     </div>
-    <p class="mt-1 text-sm text-(--fg-dim)">
-      Core theory, hand-drawn mechanics, concise code — 25 step-by-step simulations.
-    </p>
-  </header>
+    <JavaConceptPicker />
+    <span class="hidden sm:inline-flex items-center gap-1 rounded border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] text-amber-500 font-mono">
+      <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500"></span>
+      Java 21 · Spring 6
+    </span>
+  </div>
 
-  <div class="space-y-5" data-sims={JSON.stringify({ cases: SIMCASES, viz: SIM_VIZ })}>
-    <!-- Segment Control -->
-    <div class="space-y-2.5">
-      <div class="flex items-center">
-        <!-- Root Segment Switcher -->
-        <div class="inline-flex rounded-xl border border-(--border) bg-(--bg-alt) p-1 font-mono text-xs shadow-sm">
-          <button
-            type="button"
-            data-jx-segment="java"
-            class="jx-seg-btn cursor-pointer rounded-lg px-4 py-2 font-mono text-xs font-semibold transition-all bg-(--fg) text-(--bg) shadow-sm"
-          >
-            ☕ Core Java (12)
-          </button>
-          <button
-            type="button"
-            data-jx-segment="spring"
-            class="jx-seg-btn cursor-pointer rounded-lg px-4 py-2 font-mono text-xs font-semibold transition-all text-(--fg-dim) hover:text-(--fg)"
-          >
-            🍃 Spring Boot (13)
-          </button>
-        </div>
-      </div>
-
-      <!-- Segment 1: Core Java Tabs -->
-      <div data-jx-seg-content="java" class="rounded-xl border border-(--border) bg-(--bg-alt) p-2.5 space-y-1.5">
-        {JAVA_GROUPS.map((grp) => (
-          <div class="flex flex-wrap items-center gap-1.5">
-            <span class="w-16 shrink-0 font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">{grp.short}</span>
-            {grp.ids.map((id) => {
-              const tab = TABS.find((t) => t.id === id);
-              if (!tab) return null;
-              return (
-                <button
-                  type="button"
-                  data-jx-tab={tab.id}
-                  class="jx-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-xs font-mono font-semibold text-(--fg-dim) transition-all hover:border-(--fg-dim) hover:text-(--fg) touch-manipulation min-h-[34px]"
-                >
-                  {SHORT[tab.id] ?? tab.title}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-
-      <!-- Segment 2: Spring Boot Tabs -->
-      <div data-jx-seg-content="spring" hidden class="rounded-xl border border-(--border) bg-(--bg-alt) p-2.5 space-y-1.5">
-        {SPRING_GROUPS.map((grp) => (
-          <div class="flex flex-wrap items-center gap-1.5">
-            <span class="w-16 shrink-0 font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">{grp.short}</span>
-            {grp.ids.map((id) => {
-              const tab = TABS.find((t) => t.id === id);
-              if (!tab) return null;
-              return (
-                <button
-                  type="button"
-                  data-jx-tab={tab.id}
-                  class="jx-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-xs font-mono font-semibold text-(--fg-dim) transition-all hover:border-(--fg-dim) hover:text-(--fg) touch-manipulation min-h-[34px]"
-                >
-                  {SHORT[tab.id] ?? tab.title}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+  <div class="java-lab" data-sims={JSON.stringify({ cases: SIMCASES, viz: SIM_VIZ })}>
+    <!-- Active Concept Content Panels (Full-bleed stage) -->
+    <div class="flex-1 min-h-0 overflow-hidden relative">
+      {TABS.map((tab, index) => (
+        <section data-jx-panel={tab.id} hidden={index !== 0} class="h-full">
+          {tab.id === 'jvm'
+            ? <JavaJvmTab tab={tab} />
+            : tab.id === 'concurrency'
+              ? <JavaConcurrencyTab tab={tab} subs={SUBS} simcases={SIMCASES} simviz={SIM_VIZ} />
+              : <JavaRegularTab tab={tab} cases={SIMCASES[tab.id] ?? []} viz={SIM_VIZ[tab.id] ?? []} />
+          }
+        </section>
+      ))}
     </div>
-
-    <!-- Active Concept Content Panels -->
-    {TABS.map((tab, index) => (
-      <section data-jx-panel={tab.id} hidden={index !== 0}>
-        <div class="mb-2 flex items-center justify-between border-b border-(--border) pb-2">
-          <div class="flex items-center gap-2">
-            <span class="text-md font-semibold tracking-tight text-(--fg)">{tab.title}</span>
-          </div>
-          <span class={`rounded-sm border border-(--border) px-1.5 py-0.5 font-mono text-[10px] ${tab.tone}`}>{tab.badge}</span>
-        </div>
-        {tab.id === 'jvm'
-          ? <JavaJvmTab tab={tab} />
-          : tab.id === 'concurrency'
-            ? <JavaConcurrencyTab tab={tab} subs={SUBS} simcases={SIMCASES} simviz={SIM_VIZ} />
-            : <JavaRegularTab tab={tab} cases={SIMCASES[tab.id] ?? []} viz={SIM_VIZ[tab.id] ?? []} />
-        }
-      </section>
-    ))}
   </div>
 </BaseLayout>
 
@@ -143,6 +62,9 @@ const SHORT: Record<string, string> = {
   import { registerTab, bootEngine, initJVMVisualizer } from '@/scripts/lab/java/sim-engine';
 
   function initJavaLabUI() {
+    // Hide empty blog rail on lab pages so 3D workbench expands to full width
+    document.documentElement.setAttribute('data-rail', 'hidden');
+
     // 1. Register simulation data into engine
     const root = document.querySelector<HTMLElement>('[data-sims]');
     if (root) {
@@ -161,8 +83,6 @@ const SHORT: Record<string, string> = {
 
     // 2. Setup Segment Controller
     const segButtons = document.querySelectorAll<HTMLButtonElement>('[data-jx-segment]');
-    const segContents = document.querySelectorAll<HTMLElement>('[data-jx-seg-content]');
-
     const springTabIds = new Set([
       'ioc', 'scope', 'aop', 'jpa', 'security', 'metaprog', 'web', 'testing',
       'autoconfig', 'tx', 'async', 'messaging', 'config'
@@ -172,11 +92,8 @@ const SHORT: Record<string, string> = {
       segButtons.forEach((btn) => {
         const active = btn.dataset.jxSegment === seg;
         btn.className = active
-          ? 'jx-seg-btn cursor-pointer rounded-lg px-4 py-2 font-mono text-xs font-semibold transition-all bg-(--fg) text-(--bg) shadow-sm'
-          : 'jx-seg-btn cursor-pointer rounded-lg px-4 py-2 font-mono text-xs font-semibold transition-all text-(--fg-dim) hover:text-(--fg)';
-      });
-      segContents.forEach((c) => {
-        c.hidden = c.dataset.jxSegContent !== seg;
+          ? 'jx-seg-btn cursor-pointer rounded-md px-2 py-0.5 font-mono font-semibold transition-all bg-(--fg) text-(--bg) shadow-sm'
+          : 'jx-seg-btn cursor-pointer rounded-md px-2 py-0.5 font-mono font-semibold transition-all text-(--fg-dim) hover:text-(--fg)';
       });
     };
 
@@ -184,29 +101,89 @@ const SHORT: Record<string, string> = {
       btn.addEventListener('click', () => {
         const targetSeg = btn.dataset.jxSegment as 'java' | 'spring';
         setSegment(targetSeg);
-        // Automatically click first tab in this segment if current active panel is not in it
         const currentActiveBtn = document.querySelector<HTMLElement>('[data-jx-tab].border-\\(--fg\\)');
         const currentId = currentActiveBtn?.dataset.jxTab ?? '';
         const inSpring = springTabIds.has(currentId);
         if ((targetSeg === 'spring' && !inSpring) || (targetSeg === 'java' && inSpring)) {
-          const firstTabInSeg = document.querySelector<HTMLElement>(`[data-jx-seg-content="${targetSeg}"] [data-jx-tab]`);
+          const firstTabInSeg = document.querySelector<HTMLElement>(`[data-jx-seg="${targetSeg}"]`);
           firstTabInSeg?.click();
         }
       });
     });
 
+    // 3. Dropdown Menu & Search Filter Handling
+    const dropdownRoot = document.getElementById('java-concept-picker-root');
+    const dropdownBtn  = document.getElementById('btn-java-concept-dropdown');
+    const dropdownMenu = document.getElementById('java-concept-dropdown-menu');
+    const titleEl      = document.getElementById('java-active-concept-title');
+    const searchInput  = document.getElementById('java-concept-search') as HTMLInputElement | null;
+    const tabBtns      = document.querySelectorAll<HTMLElement>('[data-jx-tab]');
 
-    // 3. Auto-detect segment from initial Hash
+    if (dropdownBtn && dropdownMenu && dropdownBtn.dataset.bound !== 'true') {
+      dropdownBtn.dataset.bound = 'true';
+      dropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !dropdownMenu.hidden;
+        dropdownMenu.hidden = isOpen;
+        dropdownBtn.setAttribute('aria-expanded', String(!isOpen));
+        if (!isOpen && searchInput) {
+          setTimeout(() => searchInput.focus(), 50);
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (dropdownRoot && !dropdownRoot.contains(e.target as Node)) {
+          dropdownMenu.hidden = true;
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !dropdownMenu.hidden) {
+          dropdownMenu.hidden = true;
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+          dropdownBtn.focus();
+        }
+      });
+    }
+
+    if (searchInput && searchInput.dataset.bound !== 'true') {
+      searchInput.dataset.bound = 'true';
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase().trim();
+        tabBtns.forEach((btn) => {
+          const text = (btn.textContent ?? '').toLowerCase();
+          const matches = !query || text.includes(query);
+          btn.style.display = matches ? '' : 'none';
+        });
+      });
+    }
+
+    tabBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (dropdownMenu && dropdownBtn) {
+          dropdownMenu.hidden = true;
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+        const id = btn.dataset.jxTab ?? '';
+        const inSpring = springTabIds.has(id);
+        setSegment(inSpring ? 'spring' : 'java');
+        if (titleEl) {
+          titleEl.textContent = btn.querySelector('.java-item-text')?.textContent ?? btn.textContent ?? '';
+        }
+      });
+    });
+
+    // 4. Auto-detect segment from initial Hash
     const initialHash = window.location.hash.slice(1);
     if (initialHash && springTabIds.has(initialHash)) {
       setSegment('spring');
     } else {
       setSegment('java');
     }
-
-
   }
 
+  initJavaLabUI();
   document.addEventListener('astro:page-load', initJavaLabUI);
 </script>
 
@@ -218,7 +195,7 @@ const SHORT: Record<string, string> = {
   }
   .jx-seg-btn {
     font-family: var(--font-mono, ui-monospace, monospace) !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     line-height: 1rem !important;
   }
   .jx-row {

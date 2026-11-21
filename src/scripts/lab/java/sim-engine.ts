@@ -60,7 +60,9 @@ export function bootEngine(): void {
         panel.hidden = panel.dataset.jxPanel !== id;
       });
       const mirror = document.querySelector<HTMLElement>('[data-jx-current]');
-      if (mirror) mirror.textContent = tab.textContent ?? '';
+      if (mirror) {
+        mirror.textContent = tab.querySelector('.java-item-text')?.textContent?.trim() || tab.textContent?.trim() || '';
+      }
       tab.closest('details')?.removeAttribute('open');
 
       if (id && window.location.hash.slice(1) !== id) {
@@ -241,10 +243,14 @@ export function bootEngine(): void {
 
   // Sub-topic select for the concurrency tab.
   const sel = document.querySelector<HTMLSelectElement>('[data-conc-select]');
+
   sel?.addEventListener('change', () => {
     const id = sel.value;
     document.querySelectorAll<HTMLElement>('[data-conc-sub]').forEach((p) => {
       p.hidden = p.dataset.concSub !== id;
+    });
+    document.querySelectorAll<HTMLElement>('[data-conc-guide]').forEach((g) => {
+      g.hidden = g.dataset.concGuide !== id;
     });
     const btn = document.querySelector<HTMLButtonElement>(
       `[data-conc-sub="${id}"] [data-case-run]`,

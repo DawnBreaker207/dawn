@@ -1,0 +1,623 @@
+---
+// LabWorkbench.astro — Generic 2-column workbench shell for Java & SQL labs.
+// Slots: "canvas" (left stage area), "controls" (bottom controls bar), default (extra content below grid).
+// Dispatches CustomEvent('wb:step-change', { detail: { idx, step } }) on the .wb-root element.
+// Rule: no imports from @/lib/dts/
+
+import type { WorkbenchLesson } from '@/types/workbench';
+
+interface Props {
+  lesson: WorkbenchLesson;
+}
+
+const { lesson } = Astro.props;
+const s0 = lesson.steps[0];
+const total = lesson.steps.length;
+---
+
+<div
+  class="wb-root"
+  data-wb-steps={JSON.stringify(lesson.steps)}
+  data-wb-goals={JSON.stringify(lesson.goals)}
+>
+  <div class="wb-grid">
+    <!-- LEFT: Canvas stage -->
+    <section class="wb-stage-card" aria-label={lesson.title}>
+      <div class="wb-canvas-area">
+        <slot name="canvas">
+          <div class="wb-canvas-placeholder">
+            <span class="font-mono text-xs text-(--fg-faint)">[ canvas ]</span>
+          </div>
+        </slot>
+      </div>
+      <div class="wb-controls-bar">
+        <slot name="controls" />
+      </div>
+    </section>
+
+    <!-- RIGHT: Guide deck -->
+    <aside class="wb-guide-deck">
+      <!-- Step guide card -->
+      <div class="wb-guide-card">
+        <div class="wb-guide-header">
+          <span class="wb-step-pill" data-wb="guide-pill">Step 1 · {s0?.short ?? ''}</span>
+          <span class="font-mono text-xs text-(--fg-dim)" data-wb="step-count">1 / {total}</span>
+        </div>
+
+        <h2 class="wb-guide-title" data-wb="guide-title">{s0?.title ?? ''}</h2>
+
+        {lesson.subtitle && (
+          <div class="wb-guide-badge">
+            <span class="wb-badge-dot"></span>
+            <span>{lesson.subtitle}</span>
+          </div>
+        )}
+
+        <div class="wb-guide-body" data-wb="guide-body">
+          {s0?.body.map(p => <p set:html={p} />)}
+        </div>
+
+        <div
+          class="wb-guide-callout"
+          data-wb="guide-callout"
+          style={!s0?.why ? 'display:none' : undefined}
+        >
+          {s0?.why ?? ''}
+        </div>
+
+        <div
+          class="wb-guide-metrics"
+          data-wb="guide-metrics"
+          style={!s0?.metrics ? 'display:none' : undefined}
+        >
+          {s0?.metrics && Object.entries(s0.metrics).map(([k, v]) => (
+            <span class="wb-metric">
+              <span class="wb-metric-key">{k}</span>
+              <span class="wb-metric-val">{v}</span>
+            </span>
+          ))}
+        </div>
+
+        <div class="wb-guide-nav">
+          <button data-wb="btn-prev" type="button" class="wb-btn-nav" disabled>← Prev</button>
+          <button
+            data-wb="btn-next"
+            type="button"
+            class="wb-btn-nav wb-btn-nav--primary"
+            disabled={total <= 1}
+          >Next →</button>
+        </div>
+      </div>
+
+      <!-- Step timeline list -->
+      <div class="wb-timeline-card">
+        <div class="wb-timeline-header">
+          <span class="font-semibold uppercase tracking-wider">Steps</span>
+          <span data-wb="timeline-count">1 of {total}</span>
+        </div>
+        <ul class="wb-timeline-list" data-wb="timeline-list">
+          {lesson.steps.map((step, i) => (
+            <li
+              class:list={['wb-timeline-item', i === 0 && 'is-current']}
+              data-wb-step-idx={i}
+            >
+              <span class="wb-step-num">{i + 1}</span>
+              <span class="truncate">{step.short}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Goals card -->
+      {lesson.goals.length > 0 && (
+        <div class="wb-goals-card">
+          <div class="wb-timeline-header">
+            <span class="font-semibold uppercase tracking-wider">Learning Goals</span>
+          </div>
+          <ul class="wb-goals-list">
+            {lesson.goals.map((goal) => (
+              <li class="wb-goal-item" data-wb-goal-step={goal.step}>
+                <span class="wb-goal-dot"></span>
+                <span class="wb-goal-text">{goal.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </aside>
+  </div>
+
+  <!-- Extra content (Technical Specs accordion, etc.) -->
+  <slot />
+</div>
+
+<style>
+  .wb-root {
+    width: 100%;
+    max-width: 1380px;
+    height: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wb-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 16px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  @media (max-width: 1024px) {
+    .wb-grid {
+      grid-template-columns: 1fr;
+    }
+
+    /* Stacked layout: let the page scroll instead of clipping the guide deck */
+    .wb-root {
+      height: auto;
+      min-height: 100%;
+    }
+
+    .wb-grid {
+      flex: none;
+    }
+
+    /* Auto height makes the SVG fall back to its intrinsic ratio — pin the stage */
+    .wb-stage-card {
+      height: clamp(320px, 52vh, 460px);
+    }
+  }
+
+  /* LEFT: Stage card */
+  .wb-stage-card {
+    position: relative;
+    background: var(--bg-alt);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .wb-canvas-area {
+    flex: 1;
+    min-height: 320px;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .wb-canvas-area > :global(*) {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .wb-canvas-placeholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    background: var(--bg-subtle);
+  }
+
+  .wb-controls-bar:empty {
+    display: none;
+  }
+
+  .wb-controls-bar:not(:empty) {
+    border-top: 1px solid var(--border);
+    background: var(--bg-alt);
+  }
+
+  /* RIGHT: Guide deck */
+  .wb-guide-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  @media (min-width: 1025px) {
+    .wb-guide-deck {
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+  }
+
+  .wb-guide-card,
+  .wb-timeline-card,
+  .wb-goals-card {
+    background: var(--bg-alt);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+  }
+
+  .wb-guide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .wb-step-pill {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: rgba(var(--wb-accent-rgb, 245 158 11) / 0.12);
+    color: var(--wb-accent, #f59e0b);
+    border: 1px solid rgba(var(--wb-accent-rgb, 245 158 11) / 0.35);
+  }
+
+  .wb-guide-title {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--fg);
+    margin: 0 0 8px 0;
+  }
+
+  .wb-guide-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    color: var(--wb-accent, #f59e0b);
+    margin-bottom: 8px;
+  }
+
+  .wb-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .wb-guide-body {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--fg-dim);
+    margin: 8px 0;
+  }
+
+  .wb-guide-body p {
+    margin: 0 0 6px 0;
+  }
+
+  .wb-guide-body p:last-child {
+    margin-bottom: 0;
+  }
+
+  .wb-guide-callout {
+    font-size: 11.5px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(var(--wb-accent-rgb, 245 158 11) / 0.06);
+    border-left: 3px solid var(--wb-accent, #f59e0b);
+    color: var(--fg);
+    margin: 4px 0 12px 0;
+  }
+
+  .wb-guide-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0 12px 0;
+  }
+
+  .wb-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .wb-metric-key {
+    color: var(--fg-faint);
+  }
+
+  .wb-metric-val {
+    color: var(--wb-accent, #f59e0b);
+    font-weight: 700;
+  }
+
+  .wb-guide-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .wb-btn-nav {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .wb-btn-nav:hover:not(:disabled) {
+    border-color: var(--fg-dim);
+  }
+
+  .wb-btn-nav:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .wb-btn-nav--primary {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+
+  .wb-btn-nav--primary:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  /* Timeline */
+  .wb-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--fg-dim);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+
+  .wb-timeline-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .wb-timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--fg-dim);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .wb-timeline-item:hover {
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  .wb-timeline-item.is-current {
+    background: var(--bg);
+    border-color: var(--wb-accent, #f59e0b);
+    color: var(--fg);
+    font-weight: 700;
+  }
+
+  .wb-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: var(--bg-hover);
+    color: var(--fg-dim);
+    font-size: 10px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .wb-timeline-item.is-current .wb-step-num {
+    background: var(--wb-accent, #f59e0b);
+    color: #000;
+  }
+
+  /* Goals */
+  .wb-goals-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .wb-goal-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--fg-dim);
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+
+  .wb-goal-item.is-active {
+    color: var(--fg);
+    background: var(--bg);
+  }
+
+  .wb-goal-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--fg-faint);
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .wb-goal-item.is-active .wb-goal-dot {
+    background: var(--wb-accent, #f59e0b);
+  }
+
+  .wb-goal-text {
+    line-height: 1.4;
+  }
+</style>
+
+<script>
+  function initWorkbench(root: Element) {
+    const el = root as HTMLElement;
+    if (el.dataset.wbInit === 'true') return;
+    el.dataset.wbInit = 'true';
+
+    const steps: {
+      title: string;
+      short: string;
+      body: string[];
+      why?: string;
+      metrics?: Record<string, string>;
+    }[] = JSON.parse((root as HTMLElement).dataset.wbSteps ?? '[]');
+
+    if (!steps.length) return;
+    let curIdx = 0;
+
+    function $<T extends Element>(attr: string): T | null {
+      return root.querySelector<T>(`[data-wb="${attr}"]`);
+    }
+
+    function syncUI(idx: number) {
+      curIdx = idx;
+      const step = steps[idx];
+      if (!step) return;
+
+      const pill = $<HTMLElement>('guide-pill');
+      if (pill) pill.textContent = `Step ${idx + 1} · ${step.short}`;
+
+      const stepCount = $<HTMLElement>('step-count');
+      if (stepCount) stepCount.textContent = `${idx + 1} / ${steps.length}`;
+
+      const tlCount = $<HTMLElement>('timeline-count');
+      if (tlCount) tlCount.textContent = `${idx + 1} of ${steps.length}`;
+
+      const title = $<HTMLElement>('guide-title');
+      if (title) title.textContent = step.title;
+
+      const body = $<HTMLElement>('guide-body');
+      if (body) body.innerHTML = step.body.map(p => `<p>${p}</p>`).join('');
+
+      const callout = $<HTMLElement>('guide-callout');
+      if (callout) {
+        callout.textContent = step.why ?? '';
+        callout.style.display = step.why ? '' : 'none';
+      }
+
+      const metrics = $<HTMLElement>('guide-metrics');
+      if (metrics) {
+        if (step.metrics && Object.keys(step.metrics).length > 0) {
+          metrics.innerHTML = Object.entries(step.metrics)
+            .map(([k, v]) => `<span class="wb-metric"><span class="wb-metric-key">${k}</span><span class="wb-metric-val">${v}</span></span>`)
+            .join('');
+          metrics.style.display = '';
+        } else {
+          metrics.style.display = 'none';
+        }
+      }
+
+      const prevBtn = $<HTMLButtonElement>('btn-prev');
+      const nextBtn = $<HTMLButtonElement>('btn-next');
+      if (prevBtn) prevBtn.disabled = idx === 0;
+      if (nextBtn) nextBtn.disabled = idx === steps.length - 1;
+
+      root.querySelectorAll('.wb-timeline-item').forEach((item, i) => {
+        item.classList.toggle('is-current', i === idx);
+      });
+
+      root.querySelectorAll<HTMLElement>('.wb-goal-item').forEach(item => {
+        const goalStep = parseInt(item.dataset.wbGoalStep ?? '-1', 10);
+        item.classList.toggle('is-active', goalStep === idx + 1);
+      });
+
+      root.dispatchEvent(new CustomEvent('wb:step-change', {
+        detail: { idx, step },
+        bubbles: true,
+      }));
+    }
+
+    root.querySelectorAll<HTMLElement>('.wb-timeline-item').forEach((item, idx) => {
+      item.addEventListener('click', () => syncUI(idx));
+    });
+
+    $<HTMLButtonElement>('btn-prev')?.addEventListener('click', () => {
+      if (curIdx > 0) syncUI(curIdx - 1);
+    });
+
+    $<HTMLButtonElement>('btn-next')?.addEventListener('click', () => {
+      if (curIdx < steps.length - 1) syncUI(curIdx + 1);
+    });
+
+    // External callers can dispatch wb:navigate to jump to a specific step
+    root.addEventListener('wb:navigate', (e: Event) => {
+      const idx = (e as CustomEvent<{ idx: number }>).detail?.idx;
+      if (typeof idx === 'number') syncUI(idx);
+    });
+
+    syncUI(0);
+  }
+
+  // Chapter picker sets #/<lesson>/<step> — jump to that step (and reset on re-click)
+  let hashNavBound = false;
+  function bindHashNav() {
+    if (hashNavBound) return;
+    hashNavBound = true;
+    const go = () => {
+      const m = window.location.hash.match(/\/(\d+)$/);
+      if (!m) return;
+      const idx = parseInt(m[1], 10) - 1;
+      document.querySelectorAll<HTMLElement>('.wb-root').forEach((root) => {
+        const total = root.querySelectorAll('.wb-timeline-item').length;
+        if (idx >= 0 && idx < total) {
+          root.dispatchEvent(new CustomEvent('wb:navigate', { detail: { idx } }));
+        }
+      });
+    };
+    window.addEventListener('hashchange', go);
+    go();
+  }
+
+  function initAllWorkbenches() {
+    document.querySelectorAll('.wb-root').forEach(initWorkbench);
+    bindHashNav();
+  }
+
+  initAllWorkbenches();
+  document.addEventListener('astro:page-load', initAllWorkbenches);
+</script>

@@ -11,7 +11,9 @@ import ExplainOverviewCard from '@/components/lab/sql/ExplainOverviewCard.astro'
 import EnginePipeline from '@/components/lab/sql/EnginePipeline.astro';
 import PartitionVisualizer from '@/components/lab/sql/PartitionVisualizer.astro';
 import ReplicationTimeline from '@/components/lab/sql/ReplicationTimeline.astro';
+import SqlModulePicker from '@/components/lab/sql/SqlModulePicker.astro';
 import { EO_SQL, EO_STEPS, CASE_BRANCHES } from '@/scripts/lab/sql/execution-order';
+import '@/styles/lab-sql.css';
 
 export const prerender = true;
 ---
@@ -19,61 +21,57 @@ export const prerender = true;
 <BaseLayout
   title="Visual SQL EXPLAIN & Query Plan Explorer"
   description="Interactive PostgreSQL query plan simulator — compare Seq Scan vs B-Tree, fix Hibernate N+1, MVCC isolation, index footprint, connection pool."
+  fullBleed={true}
 >
-  <header class="mb-5 border-b border-(--border) pb-4">
-    <div class="mb-2 flex items-center gap-2">
-      <h1 class="m-0 font-mono text-[clamp(28px,4.5vw,48px)] leading-[0.96] tracking-[-0.06em] text-(--fg)">
-        sql explain explorer
-      </h1>
-      <span class="inline-flex items-center gap-1 rounded-full border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
-        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400"></span>
-        PostgreSQL 16
-      </span>
-    </div>
-    <p class="mt-1 text-sm text-(--fg-dim)">
-      Query plans, B-tree, MVCC, index sizing, infra, partitioning, replication — 8 interactive simulations.
-    </p>
-  </header>
-
-  <!-- Tab bar (Sticky, horizontal-scroll on mobile) -->
-  <div id="sql-tab-bar" class="sticky top-0 z-20 mb-5 overflow-x-auto border-b border-(--border) bg-(--bg)/90 backdrop-blur-sm pb-3 pt-2" style="-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory">
-    <div class="flex gap-1.5 font-mono text-xs whitespace-nowrap">
-      <button data-sql-tab="engine"    class="sql-tab sql-tab-active">Engine</button>
-      <button data-sql-tab="explain"   class="sql-tab">EXPLAIN</button>
-      <button data-sql-tab="btree"     class="sql-tab">B-Tree</button>
-      <button data-sql-tab="mvcc"      class="sql-tab">MVCC</button>
-      <button data-sql-tab="footprint"   class="sql-tab">Footprint</button>
-      <button data-sql-tab="infra"       class="sql-tab">Infra</button>
-      <button data-sql-tab="partition"   class="sql-tab">Partition</button>
-      <button data-sql-tab="replication" class="sql-tab">Replication</button>
-    </div>
+  <!-- Topbar Action Slot: Module Dropdown Picker + DB Version Badge -->
+  <div slot="topbar-actions" class="flex items-center gap-2">
+    <SqlModulePicker />
+    <span class="inline-flex items-center gap-1 rounded border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
+      <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400"></span>
+      PostgreSQL 16
+    </span>
   </div>
 
+  <div class="sql-lab">
+
+    <!-- Header matching system-design / request-lifecycle format -->
+    <header class="mb-4">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h1 class="m-0 font-mono text-[clamp(24px,4vw,36px)] font-bold tracking-tight text-(--fg)">
+          PostgreSQL Engine Architecture
+        </h1>
+        <p class="m-0 font-mono text-xs text-(--fg-dim)">
+          Query Lifecycle · Volcano Iterator · Shared Buffers · WAL Durability
+        </p>
+      </div>
+    </header>
+
   <!-- ═══════════════════════════════════════════════════════════════════════
-       Tab 0 — Engine Pipeline
+       Tab 0 — Engine Pipeline (DTS 2-Column Workbench)
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="engine" class="space-y-4">
-
-    <!-- Concept strip -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🗺️</div>
-        <div class="mt-0.5 font-bold text-cyan-500">5 stages</div>
-        <div class="text-[10px] text-(--fg-faint)">per query</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">📦</div>
-        <div class="mt-0.5 font-bold text-amber-500">shared_buffers</div>
-        <div class="text-[10px] text-(--fg-faint)">page cache</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">📜</div>
-        <div class="mt-0.5 font-bold text-emerald-500">WAL</div>
-        <div class="text-[10px] text-(--fg-faint)">durability</div>
-      </div>
-    </div>
-
+  <div data-sql-pane="engine" class="w-full">
     <EnginePipeline />
+  </div>
+  <div style="display:none">
+    <div class="sql-guide-col thin-scrollbar">
+      <!-- Concept strip -->
+      <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🗺️</div>
+          <div class="mt-0.5 font-bold text-cyan-500">5 stages</div>
+          <div class="text-[10px] text-(--fg-faint)">per query</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">📦</div>
+          <div class="mt-0.5 font-bold text-amber-500">shared_buffers</div>
+          <div class="text-[10px] text-(--fg-faint)">page cache</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">📜</div>
+          <div class="mt-0.5 font-bold text-emerald-500">WAL</div>
+          <div class="text-[10px] text-(--fg-faint)">durability</div>
+        </div>
+      </div>
 
     <!-- Theory: 5-stage pipeline -->
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
@@ -235,34 +233,39 @@ Replication: standby streams WAL records → apply.`}</pre>
         </div>
       </div>
     </details>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 1 — EXPLAIN Explorer
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="explain" hidden class="space-y-4">
-
-    <!-- Concept strip -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🐌</div>
-        <div class="mt-0.5 font-bold text-rose-500">O(n)</div>
-        <div class="text-[10px] text-(--fg-faint)">Seq Scan</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">⚡</div>
-        <div class="mt-0.5 font-bold text-emerald-500">O(log n)</div>
-        <div class="text-[10px] text-(--fg-faint)">Index Scan</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">💣</div>
-        <div class="mt-0.5 font-bold text-amber-500">N+1</div>
-        <div class="text-[10px] text-(--fg-faint)">queries/row</div>
-      </div>
+  <div data-sql-pane="explain" hidden>
+    <!-- Left Stage Column: Interactive Scenario & Query Execution -->
+    <div class="sql-stage-col thin-scrollbar space-y-4">
+      <ScenarioPicker />
+      <ExecutionOrder eoSql={EO_SQL} eoSteps={EO_STEPS} />
     </div>
 
-    <ScenarioPicker />
-    <ExecutionOrder eoSql={EO_SQL} eoSteps={EO_STEPS} />
+    <!-- Right Guide Column: Concept, Theory & Patterns -->
+    <div class="sql-guide-col thin-scrollbar">
+      <!-- Concept strip -->
+      <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🐌</div>
+          <div class="mt-0.5 font-bold text-rose-500">O(n)</div>
+          <div class="text-[10px] text-(--fg-faint)">Seq Scan</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">⚡</div>
+          <div class="mt-0.5 font-bold text-emerald-500">O(log n)</div>
+          <div class="text-[10px] text-(--fg-faint)">Index Scan</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">💣</div>
+          <div class="mt-0.5 font-bold text-amber-500">N+1</div>
+          <div class="text-[10px] text-(--fg-faint)">queries/row</div>
+        </div>
+      </div>
 
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
       <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
@@ -307,33 +310,38 @@ Replication: standby streams WAL records → apply.`}</pre>
         </div>
       </div>
     </details>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 2 — B-Tree
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="btree" hidden class="space-y-4">
-
-    <!-- Concept strip -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🌳</div>
-        <div class="mt-0.5 font-bold text-cyan-500">≤ 4 levels</div>
-        <div class="text-[10px] text-(--fg-faint)">even at 1B rows</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">📄</div>
-        <div class="mt-0.5 font-bold text-amber-500">8 KB</div>
-        <div class="text-[10px] text-(--fg-faint)">per page</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">⚡</div>
-        <div class="mt-0.5 font-bold text-emerald-500">O(log n)</div>
-        <div class="text-[10px] text-(--fg-faint)">lookup cost</div>
-      </div>
+  <div data-sql-pane="btree" hidden>
+    <!-- Left Stage Column: Interactive B-Tree Traversal -->
+    <div class="sql-stage-col thin-scrollbar space-y-4">
+      <BTreeTraversal />
     </div>
 
-    <BTreeTraversal />
+    <!-- Right Guide Column: B-Tree Anatomy & Split Mechanics -->
+    <div class="sql-guide-col thin-scrollbar">
+      <!-- Concept strip -->
+      <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🌳</div>
+          <div class="mt-0.5 font-bold text-cyan-500">≤ 4 levels</div>
+          <div class="text-[10px] text-(--fg-faint)">even at 1B rows</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">📄</div>
+          <div class="mt-0.5 font-bold text-amber-500">8 KB</div>
+          <div class="text-[10px] text-(--fg-faint)">per page</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">⚡</div>
+          <div class="mt-0.5 font-bold text-emerald-500">O(log n)</div>
+          <div class="text-[10px] text-(--fg-faint)">lookup cost</div>
+        </div>
+      </div>
 
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
       <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
@@ -474,33 +482,38 @@ SELECT indexname, idx_scan FROM pg_stat_user_indexes WHERE relname = 'orders';
 SELECT relname, n_dead_tup FROM pg_stat_user_tables WHERE n_dead_tup > 10000;</pre>
       </div>
     </details>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 3 — MVCC
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="mvcc" hidden class="space-y-4">
-
-    <!-- Concept strip -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🔓</div>
-        <div class="mt-0.5 font-bold text-emerald-500">No lock</div>
-        <div class="text-[10px] text-(--fg-faint)">on reads</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🏷️</div>
-        <div class="mt-0.5 font-bold text-amber-500">xmin / xmax</div>
-        <div class="text-[10px] text-(--fg-faint)">per tuple</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🧹</div>
-        <div class="mt-0.5 font-bold text-cyan-500">VACUUM</div>
-        <div class="text-[10px] text-(--fg-faint)">reclaims dead</div>
-      </div>
+  <div data-sql-pane="mvcc" hidden>
+    <!-- Left Stage Column: Interactive MVCC Simulation -->
+    <div class="sql-stage-col thin-scrollbar space-y-4">
+      <MvccVisibility />
     </div>
 
-    <MvccVisibility />
+    <!-- Right Guide Column: Version Chain & Isolation Levels -->
+    <div class="sql-guide-col thin-scrollbar">
+      <!-- Concept strip -->
+      <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🔓</div>
+          <div class="mt-0.5 font-bold text-emerald-500">No lock</div>
+          <div class="text-[10px] text-(--fg-faint)">on reads</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🏷️</div>
+          <div class="mt-0.5 font-bold text-amber-500">xmin / xmax</div>
+          <div class="text-[10px] text-(--fg-faint)">per tuple</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🧹</div>
+          <div class="mt-0.5 font-bold text-cyan-500">VACUUM</div>
+          <div class="text-[10px] text-(--fg-faint)">reclaims dead</div>
+        </div>
+      </div>
 
     <!-- Version chain + isolation levels -->
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
@@ -584,74 +597,78 @@ SELECT relname, n_live_tup, n_dead_tup,
 VACUUM ANALYZE accounts; -- autovacuum does this automatically</pre>
       </div>
     </details>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 4 — Footprint
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="footprint" hidden class="space-y-4">
-
-    <!-- Concept strip -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🌲</div>
-        <div class="mt-0.5 font-bold text-cyan-500">B-Tree</div>
-        <div class="text-[10px] text-(--fg-faint)">35 MB / 1M rows</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">⚡</div>
-        <div class="mt-0.5 font-bold text-amber-500">BRIN</div>
-        <div class="text-[10px] text-(--fg-faint)">48 KB (700×)</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🔥</div>
-        <div class="mt-0.5 font-bold text-rose-500">HOT update</div>
-        <div class="text-[10px] text-(--fg-faint)">no index write</div>
-      </div>
+  <div data-sql-pane="footprint" hidden>
+    <!-- Left Stage Column: Interactive Index Calculator -->
+    <div class="sql-stage-col thin-scrollbar space-y-4">
+      <FootprintCalc />
     </div>
 
-    <FootprintCalc />
-
-    <!-- B-Tree vs BRIN comparison -->
-    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
-      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
-        <span class="font-semibold">B-Tree vs BRIN — when each type fits</span>
-        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="border-t border-(--border) p-4 font-mono text-xs">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
-            <div class="mb-1.5"><span class="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">B-Tree</span></div>
-            <ul class="space-y-1 text-[11px] text-(--fg-dim) list-none">
-              <li>✓ Point lookups, range scans, ORDER BY</li>
-              <li>✓ Equality: <code>WHERE email = '…'</code></li>
-              <li>✗ Larger on disk — key + TID per row</li>
-              <li>✗ Random inserts cause page splits</li>
-            </ul>
-            <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Default choice for any column in WHERE / JOIN.</p>
-          </div>
-          <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
-            <div class="mb-1.5"><span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">BRIN</span></div>
-            <ul class="space-y-1 text-[11px] text-(--fg-dim) list-none">
-              <li>✓ Tiny — min/max per 128-page range</li>
-              <li>✓ Append-only: timestamps, sequential IDs</li>
-              <li>✗ Useless if data not correlated with insert order</li>
-              <li>✗ Eliminates blocks, not rows</li>
-            </ul>
-            <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Only when physical order matches key order.</p>
-          </div>
+    <!-- Right Guide Column: Concept, B-Tree vs BRIN, DDL -->
+    <div class="sql-guide-col thin-scrollbar">
+      <!-- Concept strip -->
+      <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🌲</div>
+          <div class="mt-0.5 font-bold text-cyan-500">B-Tree</div>
+          <div class="text-[10px] text-(--fg-faint)">35 MB / 1M</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">⚡</div>
+          <div class="mt-0.5 font-bold text-amber-500">BRIN</div>
+          <div class="text-[10px] text-(--fg-faint)">48 KB (700×)</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🔥</div>
+          <div class="mt-0.5 font-bold text-rose-500">HOT</div>
+          <div class="text-[10px] text-(--fg-faint)">no idx write</div>
         </div>
       </div>
-    </details>
 
-    <!-- DDL reference -->
-    <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
-      <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
-        <span class="font-semibold">DDL examples + size inspection queries</span>
-        <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="border-t border-(--border) p-4 font-mono text-xs">
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <!-- B-Tree vs BRIN comparison -->
+      <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+        <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+          <span class="font-semibold">B-Tree vs BRIN — when each type fits</span>
+          <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="border-t border-(--border) p-4 font-mono text-xs">
+          <div class="grid grid-cols-1 gap-3">
+            <div class="sql-explain-box" style="border-color:rgb(34 211 238/0.35)">
+              <div class="mb-1.5"><span class="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">B-Tree</span></div>
+              <ul class="space-y-1 text-[11px] text-(--fg-dim) list-none">
+                <li>✓ Point lookups, range scans, ORDER BY</li>
+                <li>✓ Equality: <code>WHERE email = '…'</code></li>
+                <li>✗ Larger on disk — key + TID per row</li>
+                <li>✗ Random inserts cause page splits</li>
+              </ul>
+              <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-cyan-500/40 pl-2">Default choice for any column in WHERE / JOIN.</p>
+            </div>
+            <div class="sql-explain-box" style="border-color:rgb(251 191 36/0.35)">
+              <div class="mb-1.5"><span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">BRIN</span></div>
+              <ul class="space-y-1 text-[11px] text-(--fg-dim) list-none">
+                <li>✓ Tiny — min/max per 128-page range</li>
+                <li>✓ Append-only: timestamps, sequential IDs</li>
+                <li>✗ Useless if data not correlated with insert order</li>
+                <li>✗ Eliminates blocks, not rows</li>
+              </ul>
+              <p class="mt-2 text-[10px] text-(--fg-faint) border-l-2 border-amber-500/40 pl-2">Only when physical order matches key order.</p>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- DDL reference -->
+      <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
+        <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
+          <span class="font-semibold">DDL examples + size inspection queries</span>
+          <svg class="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="border-t border-(--border) p-4 font-mono text-xs space-y-3">
           <div>
             <p class="mb-1 text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">B-Tree — 1M rows BIGINT ≈ 35 MB</p>
             <pre class="sql-details-pre thin-scrollbar">CREATE INDEX idx_events_ts ON events (created_at);
@@ -674,33 +691,39 @@ SELECT pg_size_pretty(pg_relation_size('idx_events_brin'));
 -- ✗ WHERE user_id = 42  (random dist.)</pre>
           </div>
         </div>
-      </div>
-    </details>
+      </details>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 5 — Infra Tools
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="infra" hidden class="space-y-4">
-
-    <!-- Concept strip -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🔄</div>
-        <div class="mt-0.5 font-bold text-cyan-500">Pool</div>
-        <div class="text-[10px] text-(--fg-faint)">reuse N conns</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🪣</div>
-        <div class="mt-0.5 font-bold text-amber-500">Bucket</div>
-        <div class="text-[10px] text-(--fg-faint)">burst → drop</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">⚙️</div>
-        <div class="mt-0.5 font-bold text-emerald-500">HikariCP</div>
-        <div class="text-[10px] text-(--fg-faint)">cores×2 + disks</div>
-      </div>
+  <div data-sql-pane="infra" hidden>
+    <!-- Left Stage Column: Interactive Connection Pool & Token Bucket -->
+    <div class="sql-stage-col thin-scrollbar space-y-4">
+      <InfraTools />
     </div>
+
+    <!-- Right Guide Column: Pool Sizing & Rate Limiting Theory -->
+    <div class="sql-guide-col thin-scrollbar">
+      <!-- Concept strip -->
+      <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🔄</div>
+          <div class="mt-0.5 font-bold text-cyan-500">Pool</div>
+          <div class="text-[10px] text-(--fg-faint)">reuse N conns</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🪣</div>
+          <div class="mt-0.5 font-bold text-amber-500">Bucket</div>
+          <div class="text-[10px] text-(--fg-faint)">burst → drop</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">⚙️</div>
+          <div class="mt-0.5 font-bold text-emerald-500">HikariCP</div>
+          <div class="text-[10px] text-(--fg-faint)">cores×2 + disks</div>
+        </div>
+      </div>
 
     <!-- Theory: Connection Pool -->
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
@@ -790,8 +813,6 @@ on each request:
       </div>
     </details>
 
-    <InfraTools />
-
     <!-- Pool + Token bucket explanation -->
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
       <summary class="flex cursor-pointer select-none items-center justify-between gap-3 p-3 font-mono text-xs text-(--fg-dim) hover:text-(--fg) [&::-webkit-details-marker]:hidden">
@@ -862,33 +883,38 @@ spring.datasource.hikari.max-lifetime=1800000
         </div>
       </div>
     </details>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 6 — Partitioning
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="partition" hidden class="space-y-4">
-
-    <!-- Concept strip -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🗂️</div>
-        <div class="mt-0.5 font-bold text-cyan-500">Range/List/Hash</div>
-        <div class="text-[10px] text-(--fg-faint)">3 strategies</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">✂️</div>
-        <div class="mt-0.5 font-bold text-emerald-500">Pruning</div>
-        <div class="text-[10px] text-(--fg-faint)">skip partitions</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">📦</div>
-        <div class="mt-0.5 font-bold text-amber-500">Sub-tables</div>
-        <div class="text-[10px] text-(--fg-faint)">own indexes/stats</div>
-      </div>
+  <div data-sql-pane="partition" hidden>
+    <!-- Left Stage Column: Interactive Partition Pruning Visualizer -->
+    <div class="sql-stage-col thin-scrollbar space-y-4">
+      <PartitionVisualizer />
     </div>
 
-    <PartitionVisualizer />
+    <!-- Right Guide Column: Partitioning Strategies & Pruning Rules -->
+    <div class="sql-guide-col thin-scrollbar">
+      <!-- Concept strip -->
+      <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🗂️</div>
+          <div class="mt-0.5 font-bold text-cyan-500">Range/List/Hash</div>
+          <div class="text-[10px] text-(--fg-faint)">3 strategies</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">✂️</div>
+          <div class="mt-0.5 font-bold text-emerald-500">Pruning</div>
+          <div class="text-[10px] text-(--fg-faint)">skip partitions</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">📦</div>
+          <div class="mt-0.5 font-bold text-amber-500">Sub-tables</div>
+          <div class="text-[10px] text-(--fg-faint)">own stats</div>
+        </div>
+      </div>
 
     <!-- Theory: partition types DDL -->
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
@@ -1005,33 +1031,38 @@ ORDER BY pg_relation_size(child.oid) DESC;`}</pre>
         </div>
       </div>
     </details>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
        Tab 7 — Replication
   ════════════════════════════════════════════════════════════════════════ -->
-  <div data-sql-pane="replication" hidden class="space-y-4">
-
-    <!-- Concept strip -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-xs">
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">📡</div>
-        <div class="mt-0.5 font-bold text-cyan-500">WAL Stream</div>
-        <div class="text-[10px] text-(--fg-faint)">byte-for-byte</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">⏱️</div>
-        <div class="mt-0.5 font-bold text-amber-500">Sync vs Async</div>
-        <div class="text-[10px] text-(--fg-faint)">latency trade-off</div>
-      </div>
-      <div class="rounded-lg border border-(--border) bg-(--bg-alt) p-2.5 text-center">
-        <div class="text-base">🔁</div>
-        <div class="mt-0.5 font-bold text-emerald-500">Logical</div>
-        <div class="text-[10px] text-(--fg-faint)">row-level, selective</div>
-      </div>
+  <div data-sql-pane="replication" hidden>
+    <!-- Left Stage Column: Interactive Replication Simulator -->
+    <div class="sql-stage-col thin-scrollbar space-y-4">
+      <ReplicationTimeline />
     </div>
 
-    <ReplicationTimeline />
+    <!-- Right Guide Column: WAL Streaming & Failover Theory -->
+    <div class="sql-guide-col thin-scrollbar">
+      <!-- Concept strip -->
+      <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">📡</div>
+          <div class="mt-0.5 font-bold text-cyan-500">WAL Stream</div>
+          <div class="text-[10px] text-(--fg-faint)">byte-for-byte</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">⏱️</div>
+          <div class="mt-0.5 font-bold text-amber-500">Sync vs Async</div>
+          <div class="text-[10px] text-(--fg-faint)">trade-off</div>
+        </div>
+        <div class="rounded-lg border border-(--border) bg-(--bg) p-2 text-center">
+          <div class="text-base">🔁</div>
+          <div class="mt-0.5 font-bold text-emerald-500">Logical</div>
+          <div class="text-[10px] text-(--fg-faint)">selective</div>
+        </div>
+      </div>
 
     <!-- Theory: Streaming vs Logical -->
     <details class="group rounded-xl border border-(--border) bg-(--bg-alt)">
@@ -1111,27 +1142,30 @@ SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn) AS lag_bytes
   FROM pg_stat_replication;`}</pre>
       </div>
     </details>
+    </div>
+  </div>
   </div>
 </BaseLayout>
 
 <style is:global>
   /* ── Tab bar ───────────────────────────────────────────────────────────── */
   .sql-tab {
-    border-radius: 6px; border: 1px solid var(--border);
-    background: var(--bg); padding: 5px 14px;
-    font-size: 11px; font-family: monospace;
+    border-radius: 5px; border: 1px solid var(--border);
+    background: var(--bg-alt); padding: 3px 9px;
+    font-size: 11px; font-family: var(--font-mono, monospace);
     color: var(--fg-dim); cursor: pointer;
     transition: color .15s, border-color .15s, background .15s;
     touch-action: manipulation;
     scroll-snap-align: start;
-    min-height: 36px;
+    min-height: 26px;
     white-space: nowrap;
     display: inline-flex; align-items: center;
   }
-  .sql-tab:hover { color: var(--fg); }
+  .sql-tab:hover { color: var(--fg); border-color: var(--border-hover); }
   .sql-tab-active {
     border-color: var(--accent); color: var(--accent);
-    background: color-mix(in oklch, var(--accent) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    font-weight: 600;
   }
 
   /* ── Shared visual card shell ──────────────────────────────────────────── */
@@ -1258,8 +1292,8 @@ SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn) AS lag_bytes
   .sql-mvcc-ver {
     border-radius: 6px; border: 1px solid; padding: 8px 12px;
   }
-  .sql-mvcc-dead { border-color: rgb(220 38 38/0.35); background: rgb(220 38 38/0.04); }
-  .sql-mvcc-live { border-color: rgb(22 163 74/0.35); background: rgb(22 163 74/0.04); }
+  .sql-mvcc-dead { border-color: rgb(220 38 38/0.35); background: var(--bg); }
+  .sql-mvcc-live { border-color: rgb(22 163 74/0.35); background: var(--bg); }
   .sql-mvcc-ver-head { font-size: 10px; font-weight: 700; color: var(--fg-dim); margin-bottom: 4px; }
   .sql-mvcc-dead .sql-mvcc-ver-head { color: #dc2626; }
   .sql-mvcc-live .sql-mvcc-ver-head { color: #16a34a; }
@@ -1344,14 +1378,63 @@ SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn) AS lag_bytes
 
 <script>
   function initSqlTabs() {
-    const bar = document.getElementById('sql-tab-bar');
-    if (!bar) return;
-    const tabs  = bar.querySelectorAll<HTMLButtonElement>('[data-sql-tab]');
-    const panes = document.querySelectorAll<HTMLElement>('[data-sql-pane]');
+    // Hide empty blog rail on lab pages so 3D workbench expands to full width
+    document.documentElement.setAttribute('data-rail', 'hidden');
+
+    const dropdownRoot = document.getElementById('sql-module-picker-root');
+    const dropdownBtn  = document.getElementById('btn-sql-module-dropdown');
+    const dropdownMenu = document.getElementById('sql-dropdown-menu');
+    const titleEl      = document.getElementById('sql-active-module-title');
+    const tabs         = document.querySelectorAll<HTMLButtonElement>('[data-sql-tab]');
+    const panes        = document.querySelectorAll<HTMLElement>('[data-sql-pane]');
+    if (!tabs.length) return;
+
+    // Toggle dropdown
+    if (dropdownBtn && dropdownMenu && dropdownBtn.dataset.bound !== 'true') {
+      dropdownBtn.dataset.bound = 'true';
+      dropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !dropdownMenu.hidden;
+        dropdownMenu.hidden = isOpen;
+        dropdownBtn.setAttribute('aria-expanded', String(!isOpen));
+      });
+
+      document.addEventListener('click', (e) => {
+        if (dropdownRoot && !dropdownRoot.contains(e.target as Node)) {
+          dropdownMenu.hidden = true;
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !dropdownMenu.hidden) {
+          dropdownMenu.hidden = true;
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+          dropdownBtn.focus();
+        }
+      });
+    }
 
     const activate = (tab: string, updateHash = true) => {
-      tabs.forEach(b  => b.classList.toggle('sql-tab-active', b.dataset.sqlTab === tab));
-      panes.forEach(p => { p.hidden = p.dataset.sqlPane !== tab; });
+      tabs.forEach(b => {
+        const isTarget = b.dataset.sqlTab === tab;
+        b.classList.toggle('is-current', isTarget);
+        const pill = b.querySelector<HTMLElement>('[data-sql-pill]');
+        if (pill) pill.hidden = !isTarget;
+        if (isTarget && titleEl && b.dataset.sqlTitle) {
+          titleEl.textContent = b.dataset.sqlTitle;
+        }
+      });
+
+      panes.forEach(p => {
+        p.hidden = p.dataset.sqlPane !== tab;
+      });
+
+      if (dropdownMenu && dropdownBtn) {
+        dropdownMenu.hidden = true;
+        dropdownBtn.setAttribute('aria-expanded', 'false');
+      }
+
       try {
         localStorage.setItem('sql_lab_tab', tab);
         if (updateHash && window.location.hash.slice(1) !== tab) {
@@ -1360,9 +1443,12 @@ SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn) AS lag_bytes
       } catch {}
     };
 
-    tabs.forEach(btn =>
-      btn.addEventListener('click', () => activate(btn.dataset.sqlTab!))
-    );
+    tabs.forEach(btn => {
+      if (btn.dataset.bound !== 'true') {
+        btn.dataset.bound = 'true';
+        btn.addEventListener('click', () => activate(btn.dataset.sqlTab!));
+      }
+    });
 
     // 1. Prioritize URL hash (e.g. /lab/sql#btree)
     const hash = window.location.hash.slice(1);
@@ -1383,5 +1469,6 @@ SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn) AS lag_bytes
     activate('engine', false);
   }
 
+  initSqlTabs();
   document.addEventListener('astro:page-load', initSqlTabs);
 </script>

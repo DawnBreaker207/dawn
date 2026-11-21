@@ -413,6 +413,30 @@ function ip(e, t) {
     : [typeof e[0] == `string` ? n(e[0], 0) : e[0], typeof e[1] == `string` ? n(e[1], 1) : e[1]];
 }
 export class StageEngine {
+  host!: HTMLElement;
+  svg!: SVGSVGElement;
+  paused: boolean = false;
+  onView: ((zoomed: boolean) => void) | null = null;
+  onCards: ((cards: any) => void) | null = null;
+  onSwipe: ((dir: string) => void) | null = null;
+  onSettle: (() => void) | null = null;
+  view: any = null;
+  blend: any = null;
+  fade: any;
+  defs: any;
+  ents!: Map<any, any>;
+  links!: Map<any, any>;
+  plans!: Map<any, any>;
+  hudScale: any;
+  showCards: boolean = true;
+  scenes: any[] = [];
+  flows: any[] = [];
+  packets: any[] = [];
+  anim: any = null;
+  last: number = 0;
+  size: string = '';
+  L!: Record<string, any>;
+
     constructor(e) {
       ((this.host = e),
         (this.svg = hf(`svg`, {

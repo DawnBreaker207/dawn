@@ -325,7 +325,7 @@ const legendItems = (lesson.legend ?? []).map((item: any) => {
       isInitialized = true;
 
       // Notify DtsSceneRenderer
-      root.dispatchEvent(new CustomEvent('wb:step-change', { detail: { idx, step: s }, bubbles: true }));
+      root?.dispatchEvent(new CustomEvent('wb:step-change', { detail: { idx, step: s }, bubbles: true }));
 
       // Guide meta
       if (elStepLabel) elStepLabel.textContent = `Step ${idx + 1} / ${total}`;

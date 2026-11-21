@@ -26,10 +26,25 @@ npm-debug.log*
 # misc
 .DS_Store
 
-# legacy next.js artifacts
-.contentlayer
-public/feed.xml
-public/search.json
+# Dev audit screenshots
+*-audit.png
+*-dark.png
+*-light.png
+spec-*.png
+test-*.png
+system-design-en.png
+pills-screenshot.png
+java-*.png
+our-current-*.png
+
+# Dev reference files
+real-ref-*
+ref-real-*
+
+# Scratch / temp output
+scratch/
+test/
+public/dts/src/
 # generated at build time
 src/build-stats.json
 src/data/books.json

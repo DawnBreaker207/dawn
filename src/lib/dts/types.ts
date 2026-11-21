@@ -43,6 +43,7 @@ export interface LessonGoal {
 export interface LessonCallout {
   kind: string;
   text: string;
+  title?: string;
 }
 
 export interface LessonStep {
