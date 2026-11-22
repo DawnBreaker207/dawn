@@ -158,10 +158,10 @@ export const awsHaLesson = {
       scene: {
         entities: {
           alb: f(-8, -4, { color: `orange`, glyph: `balancer`, label: [`ALB Fleet`] }),
-          i1: d(6, -9, { color: `teal`,   glyph: `cpu`, label: [`EC2 Node 1`] }),
-          i2: d(6, -3, { color: `teal`,   glyph: `cpu`, label: [`EC2 Node 2`] }),
-          i3: d(6, 3,  { color: `yellow`, glyph: `cpu`, label: [`EC2 Node 3`], sub: `Scaled` }),
-          i4: d(6, 9,  { color: `yellow`, glyph: `cpu`, label: [`EC2 Node 4`], sub: `Scaled` }),
+          i1: d(6, -12, { color: `teal`,   glyph: `cpu`, label: [`EC2 Node 1`] }),
+          i2: d(6, -4,  { color: `teal`,   glyph: `cpu`, label: [`EC2 Node 2`] }),
+          i3: d(6, 4,   { color: `yellow`, glyph: `cpu`, label: [`EC2 Node 3`], sub: `Scaled` }),
+          i4: d(6, 12,  { color: `yellow`, glyph: `cpu`, label: [`EC2 Node 4`], sub: `Scaled` }),
         },
         links: {
           l1: h(`alb`, `i1`, [`alb`, `i1`], { heads: `both` }),

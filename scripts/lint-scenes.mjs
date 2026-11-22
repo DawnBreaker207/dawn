@@ -102,7 +102,7 @@ async function run() {
 
       const entities = Object.entries(step.scene.entities).filter(([_, e]) => {
         return e && typeof e.x === 'number' && typeof e.y === 'number' &&
-          (e.type === 'block' || e.type === 'db' || e.type === 'device' || e.type === 'queue' || !e.type);
+          (e.type === 'block' || e.type === 'db' || e.type === 'device' || !e.type);
       });
 
       const stepCollisions = [];

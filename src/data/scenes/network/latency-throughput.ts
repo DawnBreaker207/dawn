@@ -290,13 +290,13 @@ export const latencyThroughputLesson = {
             users: ue(11, `7,000 searches`),
             srv: de({ s: 5, h: 62, label: [`Search`], sub: `fan-out`, ...v(0.4) }),
             ...Object.fromEntries(
-              [-12.5, -7.5, -2.5, 2.5, 7.5, 12.5].map((e, t) => [
+              [-12, -4, 4, 12].map((e, t) => [
                 `ix${t}`,
                 d(e, 12, {
-                  s: 3,
-                  h: 32,
+                  s: 3.4,
+                  h: 36,
                   label: [],
-                  ...(t === 4
+                  ...(t === 2
                     ? {
                         heat: 0.6,
                         tags: [{ text: `slow this time`, tone: `amber`, icon: `hourglass` }],
@@ -319,7 +319,7 @@ export const latencyThroughputLesson = {
           links: {
             ...fe(),
             ...Object.fromEntries(
-              [-12.5, -7.5, -2.5, 2.5, 7.5, 12.5].map((e, t) => [
+              [-12, -4, 4, 12].map((e, t) => [
                 `f${t}`,
                 h(`srv`, `ix${t}`, [`srv`, [e, `srv`], `ix${t}`], { heads: `both` }),
               ]),
@@ -329,7 +329,7 @@ export const latencyThroughputLesson = {
             ...me(1.6),
             {
               fanout: !0,
-              routes: [0, 1, 2, 3, 5].map((e) => ({ path: [`f${e}`] })),
+              routes: [0, 1, 3].map((e) => ({ path: [`f${e}`] })),
               rate: 0.7,
               bounce: !0,
             },
