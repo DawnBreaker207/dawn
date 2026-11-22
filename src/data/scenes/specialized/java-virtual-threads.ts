@@ -39,7 +39,7 @@ export const javaVirtualThreadsLesson = {
           vt2: d(0, -4,   { color: 'blue', glyph: 'code', label: ['VirtualThread-2', 'Parked (Socket)'] }),
           vt3: d(0, 4,    { color: 'green', glyph: 'code', label: ['VirtualThread-3', 'RUNNING'] }),
           vt4: d(0, 12,   { color: 'blue', glyph: 'code', label: ['VirtualThread-4', 'Parked (DB)'] }),
-          hp:  d(12, 0,   { color: 'purple', glyph: 'layers', label: ['JVM Heap', 'Continuation Stack'] }),
+          hp:  d(12, 0,   { color: 'purple', glyph: 'layers', label: ['JVM Heap', 'Cont. Stack'] }),
           card: S({ x: -2, y: 16 }, 'Platform vs Virtual Thread Stack', [
             'Platform Thread: 1MB OS stack, kernel context switch',
             'Virtual Thread:  ~1KB heap continuation, 0 kernel switch',
@@ -74,7 +74,7 @@ export const javaVirtualThreadsLesson = {
       scene: {
         entities: {
           carrier: d(-11, -1, { color: 'orange', glyph: 'cpu', label: ['Carrier Thread', 'Switches Task'], cpu: 1.0 }),
-          vtOld:   d(-2, -10, { color: 'yellow', glyph: 'code', label: ['VT (Waiting IO)', 'Yielded Continuation'] }),
+          vtOld:   d(-2, -10, { color: 'yellow', glyph: 'code', label: ['VT (Waiting IO)', 'Yielded Cont.'] }),
           vtNew:   d(-2, 8,   { color: 'green', glyph: 'code', label: ['VT (Compute Ready)', 'Mounted Next'] }),
           network: d(9, -10,  { color: 'violet', glyph: 'network', label: ['Remote Socket', 'Awaiting Response'] }),
           card: S({ x: 2, y: 14 }, 'Continuation Yield on Blocking IO', [

@@ -57,8 +57,8 @@ export const javaCompletableLesson = {
       scene: {
         entities: {
           origin: d(-11, -1, { color: 'blue', glyph: 'code', label: ['Order Ready', 'id: 1042'] }),
-          stageA: d(-2, -10, { color: 'purple', glyph: 'code', label: ['Inventory Check', 'thenApplyAsync'] }),
-          stageB: d(-2, 8,   { color: 'purple', glyph: 'code', label: ['User Discounts', 'thenApplyAsync'] }),
+          stageA: d(-2, -10, { h: 52, color: 'purple', glyph: 'code', label: ['Inventory Check', 'thenApplyAsync'] }),
+          stageB: d(-2, 8,   { h: 52, color: 'purple', glyph: 'code', label: ['User Discounts', 'thenApplyAsync'] }),
           join:   d(9, -1,   { color: 'green', glyph: 'check', label: ['thenCombine', 'Checkout Invoice'] }),
         },
         links: {
@@ -85,8 +85,8 @@ export const javaCompletableLesson = {
       metrics: { pipelineState: 'Fallback Triggered', threadPool: 'ForkJoinPool', completionTime: '500ms (timeout)', errorRate: '100% intercepted' },
       scene: {
         entities: {
-          payment:  d(-11, -1, { color: 'rose', glyph: 'alert', label: ['Payment Stage', 'TimeoutException!'] }),
-          fallback: d(-2, 8,   { color: 'yellow', glyph: 'shield', label: ['exceptionally()', 'Pay On Delivery'] }),
+          payment:  d(-11, -1, { h: 52, color: 'rose', glyph: 'alert', label: ['Payment Stage', 'Timeout'] }),
+          fallback: d(-2, 8,   { color: 'yellow', glyph: 'shield', label: ['fallback', 'Pay On Delivery'] }),
           consumer: d(9, 8,    { color: 'green', glyph: 'check', label: ['Order Confirmed', 'Fallback OK'] }),
         },
         links: {

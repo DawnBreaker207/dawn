@@ -61,9 +61,9 @@ export const javaSpringMvcLesson = {
             '=   ModelAndView mv = ha.handle(req, res, chain.getHandler());',
             '= }',
           ]),
-          client: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cloud', label: ['HTTP Client'], sub: 'POST /api/v1/orders' }),
-          dispatcher: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['DispatcherServlet'], sub: 'Front Controller' }),
-          handler_registry: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'storage', label: ['HandlerMapping Registry'], sub: 'URL -> Handler Method' }),
+          client: d(-11, -4, { s: 3.8, h: 50, color: 'blue', glyph: 'cloud', label: ['HTTP Client'], sub: 'POST /api/v1/orders' }),
+          dispatcher: d(0, -4, { s: 3.8, h: 50, color: 'purple', glyph: 'server', label: ['Dispatch', 'Servlet'], sub: 'Front Controller' }),
+          handler_registry: d(11, -4, { s: 3.8, h: 50, color: 'green', glyph: 'storage', label: ['HandlerMapping Registry'], sub: 'URL -> Handler Method' }),
         },
         links: {
           cd: h('client', 'dispatcher', ['client', 'dispatcher'], { heads: 'end', label: 'HTTP Request' }),
@@ -97,9 +97,9 @@ export const javaSpringMvcLesson = {
             '  }',
             '}',
           ]),
-          dispatcher: d(-11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['DispatcherServlet'], sub: 'Coordinates Chain' }),
-          interceptor: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['HandlerInterceptors'], sub: 'preHandle() chain' }),
-          controller: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['OrderController'], sub: 'Target @RestController' }),
+          dispatcher: d(-11, -4, { s: 3.8, h: 50, color: 'purple', glyph: 'server', label: ['Dispatch', 'Servlet'], sub: 'Coordinates Chain' }),
+          interceptor: d(0, -4, { s: 3.8, h: 50, color: 'orange', glyph: 'workflow', label: ['Handler', 'Filter'], sub: 'preHandle() chain' }),
+          controller: d(11, -4, { s: 3.8, h: 50, color: 'blue', glyph: 'code', label: ['Order', 'Ctrl'], sub: 'Target @RestController' }),
         },
         links: {
           di: h('dispatcher', 'interceptor', ['dispatcher', 'interceptor'], { heads: 'end', label: 'preHandle()' }),
@@ -129,9 +129,9 @@ export const javaSpringMvcLesson = {
             '# Resolves @PathVariable, @RequestParam, @RequestBody (Jackson JSON)',
             '# Automatically triggers @Valid validation',
           ]),
-          adapter: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'workflow', label: ['HandlerAdapter'], sub: 'InvocableMethod' }),
-          resolvers: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'cpu', label: ['ArgumentResolvers'], sub: '@RequestBody, @Valid' }),
-          business_svc: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['OrderService'], sub: 'Domain Logic' }),
+          adapter: d(-11, -4, { s: 3.8, h: 50, color: 'blue', glyph: 'workflow', label: ['HandlerAdapter'], sub: 'InvocableMethod' }),
+          resolvers: d(0, -4, { s: 3.8, h: 50, color: 'green', glyph: 'cpu', label: ['ArgumentResolvers'], sub: '@RequestBody, @Valid' }),
+          business_svc: d(11, -4, { s: 3.8, h: 50, color: 'purple', glyph: 'server', label: ['OrderService'], sub: 'Domain Logic' }),
         },
         links: {
           ar: h('adapter', 'resolvers', ['adapter', 'resolvers'], { heads: 'end', label: 'resolve args' }),
@@ -162,9 +162,9 @@ export const javaSpringMvcLesson = {
             '# Jackson ObjectMapper serializes fields -> writes to OutputStream',
             '# Sets Content-Type: application/json;charset=UTF-8 header',
           ]),
-          converter: d(-11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'workflow', label: ['JacksonConverter'], sub: 'POJO -> JSON Bytes' }),
-          response_stream: d(0, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'server', label: ['Servlet OutputStream'], sub: 'Buffer flush' }),
-          client: d(11, -4, { s: 3.8, h: 42, color: 'cyan', glyph: 'cloud', label: ['HTTP Client'], sub: 'Receives 201 Created' }),
+          converter: d(-11, -4, { s: 3.8, h: 50, color: 'green', glyph: 'workflow', label: ['JacksonConverter'], sub: 'POJO -> JSON Bytes' }),
+          response_stream: d(0, -4, { s: 3.8, h: 50, color: 'blue', glyph: 'server', label: ['Servlet OutputStream'], sub: 'Buffer flush' }),
+          client: d(11, -4, { s: 3.8, h: 50, color: 'cyan', glyph: 'cloud', label: ['HTTP Client'], sub: 'Receives 201 Created' }),
         },
         links: {
           cr: h('converter', 'response_stream', ['converter', 'response_stream'], { heads: 'end', label: 'write bytes' }),
@@ -188,7 +188,7 @@ export const javaSpringMvcLesson = {
       scene: {
         entities: {
           card: S({ x: -4, y: 14 }, '@RestControllerAdvice Global Handling', [
-            '@RestControllerAdvice',
+            '@Rest', 'Advice',
             'public class GlobalExceptionHandler {',
             '= @ExceptionHandler(ResourceNotFoundException.class)',
             '= @ResponseStatus(HttpStatus.NOT_FOUND)',
@@ -197,9 +197,9 @@ export const javaSpringMvcLesson = {
             '= } // RFC 7807 standardized API error format',
             '}',
           ]),
-          thrown_err: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'alert', label: ['MethodArgumentNotValid'], sub: 'Validation Thrown' }),
-          advice: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['@RestControllerAdvice'], sub: 'Global Exception Handler' }),
-          rfc_res: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['ProblemDetail (RFC 7807)'], sub: '400 Bad Request Payload' }),
+          thrown_err: d(-11, -4, { s: 3.8, h: 50, color: 'red', glyph: 'alert', label: ['Valid.', 'Error'], sub: 'Validation Thrown' }),
+          advice: d(0, -4, { s: 3.8, h: 50, color: 'orange', glyph: 'workflow', label: ['@Rest', 'Advice'], sub: 'Global Exception Handler' }),
+          rfc_res: d(11, -4, { s: 3.8, h: 50, color: 'green', glyph: 'code', label: ['ProblemDetail (RFC 7807)'], sub: '400 Bad Request Payload' }),
         },
         links: {
           ta: h('thrown_err', 'advice', ['thrown_err', 'advice'], { heads: 'end', label: 'catches exception' }),

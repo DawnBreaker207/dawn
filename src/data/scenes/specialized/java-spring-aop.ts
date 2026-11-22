@@ -76,7 +76,7 @@ export const javaSpringAopLesson = {
             '}',
           ]),
           sec:    d(-12, -4, { color: 'rose', glyph: 'lock', label: ['Security'], sub: 'Check Auth' }),
-          tx:     d(-2, -4,  { color: 'green', glyph: 'database', label: ['Tx Interceptor'], sub: 'begin / commit' }),
+          tx:     d(-2, -4,  { color: 'green', glyph: 'database', label: ['Tx Advisor'], sub: 'begin / commit' }),
           target: d(10, -4,  { color: 'blue', glyph: 'code', label: ['Target Method'], sub: 'Business Logic' }),
         },
         links: {

@@ -60,9 +60,9 @@ export const javaSpringConfigLesson = {
             '= 5. @PropertySource on @Configuration classes (Lowest)',
             '# Higher priority tier completely overrides lower tier values',
           ]),
-          os_env: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cloud', label: ['OS Environment / CLI'], sub: 'Tier 3 (High Priority)' }),
-          env_registry: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'storage', label: ['StandardEnvironment'], sub: 'PropertySources Registry' }),
-          app_yml: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'code', label: ['application.yml'], sub: 'Tier 6 (Default Fallback)' }),
+          os_env: d(-11, -4, { s: 3.8, h: 50, color: 'blue', glyph: 'cloud', label: ['OS Env / CLI'], sub: 'Tier 3 (High Priority)' }),
+          env_registry: d(0, -4, { s: 3.8, h: 50, color: 'orange', glyph: 'storage', label: ['Standard', 'Env'], sub: 'PropertySources Registry' }),
+          app_yml: d(11, -4, { s: 3.8, h: 50, color: 'purple', glyph: 'code', label: ['app.yml'], sub: 'Tier 6 (Default Fallback)' }),
         },
         links: {
           oe: h('os_env', 'env_registry', ['os_env', 'env_registry'], { heads: 'end', label: 'overrides default' }),
@@ -83,7 +83,7 @@ export const javaSpringConfigLesson = {
         `<strong>@ConfigurationProperties(prefix = "app")</strong> binds entire configuration subtrees to type-safe Java Records or POJOs with JSR-380 validation (<code>@NotNull</code>, <code>@Min(100)</code>) at startup.`,
       ],
       callout: { kind: `insight`, text: 'Using Java Records with @ConfigurationProperties provides immutable, thread-safe configuration objects.' },
-      metrics: { active_profile: 'prod', active_tier: 'ConfigurationPropertiesBindingPostProcessor', source_origin: 'application.yml', bound_class: 'AppProperties Record', validation_state: 'Validated @Min(100)' },
+      metrics: { active_profile: 'prod', active_tier: 'ConfigurationPropertiesBindingPostProcessor', source_origin: 'app.yml', bound_class: 'AppProperties Record', validation_state: 'Validated @Min(100)' },
       scene: {
         entities: {
           card: S({ x: -4, y: 14 }, 'Type-Safe @ConfigurationProperties', [
@@ -95,9 +95,9 @@ export const javaSpringConfigLesson = {
             '= Duration timeout',
             ') {} // Strong type checking + JSR-380 validation on boot',
           ]),
-          yml_tree: d(-11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'storage', label: ['app.datasource.pool.*'], sub: 'Hierarchical YAML' }),
-          binder: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'workflow', label: ['ConfigurationPropertiesBinder'], sub: 'Validation & Binding' }),
-          record_pojo: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['AppConfig (Record)'], sub: 'Immutable Type-Safe Bean' }),
+          yml_tree: d(-11, -4, { s: 3.8, h: 50, color: 'purple', glyph: 'storage', label: ['pool.*'], sub: 'Hierarchical YAML' }),
+          binder: d(0, -4, { s: 3.8, h: 50, color: 'green', glyph: 'workflow', label: ['ConfigProps', 'Binder'], sub: 'Validation & Binding' }),
+          record_pojo: d(11, -4, { s: 3.8, h: 50, color: 'blue', glyph: 'code', label: ['AppConfig (Record)'], sub: 'Immutable Type-Safe Bean' }),
         },
         links: {
           yb: h('yml_tree', 'binder', ['yml_tree', 'binder'], { heads: 'end', label: 'reads properties' }),
@@ -129,9 +129,9 @@ export const javaSpringConfigLesson = {
             '= APP_DATASOURCE_POOL_TIMEOUT   // Environment friendly underscore',
             '# Decouples YAML config naming from strict Java field names',
           ]),
-          env_snake: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cloud', label: ['APP_POOL_TIMEOUT'], sub: 'SCREAMING_SNAKE' }),
-          relaxed_engine: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'cpu', label: ['RelaxedDataBinder'], sub: 'Normalizes to kebab/camel' }),
-          target_prop: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['poolTimeout (Duration)'], sub: 'Mapped cleanly' }),
+          env_snake: d(-11, -4, { s: 3.8, h: 50, color: 'blue', glyph: 'cloud', label: ['APP_POOL_TIMEOUT'], sub: 'SCREAMING_SNAKE' }),
+          relaxed_engine: d(0, -4, { s: 3.8, h: 50, color: 'orange', glyph: 'cpu', label: ['RelaxedDataBinder'], sub: 'Normalizes to kebab/camel' }),
+          target_prop: d(11, -4, { s: 3.8, h: 50, color: 'green', glyph: 'code', label: ['poolTimeout (Duration)'], sub: 'Mapped cleanly' }),
         },
         links: {
           er: h('env_snake', 'relaxed_engine', ['env_snake', 'relaxed_engine'], { heads: 'end', label: 'normalizes key' }),
@@ -163,9 +163,9 @@ export const javaSpringConfigLesson = {
             '}',
             '@Profile("dev") -> loads H2 in-memory embedded DB instead',
           ]),
-          profile_flag: d(-11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['SPRING_PROFILES_ACTIVE'], sub: 'prod' }),
-          profile_env: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'server', label: ['Profile Filter'], sub: 'Matches @Profile("prod")' }),
-          prod_bean: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['AwsSqsClient Bean'], sub: 'MockSqsClient ignored' }),
+          profile_flag: d(-11, -4, { s: 3.8, h: 50, color: 'purple', glyph: 'workflow', label: ['PROFILES', 'ACTIVE'], sub: 'prod' }),
+          profile_env: d(0, -4, { s: 3.8, h: 50, color: 'orange', glyph: 'server', label: ['Profile Filter'], sub: 'Matches @Profile("prod")' }),
+          prod_bean: d(11, -4, { s: 3.8, h: 50, color: 'green', glyph: 'code', label: ['AwsSqsClient Bean'], sub: 'MockSqsClient ignored' }),
         },
         links: {
           fp: h('profile_flag', 'profile_env', ['profile_flag', 'profile_env'], { heads: 'end', label: 'activates prod' }),
@@ -196,9 +196,9 @@ export const javaSpringConfigLesson = {
             '# Spring Cloud Vault bootstraps before application context,',
             '# populates PropertySource with dynamic short-lived DB credentials',
           ]),
-          vault_srv: d(-11, -4, { s: 3.8, h: 42, color: 'cyan', glyph: 'storage', label: ['HashiCorp Vault / K8s'], sub: 'Encrypted Secrets Store' }),
-          bootstrap_env: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['VaultPropertySource'], sub: 'Decrypts during boot' }),
-          live_bean: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['SecureDataSource'], sub: 'Credentials Injected' }),
+          vault_srv: d(-11, -4, { s: 3.8, h: 50, color: 'cyan', glyph: 'storage', label: ['HashiCorp Vault / K8s'], sub: 'Encrypted Secrets Store' }),
+          bootstrap_env: d(0, -4, { s: 3.8, h: 50, color: 'purple', glyph: 'workflow', label: ['VaultPropertySource'], sub: 'Decrypts during boot' }),
+          live_bean: d(11, -4, { s: 3.8, h: 50, color: 'green', glyph: 'server', label: ['SecureDataSource'], sub: 'Credentials Injected' }),
         },
         links: {
           vb: h('vault_srv', 'bootstrap_env', ['vault_srv', 'bootstrap_env'], { heads: 'end', label: 'fetches secret' }),

@@ -43,7 +43,7 @@ export const javaSpringJpaLesson = {
             '}',
           ]),
           app:   y(-12, -4, { label: 'Application Code', tags: [{ text: 'user.setName("New")', icon: 'code' }] }),
-          ctx:   d(-2, -4,  { color: 'blue', glyph: 'layers', label: ['Persistence'], sub: '1st Level Cache' }),
+          ctx:   d(-2, -4,  { h: 52, color: 'blue', glyph: 'layers', label: ['Entity', 'Manager'], sub: '1st Level Cache' }),
           db:    b(10, -4,  { label: 'PostgreSQL DB', tags: [{ text: 'auto UPDATE at commit', tone: 'green' }] }),
         },
         links: {

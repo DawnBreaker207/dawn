@@ -149,14 +149,19 @@ Mixing data with logic, server with client, or build scripts with browser module
 │
 ├── src/
 │   ├── data/                           ← [LAYER 1B: STATIC APPLICATION & SIMULATION DATA]
-│   │   ├── scenes/                     ← 44 DTS Simulation Scene Graphs (layout, coordinates, steps)
-│   │   │   ├── cloud/                  ← aws-vpc.ts, aws-ha.ts, aws-storage-db.ts, aws-serverless.ts
-│   │   │   ├── data/                   ← sql-engine.ts, storage-engines.ts, indexes.ts, sql-nosql.ts
-│   │   │   ├── distributed/            ← sharding.ts, consistent-hashing.ts, consensus.ts, cap.ts
-│   │   │   ├── microservices/          ← microservices.ts, java-concurrency.ts, sagas.ts, apis.ts
-│   │   │   ├── network/                ← request-lifecycle.ts, load-balancing.ts, caching.ts
-│   │   │   └── system-design/          ← hld-lld.ts, design-url-shortener.ts, design-chat.ts
-│   │   ├── dts-lessons.ts              ← Curriculum metadata: 6 canonical tracks, 11 modules, titles & IDs
+│   │   ├── scenes/                     ← 108 DTS Simulation Scene Graphs across 10 Canonical Tracks
+│   │   │   ├── architecture/           ← batch-stream.ts, microservices.ts, sagas.ts
+│   │   │   ├── cloud/                  ← aws-vpc.ts, aws-ha.ts, k8s-*.ts, docker-*.ts
+│   │   │   ├── communication/          ← kafka-*.ts, rabbitmq-*.ts, pubsub.ts, queues.ts
+│   │   │   ├── design/                 ← hld-lld.ts, design-url-shortener.ts, design-chat.ts
+│   │   │   ├── network/                ← request-lifecycle.ts, tcp-internals.ts, tls-handshake.ts
+│   │   │   ├── reliability/            ← observability.ts, rate-limiting.ts, timeouts-retries.ts
+│   │   │   ├── scaling/                ← caching.ts, cdn.ts, load-balancing.ts, stateless.ts
+│   │   │   ├── security/               ← authentication.ts, authorization.ts, encryption.ts
+│   │   │   ├── shipping/               ← cicd.ts, testing.ts
+│   │   │   ├── storage/                ← sql-engine.ts, redis-*.ts, sharding.ts, consensus.ts
+│   │   │   └── specialized/            ← 26 Java Runtime & Spring Enterprise scenes (java-*.ts)
+│   │   ├── curriculum.ts               ← Curriculum metadata: 10 canonical tracks, 15 modules, 104 lesson IDs & titles
 │   │   ├── labs.ts                     ← Directory list of playable labs
 │   │   ├── projectsData.json           ← Portfolio projects list
 │   │   ├── books.json                  ← Reading list data

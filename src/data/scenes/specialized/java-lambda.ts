@@ -53,8 +53,8 @@ export const javaLambdaLesson = {
       metrics: { classes_on_disk: '0 .class files', callsite_type: 'invokedynamic', sam_type: 'Runnable', capture_cost: '0 B', dispatch_ns: '0.8ns' },
       scene: {
         entities: {
-          code: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['() -> run()'], sub: 'Lambda Syntax' }),
-          javac: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['javac Compiler'], sub: 'Synthetic Method' }),
+          code: d(-11, -4, { s: 3.8, h: 50, color: 'blue', glyph: 'code', label: ['() -> run()'], sub: 'Lambda Syntax' }),
+          javac: d(0, -4, { s: 3.8, h: 50, color: 'purple', glyph: 'workflow', label: ['javac Compiler'], sub: 'Synthetic Method' }),
           bytecode: d(11, -4, { s: 4.4, h: 50, color: 'green', glyph: 'file', label: ['invoke', 'dynamic'], sub: 'No $1.class file' }),
           card: S({ x: -2, y: 14 }, 'Javac Bytecode Footprint', [
             '$ javac Main.java',

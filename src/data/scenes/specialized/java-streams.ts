@@ -105,7 +105,7 @@ export const javaStreamsLesson = {
             '# Uses ForkJoinPool.commonPool() (threads = CPU cores - 1)',
             '! Caution: blocking I/O inside parallelStream starves commonPool',
           ]),
-          split:  d(-12, -4, { color: 'blue', glyph: 'gitBranch', label: ['Spliterator'], sub: 'trySplit()' }),
+          split:  d(-12, -4, { h: 52, color: 'blue', glyph: 'gitBranch', label: ['Split', 'Iterator'], sub: 'trySplit()' }),
           w1:     d(0, -10,  { color: 'purple', glyph: 'cpu', label: ['FJ Worker 1'], sub: 'Core 1 Deque' }),
           w2:     d(0, 2,    { color: 'purple', glyph: 'cpu', label: ['FJ Worker 2'], sub: 'Work-Stealing' }),
           merge:  d(12, -4,  { color: 'green', glyph: 'check', label: ['Combiner'], sub: 'Merge Results' }),
