@@ -47,10 +47,25 @@ const currMod = await bundle('src/data/curriculum.ts');
 const scenes = scenesMod.ALL_SCENES || {};
 const modules = currMod.DTS_MODULES || [];
 
+const allCurriculumLessons = [];
+modules.forEach(m => {
+  (m.lessons || []).forEach(l => {
+    allCurriculumLessons.push(l);
+  });
+});
+
+const missingInScenes = allCurriculumLessons.filter(l => !scenes[l.id]);
+
 console.log('='.repeat(75));
 console.log('       MASTER 104-DIAGRAM ARCHITECTURAL AUDITOR & QUALITY REPORT');
 console.log('='.repeat(75));
-console.log(`Auditing ${Object.keys(scenes).length} Registered Scene Graphs in ALL_SCENES...\n`);
+console.log(`Total Curriculum Lessons defined in curriculum.ts: ${allCurriculumLessons.length}`);
+console.log(`Total Scene Graphs registered in ALL_SCENES:       ${Object.keys(scenes).length}`);
+if (missingInScenes.length > 0) {
+  console.log(`Curriculum lessons pending scene implementation:  ${missingInScenes.length}`);
+  console.log(`Missing IDs:`, missingInScenes.map(l => l.id).join(', '));
+}
+console.log(`\nAuditing ${Object.keys(scenes).length} Registered Scene Graphs in ALL_SCENES...\n`);
 
 const issues = {
   criticalOverlaps: [],
