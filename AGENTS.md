@@ -518,21 +518,91 @@ Blocks must have sufficient height $h$ and diamond facet scale $s$ to accommodat
 - **Label Wrapping:** Split labels into short multi-line arrays: `label: ['Primary SQS', 'Queue']` rather than a single long string that exceeds diamond facet width.
 - **Subtitle Length:** Keep `sub` concise ($\le 24$ characters).
 
-#### 5. Viewport Containment & World Bounding Box
+#### 5. Labeled Link Clearance & Detached Label Prevention (Link Length & Anti-Teleport Standard)
+
+##### A. Link Length vs Text Label Width ($L_{\text{effective}} \ge W_{\text{text}} + 30\text{px}$)
+When a link features an explanatory text label (`label: '...'`):
+- The center-to-center distance $D$ between the two connected nodes MUST satisfy:
+  $$D \ge W_{\text{text}} + 120\text{px} \quad (\text{typically } D \ge 180 \sim 260\text{px})$$
+- The effective visible link line length $L_{\text{effective}}$ after subtracting the collision radii of both endpoint blocks ($L_{\text{effective}} = D - (r_{\text{from}} + r_{\text{to}}) \approx D - 70\text{px}$) MUST exceed the rendered text label width by at least $30\text{px}$:
+  $$L_{\text{effective}} \ge W_{\text{text}} + 30\text{px}$$
+- **FORBIDDEN: Overwritten Link Paths:** If a link is too short ($D < 165\text{px}$), the text label badge ($W_{\text{text}} \approx \text{chars} \times 7.2 + 24\text{px}$) will physically overwrite the arrow line, clip into block corners, and collide with arrowheads.
+
+##### B. Anti-Detached Label Rule (Chống Văng Nhãn Lơ Lửng)
+The engine's collision avoidance algorithm (`Vf` in `stage-engine.ts`) calculates potential bounding box collisions around the link midpoint:
+1. **Vertical Projection Trap ($\Delta sx = 0$):** When two nodes are aligned along the vertical screen depth axis ($\Delta x = -\Delta y$), the tangent vector forces the label laterally into the adjacent block or tag bounding box.
+2. **Tag Collision Penalty:** If the source or target node has active tags (`tags: [...]`), the label area overlaps with the tag pill.
+3. **The Detached Bug:** When the engine detects a collision penalty at the link edge, **it triggers an aggressive fallback offset ($+26\text{px} \sim +40\text{px}$)**, causing the label to be shoved far away from the link line, floating disconnected in empty space.
+4. **Mandatory Standard:**
+   - Always maintain a healthy $30^\circ$ isometric skew angle ($\Delta x \neq -\Delta y$) for labeled links.
+   - When connecting to a node with a Tag, expand distance to $D \ge 220\text{px}$ and set `labelAt: 0.6` to bias the label safely away from the tag badge.
+
+---
+
+#### 6. Semantic Unique Link IDs Across Steps (Chống Liệt / Giật Animation Xuất Hiện)
+
+- **THE TELEPORT SNAP BUG (Lỗi Liệt Animation Vẽ Nét):**
+  In `StageEngine`, links are stored in an active Map keyed by their Link ID:
+  ```ts
+  if (this.links.has(linkId)) {
+    // Engine treats this as the SAME existing link!
+    // Bypasses tween draw: from 0 to 1! Snap teleports coordinates!
+    continue;
+  }
+  ```
+  If Step 5 defines `links: { l1: makeLink('guardrail', 'llm', ...) }` and Step 6 defines `links: { l1: makeLink('llm', 'browser', ...) }`:
+  - The engine sees `l1` already present in `this.links`.
+  - **The link draw animation (`i.tween = { from: 0, to: 1, key: 'draw' }`) is COMPLETELY SKIPPED.**
+  - The old link from Step 5 does NOT fade out cleanly.
+  - The link abruptly snap-teleports in a single jarring frame from the old target to the new target.
+
+- **MANDATORY STANDARD: Semantic Unique Link IDs:**
+  **STRICTLY FORBIDDEN:** Never recycle generic IDs like `l1`, `l2`, `l3`, `l4` across consecutive steps when the endpoints, route, or semantic meaning changes.
+  Every link MUST be assigned a contextual, descriptive semantic key:
+  - Step RAG: `rag_inject`
+  - Step MCP: `mcp_fs`, `mcp_terminal`
+  - Step ReAct: `react_think_act`, `react_act_obs`, `react_obs_ref`
+  - Step Harness: `harness_guard`, `harness_compact`
+  - Step Skills: `skill_browser`, `skill_workflow`
+  - Step State Machine: `graph_human`, `graph_store`
+  - Step Swarm: `swarm_research`, `swarm_code`, `swarm_qa`
+  - Step Cloud: `dns_query`, `edge_https`, `origin_fetch`, `alb_health`
+  *Result:* Old links fade out smoothly (300ms fade-out), and new links animate into existence with a crisp line-drawing (`draw: 0 -> 1`) transition.
+
+---
+
+#### 7. Panel Placement Standard: Code vs Concept Separation (Phân Định Panel SVG)
+
+- **CODE PANELS ONLY (`card: makePanel`):**
+  Floating panel cards inside the SVG canvas (`makePanel`) are **STRICTLY RESERVED FOR ACTUAL CODE OR SYNTAX SNIPPETS**:
+  - Executable code: Java classes, CompletableFuture pipelines, Spring configurations.
+  - Database queries: SQL `EXPLAIN ANALYZE`, index definitions, PostgreSQL commands.
+  - Engine data structures: Redis C structs (`robj`, `sdshdr8`), Linux kernel `epoll_event`.
+  - Operational scripts: Dockerfile layers, Kubernetes YAML manifests, `iptables` rules, `tcpdump` commands.
+
+- **STRICTLY FORBIDDEN: Concept & Bullet-Point Panels in SVG:**
+  Never insert text-only summary panels (e.g. `'# Raw statistical engine'`, `'= Stateless generation'`) into the 2.5D SVG canvas for abstract architectural concepts.
+  *Why:* 
+  1. The 3D canvas is meant for clear geometric architecture, animated packet flows, and link topology. Floating text boxes obstruct isometric blocks and crowd the viewport.
+  2. All conceptual explanations, step titles, bullet points, and learning goals **ALREADY BELONG TO AND ARE FULLY RENDERED IN THE RIGHT-HAND STEP GUIDE CARD AND BOTTOM TIMELINE**. Placing duplicate text panels in the SVG creates visual clutter.
+
+---
+
+#### 8. Viewport Containment & World Bounding Box
 - **Canvas Framing Standard:** The entire diagram MUST fit comfortably within the camera viewport frame without clipping or overflowing the window edges.
 - **World Coordinate Boundaries:** Keep all components strictly within $x \in [-16, 16]$ and $y \in [-24, 20]$.
 - **FORBIDDEN: Extreme Coordinate Drifts:** Never place entities at extreme positions ($|x| > 18$ or $y > 22$). Such coordinates distort the camera's bounding box calculation (`camFromScene`), triggering aggressive zooming that cuts off top tiers or pushes bottom entities off-screen.
 
-#### 6. Goal Card Deck Layout & Spacing (Minimum Gap >= 7px)
+#### 9. Goal Card Deck Layout & Spacing (Minimum Gap >= 7px)
 - **Checklist Separation:** In the Guide deck on the right rail, goal cards must ALWAYS maintain a clear visual gap of at least $7\text{px}$ (`margin-bottom >= 7px` or `gap >= 7px`).
 - **FORBIDDEN: Clumping on Goal Hit:** Cards must NEVER collapse or stick together when highlighted (`.goal-hit`).
 
-#### 7. Single Canvas Architecture & Code-Driven Presentation Standard
+#### 10. Single Canvas Architecture & Code-Driven Presentation Standard
 - **Single Canvas 3D Workbench:** All lessons (including Java and SQL) render exclusively on the Single Canvas 3D Isometric Workbench. 2D switch toggles (`[ 3D Simulator | 2D Deep-Dive ]`) are removed.
 - **Code-Driven Floating Cards (`card: makePanel`):** Modeled after `sql-nosql`, code-centric topics (Java, SQL, Frameworks) MUST pair 3D visual transitions with a floating code panel card (`card: makePanel`) showing the exact code or queries driving that step.
 - **Key Milestones Standard (6 to 8 Steps):** Reject artificial 4-step templates and avoid 33 micro-step debugger traces. Every lesson must have exactly **6 to 8 milestone steps**.
 
-#### 8. Mandatory Automated Verification & Pre-Commit Validation
+#### 11. Mandatory Automated Verification & Pre-Commit Validation
 - **Zero Tolerance for Blind / Guesswork Editing ("Sửa Chay"):** No lesson modification or creation is considered done without automated verification against real browser rendering.
 - **Automated Verification Command:**
   For every lesson created or touched, run:

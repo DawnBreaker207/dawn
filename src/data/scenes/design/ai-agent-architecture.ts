@@ -1,6 +1,6 @@
 // @ts-nocheck
 /* eslint-disable */
-import { makeBlock, makeDb, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makeZone } from '@/lib/simulator/scene-builders';
 
 export const aiAgentArchitectureLesson = {
   id: 'ai-agent-architecture',
@@ -29,12 +29,6 @@ export const aiAgentArchitectureLesson = {
       scene: {
         entities: {
           llmCore: makeBlock(0, 0, { s: 5.6, h: 54, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Next-Token Core'] }),
-          card: makePanel({ x: -12, y: 12 }, '1. Naked LLM Core', [
-            '# Raw statistical engine',
-            'response = llm.predict(prompt)',
-            '= Stateless text generation',
-            '= Zero tools or memory',
-          ]),
         },
         links: {},
       },
@@ -48,18 +42,12 @@ export const aiAgentArchitectureLesson = {
       ],
       scene: {
         entities: {
-          ragZone: makeZone({ x0: -11, x1: 11, y0: -11, y1: 11 }, 'Layer 2: RAG & Context Buffer', { color: 'blue' }),
+          ragZone: makeZone({ x0: -12, x1: 12, y0: -12, y1: 12 }, 'Layer 2: RAG & Context Buffer', { color: 'blue' }),
           llmCore: makeBlock(0, 0, { s: 5.6, h: 54, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Augmented Prompt'] }),
-          vectorDb: makeDb(-9, 9, { r: 2.6, h: 36, color: 'store', label: ['Vector Store', 'ChromaDB'] }),
-          card: makePanel({ x: -12, y: 13 }, '2. RAG Context Injection', [
-            '# Grounding in proprietary facts',
-            'query_vec = embed(user_query)',
-            'docs = vector_store.search(query_vec)',
-            'prompt.inject(docs) -> llmCore',
-          ]),
+          vectorDb: makeDb(-12, 10, { r: 2.8, h: 38, color: 'store', label: ['Vector Store', 'ChromaDB'] }),
         },
         links: {
-          l1: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { label: 'inject context chunks' }),
+          rag_inject: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { label: 'inject context chunks' }),
         },
       },
     },
@@ -72,22 +60,15 @@ export const aiAgentArchitectureLesson = {
       ],
       scene: {
         entities: {
-          mcpZone: makeZone({ x0: -13, x1: 13, y0: -13, y1: 13 }, 'Layer 3: MCP Tool Interface (USB-C)', { color: 'orange' }),
-          ragZone: makeZone({ x0: -7, x1: 7, y0: -7, y1: 7 }, 'RAG Buffer', { color: 'blue' }),
+          mcpZone: makeZone({ x0: -15, x1: 15, y0: -15, y1: 15 }, 'Layer 3: MCP Tool Interface (USB-C)', { color: 'orange' }),
+          ragZone: makeZone({ x0: -8, x1: 8, y0: -8, y1: 8 }, 'RAG Buffer', { color: 'blue' }),
           llmCore: makeBlock(0, 0, { s: 5.6, h: 54, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Tool-Call Aware'] }),
-          fileSystemTool: makeBlock(-10, 4, { s: 4.4, h: 48, color: 'blue', label: ['Filesystem MCP', 'read / edit'] }),
-          terminalTool: makeBlock(10, -4, { s: 4.4, h: 48, color: 'green', label: ['Terminal MCP', 'run_command'] }),
-          card: makePanel({ x: -12, y: 13 }, '3. MCP Tool Call Protocol', [
-            '# Standardized JSON-RPC',
-            '{"method": "tools/call",',
-            ' "name": "read_file",',
-            ' "args": {"path": "jwt.ts"}}',
-            '= Decoupled client & server',
-          ]),
+          fileSystemTool: makeBlock(-14, 4, { s: 4.6, h: 50, color: 'blue', label: ['Filesystem MCP', 'read / edit'] }),
+          terminalTool: makeBlock(14, -4, { s: 4.6, h: 50, color: 'green', label: ['Terminal MCP', 'run_command'] }),
         },
         links: {
-          l1: makeLink('llmCore', 'fileSystemTool', ['llmCore', 'fileSystemTool'], { label: 'read_file request' }),
-          l2: makeLink('llmCore', 'terminalTool', ['llmCore', 'terminalTool'], { label: 'run_command request' }),
+          mcp_fs: makeLink('llmCore', 'fileSystemTool', ['llmCore', 'fileSystemTool'], { label: 'read_file request' }),
+          mcp_term: makeLink('llmCore', 'terminalTool', ['llmCore', 'terminalTool'], { label: 'run_command request' }),
         },
       },
     },
@@ -100,26 +81,19 @@ export const aiAgentArchitectureLesson = {
       ],
       scene: {
         entities: {
-          reactZone: makeZone({ x0: -11, x1: 11, y0: -11, y1: 11 }, 'Layer 4: Cognitive ReAct Loop', { color: 'purple' }),
+          reactZone: makeZone({ x0: -13, x1: 13, y0: -13, y1: 13 }, 'Layer 4: Cognitive ReAct Loop', { color: 'purple' }),
           mcpZone: makeZone({ x0: -6, x1: 6, y0: -6, y1: 6 }, 'Tool Core', { color: 'orange' }),
           llmCore: makeBlock(0, 0, { s: 5.4, h: 52, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Controller'] }),
-          thinkNode: makeBlock(-9, -9, { s: 4.2, h: 46, color: 'purple', label: ['1. Think', 'Analyze Goal'] }),
-          actNode: makeBlock(9, -9, { s: 4.2, h: 46, color: 'orange', label: ['2. Act', 'Invoke Tool'] }),
-          observeNode: makeBlock(9, 9, { s: 4.2, h: 46, color: 'green', label: ['3. Observe', 'Capture Stdout'] }),
-          reflectNode: makeBlock(-9, 9, { s: 4.2, h: 46, color: 'blue', label: ['4. Reflect', 'Self-Healing'] }),
-          card: makePanel({ x: -13, y: 14 }, '4. ReAct Cycle', [
-            'while not task_complete():',
-            '  plan = think(state)',
-            '  out = act(plan.tool)',
-            '  diff = observe(out)',
-            '  reflect(diff) # Self-fix',
-          ]),
+          thinkNode: makeBlock(-11, -11, { s: 4.4, h: 48, color: 'purple', label: ['1. Think', 'Analyze Goal'] }),
+          actNode: makeBlock(11, -11, { s: 4.4, h: 48, color: 'orange', label: ['2. Act', 'Invoke Tool'] }),
+          observeNode: makeBlock(11, 11, { s: 4.4, h: 48, color: 'green', label: ['3. Observe', 'Capture Stdout'] }),
+          reflectNode: makeBlock(-11, 11, { s: 4.4, h: 48, color: 'blue', label: ['4. Reflect', 'Self-Healing'] }),
         },
         links: {
-          l1: makeLink('thinkNode', 'actNode', ['thinkNode', 'actNode'], { label: 'emits tool_call' }),
-          l2: makeLink('actNode', 'observeNode', ['actNode', 'observeNode'], { label: 'captures stdout' }),
-          l3: makeLink('observeNode', 'reflectNode', ['observeNode', 'reflectNode'], { label: 'evaluates exit code' }),
-          l4: makeLink('reflectNode', 'thinkNode', ['reflectNode', 'thinkNode'], { label: 'loops on failure' }),
+          react_think_act: makeLink('thinkNode', 'actNode', ['thinkNode', 'actNode'], { label: 'emits tool_call' }),
+          react_act_obs: makeLink('actNode', 'observeNode', ['actNode', 'observeNode'], { label: 'captures stdout' }),
+          react_obs_ref: makeLink('observeNode', 'reflectNode', ['observeNode', 'reflectNode'], { label: 'evaluates exit code' }),
+          react_ref_think: makeLink('reflectNode', 'thinkNode', ['reflectNode', 'thinkNode'], { label: 'loops on failure' }),
         },
       },
     },
@@ -132,21 +106,15 @@ export const aiAgentArchitectureLesson = {
       ],
       scene: {
         entities: {
-          harnessZone: makeZone({ x0: -14, x1: 14, y0: -14, y1: 14 }, 'Layer 5: OS Sandbox & Safety Harness', { color: 'slab' }),
-          reactZone: makeZone({ x0: -8, x1: 8, y0: -8, y1: 8 }, 'Agent Core Loop', { color: 'purple' }),
+          harnessZone: makeZone({ x0: -16, x1: 16, y0: -16, y1: 16 }, 'Layer 5: OS Sandbox & Safety Harness', { color: 'slab' }),
+          reactZone: makeZone({ x0: -9, x1: 9, y0: -9, y1: 9 }, 'Agent Core Loop', { color: 'purple' }),
           llmCore: makeBlock(0, 0, { s: 5.4, h: 52, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Sandboxed'] }),
-          guardrailGate: makeBlock(-12, -12, { s: 4.4, h: 48, color: 'orange', label: ['Security Gate', 'Seccomp & Policy'] }),
-          compactorNode: makeBlock(12, -12, { s: 4.4, h: 48, color: 'purple', label: ['Context Compactor', 'Prunes History'] }),
-          card: makePanel({ x: -13, y: 14 }, '5. Safety Harness', [
-            '# Guardrails and resource bounds',
-            'if is_dangerous(cmd): intercept()',
-            'if context.tokens > 80%: compact()',
-            'seccomp.isolate_container()',
-          ]),
+          guardrailGate: makeBlock(-14, -12, { s: 4.6, h: 50, color: 'orange', label: ['Security Gate', 'Seccomp & Policy'] }),
+          compactorNode: makeBlock(14, -10, { s: 4.6, h: 50, color: 'purple', label: ['Context Compactor', 'Prunes History'] }),
         },
         links: {
-          l1: makeLink('guardrailGate', 'llmCore', ['guardrailGate', 'llmCore'], { label: 'enforces permissions' }),
-          l2: makeLink('compactorNode', 'llmCore', ['compactorNode', 'llmCore'], { label: 'summarizes memory' }),
+          harness_guard: makeLink('guardrailGate', 'llmCore', ['guardrailGate', 'llmCore'], { label: 'enforces permissions' }),
+          harness_compact: makeLink('compactorNode', 'llmCore', ['compactorNode', 'llmCore'], { label: 'summarizes memory' }),
         },
       },
     },
@@ -159,21 +127,14 @@ export const aiAgentArchitectureLesson = {
       ],
       scene: {
         entities: {
-          harnessZone: makeZone({ x0: -14, x1: 14, y0: -14, y1: 14 }, 'Layer 6: Skill Superpowers Orbit', { color: 'slab' }),
+          harnessZone: makeZone({ x0: -16, x1: 16, y0: -16, y1: 16 }, 'Layer 6: Skill Superpowers Orbit', { color: 'slab' }),
           llmCore: makeBlock(0, 0, { s: 5.4, h: 52, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Skill Controller'] }),
-          browserSkill: makeBlock(-12, 0, { s: 4.4, h: 48, color: 'blue', label: ['Browser Skill', 'Playwright Runner'] }),
-          workflowSkill: makeBlock(12, 0, { s: 4.4, h: 48, color: 'green', label: ['Workflow Skill', 'Parallel Fan-Out'] }),
-          card: makePanel({ x: -13, y: 14 }, '6. Dynamic Skills', [
-            '# Loaded on-demand via SKILL.md',
-            'if task == "verify_ui":',
-            '  load_skill("browser")',
-            '  playwright.screenshot()',
-            '= Zero prompt bloat',
-          ]),
+          browserSkill: makeBlock(-16, 2, { s: 4.6, h: 50, color: 'blue', label: ['Browser Skill', 'Playwright Runner'] }),
+          workflowSkill: makeBlock(16, -2, { s: 4.6, h: 50, color: 'green', label: ['Workflow Skill', 'Parallel Fan-Out'] }),
         },
         links: {
-          l1: makeLink('llmCore', 'browserSkill', ['llmCore', 'browserSkill'], { label: 'activates UI test' }),
-          l2: makeLink('llmCore', 'workflowSkill', ['llmCore', 'workflowSkill'], { label: 'dispatches sub-pipelines' }),
+          skill_browser: makeLink('llmCore', 'browserSkill', ['llmCore', 'browserSkill'], { label: 'activates UI test' }),
+          skill_workflow: makeLink('llmCore', 'workflowSkill', ['llmCore', 'workflowSkill'], { label: 'dispatches sub-pipelines' }),
         },
       },
     },
@@ -186,21 +147,14 @@ export const aiAgentArchitectureLesson = {
       ],
       scene: {
         entities: {
-          graphZone: makeZone({ x0: -15, x1: 15, y0: -15, y1: 15 }, 'Layer 7: LangGraph State Machine', { color: 'green' }),
+          graphZone: makeZone({ x0: -16, x1: 16, y0: -16, y1: 16 }, 'Layer 7: LangGraph State Machine', { color: 'green' }),
           llmCore: makeBlock(0, 0, { s: 5.4, h: 52, color: 'purple', glyph: 'server', label: ['Agent Node', 'FSM State'] }),
-          humanGate: makeBlock(0, -12, { s: 4.6, h: 50, color: 'orange', label: ['Human Approval Gate', 'Review Plan / Diff'] }),
-          stateStore: makeDb(0, 12, { r: 2.6, h: 38, color: 'store', label: ['Checkpoint DB', 'Postgres State'] }),
-          card: makePanel({ x: -13, y: 14 }, '7. Graph State Machine', [
-            'class AgentState(TypedDict):',
-            '  plan: List[str]',
-            '  diff: str',
-            '# Pause execution for human check',
-            'interrupt_before(["git_push"])',
-          ]),
+          humanGate: makeBlock(0, -14, { s: 4.6, h: 50, color: 'orange', label: ['Human Approval Gate', 'Review Plan / Diff'] }),
+          stateStore: makeDb(0, 14, { r: 2.8, h: 40, color: 'store', label: ['Checkpoint DB', 'Postgres State'] }),
         },
         links: {
-          l1: makeLink('humanGate', 'llmCore', ['humanGate', 'llmCore'], { label: 'human approval: proceed' }),
-          l2: makeLink('llmCore', 'stateStore', ['llmCore', 'stateStore'], { label: 'save state checkpoint' }),
+          graph_human: makeLink('humanGate', 'llmCore', ['humanGate', 'llmCore'], { label: 'human approval: proceed' }),
+          graph_store: makeLink('llmCore', 'stateStore', ['llmCore', 'stateStore'], { label: 'save state checkpoint' }),
         },
       },
     },
@@ -213,24 +167,17 @@ export const aiAgentArchitectureLesson = {
       ],
       scene: {
         entities: {
-          swarmZone: makeZone({ x0: -15, x1: 15, y0: -15, y1: 15 }, 'Layer 8: Multi-Agent Swarm Orbit', { color: 'purple' }),
+          swarmZone: makeZone({ x0: -16, x1: 16, y0: -16, y1: 16 }, 'Layer 8: Multi-Agent Swarm Orbit', { color: 'purple' }),
           llmCore: makeBlock(0, 0, { s: 5.6, h: 54, color: 'purple', glyph: 'balancer', label: ['Swarm Coordinator', 'Orchestrator'] }),
-          researchWorker: makeBlock(-12, -10, { s: 4.2, h: 46, color: 'blue', label: ['Worker: Research', 'Deep Retrieval'] }),
-          codeWorker: makeBlock(12, -10, { s: 4.2, h: 46, color: 'green', label: ['Worker: Coder', 'File Authoring'] }),
-          qaWorker: makeBlock(12, 10, { s: 4.2, h: 46, color: 'orange', label: ['Worker: Verifier', 'Linter & Tests'] }),
-          card: makePanel({ x: -13, y: 14 }, '8. Swarm Orchestration', [
-            '# Multi-agent coordination',
-            'coordinator.spawn(["research", "code"])',
-            'research.post_board(findings)',
-            'code.consume(findings) -> tests',
-            '= Autonomous parallel execution',
-          ]),
+          researchWorker: makeBlock(-14, -12, { s: 4.4, h: 48, color: 'blue', label: ['Worker: Research', 'Deep Retrieval'] }),
+          codeWorker: makeBlock(14, -12, { s: 4.4, h: 48, color: 'green', label: ['Worker: Coder', 'File Authoring'] }),
+          qaWorker: makeBlock(14, 12, { s: 4.4, h: 48, color: 'orange', label: ['Worker: Verifier', 'Linter & Tests'] }),
         },
         links: {
-          l1: makeLink('llmCore', 'researchWorker', ['llmCore', 'researchWorker'], { label: 'brief: investigate issue' }),
-          l2: makeLink('llmCore', 'codeWorker', ['llmCore', 'codeWorker'], { label: 'brief: implement changes' }),
-          l3: makeLink('codeWorker', 'qaWorker', ['codeWorker', 'qaWorker'], { label: 'dispatches test suite' }),
-          l4: makeLink('qaWorker', 'llmCore', ['qaWorker', 'llmCore'], { label: 'reports green build' }),
+          swarm_research: makeLink('llmCore', 'researchWorker', ['llmCore', 'researchWorker'], { label: 'brief: investigate issue' }),
+          swarm_code: makeLink('llmCore', 'codeWorker', ['llmCore', 'codeWorker'], { label: 'brief: implement changes' }),
+          swarm_qa: makeLink('codeWorker', 'qaWorker', ['codeWorker', 'qaWorker'], { label: 'dispatches test suite' }),
+          swarm_report: makeLink('qaWorker', 'llmCore', ['qaWorker', 'llmCore'], { label: 'reports green build' }),
         },
       },
     },

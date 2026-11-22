@@ -70,17 +70,17 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-14, -4, {
+            client: y(-18, -4, {
               label: `users`,
               tags: [{ text: `https://app.io`, icon: `globe` }],
             }),
-            ec2: d(-2, -4, {
+            ec2: d(-1, -4, {
               color: `yellow`,
               glyph: `server`,
               label: [`EC2`, `us-east-1a`],
               cpu: 0.85,
             }),
-            db: b(10, -4, { label: `MySQL Single`, cpu: 0.6 }),
+            db: b(15, -4, { label: `MySQL Single`, cpu: 0.6 }),
           },
           links: {
             c1: h(`client`, `ec2`, [`client`, `ec2`], { label: `Direct Traffic`, heads: `both` }),
@@ -115,20 +115,20 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-14, -4, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
-            r53: d(-4, -10, {
+            client: y(-18, -4, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
+            r53: d(-2, -16, {
               color: `yellow`,
               glyph: `globe`,
               label: [`Route 53`],
               sub: `Latency Routing`,
             }),
-            cf: d(-4, 2, {
+            cf: d(-2, 8, {
               color: `purple`,
               glyph: `shield`,
               label: [`CloudFront`],
               sub: `Edge Cache`,
             }),
-            ec2: d(8, -4, { color: `blue`, glyph: `server`, label: [`Origin VPC`], cpu: 0.35 }),
+            ec2: d(14, 0, { color: `blue`, glyph: `server`, label: [`Origin VPC`], cpu: 0.35 }),
           },
           links: {
             dns: h(`client`, `r53`, [`client`, `r53`], { label: `DNS Query`, heads: `both` }),
@@ -160,15 +160,15 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-14, -4, { label: `users` }),
-            alb: f(-4, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            srv_a: d(8, -10, {
+            client: y(-18, -4, { label: `users` }),
+            alb: f(-2, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            srv_a: d(12, -12, {
               color: `blue`,
               glyph: `server`,
               label: [`Target AZ-1a`],
               cpu: 0.25,
             }),
-            srv_b: d(8, 2, { color: `blue`, glyph: `server`, label: [`Target AZ-1b`], cpu: 0.25 }),
+            srv_b: d(12, 4, { color: `blue`, glyph: `server`, label: [`Target AZ-1b`], cpu: 0.25 }),
           },
           links: {
             in: h(`client`, `alb`, [`client`, `alb`], { label: `HTTPS`, heads: `both` }),

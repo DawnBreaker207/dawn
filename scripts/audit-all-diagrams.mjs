@@ -19,6 +19,7 @@ const rootDir = path.resolve(__dirname, '..');
 
 const CRITICAL_DIST = 90;
 const WARNING_DIST = 125;
+const EXPANSION_RULE_DIST = 155; // Expansion Rule: links with labels or nodes with tags require >= 155px
 const BOUNDS = { xMin: -22, xMax: 22, yMin: -26, yMax: 26 };
 
 function isoProject(x, y, z = 0) {
@@ -69,6 +70,7 @@ console.log(`\nAuditing ${Object.keys(scenes).length} Registered Scene Graphs in
 
 const issues = {
   criticalOverlaps: [],
+  expansionViolations: [],
   crowdedPairs: [],
   outOfBounds: [],
   brokenLinks: [],
@@ -212,12 +214,35 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
           const [sxB, syB] = isoProject(entB.x, entB.y, entB.z || 0);
           const dist = Math.hypot(sxA - sxB, syA - syB);
 
+          // Check if there is an active link with label or either entity has tags
+          let hasConnectedLabeledLink = false;
+          for (const l of Object.values(links)) {
+            if (!l) continue;
+            if ((l.from === kA && l.to === kB) || (l.from === kB && l.to === kA)) {
+              if (l.label && typeof l.label === 'string' && l.label.trim().length > 0) {
+                hasConnectedLabeledLink = true;
+                break;
+              }
+            }
+          }
+          const hasTags = (Array.isArray(entA.tags) && entA.tags.length > 0) || (Array.isArray(entB.tags) && entB.tags.length > 0);
+
           if (dist < CRITICAL_DIST) {
             issues.criticalOverlaps.push({
               sceneId,
               step: sIdx + 1,
               pair: `${kA} <--> ${kB}`,
               dist: Math.round(dist),
+              coords: `(${entA.x},${entA.y}) vs (${entB.x},${entB.y})`,
+            });
+          } else if ((hasConnectedLabeledLink || hasTags) && dist < EXPANSION_RULE_DIST) {
+            issues.expansionViolations.push({
+              sceneId,
+              step: sIdx + 1,
+              pair: `${kA} <--> ${kB}`,
+              dist: Math.round(dist),
+              required: EXPANSION_RULE_DIST,
+              reason: hasConnectedLabeledLink ? 'Connected by labeled link' : 'Entity has tags',
               coords: `(${entA.x},${entA.y}) vs (${entB.x},${entB.y})`,
             });
           } else if (dist < WARNING_DIST) {
@@ -236,13 +261,30 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
 }
 
 console.log('--- AUDIT FINDINGS ---');
-console.log(`1. Goal Alignment Errors:       ${issues.goalErrors.length}`);
-console.log(`2. Broken Link References:      ${issues.brokenLinks.length}`);
-console.log(`3. Out of Viewport Bounds:      ${issues.outOfBounds.length}`);
-console.log(`4. Critical Overlaps (<90px):   ${issues.criticalOverlaps.length}`);
-console.log(`5. Crowded Pairs (90px..125px): ${issues.crowdedPairs.length}`);
-console.log(`6. Glyph Clearance Hazards:     ${issues.glyphHazards.length}`);
+console.log(`1. Goal Alignment Errors:          ${issues.goalErrors.length}`);
+console.log(`2. Broken Link References:         ${issues.brokenLinks.length}`);
+console.log(`3. Out of Viewport Bounds:         ${issues.outOfBounds.length}`);
+console.log(`4. Critical Overlaps (<90px):      ${issues.criticalOverlaps.length}`);
+console.log(`5. Expansion Rule Violations:      ${issues.expansionViolations.length}`);
+console.log(`6. Crowded Pairs (90px..125px):    ${issues.crowdedPairs.length}`);
+console.log(`7. Glyph Clearance Hazards:        ${issues.glyphHazards.length}`);
 console.log('='.repeat(75));
+
+if (issues.expansionViolations.length > 0) {
+  console.log('\n[EXPANSION RULE VIOLATIONS DETECTED (Labeled links or tags with dist < 155px)]:');
+  const grouped = {};
+  issues.expansionViolations.forEach(v => {
+    grouped[v.sceneId] = (grouped[v.sceneId] || []);
+    grouped[v.sceneId].push(v);
+  });
+  for (const [id, list] of Object.entries(grouped)) {
+    console.log(`  - ${id} (${list.length} violations):`);
+    list.slice(0, 5).forEach(v => {
+      console.log(`      Step ${v.step}: ${v.pair} -> dist = ${v.dist}px (required >= ${v.required}px, reason: ${v.reason})`);
+    });
+    if (list.length > 5) console.log(`      ... and ${list.length - 5} more`);
+  }
+}
 
 if (issues.criticalOverlaps.length > 0) {
   console.log('\n[CRITICAL OVERLAPS DETECTED]:');
