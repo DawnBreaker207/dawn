@@ -12,45 +12,35 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
 ---
 
 <footer
-  class="studio-statusbar flex min-w-0 items-center justify-between gap-2 border-t border-(--border) bg-(--bg-alt) px-3 font-mono text-[12px] text-(--fg-dim)"
+  class="studio-statusbar flex h-[26px] min-h-[26px] min-w-0 items-center justify-between gap-1.5 sm:gap-2 border-t border-(--border) bg-(--bg-alt) px-2 sm:px-3 font-mono text-[11px] text-(--fg-dim) select-none"
 >
-  <div class="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+  <div class="flex min-w-0 items-center gap-1 sm:gap-1.5 whitespace-nowrap">
     <span
       id="statusbar-vim-mode"
-      class="rounded border border-(--border) px-1.5 py-0.5 text-[10px] font-semibold text-(--accent) bg-(--bg) select-none"
+      class="hidden sm:inline-block rounded border border-(--border) px-1.5 py-0.2 text-[10px] font-semibold text-(--accent) bg-(--bg) select-none"
       title="Vim Mode (Press ? for shortcuts)"
     >
       NORMAL
     </span>
     <a
       href="/lab/terminal"
-      class="shrink-0 text-(--fg-faint) hover:text-(--fg)"
+      class="inline-flex items-center justify-center h-[20px] min-w-[20px] px-1 rounded text-(--fg-faint) hover:text-(--fg) hover:bg-(--bg-hover) transition-colors"
       aria-label="Open terminal"
       title="Open terminal"
+      data-umami-event="footer-terminal"
     >
       <span class="font-mono leading-none" aria-hidden="true">❯_</span>
-    </a>
-    <a
-      href="/help"
-      class="shrink-0 text-(--fg-faint) hover:text-(--fg)"
-      aria-label="Show help"
-      title="Show help"
-    >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" />
-        <circle cx="12" cy="17.5" r="0.5" fill="currentColor" />
-      </svg>
     </a>
     <a
       href="/rss.xml"
       target="_blank"
       rel="noopener noreferrer"
-      class="shrink-0 text-(--fg-faint) hover:text-(--fg)"
+      class="inline-flex items-center justify-center h-[20px] min-w-[20px] px-1 rounded text-(--fg-faint) hover:text-(--fg) hover:bg-(--bg-hover) transition-colors"
       aria-label="RSS feed"
       title="Open RSS feed in a new tab"
+      data-umami-event="footer-rss"
     >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
         <path d="M5 11a8 8 0 0 1 8 8" />
         <path d="M5 5a14 14 0 0 1 14 14" />
         <circle cx="6.5" cy="17.5" r="1.2" fill="currentColor" stroke="none" />
@@ -58,15 +48,16 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
     </a>
     <span class="hidden shrink-0 text-(--fg-faint) lg:inline">{GITHUB_USERNAME}@[::1]:443</span>
     <span class="flex min-w-0 items-center">
-      <span class="shrink-0 text-(--fg-faint)">~/</span>
+      <span class="hidden sm:inline shrink-0 text-(--fg-faint)">~/</span>
       <a
         href={repoUrl}
         target="_blank"
         rel="noopener noreferrer"
-        class="min-w-0 truncate text-(--fg) underline decoration-(--border) underline-offset-3 hover:decoration-(--fg)"
+        class="min-w-0 truncate text-(--fg) px-1 py-0.5 rounded hover:bg-(--bg-hover) hover:text-(--fg) transition-colors"
         title={`View ${GITHUB_REPO_PATH} source on GitHub${stargazers ? `, ${stargazers.toLocaleString('en-US')} stars` : ''}`}
       >
-        {GITHUB_REPO_PATH}
+        <span class="sm:hidden">~/Blog</span>
+        <span class="hidden sm:inline">{GITHUB_REPO_PATH}</span>
       </a>
     </span>
     <span class="hidden shrink-0 text-(--fg-faint) lg:inline">
@@ -74,12 +65,12 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
     </span>
   </div>
 
-  <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+  <div class="flex shrink-0 items-center gap-1 sm:gap-2">
     <a
       href={fullCommit || undefined}
       target="_blank"
       rel="noopener noreferrer"
-      class="hidden whitespace-nowrap text-(--fg) underline decoration-(--border) underline-offset-3 hover:decoration-(--fg) md:inline"
+      class="hidden whitespace-nowrap text-(--fg) px-1.5 py-0.5 rounded hover:bg-(--bg-hover) transition-colors md:inline"
       title="View last commit on GitHub"
       data-commit-time={commitDate}
     >
@@ -91,16 +82,16 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
       href="https://time.is/Hanoi"
       target="_blank"
       rel="noopener noreferrer"
-      class="whitespace-nowrap text-(--fg) underline decoration-(--border) underline-offset-3 hover:decoration-(--fg)"
+      class="hidden sm:inline-flex whitespace-nowrap text-(--fg) px-1.5 py-0.5 rounded hover:bg-(--bg-hover) transition-colors"
     >
       Hanoi <span data-local-time>--:--</span><span class="ml-1 hidden text-(--fg-faint) sm:inline" data-local-time-diff></span>
     </a>
-    <span class="text-(--fg-faint)" aria-hidden="true">·</span>
+    <span class="hidden sm:inline text-(--fg-faint)" aria-hidden="true">·</span>
 
     <!-- Streamlined Ambient Settings Dropdown (Sound, Weather, Tokens) -->
-    <details class="relative">
+    <details class="relative" id="ambient-settings" data-ambient-details>
       <summary
-        class="inline-flex items-center gap-1 cursor-pointer select-none px-1 text-[11px] text-(--fg-faint) hover:text-(--fg) list-none [&::-webkit-details-marker]:hidden"
+        class="inline-flex items-center gap-1 cursor-pointer select-none px-1.5 py-0.5 rounded text-[11px] text-(--fg-dim) hover:text-(--fg) hover:bg-(--bg-hover) list-none [&::-webkit-details-marker]:hidden transition-colors"
         title="Settings (Sound, Weather, Tokens)"
         aria-label="Settings"
       >
@@ -109,6 +100,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
         <span class="hidden sm:inline text-[11px]">Settings</span>
+        <span id="ambient-active-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 hidden animate-pulse" title="Active background effects running"></span>
       </summary>
 
       <div class="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-(--border) bg-(--bg-alt) p-3 shadow-lg flex flex-col gap-2.5 z-50 text-[11px]">
@@ -125,6 +117,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
             class="inline-flex items-center gap-1.5 rounded px-2 py-1 bg-(--bg) border border-(--border) text-(--fg) hover:border-(--accent) cursor-pointer select-none"
             title="Cycle keyboard sound"
             aria-label="Cycle keyboard sound profile"
+            data-umami-event="ambient-sound-toggle"
           >
             <span>⌨️</span>
             <span id="keyboard-sound-label" class="font-mono text-[10px]">sound: off</span>
@@ -140,6 +133,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
             class="inline-flex items-center gap-1.5 rounded px-2 py-1 bg-(--bg) border border-(--border) text-(--fg) hover:border-sky-400 cursor-pointer select-none"
             title="Cycle weather overlay"
             aria-label="Toggle atmospheric weather overlay"
+            data-umami-event="ambient-weather-toggle"
           >
             <span class="weather-icon">⛅</span>
             <span id="weather-label" class="font-mono text-[10px]">weather: off</span>
@@ -183,7 +177,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
       data-theme-toggle
       type="button"
       data-umami-event="theme-toggle"
-      class="tip shrink-0 cursor-pointer px-1 text-(--fg-faint) hover:text-(--fg)"
+      class="tip inline-flex items-center justify-center h-[20px] min-w-[20px] px-1 rounded text-(--fg-faint) hover:text-(--fg) hover:bg-(--bg-hover) cursor-pointer transition-colors"
       data-tip="Light / Dark"
       aria-label="Toggle light/dark theme"
     >
@@ -193,7 +187,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
     <button
       type="button"
       id="btn-keyboard-help"
-      class="hidden sm:inline-flex items-center justify-center w-4.5 h-4.5 rounded border border-(--border) text-[10px] text-(--fg-faint) hover:text-(--fg) cursor-pointer select-none"
+      class="hidden sm:inline-flex items-center justify-center w-[18px] h-[18px] rounded border border-(--border) text-[10px] text-(--fg-faint) hover:text-(--fg) hover:bg-(--bg-hover) cursor-pointer select-none transition-colors"
       title="Keyboard Shortcuts (?)"
       aria-label="Show keyboard shortcuts"
     >

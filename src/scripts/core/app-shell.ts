@@ -123,6 +123,7 @@ function closeMobilePanel() {
   const shell = document.getElementById('studio-shell');
   if (!shell) return;
   delete shell.dataset.mobilePanel;
+  sessionStorage.removeItem('dawn:mobilePanel');
   document.querySelectorAll<HTMLButtonElement>('[data-mobile-toggle]').forEach((btn) =>
     btn.setAttribute('aria-expanded', 'false')
   );
@@ -183,12 +184,27 @@ function closeVersionMenus() {
   document.querySelector('[data-version-trigger]')?.setAttribute('aria-expanded', 'false');
 }
 
+function closeAmbientSettings() {
+  const details = document.querySelector<HTMLDetailsElement>('[data-ambient-details]');
+  if (details && details.open) details.open = false;
+}
+
+export function updateAmbientDot() {
+  const dot = document.getElementById('ambient-active-dot');
+  if (!dot) return;
+  const soundProfile = localStorage.getItem('dawn_sound_profile') ?? 'off';
+  const weatherMode = localStorage.getItem('dawn_weather_mode') ?? 'off';
+  const isActive = soundProfile !== 'off' || weatherMode !== 'off';
+  dot.classList.toggle('hidden', !isActive);
+}
+
 function setupDocListeners() {
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeMobilePanel();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeVersionMenus();
+    if (e.key === 'Escape') {
+      closeMobilePanel();
+      closeVersionMenus();
+      closeAmbientSettings();
+    }
   });
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
@@ -205,6 +221,7 @@ function setupDocListeners() {
     }
     if (target.closest('[data-version-item]')) return closeVersionMenus();
     if (!target.closest('[data-version-popover]')) closeVersionMenus();
+    if (!target.closest('[data-ambient-details]')) closeAmbientSettings();
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && document.querySelector<HTMLElement>('[data-ext-overlay]')?.hasAttribute('data-open')) {
@@ -245,6 +262,19 @@ function once(node: HTMLElement | null, event: string, handler: EventListener) {
 function bindShell() {
   updateLocalTime();
   updateCommitAgo();
+  updateAmbientDot();
+
+  const soundBtn = document.getElementById('btn-keyboard-sound');
+  if (soundBtn) {
+    once(soundBtn, 'click', () => setTimeout(updateAmbientDot, 60));
+  }
+  const weatherBtn = document.getElementById('btn-global-weather');
+  if (weatherBtn) {
+    once(weatherBtn, 'click', () => setTimeout(updateAmbientDot, 60));
+  }
+  window.addEventListener('dawn:toggle-weather', () => setTimeout(updateAmbientDot, 60));
+  window.addEventListener('dawn:set-weather', () => setTimeout(updateAmbientDot, 60));
+
   const tab = readCurrentTab();
   normalize(tab);
   persist();
@@ -254,28 +284,32 @@ function bindShell() {
   const mobileToggles = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-mobile-toggle]'));
   const mobileBackdrop = document.querySelector<HTMLElement>('[data-mobile-backdrop]');
 
+  const savedMobilePanel = sessionStorage.getItem('dawn:mobilePanel');
+  if (savedMobilePanel && shell) {
+    shell.dataset.mobilePanel = savedMobilePanel;
+    mobileToggles.forEach((b) =>
+      b.setAttribute('aria-expanded', String(b.dataset.mobileToggle === savedMobilePanel))
+    );
+  }
+
   mobileToggles.forEach((btn) =>
     once(btn, 'click', () => {
       if (!shell) return;
       const panel = btn.dataset.mobileToggle ?? '';
       const next = shell.dataset.mobilePanel === panel ? '' : panel;
-      if (next) shell.dataset.mobilePanel = next;
-      else delete shell.dataset.mobilePanel;
+      if (next) {
+        shell.dataset.mobilePanel = next;
+        sessionStorage.setItem('dawn:mobilePanel', next);
+      } else {
+        delete shell.dataset.mobilePanel;
+        sessionStorage.removeItem('dawn:mobilePanel');
+      }
       mobileToggles.forEach((b) =>
         b.setAttribute('aria-expanded', String(b.dataset.mobileToggle === (shell.dataset.mobilePanel ?? '')))
       );
     })
   );
   once(mobileBackdrop, 'click', closeMobilePanel as EventListener);
-
-  document
-    .getElementById('sidebar')
-    ?.querySelectorAll('a')
-    .forEach((a) =>
-      once(a, 'click', () => {
-        if (window.innerWidth < 1024) closeMobilePanel();
-      })
-    );
 
   /* rail: attribute on <html> + localStorage, collapsed via .studio-workspace */
   const railToggle = document.querySelector<HTMLButtonElement>('[data-rail-toggle]');
@@ -286,8 +320,20 @@ function bindShell() {
     railToggle?.setAttribute('data-tip', hidden ? 'show right rail' : 'hide right rail');
   };
   once(railToggle, 'click', () => {
-    document.documentElement.dataset.rail = isRailHidden() ? '' : 'hidden';
-    localStorage.setItem('dawn:railHidden', isRailHidden() ? 'true' : 'false');
+    if (window.innerWidth < 1024) {
+      if (!shell) return;
+      const next = shell.dataset.mobilePanel === 'rail' ? '' : 'rail';
+      if (next) {
+        shell.dataset.mobilePanel = next;
+        sessionStorage.setItem('dawn:mobilePanel', next);
+      } else {
+        delete shell.dataset.mobilePanel;
+        sessionStorage.removeItem('dawn:mobilePanel');
+      }
+    } else {
+      document.documentElement.dataset.rail = isRailHidden() ? '' : 'hidden';
+      localStorage.setItem('dawn:railHidden', isRailHidden() ? 'true' : 'false');
+    }
     setRailLabel();
   });
   if (localStorage.getItem('dawn:railHidden') === 'true') {
@@ -337,6 +383,14 @@ document.addEventListener('astro:before-swap', (e) => {
       newRoot.setAttribute('data-rail', 'hidden');
     } else {
       newRoot.removeAttribute('data-rail');
+    }
+  }
+
+  const savedMobilePanel = sessionStorage.getItem('dawn:mobilePanel');
+  if (savedMobilePanel && newDoc) {
+    const newShell = newDoc.getElementById('studio-shell');
+    if (newShell) {
+      newShell.dataset.mobilePanel = savedMobilePanel;
     }
   }
 
