@@ -875,6 +875,8 @@ export function setupWeatherEngine(): void {
           canvas.style.display = 'none';
           const ctx = canvas.getContext('2d');
           if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.width = 0;
+          canvas.height = 0;
         }
       }, 500);
     }
