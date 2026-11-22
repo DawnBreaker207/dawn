@@ -24,7 +24,7 @@ export const DTS_TRACKS: Track[] = [
   {
     id: 'storage-tier',
     title: '2. Database & Storage Tier',
-    subtitle: 'SQL vs NoSQL, B-Trees, LSM engines, query planner, transactions & object storage',
+    subtitle: 'SQL vs NoSQL, B-Trees, LSM engines, query planner, and transactions',
     emoji: '🗄️',
     moduleIds: ['storage'],
   },
@@ -38,21 +38,28 @@ export const DTS_TRACKS: Track[] = [
   {
     id: 'microservices',
     title: '4. Microservices & Event-Driven',
-    subtitle: 'Service discovery, APIs, Kafka pub/sub, message queues, sagas & concurrency',
+    subtitle: 'Service discovery, APIs, Kafka pub/sub, message queues, and sagas',
     emoji: '🧩',
-    moduleIds: ['microservices', 'java-runtime', 'communication'],
+    moduleIds: ['microservices', 'communication'],
+  },
+  {
+    id: 'java-runtime',
+    title: '5. Java Runtime & Concurrency Engine',
+    subtitle: 'JVM Memory, Loom virtual threads, monitors, async pipelines & Spring framework',
+    emoji: '☕',
+    moduleIds: ['java-runtime', 'java-enterprise'],
   },
   {
     id: 'system-design',
-    title: '5. System Design & Case Studies',
+    title: '6. System Design & Case Studies',
     subtitle: 'HLD/LLD, TinyURL, News Feed, Chat, rate limiting, redundancy & tracing',
     emoji: '📐',
     moduleIds: ['system-design', 'reliability'],
   },
   {
     id: 'cloud-aws',
-    title: '6. AWS Cloud Architecture (SAA-C03)',
-    subtitle: 'VPC topology, Multi-AZ high availability, storage tiering & serverless systems',
+    title: '7. AWS Cloud Architecture (SAA-C03)',
+    subtitle: 'VPC topology, Multi-AZ high availability, S3 object storage & serverless systems',
     emoji: '☁️',
     moduleIds: ['cloud'],
   },
@@ -126,13 +133,13 @@ export const DTS_MODULES: Module[] = [
     color: 'violet',
     lessons: [
       { id: 'sql-engine', title: 'PostgreSQL Query Planner & Engine' },
+      { id: 'sql-explain', title: 'EXPLAIN & Query Cost Estimation' },
       { id: 'indexes', title: 'Indexes & B-Trees' },
       { id: 'storage-engines', title: 'Storage Engines (LSM vs B-Tree)' },
+      { id: 'sql-footprint', title: 'Page Layout & Storage Footprint' },
       { id: 'sql-nosql', title: 'SQL vs NoSQL Architecture' },
+      { id: 'sql-connection-pool', title: 'Connection Pooling & PgBouncer' },
       { id: 'transactions', title: 'Transactions & MVCC Isolation Levels' },
-      { id: 'replication', title: 'Streaming Replication & WAL Durability' },
-      { id: 'sharding', title: 'Sharding & Partitioning' },
-      { id: 'files', title: 'Files & Object Storage (S3)' },
     ],
   },
   {
@@ -166,7 +173,7 @@ export const DTS_MODULES: Module[] = [
     id: 'java-runtime',
     num: '05B',
     title: 'Java Runtime & Concurrency Engine',
-    trackId: 'microservices',
+    trackId: 'java-runtime',
     color: 'sky',
     lessons: [
       { id: 'java-concurrency', title: 'Threads, Monitors & Synchronized' },
@@ -174,12 +181,36 @@ export const DTS_MODULES: Module[] = [
       { id: 'java-completable', title: 'CompletableFuture & Async Pipelines' },
       { id: 'java-virtual-threads', title: 'Virtual Threads & Project Loom (JDK 21)' },
       { id: 'java-jvm-memory', title: 'JVM Memory Model, GC & Metaspace' },
+      { id: 'java-string-pool', title: 'String Pool & Interning Architecture' },
+      { id: 'java-jit-compiler', title: 'HotSpot JIT & Tiered Compilation' },
       { id: 'java-collections', title: 'Collections Internals & Hash Bins' },
       { id: 'java-streams', title: 'Lazy Stream Pipelines & Short-circuiting' },
+      { id: 'java-lambda', title: 'Lambda Expressions & invokedynamic' },
+      { id: 'java-io-nio', title: 'Java I/O, NIO & Channel Multiplexing' },
+      { id: 'java-generics', title: 'Generics, Type Erasure & Wildcards' },
+      { id: 'java-exceptions-errors', title: 'Exception Tables & OutOfMemoryError' },
+      { id: 'java-metaprogramming', title: 'Reflection, Annotations & Dynamic Proxies' },
+      { id: 'java-modern', title: 'Modern Java: Records, Sealed Classes & Pattern Matching' },
+    ],
+  },
+  {
+    id: 'java-enterprise',
+    num: '05C',
+    title: 'Spring Framework & Enterprise Architecture',
+    trackId: 'java-runtime',
+    color: 'indigo',
+    lessons: [
       { id: 'java-spring-ioc', title: 'Spring IoC Container & Bean Lifecycle' },
+      { id: 'java-spring-scopes', title: 'Bean Scopes & Scoped Proxies' },
       { id: 'java-spring-aop', title: 'Spring AOP & Proxy Architecture' },
+      { id: 'java-spring-mvc', title: 'Spring MVC Architecture & Request Pipeline' },
+      { id: 'java-spring-tx', title: 'Declarative Transactions & @Transactional' },
       { id: 'java-spring-jpa', title: 'Spring Data JPA, Hibernate & N+1 Patterns' },
       { id: 'java-spring-security', title: 'Spring Security & Filter Chain Architecture' },
+      { id: 'java-spring-boot-autoconfig', title: 'Spring Boot Auto-Configuration Engine' },
+      { id: 'java-spring-testing', title: 'Spring Testing Architecture & Context Caching' },
+      { id: 'java-spring-messaging', title: 'Spring Messaging & Event Architecture with Kafka' },
+      { id: 'java-spring-config', title: 'Spring Configuration, Profiles & Property Hierarchy' },
     ],
   },
   {
@@ -233,6 +264,7 @@ export const DTS_MODULES: Module[] = [
       { id: 'aws-vpc', title: 'AWS VPC & Network Security' },
       { id: 'aws-ha', title: 'High Availability & Auto Scaling' },
       { id: 'aws-storage-db', title: 'AWS Storage & Database Tiering' },
+      { id: 'files', title: 'Files & Object Storage (S3)' },
       { id: 'aws-serverless', title: 'Decoupled & Serverless Systems' },
     ],
   },
@@ -267,10 +299,12 @@ export const CURRICULUM_MODULES = DTS_MODULES;
 export function getLessonHref(id: string): string {
   if (id === 'architecture') return '/lab/architecture';
   if (id === 'sql' || id === 'sql-engine') return '/lab/sql';
-  if (id === 'java' || id === 'java-concurrency' || id.startsWith('java-')) return '/lab/java';
+  if (id === 'java' || id === 'java-concurrency') return '/lab/java';
   if (id === 'request-lifecycle' || id === 'foundations') return '/lab/foundations';
   if (id === 'consistent-hashing' || id === 'distributed') return '/lab/distributed';
+  if (id === 'microservices') return '/lab/microservices';
   if (id === 'hld-lld' || id === 'system-design') return '/lab/system-design';
+  if (id === 'aws-cloud') return '/lab/aws-cloud';
   return `/lab/${id}`;
 }
 

@@ -2,6 +2,10 @@
 import ArchitectureLabLayout from '@/layouts/ArchitectureLabLayout.astro';
 import { CURRICULUM_MODULES } from '@/data/curriculum';
 import { ALL_SCENES } from '@/data/scenes';
+import BTreeTraversal from '@/components/lab/sql/BTreeTraversal.astro';
+import MvccTimeline from '@/components/lab/sql/MvccTimeline.astro';
+import PartitionVisualizer from '@/components/lab/sql/PartitionVisualizer.astro';
+import FuturePipeline from '@/components/lab/java/FuturePipeline.astro';
 
 export const prerender = true;
 
@@ -53,4 +57,9 @@ const { lessonId, title, description } = Astro.props;
   lessonId={lessonId}
   title={title}
   description={description}
-/>
+>
+  {lessonId === 'indexes' && <BTreeTraversal slot="visualizer-2d" />}
+  {lessonId === 'transactions' && <MvccTimeline slot="visualizer-2d" />}
+  {lessonId === 'sharding' && <PartitionVisualizer slot="visualizer-2d" />}
+  {lessonId === 'java-completable' && <FuturePipeline slot="visualizer-2d" />}
+</ArchitectureLabLayout>
