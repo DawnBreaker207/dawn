@@ -621,16 +621,16 @@ export class StageEngine {
         [a, o, s, c] = n.b,
         l = Math.max(1, s - a),
         u = Math.max(1, c - o),
-        padX = Math.min(48, Math.max(28, r * 0.05)),
-        padTop = Math.min(56, Math.max(38, i * 0.08)),
-        padBottom = Math.min(48, Math.max(32, i * 0.06)),
+        padX = Math.min(24, Math.max(12, r * 0.02)),
+        padTop = Math.min(26, Math.max(14, i * 0.03)),
+        padBottom = Math.min(22, Math.max(12, i * 0.025)),
         d = (e, t, n) => {
           let s = t === 0 ? (r - l * e) / 2 : t < 0 ? padX : r - padX - l * e,
             c = n === 0 ? (i - u * e) / 2 : n < 0 ? padTop : i - padBottom - u * e;
           return { x: a - s / e, y: o - c / e, w: r / e, h: i / e };
         },
-        f = (e) => Math.max(xf, Math.floor(e * 20 + 1e-6) / 20),
-        p = Math.min(1.25, (r - padX * 2) / l, (i - (padTop + padBottom)) / u),
+        f = (e) => Math.max(0.42, Math.floor(e * 20 + 1e-6) / 20),
+        p = Math.min(1.35, (r - padX * 2) / l, (i - (padTop + padBottom)) / u),
         m = null;
       if (!n.panel) m = { zoom: f(p), ax: 0, ay: 0, corner: null };
       else {
@@ -644,7 +644,7 @@ export class StageEngine {
               [i, a],
             ],
             s = null;
-          for (let i = f(p); i >= 0.299999 && !s; i = Math.round((i - 0.05) * 100) / 100)
+          for (let i = f(p); i >= 0.42 && !s; i = Math.round((i - 0.05) * 100) / 100)
             for (let [a, [c, l]] of o.entries())
               if (this.cardClear(n, d(i, c, l), r)) {
                 s = {
@@ -658,7 +658,7 @@ export class StageEngine {
               }
           s && (!m || s.score > m.score) && (m = s);
         }
-        m ||= { zoom: f(p * 0.8), ax: 0, ay: 0, corner: `tr` };
+        m ||= { zoom: f(p * 0.9), ax: 0, ay: 0, corner: `tr` };
       }
       let h = d(m.zoom, m.ax, m.ay),
         g = m.corner;

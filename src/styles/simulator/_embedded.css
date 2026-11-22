@@ -3,7 +3,8 @@
 :is(html.is-embedded, .is-embedded),
 :is(html.is-embedded, .is-embedded) body {
   overflow: hidden;
-  height: 100vh;
+  height: 100% !important;
+  max-height: 100% !important;
   background: transparent !important;
 }
 
@@ -16,7 +17,8 @@
   zoom: 1 !important;
   transform: none !important;
   width: 100% !important;
-  height: 100vh !important;
+  height: 100% !important;
+  max-height: 100% !important;
   grid-template-rows: 1fr !important;
   background: transparent !important;
   overflow: hidden !important;
@@ -24,11 +26,13 @@
 
 :is(html.is-embedded, .is-embedded) .body {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) clamp(280px, 26vw, 340px) !important;
-  height: 100vh !important;
-  padding: 10px !important;
+  grid-template-columns: minmax(0, 1fr) clamp(240px, 20vw, 300px) !important;
+  grid-template-rows: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  padding: 6px !important;
   margin: 0 !important;
-  gap: 10px !important;
+  gap: 6px !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
 }
@@ -37,10 +41,12 @@
 :is(html.is-embedded, .is-embedded) .sheet {
   display: flex !important;
   flex-direction: column !important;
-  height: calc(100vh - 20px) !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  border-radius: 14px !important;
+  border-radius: 10px !important;
   border: 1px solid #e4e4e7 !important;
   overflow: hidden !important;
   background: #ffffff !important;
@@ -58,9 +64,9 @@ html[data-theme="dark"].is-embedded .sheet,
 /* Lesson Header */
 :is(html.is-embedded, .is-embedded) .lesson-head {
   order: 1 !important;
-  padding: 12px 18px 10px !important;
+  padding: 6px 14px 5px !important;
   margin: 0 !important;
-  border-radius: 13px 13px 0 0 !important;
+  border-radius: 9px 9px 0 0 !important;
   border-bottom: 1px solid #e4e4e7 !important;
   flex-shrink: 0 !important;
   background: #ffffff !important;
@@ -77,10 +83,10 @@ html[data-theme="dark"].is-embedded .lesson-head,
   display: inline-flex !important;
   align-items: center !important;
   gap: 4px !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
-  margin-bottom: 3px !important;
+  margin-bottom: 1px !important;
 }
 
 :is(html.is-embedded, .is-embedded) .lesson-head .crumb::before {
@@ -90,16 +96,16 @@ html[data-theme="dark"].is-embedded .lesson-head,
 }
 
 :is(html.is-embedded, .is-embedded) .lesson-head .title {
-  font-size: 19px !important;
+  font-size: 16px !important;
   line-height: 1.2 !important;
 }
 
 :is(html.is-embedded, .is-embedded) .lesson-head .summary,
 :is(html.is-embedded, .is-embedded) .lesson-head p {
-  font-size: 12.5px !important;
-  margin-top: 2px !important;
+  font-size: 11.5px !important;
+  margin-top: 1px !important;
   display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
+  -webkit-line-clamp: 1 !important;
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;
 }
@@ -118,13 +124,13 @@ html[data-theme="dark"].is-embedded .lesson-head,
 /* Timeline ("In this lesson") at bottom of sheet */
 :is(html.is-embedded, .is-embedded) .timeline {
   order: 3 !important;
-  padding: 6px 14px 6px !important;
+  padding: 4px 10px 4px !important;
   margin: 0 !important;
   border-top: 1px solid #e4e4e7 !important;
   border-bottom: none !important;
   border-left: none !important;
   border-right: none !important;
-  border-radius: 0 0 13px 13px !important;
+  border-radius: 0 0 9px 9px !important;
   flex-shrink: 0 !important;
   background: #f4f4f5 !important;
 }
@@ -196,26 +202,35 @@ html:not(.dark) .timeline__steps li.is-current .timeline__dot {
 :is(html.is-embedded, .is-embedded) .rail {
   display: flex !important;
   flex-direction: column !important;
-  gap: 10px !important;
-  height: calc(100vh - 20px) !important;
+  gap: 8px !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
-  overflow-y: auto !important;
-  scrollbar-width: thin;
+  overflow: hidden !important;
   background: transparent !important;
 }
 
 :is(html.is-embedded, .is-embedded) .guide {
   flex: 1 1 auto !important;
-  border-radius: 14px !important;
+  min-height: 0 !important;
+  border-radius: 10px !important;
   border: 1px solid #e4e4e7 !important;
-  padding: 16px 18px !important;
+  padding: 12px 14px !important;
   margin: 0 !important;
   background: #ffffff !important;
   box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: space-between !important;
+  overflow: hidden !important;
+}
+
+:is(html.is-embedded, .is-embedded) .guide__content {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
 }
 
 :root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .guide,
@@ -228,9 +243,9 @@ html[data-theme="dark"].is-embedded .guide,
 
 :is(html.is-embedded, .is-embedded) .goals {
   flex-shrink: 0 !important;
-  border-radius: 14px !important;
+  border-radius: 10px !important;
   border: 1px solid #e4e4e7 !important;
-  padding: 14px 18px !important;
+  padding: 10px 14px !important;
   margin: 0 !important;
   background: #ffffff !important;
   box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
