@@ -33,11 +33,11 @@ export const javaSpringMvcLesson = {
   metrics: ['pipeline_stage', 'active_handler', 'interceptors_executed', 'response_status', 'serialization_time'],
   legend: ['req', 'res', ['ping', 'internal delegation'], 'fail'],
   goals: [
-    { text: `Front Controller: DispatcherServlet as the central coordinator for incoming requests`, step: 1 },
-    { text: `HandlerMapping & Interceptors: Routing URL paths and pre/postHandle filter chains`, step: 2 },
-    { text: `HandlerAdapter & Method Invocation: Resolving @RequestBody, PathVariables, and Validation`, step: 3 },
-    { text: `HttpMessageConverters & @ResponseBody: Jackson JSON serialization to client response`, step: 4 },
-    { text: `@ControllerAdvice & Global Exception Handling: HandlerExceptionResolver pipeline`, step: 5 },
+    { text: 'Front Controller', step: 1 },
+    { text: 'HandlerMapping & Interceptors', step: 2 },
+    { text: 'HandlerAdapter & Method Invocation', step: 3 },
+    { text: 'HttpMessageConverters & @ResponseBody', step: 4 },
+    { text: '@ControllerAdvice & Global Exception', step: 5 },
   ],
   steps: [
     {

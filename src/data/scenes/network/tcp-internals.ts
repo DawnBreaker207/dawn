@@ -18,7 +18,7 @@ export const tcpInternalsLesson = {
   goals: [
     { text: 'TCP 3-Way Handshake SYN, SYN-ACK, ACK', step: 1 },
     { text: 'Sliding window flow control and rwnd', step: 2 },
-    { text: 'Slow Start and congestion window exponential growth', step: 3 },
+    { text: 'Slow Start and congestion window', step: 3 },
     { text: 'Fast retransmit on 3 duplicate ACKs', step: 4 },
     { text: 'Connection termination and TIME_WAIT state', step: 6 },
   ],

@@ -371,20 +371,48 @@ function Zr(e) {
   // Available width on the block face (dimetric isometric projection: half-width is 14 * s)
   const availWidth = Math.max(48, e.s * 14 * 1.35);
 
-  // Auto-wrap long lines with spaces if any single line exceeds available width
-  let wrappedLines = [];
+  // Helper to intelligently split long monolithic tokens (e.g. PascalCase, delimiters, paths)
+  const breakToken = (token: string): string[] => {
+    if (token.length * 7.2 <= availWidth) return [token];
+    // Split on delimiters (<, >, (, ), [, ], /, -, _, ., :) or Camel/PascalCase boundaries
+    const parts = token
+      .split(/(?<=[<(\[/_.:\-])|(?=[<(\[/_.:\-])|(?<=[a-z0-9])(?=[A-Z])/)
+      .filter(Boolean);
+    if (parts.length <= 1) return [token];
+
+    const result: string[] = [];
+    let cur = '';
+    for (const p of parts) {
+      if (!cur) {
+        cur = p;
+      } else if ((cur + p).length * 7.2 <= availWidth) {
+        cur += p;
+      } else {
+        result.push(cur);
+        cur = p;
+      }
+    }
+    if (cur) result.push(cur);
+    return result;
+  };
+
+  // Auto-wrap long lines with spaces or semantic tokens if exceeding available width
+  let wrappedLines: string[] = [];
   for (const line of lines) {
-    if (line.includes(' ') && line.length * 7.5 > availWidth) {
-      const words = line.split(/\s+/);
+    if (line.length * 7.2 > availWidth) {
+      const words = line.includes(' ') ? line.split(/\s+/) : [line];
       let cur = '';
       for (const w of words) {
-        if (!cur) {
-          cur = w;
-        } else if ((cur + ' ' + w).length * 7.5 <= availWidth) {
-          cur += ' ' + w;
-        } else {
-          wrappedLines.push(cur);
-          cur = w;
+        const subTokens = w.length * 7.2 > availWidth ? breakToken(w) : [w];
+        for (const sub of subTokens) {
+          if (!cur) {
+            cur = sub;
+          } else if ((cur + ' ' + sub).length * 7.2 <= availWidth) {
+            cur += (line.includes(' ') ? ' ' : '') + sub;
+          } else {
+            wrappedLines.push(cur);
+            cur = sub;
+          }
         }
       }
       if (cur) wrappedLines.push(cur);
@@ -395,13 +423,13 @@ function Zr(e) {
 
   // Calculate dynamic font-size to guarantee text fits inside block face
   let maxLen = Math.max(1, ...wrappedLines.map((l) => l.length));
-  let fontSize = wrappedLines.length <= 1 ? 13 : wrappedLines.length === 2 ? 11.5 : 10;
+  let fontSize = wrappedLines.length <= 1 ? 13 : wrappedLines.length === 2 ? 11.5 : wrappedLines.length === 3 ? 10 : 9;
   let estWidth = maxLen * (fontSize * 0.62);
   if (estWidth > availWidth) {
-    fontSize = Math.max(8.5, Math.min(fontSize, (availWidth / (maxLen * 0.62))));
+    fontSize = Math.max(7.2, Math.min(fontSize, (availWidth / (maxLen * 0.62))));
   }
   fontSize = Math.round(fontSize * 10) / 10;
-  const fontWeight = fontSize < 10.5 ? 700 : 800;
+  const fontWeight = fontSize < 10 ? 700 : 800;
 
   let d = e.s >= 6 ? 1.15 : e.s < 3.5 ? 0.8 : 1,
     iconSize = e.s < 3.2 ? 17 : e.s < 3.8 ? 19 : 21,

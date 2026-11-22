@@ -88,10 +88,10 @@ export const javaConcurrencyLesson = {
   level: `intermediate`,
   metrics: [`threads`, `queue`, `locks`, `mode`],
   goals: [
-    { text: `Understand thread lifecycle and monitor semantics`, step: 1 },
-    { text: `Size thread pools for CPU-bound vs IO-bound workloads`, step: 2 },
-    { text: `Compose async pipelines with CompletableFuture`, step: 3 },
-    { text: `Scale to millions of tasks with virtual threads (JDK 21)`, step: 4 },
+    { text: 'Understand thread lifecycle and', step: 1 },
+    { text: 'Size thread pools for CPU-bound', step: 2 },
+    { text: 'Compose async pipelines with CompletableFuture', step: 3 },
+    { text: 'Scale to millions of tasks', step: 4 },
   ],
   steps: [
     {
@@ -100,7 +100,8 @@ export const javaConcurrencyLesson = {
       title: `Threads & Monitor Locks`,
       body: [
         `Every Java object has a monitor. Only one thread can hold a monitor at a time — others BLOCK.`,
-        `synchronized(obj) acquires the monitor; the JVM stores owner thread ID in the object header lock word.`,
+        `<code>synchronized(obj)</code> acquires the monitor; the JVM stores the owner thread ID in the object header lock word:`,
+        `<code>Object lock = new Object();<br>synchronized(lock) {<br>  // Critical section (monitorenter)<br>  sharedState.update();<br>} // releases lock (monitorexit)</code>`,
       ],
       callout: { kind: `tip`, text: `JVM optimises uncontested locks with biased locking and thin locks before escalating to OS mutex (inflated lock).` },
       metrics: { threads: `3 competing`, queue: `blocked`, locks: `1 monitor`, mode: `synchronized` },
@@ -111,6 +112,12 @@ export const javaConcurrencyLesson = {
           t3:   d(-8, 12,  { color: `yellow`, glyph: `cpu`,  label: [`Thread-3`, `BLOCKED`] }),
           lock: d(4,  4,   { color: `orange`, glyph: `lock`, label: [`Monitor`, `owner: T-1`] }),
           obj:  b(14, 4,   { label: [`Shared`, `Resource`] }),
+          card: S({ x: -2, y: 16 }, 'Java Monitor & Lock Stack', [
+            'Object Header: Lock word in Mark Word (biased/thin/fat)',
+            'Bytecode:      monitorenter ... monitorexit',
+            'Owner:         Thread-1 (RUNNABLE, updating shared state)',
+            'EntrySet:      Thread-2 & Thread-3 parked in BLOCKED state',
+          ], { icon: 'lock' }),
         },
         links: {
           t1l: h(`t1`,   `lock`, [`t1`,   `lock`], { label: `holds`,   heads: `end` }),
@@ -127,7 +134,7 @@ export const javaConcurrencyLesson = {
       title: `Executor & ThreadPoolExecutor`,
       body: [
         `ThreadPoolExecutor manages a fixed pool of worker threads and a BlockingQueue for submitted tasks.`,
-        `CPU-bound: pool size = CPU cores. IO-bound: pool size = cores × (1 + wait/compute) can be much larger.`,
+        `<code>// Bounded queue prevents OutOfMemoryError under load:<br>ExecutorService pool = new ThreadPoolExecutor(<br>  4, 8, 60L, TimeUnit.SECONDS,<br>  new ArrayBlockingQueue<>(100),<br>  new ThreadPoolExecutor.CallerRunsPolicy()<br>);</code>`,
       ],
       callout: { kind: `tip`, text: `Unbounded queues (LinkedBlockingQueue default) can cause memory exhaustion under load. Always set a bounded queue with RejectedExecutionHandler.` },
       metrics: { threads: `4 workers`, queue: `LinkedBQ`, locks: `—`, mode: `ExecutorService` },
@@ -139,6 +146,12 @@ export const javaConcurrencyLesson = {
           w2:     d(10, -2,  { color: `blue`,   glyph: `cpu`,       label: [`Worker-2`], cpu: 0.7 }),
           w3:     d(10,  6,  { color: `blue`,   glyph: `cpu`,       label: [`Worker-3`], cpu: 0.3 }),
           w4:     d(10,  14, { color: `blue`,   glyph: `cpu`,       label: [`Worker-4`], cpu: 0 }),
+          card: S({ x: -4, y: 14 }, 'ThreadPoolExecutor Sizing Matrix', [
+            'CPU-bound tasks: Pool = Runtime.getRuntime().availableProcessors()',
+            'IO-bound tasks:  Pool = Cores * (1 + Wait_Time / Compute_Time)',
+            'Queue Strategy:  ArrayBlockingQueue(100) + CallerRunsPolicy',
+            'Worker Pool:     4 active OS threads polling work queue',
+          ], { icon: 'cpu' }),
         },
         links: {
           sq: h(`submit`, `queue`, [`submit`, `queue`], { label: `enqueue`, heads: `end` }),
@@ -158,8 +171,8 @@ export const javaConcurrencyLesson = {
       chapter: `technique`,
       title: `Async Pipeline — CompletableFuture`,
       body: [
-        `CompletableFuture chains async stages: thenApply (transform), thenCompose (flat-map), thenCombine (merge two futures).`,
-        `Each stage runs on the ForkJoinPool.commonPool by default — or a custom Executor for IO stages.`,
+        `CompletableFuture chains async stages: thenApply (transform), thenCompose (flat-map), thenCombine (merge two futures):`,
+        `<code>CompletableFuture.supplyAsync(() -> fetchUser(id), ioPool)<br>  .thenCompose(user -> enrichData(user))<br>  .thenApplyAsync(data -> formatJson(data))<br>  .thenAccept(System.out::println);</code>`,
       ],
       callout: { kind: `insight`, text: `thenApply runs the callback on the completing thread. thenApplyAsync always submits to the pool — use it to avoid blocking the common pool with IO.` },
       metrics: { threads: `FJP common`, queue: `non-blocking`, locks: `—`, mode: `CompletableFuture` },
@@ -170,6 +183,12 @@ export const javaConcurrencyLesson = {
           s3a:    d(10, -4,  { color: `green`,  glyph: `code`,  label: [`Stage 3a`, `formatJson()`] }),
           s3b:    d(10,  8,  { color: `green`,  glyph: `code`,  label: [`Stage 3b`, `sendEmail()`] }),
           result: d(20,  2,  { color: `orange`, glyph: `check`, label: [`allOf()`, `joined`] }),
+          card: S({ x: -2, y: 14 }, 'CompletableFuture Pipeline', [
+            'thenApply():      Runs synchronously on completing thread',
+            'thenApplyAsync(): Dispatches callback to ForkJoinPool.commonPool',
+            'thenCompose():    Monadic flatMap chaining async dependencies',
+            'allOf():          Non-blocking join barrier across futures',
+          ], { icon: 'code' }),
         },
         links: {
           s12: h(`s1`,  `s2`,     [`s1`,  `s2`],     { label: `thenCompose`,    heads: `end` }),
@@ -189,8 +208,8 @@ export const javaConcurrencyLesson = {
       chapter: `technique`,
       title: `Virtual Threads (JDK 21 — Project Loom)`,
       body: [
-        `Virtual threads are lightweight JVM-managed threads. Millions can exist simultaneously — each uses ~1KB of memory vs ~1MB for a platform thread.`,
-        `When a virtual thread blocks (IO, sleep), the JVM unmounts it from its carrier thread and parks the continuation. No OS context switch.`,
+        `Virtual threads are lightweight JVM-managed threads. Millions can exist simultaneously — each uses ~1KB of memory vs ~1MB for a platform thread:`,
+        `<code>// Millions of concurrent threads without OS thread exhaustion:<br>try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {<br>  executor.submit(() -> {<br>    Thread.sleep(Duration.ofSeconds(1)); // Unmounts from carrier!<br>    return fetchHttp();<br>  });<br>}</code>`,
       ],
       callout: { kind: `insight`, text: `Write blocking-style IO code and get async performance. HTTP server throughput scales linearly with virtual threads — no reactive callbacks needed.` },
       metrics: { threads: `1M virtual`, queue: `per-carrier`, locks: `continuation`, mode: `VirtualThread` },
@@ -203,6 +222,12 @@ export const javaConcurrencyLesson = {
           vt3:      d(12,   4, { color: `green`,  glyph: `code`,   label: [`VT-3`, `RUNNING`] }),
           vt4:      d(12,  12, { color: `blue`,   glyph: `code`,   label: [`VT-4`, `parked (IO)`] }),
           heap:     d(20,  -4, { color: `purple`, glyph: `layers`, label: [`Heap`, `~1KB/VT`] }),
+          card: S({ x: -4, y: 16 }, 'Carrier OS Thread vs Virtual Thread', [
+            'Platform Thread: 1MB OS stack, kernel context switch (~1-2us)',
+            'Virtual Thread:  ~1KB Heap continuation, zero OS context switch',
+            'Blocking Event:  JVM unmounts VT from Carrier (Continuation.yield)',
+            'Scale Capacity:  Millions of concurrent blocking I/O calls',
+          ], { icon: 'zap' }),
         },
         links: {
           c1v1: h(`carrier1`, `vt1`,  [`carrier1`, `vt1`],  { label: `mounted`,      heads: `both` }),

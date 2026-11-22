@@ -33,11 +33,11 @@ export const javaSpringTestingLesson = {
   metrics: ['test_mode', 'context_cache_hits', 'contexts_created', 'execution_time_ms', 'db_fidelity'],
   legend: ['req', 'res', ['ping', 'cached lookup'], 'fail'],
   goals: [
-    { text: `TestContext Framework: TestContextManager and execution listener lifecycle`, step: 1 },
-    { text: `Context Caching: How identical configurations share one ApplicationContext across classes`, step: 2 },
-    { text: `The @MockBean Anti-Pattern: Why @MockBean breaks context caching and slows CI builds`, step: 3 },
-    { text: `Test Slices: Focused fast tests via @WebMvcTest, @DataJpaTest, and @JsonTest`, step: 4 },
-    { text: `Integration Testing: Testcontainers dynamic properties and singleton container pattern`, step: 5 },
+    { text: 'TestContext Framework', step: 1 },
+    { text: 'Context Caching', step: 2 },
+    { text: 'The @MockBean Anti-Pattern', step: 3 },
+    { text: 'Test Slices: Focused fast tests', step: 4 },
+    { text: 'Integration Testing', step: 5 },
   ],
   steps: [
     {

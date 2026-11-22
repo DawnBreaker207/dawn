@@ -17,10 +17,10 @@ export const redisMemoryEvictionLesson = {
   legend: ['req', 'res', ['ping', 'eviction scan'], 'fail'],
   goals: [
     { text: 'Compare 8 maxmemory eviction policies', step: 1 },
-    { text: 'Approximated LRU random sampling pool vs true LRU', step: 2 },
-    { text: 'Logarithmic LFU frequency counters and decay time', step: 3 },
-    { text: 'Passive lazy deletion vs active periodic TTL expiration', step: 4 },
-    { text: 'Memory fragmentation ratio and runtime activedefrag', step: 6 },
+    { text: 'Approximated LRU random sampling pool', step: 2 },
+    { text: 'Logarithmic LFU frequency counters and', step: 3 },
+    { text: 'Passive lazy deletion vs active', step: 4 },
+    { text: 'Memory fragmentation ratio and runtime', step: 6 },
   ],
   steps: [
     {

@@ -66,9 +66,9 @@ export const statelessLesson = {
     metrics: [`ok`, `survive`, `scale`, `extra`],
     legend: [`mine`, `res`, `write`, `fail`],
     goals: [
-      { text: `What “state” is, and why it pins users to a server`, step: 1 },
+      { text: 'What “state” is, and why', step: 1 },
       { text: `Sticky sessions — and how they break`, step: 3 },
-      { text: `A shared session store makes servers interchangeable`, step: 5 },
+      { text: 'A shared session store makes', step: 5 },
       { text: `Carrying state in signed tokens`, step: 6 },
       { text: `Files belong in object storage`, step: 8 },
     ],

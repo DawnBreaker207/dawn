@@ -58,7 +58,7 @@ export const systemDesignLesson = {
   goals: [
     { text: "Content drafting on Author Workstation", step: 1 },
     { text: "Astro 5 SSG build via GitHub Actions", step: 2 },
-    { text: "Deploying to 300+ Edge PoPs with cache purge", step: 3 },
+    { text: 'Deploying to 300+ Edge PoPs', step: 3 },
     { text: "Sub-20ms TTFB reader cache hits", step: 4 },
     { text: "Serverless SSR & Prisma connection pooling", step: 5 },
     { text: "The complete dual-pipeline architecture", step: 6 },

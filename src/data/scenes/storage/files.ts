@@ -117,11 +117,11 @@ const mo = {
       `fail`,
     ],
     goals: [
-      { text: `Bytes in object storage, metadata in the database`, step: 2 },
-      { text: `Direct uploads with presigned URLs; big files in parts`, step: 4 },
-      { text: `Processing, CDN delivery and adaptive video`, step: 6 },
+      { text: 'Bytes in object storage, metadata', step: 2 },
+      { text: 'Direct uploads with presigned URLs;', step: 4 },
+      { text: 'Processing, CDN delivery and adaptive', step: 6 },
       { text: `Keeping metadata and files in step`, step: 9 },
-      { text: `Storage classes, lifecycle and private buckets`, step: 10 },
+      { text: 'Storage classes, lifecycle and private', step: 10 },
     ],
     steps: [
       {

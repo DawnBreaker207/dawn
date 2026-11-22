@@ -16,11 +16,11 @@ export const redisClusterShardingLesson = {
   metrics: ['cluster_nodes', 'hash_slots', 'failover_mode', 'sharding_algo'],
   legend: ['req', 'res', ['ping', 'gossip sync'], 'fail'],
   goals: [
-    { text: 'Redis Sentinel automatic master failover and quorum', step: 1 },
-    { text: 'Redis Cluster 16,384 hash slots and CRC16 hashing', step: 2 },
-    { text: 'Hash tags for multi-key operations on the same shard', step: 3 },
+    { text: 'Redis Sentinel automatic master', step: 1 },
+    { text: 'Redis Cluster 16,384 hash slots', step: 2 },
+    { text: 'Hash tags for multi-key operations', step: 3 },
     { text: 'MOVED and ASK client redirection protocols', step: 4 },
-    { text: 'Online resharding and replica promotion without downtime', step: 6 },
+    { text: 'Online resharding and replica', step: 6 },
   ],
   steps: [
     {

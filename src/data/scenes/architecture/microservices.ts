@@ -103,11 +103,11 @@ export const microservicesLesson = {
     metrics: [`deploys`, `blast`, `hops`, `opsCost`],
     legend: [`req`, `res`, `fail`],
     goals: [
-      { text: `What a monolith is good at — and where it hurts`, step: 1 },
+      { text: 'What a monolith is good at', step: 1 },
       { text: `Splitting by business capability`, step: 2 },
       { text: `The costs: a network in the middle`, step: 4 },
       { text: `Queries across services: local read copies`, step: 7 },
-      { text: `Contract tests and the distributed monolith`, step: 8 },
+      { text: 'Contract tests and the distributed', step: 8 },
       { text: `Migrating safely with a strangler fig`, step: 10 },
     ],
     steps: [

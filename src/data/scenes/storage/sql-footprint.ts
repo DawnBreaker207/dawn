@@ -33,11 +33,11 @@ export const sqlFootprintLesson = {
   metrics: [`page_size`, `free_space`, `live_tuples`, `dead_tuples`, `bloat_pct`],
   legend: [`req`, `res`, [`ping`, `tuple write`], `fail`],
   goals: [
-    { text: `Anatomy of an 8KB page: Header, line pointers, and tuple payload`, step: 1 },
-    { text: `HeapTupleHeader: 23-byte overhead per row (xmin, xmax, null bitmap)`, step: 2 },
-    { text: `Fillfactor: Leaving free space for HOT updates without page splits`, step: 3 },
-    { text: `How UPDATE & DELETE create dead tuples and table bloat`, step: 4 },
-    { text: `VACUUM, Free Space Map (FSM) & REINDEX CONCURRENTLY`, step: 5 },
+    { text: 'Anatomy of an 8KB page', step: 1 },
+    { text: 'HeapTupleHeader', step: 2 },
+    { text: 'Fillfactor: Leaving free space', step: 3 },
+    { text: 'How UPDATE & DELETE create', step: 4 },
+    { text: 'VACUUM, Free Space Map (FSM)', step: 5 },
   ],
   steps: [
     {

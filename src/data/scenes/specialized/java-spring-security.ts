@@ -14,9 +14,9 @@ export const javaSpringSecurityLesson = {
   level: 'intermediate',
   metrics: ['authStatus', 'tokenType', 'principal', 'authorities'],
   goals: [
-    { text: 'Understand DelegatingFilterProxy bridging Servlet container to Spring', step: 1 },
-    { text: 'Validate JWT tokens inside OncePerRequestFilter pipeline', step: 2 },
-    { text: 'Populate SecurityContextHolder with Authentication token', step: 3 },
+    { text: 'DelegatingFilterProxy Pipeline', step: 1 },
+    { text: 'JWT Token Validation Filter', step: 2 },
+    { text: 'SecurityContextHolder Auth State', step: 3 },
   ],
   steps: [
     {

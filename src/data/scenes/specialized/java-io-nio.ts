@@ -33,11 +33,11 @@ export const javaIoNioLesson = {
   metrics: ['concurrency', 'memory_mode', 'io_mechanism', 'sys_calls', 'throughput'],
   legend: ['req', 'res', ['ping', 'epoll ready'], 'fail'],
   goals: [
-    { text: `Classic Blocking I/O (BIO): Stream abstraction & 1-thread-per-socket bottleneck`, step: 1 },
-    { text: `NIO Channel & ByteBuffer: Position, limit, capacity, and direct off-heap memory`, step: 2 },
-    { text: `Selector & epoll Multiplexing: Handling 10,000 connections on 1 worker thread`, step: 3 },
-    { text: `Zero-Copy Transfer: FileChannel.transferTo() and sendfile syscall`, step: 4 },
-    { text: `Netty EventLoop Architecture: Reactor pattern & ChannelPipeline`, step: 5 },
+    { text: 'Classic Blocking I/O (BIO)', step: 1 },
+    { text: 'NIO Channel & ByteBuffer', step: 2 },
+    { text: 'Selector & epoll Multiplexing', step: 3 },
+    { text: 'Zero-Copy Transfer', step: 4 },
+    { text: 'Netty EventLoop Architecture', step: 5 },
   ],
   steps: [
     {

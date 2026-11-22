@@ -33,11 +33,11 @@ export const javaModernLesson = {
   metrics: ['feature_version', 'boilerplate_reduction', 'type_safety', 'switch_exhaustiveness', 'performance'],
   legend: ['req', 'res', ['ping', 'pattern match'], 'fail'],
   goals: [
-    { text: `Records (Java 16+): Immutable data carriers with compact constructors`, step: 1 },
-    { text: `Sealed Classes (Java 17+): Restricted class hierarchies & permits clause`, step: 2 },
-    { text: `Pattern Matching for instanceof: Eliminating unsafe redundant casts`, step: 3 },
-    { text: `Pattern Matching for switch (Java 21+): Exhaustiveness & guarded patterns (when)`, step: 4 },
-    { text: `Record Patterns & Deconstruction: Direct field extraction in pattern matching`, step: 5 },
+    { text: 'Records (Java 16+)', step: 1 },
+    { text: 'Sealed Classes (Java 17+)', step: 2 },
+    { text: 'Pattern Matching for instanceof', step: 3 },
+    { text: 'Pattern Matching for switch (Java 21+)', step: 4 },
+    { text: 'Record Patterns & Deconstruction', step: 5 },
   ],
   steps: [
     {

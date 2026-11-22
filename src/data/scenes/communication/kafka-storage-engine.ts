@@ -16,11 +16,11 @@ export const kafkaStorageEngineLesson = {
   metrics: ['storage_mode', 'io_throughput', 'copy_overhead', 'cache_hit_rate'],
   legend: ['req', 'res', ['ping', 'zero-copy stream'], 'fail'],
   goals: [
-    { text: 'Why sequential disk I/O rivals memory bandwidth', step: 1 },
-    { text: 'Log segment files .log, .index, and .timeindex', step: 2 },
-    { text: 'OS PageCache utilization and zero JVM garbage collection', step: 3 },
-    { text: 'The Linux sendfile() zero-copy system call mechanism', step: 4 },
-    { text: 'Log compaction by key for stateful changelog streams', step: 6 },
+    { text: 'Why sequential disk I/O rivals', step: 1 },
+    { text: 'Log segment files .log, .index,', step: 2 },
+    { text: 'OS PageCache utilization and zero', step: 3 },
+    { text: 'The Linux sendfile() zero-copy system', step: 4 },
+    { text: 'Log compaction by key for', step: 6 },
   ],
   steps: [
     {
@@ -69,7 +69,7 @@ export const kafkaStorageEngineLesson = {
       metrics: { storage_mode: 'Segmented Disk Files', io_throughput: '1 GB Rollover', copy_overhead: 'Sparse Index', cache_hit_rate: '100%' },
       scene: {
         entities: {
-          broker: d(-8, -4, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Partition 0 Dir', '/var/lib/kafka/data'], sub: 'orders-0/' }),
+          broker: d(-8, -4, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Partition 0 Dir', 'kafka-data/'], sub: 'orders-0/' }),
           logFile: d(6, -10, { s: 4.4, h: 52, color: 'purple', glyph: 'folder', label: ['000000.log (1GB)', 'Binary RecordBatches'], sub: 'Payload bytes' }),
           idxFile: d(6, 4, { s: 4.4, h: 52, color: 'teal', glyph: 'listOrdered', label: ['000000.index (10MB)', 'Sparse Memory Map'], sub: 'Offset -> Byte position' }),
           card: S({ x: -2, y: 14 }, 'Segment File Structure', [

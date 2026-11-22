@@ -14,9 +14,9 @@ export const javaCompletableLesson = {
   level: 'intermediate',
   metrics: ['pipelineState', 'threadPool', 'completionTime', 'errorRate'],
   goals: [
-    { text: 'Compose asynchronous steps using supplyAsync and thenApply', step: 1 },
-    { text: 'Fork and join multiple parallel futures using allOf()', step: 2 },
-    { text: 'Handle timeouts and exceptions using exceptionally() fallback', step: 3 },
+    { text: 'Compose asynchronous steps using', step: 1 },
+    { text: 'Fork and join multiple parallel', step: 2 },
+    { text: 'Handle timeouts and exceptions using', step: 3 },
   ],
   steps: [
     {

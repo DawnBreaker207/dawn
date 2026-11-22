@@ -8,6 +8,14 @@ export const k8sNetworkingCniLesson = {
   trackId: 'k8s',
   badge: 'Advanced',
   summary: 'Dive into the core Kubernetes networking requirements: IP-per-Pod flat network model, CNI plugin encapsulation (VXLAN/BGP), and Kube-Proxy packet redirection (iptables vs IPVS vs eBPF).',
+  metrics: ['network_cidr', 'cni_mode', 'encapsulation', 'kube_proxy'],
+  goals: [
+    { text: 'Flat Pod Network Model', step: 1 },
+    { text: 'CNI veth Pairs & Bridges', step: 2 },
+    { text: 'Cross-Node VXLAN Encapsulation', step: 3 },
+    { text: 'Kube-Proxy iptables Redirection', step: 4 },
+    { text: 'Modern eBPF Data Plane', step: 5 },
+  ],
   steps: [
     {
       title: 'The Golden Kubernetes Network Rules',

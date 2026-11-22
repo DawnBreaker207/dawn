@@ -14,9 +14,9 @@ export const javaJvmMemoryLesson = {
   level: 'intermediate',
   metrics: ['heapUsed', 'youngGen', 'oldGen', 'gcLatency'],
   goals: [
-    { text: 'Differentiate Young Generation (Eden/Survivor) and Tenured Old Gen', step: 1 },
-    { text: 'Trace Minor GC evacuation and object aging via tenure threshold', step: 2 },
-    { text: 'Understand Metaspace class metadata vs Heap object storage', step: 3 },
+    { text: 'Differentiate Young Generation (Eden/Survivor)', step: 1 },
+    { text: 'Trace Minor GC evacuation and', step: 2 },
+    { text: 'Understand Metaspace class metadata vs', step: 3 },
   ],
   steps: [
     {

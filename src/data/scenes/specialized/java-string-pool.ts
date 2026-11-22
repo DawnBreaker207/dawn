@@ -33,11 +33,11 @@ export const javaStringPoolLesson = {
   metrics: ['heap_strings', 'pooled_strings', 'cached_hashes', 'bytes_saved', 'intern_time'],
   legend: ['req', 'res', ['ping', 'hash lookup'], 'fail'],
   goals: [
-    { text: `String literal resolution & the native StringTable`, step: 1 },
-    { text: `String.intern(): Deduplicating dynamic heap strings`, step: 2 },
-    { text: `Immutability guarantees & thread-safe hashCode caching`, step: 3 },
-    { text: `Compact Strings (Java 9+): 1-byte Latin1 vs 2-byte UTF-16`, step: 4 },
-    { text: `String concatenation: invokedynamic makeConcatWithConstants`, step: 5 },
+    { text: 'String literal resolution & the', step: 1 },
+    { text: 'String.intern()', step: 2 },
+    { text: 'Immutability guarantees & thread-safe', step: 3 },
+    { text: 'Compact Strings (Java 9+)', step: 4 },
+    { text: 'String concatenation', step: 5 },
   ],
   steps: [
     {

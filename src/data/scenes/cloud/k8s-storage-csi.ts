@@ -8,6 +8,14 @@ export const k8sStorageCsiLesson = {
   trackId: 'k8s',
   badge: 'Advanced',
   summary: 'Master Kubernetes persistent storage: PersistentVolumeClaims (PVC), declarative StorageClasses, Container Storage Interface (CSI) RPC workflow (Provision, Attach, Mount), and volume expansion.',
+  metrics: ['pv_status', 'access_mode', 'csi_driver', 'capacity'],
+  goals: [
+    { text: 'Ephemeral Container Disk Pitfalls', step: 1 },
+    { text: 'Decoupled PV & PVC Contracts', step: 2 },
+    { text: 'Dynamic StorageClass Provisioning', step: 3 },
+    { text: 'CSI Attach & Mount Pipeline', step: 4 },
+    { text: 'Online Volume Expansion Flow', step: 5 },
+  ],
   steps: [
     {
       title: 'The Storage Problem: Ephemeral Pods',

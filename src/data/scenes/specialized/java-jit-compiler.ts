@@ -33,11 +33,11 @@ export const javaJitCompilerLesson = {
   metrics: ['compilation_tier', 'invocation_count', 'inlining_depth', 'escape_analysis', 'execution_speed'],
   legend: ['req', 'res', ['ping', 'hot execution'], 'fail'],
   goals: [
-    { text: `Interpreter vs JIT: Method invocation counters & Hot methods`, step: 1 },
-    { text: `Tiered Compilation: Tier 0 Interpreter -> Tier 1-3 C1 Client -> Tier 4 C2 Server`, step: 2 },
-    { text: `Method Inlining: Eliminating call overhead & monomorphic inline caches`, step: 3 },
-    { text: `Escape Analysis: Scalar replacement & stack allocation of heap objects`, step: 4 },
-    { text: `Deoptimization & Safepoints: How speculative optimizations fall back safely`, step: 5 },
+    { text: 'Interpreter vs JIT', step: 1 },
+    { text: 'Tiered Compilation', step: 2 },
+    { text: 'Method Inlining', step: 3 },
+    { text: 'Escape Analysis', step: 4 },
+    { text: 'Deoptimization & Safepoints', step: 5 },
   ],
   steps: [
     {

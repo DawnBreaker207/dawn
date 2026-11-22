@@ -15,9 +15,9 @@ export const javaSpringJpaLesson = {
   level: 'intermediate',
   metrics: ['persistenceContext', 'queriesFired', 'cacheHitRate', 'fetchStrategy'],
   goals: [
-    { text: 'Trace JPA Persistence Context, First-Level Cache, and automated Dirty Checking', step: 1 },
-    { text: 'Diagnose N+1 Select queries caused by Lazy Loading in collection traversals', step: 2 },
-    { text: 'Eliminate N+1 queries using JOIN FETCH, EntityGraph, and batch size configurations', step: 3 },
+    { text: 'Trace JPA Persistence Context,', step: 1 },
+    { text: 'Diagnose N+1 Select queries caused', step: 2 },
+    { text: 'Eliminate N+1 queries using JOIN', step: 3 },
   ],
   steps: [
     {

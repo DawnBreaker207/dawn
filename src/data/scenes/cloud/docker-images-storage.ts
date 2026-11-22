@@ -8,6 +8,13 @@ export const dockerImagesStorageLesson = {
   trackId: 'k8s',
   badge: 'Intermediate',
   summary: 'Understand immutable OCI image layers, Copy-on-Write (CoW) mechanics, and how Linux OverlayFS mounts lowerdir, upperdir, and merged views.',
+  metrics: ['layers', 'storage_driver', 'cow_status', 'mount_type'],
+  goals: [
+    { text: 'Immutable Image Layer Stacks', step: 1 },
+    { text: 'OverlayFS lowerdir & upperdir', step: 2 },
+    { text: 'Copy-on-Write (CoW) Triggers', step: 3 },
+    { text: 'Docker Volumes & Shared Storage', step: 4 },
+  ],
   steps: [
     {
       title: 'Dockerfile to Layer Stack',

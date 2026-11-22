@@ -36,11 +36,11 @@ export const awsServerlessLesson = {
   metrics: [`queue_depth`, `fanout_topics`, `lambda_concurrency`, `dlq_messages`, `serverless_uptime`],
   legend: [`req`, `res`, [`ping`, `event publish`], `fail`],
   goals: [
-    { text: `Decoupling with Amazon SQS: Standard (at-least-once) vs FIFO (exact order)`, step: 1 },
-    { text: `Dead Letter Queue (DLQ) & Visibility Timeout mechanics`, step: 2 },
-    { text: `Amazon SNS Fanout Pattern: 1 publish trigger to multiple consumer queues`, step: 3 },
-    { text: `Amazon EventBridge Event Bus: Content-based routing & SaaS integration`, step: 4 },
-    { text: `Full Serverless Web Stack: API Gateway + AWS Lambda + DynamoDB`, step: 5 },
+    { text: 'Decoupling with Amazon SQS', step: 1 },
+    { text: 'Dead Letter Queue (DLQ) &', step: 2 },
+    { text: 'Amazon SNS Fanout Pattern', step: 3 },
+    { text: 'Amazon EventBridge Event Bus', step: 4 },
+    { text: 'Full Serverless Web Stack', step: 5 },
   ],
   steps: [
     {

@@ -16,11 +16,11 @@ export const kafkaClusterKraftLesson = {
   metrics: ['consensus_mode', 'topic_partitions', 'metadata_latency', 'cluster_brokers'],
   legend: ['req', 'res', ['ping', 'partition flow'], 'fail'],
   goals: [
-    { text: 'Kafka distributed partition log design and ordering guarantees', step: 1 },
-    { text: 'Why ZooKeeper was replaced by KRaft (KIP-500)', step: 2 },
-    { text: 'KRaft metadata quorum and the internal @metadata log', step: 3 },
-    { text: 'Producer partition routing strategies and sticky partitioner', step: 4 },
-    { text: 'Sub-second active controller leader election in KRaft', step: 6 },
+    { text: 'Kafka distributed partition log design', step: 1 },
+    { text: 'Why ZooKeeper was replaced by', step: 2 },
+    { text: 'KRaft metadata quorum and the', step: 3 },
+    { text: 'Producer partition routing strategies', step: 4 },
+    { text: 'Sub-second active controller leader', step: 6 },
   ],
   steps: [
     {

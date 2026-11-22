@@ -61,7 +61,7 @@ export const verticalHorizontalLesson = {
       { text: `Spot the symptoms of an overloaded server`, step: 1 },
       { text: `Scale up — and know its limits`, step: 4 },
       { text: `Scale out with many smaller servers`, step: 5 },
-      { text: `Autoscale with the daily cycle — and pre-scale for spikes`, step: 7 },
+      { text: 'Autoscale with the daily cycle', step: 7 },
       { text: `See why scaling out needs a load balancer`, step: 9 },
     ],
     steps: [

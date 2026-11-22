@@ -167,7 +167,7 @@ const Pd = {
     goals: [
       { text: `Size the read and write load of a feed`, step: 1 },
       { text: `Fan-out on read vs fan-out on write`, step: 4 },
-      { text: `Why celebrities break pure push — and the hybrid fix`, step: 7 },
+      { text: 'Why celebrities break pure push', step: 7 },
       { text: `What to store, and for whom`, step: 8 },
       { text: `Cursors, and rebuilding derived data`, step: 10 },
     ],

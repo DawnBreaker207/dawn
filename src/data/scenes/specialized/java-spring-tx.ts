@@ -33,11 +33,11 @@ export const javaSpringTxLesson = {
   metrics: ['tx_state', 'active_propagation', 'sync_manager_status', 'connection_bound', 'rollback_status'],
   legend: ['req', 'res', ['ping', 'tx boundaries'], 'fail'],
   goals: [
-    { text: `AOP Proxy Interception: TransactionInterceptor opening connection on method entry`, step: 1 },
-    { text: `TransactionSynchronizationManager: ThreadLocal binding of database connections`, step: 2 },
-    { text: `Propagation REQUIRED vs REQUIRES_NEW: Joining existing tx vs suspending and creating new`, step: 3 },
-    { text: `Self-Invocation Pitfall: Why internal this.method() bypasses @Transactional completely`, step: 4 },
-    { text: `Rollback Semantics: RuntimeException vs Checked Exception and rollbackFor rules`, step: 5 },
+    { text: 'AOP Proxy Interception', step: 1 },
+    { text: 'TransactionSynchronizationManager', step: 2 },
+    { text: 'Propagation REQUIRED vs REQUIRES_NEW', step: 3 },
+    { text: 'Self-Invocation Pitfall', step: 4 },
+    { text: 'Rollback Semantics', step: 5 },
   ],
   steps: [
     {

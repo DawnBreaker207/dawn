@@ -100,7 +100,7 @@ const Cu = {
       { text: `Continuous integration on every push`, step: 2 },
       { text: `Build once, promote one artifact`, step: 3 },
       { text: `Blue-green and canary releases`, step: 6 },
-      { text: `Migrations that don’t break the old version`, step: 7 },
+      { text: 'Migrations that don’t break the', step: 7 },
       { text: `Feature flags and measuring delivery`, step: 9 },
     ],
     steps: [

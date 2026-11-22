@@ -84,7 +84,7 @@ export const replicationLesson = {
       { text: `Scaling reads with replicas`, step: 2 },
       { text: `Replication lag and read-your-writes`, step: 4 },
       { text: `Failover when the leader dies`, step: 6 },
-      { text: `Analytics replicas, backups and replication styles`, step: 7 },
+      { text: 'Analytics replicas, backups and', step: 7 },
     ],
     steps: [
       {

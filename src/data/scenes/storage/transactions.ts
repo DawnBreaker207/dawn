@@ -72,7 +72,7 @@ const $a = {
     goals: [
       { text: `How read-then-write races oversell`, step: 1 },
       { text: `Row locks and atomic updates`, step: 4 },
-      { text: `Optimistic concurrency and isolation levels`, step: 6 },
+      { text: 'Optimistic concurrency and isolation levels', step: 6 },
       { text: `Phantoms and write skew`, step: 7 },
       { text: `Deadlocks and constraints as a safety net`, step: 9 },
       { text: `Short transactions with holds that expire`, step: 11 },

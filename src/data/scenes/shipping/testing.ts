@@ -86,7 +86,7 @@ const su = {
       { text: `Unit tests and test doubles`, step: 2 },
       { text: `Integration and contract tests`, step: 4 },
       { text: `End-to-end tests and the test pyramid`, step: 6 },
-      { text: `Flaky tests, and testing for load and failure`, step: 8 },
+      { text: 'Flaky tests, and testing for', step: 8 },
     ],
     steps: [
       {

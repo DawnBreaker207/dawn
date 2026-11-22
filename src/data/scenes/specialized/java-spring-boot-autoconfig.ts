@@ -33,11 +33,11 @@ export const javaSpringBootAutoconfigLesson = {
   metrics: ['boot_stage', 'candidates_loaded', 'conditions_evaluated', 'beans_registered', 'startup_time_ms'],
   legend: ['req', 'res', ['ping', 'condition evaluation'], 'fail'],
   goals: [
-    { text: `@SpringBootApplication: Meta-annotation combining @Configuration, @ComponentScan, and @EnableAutoConfiguration`, step: 1 },
-    { text: `AutoConfigurationImportSelector: Reading META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`, step: 2 },
-    { text: `Conditional Annotations: Filtering candidate configs with @ConditionalOnClass, @ConditionalOnMissingBean`, step: 3 },
-    { text: `Configuration Phase Ordering: @AutoConfigureBefore, @AutoConfigureAfter, and Priority tiers`, step: 4 },
-    { text: `Startup Diagnostics: Analyzing conditions evaluation report via --debug / ConditionEvaluationReport`, step: 5 },
+    { text: '@SpringBootApplication', step: 1 },
+    { text: 'AutoConfigurationImportSelector', step: 2 },
+    { text: 'Conditional Annotations', step: 3 },
+    { text: 'Configuration Phase Ordering', step: 4 },
+    { text: 'Startup Diagnostics', step: 5 },
   ],
   steps: [
     {

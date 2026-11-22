@@ -85,7 +85,7 @@ const tc = {
     goals: [
       { text: `How one slow service spreads failure`, step: 0 },
       { text: `Timeouts and fallbacks`, step: 1 },
-      { text: `Retries, retry storms and backoff with jitter`, step: 4 },
+      { text: 'Retries, retry storms and backoff', step: 4 },
       { text: `Circuit breakers and idempotency keys`, step: 7 },
       { text: `Deadlines and bulkheads`, step: 9 },
     ],

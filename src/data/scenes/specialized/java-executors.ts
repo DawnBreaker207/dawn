@@ -16,9 +16,9 @@ export const javaExecutorsLesson = {
   level: 'intermediate',
   metrics: ['poolSize', 'activeThreads', 'queueCapacity', 'throughput'],
   goals: [
-    { text: 'Understand core vs max pool size dynamics in ThreadPoolExecutor', step: 1 },
-    { text: 'Observe task queue saturation and RejectedExecutionHandler policies', step: 2 },
-    { text: 'Inspect WorkStealingPool deques and lock-free thread stealing', step: 3 },
+    { text: 'Understand core vs max pool', step: 1 },
+    { text: 'Observe task queue saturation and', step: 2 },
+    { text: 'Inspect WorkStealingPool deques and', step: 3 },
   ],
   steps: [
     {

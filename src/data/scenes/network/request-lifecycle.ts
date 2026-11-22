@@ -36,7 +36,7 @@ export const requestLifecycleLesson = {
     goals: [
       { text: `What DNS does and why it is cached`, step: 1 },
       { text: `Why a connection costs round trips`, step: 2 },
-      { text: `The path: browser → server → database → back`, step: 4 },
+      { text: 'The path: browser → server', step: 4 },
       { text: `Where page-load time actually goes`, step: 6 },
       { text: `Cases: a slow query and a distant user`, step: 8 },
     ],
@@ -278,7 +278,14 @@ export const requestLifecycleLesson = {
             dns: ne(),
             web: re(),
             db: ie(),
-            sum: se,
+            card: S({ x: -2, y: 14 }, 'cURL Production Trace (155ms)', [
+              '$ curl -w "@format.txt" -o /dev/null -s https://shop.example',
+              'time_namelookup:    0.020s (DNS)',
+              'time_connect:       0.040s (TCP SYN/ACK)',
+              'time_appconnect:    0.060s (TLS 1.3)',
+              'time_starttransfer: 0.115s (TTFB)',
+              'time_total:         0.155s',
+            ], { icon: 'timer' }),
           },
           links: {
             q: C.dns({ label: `20 ms`, style: `off` }),

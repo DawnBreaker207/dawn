@@ -16,11 +16,11 @@ export const httpEvolutionLesson = {
   metrics: ['http_version', 'transport', 'multiplexing', 'hol_blocking', 'conn_migration'],
   legend: ['req', 'res', ['ping', 'frame transfer'], 'fail'],
   goals: [
-    { text: 'HTTP/1.1 connection limits and application Head-of-Line blocking', step: 1 },
-    { text: 'HTTP/2 binary framing and multiplexed streams', step: 3 },
-    { text: 'HPACK static and dynamic header compression', step: 4 },
-    { text: 'Why packet loss stalls all streams in HTTP/2 TCP', step: 5 },
-    { text: 'HTTP/3 QUIC over UDP and zero-RTT connection migration', step: 6 },
+    { text: 'HTTP/1.1 connection limits and', step: 1 },
+    { text: 'HTTP/2 binary framing and multiplexed', step: 3 },
+    { text: 'HPACK static and dynamic header', step: 4 },
+    { text: 'Why packet loss stalls all', step: 5 },
+    { text: 'HTTP/3 QUIC over UDP and', step: 6 },
   ],
   steps: [
     {

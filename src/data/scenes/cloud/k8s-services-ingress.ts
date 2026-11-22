@@ -8,6 +8,14 @@ export const k8sServicesIngressLesson = {
   trackId: 'k8s',
   badge: 'Intermediate',
   summary: 'Understand how traffic enters a Kubernetes cluster: ClusterIP internal routing, NodePort high-port exposure, cloud LoadBalancer provisioning, and L7 Ingress / Gateway API HTTP routing.',
+  metrics: ['service_type', 'cluster_ip', 'ingress_tls', 'backend_pods'],
+  goals: [
+    { text: 'ClusterIP Internal Routing', step: 1 },
+    { text: 'NodePort External Exposure', step: 2 },
+    { text: 'Cloud LoadBalancer Service', step: 3 },
+    { text: 'L7 Ingress Controller Routing', step: 4 },
+    { text: 'Gateway API Role Architecture', step: 5 },
+  ],
   steps: [
     {
       title: 'ClusterIP: Internal Microservice Communication',

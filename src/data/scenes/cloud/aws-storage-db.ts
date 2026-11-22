@@ -36,11 +36,11 @@ export const awsStorageDbLesson = {
   metrics: [`storage_class`, `ebs_iops`, `aurora_replicas`, `dynamo_lat`, `cost_opt`],
   legend: [`req`, `res`, [`ping`, `storage read`], `fail`],
   goals: [
-    { text: `Amazon S3 Storage Classes & Intelligent-Tiering Lifecycles`, step: 1 },
-    { text: `EBS Block Storage vs EFS Shared POSIX File System`, step: 2 },
-    { text: `Amazon Aurora Multi-AZ: 6 copies across 3 AZs & 15 Read Replicas`, step: 3 },
-    { text: `Amazon DynamoDB: Single-digit millisecond NoSQL, DAX, and Global Tables`, step: 4 },
-    { text: `Amazon ElastiCache: Redis Cluster vs Memcached in-memory caching`, step: 5 },
+    { text: 'Amazon S3 Storage Classes &', step: 1 },
+    { text: 'EBS Block Storage vs EFS', step: 2 },
+    { text: 'Amazon Aurora Multi-AZ', step: 3 },
+    { text: 'Amazon DynamoDB', step: 4 },
+    { text: 'Amazon ElastiCache', step: 5 },
   ],
   steps: [
     {

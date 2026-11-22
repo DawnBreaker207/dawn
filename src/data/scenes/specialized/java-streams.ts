@@ -14,9 +14,9 @@ export const javaStreamsLesson = {
   level: 'intermediate',
   metrics: ['streamState', 'fusedPasses', 'elementsProcessed', 'poolThreads'],
   goals: [
-    { text: 'Trace lazy evaluation: why intermediate ops execute only when terminal ops fire', step: 1 },
-    { text: 'Understand short-circuiting: findFirst/anyMatch terminating before end of stream', step: 2 },
-    { text: 'Master ForkJoinPool work-stealing and when parallelStream() hurts performance', step: 3 },
+    { text: 'Trace lazy evaluation', step: 1 },
+    { text: 'Understand short-circuiting', step: 2 },
+    { text: 'Master ForkJoinPool work-stealing and', step: 3 },
   ],
   steps: [
     {

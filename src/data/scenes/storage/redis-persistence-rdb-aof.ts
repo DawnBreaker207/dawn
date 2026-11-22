@@ -16,11 +16,11 @@ export const redisPersistenceRdbAofLesson = {
   metrics: ['persistence_mode', 'data_loss_window', 'io_overhead', 'recovery_speed'],
   legend: ['req', 'res', ['ping', 'disk write'], 'fail'],
   goals: [
-    { text: 'RDB snapshots via background fork and Copy-on-Write', step: 1 },
-    { text: 'AOF logging and the 3 fsync policies (always, everysec, no)', step: 3 },
+    { text: 'RDB snapshots via background fork', step: 1 },
+    { text: 'AOF logging and the 3', step: 3 },
     { text: 'AOF Rewrite (BGREWRITEAOF) log compaction', step: 4 },
-    { text: 'Hybrid persistence RDB preamble with streaming AOF', step: 5 },
-    { text: 'Fork latency spikes and memory sizing rules', step: 6 },
+    { text: 'Hybrid persistence RDB preamble with', step: 5 },
+    { text: 'Fork latency spikes and memory', step: 6 },
   ],
   steps: [
     {

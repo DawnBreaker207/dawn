@@ -100,7 +100,7 @@ const Yl = {
     ],
     goals: [
       { text: `TLS, certificates and renewing them`, step: 2 },
-      { text: `Encryption inside the data center and at rest`, step: 5 },
+      { text: 'Encryption inside the data center', step: 5 },
       { text: `Rotating keys`, step: 6 },
       { text: `Keeping secrets out of code`, step: 8 },
       { text: `Tokenization and end-to-end encryption`, step: 10 },

@@ -33,10 +33,10 @@ export const sqlEngineLesson = {
   metrics: [`stage`, `buffers`, `wal`, `locks`],
   goals: [
     { text: `How the parser turns SQL text into an AST`, step: 1 },
-    { text: `How the analyzer resolves names and checks types`, step: 2 },
-    { text: `How the planner chooses Seq Scan vs Index Scan`, step: 3 },
-    { text: `Buffer pool, WAL write, and lock acquisition during execution`, step: 4 },
-    { text: `WAL flush, fsync, and lock release on COMMIT`, step: 5 },
+    { text: 'How the analyzer resolves names', step: 2 },
+    { text: 'How the planner chooses Seq', step: 3 },
+    { text: 'Buffer pool, WAL write, and', step: 4 },
+    { text: 'WAL flush, fsync, and lock', step: 5 },
   ],
   steps: [
     {

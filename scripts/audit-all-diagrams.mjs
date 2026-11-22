@@ -129,6 +129,7 @@ const issues = {
   brokenLinks: [],
   goalErrors: [],
   glyphHazards: [],
+  textOverflowHazards: [],
 };
 
 // Categorize diagram nature
@@ -305,6 +306,36 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
           });
         }
       }
+
+      // Check Text Overflow Hazard on Blocks (Tokens that cannot fit even after PascalCase / delimiter split)
+      if (ent.type === 'block') {
+        const s = typeof ent.s === 'number' ? ent.s : 4;
+        const availWidth = Math.max(48, s * 14 * 1.35);
+        let lines = [];
+        if (typeof ent.label === 'string') {
+          lines = ent.label.includes('\n') ? ent.label.split('\n') : [ent.label];
+        } else if (Array.isArray(ent.label)) {
+          lines = ent.label.map(x => String(x).trim());
+        }
+        for (const line of lines) {
+          const words = line.split(/\s+/);
+          for (const w of words) {
+            const subParts = w.split(/(?<=[<(\[/_.:\-])|(?=[<(\[/_.:\-])|(?<=[a-z0-9])(?=[A-Z])/).filter(Boolean);
+            const maxSubLen = Math.max(1, ...subParts.map(p => p.length));
+            if (maxSubLen * 7.2 > availWidth || (w.length >= 20 && !w.includes(' '))) {
+              issues.textOverflowHazards.push({
+                sceneId,
+                step: sIdx + 1,
+                entity: k,
+                word: w,
+                s,
+                availWidth: Math.round(availWidth),
+                estWidth: Math.round(w.length * 7.2),
+              });
+            }
+          }
+        }
+      }
     }
 
     // Filter tangible nodes for collision check (Exclude decorative floors, cards, buffers)
@@ -406,7 +437,24 @@ console.log(`8. Overwritten / Cramped Links:    ${issues.overwrittenLinks.length
 console.log(`9. Detached Label Hazards:         ${issues.detachedLabels.length}`);
 console.log(`10. Recycled Link IDs (Tween Dead):${issues.recycledLinkIds.length}`);
 console.log(`11. Generic Concept Panels:        ${issues.genericConceptPanels.length}`);
+console.log(`12. Text Overflow Hazards:         ${issues.textOverflowHazards.length}`);
 console.log('='.repeat(75));
+
+if (issues.textOverflowHazards.length > 0) {
+  console.log('\n[TEXT OVERFLOW HAZARDS ON BLOCKS (Monolithic words >= 14 chars exceeding face width)]:');
+  const grouped = {};
+  issues.textOverflowHazards.forEach(t => {
+    grouped[t.sceneId] = (grouped[t.sceneId] || []);
+    grouped[t.sceneId].push(t);
+  });
+  for (const [id, list] of Object.entries(grouped)) {
+    console.log(`  - ${id} (${list.length} text hazards):`);
+    list.slice(0, 4).forEach(t => {
+      console.log(`      Step ${t.step} [${t.entity}]: "${t.word}" (s=${t.s}, est=${t.estWidth}px vs avail=${t.availWidth}px)`);
+    });
+    if (list.length > 4) console.log(`      ... and ${list.length - 4} more`);
+  }
+}
 
 if (issues.genericConceptPanels.length > 0) {
   console.log('\n[GENERIC CONCEPT PANELS DETECTED (Should be removed unless Technical Artifact)]:');

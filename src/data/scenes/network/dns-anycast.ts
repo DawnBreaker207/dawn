@@ -16,10 +16,10 @@ export const dnsAnycastLesson = {
   metrics: ['dns_ttl', 'resolution_ms', 'routing_type', 'security_mode'],
   legend: ['req', 'res', ['ping', 'dns lookup'], 'fail'],
   goals: [
-    { text: 'Recursive resolver vs iterative hierarchy queries', step: 1 },
+    { text: 'Recursive resolver vs iterative', step: 1 },
     { text: 'DNS record types A, AAAA, CNAME, ALIAS', step: 2 },
     { text: 'TTL caching mechanics and negative caching', step: 3 },
-    { text: 'BGP Anycast routing 1 IP across 300 global PoPs', step: 4 },
+    { text: 'BGP Anycast routing 1 IP', step: 4 },
     { text: 'GeoDNS and DNSSEC tamper prevention', step: 6 },
   ],
   steps: [

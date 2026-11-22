@@ -33,11 +33,11 @@ export const sqlExplainLesson = {
   metrics: [`cost`, `rows`, `loops`, `buffers_hit`, `execution_time`],
   legend: [`req`, `res`, [`ping`, `buffer read`], `fail`],
   goals: [
-    { text: `How PostgreSQL calculates Startup Cost vs Total Cost`, step: 1 },
-    { text: `Seq Scan vs Index Scan: Selectivity threshold & random I/O`, step: 2 },
+    { text: 'How PostgreSQL calculates Startup Cost', step: 1 },
+    { text: 'Seq Scan vs Index Scan', step: 2 },
     { text: `Bitmap Index Scan & Lossy Bitmap Heap Scan`, step: 3 },
-    { text: `Hash Join vs Nested Loop with Index Lookups`, step: 4 },
-    { text: `EXPLAIN (ANALYZE, BUFFERS): Shared Hits, Reads & Dirtied pages`, step: 5 },
+    { text: 'Hash Join vs Nested Loop', step: 4 },
+    { text: 'EXPLAIN (ANALYZE, BUFFERS)', step: 5 },
   ],
   steps: [
     {

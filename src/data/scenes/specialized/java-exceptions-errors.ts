@@ -33,11 +33,11 @@ export const javaExceptionsErrorsLesson = {
   metrics: ['throwable_type', 'stack_depth', 'stacktrace_cost', 'suppressed_count', 'jvm_action'],
   legend: ['req', 'res', ['ping', 'stack unwind'], 'fail'],
   goals: [
-    { text: `Throwable hierarchy: Checked vs Unchecked (RuntimeException) vs Error`, step: 1 },
-    { text: `Cost of fillInStackTrace(): Why exceptions should never control flow`, step: 2 },
-    { text: `Try-with-Resources & Suppressed Exceptions: AutoCloseable mechanics`, step: 3 },
-    { text: `Fatal JVM Errors: OutOfMemoryError (Heap vs Metaspace) & StackOverflowError`, step: 4 },
-    { text: `Exception handling best practices: Root cause preservation`, step: 5 },
+    { text: 'Throwable hierarchy', step: 1 },
+    { text: 'Cost of fillInStackTrace()', step: 2 },
+    { text: 'Try-with-Resources & Suppressed Exceptions:', step: 3 },
+    { text: 'Fatal JVM Errors', step: 4 },
+    { text: 'Exception handling best practices', step: 5 },
   ],
   steps: [
     {

@@ -16,11 +16,11 @@ export const networkSecurityDdosLesson = {
   metrics: ['attack_type', 'attack_volume_gbps', 'defense_tier', 'mitigation_status'],
   legend: ['req', 'res', ['ping', 'attack vector'], 'fail'],
   goals: [
-    { text: 'Taxonomy of L3/L4 volumetric vs L7 application DDoS attacks', step: 1 },
-    { text: 'SYN flood attacks and cryptographic SYN cookies defense', step: 2 },
-    { text: 'UDP amplification reflection attacks and BGP scrubbing centers', step: 4 },
-    { text: 'Layer 7 Slowloris connection starvation attacks', step: 5 },
-    { text: 'Edge WAF rate limiting and Cloudflare Under Attack Mode', step: 6 },
+    { text: 'Taxonomy of L3/L4 volumetric vs', step: 1 },
+    { text: 'SYN flood attacks and cryptographic', step: 2 },
+    { text: 'UDP amplification reflection attacks', step: 4 },
+    { text: 'Layer 7 Slowloris connection', step: 5 },
+    { text: 'Edge WAF rate limiting and', step: 6 },
   ],
   steps: [
     {

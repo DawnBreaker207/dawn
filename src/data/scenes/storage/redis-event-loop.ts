@@ -16,11 +16,11 @@ export const redisEventLoopLesson = {
   metrics: ['event_loop_state', 'active_conns', 'qps', 'avg_latency_us'],
   legend: ['req', 'res', ['ping', 'event multiplexing'], 'fail'],
   goals: [
-    { text: 'Why single-threaded design eliminates locking and context switching', step: 1 },
-    { text: 'Linux epoll I/O multiplexing event loop mechanism', step: 2 },
-    { text: 'ae.c event library: file events vs time events', step: 3 },
-    { text: 'Redis 6.0 threaded I/O for network socket read/write', step: 4 },
-    { text: 'Why O(N) commands like KEYS * freeze the entire server', step: 5 },
+    { text: 'Why single-threaded design eliminates', step: 1 },
+    { text: 'Linux epoll I/O multiplexing event', step: 2 },
+    { text: 'ae.c event library', step: 3 },
+    { text: 'Redis 6.0 threaded I/O for', step: 4 },
+    { text: 'Why O(N) commands like KEYS', step: 5 },
   ],
   steps: [
     {

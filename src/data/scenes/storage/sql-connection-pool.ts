@@ -33,11 +33,11 @@ export const sqlConnectionPoolLesson = {
   metrics: [`client_conns`, `db_backends`, `pool_size`, `context_switches`, `p99_latency`],
   legend: [`req`, `res`, [`ping`, `connection request`], `fail`],
   goals: [
-    { text: `PostgreSQL process-per-connection architecture & RAM overhead`, step: 1 },
-    { text: `The Thundering Herd: How 1,000 idle connections crash database CPU`, step: 2 },
-    { text: `Client-side pool sizing with HikariCP formula: Pool = CPU × 2 + Disk`, step: 3 },
-    { text: `PgBouncer: Multiplexing 10,000 client sockets to 50 server backends`, step: 4 },
-    { text: `Pooling Modes: Session vs Transaction vs Statement pooling trade-offs`, step: 5 },
+    { text: 'PostgreSQL process-per-connection architecture &', step: 1 },
+    { text: 'The Thundering Herd', step: 2 },
+    { text: 'Client-side pool sizing with HikariCP', step: 3 },
+    { text: 'PgBouncer: Multiplexing 10,000 client', step: 4 },
+    { text: 'Pooling Modes', step: 5 },
   ],
   steps: [
     {

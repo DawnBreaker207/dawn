@@ -107,7 +107,7 @@ export const indexesLesson = {
       { text: `How a B-tree index finds a row`, step: 3 },
       { text: `What indexes cost on every write`, step: 4 },
       { text: `Composite indexes and column order`, step: 5 },
-      { text: `When an index can’t help — and how to check`, step: 6 },
+      { text: 'When an index can’t help', step: 6 },
     ],
     steps: [
       {

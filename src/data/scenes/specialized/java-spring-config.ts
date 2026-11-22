@@ -33,11 +33,11 @@ export const javaSpringConfigLesson = {
   metrics: ['active_profile', 'active_tier', 'source_origin', 'bound_class', 'validation_state'],
   legend: ['req', 'res', ['ping', 'property resolution'], 'fail'],
   goals: [
-    { text: `The 17-Tier PropertySource Hierarchy: Command-line args -> OS env -> application-{profile}.yml -> application.yml`, step: 1 },
-    { text: `@ConfigurationProperties vs @Value: Type-safe immutable records with validation`, step: 2 },
-    { text: `Relaxed Binding: How kebab-case, camelCase, and SCREAMING_SNAKE map to the same field`, step: 3 },
-    { text: `Profile Activation: SPRING_PROFILES_ACTIVE and conditional beans via @Profile`, step: 4 },
-    { text: `External Secrets & Cloud Config: Integrating Vault and Kubernetes ConfigMaps`, step: 5 },
+    { text: 'The 17-Tier PropertySource Hierarchy', step: 1 },
+    { text: '@ConfigurationProperties vs @Value', step: 2 },
+    { text: 'Relaxed Binding', step: 3 },
+    { text: 'Profile Activation', step: 4 },
+    { text: 'External Secrets & Cloud Config', step: 5 },
   ],
   steps: [
     {

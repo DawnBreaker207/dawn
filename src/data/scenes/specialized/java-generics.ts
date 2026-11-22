@@ -33,11 +33,11 @@ export const javaGenericsLesson = {
   metrics: ['generic_type', 'bytecode_type', 'bridge_methods', 'variance', 'check_phase'],
   legend: ['req', 'res', ['ping', 'type check'], 'fail'],
   goals: [
-    { text: `Type Erasure: How bytecode replaces T with Object or bound`, step: 1 },
-    { text: `Synthetic Bridge Methods: Preserving polymorphism during inheritance`, step: 2 },
-    { text: `PECS Rule: Producer Extends (? extends T) for reading`, step: 3 },
-    { text: `PECS Rule: Consumer Super (? super T) for writing`, step: 4 },
-    { text: `Reification limits: Why new T() is forbidden & TypeToken workarounds`, step: 5 },
+    { text: 'Type Erasure', step: 1 },
+    { text: 'Synthetic Bridge Methods', step: 2 },
+    { text: 'PECS Rule: Producer Extends (?', step: 3 },
+    { text: 'PECS Rule: Consumer Super (?', step: 4 },
+    { text: 'Reification limits', step: 5 },
   ],
   steps: [
     {

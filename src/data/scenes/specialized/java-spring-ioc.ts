@@ -14,9 +14,9 @@ export const javaSpringIocLesson = {
   level: 'intermediate',
   metrics: ['containerState', 'beanCount', 'injectionMode', 'scope'],
   goals: [
-    { text: 'Trace ApplicationContext initialization and BeanFactory hierarchy', step: 1 },
-    { text: 'Observe Constructor vs Field Dependency Injection resolution', step: 2 },
-    { text: 'Follow BeanPostProcessor hooks (@PostConstruct, proxies)', step: 3 },
+    { text: 'ApplicationContext Bootstrap', step: 1 },
+    { text: 'Constructor Dependency Injection', step: 2 },
+    { text: 'BeanPostProcessor Lifecycle Hooks', step: 3 },
   ],
   steps: [
     {

@@ -33,11 +33,11 @@ export const javaSpringScopesLesson = {
   metrics: ['scope_type', 'instances_created', 'proxy_mode', 'thread_safety', 'memory_footprint'],
   legend: ['req', 'res', ['ping', 'proxy invocation'], 'fail'],
   goals: [
-    { text: `Singleton vs Prototype: Eager caching vs fresh instantiation per injection`, step: 1 },
-    { text: `The Prototype Dilemma: Why injecting Prototype into Singleton creates a stale single instance`, step: 2 },
-    { text: `CGLIB Scoped Proxies: Lazy runtime resolution via proxy delegation on each method call`, step: 3 },
-    { text: `Web Scopes: Request & Session bean lifecycle tied to HttpServletRequest & HttpSession`, step: 4 },
-    { text: `Bean Destruction: DisposableBean, @PreDestroy, and why Spring does NOT destroy prototypes`, step: 5 },
+    { text: 'Singleton vs Prototype', step: 1 },
+    { text: 'The Prototype Dilemma', step: 2 },
+    { text: 'CGLIB Scoped Proxies', step: 3 },
+    { text: 'Web Scopes: Request & Session', step: 4 },
+    { text: 'Bean Destruction', step: 5 },
   ],
   steps: [
     {

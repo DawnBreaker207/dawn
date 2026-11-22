@@ -16,11 +16,11 @@ export const rabbitmqExchangesRoutingLesson = {
   metrics: ['exchange_type', 'routing_pattern', 'fanout_factor', 'binding_count'],
   legend: ['req', 'res', ['ping', 'routed message'], 'fail'],
   goals: [
-    { text: 'Compare 4 AMQP exchange types: Direct, Fanout, Topic, Headers', step: 1 },
+    { text: 'Compare 4 AMQP exchange types', step: 1 },
     { text: 'Direct Exchange exact string matching', step: 2 },
     { text: 'Fanout Exchange high-speed broadcast publishing', step: 3 },
-    { text: 'Topic Exchange wildcard matching with * and #', step: 4 },
-    { text: 'Exchange-to-Exchange bindings for modular routing trees', step: 6 },
+    { text: 'Topic Exchange wildcard matching with', step: 4 },
+    { text: 'Exchange-to-Exchange bindings for modular', step: 6 },
   ],
   steps: [
     {

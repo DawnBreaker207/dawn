@@ -18,9 +18,9 @@ export const tlsHandshakeLesson = {
   goals: [
     { text: 'Compare TLS 1.2 2-RTT vs TLS 1.3 1-RTT', step: 2 },
     { text: 'ECDHE ephemeral Diffie-Hellman key exchange', step: 3 },
-    { text: 'X.509 Certificate Chain verification and SNI', step: 4 },
+    { text: 'X.509 Certificate Chain verification', step: 4 },
     { text: '0-RTT early data and replay protection', step: 5 },
-    { text: 'Mutual TLS (mTLS) for microservice zero-trust', step: 6 },
+    { text: 'Mutual TLS (mTLS) for microservice', step: 6 },
   ],
   steps: [
     {

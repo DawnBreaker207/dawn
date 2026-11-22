@@ -16,11 +16,11 @@ export const rabbitmqAmqpModelLesson = {
   metrics: ['amqp_protocol', 'tcp_conns', 'multiplexed_channels', 'broker_model'],
   legend: ['req', 'res', ['ping', 'amqp frame'], 'fail'],
   goals: [
-    { text: 'Compare smart broker RabbitMQ with dumb broker Kafka', step: 1 },
-    { text: 'The AMQP 0-9-1 model: Exchange, Binding, Queue, Consumer', step: 2 },
-    { text: 'Multiplexed channels over a single shared TCP connection', step: 3 },
-    { text: 'Virtual Hosts (vhosts) for multi-tenant isolation', step: 4 },
-    { text: 'Consumer acknowledgments: basic.ack, basic.nack, basic.reject', step: 5 },
+    { text: 'Compare smart broker RabbitMQ with', step: 1 },
+    { text: 'The AMQP 0-9-1 model', step: 2 },
+    { text: 'Multiplexed channels over a single', step: 3 },
+    { text: 'Virtual Hosts (vhosts) for', step: 4 },
+    { text: 'Consumer acknowledgments', step: 5 },
   ],
   steps: [
     {

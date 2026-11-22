@@ -17,10 +17,10 @@ export const kafkaReplicationIsrLesson = {
   legend: ['req', 'res', ['ping', 'fetch replication'], 'fail'],
   goals: [
     { text: 'Leader-Follower partition replication mechanics', step: 1 },
-    { text: 'In-Sync Replicas (ISR) and the High Watermark commit boundary', step: 2 },
-    { text: 'Producer acks=0, acks=1 vs acks=all trade-offs', step: 3 },
-    { text: 'Why acks=all requires min.insync.replicas to prevent data loss', step: 4 },
-    { text: 'Clean vs unclean leader election during catastrophic multi-node failures', step: 6 },
+    { text: 'In-Sync Replicas (ISR) and the', step: 2 },
+    { text: 'Producer acks=0, acks=1 vs acks=all', step: 3 },
+    { text: 'Why acks=all requires min.insync.replicas', step: 4 },
+    { text: 'Clean vs unclean leader election', step: 6 },
   ],
   steps: [
     {

@@ -8,6 +8,14 @@ export const dockerInternalsLesson = {
   trackId: 'k8s',
   badge: 'Beginner',
   summary: 'Explore how Docker isolates processes using Linux Namespaces (PID, NET, MNT) and enforces hardware resource limits using Cgroups.',
+  metrics: ['namespaces', 'cgroups', 'isolation', 'oom_killer'],
+  goals: [
+    { text: 'Host PID Tree & Namespaces', step: 1 },
+    { text: 'PID 1 Container Isolation', step: 2 },
+    { text: 'Mount & Network Namespaces', step: 3 },
+    { text: 'Cgroups CPU & RAM Quotas', step: 4 },
+    { text: 'OOM Killer & Limits Enforcement', step: 5 },
+  ],
   steps: [
     {
       title: 'The Host Process Tree',

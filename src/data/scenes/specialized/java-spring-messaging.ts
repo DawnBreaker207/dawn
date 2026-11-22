@@ -33,11 +33,11 @@ export const javaSpringMessagingLesson = {
   metrics: ['producer_throughput', 'consumer_ack_mode', 'retry_attempts', 'dlt_redirected', 'partition_lag'],
   legend: ['req', 'res', ['ping', 'event streaming'], 'fail'],
   goals: [
-    { text: `KafkaTemplate: Asynchronous producing with CompletableFuture callbacks and serializers`, step: 1 },
-    { text: `@KafkaListener: Concurrent message listener containers and partition assignment`, step: 2 },
-    { text: `Acknowledgment Modes: RECORD, BATCH, and MANUAL_IMMEDIATE commit strategies`, step: 3 },
-    { text: `Error Handling & Backoff: DefaultErrorHandler, Exponential Backoff, and DLT routing`, step: 4 },
-    { text: `Idempotent Processing: Consumer deduplication via unique message IDs & transactional outbox`, step: 5 },
+    { text: 'KafkaTemplate', step: 1 },
+    { text: '@KafkaListener', step: 2 },
+    { text: 'Acknowledgment Modes', step: 3 },
+    { text: 'Error Handling & Backoff', step: 4 },
+    { text: 'Idempotent Processing', step: 5 },
   ],
   steps: [
     {

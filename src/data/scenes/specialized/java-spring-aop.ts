@@ -14,9 +14,9 @@ export const javaSpringAopLesson = {
   level: 'intermediate',
   metrics: ['proxyType', 'interceptorChain', 'weavingTiming', 'targetState'],
   goals: [
-    { text: 'Compare JDK Dynamic Proxy (interface-based) vs CGLIB (subclass bytecode)', step: 1 },
-    { text: 'Trace MethodInvocation advice chains (@Before, @Around, @AfterReturning)', step: 2 },
-    { text: 'Diagnose self-invocation (this.method()) bypassing the proxy container', step: 3 },
+    { text: 'Compare JDK Dynamic Proxy', step: 1 },
+    { text: 'Trace MethodInvocation advice chains', step: 2 },
+    { text: 'Diagnose self-invocation (this.method()) bypassing', step: 3 },
   ],
   steps: [
     {

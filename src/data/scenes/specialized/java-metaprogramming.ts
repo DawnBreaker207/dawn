@@ -33,11 +33,11 @@ export const javaMetaprogrammingLesson = {
   metrics: ['proxy_type', 'inspection_method', 'bytecode_engine', 'security_manager', 'invocation_overhead'],
   legend: ['req', 'res', ['ping', 'reflection call'], 'fail'],
   goals: [
-    { text: `Java Reflection API: Class inspection, Method.invoke(), and inflation`, step: 1 },
-    { text: `Annotation Retention: SOURCE vs CLASS vs RUNTIME retention policies`, step: 2 },
-    { text: `JDK Dynamic Proxy: Proxy.newProxyInstance() & InvocationHandler interface`, step: 3 },
-    { text: `CGLIB & Byte Buddy: Subclassing & runtime bytecode generation`, step: 4 },
-    { text: `Java Module System (JPMS): Strong encapsulation, opens vs exports`, step: 5 },
+    { text: 'Java Reflection API', step: 1 },
+    { text: 'Annotation Retention', step: 2 },
+    { text: 'JDK Dynamic Proxy', step: 3 },
+    { text: 'CGLIB & Byte Buddy', step: 4 },
+    { text: 'Java Module System (JPMS)', step: 5 },
   ],
   steps: [
     {

@@ -8,6 +8,14 @@ export const k8sAutoscalingHpaLesson = {
   trackId: 'k8s',
   badge: 'Intermediate',
   summary: 'Explore elasticity in Kubernetes: Metrics Server polling, HPA PID scaling formulas, Vertical Pod Autoscaling (VPA) right-sizing, and Cluster Autoscaler / Karpenter node provisioning.',
+  metrics: ['target_cpu', 'current_cpu', 'replica_count', 'scaling_cooldown'],
+  goals: [
+    { text: 'Metrics Server Scraping API', step: 1 },
+    { text: 'HPA PID Scaling Math Formula', step: 2 },
+    { text: 'Custom Business Metrics Scaling', step: 3 },
+    { text: 'VPA Automatic Resource Sizing', step: 4 },
+    { text: 'Karpenter Fast Node Provisioning', step: 5 },
+  ],
   steps: [
     {
       title: 'Metrics Server & Resource Metrics API',
@@ -109,7 +117,7 @@ export const k8sAutoscalingHpaLesson = {
       ],
       scene: {
         entities: {
-          pendingPods: makeBlock(-10, -14, { s: 4, h: 42, color: 'orange', label: ['Pending Pods', 'FailedScheduling'] }),
+          pendingPods: makeBlock(-10, -14, { s: 4, h: 42, color: 'orange', label: ['Pending Pods', 'Failed Scheduling'] }),
           karpenterEngine: makeBlock(6, -14, { s: 4.5, h: 44, color: 'purple', label: ['Karpenter Autoscaler', 'Bin-packing evaluation'] }),
           newEc2Node: makeBlock(-2, 4, { s: 5, h: 46, color: 'green', label: ['New EC2 Node (45s)', 'Joins cluster'] }),
           card: makePanel({ x: -12, y: 14 }, 'Karpenter Node Scaler', [

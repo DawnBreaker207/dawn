@@ -16,11 +16,11 @@ export const websocketRealtimeProtocolsLesson = {
   metrics: ['channel_type', 'frame_overhead', 'concurrency', 'directionality'],
   legend: ['req', 'res', ['ping', 'socket frame'], 'fail'],
   goals: [
-    { text: 'Compare polling, long-polling and persistent WebSockets', step: 1 },
-    { text: 'The HTTP 101 Switching Protocols upgrade handshake', step: 2 },
-    { text: 'WebSocket binary frame anatomy and client masking', step: 3 },
-    { text: 'Server-Sent Events (SSE) over HTTP/2 vs WebSockets', step: 4 },
-    { text: 'Scale WebSocket clusters with a Redis Pub/Sub backplane', step: 6 },
+    { text: 'Compare polling, long-polling and', step: 1 },
+    { text: 'The HTTP 101 Switching Protocols', step: 2 },
+    { text: 'WebSocket binary frame anatomy and', step: 3 },
+    { text: 'Server-Sent Events (SSE) over HTTP/2', step: 4 },
+    { text: 'Scale WebSocket clusters with a', step: 6 },
   ],
   steps: [
     {
@@ -187,7 +187,7 @@ export const websocketRealtimeProtocolsLesson = {
       scene: {
         entities: {
           client: y(-10, -8, { form: 'phone', label: '1M Users', tags: [{ text: '1,000,000 Sockets', tone: 'green', icon: 'users' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['High-Performance Gateway', 'Linux Epoll Kernel'], sub: 'RAM: 4GB Total' }),
+          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['High-Perf Gateway', 'Linux Epoll Kernel'], sub: 'RAM: 4GB Total' }),
           card: S({ x: -2, y: 14 }, 'Kernel Tuning for 1M WebSockets', [
             '/etc/security/limits.conf: * soft nofile 1048576',
             'sysctl -w fs.file-max=2097152',

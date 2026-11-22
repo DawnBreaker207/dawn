@@ -147,7 +147,7 @@ export const storageEnginesLesson = {
       { text: `Why “saved” needs a write-ahead log`, step: 2 },
       { text: `fsync, group commit and checkpoints`, step: 4 },
       { text: `How a B-tree engine reads and writes`, step: 5 },
-      { text: `LSM-trees: memtable, SSTables, Bloom filters, compaction`, step: 9 },
+      { text: 'LSM-trees: memtable, SSTables, Bloom', step: 9 },
       { text: `Choosing: B-tree or LSM, rows or columns`, step: 11 },
     ],
     steps: [

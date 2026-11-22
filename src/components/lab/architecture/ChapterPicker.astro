@@ -1,5 +1,5 @@
 ---
-import { DTS_MODULES, type Module, type Lesson, getLessonHref } from '@/data/curriculum';
+import { DTS_MODULES, DTS_TRACKS, type Module, type Lesson, type Track, getLessonHref } from '@/data/curriculum';
 
 interface Props {
   currentLessonId: string;
@@ -9,34 +9,40 @@ interface Props {
 
 const { currentLessonId, trackId: propTrackId, moduleId: propModuleId } = Astro.props;
 
-// Determine module scope (Locked strictly to current Module per user request)
-const resolveModule = (lessonId: string, explicitModuleId?: string, fallbackTrackId?: string): Module => {
-  // 1. Explicit moduleId priority
-  if (explicitModuleId) {
-    const mod = DTS_MODULES.find((m) => m.id === explicitModuleId);
-    if (mod) return mod;
-  }
-  // 2. Direct match by lessonId
-  for (const mod of DTS_MODULES) {
-    if (mod.lessons.some((l) => l.id === lessonId)) {
-      return mod;
-    }
-  }
-  // 3. Fallback match by fallbackTrackId
-  if (fallbackTrackId) {
-    const mod = DTS_MODULES.find((m) => m.trackId === fallbackTrackId);
-    if (mod) return mod;
-  }
-  return DTS_MODULES[0];
-};
+// 1. Resolve active module
+let activeModule = propModuleId ? DTS_MODULES.find((m) => m.id === propModuleId) : undefined;
+if (!activeModule) {
+  activeModule = DTS_MODULES.find((m) => m.lessons.some((l) => l.id === currentLessonId));
+}
+if (!activeModule) {
+  activeModule = DTS_MODULES[0];
+}
 
-const activeModule = resolveModule(currentLessonId, propModuleId, propTrackId);
-const totalVisibleLessons = activeModule.lessons.length;
+// 2. Resolve active track encompassing related modules (e.g. Java Runtime + Spring Framework)
+let activeTrack = propTrackId ? DTS_TRACKS.find((t) => t.id === propTrackId) : undefined;
+if (!activeTrack) {
+  activeTrack = DTS_TRACKS.find((t) => t.moduleIds.includes(activeModule.id) || t.id === activeModule.trackId);
+}
+if (!activeTrack) {
+  activeTrack = DTS_TRACKS[0];
+}
+
+// 3. Resolve all modules in this track (e.g. 05B Java Runtime & 05C Spring)
+const visibleModules = DTS_MODULES.filter((m) => activeTrack.moduleIds.includes(m.id) || m.trackId === activeTrack.id);
+const totalVisibleLessons = visibleModules.reduce((acc, m) => acc + m.lessons.length, 0);
 
 let activeLessonTitle = `${activeModule.num} · ${activeModule.lessons[0]?.title || activeModule.title}`;
-const foundLesson = activeModule.lessons.find((l) => l.id === currentLessonId);
-if (foundLesson) {
-  activeLessonTitle = `${activeModule.num} · ${foundLesson.title}`;
+for (const mod of visibleModules) {
+  const found = mod.lessons.find((l) => l.id === currentLessonId);
+  if (found) {
+    activeLessonTitle = `${mod.num} · ${found.title}`;
+    break;
+  }
+}
+
+interface SectionGroup {
+  title: string | null;
+  lessons: Lesson[];
 }
 ---
 
@@ -48,7 +54,7 @@ if (foundLesson) {
     class="chapter-dropdown-trigger"
     aria-haspopup="true"
     aria-expanded="false"
-    title={`Browse ${activeModule.title} chapters`}
+    title={`Browse ${activeTrack.title} chapters`}
   >
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
@@ -70,43 +76,68 @@ if (foundLesson) {
       <input
         id="dropdown-search-input"
         type="text"
-        placeholder={`Filter ${activeModule.title} chapters...`}
+        placeholder={`Filter ${activeTrack.title} chapters...`}
         autocomplete="off"
       />
     </div>
 
-    <!-- Scoped to Single Active Module Only -->
+    <!-- Scoped to Track Modules -->
     <div class="dropdown-list-scroll thin-scrollbar" id="dropdown-list-container">
-      <div class="dropdown-module-group" data-module-id={activeModule.id} data-track-id={activeModule.trackId}>
-        <div class="dropdown-module-header">
-          <span class="mod-num font-mono">{activeModule.num}</span>
-          <span class="mod-title">{activeModule.title}</span>
-          <span class="mod-count font-mono">{activeModule.lessons.length}</span>
-        </div>
-        <div class="dropdown-lessons-list">
-          {activeModule.lessons.map((lesson: Lesson) => {
-            const isCurrent = lesson.id === currentLessonId;
-            const href = getLessonHref(lesson.id);
-            return (
-              <button
-                type="button"
-                class:list={[
-                  'dropdown-lesson-btn',
-                  isCurrent && 'is-current',
-                ]}
-                data-lesson-id={lesson.id}
-                data-lesson-title={`${activeModule.num} · ${lesson.title}`}
-                data-lesson-href={href}
-                data-native="true"
-              >
-                <span class="lesson-dot">●</span>
-                <span class="lesson-text">{lesson.title}</span>
-                <span class="active-pill" data-lesson-pill={lesson.id} hidden={!isCurrent}>Active</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {visibleModules.map((mod: Module) => {
+        const sectionGroups: SectionGroup[] = [];
+        for (const lesson of mod.lessons) {
+          const curSection = lesson.section || null;
+          const lastGroup = sectionGroups[sectionGroups.length - 1];
+          if (!lastGroup || lastGroup.title !== curSection) {
+            sectionGroups.push({ title: curSection, lessons: [lesson] });
+          } else {
+            lastGroup.lessons.push(lesson);
+          }
+        }
+
+        return (
+          <div class="dropdown-module-group" data-module-id={mod.id} data-track-id={mod.trackId}>
+            <div class="dropdown-module-header">
+              <span class="mod-num font-mono">{mod.num}</span>
+              <span class="mod-title">{mod.title}</span>
+              <span class="mod-count font-mono">{mod.lessons.length}</span>
+            </div>
+            <div class="dropdown-lessons-list">
+              {sectionGroups.map((group) => (
+                <div class="dropdown-section-group" data-section-title={group.title || ''}>
+                  {group.title && (
+                    <div class="dropdown-section-divider">
+                      <span class="section-badge font-mono">{group.title}</span>
+                      <span class="section-count font-mono">{group.lessons.length}</span>
+                    </div>
+                  )}
+                  {group.lessons.map((lesson: Lesson) => {
+                    const isCurrent = lesson.id === currentLessonId;
+                    const href = getLessonHref(lesson.id);
+                    return (
+                      <button
+                        type="button"
+                        class:list={[
+                          'dropdown-lesson-btn',
+                          isCurrent && 'is-current',
+                        ]}
+                        data-lesson-id={lesson.id}
+                        data-lesson-title={`${mod.num} · ${lesson.title}`}
+                        data-lesson-href={href}
+                        data-native="true"
+                      >
+                        <span class="lesson-dot">●</span>
+                        <span class="lesson-text">{lesson.title}</span>
+                        <span class="active-pill" data-lesson-pill={lesson.id} hidden={!isCurrent}>Active</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   </div>
 </div>
@@ -225,6 +256,12 @@ if (foundLesson) {
     flex-direction: column;
   }
 
+  .dropdown-module-group + .dropdown-module-group {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+
   .dropdown-module-header {
     display: flex;
     align-items: center;
@@ -255,6 +292,44 @@ if (foundLesson) {
     display: flex;
     flex-direction: column;
     padding: 2px 0;
+  }
+
+  .dropdown-section-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dropdown-section-divider {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 8px 3px 8px;
+    margin-top: 5px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .dropdown-section-group:first-child .dropdown-section-divider {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 4px;
+  }
+
+  .section-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    font-family: var(--font-mono, monospace);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+
+  .section-count {
+    font-size: 9px;
+    color: var(--fg-faint);
+    background: var(--bg-hover);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
   }
 
   .dropdown-lesson-btn {
@@ -329,13 +404,29 @@ if (foundLesson) {
 
       groups.forEach((grp) => {
         let matchCount = 0;
-        const btns = grp.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
-        btns.forEach((btn) => {
-          const text = (btn.dataset.lessonTitle || btn.textContent || '').toLowerCase();
-          const visible = !q || text.includes(q);
-          btn.style.display = visible ? 'flex' : 'none';
-          if (visible) matchCount++;
-        });
+        const sectionGroups = grp.querySelectorAll<HTMLElement>('.dropdown-section-group');
+        if (sectionGroups.length > 0) {
+          sectionGroups.forEach((sec) => {
+            let secMatches = 0;
+            const btns = sec.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
+            btns.forEach((btn) => {
+              const text = (btn.dataset.lessonTitle || btn.textContent || '').toLowerCase();
+              const visible = !q || text.includes(q);
+              btn.style.display = visible ? 'flex' : 'none';
+              if (visible) secMatches++;
+            });
+            sec.style.display = secMatches > 0 ? 'flex' : 'none';
+            matchCount += secMatches;
+          });
+        } else {
+          const btns = grp.querySelectorAll<HTMLButtonElement>('.dropdown-lesson-btn');
+          btns.forEach((btn) => {
+            const text = (btn.dataset.lessonTitle || btn.textContent || '').toLowerCase();
+            const visible = !q || text.includes(q);
+            btn.style.display = visible ? 'flex' : 'none';
+            if (visible) matchCount++;
+          });
+        }
 
         grp.style.display = matchCount > 0 ? 'flex' : 'none';
       });

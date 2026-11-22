@@ -16,11 +16,11 @@ export const rabbitmqReliabilityDlxLesson = {
   metrics: ['reliability_tier', 'delivery_guarantee', 'dlx_policy', 'queue_type'],
   legend: ['req', 'res', ['ping', 'reliable delivery'], 'fail'],
   goals: [
-    { text: 'Publisher Confirms (confirm.select) for guaranteed disk persistence', step: 1 },
-    { text: 'Consumer prefetch QoS to prevent worker starvation and overload', step: 2 },
-    { text: 'Dead Letter Exchanges (DLX) for rejected or expired messages', step: 3 },
-    { text: 'Retry queues with message TTL and exponential backoff loops', step: 4 },
-    { text: 'Raft Quorum Queues replacing legacy mirrored queues', step: 6 },
+    { text: 'Publisher Confirms (confirm.select) for', step: 1 },
+    { text: 'Consumer prefetch QoS to prevent', step: 2 },
+    { text: 'Dead Letter Exchanges (DLX) for', step: 3 },
+    { text: 'Retry queues with message TTL', step: 4 },
+    { text: 'Raft Quorum Queues replacing legacy', step: 6 },
   ],
   steps: [
     {
@@ -99,7 +99,7 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'QoS Balanced', delivery_guarantee: 'At-Least-Once', dlx_policy: 'None', queue_type: 'Fair Dispatch' },
       scene: {
         entities: {
-          queue: d(-8, -4, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['Task Queue', 'basic.qos(prefetch=1)'], sub: 'Dispatches only when idle' }),
+          queue: d(-8, -4, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['Task Queue', 'prefetch = 1'], sub: 'Dispatches only when idle' }),
           w1: d(8, -8, { s: 4.4, h: 52, color: 'purple', glyph: 'server', label: ['Worker 1 (Busy)', 'Processing Task #1'], sub: 'Unacked: 1 (Blocked)' }),
           w2: d(8, 4, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['Worker 2 (Free)', 'Idle'], sub: 'Receives next message' }),
           card: S({ x: -2, y: 14 }, 'Prefetch QoS Mechanics', [
@@ -243,7 +243,7 @@ export const rabbitmqReliabilityDlxLesson = {
         entities: {
           publisher: y(-12, -4, { form: 'phone', label: 'Publisher', tags: [{ text: 'delivery_mode=2', tone: 'green', icon: 'lock' }] }),
           quorumQ: d(-2, -4, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Quorum Queue (Raft)', 'durable=true'], sub: '3-Node Multi-AZ Quorum' }),
-          consumer: d(8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'server', label: ['Worker Pool', 'manual_ack=true'], sub: 'prefetch_count=1' }),
+          consumer: d(8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'server', label: ['Worker Pool', 'manual_ack'], sub: 'prefetch_count=1' }),
           dlq: d(8, 6, { s: 4.4, h: 52, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue', 'Quarantine'], sub: 'Unrecoverable jobs' }),
           card: S({ x: -2, y: 16 }, 'Production Reliability Checklist', [
             '1. delivery_mode = 2 (PERSISTENT message header)',

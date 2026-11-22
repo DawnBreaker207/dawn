@@ -8,6 +8,14 @@ export const k8sControlPlaneLesson = {
   trackId: 'k8s',
   badge: 'Advanced',
   summary: 'Deconstruct the Kubernetes brain: kube-apiserver authentication and admission, distributed Raft storage in etcd, kube-scheduler filtering, and controller reconciliation loops.',
+  metrics: ['apiserver', 'etcd_raft', 'scheduler', 'reconciliation'],
+  goals: [
+    { text: 'Declarative State via kubectl', step: 1 },
+    { text: 'apiserver Pipeline & Webhooks', step: 2 },
+    { text: 'etcd Raft Consensus Store', step: 3 },
+    { text: 'K8s Controller Reconciliation', step: 4 },
+    { text: 'kube-scheduler Filter & Score', step: 5 },
+  ],
   steps: [
     {
       title: 'The Declaration: kubectl apply',

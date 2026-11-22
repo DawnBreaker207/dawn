@@ -16,11 +16,11 @@ export const reverseProxyL4L7Lesson = {
   metrics: ['lb_layer', 'throughput_conn_sec', 'tls_termination', 'routing_granularity'],
   legend: ['req', 'res', ['ping', 'health check'], 'fail'],
   goals: [
-    { text: 'Compare Layer 4 transport vs Layer 7 application balancing', step: 1 },
-    { text: 'Direct Server Return (DSR) asymmetric response bypass', step: 2 },
-    { text: 'L7 Envoy / ALB path-based and header routing', step: 3 },
-    { text: 'Load balancing algorithms: Least Connections vs P2C', step: 4 },
-    { text: 'Graceful connection draining during blue-green deploys', step: 6 },
+    { text: 'Compare Layer 4 transport vs', step: 1 },
+    { text: 'Direct Server Return (DSR) asymmetric', step: 2 },
+    { text: 'L7 Envoy / ALB path-based', step: 3 },
+    { text: 'Load balancing algorithms', step: 4 },
+    { text: 'Graceful connection draining during', step: 6 },
   ],
   steps: [
     {

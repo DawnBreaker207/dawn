@@ -16,11 +16,11 @@ export const redisSortedSetsLesson = {
   metrics: ['zset_struct', 'lookup_cost', 'range_cost', 'skiplist_levels'],
   legend: ['req', 'res', ['ping', 'skiplist traversal'], 'fail'],
   goals: [
-    { text: 'Why ZSETs combine a Hash Table with a SkipList', step: 1 },
-    { text: 'Probabilistic SkipList tower levels and forward pointers', step: 2 },
-    { text: 'Range queries with ZRANGEBYSCORE and span metrics', step: 3 },
-    { text: 'Delayed task scheduling queue with ZSET timestamps', step: 4 },
-    { text: 'Geospatial indexing via Geohash 52-bit integers in ZSET', step: 6 },
+    { text: 'Why ZSETs combine a Hash', step: 1 },
+    { text: 'Probabilistic SkipList tower levels', step: 2 },
+    { text: 'Range queries with ZRANGEBYSCORE and', step: 3 },
+    { text: 'Delayed task scheduling queue with', step: 4 },
+    { text: 'Geospatial indexing via Geohash 52-bit', step: 6 },
   ],
   steps: [
     {

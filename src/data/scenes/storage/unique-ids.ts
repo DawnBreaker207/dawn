@@ -94,7 +94,7 @@ const ua = {
     goals: [
       { text: `Why database counters break under sharding`, step: 1 },
       { text: `Ticket servers and id blocks`, step: 3 },
-      { text: `UUIDs — and what random keys do to an index`, step: 5 },
+      { text: 'UUIDs', step: 5 },
       { text: `Time-ordered ids: UUID v7 and Snowflake`, step: 7 },
       { text: `Clocks that step back, and what ids leak`, step: 9 },
     ],

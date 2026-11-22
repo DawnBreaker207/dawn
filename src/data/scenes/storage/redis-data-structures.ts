@@ -16,11 +16,11 @@ export const redisDataStructuresLesson = {
   metrics: ['data_struct', 'encoding', 'time_complexity', 'memory_efficiency'],
   legend: ['req', 'res', ['ping', 'memory allocation'], 'fail'],
   goals: [
-    { text: 'Redis object wrapper robj anatomy and encoding', step: 1 },
-    { text: 'Simple Dynamic String (SDS) vs standard C strings', step: 2 },
-    { text: 'Dict hash table progressive rehashing across ht[0] and ht[1]', step: 3 },
-    { text: 'Memory optimization: Intset and Listpack compact encodings', step: 4 },
-    { text: 'Why storing data in hashes saves up to 80% RAM', step: 6 },
+    { text: 'Redis object wrapper robj anatomy', step: 1 },
+    { text: 'Simple Dynamic String (SDS) vs', step: 2 },
+    { text: 'Dict hash table progressive rehashing', step: 3 },
+    { text: 'Memory optimization', step: 4 },
+    { text: 'Why storing data in hashes', step: 6 },
   ],
   steps: [
     {

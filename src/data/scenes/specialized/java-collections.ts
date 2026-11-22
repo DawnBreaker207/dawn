@@ -15,9 +15,9 @@ export const javaCollectionsLesson = {
   level: 'intermediate',
   metrics: ['capacity', 'loadFactor', 'collisionRate', 'concurrency'],
   goals: [
-    { text: 'Master ArrayList dynamic resizing and 1.5x amortized growth', step: 1 },
-    { text: 'Understand HashMap hashing, collisions, and treeify threshold (8 entries)', step: 2 },
-    { text: 'Scale with ConcurrentHashMap lock-striping and CAS bin headers', step: 3 },
+    { text: 'Master ArrayList dynamic resizing and', step: 1 },
+    { text: 'Understand HashMap hashing, collisions,', step: 2 },
+    { text: 'Scale with ConcurrentHashMap lock-striping', step: 3 },
   ],
   steps: [
     {

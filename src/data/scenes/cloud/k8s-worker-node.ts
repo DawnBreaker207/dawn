@@ -8,6 +8,14 @@ export const k8sWorkerNodeLesson = {
   trackId: 'k8s',
   badge: 'Intermediate',
   summary: 'Follow the execution on a Kubernetes Worker Node: Kubelet sync loop, CRI runtime calls via containerd, pause container networking, and Liveness/Readiness/Startup health probes.',
+  metrics: ['kubelet_sync', 'cri_runtime', 'pod_status', 'probes'],
+  goals: [
+    { text: 'Kubelet Sync Loop & Watches', step: 1 },
+    { text: 'CRI gRPC Runtime Workflow', step: 2 },
+    { text: 'Pause Container & Network Pod', step: 3 },
+    { text: 'Pod Startup Sequence', step: 4 },
+    { text: 'Liveness & Readiness Probes', step: 5 },
+  ],
   steps: [
     {
       title: 'Kubelet Sync Loop',

@@ -118,9 +118,9 @@ const ld = {
     goals: [
       { text: `Turn a brief into requirements and numbers`, step: 1 },
       { text: `Generate short codes that never collide`, step: 4 },
-      { text: `Design the read path: cache and redirect type`, step: 7 },
+      { text: 'Design the read path', step: 7 },
       { text: `Store billions of key → value rows`, step: 8 },
-      { text: `Keep analytics and abuse off the critical path`, step: 10 },
+      { text: 'Keep analytics and abuse off', step: 10 },
     ],
     steps: [
       {
