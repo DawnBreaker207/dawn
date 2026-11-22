@@ -205,13 +205,6 @@ export const redisEventLoopLesson = {
           badClient: y(-12, -8, { form: 'phone', label: 'Admin Tool', tags: [{ text: 'KEYS * (10M keys)', tone: 'red', icon: 'alert' }] }),
           goodClient: y(-12, 6, { form: 'phone', label: 'Normal User', tags: [{ text: 'GET user:42 (Blocked!)', tone: 'amber', icon: 'hourglass' }] }),
           redis: d(6, -1, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Redis Server', 'Event Loop BLOCKED'], sub: 'Traversing 10M Dict Nodes' }),
-          card: S({ x: -2, y: 16 }, 'Production Blocking Catastrophe', [
-            'Bad query: KEYS * -> Iterates 10,000,000 bucket pointers sequentially',
-            'Execution duration: 2.4 seconds',
-            'During this 2.4s window, NO OTHER COMMAND CAN RUN',
-            'Health checks fail -> Load balancer kills instance -> Cascade outage',
-            'Fix: Use SCAN 0 MATCH user:* COUNT 100'
-          ], { icon: 'alert' })
         },
         links: {
           bc: h('badClient', 'redis', ['badClient', 'redis'], { heads: 'both', label: 'Blocking Query' }),

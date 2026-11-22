@@ -82,7 +82,7 @@ const Ws = (e = [zs], t = {}) => ({
 
 const Gs = (e = {}) => ({
     ug: h(`users`, `gw`, [`users`, [`users`, `gw`], `gw`], { heads: `both` }),
-    bg: h(`bot`, `gw2`, [`bot`, `gw2`], {
+    bg2: h(`bot`, `gw2`, [`bot`, `gw2`], {
       label: `429 Too Many Requests`,
       labelTone: `red`,
       labelAt: 0.5,
@@ -258,7 +258,7 @@ const Ks = {
           links: Gs(),
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
-            { route: [`bg`, `ga2`], rate: 7, kind: `heavy`, speed: 1.2 },
+            { route: [`bg2`, `ga2`], rate: 7, kind: `heavy`, speed: 1.2 },
             { routes: [{ path: [`gr`] }, { path: [`g2r`] }], rate: 2.4, kind: `write`, bounce: !0 },
           ],
         },
@@ -284,7 +284,7 @@ const Ks = {
           links: Gs({ fail: 0, label: `within limit`, labelTone: `green` }),
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
-            { route: [`bg`, `ga2`], rate: 0.6, bounce: !0 },
+            { route: [`bg2`, `ga2`], rate: 0.6, bounce: !0 },
             { routes: [{ path: [`gr`] }, { path: [`g2r`] }], rate: 1.2, kind: `write`, bounce: !0 },
           ],
         },

@@ -224,15 +224,6 @@ const fs = {
               tags: [{ text: `500,000 req/s · 95% empty`, tone: `red`, icon: `alert` }],
             }),
             bob: ts(),
-            card: cs(
-              `The bill`,
-              [
-                `1,000,000 users ÷ 2 s`,
-                `= 500,000 requests / s`,
-                `! ~475,000 of them: “nothing new”`,
-              ],
-              `activity`,
-            ),
           },
           links: { ...rs({ heads: `both`, label: `GET /messages · every 2 s` }), ...as() },
           flows: [

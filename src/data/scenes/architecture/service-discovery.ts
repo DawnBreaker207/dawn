@@ -237,16 +237,6 @@ const Uc = {
             ...Fc(),
             ...Nc(),
             reg: Ic(),
-            card: Hc(
-              `Who picks the instance?`,
-              [
-                `client-side   Orders gets the list,`,
-                `              balances itself`,
-                `server-side   Orders calls “payments”,`,
-                `              a proxy picks for it`,
-              ],
-              `split`,
-            ),
           },
           links: {
             opn: h(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),

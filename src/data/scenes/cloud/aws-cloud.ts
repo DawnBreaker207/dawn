@@ -310,7 +310,7 @@ export const awsCloudLesson = {
           },
           links: {
             w1: h(`ecs_a`, `db_p`, [`ecs_a`, `db_p`], { label: `INSERT / UPDATE`, heads: `both` }),
-            r1: h(`ecs_b`, `db_r`, [`ecs_b`, `db_r`], { label: `SELECT read-only`, heads: `both` }),
+            r_read: h(`ecs_b`, `db_r`, [`ecs_b`, `db_r`], { label: `SELECT read-only`, heads: `both` }),
             aurora_sync: h(`db_p`, `db_r`, [`db_p`, `db_r`], {
               label: `Shared Storage (6-way)`,
               heads: `both`,
@@ -318,7 +318,7 @@ export const awsCloudLesson = {
           },
           flows: [
             { route: [`w1`], bounce: !0, rate: 0.9 },
-            { route: [`r1`], bounce: !0, rate: 1.1 },
+            { route: [`r_read`], bounce: !0, rate: 1.1 },
           ],
         },
       },
@@ -348,27 +348,27 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            alb: f(-12, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs_a: d(-2, -8, {
+            alb: f(-14, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs_a: d(0, -10, {
               color: `slab`,
               glyph: `skull`,
               dead: 1,
               label: [`ECS AZ-1a (DOWN)`],
               tags: [{ text: `DOWN`, tone: `red`, icon: `alert` }],
             }),
-            ecs_b: d(-2, 4, {
+            ecs_b: d(0, 4, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-1b (HEALTHY)`],
               cpu: 0.75,
             }),
-            db_a: b(10, -8, {
+            db_a: b(12, -10, {
               label: `Writer AZ-a (DOWN)`,
               dead: 1,
               heat: 0.9,
               tags: [{ text: `FAILED`, tone: `red` }],
             }),
-            db_b: b(10, 4, {
+            db_b: b(12, 4, {
               label: `Replica AZ-b`,
               tags: [{ text: `Promoting…`, tone: `amber` }],
             }),
@@ -429,7 +429,7 @@ export const awsCloudLesson = {
               label: [`ECS AZ-b (#2)`],
               cpu: 0.35,
             }),
-            db_b: b(16, -4, {
+            db_b: b(18, -2, {
               label: `Aurora New Writer`,
               cpu: 0.4,
               tags: [{ text: `PRIMARY WRITER`, tone: `green` }],

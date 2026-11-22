@@ -307,17 +307,6 @@ const js = {
         metrics: { avail: `99.99%`, downtime: `53 min`, spofs: 0, survives: `a zone` },
         scene: {
           entities: Ds({
-            card: As(
-              `This failover`,
-              [
-                `detect: 3 missed health checks   10 s`,
-                `promote follower                 20 s`,
-                `reconnect apps                   30 s`,
-                `= RTO ≈ 1 minute`,
-                `! RPO ≈ 2 s of async writes lost`,
-              ],
-              `timer`,
-            ),
           }),
           links: Os,
           flows: ks,

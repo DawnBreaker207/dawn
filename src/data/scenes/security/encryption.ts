@@ -151,16 +151,6 @@ const Yl = {
               lb: [{ text: `certificate: shop.example`, icon: `fileKey` }],
             }),
             mallory: Pl([{ text: `sees random bytes`, tone: `green`, icon: `eyeOff` }]),
-            card: Jl(
-              `The TLS handshake`,
-              [
-                `server shows its certificate`,
-                `browser checks the CA signature`,
-                `both agree on fresh session keys`,
-                `= everything after: encrypted + tamper-proof`,
-              ],
-              `lock`,
-            ),
           },
           links: { ...Ul({ ar: { label: `TLS`, labelAt: 0.5 }, rl: { label: `TLS` } }), ...Wl() },
           flows: [Kl.req, Kl.sniffCipher],

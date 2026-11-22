@@ -176,16 +176,6 @@ const ld = {
           entities: {
             users: Ju(),
             app: Yu([], { label: [`sho.rt`], sub: `to be designed`, glyph: `share` }),
-            card: sd(
-              `Napkin math`,
-              [
-                `100 M links / month    ≈ 40 writes/s`,
-                `× 100 opens each       ≈ 4,000 reads/s`,
-                `evening peak × 3       ≈ 12,000 reads/s`,
-                `= 5 years: 6 billion links ≈ 3 TB`,
-              ],
-              `sigma`,
-            ),
           },
           links: { us: K.us },
           flows: [{ route: [`us`], rate: 4, bounce: !0 }],

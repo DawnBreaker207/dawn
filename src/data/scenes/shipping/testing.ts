@@ -191,11 +191,11 @@ const su = {
           },
           links: {
             ts: W.ts(),
-            sd: W.sd(`fdb`, { style: `dashed` }),
+            sd_fake: W.sd(`fdb`, { style: `dashed` }),
             sp: W.sp(`fpay`, { style: `dashed` }),
-            si: W.si(`finv`, { style: `dashed` }),
+            si_fake: W.si(`finv`, { style: `dashed` }),
           },
-          flows: [G([`ts`, `sd`], 1.4), G([`ts`, `sp`], 1), G([`ts`, `si`], 1)],
+          flows: [G([`ts`, `sd_fake`], 1.4), G([`ts`, `sp`], 1), G([`ts`, `si_fake`], 1)],
         },
       },
       {
@@ -273,9 +273,9 @@ const su = {
           links: {
             ts: W.ts(),
             sd: W.sd(),
-            si: W.si(`inv`, { style: `dashed`, label: `contract` }),
+            si_contract: W.si(`inv`, { style: `dashed`, label: `contract` }),
           },
-          flows: [G([`ts`, `sd`], 1.4, { kind: `heavy` }), G([`si`], 0.6)],
+          flows: [G([`ts`, `sd`], 1.4, { kind: `heavy` }), G([`si_contract`], 0.6)],
         },
       },
       {

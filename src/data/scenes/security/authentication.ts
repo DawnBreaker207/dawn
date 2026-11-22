@@ -141,16 +141,6 @@ const xl = {
             thief: ml(`attacker`, [
               { text: `gets hashes · years to crack`, tone: `amber`, icon: `hourglass` },
             ]),
-            card: bl(
-              `Salted, slow hashing`,
-              [
-                `hunter2 + salt 9f2c → $argon2id$…7Qe`,
-                `same password, other salt → other hash`,
-                `= ~100 ms per guess, on purpose`,
-                `! MD5 / SHA-256: billions per second`,
-              ],
-              `hash`,
-            ),
           },
           links: { ...V.base, ...V.steal() },
           flows: [yl.login, yl.steal],

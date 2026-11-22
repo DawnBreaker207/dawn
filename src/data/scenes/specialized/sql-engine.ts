@@ -95,10 +95,10 @@ export const sqlEngineLesson = {
       metrics: { stage: `Plan`, buffers: `1`, wal: `0 B`, locks: `schema lock` },
       scene: {
         entities: {
-          planner: d(-4, 2,  { color: `purple`, glyph: `code`,   label: [`Planner`, `cost model`] }),
-          stats:   d(6, -6,  { color: `blue`,   glyph: `chart`,  label: [`Statistics`, `pg_stats`] }),
-          seqscan: d(6,  2,  { color: `yellow`, glyph: `layers`, label: [`Seq Scan`, `10 000 rows`] }),
-          idxscan: d(6,  10, { color: `green`,  glyph: `zap`,    label: [`Index Scan`, `12 rows ✓`] }),
+          planner: d(-6, 4,  { color: `purple`, glyph: `code`,   label: [`Planner`, `cost model`] }),
+          stats:   d(8, -8,  { color: `blue`,   glyph: `chart`,  label: [`Statistics`, `pg_stats`] }),
+          seqscan: d(8,  2,  { color: `yellow`, glyph: `layers`, label: [`Seq Scan`, `10 000 rows`] }),
+          idxscan: d(8,  10, { color: `green`,  glyph: `zap`,    label: [`Index Scan`, `12 rows ✓`] }),
         },
         links: {
           ps: h(`planner`, `stats`,   [`planner`, `stats`],   { label: `read stats`, heads: `both` }),
@@ -120,10 +120,10 @@ export const sqlEngineLesson = {
       metrics: { stage: `Execute`, buffers: `4 loaded`, wal: `48 B`, locks: `RowShareLock` },
       scene: {
         entities: {
-          executor: d(-6, 0,  { color: `green`,  glyph: `code`,   label: [`Executor`, `pull model`] }),
-          bufpool:  d(6, -6,  { color: `blue`,   glyph: `layers`, label: [`Buffer Pool`, `8KB pages`] }),
-          lock_mgr: d(6,  4,  { color: `orange`, glyph: `lock`,   label: [`Lock Mgr`, `RowShareLock`] }),
-          disk:     b(16, -6, { label: [`Disk`, `heap + index`] }),
+          executor: d(-8, 2,   { color: `green`,  glyph: `code`,   label: [`Executor`, `pull model`] }),
+          bufpool:  d(8, -6,   { color: `blue`,   glyph: `layers`, label: [`Buffer Pool`, `8KB pages`] }),
+          lock_mgr: d(8,  4,   { color: `orange`, glyph: `lock`,   label: [`Lock Mgr`, `RowShareLock`] }),
+          disk:     b(18, -6,  { label: [`Disk`, `heap + index`] }),
         },
         links: {
           eb: h(`executor`, `bufpool`,  [`executor`, `bufpool`],  { label: `fetch page`, heads: `both` }),
@@ -148,10 +148,10 @@ export const sqlEngineLesson = {
       metrics: { stage: `Commit`, buffers: `4`, wal: `fsynced`, locks: `released` },
       scene: {
         entities: {
-          executor: d(-8, 0, { color: `green`,  glyph: `code`,  label: [`Executor`, `COMMIT`] }),
-          wal:      b(4, -6, { label: [`WAL`, `pg_wal`] }),
-          disk:     b(4,  6, { label: [`Heap`, `data files`] }),
-          done:     d(16, 0, { color: `green`,  glyph: `check`, label: [`Client`, `OK`] }),
+          executor: d(-10, 2, { color: `green`,  glyph: `code`,  label: [`Executor`, `COMMIT`] }),
+          wal:      b(6, -6,  { label: [`WAL`, `pg_wal`] }),
+          disk:     b(6,  6,  { label: [`Heap`, `data files`] }),
+          done:     d(18, 0,  { color: `green`,  glyph: `check`, label: [`Client`, `OK`] }),
         },
         links: {
           ew:  h(`executor`, `wal`,  [`executor`, `wal`],  { label: `fsync WAL`,         heads: `end` }),

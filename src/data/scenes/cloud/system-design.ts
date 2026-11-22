@@ -128,7 +128,7 @@ export const systemDesignLesson = {
             label: "Author",
             tags: [{ text: "Published ✓", tone: "green" }],
           }),
-          notion: sys_d(-8, 12, {
+          notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
             label: ["Notion CMS"],
@@ -188,7 +188,7 @@ export const systemDesignLesson = {
       scene: {
         entities: {
           author: sys_y(-18, 6, { label: "Author" }),
-          notion: sys_d(-8, 12, {
+          notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
             label: ["Notion CMS"],
@@ -259,7 +259,7 @@ export const systemDesignLesson = {
             tags: [{ text: "Cache HIT · 18ms", tone: "green" }],
           }),
           author: sys_y(-18, 6, { label: "Author" }),
-          notion: sys_d(-8, 12, {
+          notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
             label: ["Notion CMS"],
@@ -325,7 +325,7 @@ export const systemDesignLesson = {
             pills: "above",
             tags: [{ text: "Proxy SSR API", tone: "amber" }],
           }),
-          astro: sys_d(12, 0, {
+          astro: sys_d(10, -2, {
             color: "violet",
             glyph: "server",
             label: ["Astro SSR"],
@@ -334,13 +334,13 @@ export const systemDesignLesson = {
             pills: "above",
             tags: [{ text: "Prisma · 45ms", tone: "violet" }],
           }),
-          db: sys_b(18, 0, {
+          db: sys_b(18, 6, {
             label: "PostgreSQL",
             cpu: 0.45,
             tags: [{ text: "Pool: 1/10", tone: "green" }],
           }),
           author: sys_y(-18, 6, { label: "Author" }),
-          notion: sys_d(-8, 12, {
+          notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
             label: ["Notion CMS"],
@@ -407,7 +407,7 @@ export const systemDesignLesson = {
       scene: {
         entities: {
           author: sys_y(-18, 6, { label: "Author" }),
-          notion: sys_d(-8, 12, {
+          notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
             label: ["Notion CMS"],
@@ -427,13 +427,13 @@ export const systemDesignLesson = {
             pills: "above",
           }),
           readers: sys_y(-14, -8, { label: "Readers" }),
-          astro: sys_d(12, 0, {
+          astro: sys_d(10, -2, {
             color: "violet",
             glyph: "server",
             label: ["Astro SSR"],
             sub: "Serverless",
           }),
-          db: sys_b(18, 0, { label: "PostgreSQL" }),
+          db: sys_b(18, 6, { label: "PostgreSQL" }),
         },
         links: {
           readers_edge: sys_h("readers", "edge", ["readers", "edge"], {

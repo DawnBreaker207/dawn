@@ -84,13 +84,13 @@ export const reverseProxyL4L7Lesson = {
           ], { icon: 'zap' })
         },
         links: {
-          cl: h('client', 'l4', ['client', 'l4'], { heads: 'both' }),
+          cl_l4: h('client', 'l4', ['client', 'l4'], { heads: 'both' }),
           l1: h('l4', 'b1', ['l4', 'b1'], { heads: 'both' }),
           l2: h('l4', 'b2', ['l4', 'b2'], { heads: 'both' })
         },
         flows: [
-          { route: ['cl', 'l1'], bounce: true, rate: 2.0 },
-          { route: ['cl', 'l2'], bounce: true, rate: 2.0 }
+          { route: ['cl_l4', 'l1'], bounce: true, rate: 2.0 },
+          { route: ['cl_l4', 'l2'], bounce: true, rate: 2.0 }
         ]
       }
     },
@@ -259,13 +259,6 @@ export const reverseProxyL4L7Lesson = {
           proxy: d(-2, -4, { s: 4.8, h: 50, color: 'purple', glyph: 'balancer', label: ['Ingress / Envoy', 'Drain Controller'], sub: 'Drain Timer: 24s left' }),
           oldNode: d(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'server', label: ['Old Pod v1', 'DRAINING (No New Conns)'], sub: 'Finishing 3 requests' }),
           newNode: d(8, 2, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['New Pod v2', 'HEALTHY (100% Traffic)'], sub: 'Accepting all new traffic' }),
-          card: S({ x: -2, y: 14 }, 'Connection Draining Sequence', [
-            '1. Deployment triggers Pod v1 shutdown',
-            '2. Envoy marks Pod v1 as DRAINING:',
-            '   - New requests route exclusively to Pod v2',
-            '   - In-flight checkouts on Pod v1 finish gracefully',
-            '3. Pod v1 terminates with zero 502/504 errors'
-          ], { icon: 'check' })
         },
         links: {
           cp: h('client', 'proxy', ['client', 'proxy'], { heads: 'both' }),

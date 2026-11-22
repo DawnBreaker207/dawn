@@ -136,11 +136,11 @@ export const sqlExplainLesson = {
           probe: d(11, -4, { s: 3.8, h: 42, color: `teal`, glyph: `search`, label: [`Outer Probe`], sub: `Hash Join` }),
         },
         links: {
-          bh: h(`build`, `hash_tbl`, [`build`, `hash_tbl`], { heads: `end`, label: `populate` }),
+          build_hash: h(`build`, `hash_tbl`, [`build`, `hash_tbl`], { heads: `end`, label: `populate` }),
           ph: h(`probe`, `hash_tbl`, [`probe`, `hash_tbl`], { heads: `both`, label: `hash match` }),
         },
         flows: [
-          { route: [`bh`], bounce: false, rate: 1.5 },
+          { route: [`build_hash`], bounce: false, rate: 1.5 },
           { route: [`ph`], bounce: true, rate: 2.2 },
         ],
       },

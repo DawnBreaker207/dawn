@@ -261,16 +261,6 @@ export const storageEnginesLesson = {
             mem: rn(),
             ...un(),
             ...sn(6, [{ text: `1 fsync for 8 transactions`, tone: `green`, icon: `layers` }]),
-            card: Sn(
-              `The durability dial`,
-              [
-                `fsync every commit    safest · slowest`,
-                `= group commit        same safety, shared fsync`,
-                `fsync every 100 ms    fast · may lose 100 ms`,
-                `! fsync never         fastest · may lose minutes`,
-              ],
-              `gauge`,
-            ),
           },
           links: { am: T.am(), mw: T.mw(), ...fn(mn, { style: `dashed` }) },
           flows: [bn(3.2), xn(0.8, { kind: `heavy` }), pn(mn, 0.3)],

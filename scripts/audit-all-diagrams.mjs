@@ -26,6 +26,55 @@ function isoProject(x, y, z = 0) {
   return [Math.round(14 * (x + y)), Math.round(7 * (x - y) - z)];
 }
 
+function isTechnicalArtifactPanel(panel) {
+  if (!panel) return false;
+  // Chart widgets (e.g. hockey stick latency chart) are visualization components, not text panels
+  if (panel.chart) return true;
+  // Bitfield specifications (e.g. Snowflake 64-bit register bitfield)
+  if (panel.title && (/64-bit|bitfield|UUID\s*v[47]|Base\s*62/i.test(panel.title))) return true;
+
+  if (!Array.isArray(panel.lines)) return false;
+  const lines = panel.lines;
+  for (const line of lines) {
+    if (typeof line !== 'string') continue;
+    const s = line.trim();
+    // Bitfield / binary specs
+    if (/\b\d+\s*bits\b/i.test(s)) return true;
+    // Deadlock / lock cycle traces
+    if (/lock\s+[A-Z]\b.*waiting\s+for/i.test(s) || /waiting\s+for\s+[A-Z]\b/i.test(s)) return true;
+    // Shell commands / redirections
+    if (/^echo\s+|>\s*\/|>\s*[a-z0-9_.]+/i.test(s)) return true;
+    // HTTP Headers / Payload keys
+    if (/^(Idempotency-Key|Authorization|Cookie|Content-Type):/i.test(s)) return true;
+
+    // Terminal commands / Shell output
+    if (/^(\$|>|#)\s+/i.test(s)) return true;
+    if (/^(ps|grep|ip|etcdctl|cat|systemctl|mount|chroot|kill|top|free|strace|netstat|ss|iptables|ip6tables|nsenter|bpftool)\b/i.test(s)) return true;
+    if (s.startsWith('/sys/fs/cgroup/') || s.startsWith('/proc/')) return true;
+
+    // Kubernetes manifests & Dockerfile
+    if (/^(apiVersion:|kind:|spec:|metadata:|status:|rules:|selector:|containers:|ports:|type:\s*(ClusterIP|NodePort|LoadBalancer))/i.test(s)) return true;
+    if (/^(FROM|RUN|COPY|CMD|ENTRYPOINT|WORKDIR|ENV|EXPOSE|VOLUME)\b/i.test(s)) return true;
+
+    // HTTP Request / Presigned URL / API payloads
+    if (/^(PUT|GET|POST|DELETE|PATCH)\s+https?:\/\//i.test(s) || s.includes('?expires=') || s.includes('signature=')) return true;
+    // Multi-part / State transition specifications
+    if (s.includes('→') || s.includes('->') || s.includes('failed') || s.includes('complete')) {
+      if (s.includes('part') || s.includes('upload id') || s.includes('retry') || s.includes('state')) return true;
+    }
+    // Code / Query / Commands
+    if (
+      s.includes(' = ') || s.includes('(') || s.includes('{') ||
+      /^(SELECT|FROM|WHERE|INSERT|UPDATE|DELETE|CREATE|ALTER)\b/i.test(s) ||
+      /^(docker|kubectl|git|curl|iptables|tcpdump|sysctl|openssl)\b/i.test(s) ||
+      /^(const|let|var|def|func|class|import|export|return)\b/i.test(s) ||
+      s.includes('public class') || s.includes('void ') || s.includes('struct ') ||
+      s.includes('SYN=') || s.includes('ACK=') || s.includes('SEQ=')
+    ) return true;
+  }
+  return false;
+}
+
 async function bundle(relPath) {
   const res = await esbuild.build({
     entryPoints: [path.join(rootDir, relPath)],
@@ -71,6 +120,10 @@ console.log(`\nAuditing ${Object.keys(scenes).length} Registered Scene Graphs in
 const issues = {
   criticalOverlaps: [],
   expansionViolations: [],
+  overwrittenLinks: [],
+  detachedLabels: [],
+  recycledLinkIds: [],
+  genericConceptPanels: [],
   crowdedPairs: [],
   outOfBounds: [],
   brokenLinks: [],
@@ -118,7 +171,7 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
     const ents = step.scene.entities || {};
     const links = step.scene.links || {};
 
-    // Check Broken Links
+    // Check Broken Links & Labeled Link Fitness
     for (const [linkId, link] of Object.entries(links)) {
       if (!link) continue;
       const from = link.from;
@@ -128,6 +181,87 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
       }
       if (to && !ents[to] && to !== 'users' && to !== 'you' && to !== 'client') {
         issues.brokenLinks.push({ sceneId, step: sIdx + 1, linkId, missing: to, role: 'to' });
+      }
+
+      // Labeled Link Clearance and Detached Risk
+      if (link.label && from && to && ents[from] && ents[to]) {
+        const eFrom = ents[from];
+        const eTo = ents[to];
+        const p1 = isoProject(eFrom.x, eFrom.y, eFrom.z || 0);
+        const p2 = isoProject(eTo.x, eTo.y, eTo.z || 0);
+        const totalDist = Math.hypot(p1[0] - p2[0], p1[1] - p2[1]);
+        const rFrom = (eFrom.s ? eFrom.s * 7 : 32);
+        const rTo = (eTo.s ? eTo.s * 7 : 32);
+        const effectiveLength = Math.max(0, totalDist - (rFrom + rTo));
+        const labelText = String(link.label).trim();
+        const textWidth = Math.round(labelText.length * 7.2 + 24);
+
+        if (effectiveLength < textWidth + 30 || totalDist < 165) {
+          issues.overwrittenLinks.push({
+            sceneId,
+            step: sIdx + 1,
+            linkId,
+            label: labelText,
+            from,
+            to,
+            totalDist: Math.round(totalDist),
+            effectiveLength: Math.round(effectiveLength),
+            textWidth,
+          });
+        }
+
+        const deltaSx = Math.abs(p1[0] - p2[0]);
+        const deltaSy = Math.abs(p1[1] - p2[1]);
+        const isVerticalGhat = deltaSx < 20 && deltaSy > 50;
+        const hasTags = (Array.isArray(eFrom.tags) && eFrom.tags.length > 0) || (Array.isArray(eTo.tags) && eTo.tags.length > 0);
+
+        if ((isVerticalGhat || hasTags) && totalDist < 210) {
+          issues.detachedLabels.push({
+            sceneId,
+            step: sIdx + 1,
+            linkId,
+            label: labelText,
+            from,
+            to,
+            totalDist: Math.round(totalDist),
+            reason: isVerticalGhat ? 'Trục chiếu đứng gắt (dx ~ 0)' : 'Khối gắn thẻ Tag (va chạm đẩy nhãn văng)',
+          });
+        }
+      }
+    }
+
+    // Check Step Transition: Recycled Link IDs with different endpoints
+    if (sIdx + 1 < totalSteps && scene.steps[sIdx + 1]?.scene?.links) {
+      const nextLinks = scene.steps[sIdx + 1].scene.links;
+      for (const [kId, curL] of Object.entries(links)) {
+        if (!curL) continue;
+        const nxtL = nextLinks[kId];
+        if (nxtL && (nxtL.from !== curL.from || nxtL.to !== curL.to)) {
+          issues.recycledLinkIds.push({
+            sceneId,
+            fromStep: sIdx + 1,
+            toStep: sIdx + 2,
+            linkId: kId,
+            prev: `${curL.from} -> ${curL.to}`,
+            next: `${nxtL.from} -> ${nxtL.to}`,
+          });
+        }
+      }
+    }
+
+    // Check Generic Concept Panels vs Technical Artifact Panels
+    for (const [k, ent] of Object.entries(ents)) {
+      if (!ent || typeof ent !== 'object') continue;
+      if (ent.type === 'panel') {
+        if (!isTechnicalArtifactPanel(ent)) {
+          issues.genericConceptPanels.push({
+            sceneId,
+            step: sIdx + 1,
+            panelKey: k,
+            title: ent.title,
+            lines: ent.lines || [],
+          });
+        }
       }
     }
 
@@ -268,7 +402,75 @@ console.log(`4. Critical Overlaps (<90px):      ${issues.criticalOverlaps.length
 console.log(`5. Expansion Rule Violations:      ${issues.expansionViolations.length}`);
 console.log(`6. Crowded Pairs (90px..125px):    ${issues.crowdedPairs.length}`);
 console.log(`7. Glyph Clearance Hazards:        ${issues.glyphHazards.length}`);
+console.log(`8. Overwritten / Cramped Links:    ${issues.overwrittenLinks.length}`);
+console.log(`9. Detached Label Hazards:         ${issues.detachedLabels.length}`);
+console.log(`10. Recycled Link IDs (Tween Dead):${issues.recycledLinkIds.length}`);
+console.log(`11. Generic Concept Panels:        ${issues.genericConceptPanels.length}`);
 console.log('='.repeat(75));
+
+if (issues.genericConceptPanels.length > 0) {
+  console.log('\n[GENERIC CONCEPT PANELS DETECTED (Should be removed unless Technical Artifact)]:');
+  const grouped = {};
+  issues.genericConceptPanels.forEach(p => {
+    grouped[p.sceneId] = (grouped[p.sceneId] || []);
+    grouped[p.sceneId].push(p);
+  });
+  for (const [id, list] of Object.entries(grouped)) {
+    console.log(`  - ${id} (${list.length} panels):`);
+    list.slice(0, 3).forEach(p => {
+      console.log(`      Step ${p.step} [${p.panelKey}]: "${p.title}" -> lines: [${p.lines.slice(0, 2).join('; ')}...]`);
+    });
+    if (list.length > 3) console.log(`      ... and ${list.length - 3} more`);
+  }
+}
+
+if (issues.recycledLinkIds.length > 0) {
+  console.log('\n[RECYCLED LINK IDS ACROSS STEPS (Kills draw animation & causes teleport snap)]:');
+  const grouped = {};
+  issues.recycledLinkIds.forEach(r => {
+    grouped[r.sceneId] = (grouped[r.sceneId] || []);
+    grouped[r.sceneId].push(r);
+  });
+  for (const [id, list] of Object.entries(grouped)) {
+    console.log(`  - ${id} (${list.length} recycled link transitions):`);
+    list.slice(0, 5).forEach(r => {
+      console.log(`      Link "${r.linkId}" Step ${r.fromStep} -> ${r.toStep}: was (${r.prev}), became (${r.next})`);
+    });
+    if (list.length > 5) console.log(`      ... and ${list.length - 5} more`);
+  }
+}
+
+if (issues.overwrittenLinks.length > 0) {
+  console.log('\n[OVERWRITTEN / CRAMPED LABELED LINKS (effectiveLength < textWidth + 30 or dist < 165)]:');
+  const grouped = {};
+  issues.overwrittenLinks.forEach(o => {
+    grouped[o.sceneId] = (grouped[o.sceneId] || []);
+    grouped[o.sceneId].push(o);
+  });
+  for (const [id, list] of Object.entries(grouped)) {
+    console.log(`  - ${id} (${list.length} links):`);
+    list.slice(0, 4).forEach(o => {
+      console.log(`      Step ${o.step} link "${o.linkId}" ("${o.label}"): dist=${o.totalDist}px, effLen=${o.effectiveLength}px, textW=${o.textWidth}px (${o.from} -> ${o.to})`);
+    });
+    if (list.length > 4) console.log(`      ... and ${list.length - 4} more`);
+  }
+}
+
+if (issues.detachedLabels.length > 0) {
+  console.log('\n[DETACHED LABEL HAZARDS (Vertical axis dx<20 or tags near link with dist < 210)]:');
+  const grouped = {};
+  issues.detachedLabels.forEach(d => {
+    grouped[d.sceneId] = (grouped[d.sceneId] || []);
+    grouped[d.sceneId].push(d);
+  });
+  for (const [id, list] of Object.entries(grouped)) {
+    console.log(`  - ${id} (${list.length} links):`);
+    list.slice(0, 3).forEach(d => {
+      console.log(`      Step ${d.step} link "${d.linkId}" ("${d.label}"): dist=${d.totalDist}px, reason: ${d.reason}`);
+    });
+    if (list.length > 3) console.log(`      ... and ${list.length - 3} more`);
+  }
+}
 
 if (issues.expansionViolations.length > 0) {
   console.log('\n[EXPANSION RULE VIOLATIONS DETECTED (Labeled links or tags with dist < 155px)]:');

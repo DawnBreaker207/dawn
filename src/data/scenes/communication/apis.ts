@@ -168,16 +168,6 @@ const wo = {
           entities: {
             phone: ho([{ text: `loading…`, tone: `amber`, icon: `hourglass` }]),
             api: go(),
-            card: So(
-              `What the screen needs`,
-              [
-                `name, avatar URL           ~0.4 KB`,
-                `last 3 posts + previews    ~2.5 KB`,
-                `follower count             ~0.1 KB`,
-                `! downloaded 48 KB · used ~3 KB`,
-              ],
-              `smartphone`,
-            ),
           },
           links: yo(Co),
           flows: [{ route: [`pa`], rate: 1.6, bounce: !0, speed: 0.6 }],

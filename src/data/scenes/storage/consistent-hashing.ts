@@ -324,14 +324,6 @@ const Xi = {
             ring: zi(Ki, { moved: Vi(Gi, Ki) }),
             ...Yi([`A`, `B`, `C`, `D`]),
             e: Li(`E`, 308),
-            card: S({ x: 0, y: 0, z: 0, dx: -470, dy: -250 }, `Misses after adding a server`, [], {
-              icon: `zap`,
-              chart: `bars`,
-              bars: [
-                { label: `hash % N`, to: 0.8, tone: `red`, note: `80%` },
-                { label: `consistent`, to: 0.2, tone: `green`, note: `20%` },
-              ],
-            }),
           },
           links: {},
           flows: [],

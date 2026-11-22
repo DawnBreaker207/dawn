@@ -132,16 +132,6 @@ const dc = {
           entities: {
             shoppers: rc(),
             ...ac(uc),
-            card: lc(`Dashboard · p99 latency`, [], `chartLine`, {
-              chart: `bars`,
-              bars: [
-                { label: `gateway`, to: 1, tone: `red`, note: `2.4 s` },
-                { label: `orders`, to: 0.96, tone: `red`, note: `2.3 s` },
-                { label: `payments`, to: 0.92, tone: `red`, note: `2.2 s` },
-                { label: `inventory`, to: 0.02, tone: `green`, note: `30 ms` },
-                { label: `orders DB`, to: 0.01, tone: `green`, note: `8 ms` },
-              ],
-            }),
           },
           links: oc(),
           flows: sc(),

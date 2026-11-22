@@ -70,15 +70,6 @@ export const websocketRealtimeProtocolsLesson = {
         entities: {
           client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Upgrade: websocket', icon: 'zap' }] }),
           server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['WebSocket Gateway', 'Port 443'], sub: 'HTTP 101 Switched' }),
-          card: S({ x: -2, y: 14 }, 'The Upgrade Handshake', [
-            'Client -> Server:',
-            '  GET /chat HTTP/1.1',
-            '  Upgrade: websocket, Connection: Upgrade',
-            '  Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==',
-            'Server -> Client:',
-            '  HTTP/1.1 101 Switching Protocols',
-            '  Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo='
-          ], { icon: 'network' })
         },
         links: {
           cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'Upgraded Socket' })
@@ -230,7 +221,7 @@ export const websocketRealtimeProtocolsLesson = {
           userB: y(-12, 6, { form: 'phone', label: 'User B', tags: [{ text: 'Conn: Server 2', icon: 'user' }] }),
           gw1: d(0, -10, { s: 4.6, h: 52, color: 'orange', glyph: 'network', label: ['WS Gateway 1', 'Node A'], sub: 'Holds User A socket' }),
           gw2: d(0, 6, { s: 4.6, h: 52, color: 'orange', glyph: 'network', label: ['WS Gateway 2', 'Node B'], sub: 'Holds User B socket' }),
-          redis: d(12, -2, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Pub/Sub', 'Backplane Bus'], sub: 'Channel: room_102' }),
+          redis: d(14, -2, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Pub/Sub', 'Backplane Bus'], sub: 'Channel: room_102' }),
           card: S({ x: -2, y: 16 }, 'Multi-Node Message Dispatch', [
             '1. User A sends message "Hi B!" to Gateway 1',
             '2. Gateway 1 publishes: REDIS PUBLISH room_102 "Hi B!"',

@@ -108,13 +108,6 @@ export const dnsAnycastLesson = {
         entities: {
           client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'IPv4 + IPv6 Dual', icon: 'zap' }] }),
           auth: d(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Authoritative NS', 'Zone Records'], sub: 'Zone apex: @' }),
-          card: S({ x: -2, y: 14 }, 'Zone File Resource Records', [
-            'example.com.      300  IN  A      198.51.100.1',
-            'example.com.      300  IN  AAAA   2001:db8::1',
-            'www.example.com.  300  IN  CNAME  example.com.',
-            'mail.example.com. 300  IN  MX 10  aspmx.l.google.com.',
-            'example.com.      300  IN  TXT    "v=spf1 include:_spf.google.com ~all"'
-          ], { icon: 'listOrdered' })
         },
         links: {
           ca: h('client', 'auth', ['client', 'auth'], { heads: 'both', label: 'Query Type: A + AAAA' })

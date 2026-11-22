@@ -231,16 +231,10 @@ export const networkSecurityDdosLesson = {
       metrics: { attack_type: 'L7 Mitigated', attack_volume_gbps: '100% Inspected', defense_tier: 'Edge WAF Rules', mitigation_status: 'PROTECTED' },
       scene: {
         entities: {
-          user: y(-12, -8, { form: 'phone', label: 'Legitimate User', tags: [{ text: 'Passed Challenge', tone: 'green', icon: 'check' }] }),
-          bot: y(-12, 4, { form: 'phone', label: 'Malicious Scraper', tags: [{ text: 'Blocked by WAF', tone: 'red', icon: 'ban' }] }),
-          waf: d(-2, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'shield', label: ['Edge WAF', 'Rate Limit & Rules'], sub: '100 req/min Cap' }),
-          origin: d(10, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['App Backend', 'Fast & Healthy'], sub: 'Protected Tier' }),
-          card: S({ x: -2, y: 16 }, 'Edge WAF Evaluation Rules', [
-            'Rule 1: Rate limit > 100 requests / 10s per IP -> 429 Too Many Requests',
-            'Rule 2: SQLi regex pattern in URI/Body -> Immediate 403 Forbidden',
-            'Rule 3: Cloudflare Turnstile / Managed Challenge for automated bots',
-            'Result: Zero malicious requests reach backend application code'
-          ], { icon: 'shield' })
+          user: y(-14, -10, { form: 'phone', label: 'Legitimate User', tags: [{ text: 'Passed Challenge', tone: 'green', icon: 'check' }] }),
+          bot: y(-14, 6, { form: 'phone', label: 'Malicious Scraper', tags: [{ text: 'Blocked by WAF', tone: 'red', icon: 'ban' }] }),
+          waf: d(0, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'shield', label: ['Edge WAF', 'Rate Limit & Rules'], sub: '100 req/min Cap' }),
+          origin: d(12, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['App Backend', 'Fast & Healthy'], sub: 'Protected Tier' }),
         },
         links: {
           uw: h('user', 'waf', ['user', 'waf'], { heads: 'both' }),

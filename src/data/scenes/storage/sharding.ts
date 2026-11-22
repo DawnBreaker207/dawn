@@ -279,15 +279,6 @@ export const shardingLesson = {
           entities: {
             app: Gn([{ text: `top 10 by followers?`, icon: `search` }]),
             ...qn(Qn),
-            card: Xn(
-              `Scatter–gather`,
-              [
-                `ask all 4 shards for their top 10`,
-                `merge 40 results, keep the top 10`,
-                `! as slow as the slowest shard`,
-              ],
-              `layers`,
-            ),
           },
           links: Jn(),
           flows: [

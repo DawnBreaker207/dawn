@@ -259,16 +259,6 @@ export const cachingLesson = {
             app: dt(),
             db: ft({ cpu: 0.12 }),
             cache: pt({ tags: [{ text: `memory full`, tone: `amber`, icon: `alert` }] }),
-            card: ht(
-              `Least recently used`,
-              [
-                `product:42    used 1 s ago`,
-                `product:7     used 4 s ago`,
-                `product:913   used 2 min ago`,
-                `! evict product:5 · unused 3 h`,
-              ],
-              `layers`,
-            ),
           },
           links: mt,
           flows: gt(0.92),

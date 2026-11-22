@@ -410,18 +410,6 @@ export const sqlNosqlLesson = {
               label: [`Search`],
               sub: `inverted index`,
             }),
-            card: Lt(
-              `Built for one job`,
-              [
-                `search        free text, ranking, typos`,
-                `time-series   metrics, sensor data`,
-                `graph         friends-of-friends`,
-                `wide-column   huge write volumes`,
-                `object store  files, images, backups`,
-              ],
-              `layers`,
-              { x: 0, y: 11, dx: 60, dy: -205 },
-            ),
           },
           links: {
             ua: w.ua,

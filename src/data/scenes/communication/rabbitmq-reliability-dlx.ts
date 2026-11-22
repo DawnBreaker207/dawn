@@ -135,9 +135,9 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'DLX Protected', delivery_guarantee: 'Poison Isolated', dlx_policy: 'x-dead-letter-exchange', queue_type: 'DLQ Routed' },
       scene: {
         entities: {
-          mainQ: d(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'inbox', label: ['Main Queue: orders', 'Poison Msg Detected'], sub: 'basic.reject(requeue=false)' }),
-          dlx: d(0, 4, { s: 4.6, h: 52, color: 'rose', glyph: 'route', label: ['DLX: orders_dlx', 'Dead Letter Exchange'], sub: 'Captures failed jobs' }),
-          dlq: d(8, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue (DLQ)', 'Isolated for Review'], sub: 'Alerts sent to Sentry / Slack' }),
+          mainQ: d(-12, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'inbox', label: ['Main Queue: orders', 'Poison Msg Detected'], sub: 'basic.reject(requeue=false)' }),
+          dlx: d(-2, 4, { s: 4.6, h: 52, color: 'rose', glyph: 'route', label: ['DLX: orders_dlx', 'Dead Letter Exchange'], sub: 'Captures failed jobs' }),
+          dlq: d(12, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue (DLQ)', 'Isolated for Review'], sub: 'Alerts sent to Sentry / Slack' }),
           card: S({ x: -2, y: 16 }, 'DLX Routing Arguments', [
             'Map<String, Object> args = new HashMap<>();',
             'args.put("x-dead-letter-exchange", "orders_dlx");',

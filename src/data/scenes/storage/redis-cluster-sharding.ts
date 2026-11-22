@@ -201,13 +201,6 @@ export const redisClusterShardingLesson = {
         entities: {
           nodeA: d(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'database', label: ['Node A (Source)', 'MIGRATING Slot 1000'], sub: 'Streaming keys' }),
           nodeD: d(8, 4, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['New Node D (Target)', 'IMPORTING Slot 1000'], sub: 'Receiving slot data' }),
-          card: S({ x: 0, y: 14 }, 'Online Slot Migration Steps', [
-            'CLUSTER SETSLOT 1000 MIGRATING <NodeD_ID>',
-            'CLUSTER SETSLOT 1000 IMPORTING <NodeA_ID>',
-            'CLUSTER GETKEYSINSLOT 1000 100 -> MIGRATE NodeD keys...',
-            'CLUSTER SETSLOT 1000 NODE <NodeD_ID>',
-            'Gossip protocol announces new slot owner to all cluster nodes'
-          ], { icon: 'refresh' })
         },
         links: {
           ad: h('nodeA', 'nodeD', ['nodeA', 'nodeD'], { heads: 'end', label: 'Live MIGRATE Stream' })

@@ -82,11 +82,11 @@ export const sqlConnectionPoolLesson = {
           disk: b(11, -4, { r: 2.2, h: 36, label: `Disk Queue Stalled`, color: `red` }),
         },
         links: {
-          cp: h(`crowd`, `pg_server`, [`crowd`, `pg_server`], { heads: `end`, fail: 0.4, label: `connection storm` }),
+          storm_link: h(`crowd`, `pg_server`, [`crowd`, `pg_server`], { heads: `end`, fail: 0.4, label: `connection storm` }),
           pd: h(`pg_server`, `disk`, [`pg_server`, `disk`], { heads: `both`, label: `I/O wait` }),
         },
         flows: [
-          { route: [`cp`], bounce: true, rate: 2.5 },
+          { route: [`storm_link`], bounce: true, rate: 2.5 },
         ],
       },
     },

@@ -110,10 +110,10 @@ export const javaExceptionsErrorsLesson = {
         },
         links: {
           tt: h('try_block', 'twr_spine', ['try_block', 'twr_spine'], { heads: 'end', label: 'thrown first' }),
-          ts: h('twr_spine', 'suppressed', ['twr_spine', 'suppressed'], { heads: 'end', label: 'attached as suppressed' }),
+          twr_suppressed: h('twr_spine', 'suppressed', ['twr_spine', 'suppressed'], { heads: 'end', label: 'attached as suppressed' }),
         },
         flows: [
-          { route: ['tt', 'ts'], bounce: false, rate: 1.8 },
+          { route: ['tt', 'twr_suppressed'], bounce: false, rate: 1.8 },
         ],
       },
     },

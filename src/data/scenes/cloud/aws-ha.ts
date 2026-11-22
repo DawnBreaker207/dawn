@@ -72,10 +72,10 @@ export const awsHaLesson = {
       },
       scene: {
         entities: {
-          users: y(-12, -4, { label: `Global Users`, tags: [{ text: `DNS Query`, icon: `globe` }] }),
+          users: y(-14, -4, { label: `Global Users`, tags: [{ text: `DNS Query`, icon: `globe` }] }),
           r53: d(-2, -4, { color: `yellow`, glyph: `globe`, label: [`Route 53`, `Failover + Health`] }),
-          reg_pri: d(10, -10, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `Healthy`] }),
-          reg_sec: d(10, 2, { color: `orange`, glyph: `server`, label: [`DR (us-west-2)`, `Standby`] }),
+          reg_pri: d(12, -10, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `Healthy`] }),
+          reg_sec: d(12, 2, { color: `orange`, glyph: `server`, label: [`DR (us-west-2)`, `Standby`] }),
         },
         links: {
           u_dns: h(`users`, `r53`, [`users`, `r53`], { heads: `both` }),
@@ -119,14 +119,14 @@ export const awsHaLesson = {
           az3: d(6, 4,   { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1c)`] }),
         },
         links: {
-          l1: h(`alb`, `az1`, [`alb`, `az1`], { heads: `both` }),
-          l2: h(`alb`, `az2`, [`alb`, `az2`], { heads: `both` }),
-          l3: h(`alb`, `az3`, [`alb`, `az3`], { heads: `both` }),
+          alb_az1: h(`alb`, `az1`, [`alb`, `az1`], { heads: `both` }),
+          alb_az2: h(`alb`, `az2`, [`alb`, `az2`], { heads: `both` }),
+          alb_az3: h(`alb`, `az3`, [`alb`, `az3`], { heads: `both` }),
         },
         flows: [
-          { route: [`l1`], bounce: true, rate: 1.0 },
-          { route: [`l2`], bounce: true, rate: 1.0 },
-          { route: [`l3`], bounce: true, rate: 1.0 },
+          { route: [`alb_az1`], bounce: true, rate: 1.0 },
+          { route: [`alb_az2`], bounce: true, rate: 1.0 },
+          { route: [`alb_az3`], bounce: true, rate: 1.0 },
         ],
       },
     },
@@ -164,13 +164,13 @@ export const awsHaLesson = {
           i4: d(6, 12,  { color: `yellow`, glyph: `cpu`, label: [`EC2 Node 4`], sub: `Scaled` }),
         },
         links: {
-          l1: h(`alb`, `i1`, [`alb`, `i1`], { heads: `both` }),
-          l2: h(`alb`, `i2`, [`alb`, `i2`], { heads: `both` }),
-          l3: h(`alb`, `i3`, [`alb`, `i3`], { heads: `both` }),
-          l4: h(`alb`, `i4`, [`alb`, `i4`], { heads: `both` }),
+          alb_i1: h(`alb`, `i1`, [`alb`, `i1`], { heads: `both` }),
+          alb_i2: h(`alb`, `i2`, [`alb`, `i2`], { heads: `both` }),
+          alb_i3: h(`alb`, `i3`, [`alb`, `i3`], { heads: `both` }),
+          alb_i4: h(`alb`, `i4`, [`alb`, `i4`], { heads: `both` }),
         },
         flows: [
-          { route: [`l1`, `l2`, `l3`, `l4`], bounce: true, rate: 2.0 },
+          { route: [`alb_i1`, `alb_i2`, `alb_i3`, `alb_i4`], bounce: true, rate: 2.0 },
         ],
       },
     },
@@ -207,11 +207,11 @@ export const awsHaLesson = {
         },
         links: {
           ld: h(`alb`, `dead`, [`alb`, `dead`], { heads: `none`, style: `dashed` }),
-          l1: h(`alb`, `alive1`, [`alb`, `alive1`], { heads: `both` }),
-          l2: h(`alb`, `alive2`, [`alb`, `alive2`], { heads: `both` }),
+          alb_alive1: h(`alb`, `alive1`, [`alb`, `alive1`], { heads: `both` }),
+          alb_alive2: h(`alb`, `alive2`, [`alb`, `alive2`], { heads: `both` }),
         },
         flows: [
-          { route: [`l1`, `l2`], bounce: true, rate: 2.4 },
+          { route: [`alb_alive1`, `alb_alive2`], bounce: true, rate: 2.4 },
         ],
       },
     },

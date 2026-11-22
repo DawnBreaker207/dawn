@@ -108,11 +108,11 @@ export const javaSpringScopesLesson = {
           fresh_target: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['Fresh Task Instance'], sub: 'Instantiated on demand' }),
         },
         links: {
-          sp: h('singleton_svc', 'cglib_proxy', ['singleton_svc', 'cglib_proxy'], { heads: 'end', label: 'method call' }),
+          svc_proxy: h('singleton_svc', 'cglib_proxy', ['singleton_svc', 'cglib_proxy'], { heads: 'end', label: 'method call' }),
           pt: h('cglib_proxy', 'fresh_target', ['cglib_proxy', 'fresh_target'], { heads: 'end', label: 'target resolution' }),
         },
         flows: [
-          { route: ['sp', 'pt'], bounce: true, rate: 2.2 },
+          { route: ['svc_proxy', 'pt'], bounce: true, rate: 2.2 },
         ],
       },
     },

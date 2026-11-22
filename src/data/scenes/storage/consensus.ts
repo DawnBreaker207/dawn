@@ -277,16 +277,6 @@ const Ua = {
             ]),
             b: M(`b`, [Ma(2), { text: `log 1 2 3 · 4 Ben ✓`, tone: `green`, icon: `listOrdered` }]),
             c: M(`c`, [{ text: `log 1 2 3 · 4 Ben ✓`, tone: `green`, icon: `listOrdered` }]),
-            card: Ra(
-              `Commit rule`,
-              [
-                `1  leader appends the entry`,
-                `2  sends it to every follower`,
-                `3  a majority has stored it`,
-                `= committed → reply “saved”`,
-              ],
-              `listOrdered`,
-            ),
           },
           links: {
             w1a: N.w1a({ fail: 1 }),

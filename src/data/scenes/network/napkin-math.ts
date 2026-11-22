@@ -124,7 +124,7 @@ export const napkinMathLesson = {
         },
         metrics: { dau: `10M`, avg: `?`, peak: `?`, servers: `?`, storage: `?` },
         scene: {
-          entities: { users: ye(), ...we({ tags: [{ text: `enough?`, icon: `info` }] }), card: Me },
+          entities: { users: ye(), ...we({ tags: [{ text: `enough?`, icon: `info` }] }), },
           links: Ee(),
           flows: [{ route: [`u`], rate: 2 }],
         },
@@ -179,11 +179,6 @@ export const napkinMathLesson = {
           entities: {
             users: ye(),
             ...we(_(1)),
-            card: be(
-              `Peak traffic`,
-              [`evenings run ~3× the average`, `= 2,300 × 3 ≈ 7,000 req/s`],
-              `trendingUp`,
-            ),
           },
           links: Ee({ fail: 0.35 }),
           flows: [{ route: [`u`], rate: 6.5 }],

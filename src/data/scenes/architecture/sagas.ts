@@ -227,16 +227,6 @@ const $c = {
               car: { tags: [{ text: `no cars left`, tone: `red`, icon: `alert` }] },
             }),
             ...Yc(),
-            card: Zc(
-              `The saga`,
-              [
-                `1. book flight   ✓   undo: cancel flight`,
-                `2. book hotel    ✓   undo: cancel hotel`,
-                `! 3. rent car     ✗`,
-                `= run undos in reverse: 2 ← 1`,
-              ],
-              `undo`,
-            ),
           },
           links: { ...R.ut, ...R.calls(`trip`, { car: { fail: 1 } }), ...R.dbs() },
           flows: [

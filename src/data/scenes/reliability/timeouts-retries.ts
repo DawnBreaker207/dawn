@@ -239,15 +239,6 @@ const tc = {
               ...v(0.62),
               tags: [{ text: `recovering`, tone: `green`, icon: `heartPulse` }],
             }),
-            card: ec(`One call, with backoff`, [], `timer`, {
-              chart: `bars`,
-              bars: [
-                { label: `attempt 1`, from: 0, to: 0.06, tone: `red`, note: `timeout` },
-                { label: `retry 1`, from: 0.14, to: 0.2, tone: `red`, note: `+100 ms` },
-                { label: `retry 2`, from: 0.36, to: 0.42, tone: `red`, note: `+200 ms` },
-                { label: `retry 3`, from: 0.74, to: 0.8, tone: `green`, note: `+400 ms ✓` },
-              ],
-            }),
           },
           links: { ...Qs.uo(), ...Qs.op({ label: `backoff + jitter`, fail: 0.1 }) },
           flows: [

@@ -190,16 +190,6 @@ const ul = {
               w3: [{ text: `reduce` }],
               w4: [{ text: `reduce` }],
             }),
-            card: cl(
-              `Counting 2 billion views`,
-              [
-                `map:     each worker counts its chunk`,
-                `shuffle: same video → same worker`,
-                `reduce:  sum the counts per video`,
-                `= 100 workers: ~20 minutes`,
-              ],
-              `sigma`,
-            ),
           },
           links: { ...z.base, ...z.batch },
           flows: [B.base, ...B.batch],

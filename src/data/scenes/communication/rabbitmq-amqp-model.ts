@@ -109,12 +109,6 @@ export const rabbitmqAmqpModelLesson = {
           appThreads: y(-10, -8, { form: 'phone', label: 'Multi-Thread App', tags: [{ text: '50 Worker Threads', icon: 'workflow' }] }),
           tcpPipe: d(0, 0, { s: 4.6, h: 52, color: 'blue', glyph: 'network', label: ['Single TCP Connection', 'Port 5672 (AMQP)'], sub: 'Carries Frames 1..50' }),
           broker: d(10, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['RabbitMQ Broker', 'Channel Dispatcher'], sub: 'Erlang Actors per Channel' }),
-          card: S({ x: -2, y: 14 }, 'Channel Multiplexing on Wire', [
-            'TCP Frame Header: [Type | Channel ID: 1 | Length | Payload]',
-            'TCP Frame Header: [Type | Channel ID: 2 | Length | Payload]',
-            'TCP Frame Header: [Type | Channel ID: 3 | Length | Payload]',
-            'Creating a channel costs ZERO TCP handshakes and zero TLS RTTs!'
-          ], { icon: 'layers' })
         },
         links: {
           at: h('appThreads', 'tcpPipe', ['appThreads', 'tcpPipe'], { heads: 'both' }),

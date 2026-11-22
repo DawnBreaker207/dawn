@@ -327,19 +327,9 @@ const ua = {
             s1: Qi([{ text: `018f6b1c-3a40-7…`, icon: `clock` }]),
             s2: $i([{ text: `018f6b1c-3a41-7…`, icon: `clock` }]),
             ...ca([9]),
-            card: oa(
-              `UUID v7`,
-              [
-                `018f6b1c-3a40-7d2e-9b6f-5c1a2e4d7f90`,
-                `48 bits   milliseconds since 1970`,
-                `74 bits   random`,
-                `= ordered by time, no coordination`,
-              ],
-              `clock`,
-            ),
           },
-          links: { r5: la(`s1`, 9), r4: la(`s2`, 9) },
-          flows: [{ routes: [{ path: [`r5`] }, { path: [`r4`] }], kind: `write`, rate: 2.4 }],
+          links: { r_s1_p9: la(`s1`, 9), r_s2_p9: la(`s2`, 9) },
+          flows: [{ routes: [{ path: [`r_s1_p9`] }, { path: [`r_s2_p9`] }], kind: `write`, rate: 2.4 }],
         },
       },
       {

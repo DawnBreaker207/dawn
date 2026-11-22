@@ -70,12 +70,6 @@ export const httpEvolutionLesson = {
         entities: {
           browser: y(-10, -8, { form: 'phone', label: 'Browser', tags: [{ text: 'Blocked on Req #1', tone: 'amber', icon: 'hourglass' }] }),
           server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Web Server', 'HTTP/1.1 FIFO'], sub: 'Slow query stalls queue' }),
-          card: S({ x: -2, y: 14 }, 'Head-of-Line (HoL) Blocking', [
-            'Stream: [Req #1: slow API] -> [Req #2: style.css] -> [Req #3: app.js]',
-            'Server response order MUST match request order:',
-            '- Style.css is ready in 5ms, BUT CANNOT BE SENT',
-            '- It waits 2000ms until slow API finishes transmitting!'
-          ], { icon: 'hourglass' })
         },
         links: {
           bs: h('browser', 'server', ['browser', 'server'], { heads: 'both', label: 'Sequential Queue' })

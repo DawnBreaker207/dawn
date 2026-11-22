@@ -172,17 +172,6 @@ const tf = {
             alice: Id(),
             bob: Ld(),
             chat: zd([], { sub: `to be designed` }),
-            card: $d(
-              `Napkin math`,
-              [
-                `50 M users × 40 messages  ≈ 23,000 / s`,
-                `× 200 bytes               ≈ 400 GB / day`,
-                `20 M connected at peak`,
-                `= ÷ 200 k per server ≈ 100 gateways`,
-              ],
-              `sigma`,
-              { x: 0, y: -4, dx: 60, dy: -215 },
-            ),
           },
           links: {},
           flows: [],

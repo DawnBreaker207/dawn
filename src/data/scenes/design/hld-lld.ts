@@ -106,18 +106,18 @@ const Bu = (e = {}) => ({
   });
 
 const Vu = (e = {}) => ({
-    gc: h(`gw`, `ctl`, [`gw`, `ctl`], { heads: `both` }),
+    gc_ctl: h(`gw`, `ctl`, [`gw`, `ctl`], { heads: `both` }),
     cs: h(`ctl`, `svc`, [`ctl`, `svc`], { heads: `both` }),
     sr: h(`svc`, `repo`, [`svc`, [`svc`, 9], [`repo`, 9], `repo`], { heads: `both` }),
     sp: h(`svc`, `payc`, [`svc`, [`svc`, 9], [`payc`, 9], `payc`], { heads: `both` }),
     ro: h(`repo`, `odb`, [`repo`, `odb`], { heads: `both` }),
-    pp: h(`payc`, `pay`, [`payc`, `pay`], { heads: `both` }),
+    pp_client: h(`payc`, `pay`, [`payc`, `pay`], { heads: `both` }),
     ...e,
   });
 
 const Hu = () => [
     {
-      routes: [{ path: [`gc`, `cs`, `sr`, `ro`] }, { path: [`gc`, `cs`, `sp`, `pp`] }],
+      routes: [{ path: [`gc_ctl`, `cs`, `sr`, `ro`] }, { path: [`gc_ctl`, `cs`, `sp`, `pp_client`] }],
       rate: 1.4,
       bounce: !0,
     },
@@ -177,16 +177,6 @@ const Ku = {
         scene: {
           entities: Pu({
             sz: x({ x0: -14, x1: 14, y0: -14, y1: 16 }, `HLD · THE WHOLE SYSTEM`),
-            card: Uu(
-              `HLD decides`,
-              [
-                `which services exist, what each owns`,
-                `call or event between them`,
-                `which store for which data`,
-                `how it scales, how it fails`,
-              ],
-              `map`,
-            ),
           }),
           links: Iu(),
           flows: Lu(),
@@ -319,7 +309,7 @@ const Ku = {
             ),
           }),
           links: Vu({
-            gc: h(`gw`, `ctl`, [`gw`, `ctl`], {
+            gc_ctl: h(`gw`, `ctl`, [`gw`, `ctl`], {
               heads: `both`,
               label: `the contract`,
               labelTone: `green`,

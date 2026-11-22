@@ -384,17 +384,6 @@ const Cu = {
               label: `users table`,
               tags: [{ text: `name → full_name`, tone: `amber`, icon: `database` }],
             }),
-            card: gu(
-              `Expand, then contract`,
-              [
-                `1  add full_name, write both columns`,
-                `2  backfill old rows`,
-                `3  read from full_name`,
-                `= 4  drop name — once nothing uses it`,
-                `! never rename in one step`,
-              ],
-              `database`,
-            ),
           },
           links: {
             ...bu(),

@@ -139,16 +139,6 @@ export const redisPersistenceRdbAofLesson = {
           client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET k v', icon: 'zap' }] }),
           redis: d(0, 0, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Engine', 'aof_buf Buffer'], sub: 'In-Memory + Log Append' }),
           aofFile: d(10, 8, { s: 4.6, h: 52, color: 'teal', glyph: 'folder', label: ['appendonly.aof', 'RESP Command Log'], sub: '*3\\r\\n$3\\r\\nSET...' }),
-          card: S({ x: -2, y: 14 }, 'AOF Log Entry Format', [
-            '*3',
-            '$3',
-            'SET',
-            '$7',
-            'user:42',
-            '$4',
-            'John',
-            'Appended sequentially to disk buffer on every write'
-          ], { icon: 'listOrdered' })
         },
         links: {
           cr: h('client', 'redis', ['client', 'redis'], { heads: 'both' }),

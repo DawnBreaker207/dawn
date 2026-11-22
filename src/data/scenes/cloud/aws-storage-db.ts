@@ -114,9 +114,9 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          ec2_1: d(-8, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
-          ec2_2: d(8, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
-          efs: d(0, 6, { s: 4.4, h: 48, color: `orange`, glyph: `folder`, label: [`Amazon EFS`], sub: `Shared POSIX` }),
+          ec2_1: d(-11, -6, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
+          ec2_2: d(11, -6, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
+          efs: d(0, 8, { s: 4.4, h: 48, color: `orange`, glyph: `folder`, label: [`Amazon EFS`], sub: `Shared POSIX` }),
         },
         links: {
           m1: h(`ec2_1`, `efs`, [`ec2_1`, `efs`], { heads: `both`, label: `NFS Mount` }),

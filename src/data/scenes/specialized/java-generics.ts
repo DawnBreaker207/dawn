@@ -82,11 +82,11 @@ export const javaGenericsLesson = {
           target: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['compareTo(Node)'], sub: 'User Business Logic' }),
         },
         links: {
-          cb: h('caller', 'bridge', ['caller', 'bridge'], { heads: 'end', label: 'invokevirtual' }),
+          caller_bridge: h('caller', 'bridge', ['caller', 'bridge'], { heads: 'end', label: 'invokevirtual' }),
           bt: h('bridge', 'target', ['bridge', 'target'], { heads: 'end', label: 'forwards typed call' }),
         },
         flows: [
-          { route: ['cb', 'bt'], bounce: false, rate: 2.2 },
+          { route: ['caller_bridge', 'bt'], bounce: false, rate: 2.2 },
         ],
       },
     },

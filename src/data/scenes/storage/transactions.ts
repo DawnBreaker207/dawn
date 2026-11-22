@@ -92,7 +92,7 @@ const $a = {
         },
         metrics: { seatsLeft: 1, sold: 0, oversold: `no`, lockWait: 0 },
         scene: {
-          entities: { ana: Wa(), ben: Ga(), ...Ka(), db: qa([Ja(1)]), card: Qa },
+          entities: { ana: Wa(), ben: Ga(), ...Ka(), db: qa([Ja(1)]), },
           links: Ya(),
           flows: Xa({ ana: { rate: 0.5 }, ben: { rate: 0.5 } }),
         },
@@ -117,15 +117,6 @@ const $a = {
             ben: Ga([{ text: `booked seat 7 ✓`, tone: `green` }]),
             ...Ka(),
             db: qa([Ja(0, `red`, ` · 2 bookings!`)], { heat: 0.5 }),
-            card: Za(`What happened`, [], `timer`, {
-              chart: `bars`,
-              bars: [
-                { label: `Ana reads`, from: 0, to: 0.18, tone: `violet`, note: `left = 1` },
-                { label: `Ben reads`, from: 0.1, to: 0.28, tone: `amber`, note: `left = 1` },
-                { label: `Ana writes`, from: 0.36, to: 0.54, tone: `violet`, note: `left = 0` },
-                { label: `Ben writes`, from: 0.48, to: 0.66, tone: `red`, note: `left = 0 !` },
-              ],
-            }),
           },
           links: Ya(),
           flows: Xa(),

@@ -441,17 +441,6 @@ const mo = {
         scene: {
           entities: lo({
             cdn: so({ tags: [{ text: `segments · 4 s each`, icon: `video` }] }),
-            card: co(
-              `One video, five qualities`,
-              [
-                `1080p   5 Mbit/s`,
-                ` 720p   3 Mbit/s`,
-                `= 480p   1.5 Mbit/s   ← now: 2 Mbit/s link`,
-                ` 360p   0.8 Mbit/s`,
-                ` 240p   0.4 Mbit/s`,
-              ],
-              `video`,
-            ),
           }),
           links: uo(),
           flows: [

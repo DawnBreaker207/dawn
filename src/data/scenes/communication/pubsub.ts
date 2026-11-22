@@ -113,15 +113,6 @@ const $o = {
             shoppers: Uo(),
             order: Wo({ tags: [{ text: `waits for 4 calls`, tone: `amber`, icon: `hourglass` }] }),
             ...Ko(),
-            card: Qo(
-              `Checkout time`,
-              [
-                `save the order          120 ms`,
-                `+ 4 calls × ~200 ms     800 ms`,
-                `= ~920 ms before “thank you”`,
-              ],
-              `timer`,
-            ),
           },
           links: { ...Jo(), ...Yo() },
           flows: [
@@ -334,7 +325,7 @@ const $o = {
               label: `one transaction`,
               labelAt: 0.5,
             }),
-            ob: h(`odb`, `bus`, [`odb`, [`odb`, `bus`], `bus`], { label: `relay`, labelAt: 0.75 }),
+            relay_bus: h(`odb`, `bus`, [`odb`, [`odb`, `bus`], `bus`], { label: `relay`, labelAt: 0.75 }),
             ...Object.fromEntries(
               [...Ho, `fr`].map((e) => [`b${e}`, h(`bus`, e, [`bus`, [e, `bus`], e])]),
             ),
@@ -343,7 +334,7 @@ const $o = {
             { route: [`uo`, `od`], rate: 1.4, bounce: !0 },
             {
               fanout: !0,
-              routes: [...Ho, `fr`].map((e) => ({ path: [`ob`, `b${e}`] })),
+              routes: [...Ho, `fr`].map((e) => ({ path: [`relay_bus`, `b${e}`] })),
               kind: `msg`,
               rate: 0.8,
             },

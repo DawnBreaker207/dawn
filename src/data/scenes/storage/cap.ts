@@ -434,18 +434,6 @@ const Oa = {
         scene: {
           entities: {
             ...Ea(),
-            card: S(
-              { x: 7, y: 0, z: 0, dx: 60, dy: -230 },
-              `Strongest → weakest`,
-              [
-                `linearizable   everyone sees the latest`,
-                `causal         effects after causes`,
-                `read-your-writes  you see your own`,
-                `monotonic      never go back in time`,
-                `eventual       copies converge… later`,
-              ],
-              { icon: `layers` },
-            ),
           },
           links: Da,
           flows: [

@@ -194,12 +194,6 @@ export const tlsHandshakeLesson = {
         entities: {
           client: d(-8, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Order Service', 'SPIFFE Cert'], sub: 'spiffe://cluster/ns/order' }),
           server: d(8, 4, { s: 4.8, h: 50, color: 'purple', glyph: 'database', label: ['Payment Gateway', 'Mutual TLS Policy'], sub: 'Validates Client Cert' }),
-          card: S({ x: 0, y: 14 }, 'mTLS Zero-Trust Verification', [
-            '1. Client presents certificate: spiffe://prod/sa/order-service',
-            '2. Server validates client cert with Internal Mesh CA',
-            '3. Authorization Policy check: Can "order-service" call POST /pay?',
-            '4. Bidirectional hardware-encrypted communication established'
-          ], { icon: 'lock' })
         },
         links: {
           cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'mTLS Encrypted Lane' })

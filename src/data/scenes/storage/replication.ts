@@ -374,17 +374,6 @@ export const replicationLesson = {
               label: `backups`,
               tags: [{ text: `snapshot 03:00 + write log`, tone: `green`, icon: `check` }],
             }),
-            card: S(
-              { x: -9, y: 9, z: 0, dx: -365, dy: -70 },
-              `Point-in-time recovery`,
-              [
-                `03:00  restore the nightly snapshot`,
-                `       replay the write log…`,
-                `= 14:02  stop here — data intact`,
-                `! 14:03  the bad migration`,
-              ],
-              { icon: `clock` },
-            ),
           },
           links: {
             ...Fn,

@@ -253,16 +253,6 @@ const zo = {
             mq: jo(`QUEUE · DRAINING`),
             q: Mo(4),
             ...Po(Oo, { w3: g }),
-            card: Ro(
-              `Acknowledgements`,
-              [
-                `1. worker takes a job → hidden, not deleted`,
-                `2. worker finishes → ack → deleted`,
-                `3. no ack in 60 s → visible again`,
-                `! may run twice → make jobs idempotent`,
-              ],
-              `check`,
-            ),
           },
           links: {
             ...F.uw(),

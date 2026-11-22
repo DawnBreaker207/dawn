@@ -80,12 +80,12 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'check' })
         },
         links: {
-          pe: h('producer', 'directEx', ['producer', 'directEx'], { heads: 'end' }),
+          pe_direct: h('producer', 'directEx', ['producer', 'directEx'], { heads: 'end' }),
           eqE: h('directEx', 'qError', ['directEx', 'qError'], { heads: 'end', label: 'error' }),
           eqI: h('directEx', 'qInfo', ['directEx', 'qInfo'], { heads: 'end', label: 'info' })
         },
         flows: [
-          { route: ['pe', 'eqE'], bounce: false, rate: 2.8 }
+          { route: ['pe_direct', 'eqE'], bounce: false, rate: 2.8 }
         ]
       }
     },
@@ -119,15 +119,15 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'workflow' })
         },
         links: {
-          pe: h('producer', 'fanoutEx', ['producer', 'fanoutEx'], { heads: 'end' }),
+          pe_fanout: h('producer', 'fanoutEx', ['producer', 'fanoutEx'], { heads: 'end' }),
           fe1: h('fanoutEx', 'qEmail', ['fanoutEx', 'qEmail'], { heads: 'end' }),
           fe2: h('fanoutEx', 'qInven', ['fanoutEx', 'qInven'], { heads: 'end' }),
           fe3: h('fanoutEx', 'qAudit', ['fanoutEx', 'qAudit'], { heads: 'end' })
         },
         flows: [
-          { route: ['pe', 'fe1'], bounce: false, rate: 2.0 },
-          { route: ['pe', 'fe2'], bounce: false, rate: 2.0 },
-          { route: ['pe', 'fe3'], bounce: false, rate: 2.0 }
+          { route: ['pe_fanout', 'fe1'], bounce: false, rate: 2.0 },
+          { route: ['pe_fanout', 'fe2'], bounce: false, rate: 2.0 },
+          { route: ['pe_fanout', 'fe3'], bounce: false, rate: 2.0 }
         ]
       }
     },
@@ -159,13 +159,13 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          pe: h('producer', 'topicEx', ['producer', 'topicEx'], { heads: 'end' }),
+          pe_topic: h('producer', 'topicEx', ['producer', 'topicEx'], { heads: 'end' }),
           eq1: h('topicEx', 'qEuAll', ['topicEx', 'qEuAll'], { heads: 'end', label: '*.eu.*' }),
           eq2: h('topicEx', 'qPayAll', ['topicEx', 'qPayAll'], { heads: 'end', label: 'payment.#' })
         },
         flows: [
-          { route: ['pe', 'eq1'], bounce: false, rate: 2.2 },
-          { route: ['pe', 'eq2'], bounce: false, rate: 2.2 }
+          { route: ['pe_topic', 'eq1'], bounce: false, rate: 2.2 },
+          { route: ['pe_topic', 'eq2'], bounce: false, rate: 2.2 }
         ]
       }
     },

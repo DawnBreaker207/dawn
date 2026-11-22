@@ -253,16 +253,6 @@ const jl = {
             eve: Cl(),
             api: wl([{ text: `role allows “edit”? ✓`, tone: `green`, icon: `shield` }]),
             db: Tl(),
-            card: Al(
-              `Roles → permissions`,
-              [
-                `viewer      read`,
-                `accountant  read · edit`,
-                `approver    read · approve`,
-                `admin       everything + users`,
-              ],
-              `idCard`,
-            ),
           },
           links: H.base(),
           flows: [U.alice, U.eveOwn],
