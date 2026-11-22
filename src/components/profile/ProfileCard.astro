@@ -3,16 +3,17 @@ import { SITE } from '@/lib/site';
 ---
 
 <div class="z-10 mb-8 md:mb-0">
-  <div
-    class="flex flex-col overflow-hidden rounded-lg shadow-sky dark:shadow-mondegreen bg-(--bg-alt) border border-(--border)"
-  >
-    <img
-      src="/static/images/avatar.jpg"
-      alt={SITE.title}
-      width="550"
-      height="350"
-      loading="eager"
-      style="object-position: 50% 15%; aspect-ratio: 4/4; width: 100%"
-    />
+  <div class="relative rounded-2xl p-[2.5px] bg-gradient-to-tr from-rose-600 via-pink-500 to-amber-400 dark:from-rose-500 dark:via-red-500 dark:to-orange-400 shadow-sky dark:shadow-mondegreen">
+    <div class="overflow-hidden rounded-[13.5px] bg-(--bg-alt)">
+      <img
+        src="/static/images/avatar.jpg"
+        alt={SITE.title}
+        width="550"
+        height="350"
+        loading="eager"
+        class="transition-transform duration-500 hover:scale-[1.03]"
+        style="object-position: 50% 15%; aspect-ratio: 4/4; width: 100%"
+      />
+    </div>
   </div>
 </div>
