@@ -482,11 +482,11 @@ export class StageEngine {
           <stop offset=".78" stop-color="#fff" stop-opacity=".35"/>
           <stop offset="1" stop-color="#fff" stop-opacity="0"/>
         </radialGradient>
-        <mask id="grid-mask" maskUnits="userSpaceOnUse" x="-5000" y="-5000" width="10000" height="10000">
-          <rect x="-5000" y="-5000" width="10000" height="10000" fill="url(#grid-fade)"/>
+        <mask id="grid-mask" maskUnits="userSpaceOnUse" x="-1500" y="-1500" width="3000" height="3000">
+          <rect x="-1500" y="-1500" width="3000" height="3000" fill="url(#grid-fade)"/>
         </mask>
       </defs>
-      <rect class="stage-grid" x="-5000" y="-5000" width="10000" height="10000" fill="url(#iso-grid)" mask="url(#grid-mask)"/>
+      <rect class="stage-grid" x="-1500" y="-1500" width="3000" height="3000" fill="url(#iso-grid)" mask="url(#grid-mask)"/>
       <g class="layer-floor"></g>
       <g class="layer-links"></g>
       <g class="layer-packets"></g>
