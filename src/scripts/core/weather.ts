@@ -242,9 +242,21 @@ export function setupWeatherEngine(): void {
   const btn = document.getElementById('btn-global-weather') || document.getElementById('btn-global-rain');
   const label = document.getElementById('weather-label') || document.getElementById('rain-label');
   const vol = document.getElementById('weather-vol') as HTMLInputElement | null;
+  const muteBtn = document.getElementById('btn-audio-mute');
+  const muteIcon = document.getElementById('audio-speaker-icon');
+  const syncMuteIcon = (v: number) => {
+    if (muteIcon) muteIcon.textContent = v <= 0.01 ? '🔇' : '🔊';
+    if (muteBtn) muteBtn.setAttribute('title', v <= 0.01 ? 'Unmute audio' : 'Mute audio');
+  };
   if (vol) {
-    vol.value = String(Math.round(getWeatherVolume() * 100));
-    vol.addEventListener('input', () => setWeatherVolume(Number(vol.value) / 100));
+    const curVol = getWeatherVolume();
+    vol.value = String(Math.round(curVol * 100));
+    syncMuteIcon(curVol);
+    vol.addEventListener('input', () => {
+      const v = Number(vol.value) / 100;
+      setWeatherVolume(v);
+      syncMuteIcon(v);
+    });
   }
 
   const getSavedMode = (): WeatherMode => {

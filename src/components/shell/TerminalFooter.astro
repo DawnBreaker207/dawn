@@ -15,13 +15,6 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
   class="studio-statusbar flex h-[26px] min-h-[26px] min-w-0 items-center justify-between gap-1.5 sm:gap-2 border-t border-(--border) bg-(--bg-alt) px-2 sm:px-3 font-mono text-[11px] text-(--fg-dim) select-none"
 >
   <div class="flex min-w-0 items-center gap-1 sm:gap-1.5 whitespace-nowrap">
-    <span
-      id="statusbar-vim-mode"
-      class="hidden sm:inline-block rounded border border-(--border) px-1.5 py-0.2 text-[10px] font-semibold text-(--accent) bg-(--bg) select-none"
-      title="Vim Mode (Press ? for shortcuts)"
-    >
-      NORMAL
-    </span>
     <a
       href="/lab/terminal"
       data-open-terminal
@@ -141,9 +134,20 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
           </button>
         </div>
 
-        <!-- Weather Volume -->
+        <!-- Weather Volume & Mute Toggle -->
         <div class="flex items-center justify-between pt-1">
-          <span class="text-(--fg-faint) text-[10px]">Audio Vol:</span>
+          <div class="flex items-center gap-1 text-(--fg-dim)">
+            <button
+              type="button"
+              id="btn-audio-mute"
+              class="inline-flex items-center justify-center w-5 h-5 rounded hover:bg-(--bg-hover) text-(--fg-dim) hover:text-(--fg) cursor-pointer select-none transition-colors"
+              title="Toggle audio mute"
+              aria-label="Toggle audio mute"
+            >
+              <span id="audio-speaker-icon">🔊</span>
+            </button>
+            <span class="text-[10px]">Audio Vol:</span>
+          </div>
           <input
             type="range"
             id="weather-vol"
@@ -178,7 +182,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
       data-theme-toggle
       type="button"
       data-umami-event="theme-toggle"
-      class="tip inline-flex items-center justify-center h-[20px] min-w-[20px] px-1 rounded text-(--fg-faint) hover:text-(--fg) hover:bg-(--bg-hover) cursor-pointer transition-colors"
+      class="tip inline-flex items-center justify-center min-w-[34px] sm:min-w-[22px] h-[24px] sm:h-[20px] px-1.5 sm:px-1 rounded text-[13px] sm:text-[11px] text-(--fg-faint) hover:text-(--fg) hover:bg-(--bg-hover) active:bg-(--bg-subtle) cursor-pointer select-none transition-colors"
       data-tip="Light / Dark"
       aria-label="Toggle light/dark theme"
     >
@@ -248,3 +252,51 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
     </div>
   </div>
 </footer>
+
+<script>
+  function setupAudioMute() {
+    const muteBtn = document.getElementById('btn-audio-mute');
+    const muteIcon = document.getElementById('audio-speaker-icon');
+    const vol = document.getElementById('weather-vol') as HTMLInputElement | null;
+    if (!muteBtn) return;
+
+    let savedVol = Number(localStorage.getItem('dawn_weather_vol'));
+    if (!Number.isFinite(savedVol) || savedVol < 0 || savedVol > 1) savedVol = 1;
+    let lastVol = savedVol > 0.01 ? savedVol : 1;
+
+    const syncUI = (v: number) => {
+      if (muteIcon) muteIcon.textContent = v <= 0.01 ? '🔇' : '🔊';
+      muteBtn.setAttribute('title', v <= 0.01 ? 'Unmute audio' : 'Mute audio');
+      if (vol) vol.value = String(Math.round(v * 100));
+    };
+
+    syncUI(savedVol);
+
+    muteBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const current = vol ? Number(vol.value) / 100 : Number(localStorage.getItem('dawn_weather_vol') || 1);
+      if (current > 0.01) {
+        lastVol = current;
+        localStorage.setItem('dawn_weather_vol', '0');
+        syncUI(0);
+        vol?.dispatchEvent(new Event('input', { bubbles: true }));
+      } else {
+        const restore = lastVol > 0.01 ? lastVol : 1;
+        localStorage.setItem('dawn_weather_vol', String(restore));
+        syncUI(restore);
+        vol?.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    };
+
+    vol?.addEventListener('input', () => {
+      const v = Number(vol.value) / 100;
+      if (v > 0.01) lastVol = v;
+      if (muteIcon) muteIcon.textContent = v <= 0.01 ? '🔇' : '🔊';
+      muteBtn.setAttribute('title', v <= 0.01 ? 'Unmute audio' : 'Mute audio');
+    });
+  }
+
+  setupAudioMute();
+  document.addEventListener('astro:page-load', setupAudioMute);
+</script>
