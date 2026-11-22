@@ -449,6 +449,120 @@ Requirements:
   React state management (e.g. a component with many inter-dependent state values)
 - Lab CSS → isolated file, scoped under a root class (see `designed-to-scale.css` pattern)
 
+### DTS Isometric 2.5D Diagram Rules (MANDATORY FOR ALL SCENE GRAPHS)
+
+> [!IMPORTANT]
+> **READ PLAN FIRST:** Before implementing any new scene or refactoring existing ones, always consult [lab-workbench-plan.md](file:///D:/Code/Blog/lab-workbench-plan.md) (Sections 10 to 15). The plan contains the complete architecture, concept-to-visual conversion formulas, milestone steps, and topic allocations for all 104 lessons.
+
+All architectural simulation scenes (`src/data/scenes/*`) render on a dimetric 2.5D isometric SVG canvas.
+To prevent blocks from overlapping, colliding, or having unreadable cramped link arrows, every scene MUST strictly obey these rules:
+
+#### 1. Projection Math & Distance Thresholds
+The engine maps 3D coordinates `(x, y, z)` to 2D screen pixels `(sx, sy)` via:
+$$\begin{cases} sx = 14 \times (x + y) \\ sy = 7 \times (x - y) - z \end{cases}$$
+
+- **CRITICAL OVERLAP THRESHOLD ($D < 90\text{px}$):** **STRICTLY FORBIDDEN.** Blocks intersect or touch faces.
+- **CROWDED THRESHOLD ($90\text{px} \le D < 125\text{px}$):** Discouraged. Link arrows become cramped.
+- **SAFE / HEALTHY DISTANCE ($D \ge 125\text{px}$):** Required for all major compute blocks, databases, and gateways.
+- **THE EXPANSION RULE (Kéo giãn khoảng cách):** When an element has tags, badge labels, or connects multiple links, default to expanding distance ($D \ge 160\sim 190\text{px}$) to avoid visual clutter.
+
+#### 2. The Standard 4-Tier Layout Grid
+Never invent arbitrary `(x, y)` coordinates. Assign components to these architectural tiers:
+- **Tier 1 (Client / Traffic):** `y = -24` to `-18` (e.g. `fc: { x0: -9, x1: -1, y0: -24, y1: -18 }`).
+- **Tier 2 (Ingress / Gateway / ALB / DNS):** `y = -8` to `-4`, centered at $x \approx -4$ to $-2$.
+- **Tier 3 (Services / Compute / Workers):** `y = 2` to `6`, staggered across $x$ with step $\Delta x \ge 8$ units ($\Delta sx \ge 112\text{px}$).
+- **Tier 4 (Persistence / Storage / Queues / Cache):** `y = 12` to `16` (placed behind respective services).
+
+#### 3. Isometric 3D Grid Alignment & Link Straightness (Perspective Standard)
+Every component placement and connection link MUST follow the canonical 3D isometric perspective grid:
+- **Perspective Vectors:**
+  - **Isometric X-axis:** $\vec{u}_x = (14, 7)$ (runs diagonally down-right at $26.5^\circ$).
+  - **Isometric Y-axis:** $\vec{u}_y = (14, -7)$ (runs diagonally up-right at $-26.5^\circ$).
+- **Perspective Alignment (Reference Model: Microservices Step 1 Monolith):**
+  - Dependent components (e.g. Service $\to$ its Database) must align straight along the isometric depth axis ($+Y$, constant $X$). The link connecting them must be a pure straight line along $\vec{u}_y$ with zero sideways drift ($\Delta sx = 0$).
+  - Components on the same architectural tier must follow regular spacing along the isometric grid line.
+- **FORBIDDEN: Dogleg / Z-Bends in Links:**
+  - Strictly avoid artificial intermediate waypoints like `['gw', [t, 'gw'], t]` that create awkward, crooked $90^\circ$ zig-zag bends. Links must project directly from source to target `['gw', t]` or strictly follow the isometric grid rays.
+- **Link Path Spacing & Parallel Clearance (MANDATORY: Minimum Gap >= 7px):**
+  - When two or more link paths run parallel or near each other (e.g. forward Request path and return Response path, or multiple data lanes originating from a single gateway):
+  - The perpendicular separation distance (gap) between link lines MUST be **at least $7\text{px}$** (`gap >= 7px`).
+  - **STRICTLY FORBIDDEN: Merged Link Lines:** Never allow parallel links to run on top of each other (gap $< 7\text{px}$), which blurs SVG strokes, collides animated flow packets, and obscures arrowheads.
+  - Separate two-way flows into distinct lanes via lateral offsets or waypoints to maintain the $\ge 7\text{px}$ clearance.
+- **Inter-Block Spacing Flexibility:** Unlike the strict $\ge 7\text{px}$ gap for link paths, the distance between blocks is adaptive: it scales based on the domain, number of clustered nodes, and layout tiers, provided blocks do not collide and remain framed within the canvas.
+
+#### 4. Block Dimensions, Text Wrapping & Glyph Clearance
+- **Standard Sizing:** Blocks displaying both text and glyph icons (e.g. SQS queues, Kafka brokers, microservices) must use $s \ge 3.8$ and $h \ge 42\sim 46\text{px}$.
+- **FORBIDDEN: Cramped Blocks:** Never use tiny blocks ($s < 3.8$ or $h < 40$) for multi-line or icon-bearing entities. Text will collide with the icon or overflow the bottom boundary.
+- **Label Wrapping:** Split labels into short multi-line arrays: `label: ['Primary SQS', 'Queue']` rather than a single long string that exceeds diamond facet width.
+- **Subtitle Length:** Keep `sub` concise ($\le 24$ characters).
+- **Text & Icon Padding:** Glyphs are raised ($y = o - 4$) and text starting Y is clamped to $[o + 7.5, (o + h) - \text{totalTextHeight} - 5]$ to guarantee safe padding on all faces.
+
+#### 5. Viewport Containment & World Bounding Box
+- **Canvas Framing Standard:** The entire diagram MUST fit comfortably within the camera viewport frame without clipping or overflowing the window edges.
+- **World Coordinate Boundaries:** Keep all components strictly within $x \in [-16, 16]$ and $y \in [-24, 20]$.
+- **FORBIDDEN: Extreme Coordinate Drifts:** Never place entities at extreme positions ($|x| > 18$ or $y > 22$). Such coordinates distort the camera's bounding box calculation (`camFromScene`), triggering aggressive zooming that cuts off top tiers or pushes bottom entities off-screen.
+
+#### 6. Goal Card Deck Layout & Spacing (Minimum Gap >= 7px)
+- **Checklist Separation:** In the Guide deck on the right rail, goal cards must ALWAYS maintain a clear visual gap of at least $7\text{px}$ (`margin-bottom >= 7px` or `gap >= 7px`).
+- **FORBIDDEN: Clumping on Goal Hit:** Cards must NEVER collapse or stick together when highlighted (`.goal-hit`).
+
+#### 7. Single Canvas Architecture & Code-Driven Presentation Standard
+- **Single Canvas 3D Workbench:** All lessons (including Java and SQL) render exclusively on the Single Canvas 3D Isometric Workbench. 2D switch toggles (`[ 3D Simulator | 2D Deep-Dive ]`) are removed.
+- **Code-Driven Floating Cards (`card: makePanel`):** Modeled after `sql-nosql`, code-centric topics (Java, SQL, Frameworks) MUST pair 3D visual transitions with a floating code panel card (`card: makePanel`) showing the exact code or queries driving that step.
+- **Key Milestones Standard (6 to 8 Steps):** Reject artificial 4-step templates and avoid 33 micro-step debugger traces. Every lesson must have exactly **6 to 8 milestone steps**.
+
+#### 8. Mandatory Automated Verification & Pre-Commit Validation
+- **Zero Tolerance for Blind / Guesswork Editing ("Sửa Chay"):** No lesson modification or creation is considered done without automated verification against real browser rendering.
+- **Automated Verification Command:**
+  For every lesson created or touched, run:
+  ```bash
+  node scratch/verify_lesson.cjs <lesson-id>
+  ```
+  *Gate:* 0 critical overlaps ($D < 90\text{px}$), 0 crowded pairs ($D < 125\text{px}$), all goals hit with `gap >= 7px`, 0 console errors, full frame visibility.
+- **Pre-Commit Validation:**
+  ```bash
+  node scripts/lint-scenes.mjs
+  cmd /c npm run build
+  ```
+  The scene linter **MUST pass with 0 critical overlaps (`CLEAN`)** and the static build must complete with exit code 0.
+
+### Canonical Navigation & Domain Grouping (8 Topics on Navbar)
+
+All interactive simulations are strictly partitioned into 8 mutually exclusive domain tracks on the Navbar / Sidebar Explorer:
+
+| Nav Item | Domain Scope | Included Content & Exclusions | Total Lessons |
+|---|---|---|:---:|
+| **`network.sim`** | Network Protocols & Edge Scaling | TCP internals, TLS 1.3/mTLS, HTTP/3 QUIC, Anycast DNS, WebSockets, Request lifecycle, Latency & Percentiles (P50/P90/P95/P99), L4 DSR vs L7 Envoy, Caching, CDN, DDoS defense | **15** |
+| **`storage.sim`** | Database & In-Memory Engines | **PostgreSQL Engine (8 lessons):** Planner, Indexes, Storage Engines, Footprint, SQL vs NoSQL, Pool, MVCC Txns, EXPLAIN.<br>**Redis In-Memory Engine (6 lessons):** Single-thread event loop, Dict & SDS, Skiplist, Persistence (RDB/AOF), Sentinels, Cluster Sharding | **14** |
+| **`distributed.sim`** | Distributed Systems Core | Streaming replication, sharding & partitioning, consistent hashing ring, Snowflake IDs, CAP theorem, Raft consensus | **6** |
+| **`microservices.sim`** | Microservices, Kafka & Queues | Monolith vs microservices, service discovery, sagas, REST/gRPC.<br>**Apache Kafka (4 lessons):** Partition log, Consumer groups, ISR, Exactly-once.<br>**RabbitMQ (3 lessons):** AMQP Exchanges, DLQ & Retries, High-Availability Quorum Queues | **14** |
+| **`k8s.sim`** | Containers & Kubernetes Orchestration | Docker namespaces & cgroups, multi-stage builds, K8s Pods & ReplicaSets, Services (ClusterIP/NodePort), Ingress Controller, ConfigMaps/Secrets, StatefulSets & Storage, HPA & Autoscaling | **8** |
+| **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6–8 steps):** JVM memory model, GC, monitor locks, thread pools, Virtual Threads (Project Loom), Spring Security filter chain, Spring IoC bean lifecycle (27 lessons total) | **27** |
+| **`system-design.sim`** | System Design & AI Agents | HLD vs LLD, TinyURL, News Feed, Chat app, redundancy, rate limiting, timeouts/retries, observability.<br>**Flagship Lesson:** `ai-agent-architecture` (8-step Onion Model: LLM, RAG, MCP, Loop, Harness, Superpowers, LangChain, BMAD Swarms) | **10** |
+| **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking (Direct Connect/Transit Gateway), IAM & KMS Encryption, Edge Security (WAF/Shield), HA & DR Tiers, Compute (Spot/Fargate/EKS), Storage (S3/EBS/EFS), Databases (Aurora/DynamoDB), Serverless (SQS/SNS/EventBridge/Step Functions), Migration (DMS/Kinesis/Athena) | **10** |
+| **TỔNG CỘNG** | **Toàn bộ hệ thống mô phỏng kiến trúc 3D** | **100% Single Canvas 3D + Code-Driven Cards** | **104 Bài** |
+
+### Hybrid Architecture: 3D Macro Topology vs 2D Deep-Dive Mechanics
+
+Interactive labs are organized into two distinct architectural visualization tiers:
+
+1. **3D Isometric DTS Canvas (Macro / Cluster & System Topology):**
+   - Used for distributed systems, networking, cloud topologies, and service interactions where physical or network infrastructure is being simulated.
+   - Examples: `network.sim`, `distributed.sim`, `microservices.sim`, `aws-cloud.sim`.
+2. **2D Deep-Dive Visualizers (Micro / Engine Internals & Data Structures):**
+   - Used when teaching internal computer science data structures, finite state machines (FSM), query pipelines, and lifecycle mechanics that cannot be naturally represented as 3D blocks.
+   - Examples:
+     - `indexes`: B-Tree traversal, node splits, binary search path (`BTreeTraversal.astro`).
+     - `transactions`: MVCC row version chains (xmin/xmax), snapshot visibility timeline (`MvccTimeline.astro`).
+     - `sql-engine`: PostgreSQL query pipeline (Parse -> Analyze -> Plan -> Execute -> WAL) (`SqlPipelineDiagram.astro`).
+     - `java-concurrency`: JVM Thread State Machine (`ThreadStateDiagram.astro`).
+     - `java-completable`: Async DAG Pipeline (`FuturePipeline.astro`).
+     - `java-spring-security`: Filter Chain sequence (`SecurityFilterChain`).
+     - `java-spring-ioc`: Spring Bean lifecycle & BeanPostProcessor hooks.
+
+#### Event Sync Standard
+All 2D visualizers must bind to step changes via `window.addEventListener('wb:step-change', ...)` to synchronously animate and highlight code as users step through the lesson.
+
 ---
 
 ## 9. Astro Patterns
