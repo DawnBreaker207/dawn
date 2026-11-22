@@ -19,6 +19,16 @@ import { storageEnginesLesson } from './storage/storage-engines';
 import { replicationLesson } from './storage/replication';
 import { shardingLesson } from './storage/sharding';
 import { javaConcurrencyLesson } from './specialized/java-concurrency';
+import { javaExecutorsLesson } from './specialized/java-executors';
+import { javaCompletableLesson } from './specialized/java-completable';
+import { javaVirtualThreadsLesson } from './specialized/java-virtual-threads';
+import { javaJvmMemoryLesson } from './specialized/java-jvm-memory';
+import { javaCollectionsLesson } from './specialized/java-collections';
+import { javaStreamsLesson } from './specialized/java-streams';
+import { javaSpringIocLesson } from './specialized/java-spring-ioc';
+import { javaSpringAopLesson } from './specialized/java-spring-aop';
+import { javaSpringJpaLesson } from './specialized/java-spring-jpa';
+import { javaSpringSecurityLesson } from './specialized/java-spring-security';
 import { sqlEngineLesson } from './specialized/sql-engine';
 import { microservicesLesson } from './architecture/microservices';
 import { awsCloudLesson } from './cloud/aws-cloud';
@@ -53,6 +63,31 @@ import { hldLldLesson } from './design/hld-lld';
 import { designUrlShortenerLesson } from './design/design-url-shortener';
 import { designNewsFeedLesson } from './design/design-news-feed';
 import { designChatLesson } from './design/design-chat';
+
+
+// SQL deep-dive concepts
+import { sqlExplainLesson } from './storage/sql-explain';
+import { sqlFootprintLesson } from './storage/sql-footprint';
+import { sqlConnectionPoolLesson } from './storage/sql-connection-pool';
+
+// Java Core & JVM deep-dive concepts
+import { javaStringPoolLesson } from './specialized/java-string-pool';
+import { javaLambdaLesson } from './specialized/java-lambda';
+import { javaIoNioLesson } from './specialized/java-io-nio';
+import { javaGenericsLesson } from './specialized/java-generics';
+import { javaJitCompilerLesson } from './specialized/java-jit-compiler';
+import { javaExceptionsErrorsLesson } from './specialized/java-exceptions-errors';
+import { javaMetaprogrammingLesson } from './specialized/java-metaprogramming';
+import { javaModernLesson } from './specialized/java-modern';
+
+// Spring Enterprise concepts
+import { javaSpringScopesLesson } from './specialized/java-spring-scopes';
+import { javaSpringMvcLesson } from './specialized/java-spring-mvc';
+import { javaSpringTxLesson } from './specialized/java-spring-tx';
+import { javaSpringBootAutoconfigLesson } from './specialized/java-spring-boot-autoconfig';
+import { javaSpringTestingLesson } from './specialized/java-spring-testing';
+import { javaSpringMessagingLesson } from './specialized/java-spring-messaging';
+import { javaSpringConfigLesson } from './specialized/java-spring-config';
 
 export {
   requestLifecycleLesson,
@@ -103,6 +138,34 @@ export {
   systemDesignLesson,
   sqlEngineLesson,
   javaConcurrencyLesson,
+  javaExecutorsLesson,
+  javaCompletableLesson,
+  javaVirtualThreadsLesson,
+  javaJvmMemoryLesson,
+  javaCollectionsLesson,
+  javaStreamsLesson,
+  javaSpringIocLesson,
+  javaSpringAopLesson,
+  javaSpringJpaLesson,
+  javaSpringSecurityLesson,
+  sqlExplainLesson,
+  sqlFootprintLesson,
+  sqlConnectionPoolLesson,
+  javaStringPoolLesson,
+  javaLambdaLesson,
+  javaIoNioLesson,
+  javaGenericsLesson,
+  javaJitCompilerLesson,
+  javaExceptionsErrorsLesson,
+  javaMetaprogrammingLesson,
+  javaModernLesson,
+  javaSpringScopesLesson,
+  javaSpringMvcLesson,
+  javaSpringTxLesson,
+  javaSpringBootAutoconfigLesson,
+  javaSpringTestingLesson,
+  javaSpringMessagingLesson,
+  javaSpringConfigLesson,
 };
 
 export const ALL_SCENES: Record<string, any> = {
@@ -156,16 +219,34 @@ export const ALL_SCENES: Record<string, any> = {
   'sql-engine': sqlEngineLesson,
   'sql': sqlEngineLesson,
   'java-concurrency': javaConcurrencyLesson,
-  'java-executors': javaConcurrencyLesson,
-  'java-completable': javaConcurrencyLesson,
-  'java-virtual-threads': javaConcurrencyLesson,
-  'java-jvm-memory': javaConcurrencyLesson,
-  'java-collections': javaConcurrencyLesson,
-  'java-streams': javaConcurrencyLesson,
-  'java-spring-ioc': javaConcurrencyLesson,
-  'java-spring-aop': javaConcurrencyLesson,
-  'java-spring-jpa': javaConcurrencyLesson,
-  'java-spring-security': javaConcurrencyLesson,
+  'java-executors': javaExecutorsLesson,
+  'java-completable': javaCompletableLesson,
+  'java-virtual-threads': javaVirtualThreadsLesson,
+  'java-jvm-memory': javaJvmMemoryLesson,
+  'java-collections': javaCollectionsLesson,
+  'java-streams': javaStreamsLesson,
+  'java-spring-ioc': javaSpringIocLesson,
+  'java-spring-aop': javaSpringAopLesson,
+  'java-spring-jpa': javaSpringJpaLesson,
+  'java-spring-security': javaSpringSecurityLesson,
+  'sql-explain': sqlExplainLesson,
+  'sql-footprint': sqlFootprintLesson,
+  'sql-connection-pool': sqlConnectionPoolLesson,
+  'java-string-pool': javaStringPoolLesson,
+  'java-lambda': javaLambdaLesson,
+  'java-io-nio': javaIoNioLesson,
+  'java-generics': javaGenericsLesson,
+  'java-jit-compiler': javaJitCompilerLesson,
+  'java-exceptions-errors': javaExceptionsErrorsLesson,
+  'java-metaprogramming': javaMetaprogrammingLesson,
+  'java-modern': javaModernLesson,
+  'java-spring-scopes': javaSpringScopesLesson,
+  'java-spring-mvc': javaSpringMvcLesson,
+  'java-spring-tx': javaSpringTxLesson,
+  'java-spring-boot-autoconfig': javaSpringBootAutoconfigLesson,
+  'java-spring-testing': javaSpringTestingLesson,
+  'java-spring-messaging': javaSpringMessagingLesson,
+  'java-spring-config': javaSpringConfigLesson,
   'java': javaConcurrencyLesson,
 };
 

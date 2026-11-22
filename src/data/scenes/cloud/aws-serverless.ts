@@ -71,9 +71,9 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          producer: d(-6, -2, { s: 2.6, h: 26, color: `teal`, glyph: `server`, label: [`Order API`, `Producer`] }),
-          sqs: ee(0, 0, { label: [`Amazon SQS Queue`, `Standard Queue`] }),
-          consumer: d(6, 2, { s: 2.6, h: 26, color: `orange`, glyph: `cpu`, label: [`Payment Worker`, `Consumer`] }),
+          producer: d(-11, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`Order API`, `Producer`] }),
+          sqs: d(0, 0, { s: 3.8, h: 42, color: `purple`, glyph: `inbox`, label: [`Amazon SQS`, `Standard Queue`] }),
+          consumer: d(11, 4, { s: 3.8, h: 42, color: `orange`, glyph: `cpu`, label: [`Payment Worker`, `Consumer`] }),
         },
         links: {
           send: h(`producer`, `sqs`, [`producer`, `sqs`], { heads: `end`, label: `SendMessage` }),
@@ -82,6 +82,45 @@ export const awsServerlessLesson = {
         flows: [
           { route: [`send`], bounce: false, rate: 2.0 },
           { route: [`poll`], bounce: true, rate: 1.5 },
+        ],
+      },
+    },
+    {
+      short: `DLQ Mechanics`,
+      chapter: `technique`,
+      title: `Dead Letter Queue (DLQ) & Redrive Policies`,
+      body: [
+        `When a consumer fails to process a message (bug, unhandled exception, corrupted payload), the message returns to the queue after the Visibility Timeout.`,
+        `Without a safeguard, poison messages create infinite retry loops. A <strong>Dead Letter Queue (DLQ)</strong> catches failed messages after <code>maxReceiveCount</code> (e.g. 3 attempts) for debugging and alerting.`,
+      ],
+      callout: {
+        kind: `warn`,
+        text: `Set CloudWatch Alarms on DLQ ApproximateNumberOfMessagesVisible > 0 to alert on-call engineers to poisonous payloads.`,
+      },
+      changes: [
+        `+ Dead Letter Queue (DLQ) attached`,
+        `+ Redrive Policy: maxReceiveCount = 3`,
+        `+ SQS redrive to source feature enabled`,
+      ],
+      metrics: {
+        queue_depth: `4 msgs`,
+        fanout_topics: `—`,
+        lambda_concurrency: `—`,
+        dlq_messages: `1 Poison Msg`,
+        serverless_uptime: `99.95%`,
+      },
+      scene: {
+        entities: {
+          queue: d(-10, -4, { s: 3.8, h: 44, color: `purple`, glyph: `inbox`, label: [`Primary SQS`], sub: `maxReceive: 3` }),
+          worker: d(0, -4, { s: 3.8, h: 44, color: `rose`, glyph: `alertTriangle`, label: [`Worker`], sub: `Crash 3x` }),
+          dlq: d(10, 4, { s: 3.8, h: 46, color: `red`, glyph: `skull`, label: [`Dead Letter SQS`], sub: `Poison Msg` }),
+        },
+        links: {
+          qw: h(`queue`, `worker`, [`queue`, `worker`], { heads: `both`, label: `poll & crash` }),
+          wd: h(`worker`, `dlq`, [`worker`, `dlq`], { heads: `end`, label: `redrive after 3x`, style: `dashed` }),
+        },
+        flows: [
+          { route: [`qw`, `wd`], bounce: false, rate: 1.2 },
         ],
       },
     },
@@ -115,11 +154,11 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          order_svc: d(-6, 0, { s: 2.5, h: 25, color: `teal`, glyph: `cart`, label: [`Order Service`] }),
-          sns: d(-2, 0, { s: 3.0, h: 30, color: `rose`, glyph: `signpost`, label: [`SNS Topic: OrderPlaced`] }),
-          q_bill: ee(4, -4, { label: [`Billing SQS`] }),
-          q_ship: ee(4, 0, { label: [`Shipping SQS`] }),
-          q_notif: ee(4, 4, { label: [`Email SQS`] }),
+          order_svc: d(-12, -4, { s: 3.6, h: 40, color: `teal`, glyph: `cart`, label: [`Order Service`] }),
+          sns: d(-2, -4, { s: 3.8, h: 42, color: `rose`, glyph: `signpost`, label: [`SNS Topic`], sub: `OrderPlaced` }),
+          q_bill: d(8, -12, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Billing SQS`] }),
+          q_ship: d(8, -4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Shipping SQS`] }),
+          q_notif: d(8, 4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Email SQS`] }),
         },
         links: {
           pub: h(`order_svc`, `sns`, [`order_svc`, `sns`], { heads: `end`, label: `Publish` }),
@@ -130,6 +169,48 @@ export const awsServerlessLesson = {
         flows: [
           { route: [`pub`], bounce: false, rate: 2.0 },
           { route: [`f1`, `f2`, `f3`], bounce: false, rate: 2.0 },
+        ],
+      },
+    },
+    {
+      short: `EventBridge`,
+      chapter: `technique`,
+      title: `Amazon EventBridge: Content-Based Event Bus`,
+      body: [
+        `<strong>Amazon EventBridge</strong> provides a serverless event bus that ingests events from AWS services, custom apps, and third-party SaaS (Stripe, Datadog, Zendesk).`,
+        `EventBridge evaluates declarative JSON event patterns to route events directly to over 20 AWS targets without writing custom dispatch code.`,
+      ],
+      callout: {
+        kind: `insight`,
+        text: `Schema Registry with schema discovery generates TypeScript and Java client bindings directly from incoming JSON events.`,
+      },
+      changes: [
+        `+ Custom Event Bus provisioned`,
+        `+ Rule: detail-type = "OrderCancelled"`,
+        `+ Targets: Lambda refund handler + Step Functions saga`,
+      ],
+      metrics: {
+        queue_depth: `Zero In-Transit`,
+        fanout_topics: `Content-Filtered`,
+        lambda_concurrency: `Dynamic`,
+        dlq_messages: `0`,
+        serverless_uptime: `99.999%`,
+      },
+      scene: {
+        entities: {
+          saas: y(-12, -4, { label: `Stripe Webhook`, tags: [{ text: 'Payment.Success', icon: 'zap' }] }),
+          bus: d(-2, -4, { s: 3.8, h: 44, color: `purple`, glyph: `workflow`, label: [`EventBridge`], sub: `Event Bus` }),
+          l_refund: d(9, -10, { s: 3.6, h: 44, color: `yellow`, glyph: `zap`, label: [`Lambda Target`], sub: `Refund Handler` }),
+          step_fn: d(9, 2, { s: 3.6, h: 44, color: `blue`, glyph: `workflow`, label: [`Step Functions`], sub: `Order Saga` }),
+        },
+        links: {
+          sb: h(`saas`, `bus`, [`saas`, `bus`], { heads: `end`, label: `putEvents` }),
+          bl: h(`bus`, `l_refund`, [`bus`, `l_refund`], { heads: `end` }),
+          bs: h(`bus`, `step_fn`, [`bus`, `step_fn`], { heads: `end` }),
+        },
+        flows: [
+          { route: [`sb`, `bl`], bounce: false, rate: 1.4 },
+          { route: [`sb`, `bs`], bounce: false, rate: 1.4 },
         ],
       },
     },
@@ -161,10 +242,10 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          client: te(-6, -2, { label: [`Mobile / Web User`] }),
-          apigw: d(-2, -1, { s: 2.6, h: 26, color: `orange`, glyph: `route`, label: [`API Gateway`, `HTTP /api/v1`] }),
-          lambda: d(2, 1, { s: 2.8, h: 28, color: `yellow`, glyph: `zap`, label: [`AWS Lambda`, `Stateless Function`] }),
-          ddb: b(6, 3, { r: 2.0, h: 32, label: `Amazon DynamoDB`, color: `blue` }),
+          client: y(-14, -4, { label: `Mobile / Web User`, tags: [{ text: `HTTPS`, icon: `globe` }] }),
+          apigw: d(-4, -4, { s: 3.6, h: 44, color: `orange`, glyph: `route`, label: [`API Gateway`], sub: `HTTP /api/v1` }),
+          lambda: d(5, -4, { s: 3.6, h: 44, color: `yellow`, glyph: `zap`, label: [`AWS Lambda`], sub: `Stateless Fn` }),
+          ddb: b(14, -4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
         },
         links: {
           c_gw: h(`client`, `apigw`, [`client`, `apigw`], { heads: `both` }),

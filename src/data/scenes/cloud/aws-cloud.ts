@@ -70,17 +70,17 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-6, -4, {
+            client: y(-14, -4, {
               label: `users`,
               tags: [{ text: `https://app.io`, icon: `globe` }],
             }),
-            ec2: d(0, 0, {
+            ec2: d(-2, -4, {
               color: `yellow`,
               glyph: `server`,
               label: [`EC2`, `us-east-1a`],
               cpu: 0.85,
             }),
-            db: b(6, 4, { label: `MySQL Single`, cpu: 0.6 }),
+            db: b(10, -4, { label: `MySQL Single`, cpu: 0.6 }),
           },
           links: {
             c1: h(`client`, `ec2`, [`client`, `ec2`], { label: `Direct Traffic`, heads: `both` }),
@@ -115,20 +115,20 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-6, -4, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
-            r53: d(-2, -2, {
+            client: y(-14, -4, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
+            r53: d(-4, -10, {
               color: `yellow`,
               glyph: `globe`,
               label: [`Route 53`],
               sub: `Latency Routing`,
             }),
-            cf: d(2, -1, {
+            cf: d(-4, 2, {
               color: `purple`,
               glyph: `shield`,
               label: [`CloudFront`],
               sub: `Edge Cache`,
             }),
-            ec2: d(6, 2, { color: `blue`, glyph: `server`, label: [`Origin VPC`], cpu: 0.35 }),
+            ec2: d(8, -4, { color: `blue`, glyph: `server`, label: [`Origin VPC`], cpu: 0.35 }),
           },
           links: {
             dns: h(`client`, `r53`, [`client`, `r53`], { label: `DNS Query`, heads: `both` }),
@@ -160,15 +160,15 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-6, -4, { label: `users` }),
-            alb: f(-2, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            srv_a: d(4, -3, {
+            client: y(-14, -4, { label: `users` }),
+            alb: f(-4, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            srv_a: d(8, -10, {
               color: `blue`,
               glyph: `server`,
               label: [`Target AZ-1a`],
               cpu: 0.25,
             }),
-            srv_b: d(4, 3, { color: `blue`, glyph: `server`, label: [`Target AZ-1b`], cpu: 0.25 }),
+            srv_b: d(8, 2, { color: `blue`, glyph: `server`, label: [`Target AZ-1b`], cpu: 0.25 }),
           },
           links: {
             in: h(`client`, `alb`, [`client`, `alb`], { label: `HTTPS`, heads: `both` }),
@@ -207,11 +207,11 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            alb: f(-4, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs1: d(2, -4, { color: `blue`, glyph: `server`, label: [`ECS-1 (AZ-a)`], cpu: 0.3 }),
-            ecs2: d(2, -1, { color: `blue`, glyph: `server`, label: [`ECS-2 (AZ-a)`], cpu: 0.3 }),
-            ecs3: d(2, 2, { color: `blue`, glyph: `server`, label: [`ECS-3 (AZ-b)`], cpu: 0.3 }),
-            ecs4: d(2, 5, { color: `blue`, glyph: `server`, label: [`ECS-4 (AZ-b)`], cpu: 0.3 }),
+            alb: f(-8, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs1: d(6, -14, { color: `blue`, glyph: `server`, label: [`ECS-1 (AZ-a)`], cpu: 0.3 }),
+            ecs2: d(6, -6,  { color: `blue`, glyph: `server`, label: [`ECS-2 (AZ-a)`], cpu: 0.3 }),
+            ecs3: d(6, 2,   { color: `blue`, glyph: `server`, label: [`ECS-3 (AZ-b)`], cpu: 0.3 }),
+            ecs4: d(6, 10,  { color: `blue`, glyph: `server`, label: [`ECS-4 (AZ-b)`], cpu: 0.3 }),
           },
           links: {
             l1: h(`alb`, `ecs1`, [`alb`, `ecs1`]),
@@ -247,10 +247,10 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            ecs_a: d(-4, -2, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1a`] }),
-            ecs_b: d(-4, 2, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1b`] }),
-            redis_p: d(4, -2, { color: `green`, glyph: `zap`, label: [`Redis Master`, `AZ-1a`] }),
-            redis_r: d(4, 2, { color: `green`, glyph: `zap`, label: [`Redis Replica`, `AZ-1b`] }),
+            ecs_a: d(-2, -8, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1a`] }),
+            ecs_b: d(-2, 4, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1b`] }),
+            redis_p: d(10, -8, { color: `green`, glyph: `zap`, label: [`Redis Master`, `AZ-1a`] }),
+            redis_r: d(10, 4, { color: `green`, glyph: `zap`, label: [`Redis Replica`, `AZ-1b`] }),
           },
           links: {
             r1: h(`ecs_a`, `redis_p`, [`ecs_a`, `redis_p`], {
@@ -295,14 +295,14 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            ecs_a: d(-4, -2, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
-            ecs_b: d(-4, 2, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
-            db_p: b(4, -2, {
+            ecs_a: d(-2, -8, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
+            ecs_b: d(-2, 4, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
+            db_p: b(10, -8, {
               label: `Aurora Writer`,
               cpu: 0.35,
               tags: [{ text: `Primary`, tone: `green` }],
             }),
-            db_r: b(4, 2, {
+            db_r: b(10, 4, {
               label: `Aurora Replica`,
               cpu: 0.2,
               tags: [{ text: `Standby`, tone: `blue` }],
@@ -348,27 +348,27 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            alb: f(-4, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs_a: d(0, -3, {
+            alb: f(-12, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs_a: d(-2, -8, {
               color: `slab`,
               glyph: `skull`,
               dead: 1,
               label: [`ECS AZ-1a (DOWN)`],
               tags: [{ text: `DOWN`, tone: `red`, icon: `alert` }],
             }),
-            ecs_b: d(0, 3, {
+            ecs_b: d(-2, 4, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-1b (HEALTHY)`],
               cpu: 0.75,
             }),
-            db_a: b(6, -3, {
+            db_a: b(10, -8, {
               label: `Writer AZ-a (DOWN)`,
               dead: 1,
               heat: 0.9,
               tags: [{ text: `FAILED`, tone: `red` }],
             }),
-            db_b: b(6, 3, {
+            db_b: b(10, 4, {
               label: `Replica AZ-b`,
               tags: [{ text: `Promoting…`, tone: `amber` }],
             }),
@@ -412,24 +412,24 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-6, -4, {
+            client: y(-14, -4, {
               label: `users`,
               tags: [{ text: `0 downtime`, tone: `green`, icon: `check` }],
             }),
-            alb: f(-2, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Healthy`] }),
-            ecs_b1: d(2, 0, {
+            alb: f(-4, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Healthy`] }),
+            ecs_b1: d(6, -8, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-b (#1)`],
               cpu: 0.35,
             }),
-            ecs_b2: d(2, 4, {
+            ecs_b2: d(6, 0, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-b (#2)`],
               cpu: 0.35,
             }),
-            db_b: b(6, 2, {
+            db_b: b(16, -4, {
               label: `Aurora New Writer`,
               cpu: 0.4,
               tags: [{ text: `PRIMARY WRITER`, tone: `green` }],
@@ -467,12 +467,12 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-6, -4, { label: `users`, tags: [{ text: `resilient`, tone: `green` }] }),
-            alb: f(-3, 0, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs_a: d(1, -3, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
-            ecs_b: d(1, 3, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
-            db_a: b(6, -3, { label: `Aurora Writer`, tags: [{ text: `Active`, tone: `green` }] }),
-            db_b: b(6, 3, { label: `Aurora Standby`, tags: [{ text: `Replica`, tone: `blue` }] }),
+            client: y(-14, -4, { label: `users`, tags: [{ text: `resilient`, tone: `green` }] }),
+            alb: f(-4, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs_a: d(6, -10, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
+            ecs_b: d(6, 2, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
+            db_a: b(16, -10, { label: `Aurora Writer`, tags: [{ text: `Active`, tone: `green` }] }),
+            db_b: b(16, 2, { label: `Aurora Standby`, tags: [{ text: `Replica`, tone: `blue` }] }),
           },
           links: {
             c: h(`client`, `alb`, [`client`, `alb`], { heads: `both` }),

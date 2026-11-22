@@ -73,9 +73,9 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          s3_std: b(-6, -2, { r: 1.8, h: 32, label: `S3 Standard ($0.023/GB)`, color: `green` }),
+          s3_std: b(-10, -4, { r: 1.8, h: 32, label: `S3 Standard ($0.023/GB)`, color: `green` }),
           s3_ia: b(0, 0, { r: 1.8, h: 32, label: `S3 Standard-IA ($0.0125/GB)`, color: `yellow` }),
-          s3_glacier: b(6, 2, { r: 1.8, h: 32, label: `Glacier Deep ($0.00099/GB)`, color: `blue` }),
+          s3_glacier: b(10, 4, { r: 1.8, h: 32, label: `Glacier Deep ($0.00099/GB)`, color: `blue` }),
         },
         links: {
           t1: h(`s3_std`, `s3_ia`, [`s3_std`, `s3_ia`], { heads: `end`, label: `30 days` }),
@@ -114,9 +114,9 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          ec2_1: d(-4, -4, { s: 2.4, h: 24, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
-          ec2_2: d(4, -4, { s: 2.4, h: 24, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
-          efs: d(0, 4, { s: 3.2, h: 32, color: `orange`, glyph: `folder`, label: [`Amazon EFS (Shared NFS)`, `Multi-AZ Mount`] }),
+          ec2_1: d(-8, -4, { s: 2.4, h: 24, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
+          ec2_2: d(8, -4, { s: 2.4, h: 24, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
+          efs: d(0, 6, { s: 3.2, h: 32, color: `orange`, glyph: `folder`, label: [`Amazon EFS`], sub: `Shared POSIX` }),
         },
         links: {
           m1: h(`ec2_1`, `efs`, [`ec2_1`, `efs`], { heads: `both`, label: `NFS Mount` }),
@@ -158,10 +158,10 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          writer: b(-4, -2, { r: 2.2, h: 36, label: `Aurora Primary (Writer)`, color: `purple` }),
-          reader1: b(4, -4, { r: 1.8, h: 28, label: `Read Replica 1`, color: `blue` }),
-          reader2: b(4, 2, { r: 1.8, h: 28, label: `Read Replica 2`, color: `blue` }),
-          storage: x(0, 6, { w: 22, h: 6, label: `Aurora Shared Storage (6 Copies / 3 AZs)` }),
+          writer: b(-8, -4, { r: 2.2, h: 36, label: `Aurora Primary (Writer)`, color: `purple` }),
+          reader1: b(8, -8, { r: 1.8, h: 28, label: `Read Replica 1`, color: `blue` }),
+          reader2: b(8, 2, { r: 1.8, h: 28, label: `Read Replica 2`, color: `blue` }),
+          storage: x({ x0: -11, x1: 11, y0: 5, y1: 11 }, `Aurora Shared Storage (6 Copies / 3 AZs)`),
         },
         links: {
           w_s: h(`writer`, `storage`, [`writer`, `storage`], { heads: `both` }),
@@ -203,9 +203,9 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          app: d(-6, -2, { s: 2.5, h: 25, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
-          dax: d(0, 0, { s: 2.8, h: 28, color: `orange`, glyph: `zap`, label: [`DAX Cache (RAM)`, `Microsecond latency`] }),
-          dynamo: b(6, 2, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
+          app: d(-10, -4, { s: 2.5, h: 25, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
+          dax: d(0, 0, { s: 2.8, h: 28, color: `orange`, glyph: `zap`, label: [`DAX Cache`], sub: `In-Memory` }),
+          dynamo: b(10, 4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
         },
         links: {
           a_dax: h(`app`, `dax`, [`app`, `dax`], { heads: `both`, label: `Cache Hit (<1ms)` }),
@@ -213,6 +213,46 @@ export const awsStorageDbLesson = {
         },
         flows: [
           { route: [`a_dax`], bounce: true, rate: 3.0 },
+        ],
+      },
+    },
+    {
+      short: `ElastiCache`,
+      chapter: `solution`,
+      title: `Amazon ElastiCache: Redis Cluster vs Memcached`,
+      body: [
+        `<strong>Amazon ElastiCache</strong> delivers sub-millisecond responses for session stores, leaderboards, and database query caching.`,
+        `• <strong>Redis</strong>: Supports complex data structures (hashes, sorted sets, lists), Multi-AZ replication, automated failover, and pub/sub.`,
+        `• <strong>Memcached</strong>: Simple pure key-value caching with multi-threaded horizontal scaling across memory shards.`,
+      ],
+      callout: {
+        kind: `tip`,
+        text: `Use Cache-Aside pattern: application checks ElastiCache first on read. On miss, read database and write result into cache with TTL.`,
+      },
+      changes: [
+        `+ ElastiCache Redis Cluster provisioned in Multi-AZ`,
+        `+ Lazy loading (Cache-Aside) with 1h TTL`,
+        `+ Relieves 90% of read query load on database tier`,
+      ],
+      metrics: {
+        storage_class: `In-Memory RAM`,
+        ebs_iops: `Offloaded`,
+        aurora_replicas: `Relieved 90%`,
+        dynamo_lat: `Sub-millisecond`,
+        cost_opt: `Max Throughput`,
+      },
+      scene: {
+        entities: {
+          app: d(-10, -4, { s: 2.5, h: 25, color: `teal`, glyph: `server`, label: [`API Cluster`] }),
+          redis: d(0, 0, { s: 2.8, h: 28, color: `rose`, glyph: `zap`, label: [`ElastiCache`], sub: `Redis Cluster` }),
+          db: b(10, 4, { r: 2.2, h: 36, label: `Primary Aurora DB`, color: `purple` }),
+        },
+        links: {
+          ar: h(`app`, `redis`, [`app`, `redis`], { heads: `both`, label: `Cache-Aside (0.8ms)` }),
+          ad: h(`app`, `db`, [`app`, `db`], { heads: `both`, label: `DB Fallback on Miss`, style: `dashed` }),
+        },
+        flows: [
+          { route: [`ar`], bounce: true, rate: 2.5 },
         ],
       },
     },

@@ -72,10 +72,10 @@ export const awsHaLesson = {
       },
       scene: {
         entities: {
-          users: y(-6, -4, { label: `Global Users`, tags: [{ text: `DNS Query`, icon: `globe` }] }),
-          r53: d(-2, -2, { color: `yellow`, glyph: `globe`, label: [`Route 53`, `Failover + Health`] }),
-          reg_pri: d(4, -2, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `Healthy`] }),
-          reg_sec: d(4, 4, { color: `orange`, glyph: `server`, label: [`DR (us-west-2)`, `Standby`] }),
+          users: y(-12, -4, { label: `Global Users`, tags: [{ text: `DNS Query`, icon: `globe` }] }),
+          r53: d(-2, -4, { color: `yellow`, glyph: `globe`, label: [`Route 53`, `Failover + Health`] }),
+          reg_pri: d(10, -10, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `Healthy`] }),
+          reg_sec: d(10, 2, { color: `orange`, glyph: `server`, label: [`DR (us-west-2)`, `Standby`] }),
         },
         links: {
           u_dns: h(`users`, `r53`, [`users`, `r53`], { heads: `both` }),
@@ -113,10 +113,10 @@ export const awsHaLesson = {
       },
       scene: {
         entities: {
-          alb: f(-4, -2, { color: `orange`, glyph: `balancer`, label: [`Public ALB`, `Cross-Zone ON`] }),
-          az1: d(4, -4, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1a)`] }),
-          az2: d(4, 0, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1b)`] }),
-          az3: d(4, 4, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1c)`] }),
+          alb: f(-8, -4, { color: `orange`, glyph: `balancer`, label: [`Public ALB`, `Cross-Zone ON`] }),
+          az1: d(6, -12, { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1a)`] }),
+          az2: d(6, -4,  { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1b)`] }),
+          az3: d(6, 4,   { color: `teal`, glyph: `server`, label: [`EC2 (AZ-1c)`] }),
         },
         links: {
           l1: h(`alb`, `az1`, [`alb`, `az1`], { heads: `both` }),
@@ -157,11 +157,11 @@ export const awsHaLesson = {
       },
       scene: {
         entities: {
-          alb: f(-4, 0, { color: `orange`, glyph: `balancer`, label: [`ALB Fleet`] }),
-          i1: d(2, -4, { color: `teal`, glyph: `cpu`, label: [`EC2 Node #1`] }),
-          i2: d(2, 4, { color: `teal`, glyph: `cpu`, label: [`EC2 Node #2`] }),
-          i3: d(6, -2, { color: `yellow`, glyph: `cpu`, label: [`EC2 #3 (Scaled)`] }),
-          i4: d(6, 2, { color: `yellow`, glyph: `cpu`, label: [`EC2 #4 (Scaled)`] }),
+          alb: f(-8, -4, { color: `orange`, glyph: `balancer`, label: [`ALB Fleet`] }),
+          i1: d(6, -9, { color: `teal`,   glyph: `cpu`, label: [`EC2 Node 1`] }),
+          i2: d(6, -3, { color: `teal`,   glyph: `cpu`, label: [`EC2 Node 2`] }),
+          i3: d(6, 3,  { color: `yellow`, glyph: `cpu`, label: [`EC2 Node 3`], sub: `Scaled` }),
+          i4: d(6, 9,  { color: `yellow`, glyph: `cpu`, label: [`EC2 Node 4`], sub: `Scaled` }),
         },
         links: {
           l1: h(`alb`, `i1`, [`alb`, `i1`], { heads: `both` }),
@@ -171,6 +171,47 @@ export const awsHaLesson = {
         },
         flows: [
           { route: [`l1`, `l2`, `l3`, `l4`], bounce: true, rate: 2.0 },
+        ],
+      },
+    },
+    {
+      short: `AZ Failover`,
+      chapter: `technique`,
+      title: `Simulated AZ Outage: Rebalancing & Self-Healing`,
+      body: [
+        `When an entire Availability Zone experiences a disruption, ALB health probes fail targets in the affected zone.`,
+        `The ALB stops sending traffic to unhealthy nodes immediately, while ASG detects target group degradation and launches replacement instances in the remaining healthy AZs.`,
+      ],
+      callout: {
+        kind: `tip`,
+        text: `Cross-zone load balancing guarantees seamless zero-downtime traffic rerouting while ASG rebalances capacity.`,
+      },
+      changes: [
+        `! AZ-1a marked UNHEALTHY (Power loss simulation)`,
+        `+ ALB deregisters AZ-1a targets`,
+        `+ ASG launches replacement EC2 in AZ-1b`,
+      ],
+      metrics: {
+        dns: `—`,
+        connect: `6 ms`,
+        az_active: `AZ-1b, AZ-1c (AZ-1a Down)`,
+        asg_capacity: `Rebalanced (4/4)`,
+        failover_sec: `Instant ALB reroute`,
+      },
+      scene: {
+        entities: {
+          alb: f(-8, -4, { color: `orange`, glyph: `balancer`, label: [`ALB Fleet`] }),
+          dead: d(6, -9, { color: `rose`, glyph: `alert`, label: [`AZ-1a EC2`], sub: `Unhealthy`, style: `dashed` }),
+          alive1: d(6, 0, { color: `teal`, glyph: `cpu`, label: [`AZ-1b EC2`], sub: `Healthy` }),
+          alive2: d(6, 9, { color: `green`, glyph: `cpu`, label: [`AZ-1c EC2`], sub: `Rebalanced` }),
+        },
+        links: {
+          ld: h(`alb`, `dead`, [`alb`, `dead`], { heads: `none`, style: `dashed` }),
+          l1: h(`alb`, `alive1`, [`alb`, `alive1`], { heads: `both` }),
+          l2: h(`alb`, `alive2`, [`alb`, `alive2`], { heads: `both` }),
+        },
+        flows: [
+          { route: [`l1`, `l2`], bounce: true, rate: 2.4 },
         ],
       },
     },
@@ -203,8 +244,8 @@ export const awsHaLesson = {
       },
       scene: {
         entities: {
-          pri_region: d(-5, 0, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `100% Traffic`] }),
-          sec_region: d(5, 0, { color: `yellow`, glyph: `server`, label: [`Warm Standby (us-west-2)`, `Ready to Scale`] }),
+          pri_region: d(-8, -4, { color: `green`, glyph: `server`, label: [`Primary`], sub: `us-east-1` }),
+          sec_region: d(8, 4, { color: `yellow`, glyph: `server`, label: [`Warm Standby`], sub: `us-west-2` }),
         },
         links: {
           rep: h(`pri_region`, `sec_region`, [`pri_region`, `sec_region`], { heads: `end`, label: `Continuous DB Sync (RPO < 1s)` }),

@@ -69,10 +69,10 @@ export const awsVpcLesson = {
       },
       scene: {
         entities: {
-          client: y(-6, -4, { label: `External Internet`, tags: [{ text: `Public`, icon: `globe` }] }),
-          pub_sub: d(-2, -2, { color: `orange`, glyph: `globe`, label: [`Public Subnet`, `AZ-1a /24`] }),
-          priv_app: d(2, 2, { color: `blue`, glyph: `server`, label: [`Private App`, `AZ-1a /24`] }),
-          priv_db: b(6, 4, { label: `Private DB (AZ-1a)`, color: `purple` }),
+          client: y(-14, -4, { label: `External Internet`, tags: [{ text: `Public`, icon: `globe` }] }),
+          pub_sub: d(-4, -4, { color: `orange`, glyph: `globe`, label: [`Public Subnet`, `AZ-1a /24`] }),
+          priv_app: d(6, -4, { color: `blue`, glyph: `server`, label: [`Private App`, `AZ-1a /24`] }),
+          priv_db: b(16, -4, { label: `Private DB (AZ-1a)`, color: `purple` }),
         },
         links: {
           c_pub: h(`client`, `pub_sub`, [`client`, `pub_sub`], { heads: `both`, label: `Ingress` }),
@@ -110,11 +110,11 @@ export const awsVpcLesson = {
       },
       scene: {
         entities: {
-          users: y(-6, -4, { label: `Global Users`, tags: [{ text: `HTTPS 443`, icon: `globe` }] }),
-          igw: d(-2, -2, { color: `orange`, glyph: `globe`, label: [`Internet Gateway`, `VPC Router`] }),
-          alb: f(2, -2, { color: `orange`, glyph: `balancer`, label: [`Public ALB`, `Multi-AZ`] }),
-          app1: d(6, -4, { color: `teal`, glyph: `server`, label: [`ECS Task (AZ-a)`] }),
-          app2: d(6, 2, { color: `teal`, glyph: `server`, label: [`ECS Task (AZ-b)`] }),
+          users: y(-14, -4, { label: `Global Users`, tags: [{ text: `HTTPS 443`, icon: `globe` }] }),
+          igw: d(-4, -4, { color: `orange`, glyph: `globe`, label: [`Internet Gateway`, `VPC Router`] }),
+          alb: f(6, -4, { color: `orange`, glyph: `balancer`, label: [`Public ALB`, `Multi-AZ`] }),
+          app1: d(16, -10, { color: `teal`, glyph: `server`, label: [`ECS Task (AZ-a)`] }),
+          app2: d(16, 2, { color: `teal`, glyph: `server`, label: [`ECS Task (AZ-b)`] }),
         },
         links: {
           u_igw: h(`users`, `igw`, [`users`, `igw`], { heads: `both` }),
@@ -155,10 +155,10 @@ export const awsVpcLesson = {
       },
       scene: {
         entities: {
-          app_priv: d(-6, 2, { color: `blue`, glyph: `cpu`, label: [`Backend Compute`, `Private 10.0.10.x`] }),
-          nat: d(-2, 0, { color: `yellow`, glyph: `shield`, label: [`NAT Gateway`, `Elastic IP`] }),
-          igw: d(2, -2, { color: `orange`, glyph: `globe`, label: [`Internet Gateway`] }),
-          repos: y(6, -4, { label: `External Yum/GitHub` }),
+          app_priv: d(-14, -4, { color: `blue`, glyph: `cpu`, label: [`Backend Compute`, `Private 10.0.10.x`] }),
+          nat: d(-4, -4, { color: `yellow`, glyph: `shield`, label: [`NAT Gateway`, `Elastic IP`] }),
+          igw: d(6, -4, { color: `orange`, glyph: `globe`, label: [`Internet Gateway`] }),
+          repos: y(16, -4, { label: `External Yum/GitHub` }),
         },
         links: {
           app_nat: h(`app_priv`, `nat`, [`app_priv`, `nat`], { heads: `end`, label: `Outbound Only` }),
@@ -197,9 +197,9 @@ export const awsVpcLesson = {
       },
       scene: {
         entities: {
-          alb_sg: d(-6, -2, { color: `orange`, glyph: `balancer`, label: [`ALB SecGroup`, `In: 443`] }),
+          alb_sg: d(-10, -4, { color: `orange`, glyph: `balancer`, label: [`ALB SecGroup`, `In: 443`] }),
           app_sg: d(0, 0, { color: `teal`, glyph: `server`, label: [`App SecGroup`, `In: From ALB_SG`] }),
-          db_sg: b(6, 2, { label: `DB SecGroup (In: 5432 App_SG)`, color: `purple` }),
+          db_sg: b(10, 4, { label: `DB SecGroup (In: 5432 App_SG)`, color: `purple` }),
         },
         links: {
           sg1: h(`alb_sg`, `app_sg`, [`alb_sg`, `app_sg`], { heads: `both`, label: `Port 8080` }),
@@ -237,9 +237,9 @@ export const awsVpcLesson = {
       },
       scene: {
         entities: {
-          app: d(-6, -2, { color: `teal`, glyph: `server`, label: [`Private App Node`] }),
+          app: d(-10, -4, { color: `teal`, glyph: `server`, label: [`Private App Node`] }),
           vpce: d(0, 0, { color: `green`, glyph: `shield`, label: [`S3 Gateway Endpoint`, `Route Table Entry`] }),
-          s3: b(6, 2, { label: `Amazon S3 Storage`, color: `green` }),
+          s3: b(10, 4, { label: `Amazon S3 Storage`, color: `green` }),
         },
         links: {
           app_vpce: h(`app`, `vpce`, [`app`, `vpce`], { heads: `both`, label: `AWS Backbone` }),

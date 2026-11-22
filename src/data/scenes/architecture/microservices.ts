@@ -27,24 +27,24 @@ import {
 // ============================================================================
 // MICROSERVICES & DISTRIBUTED SYSTEMS
 // ============================================================================
-const fc = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 },
+const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
   pc = () => p(fc, 13, `shoppers`),
-  mc = (e, t = {}) =>
-    d(e, 0, {
+  mc = (x, y = 4, t = {}) =>
+    d(x, y, {
       s: 5.5,
       h: 60,
       color: `orange`,
       glyph: `box`,
       label: [`Monolith`],
       sub: `all features`,
-      ...t,
+      ...(typeof y === 'object' ? y : t),
     }),
   hc = (e = {}, t = {}, n = {}) => ({
     users: pc(),
-    lb: f(0, -5),
-    m1: mc(-5, e),
-    m2: mc(5, t),
-    mdb: b(0, 6, { r: 2.2, h: 44, label: `one database`, ...n }),
+    lb: f(-5, -6),
+    m1: mc(-3, 6, e),
+    m2: mc(8, -4, t),
+    mdb: b(9, 7, { r: 2.2, h: 44, label: `one database`, ...n }),
   }),
   gc = {
     ul: h(`users`, `lb`, [`users`, `lb`], { heads: `both` }),
@@ -57,14 +57,14 @@ const fc = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 },
     { routes: [{ path: [`ul`, `l1`, `d1`] }, { path: [`ul`, `l2`, `d2`] }], rate: 2.4, bounce: !0 },
   ],
   vc = {
-    usr: { x: -13.5, color: `green`, glyph: `user`, label: [`Users`] },
-    cat: { x: -4.5, color: `yellow`, glyph: `layers`, label: [`Catalog`] },
-    ord: { x: 4.5, color: `blue`, glyph: `cart`, label: [`Orders`] },
-    pay: { x: 13.5, color: `purple`, glyph: `creditCard`, label: [`Payments`] },
+    usr: { x: -12, y: 4, color: `green`, glyph: `user`, label: [`Users`] },
+    cat: { x: -3, y: 4, color: `yellow`, glyph: `layers`, label: [`Catalog`] },
+    ord: { x: 6, y: 4, color: `blue`, glyph: `cart`, label: [`Orders`] },
+    pay: { x: 15, y: 4, color: `purple`, glyph: `creditCard`, label: [`Payments`] },
   },
   yc = Object.keys(vc),
   bc = (e = []) =>
-    d(0, -5, {
+    d(-2, -6, {
       color: `orange`,
       glyph: `route`,
       label: [`API`, `Gateway`],
@@ -72,15 +72,15 @@ const fc = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 },
       pills: `below`,
     }),
   xc = (e = {}) =>
-    Object.fromEntries(yc.map((t) => [t, d(vc[t].x, 0, { ...vc[t], ...(e[t] || {}) })])),
+    Object.fromEntries(yc.map((t) => [t, d(vc[t].x, vc[t].y, { ...vc[t], ...(e[t] || {}) })])),
   Sc = () =>
-    Object.fromEntries(yc.map((e) => [`${e}db`, b(vc[e].x, 10, { r: 1.5, h: 30, label: `` })])),
+    Object.fromEntries(yc.map((e) => [`${e}db`, b(vc[e].x, 14, { r: 1.5, h: 30, label: `` })])),
   Cc = (e = {}) => ({
     ug: h(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
     ...Object.fromEntries(
       yc.map((t) => [
         `g${t}`,
-        h(`gw`, t, [`gw`, [t, `gw`], t], { heads: `both`, ...(e[t] || {}) }),
+        h(`gw`, t, [`gw`, t], { heads: `both`, ...(e[t] || {}) }),
       ]),
     ),
   }),
@@ -92,7 +92,7 @@ const fc = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 },
   Ec = (e = 2.6) => [
     { routes: yc.map((e) => ({ path: [`ug`, `g${e}`, `d${e}`] })), rate: e, bounce: !0 },
   ],
-  Dc = (e, t, n) => S({ x: 4.5, y: 10, z: 0, dx: 60, dy: -175 }, e, t, { icon: n });
+  Dc = (e, t, n) => S({ x: 15, y: 14, z: 0, dx: 60, dy: -175 }, e, t, { icon: n });
 
 export const microservicesLesson = {
     id: `microservices`,
@@ -179,12 +179,12 @@ export const microservicesLesson = {
             users: pc(),
             gw: bc(),
             ...xc(),
-            mdb: b(0, 6, { r: 2.2, h: 44, label: `one database` }),
+            mdb: b(2, 14, { r: 2.2, h: 44, label: `one database` }),
           },
           links: {
             ...Cc(),
             ...Object.fromEntries(
-              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, [vc[e].x, 6], `mdb`], { heads: `both` })]),
+              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, `mdb`], { heads: `both` })]),
             ),
           },
           flows: [
@@ -281,13 +281,13 @@ export const microservicesLesson = {
             users: pc(),
             gw: bc([{ text: `release train: all 4 together`, tone: `red`, icon: `alert` }]),
             ...xc(),
-            mdb: b(0, 6, { r: 2.2, h: 44, label: `shared tables`, heat: 0.6 }),
+            mdb: b(2, 14, { r: 2.2, h: 44, label: `shared tables`, heat: 0.6 }),
           },
           links: {
             ...Cc(),
             ...Tc({ label: `chatty calls` }),
             ...Object.fromEntries(
-              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, [vc[e].x, 6], `mdb`], { heads: `both` })]),
+              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, `mdb`], { heads: `both` })]),
             ),
           },
           flows: [
@@ -453,19 +453,19 @@ export const microservicesLesson = {
           entities: {
             users: pc(),
             gw: bc(),
-            m1: mc(-6, { tags: [{ text: `users · catalog · orders` }] }),
-            mdb: b(-4, 6, { r: 2.2, h: 44, label: `monolith DB` }),
-            pay: d(9, 0, { ...vc.pay, tags: [{ text: `new`, tone: `green` }] }),
-            paydb: b(9, 10, { r: 1.5, h: 30, label: `` }),
+            m1: mc(-4, 4, { tags: [{ text: `users · catalog · orders` }] }),
+            mdb: b(-4, 14, { r: 2.2, h: 44, label: `monolith DB` }),
+            pay: d(12, 4, { ...vc.pay, tags: [{ text: `new`, tone: `green` }] }),
+            paydb: b(12, 14, { r: 1.5, h: 30, label: `` }),
           },
           links: {
             ug: h(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
-            gm: h(`gw`, `m1`, [`gw`, [`m1`, `gw`], `m1`], {
+            gm: h(`gw`, `m1`, [`gw`, `m1`], {
               heads: `both`,
               label: `everything else`,
               labelAt: 0.45,
             }),
-            gpay: h(`gw`, `pay`, [`gw`, [`pay`, `gw`], `pay`], {
+            gpay: h(`gw`, `pay`, [`gw`, `pay`], {
               heads: `both`,
               label: `/payments/*`,
               labelAt: 0.45,
