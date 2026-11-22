@@ -571,20 +571,44 @@ The engine's collision avoidance algorithm (`Vf` in `stage-engine.ts`) calculate
 
 ---
 
-#### 7. Panel Placement Standard: Code vs Concept Separation (Phân Định Panel SVG)
+#### 7. Purpose-Driven Panel Standard: Technical Artifacts vs Generic Text (Phân Định Mục Đích Panel Trong SVG)
 
-- **CODE PANELS ONLY (`card: makePanel`):**
-  Floating panel cards inside the SVG canvas (`makePanel`) are **STRICTLY RESERVED FOR ACTUAL CODE OR SYNTAX SNIPPETS**:
-  - Executable code: Java classes, CompletableFuture pipelines, Spring configurations.
-  - Database queries: SQL `EXPLAIN ANALYZE`, index definitions, PostgreSQL commands.
-  - Engine data structures: Redis C structs (`robj`, `sdshdr8`), Linux kernel `epoll_event`.
-  - Operational scripts: Dockerfile layers, Kubernetes YAML manifests, `iptables` rules, `tcpdump` commands.
+Panel nổi trong không gian SVG 2.5D (`card: makePanel`) **phải được sử dụng tùy theo mục đích kỹ thuật thực tế**, KHÔNG áp dụng máy móc việc cấm đoán hay lạm dụng:
 
-- **STRICTLY FORBIDDEN: Concept & Bullet-Point Panels in SVG:**
-  Never insert text-only summary panels (e.g. `'# Raw statistical engine'`, `'= Stateless generation'`) into the 2.5D SVG canvas for abstract architectural concepts.
-  *Why:* 
-  1. The 3D canvas is meant for clear geometric architecture, animated packet flows, and link topology. Floating text boxes obstruct isometric blocks and crowd the viewport.
-  2. All conceptual explanations, step titles, bullet points, and learning goals **ALREADY BELONG TO AND ARE FULLY RENDERED IN THE RIGHT-HAND STEP GUIDE CARD AND BOTTOM TIMELINE**. Placing duplicate text panels in the SVG creates visual clutter.
+##### A. Mục Đích HỢP LỆ — Technical Artifact Panels (BẮT BUỘC GIỮ)
+Một panel có giá trị cao khi nó cung cấp một **vật phẩm kỹ thuật cụ thể (Technical Artifact / Payload on the Wire)** mà các khối 3D không thể biểu diễn trực quan hết được:
+1. **Mã nguồn & Truy vấn thực tế (Code & Query Snippets):**
+   - Code Java (Loom, CompletableFuture, Spring annotations).
+   - Truy vấn SQL (`EXPLAIN ANALYZE`, CTE, window functions).
+   - C structs trong Database / Kernel (Redis `robj`, `sdshdr8`, Linux `epoll_event`).
+2. **Giao thức mạng, HTTP Requests & Payload mẫu (Network & Protocol Payloads):**
+   - *Điển hình:* **`Files & Media` (Step 5 - Presigned URL):**
+     `PUT https://bucket…/videos/7a1e.mp4?expires=900&signature=3b9f…`
+     `= one key · one upload · 15 minutes`
+     `# the app never touches the bytes`
+     *(Panel này trực quan hóa chính xác chuỗi URL chữ ký mà client gửi trực tiếp lên S3).*
+   - Header gói tin, JWT token payload, JSON-RPC schema.
+3. **Quy trình trạng thái & Công thức tính toán cụ thể (State Transitions & Math Specs):**
+   - *Điển hình:* **`Files & Media` (Step 6 - Multipart Upload):**
+     `start      → upload id + 200 URLs`
+     `part 1…200  10 MB each, 4 at a time`
+     `! part 37 failed → send part 37 again`
+     `= complete  → videos/7a1e.mp4`
+   - Công thức giải thuật (HPA replica math, Snowflake bit allocation, Token bucket leak rate).
+4. **Cấu hình & Câu lệnh vận hành (Manifests & CLI Commands):**
+   - Dockerfile, K8s YAML specs, lệnh `iptables`, `kubectl`, `tcpdump`.
+
+##### B. Mục Đích BỊ CẤM — Generic Conceptual Summaries (BẮT BUỘC LOẠI BỎ)
+**TUYỆT ĐỐI KHÔNG** chèn panel vào canvas SVG khi nội dung của nó chỉ là **các câu tóm tắt lý thuyết định tính chung chung**:
+- *Ví dụ cấm:* Các panel kiểu: `'# Raw statistical engine'`, `'= Stateless generation'`, `'Microservices are loosely coupled'`, `'Replication ensures high availability'`.
+- *Nguyên nhân:* 
+  1. Toàn bộ lý thuyết, tiêu đề bước và bài học **ĐÃ CÓ Ở CỘT STEP GUIDE BÊN PHẢI VÀ BOTTOM TIMELINE**.
+  2. Panel chữ nhật lơ lửng chứa text lý thuyết sẽ che khuất các khối kiến trúc 3D, cản trở đường link và gây cảm giác chật chội rác canvas.
+
+##### C. Quy Tắc Vàng Phân Định (The Golden Litmus Test)
+> **Quy tắc phân định:** *"Nếu xóa panel này đi, người học có bị mất đi một cú pháp mã lệnh, một URL/API payload thực tế, hay một công thức kỹ thuật trên đường truyền không?"*
+> - Nếu **CÓ** (như đoạn Presigned URL ở `files`, hay câu lệnh CLI) $\implies$ **GIỮ LẠI TRONG SVG**.
+> - Nếu **KHÔNG** (chỉ là đoạn tóm tắt giải thích bằng lời) $\implies$ **GỠ KHỎI SVG**, chuyển trọn vẹn nội dung đó sang cột Step Guide bên phải.
 
 ---
 
