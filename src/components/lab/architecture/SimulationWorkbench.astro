@@ -390,7 +390,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
         <div class="eyebrow">You’ll learn</div>
         <ul id="goals-list">
           {lesson.goals.map((g, idx) => (
-            <li data-goal-step={g.step || idx + 1}>
+            <li data-goal-step={g.step !== undefined ? g.step : idx + 1}>
               <span class="check">
                 <svg class="i " width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
               </span>
@@ -479,8 +479,11 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
 
       isInitialized = true;
 
-      // Notify DtsSceneRenderer
-      root?.dispatchEvent(new CustomEvent('wb:step-change', { detail: { idx, step: s }, bubbles: true }));
+      // Notify DtsSceneRenderer and 2D Deep-Dive Visualizers
+      const stepEvtDetail = { idx, step: s, index: idx };
+      root?.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail, bubbles: true }));
+      window.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail }));
+      document.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail }));
 
       // Guide meta
       if (elStepLabel) elStepLabel.textContent = `Step ${idx + 1} / ${total}`;
@@ -597,7 +600,10 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
         const lis = elGoalsList.querySelectorAll('li');
         lis.forEach((li) => {
           const goalStep = parseInt(li.getAttribute('data-goal-step') || '99', 10);
-          li.classList.toggle('is-hit', goalStep <= idx + 1);
+          const isHit = goalStep <= idx + 1;
+          li.classList.toggle('is-hit', isHit);
+          const chk = li.querySelector('.check');
+          if (chk) chk.classList.toggle('is-on', isHit);
         });
       }
 

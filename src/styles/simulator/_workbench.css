@@ -849,6 +849,7 @@ p {
   display: flex;
   position: absolute;
   bottom: 10px;
+  pointer-events: none;
 }
 
 .stage__legend span {

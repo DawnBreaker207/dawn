@@ -338,3 +338,32 @@ span[style*="background"],
 div[style*="background"] {
   color: inherit;
 }
+
+/* ── 10. GOALS CARD STYLING & DARK MODE REFINEMENT ─────────────────────── */
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .goals li,
+.dark :is(html.is-embedded, .is-embedded) .goals li {
+  background: var(--bg-alt, #212126) !important;
+  border-color: var(--border, #2e2e36) !important;
+  color: var(--fg-dim, #a1a1aa) !important;
+}
+
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .goals li.is-hit,
+.dark :is(html.is-embedded, .is-embedded) .goals li.is-hit {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: var(--fg, #f4f4f5) !important;
+}
+
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .goals li .check,
+.dark :is(html.is-embedded, .is-embedded) .goals li .check {
+  border-color: #3f3f46 !important;
+  background: #18181b !important;
+}
+
+:root[data-theme="dark"] :is(html.is-embedded, .is-embedded) .goals li.is-hit .check,
+.dark :is(html.is-embedded, .is-embedded) .goals li.is-hit .check {
+  border-color: #10b981 !important;
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+

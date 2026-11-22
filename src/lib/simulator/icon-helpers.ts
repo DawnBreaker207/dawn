@@ -3,5 +3,5 @@ export const attrsToString = (attrs: Record<string, string>) =>
     .map(([k, v]) => `${k}="${v}"`)
     .join(` `);
 
-export const pathsToSvgElements = (paths: [string, Record<string, string>][]) =>
-  paths.map(([tag, attrs]) => `<${tag} ${attrsToString(attrs)}/>`).join(``);
+export const pathsToSvgElements = (paths?: [string, Record<string, string>][]) =>
+  (paths || []).map(([tag, attrs]) => `<${tag} ${attrsToString(attrs)}/>`).join(``);

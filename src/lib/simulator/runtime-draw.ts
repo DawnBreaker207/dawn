@@ -357,31 +357,89 @@ function Zr(e) {
     r = e.lift,
     i = n.T[0],
     o = n.ty,
-    s = 1 - e.dead * 0.5 - e.dim * 0.35,
-    c = e.label || [],
-    l = o + (e.s * 14 * 0.5 + e.h) * 0.4,
-    u = ``;
-  u = c.length
-    ? c.length === 1 && !e.sub
-      ? Ar(i, l + 4.5, c[0], 13.5, 800)
-      : c.length === 1
-        ? `${Ar(i, l, c[0], 13.5, 800)}${Ar(i, l + 14, e.sub, 10, 600)}`
-        : e.sub
-          ? `${Ar(i, l - 9, c[0], 13, 800)}${Ar(i, l + 6.5, c[1], 13, 800)}${Ar(i, l + 20.5, e.sub, 10, 600)}`
-          : `${Ar(i, l - 3.5, c[0], 13, 800)}${Ar(i, l + 12, c[1], 13, 800)}`
-    : ``;
+    s = 1 - e.dead * 0.5 - e.dim * 0.35;
+
+  // Normalize label into an array of clean lines
+  let rawLabel = e.label;
+  let lines = [];
+  if (typeof rawLabel === 'string') {
+    lines = rawLabel.trim() ? [rawLabel.trim()] : [];
+  } else if (Array.isArray(rawLabel)) {
+    lines = rawLabel.map((x) => String(x).trim()).filter(Boolean);
+  }
+
+  // Available width on the block face (dimetric isometric projection: half-width is 14 * s)
+  const availWidth = Math.max(48, e.s * 14 * 1.35);
+
+  // Auto-wrap long lines with spaces if any single line exceeds available width
+  let wrappedLines = [];
+  for (const line of lines) {
+    if (line.includes(' ') && line.length * 7.5 > availWidth) {
+      const words = line.split(/\s+/);
+      let cur = '';
+      for (const w of words) {
+        if (!cur) {
+          cur = w;
+        } else if ((cur + ' ' + w).length * 7.5 <= availWidth) {
+          cur += ' ' + w;
+        } else {
+          wrappedLines.push(cur);
+          cur = w;
+        }
+      }
+      if (cur) wrappedLines.push(cur);
+    } else {
+      wrappedLines.push(line);
+    }
+  }
+
+  // Calculate dynamic font-size to guarantee text fits inside block face
+  let maxLen = Math.max(1, ...wrappedLines.map((l) => l.length));
+  let fontSize = wrappedLines.length <= 1 ? 13 : wrappedLines.length === 2 ? 11.5 : 10;
+  let estWidth = maxLen * (fontSize * 0.62);
+  if (estWidth > availWidth) {
+    fontSize = Math.max(8.5, Math.min(fontSize, (availWidth / (maxLen * 0.62))));
+  }
+  fontSize = Math.round(fontSize * 10) / 10;
+  const fontWeight = fontSize < 10.5 ? 700 : 800;
+
   let d = e.s >= 6 ? 1.15 : e.s < 3.5 ? 0.8 : 1,
+    iconSize = e.s < 3.2 ? 17 : e.s < 3.8 ? 19 : 21,
+    iconY = wrappedLines.length ? o - 4 : o + 1,
     f = Yr[e.glyph]
-      ? Yr[e.glyph](i, c.length ? o - 1 : o + 2, d)
+      ? Yr[e.glyph](i, iconY, d)
       : e.glyph
-        ? a(e.glyph, i, o - 1, 24, { stroke: 1.9 })
-        : ``,
-    p =
-      e.dead > 0.01
-        ? `<g opacity="${A(e.dead)}" stroke="#c0392b" stroke-width="3.2" stroke-linecap="round">
+        ? a(e.glyph, i, iconY, iconSize, { stroke: 1.8 })
+        : ``;
+
+  // Compute vertical positions for lines ensuring clear separation from the icon above and bottom boundary
+  let lineSpacing = Math.round(fontSize * (e.sub ? 1.15 : 1.25));
+  let numLines = wrappedLines.length + (e.sub ? 1 : 0);
+  let totalTextHeight = (numLines - 1) * lineSpacing;
+
+  let minStartY = e.glyph ? o + 7.5 : o + 3.5;
+  let maxStartY = (o + e.h) - totalTextHeight - 5;
+  let idealCenter = o + (e.s * 14 * 0.35 + e.h) * 0.45;
+  let startY = Math.max(minStartY, Math.min(maxStartY, idealCenter - totalTextHeight / 2));
+
+  let u = '';
+  wrappedLines.forEach((lineText, idx) => {
+    const yPos = startY + idx * lineSpacing;
+    u += Ar(i, yPos, lineText, fontSize, fontWeight);
+  });
+
+  if (e.sub) {
+    const subFs = Math.max(8, Math.round(fontSize * 0.78 * 10) / 10);
+    const subY = startY + wrappedLines.length * lineSpacing;
+    u += Ar(i, subY, e.sub, subFs, 600);
+  }
+
+  let p =
+    e.dead > 0.01
+      ? `<g opacity="${A(e.dead)}" stroke="#c0392b" stroke-width="3.2" stroke-linecap="round">
          <path d="M${A(i - 9)},${A(o - 10)} L${A(i + 9)},${A(o + 8)} M${A(i + 9)},${A(o - 10)} L${A(i - 9)},${A(o + 8)}"/>
        </g>`
-        : ``,
+      : ``,
     m = `
     <g opacity="${A(e.opacity)}">
       ${qr(n, e.h, r, 0.26)}

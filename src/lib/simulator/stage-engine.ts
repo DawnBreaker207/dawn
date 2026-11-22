@@ -585,10 +585,12 @@ export class StageEngine {
           r.push(o),
           l([o[0] - 2, o[1] - 2, o[2] + 2, o[3] + 4]));
       }
-      return (
-        c[0] === 1 / 0 && (c = [-100, -60, 100, 60]),
-        { b: c, boxes: r, polys: a, panel: o, picks: p }
-      );
+      if (c[0] === 1 / 0) {
+        c = [-100, -60, 100, 60];
+      } else {
+        c = [c[0] - 20, c[1] - 24, c[2] + 20, c[3] + 24];
+      }
+      return { b: c, boxes: r, polys: a, panel: o, picks: p };
     }
     dockRect(e, t) {
       let n = this.host.clientWidth,
@@ -619,13 +621,16 @@ export class StageEngine {
         [a, o, s, c] = n.b,
         l = Math.max(1, s - a),
         u = Math.max(1, c - o),
+        padX = Math.min(48, Math.max(28, r * 0.05)),
+        padTop = Math.min(56, Math.max(38, i * 0.08)),
+        padBottom = Math.min(48, Math.max(32, i * 0.06)),
         d = (e, t, n) => {
-          let s = t === 0 ? (r - l * e) / 2 : t < 0 ? Sf : r - Sf - l * e,
-            c = n === 0 ? (i - u * e) / 2 : n < 0 ? Sf : i - Sf - u * e;
+          let s = t === 0 ? (r - l * e) / 2 : t < 0 ? padX : r - padX - l * e,
+            c = n === 0 ? (i - u * e) / 2 : n < 0 ? padTop : i - padBottom - u * e;
           return { x: a - s / e, y: o - c / e, w: r / e, h: i / e };
         },
         f = (e) => Math.max(xf, Math.floor(e * 20 + 1e-6) / 20),
-        p = Math.min(bf, (r - 32) / l, (i - 32) / u),
+        p = Math.min(1.25, (r - padX * 2) / l, (i - (padTop + padBottom)) / u),
         m = null;
       if (!n.panel) m = { zoom: f(p), ax: 0, ay: 0, corner: null };
       else {
@@ -653,28 +658,10 @@ export class StageEngine {
               }
           s && (!m || s.score > m.score) && (m = s);
         }
-        m ||= { zoom: f(p * 0.7), ax: -1, ay: 1, corner: `tr` };
+        m ||= { zoom: f(p * 0.8), ax: 0, ay: 0, corner: `tr` };
       }
       let h = d(m.zoom, m.ax, m.ay),
         g = m.corner;
-      if (t) {
-        let e = Math.abs(t.zoom - m.zoom) < 1e-6,
-          r = t.zoom < m.zoom && t.zoom >= m.zoom * 0.9;
-        if (e || r) {
-          let r = t.cam,
-            i = 12 / t.zoom,
-            l = a >= r.x + i && o >= r.y + i && s <= r.x + r.w - i && c <= r.y + r.h - i,
-            u = Math.abs((a + s) / 2 - (r.x + r.w / 2)) / r.w,
-            d = Math.abs((o + c) / 2 - (r.y + r.h / 2)) / r.h,
-            f = e ? 0.12 : 0.18;
-          if (l && u < f && d < f) {
-            let e = n.panel
-              ? [t.corner, ...Df].filter(Boolean).find((e) => this.cardClear(n, r, e))
-              : null;
-            (!n.panel || e) && ((h = r), (g = n.panel ? e : null), (m = { ...m, zoom: t.zoom }));
-          }
-        }
-      }
       let _ = n.panel ? this.dockRect(g, n.panel) : null;
       return {
         cam: h,
