@@ -291,14 +291,16 @@ const lines = codeSnippet.trim().split('\n');
       });
     };
 
-    // Listen to wb:step-change from LabWorkbench
-    const workbenchRoot = root.closest('.wb-root') || document;
-    workbenchRoot.addEventListener('wb:step-change', (e: Event) => {
-      const customEvent = e as CustomEvent<{ idx: number }>;
-      if (typeof customEvent.detail?.idx === 'number') {
-        syncToStep(customEvent.detail.idx);
+    // Listen to wb:step-change from SimulationWorkbench
+    const onStepChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ idx?: number; index?: number }>;
+      const stepIdx = customEvent.detail?.idx ?? customEvent.detail?.index;
+      if (typeof stepIdx === 'number') {
+        syncToStep(stepIdx);
       }
-    });
+    };
+    window.addEventListener('wb:step-change', onStepChange);
+    document.addEventListener('wb:step-change', onStepChange);
   }
 
   initThreadStateSync();

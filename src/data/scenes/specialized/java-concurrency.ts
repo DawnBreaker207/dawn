@@ -135,10 +135,10 @@ export const javaConcurrencyLesson = {
         entities: {
           submit: y(-10, 2,  { label: `callers`, tags: [{ text: `submit(task)`, icon: `play` }] }),
           queue:  d(0,   2,  { color: `purple`, glyph: `container`, label: [`Task Queue`, `BlockingQueue`] }),
-          w1:     d(10, -6,  { color: `blue`,   glyph: `cpu`,       label: [`Worker-1`], cpu: 1 }),
-          w2:     d(10,  0,  { color: `blue`,   glyph: `cpu`,       label: [`Worker-2`], cpu: 0.7 }),
+          w1:     d(10, -10, { color: `blue`,   glyph: `cpu`,       label: [`Worker-1`], cpu: 1 }),
+          w2:     d(10, -2,  { color: `blue`,   glyph: `cpu`,       label: [`Worker-2`], cpu: 0.7 }),
           w3:     d(10,  6,  { color: `blue`,   glyph: `cpu`,       label: [`Worker-3`], cpu: 0.3 }),
-          w4:     d(10,  12, { color: `blue`,   glyph: `cpu`,       label: [`Worker-4`], cpu: 0 }),
+          w4:     d(10,  14, { color: `blue`,   glyph: `cpu`,       label: [`Worker-4`], cpu: 0 }),
         },
         links: {
           sq: h(`submit`, `queue`, [`submit`, `queue`], { label: `enqueue`, heads: `end` }),
@@ -196,13 +196,13 @@ export const javaConcurrencyLesson = {
       metrics: { threads: `1M virtual`, queue: `per-carrier`, locks: `continuation`, mode: `VirtualThread` },
       scene: {
         entities: {
-          carrier1: d(0,  -8,  { color: `orange`, glyph: `cpu`,    label: [`Carrier-1`, `OS Thread`], cpu: 0.9 }),
-          carrier2: d(0,   2,  { color: `orange`, glyph: `cpu`,    label: [`Carrier-2`, `OS Thread`], cpu: 0.7 }),
+          carrier1: d(-2, -6,  { color: `orange`, glyph: `cpu`,    label: [`Carrier-1`, `OS Thread`], cpu: 0.9 }),
+          carrier2: d(-2,  6,  { color: `orange`, glyph: `cpu`,    label: [`Carrier-2`, `OS Thread`], cpu: 0.7 }),
           vt1:      d(12, -12, { color: `green`,  glyph: `code`,   label: [`VT-1`, `RUNNING`] }),
-          vt2:      d(12, -6,  { color: `blue`,   glyph: `code`,   label: [`VT-2`, `parked (IO)`] }),
-          vt3:      d(12,  0,  { color: `green`,  glyph: `code`,   label: [`VT-3`, `RUNNING`] }),
-          vt4:      d(12,  6,  { color: `blue`,   glyph: `code`,   label: [`VT-4`, `parked (IO)`] }),
-          heap:     d(22, -3,  { color: `purple`, glyph: `layers`, label: [`Heap`, `~1KB/VT`] }),
+          vt2:      d(12,  -4, { color: `blue`,   glyph: `code`,   label: [`VT-2`, `parked (IO)`] }),
+          vt3:      d(12,   4, { color: `green`,  glyph: `code`,   label: [`VT-3`, `RUNNING`] }),
+          vt4:      d(12,  12, { color: `blue`,   glyph: `code`,   label: [`VT-4`, `parked (IO)`] }),
+          heap:     d(24,   0, { color: `purple`, glyph: `layers`, label: [`Heap`, `~1KB/VT`] }),
         },
         links: {
           c1v1: h(`carrier1`, `vt1`,  [`carrier1`, `vt1`],  { label: `mounted`,      heads: `both` }),

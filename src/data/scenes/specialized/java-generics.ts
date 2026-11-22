@@ -1,0 +1,170 @@
+// @ts-nocheck
+/* eslint-disable */
+import {
+  makeBlock as d,
+  makeBalancer as f,
+  makeCrowd as p,
+  makeGhost as m,
+  makeLink as h,
+  DEAD_STATE as g,
+  makeHot as _,
+  makeCool as v,
+  makeDevice as y,
+  makeDb as b,
+  makeZone as x,
+  makeQueue as ee,
+  makePanel as S,
+  makeUser as te,
+  makeDns as ne,
+  makeWebServer as re,
+  makeDatabase as ie,
+  URL_TAG as ae,
+  LINK_TEMPLATES as C,
+  CACHED_DNS_LINK as oe,
+  TIMING_PANEL as se,
+} from '@/lib/simulator/scene-builders';
+
+export const javaGenericsLesson = {
+  id: `java-generics`,
+  title: `Java Generics Internals & Type Erasure`,
+  summary: `How Java compiles generics: compile-time Type Erasure, synthetic bridge methods, PECS (Producer Extends, Consumer Super), and reification.`,
+  minutes: 11,
+  level: `intermediate`,
+  metrics: ['generic_type', 'bytecode_type', 'bridge_methods', 'variance', 'check_phase'],
+  legend: ['req', 'res', ['ping', 'type check'], 'fail'],
+  goals: [
+    { text: `Type Erasure: How bytecode replaces T with Object or bound`, step: 1 },
+    { text: `Synthetic Bridge Methods: Preserving polymorphism during inheritance`, step: 2 },
+    { text: `PECS Rule: Producer Extends (? extends T) for reading`, step: 3 },
+    { text: `PECS Rule: Consumer Super (? super T) for writing`, step: 4 },
+    { text: `Reification limits: Why new T() is forbidden & TypeToken workarounds`, step: 5 },
+  ],
+  steps: [
+    {
+      short: `Erasure`,
+      chapter: `technique`,
+      title: `Type Erasure at Compile Time`,
+      body: [
+        `To maintain backward compatibility with pre-Java 5 bytecode, Java uses <strong>Type Erasure</strong>.`,
+        `The compiler checks types at compile time, then erases generic type parameters: <code>List<String></code> becomes plain <code>List</code>, and <code>T</code> becomes <code>Object</code> (or the upper bound <code>Comparable</code>). Synthetic casts are inserted automatically.`,
+      ],
+      callout: { kind: `insight`, text: 'At runtime inside JVM memory, List<String> and List<Integer> are the exact same Class: List.class.' },
+      metrics: { generic_type: 'List<String>', bytecode_type: 'List (raw)', bridge_methods: '0', variance: 'Invariable', check_phase: 'Compile Time' },
+      scene: {
+        entities: {
+          source: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['List<String>'], sub: 'Strong Types' }),
+          compiler: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['Type Erasure'], sub: 'javac Stripper' }),
+          bytecode: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'file', label: ['List (Raw Object)'], sub: 'checkcast inserted' }),
+        },
+        links: {
+          sc: h('source', 'compiler', ['source', 'compiler'], { heads: 'end', label: 'type check' }),
+          cb: h('compiler', 'bytecode', ['compiler', 'bytecode'], { heads: 'end', label: 'erases to Object' }),
+        },
+        flows: [
+          { route: ['sc', 'cb'], bounce: false, rate: 2.0 },
+        ],
+      },
+    },
+    {
+      short: `Bridge Methods`,
+      chapter: `technique`,
+      title: `Synthetic Bridge Methods`,
+      body: [
+        `When a subclass implements a generic interface (e.g. <code>Comparable<Node></code> with <code>compareTo(Node)</code>), erasure creates a signature mismatch because the interface requires <code>compareTo(Object)</code>.`,
+        `The Java compiler automatically generates a hidden <strong>synthetic bridge method</strong> <code>compareTo(Object o)</code> that casts <code>o</code> to <code>Node</code> and forwards the call.`,
+      ],
+      callout: { kind: `tip`, text: 'Reflection shows 2 methods with the same name on the class: one synthetic bridge and one actual method.' },
+      metrics: { generic_type: 'Comparable<Node>', bytecode_type: 'Bridge Added', bridge_methods: '1 Synthetic', variance: 'Polymorphic', check_phase: 'Runtime Dispatch' },
+      scene: {
+        entities: {
+          caller: d(-11, -4, { s: 3.8, h: 42, color: 'teal', glyph: 'cpu', label: ['Caller'], sub: 'compareTo(Object)' }),
+          bridge: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'shield', label: ['Bridge Method'], sub: 'casts (Node) o' }),
+          target: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['compareTo(Node)'], sub: 'User Business Logic' }),
+        },
+        links: {
+          cb: h('caller', 'bridge', ['caller', 'bridge'], { heads: 'end', label: 'invokevirtual' }),
+          bt: h('bridge', 'target', ['bridge', 'target'], { heads: 'end', label: 'forwards typed call' }),
+        },
+        flows: [
+          { route: ['cb', 'bt'], bounce: false, rate: 2.2 },
+        ],
+      },
+    },
+    {
+      short: `Producer Extends`,
+      chapter: `technique`,
+      title: `PECS: Producer Extends (? extends T)`,
+      body: [
+        `Java generics are invariant: <code>List<Integer></code> is NOT a subtype of <code>List<Number></code>.`,
+        `Use <strong>? extends T</strong> when the collection <strong>produces</strong> elements (you only READ from it). You can safely read <code>Number n = list.get(0)</code>, but you CANNOT add anything because the compiler doesn't know the specific concrete subtype.`,
+      ],
+      callout: { kind: `insight`, text: 'Upper bounded wildcards (? extends) provide Covariance: reading is safe, writing is forbidden.' },
+      metrics: { generic_type: 'List<? extends Number>', bytecode_type: 'Number getter', bridge_methods: '0', variance: 'Covariant', check_phase: 'Read-Only' },
+      scene: {
+        entities: {
+          int_list: d(-11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'layers', label: ['List<Integer>'], sub: 'Producer' }),
+          producer: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'search', label: ['? extends Number'], sub: 'Covariant Read' }),
+          reader: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cpu', label: ['Number n = get()'], sub: 'Guaranteed Type' }),
+        },
+        links: {
+          ip: h('int_list', 'producer', ['int_list', 'producer'], { heads: 'end', label: 'safe assign' }),
+          pr: h('producer', 'reader', ['producer', 'reader'], { heads: 'end', label: 'reads Number' }),
+        },
+        flows: [
+          { route: ['ip', 'pr'], bounce: false, rate: 2.0 },
+        ],
+      },
+    },
+    {
+      short: `Consumer Super`,
+      chapter: `technique`,
+      title: `PECS: Consumer Super (? super T)`,
+      body: [
+        `Use <strong>? super T</strong> when the collection <strong>consumes</strong> elements (you WRITE elements into it).`,
+        `In <code>List<? super Integer></code>, the list is guaranteed to hold Integer or an ancestor (Number, Object). Therefore, calling <code>list.add(42)</code> is 100% type-safe, but reading only yields <code>Object</code>.`,
+      ],
+      callout: { kind: `tip`, text: 'Remember PECS: Producer Extends, Consumer Super (Joshua Bloch, Effective Java).' },
+      metrics: { generic_type: 'List<? super Integer>', bytecode_type: 'Integer setter', bridge_methods: '0', variance: 'Contravariant', check_phase: 'Write-Safe' },
+      scene: {
+        entities: {
+          writer: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cpu', label: ['add(Integer 42)'], sub: 'Value Producer' }),
+          consumer: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'box', label: ['? super Integer'], sub: 'Contravariant Write' }),
+          target_list: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'layers', label: ['List<Number>'], sub: 'Accepts Integer' }),
+        },
+        links: {
+          wc: h('writer', 'consumer', ['writer', 'consumer'], { heads: 'end', label: 'safe write' }),
+          ct: h('consumer', 'target_list', ['consumer', 'target_list'], { heads: 'end', label: 'stores safely' }),
+        },
+        flows: [
+          { route: ['wc', 'ct'], bounce: false, rate: 2.0 },
+        ],
+      },
+    },
+    {
+      short: `TypeToken`,
+      chapter: `deep`,
+      title: `Reification & Super Type Tokens`,
+      body: [
+        `Because of erasure, <code>new T()</code> and <code>instanceof List<String></code> are compile errors: the JVM does not know what <code>T</code> is at runtime.`,
+        `To preserve type information for serialization (Jackson, Gson), Neal Gafter invented the <strong>Super Type Token</strong>: an anonymous subclass (<code>new TypeReference<List<String>>() {}</code>) captures generic types in the class bytecode metadata.`,
+      ],
+      callout: { kind: `insight`, text: 'Class metadata retains generic signatures even when instance variables erase them.' },
+      metrics: { generic_type: 'TypeReference<T>', bytecode_type: 'ParameterizedType', bridge_methods: '0', variance: 'Reified via Class', check_phase: 'Runtime Reflection' },
+      scene: {
+        entities: {
+          json: d(-11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'code', label: ['JSON Input'], sub: '{"items": ["a"]}' }),
+          type_token: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'shield', label: ['Super Type Token'], sub: 'ParameterizedType' }),
+          deserialized: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'layers', label: ['List<String>'], sub: 'Type Restored' }),
+        },
+        links: {
+          jt: h('json', 'type_token', ['json', 'type_token'], { heads: 'end' }),
+          td: h('type_token', 'deserialized', ['type_token', 'deserialized'], { heads: 'end', label: 'reified deserialization' }),
+        },
+        flows: [
+          { route: ['jt', 'td'], bounce: false, rate: 2.2 },
+        ],
+      },
+    },
+  ],
+};
+export default javaGenericsLesson;
