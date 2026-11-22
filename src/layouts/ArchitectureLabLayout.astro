@@ -45,7 +45,7 @@ const dtsLesson = ALL_SCENES[lessonId] as unknown as Lesson;
 
 <script>
   const getLayout = (w: number, h: number) =>
-    w >= 1200 && h >= 560 ? 'desktop' : w >= 960 && h >= 600 ? 'tablet' : 'stack';
+    w >= 860 ? 'desktop' : 'stack';
 
   function updateDtsLayout() {
     const tsView = document.getElementById('dts-view-ts');
@@ -55,17 +55,47 @@ const dtsLesson = ALL_SCENES[lessonId] as unknown as Lesson;
   }
 
   function setupLabPage() {
-    // Hide empty blog rail on lab pages
-    document.documentElement.setAttribute('data-rail', 'hidden');
+    // Only default to hidden if user hasn't explicitly opened the rail
+    const userRailPref = localStorage.getItem('dawn:railHidden');
+    if (userRailPref === null) {
+      document.documentElement.setAttribute('data-rail', 'hidden');
+      localStorage.setItem('dawn:railHidden', 'hidden');
+    } else if (userRailPref === 'false') {
+      document.documentElement.removeAttribute('data-rail');
+    } else {
+      document.documentElement.setAttribute('data-rail', 'hidden');
+    }
+
+    // Restore mobile panel state if user opened it
+    const savedMobile = sessionStorage.getItem('dawn:mobilePanel');
+    if (savedMobile) {
+      const shell = document.getElementById('studio-shell');
+      if (shell) shell.dataset.mobilePanel = savedMobile;
+    }
+
     updateDtsLayout();
     window.addEventListener('resize', updateDtsLayout);
   }
 
   setupLabPage();
   document.addEventListener('astro:page-load', setupLabPage);
-  document.addEventListener('astro:before-swap', () => {
+  document.addEventListener('astro:before-swap', (e: any) => {
     window.removeEventListener('resize', updateDtsLayout);
     document.documentElement.removeAttribute('data-layout');
-    document.documentElement.removeAttribute('data-rail');
+    // Preserve rail attribute for incoming page based on user preference
+    const userRailPref = localStorage.getItem('dawn:railHidden');
+    const newDoc = e.newDocument || e.detail?.newDocument;
+    if (newDoc?.documentElement) {
+      if (userRailPref === 'false') {
+        newDoc.documentElement.removeAttribute('data-rail');
+      } else {
+        newDoc.documentElement.setAttribute('data-rail', 'hidden');
+      }
+      const savedMobile = sessionStorage.getItem('dawn:mobilePanel');
+      const newShell = newDoc.getElementById('studio-shell');
+      if (savedMobile && newShell) {
+        newShell.dataset.mobilePanel = savedMobile;
+      }
+    }
   });
 </script>

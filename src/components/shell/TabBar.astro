@@ -10,10 +10,11 @@ const active = tabs.at(-1) ?? { path: '/', label: 'README.md' };
 ---
 
 <nav class="studio-topbar relative z-30 flex min-h-11 shrink-0 items-stretch border-b border-(--border) bg-(--bg)">
+  <!-- Mobile only: Nút mở Explorer sidebar bên trái -->
   <button
     id="toggle-sidebar"
     type="button"
-    class="studio-mobile-toggle grid min-w-11 shrink-0 cursor-pointer place-items-center border-r border-(--border) px-3 text-(--fg-faint) hover:bg-(--bg-alt) hover:text-(--fg) lg:hidden"
+    class="studio-mobile-toggle flex h-11 w-11 min-w-11 shrink-0 cursor-pointer items-center justify-center border-r border-(--border) text-(--fg-faint) hover:bg-(--bg-alt) hover:text-(--fg) lg:hidden"
     data-mobile-toggle="sidebar"
     data-umami-event="toggle-sidebar"
     aria-controls="sidebar"
@@ -38,34 +39,69 @@ const active = tabs.at(-1) ?? { path: '/', label: 'README.md' };
     <slot />
   </div>
 
-  <button
-    id="toggle-rail-mobile"
-    type="button"
-    class="studio-mobile-toggle grid min-w-11 shrink-0 cursor-pointer place-items-center border-l border-(--border) px-3 text-(--fg-faint) hover:bg-(--bg-alt) hover:text-(--fg) lg:hidden"
-    data-mobile-toggle="rail"
-    data-umami-event="toggle-rail-mobile"
-    aria-controls="rail"
-    aria-expanded="false"
-    aria-label="Open runtime activity"
-  >
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <path d="M4 4h16v7H4zM4 13h16v7H4z" />
-    </svg>
-  </button>
-
+  <!-- Nút đóng mở panel bên phải (Desktop + Mobile) -->
   <button
     id="toggle-rail"
     type="button"
-    class="tip tip--down hidden shrink-0 cursor-pointer border-l border-(--border) px-3.5 text-(--fg-faint) hover:bg-(--bg-alt) hover:text-(--fg) lg:grid lg:place-items-center"
+    class="tip tip--down flex h-11 w-11 min-w-11 shrink-0 cursor-pointer items-center justify-center border-l border-(--border) text-(--fg-faint) hover:bg-(--bg-alt) hover:text-(--fg)"
     data-rail-toggle
-    data-umami-event="toggle-rail-desktop"
-    data-tip="hide right rail"
+    data-umami-event="toggle-rail"
+    data-tip="toggle right panel"
     aria-controls="rail"
     aria-expanded="true"
-    aria-label="Hide right rail"
+    aria-label="Toggle right panel"
   >
     <svg class="rail-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
       <path d="M9 6l6 6-6 6" />
     </svg>
   </button>
 </nav>
+
+<style>
+  #toggle-sidebar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    border: 0;
+    border-right: 1px solid var(--border) !important;
+    padding: 0 12px !important;
+    color: var(--fg-faint);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  @media (min-width: 1024px) {
+    #toggle-sidebar {
+      display: none !important;
+    }
+  }
+  #toggle-sidebar:hover,
+  #toggle-rail:hover {
+    background: var(--bg-alt) !important;
+    color: var(--fg) !important;
+  }
+  #toggle-rail {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    border: 0;
+    border-left: 1px solid var(--border) !important;
+    padding: 0 12px !important;
+    color: var(--fg-faint);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+</style>
