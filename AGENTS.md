@@ -478,9 +478,11 @@ Every component placement and connection link MUST follow the canonical 3D isome
 - **Perspective Vectors:**
   - **Isometric X-axis:** $\vec{u}_x = (14, 7)$ (runs diagonally down-right at $26.5^\circ$).
   - **Isometric Y-axis:** $\vec{u}_y = (14, -7)$ (runs diagonally up-right at $-26.5^\circ$).
-- **Perspective Alignment (Reference Model: Microservices Step 1 Monolith):**
-  - Dependent components (e.g. Service $\to$ its Database) must align straight along the isometric depth axis ($+Y$, constant $X$). The link connecting them must be a pure straight line along $\vec{u}_y$ with zero sideways drift ($\Delta sx = 0$).
-  - Components on the same architectural tier must follow regular spacing along the isometric grid line.
+- **Perspective Alignment & Straight Depth Axis ($\Delta sx = 0$):**
+  - To align two components straight along the screen's vertical depth axis without crooked sideways tilting ($\Delta sx = 0$), the coordinates MUST satisfy:
+    $$\Delta x = -\Delta y \iff (x_1 + y_1) = (x_2 + y_2)$$
+    *Example:* If a Service is at $(0, 0)$, its Database behind it must be placed at $(-4, 4)$ or $(-6, 6)$. Placing it at $(0, 4)$ causes a severe $30^\circ$ sideways drift ($\Delta sx = 56\text{px}$).
+  - Reference Model: Microservices Step 1 Monolith (Gateway $\to$ Monolith $\to$ Database straight on depth axis).
 - **FORBIDDEN: Dogleg / Z-Bends in Links:**
   - Strictly avoid artificial intermediate waypoints like `['gw', [t, 'gw'], t]` that create awkward, crooked $90^\circ$ zig-zag bends. Links must project directly from source to target `['gw', t]` or strictly follow the isometric grid rays.
 - **Link Path Spacing & Parallel Clearance (MANDATORY: Minimum Gap >= 7px):**
@@ -542,26 +544,20 @@ All interactive simulations are strictly partitioned into 8 mutually exclusive d
 | **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking (Direct Connect/Transit Gateway), IAM & KMS Encryption, Edge Security (WAF/Shield), HA & DR Tiers, Compute (Spot/Fargate/EKS), Storage (S3/EBS/EFS), Databases (Aurora/DynamoDB), Serverless (SQS/SNS/EventBridge/Step Functions), Migration (DMS/Kinesis/Athena) | **10** |
 | **TỔNG CỘNG** | **Toàn bộ hệ thống mô phỏng kiến trúc 3D** | **100% Single Canvas 3D + Code-Driven Cards** | **104 Bài** |
 
-### Hybrid Architecture: 3D Macro Topology vs 2D Deep-Dive Mechanics
+### Unified Single Canvas 3D Architecture & Code-Driven Presentation Standard
 
-Interactive labs are organized into two distinct architectural visualization tiers:
+All interactive simulation labs across all 8 canonical domains are unified under the **Single Canvas 3D Isometric Workbench**:
 
-1. **3D Isometric DTS Canvas (Macro / Cluster & System Topology):**
-   - Used for distributed systems, networking, cloud topologies, and service interactions where physical or network infrastructure is being simulated.
-   - Examples: `network.sim`, `distributed.sim`, `microservices.sim`, `aws-cloud.sim`.
-2. **2D Deep-Dive Visualizers (Micro / Engine Internals & Data Structures):**
-   - Used when teaching internal computer science data structures, finite state machines (FSM), query pipelines, and lifecycle mechanics that cannot be naturally represented as 3D blocks.
-   - Examples:
-     - `indexes`: B-Tree traversal, node splits, binary search path (`BTreeTraversal.astro`).
-     - `transactions`: MVCC row version chains (xmin/xmax), snapshot visibility timeline (`MvccTimeline.astro`).
-     - `sql-engine`: PostgreSQL query pipeline (Parse -> Analyze -> Plan -> Execute -> WAL) (`SqlPipelineDiagram.astro`).
-     - `java-concurrency`: JVM Thread State Machine (`ThreadStateDiagram.astro`).
-     - `java-completable`: Async DAG Pipeline (`FuturePipeline.astro`).
-     - `java-spring-security`: Filter Chain sequence (`SecurityFilterChain`).
-     - `java-spring-ioc`: Spring Bean lifecycle & BeanPostProcessor hooks.
+1. **Retirement of Split 2D Views:**
+   - The dual-mode toggle switch (`[ 3D View | 2D Deep-Dive ]`) and standalone 2D visualizers (e.g. `SqlPipelineDiagram`, `ThreadStateDiagram`) have been permanently deprecated.
+   - Dual visualizers fractured state synchronization across Astro page transitions and broke the unified simulator state machine.
 
-#### Event Sync Standard
-All 2D visualizers must bind to step changes via `window.addEventListener('wb:step-change', ...)` to synchronously animate and highlight code as users step through the lesson.
+2. **Code-Driven Floating Cards (`card: makePanel`):**
+   - For algorithmic, runtime internals, or query engine topics (Java Concurrency, JVM Memory, Spring Lifecycle, SQL EXPLAIN, MVCC), the engine uses floating Code Panel Cards (`card: makePanel`) embedded directly on the 3D canvas (modeled after `sql-nosql`).
+   - Each milestone step updates the panel's code snippets, query explanations, or state tables in lockstep with the isometric entity animations.
+
+3. **Step Transition State Sync:**
+   - All visual transitions, animated packet pulses, and floating cards listen exclusively to the global `wb:step-change` event dispatched by `SimulationWorkbench.astro`.
 
 ---
 
