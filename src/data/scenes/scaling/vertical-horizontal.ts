@@ -288,7 +288,7 @@ export const verticalHorizontalLesson = {
         scene: {
           entities: {
             users: p({ x0: -20.5, x1: 20.5, y0: -15, y1: -9 }, 30, `noon · 750,000 users`),
-            e: d(-17.5, 0, {
+            e: d(-16, 9, {
               label: [`booting`],
               dim: 1,
               tags: [{ text: `≈ 3 min`, tone: `amber`, icon: `hourglass` }],
@@ -297,7 +297,7 @@ export const verticalHorizontalLesson = {
             b: d(-3.5, 0, { label: [`Server B`], ..._(0.99) }),
             c: d(3.5, 0, { label: [`booting`], dim: 1 }),
             d: d(10.5, 0, { label: [`booting`], dim: 1 }),
-            f: d(17.5, 0, { label: [`booting`], dim: 1 }),
+            f: d(16, 9, { label: [`booting`], dim: 1 }),
           },
           links: {
             ua: h(`users`, `a`, [[`a`, `users`], `a`], { fail: 0.2 }),

@@ -202,7 +202,7 @@ export const javaConcurrencyLesson = {
           vt2:      d(12,  -4, { color: `blue`,   glyph: `code`,   label: [`VT-2`, `parked (IO)`] }),
           vt3:      d(12,   4, { color: `green`,  glyph: `code`,   label: [`VT-3`, `RUNNING`] }),
           vt4:      d(12,  12, { color: `blue`,   glyph: `code`,   label: [`VT-4`, `parked (IO)`] }),
-          heap:     d(24,   0, { color: `purple`, glyph: `layers`, label: [`Heap`, `~1KB/VT`] }),
+          heap:     d(20,  -4, { color: `purple`, glyph: `layers`, label: [`Heap`, `~1KB/VT`] }),
         },
         links: {
           c1v1: h(`carrier1`, `vt1`,  [`carrier1`, `vt1`],  { label: `mounted`,      heads: `both` }),

@@ -45,7 +45,7 @@ const ao = (e = {}) =>
     });
 
 const oo = (e = {}) =>
-  d(28, 6, { s: 3.8, h: 30, color: `green`, glyph: `workflow`, label: [`Workers`], ...e });
+  d(16, 12, { s: 3.8, h: 30, color: `green`, glyph: `workflow`, label: [`Workers`], ...e });
 
 const so = (e = {}) => d(10, -8, { color: `orange`, glyph: `globe`, label: [`CDN`], ...e });
 
@@ -562,7 +562,7 @@ const mo = {
         metrics: { ...po, storeCost: `≈ $6,300` },
         scene: {
           entities: lo({
-            spy: y(20, -8, { label: `anyone` }),
+            spy: y(18, -8, { label: `anyone` }),
             obj: ao({ tags: [{ text: `public access blocked`, tone: `green`, icon: `lock` }] }),
           }),
           links: uo({

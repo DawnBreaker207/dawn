@@ -37,7 +37,7 @@ const M = (e, t = [], n = {}) =>
 
 const Aa = (e = {}) => d(0, -17, { label: [`App`, `Server 1`], ...e });
 
-const ja = (e = {}) => d(-22, 7, { label: [`App`, `Server 2`], ...e });
+const ja = (e = {}) => d(-16, 1, { label: [`App`, `Server 2`], ...e });
 
 const Ma = (e) => ({ text: `leader · term ${e}`, tone: `green`, icon: `flag` });
 

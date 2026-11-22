@@ -313,7 +313,7 @@ export const shardingLesson = {
           entities: {
             app: Gn([{ text: `hash(user_id) % 5`, icon: `network` }]),
             ...qn((e) => ({ text: `${Wn[e]} · moving`, tone: `amber`, icon: `replay` })),
-            se: b(17.5, 0, {
+            se: b(14, 6, {
               r: 1.6,
               h: 36,
               ...v(0.5),

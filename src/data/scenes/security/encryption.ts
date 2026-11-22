@@ -46,7 +46,7 @@ const Bl = (e = []) =>
 
 const Vl = (e = []) => d(13, 6, { color: `slab`, glyph: `file`, label: [`Public`, `Repo`], tags: e });
 
-const Hl = (e = []) => y(21, -5, { label: `scanner bot`, tags: e });
+const Hl = (e = []) => y(15, -5, { label: `scanner bot`, tags: e });
 
 const Ul = (e = {}) => ({
     ar: h(`alice`, `router`, [`alice`, `router`], { heads: `both`, ...(e.ar || {}) }),

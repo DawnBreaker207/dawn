@@ -334,7 +334,7 @@ export const systemDesignLesson = {
             pills: "above",
             tags: [{ text: "Prisma · 45ms", tone: "violet" }],
           }),
-          db: sys_b(26, 0, {
+          db: sys_b(18, 0, {
             label: "PostgreSQL",
             cpu: 0.45,
             tags: [{ text: "Pool: 1/10", tone: "green" }],
@@ -433,7 +433,7 @@ export const systemDesignLesson = {
             label: ["Astro SSR"],
             sub: "Serverless",
           }),
-          db: sys_b(26, 0, { label: "PostgreSQL" }),
+          db: sys_b(18, 0, { label: "PostgreSQL" }),
         },
         links: {
           readers_edge: sys_h("readers", "edge", ["readers", "edge"], {

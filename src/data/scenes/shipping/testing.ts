@@ -55,13 +55,16 @@ const au = (e = `stub: “in stock”`) => m(11, 9, 4, 34, e);
 const W = {
     ts: (e = {}) => h(`tests`, `svc`, [`tests`, `svc`], { heads: `both`, ...e }),
     us: (e = {}) => h(`users`, `svc`, [`users`, `svc`], { heads: `both`, ...e }),
-    sd: (e = `db`, t = {}) => h(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
-    sp: (e = `pay`, t = {}) => h(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
-    si: (e = `inv`, t = {}) =>
-      h(`svc`, e, [`svc`, [`svc`, `svc+1.5`], [5.5, `svc+1.5`], [5.5, e], e], {
+    sd: (e = `db`, t = {}) => typeof e === 'object' ? h(`svc`, `db`, [`svc`, `db`], { heads: `both`, ...e }) : h(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
+    sp: (e = `pay`, t = {}) => typeof e === 'object' ? h(`svc`, `pay`, [`svc`, `pay`], { heads: `both`, ...e }) : h(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
+    si: (e = `inv`, t = {}) => {
+      const target = typeof e === 'object' ? `inv` : e;
+      const opts = typeof e === 'object' ? e : t;
+      return h(`svc`, target, [`svc`, [`svc`, `svc+1.5`], [5.5, `svc+1.5`], [5.5, target], target], {
         heads: `both`,
-        ...t,
-      }),
+        ...opts,
+      });
+    },
   };
 
 const ou = (e, t, n) => S({ x: 0, y: 0, z: 0 }, e, t, { icon: n });

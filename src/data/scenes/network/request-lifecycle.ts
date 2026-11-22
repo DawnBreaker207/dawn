@@ -241,7 +241,7 @@ export const requestLifecycleLesson = {
         metrics: { dns: 20, connect: 400, request: 225, download: 60, total: 705 },
         scene: {
           entities: {
-            dev: y(0, -26, { label: `you · Sydney`, tags: [ae] }),
+            dev: y(0, -22, { label: `you · Sydney`, tags: [ae] }),
             dns: ne(),
             web: re({ tags: [{ text: `Virginia`, icon: `globe` }] }),
             db: ie(),

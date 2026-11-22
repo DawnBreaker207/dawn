@@ -55,7 +55,7 @@ const we = (e = {}) => ({ s0: d(0, -7.5, { label: [`One`, `server?`], ...e }) })
 const Te = () =>
     Object.fromEntries(
       [-10.2, -4.8].flatMap((e, t) =>
-        [14.5, 18.5].map((n, r) => [`d${t}${r}`, b(n, e, { r: 1.45, h: 30 })]),
+        [11.5, 15.5].map((n, r) => [`d${t}${r}`, b(n, e, { r: 1.45, h: 30 })]),
       ),
     );
 
