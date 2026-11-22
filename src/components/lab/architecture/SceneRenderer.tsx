@@ -36,20 +36,56 @@ export default function SceneRenderer({ lesson }: Props) {
     const root = el.closest<HTMLElement>('.body') ?? document;
     let currentIdx = 0;
 
+    // Tools
+    const fitBtn = document.getElementById('fit') as HTMLElement | null;
+    const replayBtn = document.getElementById('replay') as HTMLElement | null;
+    const pauseBtn = document.getElementById('pause') as HTMLElement | null;
+
+    const updatePauseUI = (isPaused: boolean) => {
+      if (!pauseBtn) return;
+      pauseBtn.classList.toggle('is-paused', isPaused);
+      pauseBtn.setAttribute('title', isPaused ? 'Resume traffic (Space)' : 'Pause traffic (Space)');
+      const pauseIcon = pauseBtn.querySelector<SVGElement>('.icon-pause');
+      const playIcon = pauseBtn.querySelector<SVGElement>('.icon-play');
+      const pauseLabel = pauseBtn.querySelector<HTMLElement>('.label-pause');
+      const playLabel = pauseBtn.querySelector<HTMLElement>('.label-play');
+
+      if (pauseIcon && playIcon && pauseLabel && playLabel) {
+        if (isPaused) {
+          pauseIcon.classList.add('hidden');
+          playIcon.classList.remove('hidden');
+          pauseLabel.classList.add('hidden');
+          playLabel.classList.remove('hidden');
+        } else {
+          pauseIcon.classList.remove('hidden');
+          playIcon.classList.add('hidden');
+          pauseLabel.classList.remove('hidden');
+          playLabel.classList.add('hidden');
+        }
+      } else {
+        const span = pauseBtn.querySelector('span');
+        if (span) span.textContent = isPaused ? 'Play' : 'Pause';
+        const svg = pauseBtn.querySelector('svg');
+        if (svg) {
+          svg.innerHTML = isPaused
+            ? '<polygon points="5 3 19 12 5 21 5 3" fill="currentColor"></polygon>'
+            : '<rect x="14" y="3" width="5" height="18" rx="1"></rect><rect x="5" y="3" width="5" height="18" rx="1"></rect>';
+        }
+      }
+    };
+
+    updatePauseUI(false);
+
     const handleStepChange = (e: Event) => {
       const detail = (e as CustomEvent<{ idx?: number; index?: number }>).detail;
       const idx = detail?.idx ?? detail?.index;
       if (typeof idx === 'number' && engine && lesson.steps?.[idx]) {
         currentIdx = idx;
         engine.goTo(lesson.steps[idx].scene);
+        updatePauseUI(false);
       }
     };
     root.addEventListener('wb:step-change', handleStepChange);
-
-    // Tools
-    const fitBtn = document.getElementById('fit') as HTMLElement | null;
-    const replayBtn = document.getElementById('replay') as HTMLElement | null;
-    const pauseBtn = document.getElementById('pause') as HTMLElement | null;
 
     if (engine && fitBtn) {
       engine.onView = (zoomed: boolean) => {
@@ -61,12 +97,13 @@ export default function SceneRenderer({ lesson }: Props) {
     const handleReplay = () => {
       if (engine && lesson.steps?.[currentIdx]) {
         engine.goTo(lesson.steps[currentIdx].scene, { instant: true });
+        updatePauseUI(false);
       }
     };
     const handlePause = () => {
       if (!engine) return;
       engine.paused = !engine.paused;
-      pauseBtn?.classList.toggle('is-paused', engine.paused);
+      updatePauseUI(engine.paused);
     };
 
     fitBtn?.addEventListener('click', handleFit);
