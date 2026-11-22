@@ -226,7 +226,8 @@ Mixing data with logic, server with client, or build scripts with browser module
 │
 └── public/                             ← Static Assets Served Directly
     ├── static/                         ← Images, icons, avatars, favicons
-    └── dts/                            ← Legacy assets (actively migrated to pure TS)
+    ├── assets/                         ← Fonts & active site-wide static binary assets
+    └── og/                             ← Generated OpenGraph social cards
 ```
 
 ---
