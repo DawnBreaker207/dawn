@@ -89,6 +89,19 @@ import { javaSpringTestingLesson } from './specialized/java-spring-testing';
 import { javaSpringMessagingLesson } from './specialized/java-spring-messaging';
 import { javaSpringConfigLesson } from './specialized/java-spring-config';
 
+// Containers & Kubernetes (k8s.sim)
+import { dockerInternalsLesson } from './cloud/docker-internals';
+import { dockerImagesStorageLesson } from './cloud/docker-images-storage';
+import { k8sControlPlaneLesson } from './cloud/k8s-control-plane';
+import { k8sWorkerNodeLesson } from './cloud/k8s-worker-node';
+import { k8sNetworkingCniLesson } from './cloud/k8s-networking-cni';
+import { k8sServicesIngressLesson } from './cloud/k8s-services-ingress';
+import { k8sStorageCsiLesson } from './cloud/k8s-storage-csi';
+import { k8sAutoscalingHpaLesson } from './cloud/k8s-autoscaling-hpa';
+
+// Flagship System Design
+import { aiAgentArchitectureLesson } from './design/ai-agent-architecture';
+
 export {
   requestLifecycleLesson,
   latencyThroughputLesson,
@@ -166,6 +179,15 @@ export {
   javaSpringTestingLesson,
   javaSpringMessagingLesson,
   javaSpringConfigLesson,
+  dockerInternalsLesson,
+  dockerImagesStorageLesson,
+  k8sControlPlaneLesson,
+  k8sWorkerNodeLesson,
+  k8sNetworkingCniLesson,
+  k8sServicesIngressLesson,
+  k8sStorageCsiLesson,
+  k8sAutoscalingHpaLesson,
+  aiAgentArchitectureLesson,
 };
 
 export const ALL_SCENES: Record<string, any> = {
@@ -248,6 +270,16 @@ export const ALL_SCENES: Record<string, any> = {
   'java-spring-messaging': javaSpringMessagingLesson,
   'java-spring-config': javaSpringConfigLesson,
   'java': javaConcurrencyLesson,
+  'docker-internals': dockerInternalsLesson,
+  'docker-images-storage': dockerImagesStorageLesson,
+  'k8s-control-plane': k8sControlPlaneLesson,
+  'k8s-worker-node': k8sWorkerNodeLesson,
+  'k8s-networking-cni': k8sNetworkingCniLesson,
+  'k8s-services-ingress': k8sServicesIngressLesson,
+  'k8s-storage-csi': k8sStorageCsiLesson,
+  'k8s-autoscaling-hpa': k8sAutoscalingHpaLesson,
+  'k8s': k8sControlPlaneLesson,
+  'ai-agent-architecture': aiAgentArchitectureLesson,
 };
 
 export const ALL_DTS_LESSONS = ALL_SCENES;

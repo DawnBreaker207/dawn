@@ -43,29 +43,36 @@ export const DTS_TRACKS: Track[] = [
     moduleIds: ['microservices', 'communication'],
   },
   {
+    id: 'k8s',
+    title: '5. Containers & Kubernetes Orchestration',
+    subtitle: 'Docker internals, Cgroups, K8s Pods, CNI networking, CSI storage & HPA',
+    emoji: '☸️',
+    moduleIds: ['k8s'],
+  },
+  {
     id: 'java-runtime',
-    title: '5. Java Runtime & Concurrency Engine',
+    title: '6. Java Runtime & Concurrency Engine',
     subtitle: 'JVM Memory, Loom virtual threads, monitors, async pipelines & Spring framework',
     emoji: '☕',
     moduleIds: ['java-runtime', 'java-enterprise'],
   },
   {
     id: 'system-design',
-    title: '6. System Design & Case Studies',
-    subtitle: 'HLD/LLD, TinyURL, News Feed, Chat, rate limiting, redundancy & tracing',
+    title: '7. System Design & AI Agents',
+    subtitle: 'HLD/LLD, TinyURL, News Feed, Chat, AI Agent Architecture, rate limiting & tracing',
     emoji: '📐',
     moduleIds: ['system-design', 'reliability'],
   },
   {
     id: 'cloud-aws',
-    title: '7. AWS Cloud Architecture (SAA-C03)',
+    title: '8. AWS Cloud Architecture (SAA-C03)',
     subtitle: 'VPC topology, Multi-AZ high availability, S3 object storage & serverless systems',
     emoji: '☁️',
     moduleIds: ['cloud'],
   },
   {
     id: 'devsecops',
-    title: '7. DevSecOps & Security',
+    title: '9. DevSecOps & Security',
     subtitle: 'Authentication, authorization, encryption, testing & CI/CD pipelines',
     emoji: '🛡️',
     moduleIds: ['security', 'shipping'],
@@ -214,6 +221,23 @@ export const DTS_MODULES: Module[] = [
     ],
   },
   {
+    id: 'k8s',
+    num: '05D',
+    title: 'Containers & Kubernetes Orchestration',
+    trackId: 'k8s',
+    color: 'sky',
+    lessons: [
+      { id: 'docker-internals', title: 'Linux Namespaces, Cgroups & Runtime' },
+      { id: 'docker-images-storage', title: 'UnionFS & OverlayFS Storage' },
+      { id: 'k8s-control-plane', title: 'Control Plane: API Server, etcd & Raft' },
+      { id: 'k8s-worker-node', title: 'Worker Nodes: Kubelet, CRI & Probes' },
+      { id: 'k8s-networking-cni', title: 'Flat Pod Network, CNI & Kube-Proxy' },
+      { id: 'k8s-services-ingress', title: 'Services, Ingress & Gateway API' },
+      { id: 'k8s-storage-csi', title: 'Persistent Storage, PVC & CSI Driver' },
+      { id: 'k8s-autoscaling-hpa', title: 'Autoscaling: HPA, VPA & Karpenter' },
+    ],
+  },
+  {
     id: 'communication',
     num: '06',
     title: 'Event-Driven & Messaging',
@@ -246,6 +270,7 @@ export const DTS_MODULES: Module[] = [
     trackId: 'system-design',
     color: 'slate',
     lessons: [
+      { id: 'ai-agent-architecture', title: 'Modern AI Agent Architecture (Onion Model)' },
       { id: 'hld-lld', title: 'High-Level & Low-Level Design (HLD/LLD)' },
       { id: 'design-url-shortener', title: 'Design a URL Shortener (TinyURL)' },
       { id: 'design-news-feed', title: 'Design a News Feed' },
@@ -303,6 +328,7 @@ export function getLessonHref(id: string): string {
   if (id === 'request-lifecycle' || id === 'foundations') return '/lab/foundations';
   if (id === 'consistent-hashing' || id === 'distributed') return '/lab/distributed';
   if (id === 'microservices') return '/lab/microservices';
+  if (id === 'k8s' || id === 'docker-internals') return '/lab/k8s';
   if (id === 'hld-lld' || id === 'system-design') return '/lab/system-design';
   if (id === 'aws-cloud') return '/lab/aws-cloud';
   return `/lab/${id}`;

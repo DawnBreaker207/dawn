@@ -12,7 +12,8 @@ interface Props {
     | 'system'
     | 'cloud'
     | 'java'
-    | 'sql';
+    | 'sql'
+    | 'k8s';
 }
 
 const { type } = Astro.props;
@@ -84,5 +85,13 @@ const LOGOS: Record<string, string> = {
     <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
     <path d="M8 8.5l2 1.5-2 1.5" />
     <line x1="12" y1="11.5" x2="15" y2="11.5" stroke-width="2" />
+  </svg>
+) : type === 'k8s' ? (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0 text-(--fg-faint)">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 3v18" />
+    <path d="m4.2 7.5 15.6 9" />
+    <path d="m4.2 16.5 15.6-9" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 ) : null}
