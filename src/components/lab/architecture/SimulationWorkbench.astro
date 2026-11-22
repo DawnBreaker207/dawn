@@ -253,10 +253,6 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
 
       <!-- Stage Tools -->
       <div class="stage__tools">
-        <div class="view-mode-toggle" id="view-mode-toggle" hidden>
-          <button type="button" class="mode-btn is-active" data-view-mode="3d" title="3D Isometric Simulation">3D View</button>
-          <button type="button" class="mode-btn" data-view-mode="2d" title="2D Deep-Dive Visualizer">2D Deep-Dive</button>
-        </div>
         <button class="tool tool--fit" id="fit" data-t-title="Back to the whole diagram (0)" title="Back to the whole diagram (0)" hidden="">
           <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line><line x1="8" x2="14" y1="11" y2="11"></line></svg>
           <span data-t="Fit">Fit</span>
@@ -277,11 +273,6 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
       <!-- Canvas Area for DtsSceneRenderer -->
       <div class="stage__canvas" id="canvas">
         <slot name="canvas" />
-      </div>
-
-      <!-- Optional 2D Deep-Dive Visualizer Area -->
-      <div class="stage__2d-visualizer" id="visualizer-2d" hidden>
-        <slot name="visualizer-2d" />
       </div>
 
       <!-- Stage Legend -->
@@ -713,28 +704,6 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0 ? lesson.me
     };
     root.addEventListener('wb:navigate', onNavigate, { signal: controller.signal });
     window.addEventListener('wb:navigate', onNavigate, { signal: controller.signal });
-
-    // View Mode Toggle (3D Simulator vs 2D Deep-Dive Visualizer)
-    const elViewToggle = document.getElementById('view-mode-toggle');
-    const elCanvas = document.getElementById('canvas');
-    const elViz2d = document.getElementById('visualizer-2d');
-    if (elViz2d && elViz2d.firstElementChild && elViewToggle) {
-      elViewToggle.hidden = false;
-      const btns = elViewToggle.querySelectorAll<HTMLButtonElement>('[data-view-mode]');
-      btns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const mode = btn.getAttribute('data-view-mode');
-          btns.forEach((b) => b.classList.toggle('is-active', b === btn));
-          if (mode === '2d') {
-            if (elCanvas) elCanvas.hidden = true;
-            elViz2d.hidden = false;
-          } else {
-            if (elCanvas) elCanvas.hidden = false;
-            elViz2d.hidden = true;
-          }
-        });
-      });
-    }
 
     // Keyboard shortcuts: ArrowLeft / ArrowRight / R (replay) / Space (pause) / 0 (fit)
     window.addEventListener('keydown', (e) => {

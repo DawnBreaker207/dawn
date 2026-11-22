@@ -31,7 +31,6 @@ const dtsLesson = ALL_SCENES[lessonId] as unknown as Lesson;
   <div id="dts-view-ts" class="dts-window is-embedded dts-view-container w-full h-full flex flex-col flex-1 min-h-0">
     <SimulationWorkbench lesson={dtsLesson!}>
       <SceneRenderer slot="canvas" lesson={dtsLesson!} client:idle />
-      <slot name="visualizer-2d" slot="visualizer-2d" />
     </SimulationWorkbench>
   </div>
 </BaseLayout>
