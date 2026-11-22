@@ -45,7 +45,7 @@ const ao = (e = {}) =>
     });
 
 const oo = (e = {}) =>
-    d(21, 6, { s: 3.8, h: 30, color: `green`, glyph: `workflow`, label: [`Workers`], ...e });
+  d(28, 6, { s: 3.8, h: 30, color: `green`, glyph: `workflow`, label: [`Workers`], ...e });
 
 const so = (e = {}) => d(10, -8, { color: `orange`, glyph: `globe`, label: [`CDN`], ...e });
 
@@ -63,7 +63,7 @@ const P = {
     co: (e = {}) => h(`cdn`, `obj`, [`cdn`, `obj`], { heads: `both`, ...e }),
   };
 
-const co = (e, t, n) => S({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
+const co = (e, t, n) => S({ x: 0, y: 4, z: 0 }, e, t, { icon: n });
 
 const lo = (e = {}) => ({
     users: to(),
@@ -71,7 +71,7 @@ const lo = (e = {}) => ({
     db: io(),
     obj: ao(),
     workers: oo(),
-    jq: ee(15.6, 6, 3, [-1, 0]),
+    jq: ee(19, 6, 3, [-1, 0]),
     cdn: so(),
     ...e,
   });
@@ -384,7 +384,7 @@ const mo = {
             app: no(v(0.2)),
             db: io({ tags: [{ text: `status: ready`, tone: `green`, icon: `check` }] }),
             obj: ao(),
-            jq: ee(15.6, 6, 3, [-1, 0]),
+            jq: ee(19, 6, 3, [-1, 0]),
             workers: oo({ tags: [{ text: `resize · strip GPS · transcode`, icon: `workflow` }] }),
           },
           links: {
