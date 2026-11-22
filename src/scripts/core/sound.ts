@@ -17,9 +17,14 @@ export function getDawnAudioContext(): AudioContext | null {
   return masterAudioCtx;
 }
 
-// Global user gesture unlocker to ensure browser audio pipeline is always ready
+// Global user gesture unlocker: Only activates when user has enabled sound effects
 if (typeof window !== 'undefined') {
   const unlockAudio = () => {
+    const sound = localStorage.getItem('dawn_sound_profile');
+    const weather = localStorage.getItem('dawn_weather_mode');
+    const isAudioActive = (sound && sound !== 'off') || (weather && weather !== 'off');
+    if (!isAudioActive) return;
+
     const ctx = getDawnAudioContext();
     if (ctx && ctx.state === 'suspended') {
       ctx.resume().catch(() => {});

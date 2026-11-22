@@ -17,6 +17,13 @@ html, body {
   overflow: hidden;
 }
 
+/* Zero-flicker View Transitions: Keep Studio frame (Sidebar, TabBar, Statusbar) static */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+}
+
 /* Studio shell — full-screen editor frame */
 .studio-shell {
   display: grid;

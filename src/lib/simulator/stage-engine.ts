@@ -440,6 +440,10 @@ export class StageEngine {
   host!: HTMLElement;
   svg!: SVGSVGElement;
   paused: boolean = false;
+  destroyed: boolean = false;
+  rafId: number = 0;
+  resizeObserver: ResizeObserver | null = null;
+  onVisibilityChange: (() => void) | null = null;
   onView: ((zoomed: boolean) => void) | null = null;
   onCards: ((cards: any) => void) | null = null;
   onSwipe: ((dir: string) => void) | null = null;
@@ -519,14 +523,30 @@ export class StageEngine {
         (this.onSettle = null),
         this.gestures(),
         (this.size = ``),
-        new ResizeObserver(() => {
+        (this.resizeObserver = new ResizeObserver(() => {
           let t = `${e.clientWidth}x${e.clientHeight}`;
           t !== this.size && ((this.size = t), this.refit());
-        }).observe(e));
-      let t = (e) => {
-        (this.tick(e), requestAnimationFrame(t));
+        })),
+        this.resizeObserver.observe(e));
+      let t = (e: number) => {
+        if (this.destroyed) return;
+        this.tick(e);
+        this.rafId = requestAnimationFrame(t);
       };
-      requestAnimationFrame(t);
+      this.rafId = requestAnimationFrame(t);
+
+      this.onVisibilityChange = () => {
+        if (document.hidden) {
+          if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = 0;
+          }
+        } else if (!this.destroyed && !this.rafId) {
+          this.last = performance.now();
+          this.rafId = requestAnimationFrame(t);
+        }
+      };
+      document.addEventListener('visibilitychange', this.onVisibilityChange);
     }
     layoutOf(e) {
       let t = Object.fromEntries(Object.entries(e.entities).map(([e, t]) => [e, np(t)])),
@@ -951,6 +971,20 @@ export class StageEngine {
         this.clearPackets(!0),
         (this.flows = []),
         (this.L.floor.innerHTML = ``));
+    }
+    destroy() {
+      this.destroyed = true;
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = 0;
+      }
+      if (this.onVisibilityChange) {
+        document.removeEventListener('visibilitychange', this.onVisibilityChange);
+        this.onVisibilityChange = null;
+      }
+      this.resizeObserver?.disconnect();
+      this.resizeObserver = null;
+      this.clear();
     }
     goTo(e, { instant: t = !1 } = {}) {
       (this.finish(!0), this.clearPackets(), (this.flows = []));

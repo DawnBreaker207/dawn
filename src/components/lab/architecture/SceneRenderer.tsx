@@ -125,8 +125,12 @@ export default function SceneRenderer({ lesson }: Props) {
       observer.disconnect();
       if (engine) {
         try {
-          engine.clear();
-        } catch {}
+          engine.destroy();
+        } catch {
+          try {
+            engine.clear();
+          } catch {}
+        }
       }
       el.innerHTML = '';
     };

@@ -379,6 +379,9 @@ document.addEventListener('astro:before-swap', (e) => {
   const newDoc = ev.newDocument || ev.detail?.newDocument;
   const newRoot = newDoc?.documentElement;
   if (newRoot) {
+    const isDark = document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+    newRoot.classList.toggle('dark', isDark);
+    newRoot.setAttribute('data-theme', isDark ? 'dark' : 'light');
     if (isRailHidden) {
       newRoot.setAttribute('data-rail', 'hidden');
     } else {

@@ -12,7 +12,17 @@ export default defineConfig({
   site: 'https://dawn.io.vn',
 
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    build: {
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 800,
+      rollupOptions: {
+        treeshake: {
+          moduleSideEffects: 'no-external',
+          propertyReadSideEffects: false,
+        },
+      },
+    },
   },
 
   integrations: [react(), mdx()],
