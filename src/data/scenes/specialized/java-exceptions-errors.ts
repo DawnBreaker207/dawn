@@ -33,11 +33,11 @@ export const javaExceptionsErrorsLesson = {
   metrics: ['throwable_type', 'stack_depth', 'stacktrace_cost', 'suppressed_count', 'jvm_action'],
   legend: ['req', 'res', ['ping', 'stack unwind'], 'fail'],
   goals: [
-    { text: 'Throwable hierarchy', step: 1 },
-    { text: 'Cost of fillInStackTrace()', step: 2 },
-    { text: 'Try-with-Resources & Suppressed Exceptions:', step: 3 },
-    { text: 'Fatal JVM Errors', step: 4 },
-    { text: 'Exception handling best practices', step: 5 },
+    { text: 'Throwable hierarchy & checked vs unchecked', step: 0 },
+    { text: 'Cost of fillInStackTrace() native walk', step: 1 },
+    { text: 'Try-with-resources & suppressed exceptions', step: 2 },
+    { text: 'Fatal JVM errors & unrecoverable OOM', step: 3 },
+    { text: 'Root cause chaining & exception wrapping', step: 4 },
   ],
   steps: [
     {
@@ -54,6 +54,15 @@ export const javaExceptionsErrorsLesson = {
       metrics: { throwable_type: 'RuntimeException', stack_depth: '14 frames', stacktrace_cost: 'Medium', suppressed_count: '0', jvm_action: 'Catch or Crash' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Throwable Hierarchy & Catch Block', [
+            'try {',
+            '  processOrder(order);',
+            '} catch (IllegalArgumentException e) { // Unchecked',
+            '=   logger.warn("Validation error: {}", e.getMessage());',
+            '} catch (Exception e) {                // Checked',
+            '=   throw new OrderFailedException("Order failed", e);',
+            '}',
+          ]),
           error: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'alertTriangle', label: ['Fatal Error'], sub: 'JVM Hardware/Memory' }),
           throwable: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'shield', label: ['Throwable'], sub: 'Root Base Class' }),
           unchecked: d(11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'code', label: ['RuntimeException'], sub: 'Unchecked' }),
@@ -79,6 +88,15 @@ export const javaExceptionsErrorsLesson = {
       metrics: { throwable_type: 'fillInStackTrace()', stack_depth: '64 stack frames', stacktrace_cost: '35,000 ns (Slow)', suppressed_count: '0', jvm_action: 'Native Stack Walk' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'fillInStackTrace() Native Cost', [
+            '# Heavy JVM native call walking entire thread stack frames:',
+            '= public synchronized Throwable fillInStackTrace() {',
+            '=   if (stackTrace != null || backtrace != null)',
+            '      fillInStackTrace(0); // C++ native stack walker',
+            '    return this;',
+            '= }',
+            '# Tip: Override with no-op for fast flow-control exceptions',
+          ]),
           throw_point: d(-11, -4, { s: 3.8, h: 42, color: 'rose', glyph: 'alertTriangle', label: ['throw new Ex()'], sub: 'Constructor' }),
           stack_walker: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'cpu', label: ['fillInStackTrace()'], sub: 'Native C++ Walk' }),
           thread_stack: d(11, -4, { s: 3.8, h: 42, color: 'teal', glyph: 'server', label: ['64 Stack Frames'], sub: 'Captured for log' }),
@@ -104,6 +122,14 @@ export const javaExceptionsErrorsLesson = {
       metrics: { throwable_type: 'Primary Exception', stack_depth: 'Preserved', stacktrace_cost: 'Auto-closed', suppressed_count: '1 Suppressed', jvm_action: 'Resource Closed' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Try-with-Resources & addSuppressed()', [
+            'try (var in = new FileInputStream("in.log");',
+            '     var out = new FileOutputStream("out.log")) {',
+            '  throw new BusinessException("Primary error");',
+            '} // out.close() and in.close() execute automatically',
+            '= // Exception in close() is attached as suppressed:',
+            '= primaryException.addSuppressed(closeException);',
+          ]),
           try_block: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'alertTriangle', label: ['Primary Error'], sub: 'SQL Execution Failed' }),
           twr_spine: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'shield', label: ['Try-with-Resources'], sub: 'AutoCloseable' }),
           suppressed: d(11, -4, { s: 3.8, h: 42, color: 'yellow', glyph: 'archive', label: ['Suppressed Close()'], sub: 'Connection Error' }),
@@ -131,6 +157,15 @@ export const javaExceptionsErrorsLesson = {
       metrics: { throwable_type: 'OutOfMemoryError', stack_depth: 'Exhausted', stacktrace_cost: 'Fatal', suppressed_count: '0', jvm_action: 'Container Kill' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Fatal JVM Errors Handling', [
+            '! try {',
+            '!   allocateHugeBuffer();',
+            '! } catch (OutOfMemoryError oom) {',
+            '    // Never attempt recovery from fatal JVM Errors:',
+            '=   System.err.println("Fatal JVM Heap Exhaustion");',
+            '=   System.exit(1); // Exit process immediately for restart',
+            '! }',
+          ]),
           heap_full: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'alertTriangle', label: ['Heap Exhausted'], sub: 'GC Overhead Limit' }),
           jvm_core: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'cpu', label: ['HotSpot JVM'], sub: 'Fatal State' }),
           container: d(11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'server', label: ['K8s Pod Restart'], sub: 'OOMKilled (Exit 137)' }),
@@ -156,6 +191,15 @@ export const javaExceptionsErrorsLesson = {
       metrics: { throwable_type: 'DomainException', stack_depth: 'Clean Chain', stacktrace_cost: 'Root Cause Kept', suppressed_count: '0', jvm_action: 'Clean Logging' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Exception Chaining & Cause Unwrapping', [
+            'try {',
+            '  repo.save(entity);',
+            '} catch (SQLException sqlEx) {',
+            '  // Always preserve original root cause in new wrapper:',
+            '= throw new DataAccessException("Failed to persist", sqlEx);',
+            '}',
+            '# Preserves stack traces across abstraction boundaries',
+          ]),
           root: d(-11, -4, { s: 3.8, h: 42, color: 'teal', glyph: 'database', label: ['SQLException'], sub: 'Timeout 500ms' }),
           wrapper: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'shield', label: ['OrderException'], sub: 'cause = SQLException' }),
           handler: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'workflow', label: ['@ExceptionHandler'], sub: 'HTTP 504 Gateway' }),

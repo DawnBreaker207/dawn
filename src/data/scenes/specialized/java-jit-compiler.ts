@@ -33,11 +33,11 @@ export const javaJitCompilerLesson = {
   metrics: ['compilation_tier', 'invocation_count', 'inlining_depth', 'escape_analysis', 'execution_speed'],
   legend: ['req', 'res', ['ping', 'hot execution'], 'fail'],
   goals: [
-    { text: 'Interpreter vs JIT', step: 1 },
-    { text: 'Tiered Compilation', step: 2 },
-    { text: 'Method Inlining', step: 3 },
-    { text: 'Escape Analysis', step: 4 },
-    { text: 'Deoptimization & Safepoints', step: 5 },
+    { text: 'Interpreter & method invocation counters', step: 0 },
+    { text: 'Tiered compilation: C1 Client vs C2 Server', step: 1 },
+    { text: 'Method inlining & Monomorphic call cache', step: 2 },
+    { text: 'Escape analysis & scalar replacement', step: 3 },
+    { text: 'Deoptimization & safepoint stack unwinding', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,14 @@ export const javaJitCompilerLesson = {
       metrics: { compilation_tier: 'Tier 0 (Interpreter)', invocation_count: '2,000 calls', inlining_depth: '0', escape_analysis: 'None', execution_speed: 'Baseline (1x)' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'HotSpot Invocation Counters', [
+            '# HotSpot checks method invocation & backedge loop counters:',
+            '= if (++methodData.invocationCount > CompileThreshold) {',
+            '=   CompilationPolicy::request_compilation(method);',
+            '  }',
+            '# Tier 0 (Template Interpreter) runs standard bytecode',
+            '# Compiles frequently invoked hot code into native assembly',
+          ]),
           app: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['Java Bytecode'], sub: 'Calling add()' }),
           interpreter: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['Interpreter'], sub: 'Counter: 2,000' }),
           jit_queue: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'cpu', label: ['Compilation Queue'], sub: 'Threshold Hit' }),
@@ -80,6 +88,14 @@ export const javaJitCompilerLesson = {
       metrics: { compilation_tier: 'Tier 4 (C2 Native)', invocation_count: '15,000+ calls', inlining_depth: 'Tier 4', escape_analysis: 'Active', execution_speed: '25x Faster' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Tiered Compilation Lifecycle (C1 -> C2)', [
+            'Tier 0: Interpreter (0 warmup latency, unoptimized)',
+            'Tier 1-3: C1 Compiler (Client JIT, basic profiling)',
+            '= Tier 4: C2 Server JIT (heavy SSA optimizations & vectorization):',
+            '= // Loop unrolling, SIMD AVX-512 vector instructions',
+            '= // Global Value Numbering (GVN) & dead-code elimination',
+            '# Yields peak native execution speed comparable to C/C++',
+          ]),
           c1: d(-11, -4, { s: 3.8, h: 42, color: 'yellow', glyph: 'zap', label: ['C1 Compiler'], sub: 'Fast + Profiling' }),
           profiler: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'search', label: ['MDO Profiling'], sub: 'Branch Statistics' }),
           c2: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'shield', label: ['C2 Server JIT'], sub: 'Native Machine Code' }),
@@ -105,6 +121,13 @@ export const javaJitCompilerLesson = {
       metrics: { compilation_tier: 'Tier 4', invocation_count: '50k calls', inlining_depth: 'Inlined 3 levels', escape_analysis: 'Enabled', execution_speed: 'Near C++' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Method Inlining & Inline Caches', [
+            '// Original code: int res = calc(p.getX(), p.getY());',
+            '// JIT inlines getter code (< 35 bytes) directly into caller:',
+            '= int res = calc(p.x, p.y); // eliminated callsite push/pop frames',
+            '# Monomorphic callsites (1 target class) devirtualize to direct call',
+            '# Polymorphic callsites fallback to vtable lookup',
+          ]),
           caller: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['callerMethod()'], sub: 'call calc()' }),
           inliner: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'workflow', label: ['C2 Inliner'], sub: 'Monomorphic Inline' }),
           fused: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'cpu', label: ['Fused Native Code'], sub: 'Zero Call Overhead' }),
@@ -130,6 +153,15 @@ export const javaJitCompilerLesson = {
       metrics: { compilation_tier: 'Tier 4', invocation_count: '100k calls', inlining_depth: 'Inlined', escape_analysis: 'NoEscape Confirmed', execution_speed: '0ns Alloc (Registers)' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Escape Analysis & Scalar Replacement', [
+            'void process() {',
+            '  Point p = new Point(10, 20); // p never leaves process() scope',
+            '= // JIT Scalar Replacement eliminates heap allocation entirely:',
+            '= int p_x = 10; // allocated directly in CPU registers',
+            '= int p_y = 20;',
+            '= return p_x + p_y; // 0 GC garbage created!',
+            '}',
+          ]),
           heap_alloc: d(-11, -4, { s: 3.8, h: 42, color: 'rose', glyph: 'box', label: ['new Point(x, y)'], sub: 'Candidate Heap' }),
           ea_engine: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'shield', label: ['Escape Analysis'], sub: 'Scope Checker' }),
           registers: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'cpu', label: ['CPU Registers'], sub: 'Scalar Replaced (0 GC)' }),
@@ -155,6 +187,14 @@ export const javaJitCompilerLesson = {
       metrics: { compilation_tier: 'Deoptimized', invocation_count: 'Cat loaded', inlining_depth: 'Trap Triggered', escape_analysis: 'Revoked', execution_speed: 'Fallback to Tier 0' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Deoptimization at JVM Safepoint', [
+            '// JIT assumed Shape had only 1 subclass (Circle).',
+            '! ClassLoader dynamically loads new class: Rectangle!',
+            '= JIT deoptimizes C2 speculative native code:',
+            '= JVM pauses threads at Safepoint (polling page trap)',
+            '= Reconstructs interpreter stack frames and resumes Tier 0',
+            '# Preserves 100% correctness under dynamic class loading',
+          ]),
           new_class: d(-11, -4, { s: 3.8, h: 42, color: 'rose', glyph: 'alertTriangle', label: ['Loaded Cat.class'], sub: 'Breaks Assumption' }),
           safepoint: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'shield', label: ['Safepoint Trap'], sub: 'Uncommon Trap' }),
           fallback: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'workflow', label: ['Interpreter Fallback'], sub: 'Re-profiles' }),

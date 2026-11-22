@@ -3,6 +3,7 @@
 import {
   makeBlock as d,
   makeLink as h,
+  makePanel as S,
   makeDb as b,
   makeDevice as y,
 } from '@/lib/simulator/scene-builders';
@@ -15,9 +16,9 @@ export const javaCollectionsLesson = {
   level: 'intermediate',
   metrics: ['capacity', 'loadFactor', 'collisionRate', 'concurrency'],
   goals: [
-    { text: 'Master ArrayList dynamic resizing and', step: 1 },
-    { text: 'Understand HashMap hashing, collisions,', step: 2 },
-    { text: 'Scale with ConcurrentHashMap lock-striping', step: 3 },
+    { text: 'ArrayList 1.5x contiguous dynamic growth', step: 0 },
+    { text: 'HashMap hash spread & Red-Black treeification', step: 1 },
+    { text: 'ConcurrentHashMap CAS & bin-head striped locks', step: 2 },
   ],
   steps: [
     {
@@ -32,6 +33,13 @@ export const javaCollectionsLesson = {
       metrics: { capacity: '16 elements', loadFactor: '1.0 (Full)', collisionRate: '0%', concurrency: 'Unsynchronized' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'ArrayList 1.5x Dynamic Growth', [
+            'List<String> list = new ArrayList<>(10); // initial cap = 10',
+            '# When size == elementData.length (capacity exhausted):',
+            '= int newCap = oldCap + (oldCap >> 1); // 1.5x growth formula',
+            '= elementData = Arrays.copyOf(elementData, newCap);',
+            '# Amortized O(1) append time; O(N) copy on resize',
+          ]),
           app:    y(-12, -4, { label: 'Client Thread', tags: [{ text: 'list.add(item)', icon: 'zap' }] }),
           buffer: d(-2, -4,  { color: 'blue', glyph: 'layers', label: ['elementData'], sub: 'Cap 10' }),
           grow:   d(10, -4,  { color: 'green', glyph: 'layers', label: ['newCapacity'], sub: 'Cap 15 (1.5x)' }),
@@ -57,6 +65,14 @@ export const javaCollectionsLesson = {
       metrics: { capacity: '64 buckets', loadFactor: '0.75 threshold', collisionRate: '12% bin sharing', concurrency: 'Fail-Fast Iterator' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'HashMap Treeify Threshold & Hash Spread', [
+            '// High-order XOR spread to minimize collision clustering:',
+            '= static final int hash(Object key) {',
+            '=   int h; return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);',
+            '  }',
+            '# If linked list bucket length >= 8 and table cap >= 64:',
+            '= treeifyBin(tab, hash); // linked list -> Red-Black Tree (O(log N))',
+          ]),
           key:    y(-12, -4, { label: 'Put Key/Value', tags: [{ text: 'hash() ^ (h>>>16)', icon: 'code' }] }),
           table:  d(-2, -4,  { color: 'purple', glyph: 'layers', label: ['Node<K,V>[]'], sub: 'Bucket Array' }),
           tree:   d(10, -4,  { color: 'rose', glyph: 'gitBranch', label: ['TreeNode'], sub: 'Treeify (>=8)' }),
@@ -82,6 +98,14 @@ export const javaCollectionsLesson = {
       metrics: { capacity: '128 striped bins', loadFactor: 'Auto-resizing', collisionRate: '< 5%', concurrency: 'Lock-Free Read / CAS Write' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'ConcurrentHashMap Bin-Head Locking', [
+            '// Lock-free read via volatile get; CAS for empty bucket:',
+            '= if (casTabAt(tab, i, null, new Node<>(hash, key, val))) return;',
+            '// Lock only the first node in bucket for write operations:',
+            '= synchronized (firstNode) {',
+            '    if (tabAt(tab, i) == firstNode) updateBin(key, val);',
+            '= } // 16x concurrency compared to legacy Hashtable',
+          ]),
           writer1: y(-12, -10, { label: 'Thread 1', tags: [{ text: 'put(keyA)', icon: 'zap' }] }),
           writer2: y(-12, 2,   { label: 'Thread 2', tags: [{ text: 'put(keyB)', icon: 'zap' }] }),
           binA:    d(2, -10,   { color: 'green', glyph: 'lock', label: ['Bin #12'], sub: 'sync(headA)' }),

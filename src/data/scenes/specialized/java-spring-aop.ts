@@ -3,6 +3,7 @@
 import {
   makeBlock as d,
   makeLink as h,
+  makePanel as S,
   makeDevice as y,
 } from '@/lib/simulator/scene-builders';
 
@@ -14,9 +15,9 @@ export const javaSpringAopLesson = {
   level: 'intermediate',
   metrics: ['proxyType', 'interceptorChain', 'weavingTiming', 'targetState'],
   goals: [
-    { text: 'Compare JDK Dynamic Proxy', step: 1 },
-    { text: 'Trace MethodInvocation advice chains', step: 2 },
-    { text: 'Diagnose self-invocation (this.method()) bypassing', step: 3 },
+    { text: 'CGLIB subclass vs JDK dynamic proxy selection', step: 0 },
+    { text: 'MethodInvocation interceptor chain & @Around advice', step: 1 },
+    { text: 'Self-invocation bypass & AopContext proxy exposure', step: 2 },
   ],
   steps: [
     {
@@ -31,6 +32,13 @@ export const javaSpringAopLesson = {
       metrics: { proxyType: 'CGLIB Subclass', interceptorChain: '3 Interceptors', weavingTiming: 'Runtime Initialization', targetState: 'Wrapped Target' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'CGLIB Subclass vs JDK Dynamic Proxy', [
+            '# Spring Boot 2.x+ defaults to CGLIB (spring.aop.proxy-target-class=true):',
+            '= @EnableAspectJAutoProxy(proxyTargetClass = true)',
+            '// CGLIB generates UserService$$SpringCGLIB$$0 subclass',
+            '= UserService proxy = (UserService) context.getBean(UserService.class);',
+            '# Allows autowiring concrete classes directly without requiring interfaces',
+          ]),
           client: y(-12, -4, { label: 'Client Caller', tags: [{ text: 'service.doWork()', icon: 'zap' }] }),
           proxy:  d(-2, -4,  { color: 'orange', glyph: 'shield', label: ['AOP Proxy'], sub: 'CGLIB Subclass' }),
           target: d(10, -4,  { color: 'blue', glyph: 'code', label: ['Target Bean'], sub: 'Original Code' }),
@@ -56,6 +64,17 @@ export const javaSpringAopLesson = {
       metrics: { proxyType: 'Advisor Chain', interceptorChain: 'Security -> Tx -> Logging', weavingTiming: 'Invocation Time', targetState: 'Active Execution' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, '@Around Advice & ProceedingJoinPoint', [
+            '@Aspect @Component',
+            'public class MetricsAspect {',
+            '= @Around("@annotation(LogExecutionTime)")',
+            '= public Object measure(ProceedingJoinPoint joinPoint) throws Throwable {',
+            '=   long start = System.currentTimeMillis();',
+            '=   Object proceed = joinPoint.proceed(); // Invokes next in chain',
+            '=   return proceed;',
+            '= }',
+            '}',
+          ]),
           sec:    d(-12, -4, { color: 'rose', glyph: 'lock', label: ['Security'], sub: 'Check Auth' }),
           tx:     d(-2, -4,  { color: 'green', glyph: 'database', label: ['Tx Interceptor'], sub: 'begin / commit' }),
           target: d(10, -4,  { color: 'blue', glyph: 'code', label: ['Target Method'], sub: 'Business Logic' }),
@@ -81,6 +100,14 @@ export const javaSpringAopLesson = {
       metrics: { proxyType: 'Bypassed Proxy', interceptorChain: '0 Interceptors Fired', weavingTiming: 'Direct JVM Call', targetState: 'Unprotected Method' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Self-Invocation Bypasses Interceptor Chain', [
+            'public void caller() {',
+            '! this.targetWithAroundAdvice(); // DIRECT CALL: No Aspect executed!',
+            '}',
+            '= // Workaround using AopContext (exposeProxy = true):',
+            '= ((UserService) AopContext.currentProxy()).targetWithAroundAdvice();',
+            '# Best practice: Refactor helper method to dedicated component',
+          ]),
           proxy:  d(-12, -4, { color: 'sand', glyph: 'shield', label: ['Outer Proxy'], sub: 'Ignored' }),
           outer:  d(-2, -4,  { color: 'blue', glyph: 'code', label: ['methodA()'], sub: 'Runs on Target' }),
           inner:  d(10, -4,  { color: 'rose', glyph: 'alertTriangle', label: ['this.methodB()'], sub: 'No Tx Opened!' }),

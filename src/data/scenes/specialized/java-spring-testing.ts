@@ -33,11 +33,11 @@ export const javaSpringTestingLesson = {
   metrics: ['test_mode', 'context_cache_hits', 'contexts_created', 'execution_time_ms', 'db_fidelity'],
   legend: ['req', 'res', ['ping', 'cached lookup'], 'fail'],
   goals: [
-    { text: 'TestContext Framework', step: 1 },
-    { text: 'Context Caching', step: 2 },
-    { text: 'The @MockBean Anti-Pattern', step: 3 },
-    { text: 'Test Slices: Focused fast tests', step: 4 },
-    { text: 'Integration Testing', step: 5 },
+    { text: 'TestContextManager & TestExecutionListeners lifecycle', step: 0 },
+    { text: 'ApplicationContext caching across test classes', step: 1 },
+    { text: 'The @MockBean cache-busting penalty', step: 2 },
+    { text: 'Slice testing (@WebMvcTest, @DataJpaTest)', step: 3 },
+    { text: 'Testcontainers real Docker DB integration', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,16 @@ export const javaSpringTestingLesson = {
       metrics: { test_mode: 'TestContextManager', context_cache_hits: '0', contexts_created: '1', execution_time_ms: '820ms', db_fidelity: 'Rollback on finish' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Spring Test Execution Framework', [
+            '@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)',
+            'class OrderServiceTest {',
+            '= @Autowired private TestRestTemplate restTemplate;',
+            '= @Test void shouldCreateOrder() {',
+            '=   var res = restTemplate.postForEntity("/api/orders", req, Order.class);',
+            '=   assertEquals(HttpStatus.CREATED, res.getStatusCode());',
+            '  }',
+            '}',
+          ]),
           test_runner: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['JUnit 5 Runner'], sub: 'OrderServiceTest.java' }),
           tc_mgr: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['TestContextManager'], sub: 'Coordinates Listeners' }),
           listeners: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['ExecutionListeners'], sub: 'DI, Tx Rollback, Dirties' }),
@@ -77,6 +87,12 @@ export const javaSpringTestingLesson = {
       metrics: { test_mode: 'Context Cache Hit', context_cache_hits: '12 hits (92%)', contexts_created: '1 total', execution_time_ms: '45ms', db_fidelity: 'In-memory / Clean' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'ApplicationContext Cache Key', [
+            '# Spring hashes test configuration into a MergedContextConfiguration key:',
+            '= Key: { locations, classes, activeProfiles, propertySourceProperties }',
+            '= If Key matches existing cached context -> reused in 0ms!',
+            '= Reusing 1 context across 500 tests cuts suite runtime from 5m to 20s',
+          ]),
           test_suite: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['Test Class B, C, D...'], sub: 'Same @SpringBootTest config' }),
           cache_map: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'storage', label: ['ContextCache (Map)'], sub: 'Key: MergedTestConfig' }),
           active_ctx: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['Shared Context'], sub: 'Zero Startup Overhead' }),
@@ -102,6 +118,14 @@ export const javaSpringTestingLesson = {
       metrics: { test_mode: 'Cache Invalidation', context_cache_hits: '0 (Miss)', contexts_created: '8 created', execution_time_ms: '14,200ms', db_fidelity: 'Degraded build speed' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'The @MockBean Cache-Busting Trap', [
+            'class PaymentTest {',
+            '! @MockBean private StripeClient stripe; // Alters BeanDefinition!',
+            '  // Spring CANNOT reuse the cached ApplicationContext!',
+            '! // Forces a complete new context bootstrap (5-10 seconds penalty)',
+            '}',
+            '= Best practice: Group all @MockBean tests into a shared base class',
+          ]),
           mock_test: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'alert', label: ['OrderTestWithMock'], sub: '@MockBean PaymentClient' }),
           cache_inval: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['Cache Key Altered'], sub: 'CACHE MISS!' }),
           new_context: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['New ApplicationContext'], sub: '+3,500ms startup penalty' }),
@@ -128,6 +152,16 @@ export const javaSpringTestingLesson = {
       metrics: { test_mode: 'Test Slice (@WebMvcTest)', context_cache_hits: '1', contexts_created: '1 (minimal)', execution_time_ms: '280ms', db_fidelity: 'No DB loaded' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Fast Slice Testing (@WebMvcTest)', [
+            '= @WebMvcTest(UserController.class)',
+            'class UserControllerTest {',
+            '= @Autowired private MockMvc mockMvc; // Only loads Web MVC layer',
+            '  @MockBean private UserService userService;',
+            '= @Test void testGet() throws Exception {',
+            '=   mockMvc.perform(get("/api/users/1")).andExpect(status().isOk());',
+            '= } // Boots in < 500ms; skips DB, JPA, Kafka!',
+            '}',
+          ]),
           controller_test: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['@WebMvcTest'], sub: 'Fast Controller Unit' }),
           slice_context: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['Sliced Context'], sub: 'Controllers & MockMvc Only' }),
           mock_mvc: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['MockMvc Engine'], sub: 'In-memory HTTP asserts' }),
@@ -153,6 +187,18 @@ export const javaSpringTestingLesson = {
       metrics: { test_mode: 'Testcontainers Integration', context_cache_hits: 'Shared container', contexts_created: '1 Docker instance', execution_time_ms: '1,100ms', db_fidelity: '100% Real Postgres' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Testcontainers Real PostgreSQL DB', [
+            '@Testcontainers',
+            '@SpringBootTest',
+            'class PostgresRepoTest {',
+            '= @Container',
+            '= static PostgreSQLContainer<?> pg = new PostgreSQLContainer<>("postgres:16");',
+            '= @DynamicPropertySource',
+            '= static void configure(DynamicPropertyRegistry r) {',
+            '=   r.add("spring.datasource.url", pg::getJdbcUrl);',
+            '= } // 100% dialect fidelity, avoids H2 incompatibilities',
+            '}',
+          ]),
           test_suite: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['IntegrationTestSuite'], sub: '@DynamicPropertySource' }),
           docker_postgres: d(0, -4, { s: 3.8, h: 42, color: 'cyan', glyph: 'storage', label: ['Docker PostgreSQL'], sub: 'Real Postgres 16 Engine' }),
           app_context: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['Spring Boot Context'], sub: 'Hikari -> Dynamic Port' }),

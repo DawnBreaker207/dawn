@@ -33,11 +33,11 @@ export const javaSpringMessagingLesson = {
   metrics: ['producer_throughput', 'consumer_ack_mode', 'retry_attempts', 'dlt_redirected', 'partition_lag'],
   legend: ['req', 'res', ['ping', 'event streaming'], 'fail'],
   goals: [
-    { text: 'KafkaTemplate', step: 1 },
-    { text: '@KafkaListener', step: 2 },
-    { text: 'Acknowledgment Modes', step: 3 },
-    { text: 'Error Handling & Backoff', step: 4 },
-    { text: 'Idempotent Processing', step: 5 },
+    { text: 'KafkaTemplate non-blocking async producing', step: 0 },
+    { text: '@KafkaListener container thread model', step: 1 },
+    { text: 'Consumer commit & AckMode strategies', step: 2 },
+    { text: 'Dead Letter Topic (DLT) retry routing', step: 3 },
+    { text: 'Idempotent consumer Redis deduplication', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,16 @@ export const javaSpringMessagingLesson = {
       metrics: { producer_throughput: '12,500 msg/sec', consumer_ack_mode: 'N/A', retry_attempts: '0', dlt_redirected: '0', partition_lag: '0' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'KafkaTemplate Non-Blocking Send', [
+            '= CompletableFuture<SendResult<String, Order>> future =',
+            '=   kafkaTemplate.send("orders-topic", order.getId(), order);',
+            'future.whenComplete((result, ex) -> {',
+            '= if (ex == null) {',
+            '=   RecordMetadata meta = result.getRecordMetadata();',
+            '=   logger.info("Sent to partition {} offset {}", meta.partition(), meta.offset());',
+            '  } else { logger.error("Send failed", ex); }',
+            '});',
+          ]),
           app_svc: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['OrderCreatedPublisher'], sub: 'Calls kafkaTemplate.send()' }),
           kafka_template: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['KafkaTemplate'], sub: 'Async RecordBuffer' }),
           kafka_cluster: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'storage', label: ['Kafka Broker (3 Partitions)'], sub: 'orders-topic' }),
@@ -78,6 +88,16 @@ export const javaSpringMessagingLesson = {
       metrics: { producer_throughput: 'Active', consumer_ack_mode: 'BATCH', retry_attempts: '0', dlt_redirected: '0', partition_lag: 'Low (4 msgs)' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, '@KafkaListener Container Thread', [
+            '@Service',
+            'public class OrderConsumer {',
+            '= @KafkaListener(topics = "orders-topic", groupId = "order-svc")',
+            '= public void handleOrder(@Payload Order order,',
+            '=                         @Header(KafkaHeaders.RECEIVED_PARTITION) int part) {',
+            '=   orderService.process(order);',
+            '= }',
+            '}',
+          ]),
           broker_part: d(-11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'storage', label: ['orders-topic'], sub: 'Partitions 0, 1, 2' }),
           listener_ctn: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['ConcurrentMessageListener'], sub: '3 Consumer Threads' }),
           biz_handler: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'server', label: ['OrderProcessorBean'], sub: '@KafkaListener Method' }),
@@ -103,6 +123,18 @@ export const javaSpringMessagingLesson = {
       metrics: { producer_throughput: 'Active', consumer_ack_mode: 'MANUAL_IMMEDIATE', retry_attempts: '0', dlt_redirected: '0', partition_lag: '0' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Manual Offset Acknowledgment', [
+            '@KafkaListener(topics = "orders-topic", groupId = "order-svc")',
+            'public void listen(ConsumerRecord<String, Order> rec,',
+            '=                  Acknowledgment ack) {',
+            '  try {',
+            '=   processOrder(rec.value());',
+            '=   ack.acknowledge(); // Commits offset immediately',
+            '  } catch (Exception ex) {',
+            '!   // Do NOT acknowledge -> message will be redelivered',
+            '  }',
+            '}',
+          ]),
           listener_thread: d(-11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['Consumer Worker'], sub: 'Processes Message' }),
           db_write: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'storage', label: ['DB Transaction'], sub: 'Order Saved' }),
           ack_commit: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cpu', label: ['Acknowledgment.acknowledge()'], sub: 'Offset Committed to Broker' }),
@@ -129,6 +161,14 @@ export const javaSpringMessagingLesson = {
       metrics: { producer_throughput: 'Active', consumer_ack_mode: 'MANUAL_IMMEDIATE', retry_attempts: '3 retries failed', dlt_redirected: '1 to orders.DLT', partition_lag: '0' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Dead Letter Publishing Recoverer', [
+            '= @Bean public DefaultErrorHandler errorHandler(KafkaTemplate<?, ?> t) {',
+            '=   var recoverer = new DeadLetterPublishingRecoverer(t,',
+            '=     (rec, ex) -> new TopicPartition(rec.topic() + ".DLT", rec.partition()));',
+            '=   // Retry 3 times with 1-second backoff before forwarding to DLT:',
+            '=   return new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3L));',
+            '= }',
+          ]),
           poison_msg: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'alert', label: ['Poison Message'], sub: 'Serialization Exception' }),
           error_handler: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['DefaultErrorHandler'], sub: 'Retries (3x) Exhausted' }),
           dlt_topic: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'storage', label: ['orders-topic.DLT'], sub: 'Dead Letter Topic Queue' }),
@@ -155,6 +195,16 @@ export const javaSpringMessagingLesson = {
       metrics: { producer_throughput: 'Normal', consumer_ack_mode: 'MANUAL_IMMEDIATE', retry_attempts: '0', dlt_redirected: '0', partition_lag: '0' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Idempotent Consumer with Redis Key', [
+            '@KafkaListener(topics = "orders-topic")',
+            'public void consume(OrderEvent event) {',
+            '= String lockKey = "event:processed:" + event.getEventId();',
+            '= Boolean isFirstTime = redisTemplate.opsForValue()',
+            '=   .setIfAbsent(lockKey, "1", Duration.ofDays(7));',
+            '= if (Boolean.FALSE.equals(isFirstTime)) return; // Duplicate ignored!',
+            '= processOrder(event);',
+            '}',
+          ]),
           dupe_event: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'server', label: ['Incoming Event'], sub: 'ID: evt_9941 (Dupe)' }),
           dedup_store: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'storage', label: ['Idempotency Store (Redis/DB)'], sub: 'Checks evt_9941 exists' }),
           biz_skip: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['Order Logic'], sub: 'Duplicate Skipped Safely' }),

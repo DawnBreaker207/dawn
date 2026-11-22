@@ -3,6 +3,7 @@
 import {
   makeBlock as d,
   makeLink as h,
+  makePanel as S,
   makeDb as b,
 } from '@/lib/simulator/scene-builders';
 
@@ -14,9 +15,9 @@ export const javaJvmMemoryLesson = {
   level: 'intermediate',
   metrics: ['heapUsed', 'youngGen', 'oldGen', 'gcLatency'],
   goals: [
-    { text: 'Differentiate Young Generation (Eden/Survivor)', step: 1 },
-    { text: 'Trace Minor GC evacuation and', step: 2 },
-    { text: 'Understand Metaspace class metadata vs', step: 3 },
+    { text: 'Young Generation Eden/Survivor allocation', step: 0 },
+    { text: 'Minor GC evacuation & Tenuring threshold', step: 1 },
+    { text: 'Metaspace metadata & DirectBuffer off-heap', step: 2 },
   ],
   steps: [
     {
@@ -31,6 +32,13 @@ export const javaJvmMemoryLesson = {
       metrics: { heapUsed: '2.4 GB / 4.0 GB', youngGen: 'Eden (800MB)', oldGen: 'Tenured (1.6GB)', gcLatency: '< 5ms (ZGC/G1)' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'TLAB Allocation & Object Header', [
+            '// Fast-path bump-pointer allocation inside thread TLAB:',
+            '= User user = new User("dawn", 28);',
+            '# Mark Word: 8 bytes (lock state, hash, age: 4 bits)',
+            '# Klass Word: 4 bytes (Compressed OOP -> Metaspace)',
+            '# Total payload: 24 bytes aligned to 8-byte boundary',
+          ]),
           eden:     d(-12, -8, { color: 'green', glyph: 'layers', label: ['Eden Space'], sub: 'Young Gen' }),
           survivor: d(-12, 4,  { color: 'yellow', glyph: 'layers', label: ['Survivor S0/S1'], sub: 'Aging' }),
           tenured:  d(0, 0,    { color: 'purple', glyph: 'layers', label: ['Tenured'], sub: 'Old Gen' }),
@@ -59,6 +67,14 @@ export const javaJvmMemoryLesson = {
       metrics: { heapUsed: 'Evacuation in Progress', youngGen: 'Eden Cleared', oldGen: 'Marking Phase', gcLatency: '0.8ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Minor GC Evacuation & Tenuring Age', [
+            '// Eden full -> Stop-The-World Minor GC triggered:',
+            '= if (obj.age++ >= 15) {',
+            '=   promoteToOldGen(obj); // -XX:MaxTenuringThreshold=15',
+            '  } else {',
+            '    copyToSurvivor(obj); // Survivor S0 -> S1 toggle',
+            '  }',
+          ]),
           eden:     d(-12, -8, { color: 'rose', glyph: 'trash', label: ['Eden Space'], sub: 'Collected' }),
           survivor: d(-12, 4,  { color: 'green', glyph: 'check', label: ['Survivor S1'], sub: 'Alive Copied' }),
           oldGen:   d(0, 0,    { color: 'purple', glyph: 'layers', label: ['Old Gen'], sub: 'Mark Phase' }),
@@ -84,6 +100,13 @@ export const javaJvmMemoryLesson = {
       metrics: { heapUsed: '2.1 GB / 4.0 GB', youngGen: 'Stable', oldGen: 'Compacted', gcLatency: 'Off-Heap Direct IO' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'DirectByteBuffer & Off-Heap Zero Copy', [
+            '// Allocated outside Java Heap via unsafe native malloc:',
+            '= ByteBuffer buf = ByteBuffer.allocateDirect(1024 * 1024);',
+            '# JNI writes directly to OS network socket / file descriptor',
+            '! Cleaned via java.lang.ref.Cleaner (sun.misc.Unsafe.freeMemory)',
+            '# -XX:MaxDirectMemorySize=2g prevents native OOM',
+          ]),
           app:   d(-12, -4, { color: 'green', glyph: 'code', label: ['ClassLoader'], sub: 'Proxies' }),
           meta:  d(-2, -4,  { color: 'blue', glyph: 'layers', label: ['Metaspace'], sub: 'Class Metadata' }),
           off:   d(10, -4,  { color: 'purple', glyph: 'server', label: ['Off-Heap'], sub: 'DirectBuffer' }),

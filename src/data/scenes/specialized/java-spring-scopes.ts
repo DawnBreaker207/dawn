@@ -33,11 +33,11 @@ export const javaSpringScopesLesson = {
   metrics: ['scope_type', 'instances_created', 'proxy_mode', 'thread_safety', 'memory_footprint'],
   legend: ['req', 'res', ['ping', 'proxy invocation'], 'fail'],
   goals: [
-    { text: 'Singleton vs Prototype', step: 1 },
-    { text: 'The Prototype Dilemma', step: 2 },
-    { text: 'CGLIB Scoped Proxies', step: 3 },
-    { text: 'Web Scopes: Request & Session', step: 4 },
-    { text: 'Bean Destruction', step: 5 },
+    { text: 'Singleton scope shared instance & thread-safety', step: 0 },
+    { text: 'Prototype scope fresh instance per injection', step: 1 },
+    { text: 'Scoped proxies & @Lookup method injection', step: 2 },
+    { text: 'Web scopes: Request & Session lifecycles', step: 3 },
+    { text: 'Bean destruction & prototype cleanup gotcha', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,15 @@ export const javaSpringScopesLesson = {
       metrics: { scope_type: 'singleton', instances_created: '1 (shared)', proxy_mode: 'DIRECT', thread_safety: 'Must be stateless', memory_footprint: 'Minimal' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Singleton Scope: Default Shared Bean', [
+            '@Service // Scope is "singleton" by default',
+            'public class ProductCatalog {',
+            '= // Exactly 1 instance created in ApplicationContext',
+            '= // Injected into every consuming controller and service',
+            '! Thread-safety rule: singleton beans MUST be stateless!',
+            '! Do NOT store mutable request-scoped variables in instance fields',
+            '}',
+          ]),
           client_a: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['OrderController'], sub: 'Client Thread 1' }),
           ioc_cache: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'storage', label: ['singletonObjects'], sub: 'OrderService Cache' }),
           client_b: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'code', label: ['PaymentController'], sub: 'Client Thread 2' }),
@@ -78,6 +87,14 @@ export const javaSpringScopesLesson = {
       metrics: { scope_type: 'prototype', instances_created: '1 (frozen in singleton)', proxy_mode: 'NONE', thread_safety: 'Stale state', memory_footprint: 'Single instance' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Prototype Scope: New Instance on getBean', [
+            '@Component',
+            '@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)',
+            'public class ReportTask {',
+            '= // New instance instantiated every time getBean() or injection runs',
+            '  private final String taskId = UUID.randomUUID().toString();',
+            '}',
+          ]),
           singleton_holder: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'server', label: ['ReportService (Singleton)'], sub: 'Created at startup' }),
           frozen_proto: d(0, -4, { s: 3.8, h: 42, color: 'red', glyph: 'workflow', label: ['UserTask (Prototype)'], sub: 'Injected ONCE - Stale!' }),
           req_new: d(11, -4, { s: 3.8, h: 42, color: 'gray', glyph: 'code', label: ['New Requests'], sub: 'Cannot reach fresh proto' }),
@@ -103,6 +120,14 @@ export const javaSpringScopesLesson = {
       metrics: { scope_type: 'prototype via proxy', instances_created: 'New per call', proxy_mode: 'CGLIB Proxy', thread_safety: 'Thread-confined', memory_footprint: 'Dynamic GC' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, '@Lookup & Scoped Proxy Solution', [
+            '// Injecting Prototype into Singleton causes stale instance problem!',
+            '= // Solution 1: @Lookup method injection:',
+            '= @Lookup public abstract ReportTask getNewTask();',
+            '= // Solution 2: Scoped Proxy (proxyMode = TARGET_CLASS):',
+            '= @Scope(value = "prototype", proxyMode = ScopedProxyMode.TARGET_CLASS)',
+            '# Interceptor fetches fresh instance from context on each call',
+          ]),
           singleton_svc: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'server', label: ['ReportService'], sub: 'Holds Proxy Ref' }),
           cglib_proxy: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['CGLIB Proxy'], sub: 'Intercepts invocation' }),
           fresh_target: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['Fresh Task Instance'], sub: 'Instantiated on demand' }),
@@ -128,6 +153,14 @@ export const javaSpringScopesLesson = {
       metrics: { scope_type: 'request & session', instances_created: '1 per HTTP Req / Session', proxy_mode: 'CGLIB Proxy', thread_safety: 'Request-isolated', memory_footprint: 'Tied to session TTL' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Request & Session Web Scopes', [
+            '@Component',
+            '= @RequestScope // Unique bean instance per HTTP request lifecycle',
+            'public class UserContext { private String requestId; }',
+            '@Component',
+            '= @SessionScope // Persists in HTTP Session across requests',
+            'public class ShoppingCart { private List<Item> items; }',
+          ]),
           http_req: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cloud', label: ['HTTP Request'], sub: 'ThreadLocal bound' }),
           req_bean: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['@RequestScope Bean'], sub: 'ShoppingCart / Context' }),
           session_store: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'storage', label: ['HttpSession Store'], sub: 'Survives across reqs' }),
@@ -154,6 +187,12 @@ export const javaSpringScopesLesson = {
       metrics: { scope_type: 'destruction phase', instances_created: '0', proxy_mode: 'N/A', thread_safety: 'JVM shutdown hook', memory_footprint: 'Reclaimed on close()' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Prototype Destruction Gotcha', [
+            '// Spring manages complete lifecycle for Singletons (calls @PreDestroy).',
+            '! Spring DOES NOT manage destruction for Prototype beans!',
+            '! @PreDestroy is NEVER called on Prototype scoped beans!',
+            '= // Consumer client code must manually clean up prototype resources',
+          ]),
           context_close: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'workflow', label: ['Context.close()'], sub: 'JVM Shutdown Hook' }),
           singleton_dest: d(0, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'server', label: ['Singleton Beans'], sub: '@PreDestroy Executed' }),
           prototype_leak: d(11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'cpu', label: ['Prototype Beans'], sub: 'NO destroy()! Manual cleanup' }),

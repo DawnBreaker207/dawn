@@ -3,6 +3,7 @@
 import {
   makeBlock as d,
   makeLink as h,
+  makePanel as S,
   makeDevice as y,
 } from '@/lib/simulator/scene-builders';
 
@@ -14,9 +15,9 @@ export const javaSpringIocLesson = {
   level: 'intermediate',
   metrics: ['containerState', 'beanCount', 'injectionMode', 'scope'],
   goals: [
-    { text: 'ApplicationContext Bootstrap', step: 1 },
-    { text: 'Constructor Dependency Injection', step: 2 },
-    { text: 'BeanPostProcessor Lifecycle Hooks', step: 3 },
+    { text: 'ApplicationContext bootstrap & BeanFactory registry', step: 0 },
+    { text: 'Constructor dependency injection & circular checks', step: 1 },
+    { text: 'BeanPostProcessor proxy wrapping & lifecycle hooks', step: 2 },
   ],
   steps: [
     {
@@ -31,6 +32,15 @@ export const javaSpringIocLesson = {
       metrics: { containerState: 'INITIALIZED', beanCount: '48 singletons', injectionMode: 'Constructor DI', scope: 'Singleton' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Spring IoC Bean Definition & DI', [
+            '@Service',
+            'public class UserService {',
+            '= private final UserRepository repo; // Constructor DI',
+            '= public UserService(UserRepository repo) {',
+            '=   this.repo = repo; // Autowired automatically',
+            '  }',
+            '}',
+          ]),
           ctx:        d(-11, -8, { color: 'green', glyph: 'layers', label: ['App Context'], sub: 'BeanFactory' }),
           controller: d(-2, -8,  { color: 'blue', glyph: 'code', label: ['Controller'], sub: '@RestController' }),
           service:    d(-2, 4,   { color: 'blue', glyph: 'code', label: ['Service'], sub: '@Service' }),
@@ -58,6 +68,14 @@ export const javaSpringIocLesson = {
       metrics: { containerState: 'READY', beanCount: 'Proxy Wrapped', injectionMode: 'AOP Intercept', scope: 'Singleton Proxy' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'BeanPostProcessor Proxy Wrapping', [
+            'public class AsyncAnnotationBeanPostProcessor implements BeanPostProcessor {',
+            '= public Object postProcessAfterInitialization(Object bean, String name) {',
+            '=   if (hasAsyncAnnotation(bean)) return createProxy(bean);',
+            '    return bean;',
+            '= }',
+            '} // Wraps bean with CGLIB proxy for @Async/@Transactional',
+          ]),
           caller: y(-11, -2, { label: 'HTTP Request', tags: [{ text: 'GET /orders', icon: 'zap' }] }),
           proxy:  d(-2, -2,  { color: 'orange', glyph: 'shield', label: ['CGLIB Proxy'], sub: '@Transactional' }),
           target: d(9, -2,   { color: 'blue', glyph: 'code', label: ['OrderService'], sub: 'Target Bean' }),
@@ -83,6 +101,15 @@ export const javaSpringIocLesson = {
       metrics: { containerState: 'SHUTTING DOWN', beanCount: 'Draining Queues', injectionMode: 'Graceful Stop', scope: 'Clean Shutdown' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Bean Lifecycle & @PreDestroy Hook', [
+            '@PostConstruct',
+            'public void init() { logger.info("Cache warming..."); }',
+            '= @PreDestroy',
+            '= public void cleanup() {',
+            '=   connectionPool.close(); // Graceful shutdown on SIGTERM',
+            '= }',
+            '# ConfigurableApplicationContext.registerShutdownHook() invokes this',
+          ]),
           hook:   d(-12, -4, { color: 'rose', glyph: 'power', label: ['Shutdown Hook'], sub: 'SIGTERM' }),
           ctx:    d(-2, -4,  { color: 'orange', glyph: 'layers', label: ['App Context'], sub: 'close()' }),
           beans:  d(10, -4,  { color: 'green', glyph: 'check', label: ['@PreDestroy'], sub: 'Drain Queues' }),

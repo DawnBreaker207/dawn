@@ -33,11 +33,11 @@ export const javaSpringConfigLesson = {
   metrics: ['active_profile', 'active_tier', 'source_origin', 'bound_class', 'validation_state'],
   legend: ['req', 'res', ['ping', 'property resolution'], 'fail'],
   goals: [
-    { text: 'The 17-Tier PropertySource Hierarchy', step: 1 },
-    { text: '@ConfigurationProperties vs @Value', step: 2 },
-    { text: 'Relaxed Binding', step: 3 },
-    { text: 'Profile Activation', step: 4 },
-    { text: 'External Secrets & Cloud Config', step: 5 },
+    { text: 'The 17-tier PropertySource override hierarchy', step: 0 },
+    { text: '@ConfigurationProperties type-safe binding & validation', step: 1 },
+    { text: 'Relaxed binding engine (camelCase vs KEBAB_CASE)', step: 2 },
+    { text: 'Profile activation (@Profile) & conditional loading', step: 3 },
+    { text: 'Cloud secrets & HashiCorp Vault externalization', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,14 @@ export const javaSpringConfigLesson = {
       metrics: { active_profile: 'prod', active_tier: 'Tier 3 (CLI / Env Var)', source_origin: 'OS Env: APP_TIMEOUT_MS', bound_class: 'AppProperties', validation_state: 'Valid' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'PropertySource Priority Order', [
+            '1. Command line args: --server.port=9090 (Highest)',
+            '2. OS Environment vars: SERVER_PORT=9090',
+            '3. Config file profile: application-prod.yml',
+            '4. Config file default: application.yml',
+            '= 5. @PropertySource on @Configuration classes (Lowest)',
+            '# Higher priority tier completely overrides lower tier values',
+          ]),
           os_env: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cloud', label: ['OS Environment / CLI'], sub: 'Tier 3 (High Priority)' }),
           env_registry: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'storage', label: ['StandardEnvironment'], sub: 'PropertySources Registry' }),
           app_yml: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'code', label: ['application.yml'], sub: 'Tier 6 (Default Fallback)' }),
@@ -78,6 +86,15 @@ export const javaSpringConfigLesson = {
       metrics: { active_profile: 'prod', active_tier: 'ConfigurationPropertiesBindingPostProcessor', source_origin: 'application.yml', bound_class: 'AppProperties Record', validation_state: 'Validated @Min(100)' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Type-Safe @ConfigurationProperties', [
+            '@ConfigurationProperties(prefix = "app.mail")',
+            '@Validated',
+            'public record MailProperties(',
+            '= @NotBlank String host,',
+            '= @Min(1) @Max(65535) int port,',
+            '= Duration timeout',
+            ') {} // Strong type checking + JSR-380 validation on boot',
+          ]),
           yml_tree: d(-11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'storage', label: ['app.datasource.pool.*'], sub: 'Hierarchical YAML' }),
           binder: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'workflow', label: ['ConfigurationPropertiesBinder'], sub: 'Validation & Binding' }),
           record_pojo: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['AppConfig (Record)'], sub: 'Immutable Type-Safe Bean' }),
@@ -104,6 +121,14 @@ export const javaSpringConfigLesson = {
       metrics: { active_profile: 'prod', active_tier: 'RelaxedDataBinder', source_origin: 'APP_DATASOURCE_MAX_POOL_SIZE', bound_class: 'DataSourceProperties', validation_state: 'Kebab/Snake mapped' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Relaxed Binding Engine', [
+            '// All of these map to the exact same field "poolTimeout":',
+            '= app.datasource.poolTimeout     // Standard camelCase',
+            '= app.datasource.pool-timeout    // Kebab-case (recommended for YAML)',
+            '= APP_DATASOURCE_POOLTIMEOUT    // OS Environment variable',
+            '= APP_DATASOURCE_POOL_TIMEOUT   // Environment friendly underscore',
+            '# Decouples YAML config naming from strict Java field names',
+          ]),
           env_snake: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cloud', label: ['APP_POOL_TIMEOUT'], sub: 'SCREAMING_SNAKE' }),
           relaxed_engine: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'cpu', label: ['RelaxedDataBinder'], sub: 'Normalizes to kebab/camel' }),
           target_prop: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['poolTimeout (Duration)'], sub: 'Mapped cleanly' }),
@@ -129,6 +154,15 @@ export const javaSpringConfigLesson = {
       metrics: { active_profile: 'prod (Activated)', active_tier: 'ProfileAwareEnvironment', source_origin: 'application-prod.yml', bound_class: 'RealPaymentGateway', validation_state: 'Active' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Profile Activation (@Profile)', [
+            '# Run app with: java -jar app.jar -Dspring.profiles.active=prod',
+            '@Configuration',
+            '= @Profile("prod")',
+            'public class ProdDataSourceConfig {',
+            '= @Bean public DataSource hikari() { return new HikariDataSource(); }',
+            '}',
+            '@Profile("dev") -> loads H2 in-memory embedded DB instead',
+          ]),
           profile_flag: d(-11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['SPRING_PROFILES_ACTIVE'], sub: 'prod' }),
           profile_env: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'server', label: ['Profile Filter'], sub: 'Matches @Profile("prod")' }),
           prod_bean: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['AwsSqsClient Bean'], sub: 'MockSqsClient ignored' }),
@@ -154,6 +188,14 @@ export const javaSpringConfigLesson = {
       metrics: { active_profile: 'prod', active_tier: 'VaultPropertySource (Tier 1)', source_origin: 'HashiCorp Vault / K8s Secret', bound_class: 'DatabaseCredentials', validation_state: 'Encrypted & Rotated' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Externalized Cloud Secrets (Vault)', [
+            'spring.cloud.vault:',
+            '= uri: https://vault.infra.internal:8200',
+            '= token: vault_secret_token',
+            '= kv.backend: secret',
+            '# Spring Cloud Vault bootstraps before application context,',
+            '# populates PropertySource with dynamic short-lived DB credentials',
+          ]),
           vault_srv: d(-11, -4, { s: 3.8, h: 42, color: 'cyan', glyph: 'storage', label: ['HashiCorp Vault / K8s'], sub: 'Encrypted Secrets Store' }),
           bootstrap_env: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['VaultPropertySource'], sub: 'Decrypts during boot' }),
           live_bean: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['SecureDataSource'], sub: 'Credentials Injected' }),

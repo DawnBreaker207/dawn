@@ -3,6 +3,7 @@
 import {
   makeBlock as d,
   makeLink as h,
+  makePanel as S,
   makeDevice as y,
 } from '@/lib/simulator/scene-builders';
 
@@ -14,9 +15,9 @@ export const javaStreamsLesson = {
   level: 'intermediate',
   metrics: ['streamState', 'fusedPasses', 'elementsProcessed', 'poolThreads'],
   goals: [
-    { text: 'Trace lazy evaluation', step: 1 },
-    { text: 'Understand short-circuiting', step: 2 },
-    { text: 'Master ForkJoinPool work-stealing and', step: 3 },
+    { text: 'Lazy stream pipeline intermediate chaining', step: 0 },
+    { text: 'Short-circuiting terminal evaluation', step: 1 },
+    { text: 'ForkJoinPool.commonPool work stealing', step: 2 },
   ],
   steps: [
     {
@@ -31,6 +32,14 @@ export const javaStreamsLesson = {
       metrics: { streamState: 'Lazy Assembly', fusedPasses: '1 Single Pass', elementsProcessed: '0 (Deferred)', poolThreads: 'Current Caller' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Lazy Stream Pipeline Execution', [
+            'List<String> names = List.of("alice", "bob", "alex");',
+            '# Intermediate ops are completely lazy (zero execution):',
+            'var pipeline = names.stream()',
+            '  .filter(n -> n.startsWith("a")) // StatelessOp',
+            '  .map(String::toUpperCase);      // StatelessOp',
+            '= List<String> res = pipeline.toList(); // Terminal op triggers loop',
+          ]),
           src:    d(-12, -4, { color: 'green', glyph: 'layers', label: ['Collection'], sub: 'List.stream()' }),
           pipe:   d(-2, -4,  { color: 'blue', glyph: 'workflow', label: ['Pipeline'], sub: 'filter -> map' }),
           term:   d(10, -4,  { color: 'purple', glyph: 'check', label: ['Terminal'], sub: 'collect()' }),
@@ -56,6 +65,13 @@ export const javaStreamsLesson = {
       metrics: { streamState: 'Short-Circuited', fusedPasses: 'Early Return', elementsProcessed: '1st Match Found', poolThreads: '1 Thread' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Short-Circuiting Optimization', [
+            '// Halts pipeline evaluation the instant match is found:',
+            'Optional<String> first = names.stream()',
+            '  .filter(n -> n.startsWith("a"))',
+            '= .findFirst(); // Only tests elements until 1st match',
+            '# Skips downstream items, preventing redundant CPU cycles',
+          ]),
           stream: d(-10, -4, { color: 'green', glyph: 'layers', label: ['Infinite'], sub: 'iterate(1, n+1)' }),
           eval:   d(0, -4,   { color: 'orange', glyph: 'zap', label: ['Filter'], sub: 'First Match' }),
           term:   d(10, -4,  { color: 'rose', glyph: 'check', label: ['findFirst()'], sub: 'Short-Circuit' }),
@@ -81,6 +97,14 @@ export const javaStreamsLesson = {
       metrics: { streamState: 'Parallel Execution', fusedPasses: 'Split & Conquer', elementsProcessed: 'Batch Chunking', poolThreads: 'ForkJoinPool C-1' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'ForkJoinPool.commonPool Parallelism', [
+            '// Splits dataset using Spliterator chunks across CPU cores:',
+            '= long count = largeList.parallelStream()',
+            '=   .filter(item -> computeHeavy(item))',
+            '=   .count();',
+            '# Uses ForkJoinPool.commonPool() (threads = CPU cores - 1)',
+            '! Caution: blocking I/O inside parallelStream starves commonPool',
+          ]),
           split:  d(-12, -4, { color: 'blue', glyph: 'gitBranch', label: ['Spliterator'], sub: 'trySplit()' }),
           w1:     d(0, -10,  { color: 'purple', glyph: 'cpu', label: ['FJ Worker 1'], sub: 'Core 1 Deque' }),
           w2:     d(0, 2,    { color: 'purple', glyph: 'cpu', label: ['FJ Worker 2'], sub: 'Work-Stealing' }),

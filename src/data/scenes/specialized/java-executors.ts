@@ -3,6 +3,7 @@
 import {
   makeBlock as d,
   makeLink as h,
+  makePanel as S,
   makeDevice as y,
   makeQueue as ee,
   makeDb as b,
@@ -16,9 +17,9 @@ export const javaExecutorsLesson = {
   level: 'intermediate',
   metrics: ['poolSize', 'activeThreads', 'queueCapacity', 'throughput'],
   goals: [
-    { text: 'Understand core vs max pool', step: 1 },
-    { text: 'Observe task queue saturation and', step: 2 },
-    { text: 'Inspect WorkStealingPool deques and', step: 3 },
+    { text: 'ThreadPoolExecutor core workers & queue ingestion', step: 0 },
+    { text: 'Queue saturation & CallerRunsPolicy rejection', step: 1 },
+    { text: 'ForkJoinPool work-stealing deque architecture', step: 2 },
   ],
   steps: [
     {
@@ -33,6 +34,14 @@ export const javaExecutorsLesson = {
       metrics: { poolSize: '4 workers', activeThreads: '3 active', queueCapacity: '1,024 slots', throughput: '12,500 ops/s' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'ThreadPoolExecutor Sizing Code', [
+            'ExecutorService pool = new ThreadPoolExecutor(',
+            '= 4,                     // corePoolSize (always active)',
+            '= 8,                     // maximumPoolSize',
+            '  60L, TimeUnit.SECONDS, // keepAliveTime',
+            '= new LinkedBlockingQueue<>(100) // bounded task queue',
+            ');',
+          ]),
           client: y(-11, -10, { label: 'Callers', tags: [{ text: 'submit()', icon: 'play' }] }),
           queue:  ee(-2, -1,  { label: ['Task Queue', 'BlockingQueue'] }),
           w1:     d(-11, 8,   { color: 'blue', glyph: 'cpu', label: ['Worker-1', 'BUSY'], cpu: 0.9 }),
@@ -66,6 +75,13 @@ export const javaExecutorsLesson = {
       metrics: { poolSize: '4 workers', activeThreads: '4 (100%)', queueCapacity: 'FULL (1024/1024)', throughput: 'Backpressure Active' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Queue Saturation & Rejection Handler', [
+            '// When queue reaches capacity (100) and pool hits max (8):',
+            '= pool.setRejectedExecutionHandler(',
+            '=   new ThreadPoolExecutor.CallerRunsPolicy()',
+            '= ); // Backpressures caller thread to execute task',
+            '! Default AbortPolicy throws RejectedExecutionException',
+          ]),
           client: y(-11, -10, { label: 'Throttled Caller', color: 'orange', tags: [{ text: 'CallerRuns', icon: 'zap' }] }),
           queue:  ee(-2, -1,  { label: ['Task Queue', 'SATURATED'], color: 'rose' }),
           w1:     d(-11, 8,   { color: 'rose', glyph: 'cpu', label: ['Worker-1', '100% CPU'], cpu: 1.0 }),
@@ -98,6 +114,13 @@ export const javaExecutorsLesson = {
       metrics: { poolSize: '4 FJP Workers', activeThreads: 'All balancing', queueCapacity: 'Per-thread Deque', throughput: '48,000 ops/s' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'ForkJoinPool Work-Stealing Deque', [
+            'ForkJoinPool fjp = (ForkJoinPool) Executors.newWorkStealingPool();',
+            '# Each worker thread owns a double-ended queue (Deque):',
+            '= workerThread.push(subtask);   // LIFO push/pop for cache',
+            '= idleWorker.pollLast();         // FIFO work-stealing from others',
+            '# Prevents thread idle when task execution time is skewed',
+          ]),
           pool:   d(-2, -10, { color: 'purple', glyph: 'layers', label: ['ForkJoinPool', 'commonPool()'] }),
           w1:     d(-11, 8,  { color: 'green', glyph: 'cpu', label: ['Worker-1', 'Deque: 8 tasks'], cpu: 0.9 }),
           w2:     d(-2, 8,   { color: 'green', glyph: 'cpu', label: ['Worker-2', 'Deque: 4 tasks'], cpu: 0.7 }),

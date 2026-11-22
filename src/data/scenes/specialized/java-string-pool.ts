@@ -33,11 +33,11 @@ export const javaStringPoolLesson = {
   metrics: ['heap_strings', 'pooled_strings', 'cached_hashes', 'bytes_saved', 'intern_time'],
   legend: ['req', 'res', ['ping', 'hash lookup'], 'fail'],
   goals: [
-    { text: 'String literal resolution & the', step: 1 },
-    { text: 'String.intern()', step: 2 },
-    { text: 'Immutability guarantees & thread-safe', step: 3 },
-    { text: 'Compact Strings (Java 9+)', step: 4 },
-    { text: 'String concatenation', step: 5 },
+    { text: 'String literal pool & StringTable resolution', step: 0 },
+    { text: 'String.intern() & heap deduplication', step: 1 },
+    { text: 'Immutability guarantees & cached hashCode', step: 2 },
+    { text: 'Compact Strings 1-byte storage (Java 9+)', step: 3 },
+    { text: 'invokedynamic string concat optimization', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,12 @@ export const javaStringPoolLesson = {
       metrics: { heap_strings: '2 refs', pooled_strings: '1 instance', cached_hashes: '1', bytes_saved: '48 B', intern_time: '0ns' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'String Literals Resolution', [
+            'String a = "dawn";',
+            'String b = "dawn";',
+            '= assert(a == b); // true (same ref in StringTable)',
+            '# Compiled into ldc #index in bytecode',
+          ]),
           var_a: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['Variable a'], sub: '"code"' }),
           string_pool: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'archive', label: ['StringTable Pool'], sub: 'Single Instance' }),
           var_b: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['Variable b'], sub: '"code"' }),
@@ -77,6 +83,13 @@ export const javaStringPoolLesson = {
       metrics: { heap_strings: 'Reclaimed', pooled_strings: '1 Pooled', cached_hashes: '1', bytes_saved: '56 B', intern_time: '12ns' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'String.intern() Heap Deduplication', [
+            'String s1 = new String("dawn"); // Heap alloc',
+            'String s2 = s1.intern(); // StringTable lookup',
+            '= String s3 = "dawn"; // Constant pool ref',
+            '= assert(s1 != s2); // s1 is heap, s2 is pooled',
+            '= assert(s2 == s3); // true: canonical ref shared',
+          ]),
           heap_obj: d(-11, -4, { s: 3.8, h: 42, color: 'rose', glyph: 'box', label: ['new String()'], sub: 'Duplicate Heap' }),
           pool: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'archive', label: ['String Pool'], sub: 'intern() Target' }),
           canonical: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'shield', label: ['Canonical Ref'], sub: 'Unique Instance' }),
@@ -102,6 +115,16 @@ export const javaStringPoolLesson = {
       metrics: { heap_strings: 'Safe', pooled_strings: 'Thread-Safe', cached_hashes: '0x2f8a4 (cached)', bytes_saved: '100% CPU', intern_time: '0ns' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'String Immutability & Cached Hash', [
+            'public final class String {',
+            '  private final byte[] value; // immutable',
+            '  private int hash; // default 0',
+            '= public int hashCode() {',
+            '=   if (hash == 0 && value.length > 0) hash = calc();',
+            '=   return hash; // cached forever',
+            '  }',
+            '}',
+          ]),
           caller1: d(-11, -4, { s: 3.8, h: 42, color: 'teal', glyph: 'cpu', label: ['Thread 1'], sub: 'hashCode() call' }),
           str_inst: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'shield', label: ['Immutable String'], sub: 'hash: 0x2f8a4' }),
           caller2: d(11, -4, { s: 3.8, h: 42, color: 'teal', glyph: 'cpu', label: ['Thread 2'], sub: 'Reads cached hash' }),
@@ -130,6 +153,13 @@ export const javaStringPoolLesson = {
       metrics: { heap_strings: 'Compact', pooled_strings: '1-byte per char', cached_hashes: 'coder=0', bytes_saved: '50% Heap', intern_time: '0ns' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Compact Strings (Java 9+ Layout)', [
+            '# LATIN1: 1 byte per char | UTF16: 2 bytes per char',
+            'byte coder = LATIN1; // 0 for ISO-8859-1 / ASCII',
+            '= byte[] val = "hello".getBytes(); // length: 5 bytes',
+            '! byte[] utf = "xin chào".getBytes(); // coder = UTF16 (1)',
+            '# Saves up to 45% heap memory in production apps',
+          ]),
           ascii_str: d(-11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'file', label: ['Latin1 String'], sub: 'coder=0 (1B/char)' }),
           memory: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['Compact Storage'], sub: 'byte[] payload' }),
           cjk_str: d(11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'file', label: ['UTF-16 String'], sub: 'coder=1 (2B/char)' }),
@@ -155,6 +185,13 @@ export const javaStringPoolLesson = {
       metrics: { heap_strings: 'Zero Temp', pooled_strings: 'Optimized', cached_hashes: 'Direct copy', bytes_saved: 'Zero Alloc', intern_time: 'JIT Inline' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Indy String Concat (Java 9+)', [
+            'String res = "id:" + userId + ", score:" + score;',
+            '# Bytecode generated by javac (JEP 280):',
+            '= invokedynamic #bootstrap:makeConcatWithConstants(',
+            '=   "\u0001,\u0001", userId, score',
+            '  ); // zero intermediate StringBuilder allocs',
+          ]),
           src: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['a + b + c'], sub: 'Bytecode' }),
           factory: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['StringConcatFactory'], sub: 'invokedynamic' }),
           result: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'shield', label: ['Single byte[]'], sub: 'Direct Allocation' }),

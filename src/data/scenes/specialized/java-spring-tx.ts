@@ -33,11 +33,11 @@ export const javaSpringTxLesson = {
   metrics: ['tx_state', 'active_propagation', 'sync_manager_status', 'connection_bound', 'rollback_status'],
   legend: ['req', 'res', ['ping', 'tx boundaries'], 'fail'],
   goals: [
-    { text: 'AOP Proxy Interception', step: 1 },
-    { text: 'TransactionSynchronizationManager', step: 2 },
-    { text: 'Propagation REQUIRED vs REQUIRES_NEW', step: 3 },
-    { text: 'Self-Invocation Pitfall', step: 4 },
-    { text: 'Rollback Semantics', step: 5 },
+    { text: 'AOP proxy interception & TransactionInterceptor', step: 0 },
+    { text: 'TransactionSynchronizationManager ThreadLocal binding', step: 1 },
+    { text: 'Propagation REQUIRED vs REQUIRES_NEW boundaries', step: 2 },
+    { text: 'Self-invocation proxy bypass trap', step: 3 },
+    { text: 'Rollback semantics & checked exception rules', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,17 @@ export const javaSpringTxLesson = {
       metrics: { tx_state: 'NEW_TX_BEGUN', active_propagation: 'PROPAGATION_REQUIRED', sync_manager_status: 'Active', connection_bound: 'HikariCP-1 (autoCommit=false)', rollback_status: 'None' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, '@Transactional Proxy Interception', [
+            '@Service',
+            'public class OrderService {',
+            '= @Transactional',
+            '= public void placeOrder(Order order) {',
+            '=   // TransactionInterceptor begins JDBC tx before method',
+            '    repo.save(order);',
+            '=   // Commits tx on success; rolls back on RuntimeException',
+            '  }',
+            '}',
+          ]),
           caller: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['OrderController'], sub: 'Invokes createOrder()' }),
           tx_proxy: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['TransactionInterceptor'], sub: 'Begins DB Transaction' }),
           hikari_conn: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'storage', label: ['DB Connection'], sub: 'autoCommit = false' }),
@@ -78,6 +89,13 @@ export const javaSpringTxLesson = {
       metrics: { tx_state: 'BOUND_TO_THREAD', active_propagation: 'PROPAGATION_REQUIRED', sync_manager_status: 'ThreadLocal[ConnectionHolder]', connection_bound: 'HikariCP-1', rollback_status: 'None' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'TransactionSynchronizationManager', [
+            '// Binds active Connection to current thread ThreadLocal map:',
+            '= ConnectionHolder holder = (ConnectionHolder)',
+            '=   TransactionSynchronizationManager.getResource(dataSource);',
+            'Connection con = holder.getConnection();',
+            '# Guarantees multiple repositories in same thread share 1 DB transaction',
+          ]),
           sync_mgr: d(-11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['TxSyncManager'], sub: 'ThreadLocal Storage' }),
           dao_order: d(0, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['OrderRepository'], sub: 'Uses Bound Connection' }),
           dao_inventory: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'code', label: ['InventoryRepository'], sub: 'Uses Same Connection' }),
@@ -104,6 +122,15 @@ export const javaSpringTxLesson = {
       metrics: { tx_state: 'SUSPENDED & NESTED', active_propagation: 'REQUIRES_NEW', sync_manager_status: 'Suspended parent tx', connection_bound: 'HikariCP-1 & HikariCP-2', rollback_status: 'Independent' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'REQUIRED vs REQUIRES_NEW Propagation', [
+            '= @Transactional(propagation = Propagation.REQUIRED)',
+            'public void createOrder() {',
+            '  orderRepo.save();',
+            '= auditService.logAudit(); // REQUIRES_NEW suspends current tx',
+            '}',
+            '= @Transactional(propagation = Propagation.REQUIRES_NEW)',
+            'public void logAudit() { auditRepo.save(); } // independent commit',
+          ]),
           parent_tx: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'server', label: ['Parent Tx (REQUIRED)'], sub: 'State: SUSPENDED' }),
           nested_tx: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['AuditService (REQUIRES_NEW)'], sub: 'State: ACTIVE (2nd Conn)' }),
           db_cluster: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'storage', label: ['PostgreSQL Database'], sub: 'Two Concurrent Tx IDs' }),
@@ -130,6 +157,14 @@ export const javaSpringTxLesson = {
       metrics: { tx_state: 'NO_TX (BYPASS)', active_propagation: 'NONE', sync_manager_status: 'Unregistered', connection_bound: 'AutoCommit = true', rollback_status: 'No rollback possible' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Self-Invocation Pitfall (No Proxy)', [
+            'public void outerMethod() {',
+            '! this.innerTransactional(); // BYPASSES Spring AOP Proxy!',
+            '! // No transaction is started because "this" is raw target object',
+            '}',
+            '= // Fix 1: Inject self via @Autowired OrderService self;',
+            '= // Fix 2: Extract innerTransactional() into separate @Service',
+          ]),
           proxy_wrapper: d(-11, -4, { s: 3.8, h: 42, color: 'gray', glyph: 'workflow', label: ['Spring AOP Proxy'], sub: 'Bypassed by this.call()' }),
           target_obj: d(0, -4, { s: 3.8, h: 42, color: 'red', glyph: 'server', label: ['Raw OrderService Instance'], sub: 'this.internalTx()' }),
           database: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'storage', label: ['Database Table'], sub: 'Auto-committed partial data' }),
@@ -155,6 +190,15 @@ export const javaSpringTxLesson = {
       metrics: { tx_state: 'ROLLED_BACK', active_propagation: 'PROPAGATION_REQUIRED', sync_manager_status: 'Cleaned up', connection_bound: 'connection.rollback()', rollback_status: 'Triggered by Exception' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Rollback Semantics & Checked Exceptions', [
+            '= // Default: rolls back on RuntimeException and Error, NOT Checked:',
+            '= @Transactional(rollbackFor = Exception.class)',
+            'public void updateAccount() throws InsufficientBalanceException {',
+            '  if (balance < amount)',
+            '!   throw new InsufficientBalanceException("Low balance"); // rolls back!',
+            '}',
+            '# Always specify rollbackFor = Exception.class for business exceptions',
+          ]),
           error_throw: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'alert', label: ['PaymentException'], sub: 'RuntimeException thrown' }),
           interceptor: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['TransactionInterceptor'], sub: 'completeTransactionAfterThrowing()' }),
           db_rollback: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'storage', label: ['DB Connection'], sub: 'ROLLBACK executed' }),

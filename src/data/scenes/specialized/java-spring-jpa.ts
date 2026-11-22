@@ -3,6 +3,7 @@
 import {
   makeBlock as d,
   makeLink as h,
+  makePanel as S,
   makeDb as b,
   makeDevice as y,
 } from '@/lib/simulator/scene-builders';
@@ -15,9 +16,9 @@ export const javaSpringJpaLesson = {
   level: 'intermediate',
   metrics: ['persistenceContext', 'queriesFired', 'cacheHitRate', 'fetchStrategy'],
   goals: [
-    { text: 'Trace JPA Persistence Context,', step: 1 },
-    { text: 'Diagnose N+1 Select queries caused', step: 2 },
-    { text: 'Eliminate N+1 queries using JOIN', step: 3 },
+    { text: 'EntityManager 1st-level cache & dirty checking', step: 0 },
+    { text: 'The N+1 select query explosion problem', step: 1 },
+    { text: 'JOIN FETCH & @EntityGraph single round-trip fix', step: 2 },
   ],
   steps: [
     {
@@ -32,6 +33,15 @@ export const javaSpringJpaLesson = {
       metrics: { persistenceContext: 'Active (Transactional)', queriesFired: '1 SELECT', cacheHitRate: '100% on repeated ID', fetchStrategy: '1st Level Cached' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, '1st-Level Cache & Dirty Checking', [
+            '@Transactional',
+            'public void updateEmail(Long id, String email) {',
+            '= User user = entityManager.find(User.class, id); // 1st-level cache hit',
+            '= user.setEmail(email); // Mutates managed entity in memory',
+            '# No repo.save() needed: Hibernate takes initial snapshot,',
+            '= // Automatically executes UPDATE sql on transaction commit flush',
+            '}',
+          ]),
           app:   y(-12, -4, { label: 'Application Code', tags: [{ text: 'user.setName("New")', icon: 'code' }] }),
           ctx:   d(-2, -4,  { color: 'blue', glyph: 'layers', label: ['Persistence'], sub: '1st Level Cache' }),
           db:    b(10, -4,  { label: 'PostgreSQL DB', tags: [{ text: 'auto UPDATE at commit', tone: 'green' }] }),
@@ -57,6 +67,15 @@ export const javaSpringJpaLesson = {
       metrics: { persistenceContext: 'Flooded', queriesFired: '1 + N Queries (101 SQLs)', cacheHitRate: '0% on lazy proxies', fetchStrategy: 'FetchType.LAZY Loop' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'The N+1 Select Query Trap', [
+            '// 1 query fetches 100 Authors:',
+            '= List<Author> authors = authorRepo.findAll(); // Query 1',
+            'for (Author a : authors) {',
+            '! // LAZY loading fires 1 query per author: 100 extra queries!',
+            '! System.out.println(a.getBooks().size()); // Queries 2..101',
+            '}',
+            '! Total queries: 1 + 100 = 101 queries! DB latency explodes!',
+          ]),
           loop:  y(-12, -4, { label: 'Order Loop', tags: [{ text: 'for (o : orders) o.getItems()', icon: 'zap' }] }),
           hib:   d(-2, -4,  { color: 'rose', glyph: 'alertTriangle', label: ['Hibernate'], sub: 'N Queries' }),
           db:    b(10, -4,  { label: 'PostgreSQL DB', cpu: 0.95, tags: [{ text: '101 Round Trips!', tone: 'bad' }] }),
@@ -82,6 +101,15 @@ export const javaSpringJpaLesson = {
       metrics: { persistenceContext: 'Optimized', queriesFired: '1 Single SQL Join', cacheHitRate: 'Instant Association', fetchStrategy: 'JOIN FETCH / Batch IN' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Resolution: JOIN FETCH / @EntityGraph', [
+            'public interface AuthorRepository extends JpaRepository<Author, Long> {',
+            '= // Executes single SQL JOIN query fetching Author AND Books:',
+            '= @Query("SELECT a FROM Author a JOIN FETCH a.books WHERE a.active = true")',
+            '= List<Author> findAllWithBooks();',
+            '# Or via @EntityGraph(attributePaths = {"books"})',
+            '= // Total queries: EXACTLY 1 QUERY! Zero N+1 overhead!',
+            '}',
+          ]),
           repo:  y(-12, -4, { label: 'Repository Call', tags: [{ text: 'findAllWithItems()', icon: 'zap' }] }),
           opt:   d(-2, -4,  { color: 'green', glyph: 'check', label: ['JOIN FETCH'], sub: '1 SQL Query' }),
           db:    b(10, -4,  { label: 'PostgreSQL DB', cpu: 0.15, tags: [{ text: '1 Query (Fast)', tone: 'green' }] }),

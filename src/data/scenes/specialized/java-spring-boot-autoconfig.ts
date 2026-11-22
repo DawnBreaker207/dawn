@@ -33,11 +33,11 @@ export const javaSpringBootAutoconfigLesson = {
   metrics: ['boot_stage', 'candidates_loaded', 'conditions_evaluated', 'beans_registered', 'startup_time_ms'],
   legend: ['req', 'res', ['ping', 'condition evaluation'], 'fail'],
   goals: [
-    { text: '@SpringBootApplication', step: 1 },
-    { text: 'AutoConfigurationImportSelector', step: 2 },
-    { text: 'Conditional Annotations', step: 3 },
-    { text: 'Configuration Phase Ordering', step: 4 },
-    { text: 'Startup Diagnostics', step: 5 },
+    { text: '@SpringBootApplication meta-annotation decomposition', step: 0 },
+    { text: 'AutoConfiguration import discovery mechanism', step: 1 },
+    { text: '@ConditionalOnClass and @ConditionalOnMissingBean', step: 2 },
+    { text: 'AutoConfiguration phase ordering directives', step: 3 },
+    { text: 'ConditionEvaluationReport & startup diagnostics', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,12 @@ export const javaSpringBootAutoconfigLesson = {
       metrics: { boot_stage: 'Context Bootstrap', candidates_loaded: '0', conditions_evaluated: '0', beans_registered: 'User Beans Scanned', startup_time_ms: '150ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, '@SpringBootApplication Decomposition', [
+            '@SpringBootApplication // Metapackage combining 3 annotations:',
+            '= @SpringBootConfiguration // Specialized @Configuration',
+            '= @EnableAutoConfiguration // Triggers AutoConfigurationImportSelector',
+            '= @ComponentScan           // Scans current package for @Component, @Service',
+          ]),
           app_entry: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['Application.java'], sub: '@SpringBootApplication' }),
           component_scan: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'workflow', label: ['@ComponentScan'], sub: 'User Services & Repos' }),
           enable_auto: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['@EnableAutoConfig'], sub: 'Triggers ImportSelector' }),
@@ -78,6 +84,13 @@ export const javaSpringBootAutoconfigLesson = {
       metrics: { boot_stage: 'Candidate Discovery', candidates_loaded: '142 candidates', conditions_evaluated: 'Pending', beans_registered: 'User Beans Only', startup_time_ms: '380ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'AutoConfiguration Discovery', [
+            '# Spring Boot 3 reads auto-configurations from file:',
+            '= META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports',
+            '// Example entries loaded by AutoConfigurationImportSelector:',
+            'org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration',
+            'org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration',
+          ]),
           selector: d(-11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['ImportSelector'], sub: 'AutoConfig Engine' }),
           imports_file: d(0, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'storage', label: ['AutoConfiguration.imports'], sub: 'Classpath Manifests' }),
           candidate_list: d(11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'code', label: ['Candidate Classes (142)'], sub: 'DataSource, Redis, MVC...' }),
@@ -103,6 +116,14 @@ export const javaSpringBootAutoconfigLesson = {
       metrics: { boot_stage: 'Condition Evaluation', candidates_loaded: '142 candidates', conditions_evaluated: '38 matched / 104 skipped', beans_registered: 'Auto-configured beans active', startup_time_ms: '620ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, '@Conditional Filtering Guards', [
+            '@AutoConfiguration',
+            '= @ConditionalOnClass({ DataSource.class, EmbeddedDatabaseType.class })',
+            '= @ConditionalOnMissingBean(DataSource.class)',
+            'public class DataSourceAutoConfiguration {',
+            '= @Bean public DataSource dataSource() { return createHikari(); }',
+            '} // Only activates if DataSource is on classpath and user defined none!',
+          ]),
           evaluator: d(-11, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'cpu', label: ['ConditionEvaluator'], sub: 'Inspects Classpath & IoC' }),
           passed_cfg: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['Positive Matches (38)'], sub: 'DataSourceAutoConfig' }),
           skipped_cfg: d(11, -4, { s: 3.8, h: 42, color: 'gray', glyph: 'storage', label: ['Negative Matches (104)'], sub: 'Cassandra, Redis (Skipped)' }),
@@ -128,6 +149,14 @@ export const javaSpringBootAutoconfigLesson = {
       metrics: { boot_stage: 'DAG Topological Sort', candidates_loaded: '38 ordered', conditions_evaluated: 'Complete', beans_registered: 'Dependencies ordered', startup_time_ms: '850ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'AutoConfiguration Ordering Directives', [
+            '@AutoConfiguration(',
+            '= after = DataSourceAutoConfiguration.class,',
+            '= before = HibernateJpaAutoConfiguration.class',
+            ')',
+            'public class MyCustomDbAutoConfiguration { ... }',
+            '# Guarantees prerequisites are registered before dependent beans',
+          ]),
           datasource_cfg: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'storage', label: ['DataSourceAutoConfig'], sub: 'Step 1: HikariPool Bean' }),
           jpa_cfg: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'server', label: ['JpaAutoConfig'], sub: 'Step 2: EntityManagerFactory' }),
           tx_cfg: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'workflow', label: ['TransactionAutoConfig'], sub: 'Step 3: PlatformTxManager' }),
@@ -153,6 +182,14 @@ export const javaSpringBootAutoconfigLesson = {
       metrics: { boot_stage: 'Startup Complete', candidates_loaded: '142', conditions_evaluated: '100% Done', beans_registered: 'Ready for traffic', startup_time_ms: '1,240ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'ConditionEvaluationReport (--debug)', [
+            '# Run app with: java -jar app.jar --debug',
+            '= ============================',
+            '= CONDITIONS EVALUATION REPORT',
+            '= ============================',
+            '= Positive matches: DataSourceAutoConfiguration matched on Class HikariCP',
+            '! Negative matches: RedisAutoConfiguration did not find RedisConnectionFactory',
+          ]),
           cli_flag: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['--debug Flag'], sub: 'Diagnostic Trigger' }),
           report_engine: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['ConditionEvaluationReport'], sub: 'Full Audit Trail' }),
           console_out: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'cpu', label: ['Positive / Negative Log'], sub: 'Explains every bean' }),

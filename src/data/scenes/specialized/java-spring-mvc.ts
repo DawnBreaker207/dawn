@@ -33,11 +33,11 @@ export const javaSpringMvcLesson = {
   metrics: ['pipeline_stage', 'active_handler', 'interceptors_executed', 'response_status', 'serialization_time'],
   legend: ['req', 'res', ['ping', 'internal delegation'], 'fail'],
   goals: [
-    { text: 'Front Controller', step: 1 },
-    { text: 'HandlerMapping & Interceptors', step: 2 },
-    { text: 'HandlerAdapter & Method Invocation', step: 3 },
-    { text: 'HttpMessageConverters & @ResponseBody', step: 4 },
-    { text: '@ControllerAdvice & Global Exception', step: 5 },
+    { text: 'DispatcherServlet front controller lifecycle', step: 0 },
+    { text: 'HandlerMapping & HandlerExecutionChain interceptors', step: 1 },
+    { text: 'HandlerAdapter & ArgumentResolver binding', step: 2 },
+    { text: 'HttpMessageConverter JSON serialization', step: 3 },
+    { text: '@ControllerAdvice & RFC 7807 error format', step: 4 },
   ],
   steps: [
     {
@@ -52,6 +52,15 @@ export const javaSpringMvcLesson = {
       metrics: { pipeline_stage: 'DispatcherServlet.doDispatch()', active_handler: 'None (routing)', interceptors_executed: '0', response_status: '200 OK pending', serialization_time: '0ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'DispatcherServlet doDispatch() Loop', [
+            '// Core Front Controller orchestrator method:',
+            '= protected void doDispatch(HttpServletRequest req, HttpServletResponse res) {',
+            '=   HandlerExecutionChain chain = getHandler(req); // HandlerMapping',
+            '=   HandlerAdapter ha = getHandlerAdapter(chain.getHandler());',
+            '=   chain.applyPreHandle(req, res); // Interceptors preHandle()',
+            '=   ModelAndView mv = ha.handle(req, res, chain.getHandler());',
+            '= }',
+          ]),
           client: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'cloud', label: ['HTTP Client'], sub: 'POST /api/v1/orders' }),
           dispatcher: d(0, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['DispatcherServlet'], sub: 'Front Controller' }),
           handler_registry: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'storage', label: ['HandlerMapping Registry'], sub: 'URL -> Handler Method' }),
@@ -78,6 +87,16 @@ export const javaSpringMvcLesson = {
       metrics: { pipeline_stage: 'HandlerExecutionChain.applyPreHandle()', active_handler: 'OrderController#createOrder', interceptors_executed: 'Auth, RateLimit (2)', response_status: '200 OK pending', serialization_time: '0ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'RequestMappingHandlerMapping Routing', [
+            '@RestController',
+            '@RequestMapping("/api/users")',
+            'public class UserController {',
+            '= @GetMapping("/{id}") // Maps GET /api/users/{id}',
+            '= public User getUser(@PathVariable Long id) {',
+            '    return userService.findById(id);',
+            '  }',
+            '}',
+          ]),
           dispatcher: d(-11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['DispatcherServlet'], sub: 'Coordinates Chain' }),
           interceptor: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['HandlerInterceptors'], sub: 'preHandle() chain' }),
           controller: d(11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'code', label: ['OrderController'], sub: 'Target @RestController' }),
@@ -103,6 +122,13 @@ export const javaSpringMvcLesson = {
       metrics: { pipeline_stage: 'HandlerAdapter.handle()', active_handler: 'InvocableHandlerMethod', interceptors_executed: '2', response_status: '200 OK processing', serialization_time: '1.2ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'HandlerMethodArgumentResolver Binding', [
+            '// Resolves controller method parameters dynamically:',
+            '= public boolean supportsParameter(MethodParameter param);',
+            '= public Object resolveArgument(MethodParameter param, ...);',
+            '# Resolves @PathVariable, @RequestParam, @RequestBody (Jackson JSON)',
+            '# Automatically triggers @Valid validation',
+          ]),
           adapter: d(-11, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'workflow', label: ['HandlerAdapter'], sub: 'InvocableMethod' }),
           resolvers: d(0, -4, { s: 3.8, h: 42, color: 'green', glyph: 'cpu', label: ['ArgumentResolvers'], sub: '@RequestBody, @Valid' }),
           business_svc: d(11, -4, { s: 3.8, h: 42, color: 'purple', glyph: 'server', label: ['OrderService'], sub: 'Domain Logic' }),
@@ -129,6 +155,13 @@ export const javaSpringMvcLesson = {
       metrics: { pipeline_stage: 'HttpMessageConverter.write()', active_handler: 'Jackson ObjectMapper', interceptors_executed: 'afterCompletion() (2)', response_status: '201 Created', serialization_time: '0.8ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'MappingJackson2HttpMessageConverter', [
+            '// Serializes Java POJO into HTTP JSON response body:',
+            '= @ResponseBody',
+            'public UserDto getUser() { return new UserDto("dawn", "dev"); }',
+            '# Jackson ObjectMapper serializes fields -> writes to OutputStream',
+            '# Sets Content-Type: application/json;charset=UTF-8 header',
+          ]),
           converter: d(-11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'workflow', label: ['JacksonConverter'], sub: 'POJO -> JSON Bytes' }),
           response_stream: d(0, -4, { s: 3.8, h: 42, color: 'blue', glyph: 'server', label: ['Servlet OutputStream'], sub: 'Buffer flush' }),
           client: d(11, -4, { s: 3.8, h: 42, color: 'cyan', glyph: 'cloud', label: ['HTTP Client'], sub: 'Receives 201 Created' }),
@@ -154,6 +187,16 @@ export const javaSpringMvcLesson = {
       metrics: { pipeline_stage: 'HandlerExceptionResolver', active_handler: 'GlobalExceptionHandler', interceptors_executed: 'afterCompletion(ex)', response_status: '400 Bad Request', serialization_time: '0.5ms' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, '@RestControllerAdvice Global Handling', [
+            '@RestControllerAdvice',
+            'public class GlobalExceptionHandler {',
+            '= @ExceptionHandler(ResourceNotFoundException.class)',
+            '= @ResponseStatus(HttpStatus.NOT_FOUND)',
+            '= public ProblemDetail handleNotFound(ResourceNotFoundException ex) {',
+            '=   return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());',
+            '= } // RFC 7807 standardized API error format',
+            '}',
+          ]),
           thrown_err: d(-11, -4, { s: 3.8, h: 42, color: 'red', glyph: 'alert', label: ['MethodArgumentNotValid'], sub: 'Validation Thrown' }),
           advice: d(0, -4, { s: 3.8, h: 42, color: 'orange', glyph: 'workflow', label: ['@RestControllerAdvice'], sub: 'Global Exception Handler' }),
           rfc_res: d(11, -4, { s: 3.8, h: 42, color: 'green', glyph: 'code', label: ['ProblemDetail (RFC 7807)'], sub: '400 Bad Request Payload' }),

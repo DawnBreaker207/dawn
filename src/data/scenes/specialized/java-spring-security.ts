@@ -3,6 +3,7 @@
 import {
   makeBlock as d,
   makeLink as h,
+  makePanel as S,
   makeDevice as y,
 } from '@/lib/simulator/scene-builders';
 
@@ -14,9 +15,9 @@ export const javaSpringSecurityLesson = {
   level: 'intermediate',
   metrics: ['authStatus', 'tokenType', 'principal', 'authorities'],
   goals: [
-    { text: 'DelegatingFilterProxy Pipeline', step: 1 },
-    { text: 'JWT Token Validation Filter', step: 2 },
-    { text: 'SecurityContextHolder Auth State', step: 3 },
+    { text: 'SecurityFilterChain & DelegatingFilterProxy', step: 0 },
+    { text: 'Method security (@PreAuthorize) expression evaluation', step: 1 },
+    { text: 'SecurityContextHolder ThreadLocal storage strategies', step: 2 },
   ],
   steps: [
     {
@@ -31,6 +32,20 @@ export const javaSpringSecurityLesson = {
       metrics: { authStatus: 'INSPECTING', tokenType: 'Bearer JWT', principal: 'anonymousUser', authorities: 'NONE' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'SecurityFilterChain Configuration', [
+            '@Configuration @EnableWebSecurity',
+            'public class SecurityConfig {',
+            '= @Bean public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {',
+            '=   return http',
+            '=     .csrf(csrf -> csrf.disable())',
+            '=     .authorizeHttpRequests(auth -> auth',
+            '=       .requestMatchers("/api/public/**").permitAll()',
+            '=       .anyRequest().authenticated()',
+            '=     ).oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))',
+            '=     .build();',
+            '  }',
+            '}',
+          ]),
           client: y(-11, -8, { label: 'HTTP Request', tags: [{ text: 'Authorization: Bearer', icon: 'lock' }] }),
           filter: d(-2, -8,  { color: 'purple', glyph: 'shield', label: ['JwtAuthFilter'], sub: 'OncePerRequest' }),
           authMgr: d(-2, 4,  { color: 'orange', glyph: 'check', label: ['AuthManager'], sub: 'JwtProvider' }),
@@ -58,6 +73,16 @@ export const javaSpringSecurityLesson = {
       metrics: { authStatus: 'AUTHENTICATED', tokenType: 'JWT Valid', principal: 'user@dawn.dev', authorities: 'ROLE_ADMIN' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'Method Security & SpEL Expressions', [
+            '@EnableMethodSecurity',
+            '@Service',
+            'public class DocumentService {',
+            '= @PreAuthorize("hasRole(\'ADMIN\') or #doc.owner == authentication.name")',
+            '= public void deleteDocument(Document doc) {',
+            '=   documentRepo.delete(doc);',
+            '  }',
+            '} // Intercepted via MethodSecurityInterceptor before execution',
+          ]),
           secCtx:     d(-11, -2, { color: 'green', glyph: 'layers', label: ['SecurityContext'], sub: 'ROLE_ADMIN' }),
           dispatcher: d(-2, -2,  { color: 'blue', glyph: 'code', label: ['Dispatcher'], sub: 'Spring MVC' }),
           endpoint:   d(9, -2,   { color: 'purple', glyph: 'shield', label: ['AdminController'], sub: '@PreAuthorize' }),
@@ -83,6 +108,15 @@ export const javaSpringSecurityLesson = {
       metrics: { authStatus: 'AUTHORIZED', tokenType: 'JWT Validated', principal: 'user@dawn.dev', authorities: 'ACCESS_GRANTED' },
       scene: {
         entities: {
+          card: S({ x: -4, y: 14 }, 'SecurityContextHolder Access', [
+            '// Reading authenticated principal in current thread:',
+            '= SecurityContext context = SecurityContextHolder.getContext();',
+            '= Authentication auth = context.getAuthentication();',
+            '= String username = auth.getName();',
+            '= Collection<? extends GrantedAuthority> roles = auth.getAuthorities();',
+            '# MODE_THREADLOCAL: default for standard servlet threads',
+            '# MODE_INHERITABLETHREADLOCAL: passes context to child worker threads',
+          ]),
           token:   d(-12, -4, { color: 'green', glyph: 'check', label: ['Auth Token'], sub: 'Principal' }),
           holder:  d(-2, -4,  { color: 'blue', glyph: 'layers', label: ['ContextHolder'], sub: 'ThreadLocal' }),
           service: d(10, -4,  { color: 'purple', glyph: 'shield', label: ['Protected Service'], sub: 'Access Granted' }),
