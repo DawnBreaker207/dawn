@@ -458,19 +458,35 @@ Requirements:
 ### DTS Isometric 2.5D Diagram Rules (MANDATORY FOR ALL SCENE GRAPHS)
 
 > [!IMPORTANT]
-> **READ PLAN FIRST:** Before implementing any new scene or refactoring existing ones, always consult [lab-workbench-plan.md](file:///D:/Code/Blog/lab-workbench-plan.md) (Sections 10 to 15). The plan contains the complete architecture, concept-to-visual conversion formulas, milestone steps, and topic allocations for all 104 lessons.
+> **SINGLE SOURCE OF TRUTH:** This section contains the complete architectural rules, concept-to-visual conversion formulas, projection mathematics, and visual specifications for all 108 DTS simulation scene graphs across all 10 canonical tracks. No external plan files are required.
 
 All architectural simulation scenes (`src/data/scenes/*`) render on a dimetric 2.5D isometric SVG canvas.
 To prevent blocks from overlapping, colliding, or having unreadable cramped link arrows, every scene MUST strictly obey these rules:
 
-#### 1. Projection Math & Distance Thresholds
+#### 1. Projection Math, Depth Sorting & Layering (Painter's Algorithm)
 The engine maps 3D coordinates `(x, y, z)` to 2D screen pixels `(sx, sy)` via:
 $$\begin{cases} sx = 14 \times (x + y) \\ sy = 7 \times (x - y) - z \end{cases}$$
+- **World Unit:** 1 grid unit = 28 screen pixels width $\times$ 14 screen pixels height (diamond tile).
+- **Depth Sorting (Painter's Algorithm):** To eliminate visual clipping and guarantee proper z-ordering:
+  | Entity Category | Depth Key | Visual Rendering Behavior |
+  |---|:---:|---|
+  | **`zone`, `ring`** | `-10000` | Flat floor boundary; always rendered first below all nodes |
+  | **`queue`** | `-1000` | Horizontal message queue cylinder; renders below blocks, above zones |
+  | **`block`, `db`, `device`** | `x - y` | Natural isometric depth; nodes with smaller $(x - y)$ sort behind |
+  | **`panel`** | `+10000` | Screen-space HUD card; always rendered on top of canvas |
 
-- **CRITICAL OVERLAP THRESHOLD ($D < 90\text{px}$):** **STRICTLY FORBIDDEN.** Blocks intersect or touch faces.
-- **CROWDED THRESHOLD ($90\text{px} \le D < 125\text{px}$):** Discouraged. Link arrows become cramped.
-- **SAFE / HEALTHY DISTANCE ($D \ge 125\text{px}$):** Required for all major compute blocks, databases, and gateways.
-- **THE EXPANSION RULE (Kéo giãn khoảng cách):** When an element has tags, badge labels, or connects multiple links, default to expanding distance ($D \ge 160\sim 190\text{px}$) to avoid visual clutter.
+- **Lighting & Face Luminance Model:**
+  Isometric blocks feature 3 distinct faces shaded for crisp 3D contrast:
+  - **Top face:** Brightest ($\approx 100\%$ base color luminance)
+  - **Right face:** Medium ($\approx 80\%$ base color luminance)
+  - **Left face:** Darkest ($\approx 65\%$ base color luminance)
+  - **Device / Server Rack:** Same shading, enter lift = $40\text{px}$ (blocks enter lift = $120\text{px}$).
+
+- **Distance Thresholds:**
+  - **CRITICAL OVERLAP THRESHOLD ($D < 90\text{px}$):** **STRICTLY FORBIDDEN.** Blocks intersect or touch faces.
+  - **CROWDED THRESHOLD ($90\text{px} \le D < 125\text{px}$):** Discouraged. Link arrows become cramped.
+  - **SAFE / HEALTHY DISTANCE ($D \ge 125\text{px}$):** Required for all major compute blocks, databases, and gateways.
+  - **THE EXPANSION RULE (Kéo giãn khoảng cách):** When an element has tags, badge labels, or connects multiple links, default to expanding distance ($D \ge 160\sim 190\text{px}$) to avoid visual clutter.
 
 #### 2. The Standard 4-Tier Layout Grid
 Never invent arbitrary `(x, y)` coordinates. Assign components to these architectural tiers:
@@ -642,7 +658,6 @@ Một panel có giá trị cao khi nó cung cấp một **vật phẩm kỹ thu�
   *Gate:* 0 critical overlaps ($D < 90\text{px}$), 0 crowded pairs ($D < 125\text{px}$), all goals hit with `gap >= 7px`, 0 console errors, full frame visibility.
 - **Pre-Commit Validation:**
   ```bash
-  node scripts/lint-scenes.mjs
   node scripts/audit-all-diagrams.mjs
   cmd /c npm run build
   ```
@@ -678,6 +693,20 @@ All interactive simulation labs across all 8 canonical domains are unified under
 
 3. **Step Transition State Sync:**
    - All visual transitions, animated packet pulses, and floating cards listen exclusively to the global `wb:step-change` event dispatched by `SimulationWorkbench.astro`.
+
+#### 12. Transition Animation Engine Timings & Tween Lifecycle
+Every step transition in `StageEngine` executes across three overlapping lifecycle phases:
+$$\text{exits} \longrightarrow \text{moves} \longrightarrow \text{enters}$$
+- **Engine Timing Constants (in milliseconds):**
+  - **`exit` = 420ms:** Node and label fade-out / fall animation.
+  - **`move` = 820ms:** Node spatial coordinate tween (`(x, y, z)` interpolation along isometric grid).
+  - **`enter` = 680ms:** New node fade-in and drop-down from enter-lift height ($120\text{px}$ for blocks, $40\text{px}$ for heavy devices).
+  - **`draw` = 560ms:** Link path SVG line-draw interpolation (`i.tween = { from: 0, to: 1, key: 'draw' }`).
+  - **`stagger` = 130ms:** Delay multiplier per staggered entity sequence.
+- **Phase Coordination Delays:**
+  - `exitPhaseDelay = exits.length ? exit * 0.55 : 0` ($\approx 231\text{ms}$)
+  - `enterPhaseDelay = enters.length ? (changed.length ? exitPhaseDelay + move * 0.75 : (exits.length ? exit * 0.7 : 0)) : 0`
+- **Result:** Transitions between diagram states feel fluid and cinematic rather than abrupt or jarring.
 
 ---
 

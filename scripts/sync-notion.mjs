@@ -174,9 +174,9 @@ async function syncProjects() {
     });
   }
 
-  const out = path.join(process.cwd(), 'projectsData.json');
+  const out = path.join(process.cwd(), 'src', 'data', 'projectsData.json');
   fs.writeFileSync(out, JSON.stringify(items, null, 2) + '\n');
-  console.log(`✅ Synced ${items.length} projects -> projectsData.json`);
+  console.log(`✅ Synced ${items.length} projects -> src/data/projectsData.json`);
 }
 
 // ---------------------------------------------------------------------------
