@@ -28,7 +28,7 @@ export const aiAgentArchitectureLesson = {
       ],
       scene: {
         entities: {
-          llmCore: makeBlock(0, 0, { s: 5.5, h: 48, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Next-Token Core'] }),
+          llmCore: makeBlock(0, 0, { s: 5.6, h: 54, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Next-Token Core'] }),
           card: makePanel({ x: -12, y: 12 }, '1. Naked LLM Core', [
             '# Raw statistical engine',
             'response = llm.predict(prompt)',
@@ -49,7 +49,7 @@ export const aiAgentArchitectureLesson = {
       scene: {
         entities: {
           ragZone: makeZone({ x0: -11, x1: 11, y0: -11, y1: 11 }, 'Layer 2: RAG & Context Buffer', { color: 'blue' }),
-          llmCore: makeBlock(0, 0, { s: 5.2, h: 48, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Augmented Prompt'] }),
+          llmCore: makeBlock(0, 0, { s: 5.6, h: 54, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Augmented Prompt'] }),
           vectorDb: makeDb(-9, 9, { r: 2.6, h: 36, color: 'store', label: ['Vector Store', 'ChromaDB'] }),
           card: makePanel({ x: -12, y: 13 }, '2. RAG Context Injection', [
             '# Grounding in proprietary facts',
@@ -74,9 +74,9 @@ export const aiAgentArchitectureLesson = {
         entities: {
           mcpZone: makeZone({ x0: -13, x1: 13, y0: -13, y1: 13 }, 'Layer 3: MCP Tool Interface (USB-C)', { color: 'orange' }),
           ragZone: makeZone({ x0: -7, x1: 7, y0: -7, y1: 7 }, 'RAG Buffer', { color: 'blue' }),
-          llmCore: makeBlock(0, 0, { s: 5.0, h: 46, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Tool-Call Aware'] }),
-          fileSystemTool: makeBlock(-10, 4, { s: 4, h: 40, color: 'blue', label: ['Filesystem MCP', 'read / edit'] }),
-          terminalTool: makeBlock(10, -4, { s: 4, h: 40, color: 'green', label: ['Terminal MCP', 'run_command'] }),
+          llmCore: makeBlock(0, 0, { s: 5.6, h: 54, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Tool-Call Aware'] }),
+          fileSystemTool: makeBlock(-10, 4, { s: 4.4, h: 48, color: 'blue', label: ['Filesystem MCP', 'read / edit'] }),
+          terminalTool: makeBlock(10, -4, { s: 4.4, h: 48, color: 'green', label: ['Terminal MCP', 'run_command'] }),
           card: makePanel({ x: -12, y: 13 }, '3. MCP Tool Call Protocol', [
             '# Standardized JSON-RPC',
             '{"method": "tools/call",',
@@ -102,11 +102,11 @@ export const aiAgentArchitectureLesson = {
         entities: {
           reactZone: makeZone({ x0: -11, x1: 11, y0: -11, y1: 11 }, 'Layer 4: Cognitive ReAct Loop', { color: 'purple' }),
           mcpZone: makeZone({ x0: -6, x1: 6, y0: -6, y1: 6 }, 'Tool Core', { color: 'orange' }),
-          llmCore: makeBlock(0, 0, { s: 4.8, h: 44, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Controller'] }),
-          thinkNode: makeBlock(-9, -9, { s: 3.8, h: 38, color: 'purple', label: ['1. Think', 'Analyze Goal'] }),
-          actNode: makeBlock(9, -9, { s: 3.8, h: 38, color: 'orange', label: ['2. Act', 'Invoke Tool'] }),
-          observeNode: makeBlock(9, 9, { s: 3.8, h: 38, color: 'green', label: ['3. Observe', 'Capture Stdout'] }),
-          reflectNode: makeBlock(-9, 9, { s: 3.8, h: 38, color: 'blue', label: ['4. Reflect', 'Self-Healing'] }),
+          llmCore: makeBlock(0, 0, { s: 5.4, h: 52, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Controller'] }),
+          thinkNode: makeBlock(-9, -9, { s: 4.2, h: 46, color: 'purple', label: ['1. Think', 'Analyze Goal'] }),
+          actNode: makeBlock(9, -9, { s: 4.2, h: 46, color: 'orange', label: ['2. Act', 'Invoke Tool'] }),
+          observeNode: makeBlock(9, 9, { s: 4.2, h: 46, color: 'green', label: ['3. Observe', 'Capture Stdout'] }),
+          reflectNode: makeBlock(-9, 9, { s: 4.2, h: 46, color: 'blue', label: ['4. Reflect', 'Self-Healing'] }),
           card: makePanel({ x: -13, y: 14 }, '4. ReAct Cycle', [
             'while not task_complete():',
             '  plan = think(state)',
@@ -134,9 +134,9 @@ export const aiAgentArchitectureLesson = {
         entities: {
           harnessZone: makeZone({ x0: -14, x1: 14, y0: -14, y1: 14 }, 'Layer 5: OS Sandbox & Safety Harness', { color: 'slab' }),
           reactZone: makeZone({ x0: -8, x1: 8, y0: -8, y1: 8 }, 'Agent Core Loop', { color: 'purple' }),
-          llmCore: makeBlock(0, 0, { s: 4.8, h: 44, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Sandboxed'] }),
-          guardrailGate: makeBlock(-12, -12, { s: 4, h: 40, color: 'orange', label: ['Security Gate', 'Seccomp & Policy'] }),
-          compactorNode: makeBlock(12, -12, { s: 4, h: 40, color: 'purple', label: ['Context Compactor', 'Prunes History'] }),
+          llmCore: makeBlock(0, 0, { s: 5.4, h: 52, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Sandboxed'] }),
+          guardrailGate: makeBlock(-12, -12, { s: 4.4, h: 48, color: 'orange', label: ['Security Gate', 'Seccomp & Policy'] }),
+          compactorNode: makeBlock(12, -12, { s: 4.4, h: 48, color: 'purple', label: ['Context Compactor', 'Prunes History'] }),
           card: makePanel({ x: -13, y: 14 }, '5. Safety Harness', [
             '# Guardrails and resource bounds',
             'if is_dangerous(cmd): intercept()',
@@ -160,9 +160,9 @@ export const aiAgentArchitectureLesson = {
       scene: {
         entities: {
           harnessZone: makeZone({ x0: -14, x1: 14, y0: -14, y1: 14 }, 'Layer 6: Skill Superpowers Orbit', { color: 'slab' }),
-          llmCore: makeBlock(0, 0, { s: 4.8, h: 44, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Skill Controller'] }),
-          browserSkill: makeBlock(-12, 0, { s: 4, h: 40, color: 'blue', label: ['Browser Skill', 'Playwright Runner'] }),
-          workflowSkill: makeBlock(12, 0, { s: 4, h: 40, color: 'green', label: ['Workflow Skill', 'Parallel Fan-Out'] }),
+          llmCore: makeBlock(0, 0, { s: 5.4, h: 52, color: 'purple', glyph: 'server', label: ['Foundation LLM', 'Skill Controller'] }),
+          browserSkill: makeBlock(-12, 0, { s: 4.4, h: 48, color: 'blue', label: ['Browser Skill', 'Playwright Runner'] }),
+          workflowSkill: makeBlock(12, 0, { s: 4.4, h: 48, color: 'green', label: ['Workflow Skill', 'Parallel Fan-Out'] }),
           card: makePanel({ x: -13, y: 14 }, '6. Dynamic Skills', [
             '# Loaded on-demand via SKILL.md',
             'if task == "verify_ui":',
@@ -187,8 +187,8 @@ export const aiAgentArchitectureLesson = {
       scene: {
         entities: {
           graphZone: makeZone({ x0: -15, x1: 15, y0: -15, y1: 15 }, 'Layer 7: LangGraph State Machine', { color: 'green' }),
-          llmCore: makeBlock(0, 0, { s: 4.8, h: 44, color: 'purple', glyph: 'server', label: ['Agent Node', 'FSM State'] }),
-          humanGate: makeBlock(0, -12, { s: 4.2, h: 42, color: 'orange', label: ['Human Approval Gate', 'Review Plan / Diff'] }),
+          llmCore: makeBlock(0, 0, { s: 5.4, h: 52, color: 'purple', glyph: 'server', label: ['Agent Node', 'FSM State'] }),
+          humanGate: makeBlock(0, -12, { s: 4.6, h: 50, color: 'orange', label: ['Human Approval Gate', 'Review Plan / Diff'] }),
           stateStore: makeDb(0, 12, { r: 2.6, h: 38, color: 'store', label: ['Checkpoint DB', 'Postgres State'] }),
           card: makePanel({ x: -13, y: 14 }, '7. Graph State Machine', [
             'class AgentState(TypedDict):',
@@ -214,10 +214,10 @@ export const aiAgentArchitectureLesson = {
       scene: {
         entities: {
           swarmZone: makeZone({ x0: -15, x1: 15, y0: -15, y1: 15 }, 'Layer 8: Multi-Agent Swarm Orbit', { color: 'purple' }),
-          llmCore: makeBlock(0, 0, { s: 5.2, h: 46, color: 'purple', glyph: 'balancer', label: ['Swarm Coordinator', 'Orchestrator'] }),
-          researchWorker: makeBlock(-12, -10, { s: 3.8, h: 38, color: 'blue', label: ['Worker: Research', 'Deep Retrieval'] }),
-          codeWorker: makeBlock(12, -10, { s: 3.8, h: 38, color: 'green', label: ['Worker: Coder', 'File Authoring'] }),
-          qaWorker: makeBlock(12, 10, { s: 3.8, h: 38, color: 'orange', label: ['Worker: Verifier', 'Linter & Tests'] }),
+          llmCore: makeBlock(0, 0, { s: 5.6, h: 54, color: 'purple', glyph: 'balancer', label: ['Swarm Coordinator', 'Orchestrator'] }),
+          researchWorker: makeBlock(-12, -10, { s: 4.2, h: 46, color: 'blue', label: ['Worker: Research', 'Deep Retrieval'] }),
+          codeWorker: makeBlock(12, -10, { s: 4.2, h: 46, color: 'green', label: ['Worker: Coder', 'File Authoring'] }),
+          qaWorker: makeBlock(12, 10, { s: 4.2, h: 46, color: 'orange', label: ['Worker: Verifier', 'Linter & Tests'] }),
           card: makePanel({ x: -13, y: 14 }, '8. Swarm Orchestration', [
             '# Multi-agent coordination',
             'coordinator.spawn(["research", "code"])',

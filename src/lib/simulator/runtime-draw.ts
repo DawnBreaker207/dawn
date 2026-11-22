@@ -405,7 +405,7 @@ function Zr(e) {
 
   let d = e.s >= 6 ? 1.15 : e.s < 3.5 ? 0.8 : 1,
     iconSize = e.s < 3.2 ? 17 : e.s < 3.8 ? 19 : 21,
-    iconY = wrappedLines.length ? o - 4 : o + 1,
+    iconY = wrappedLines.length ? o - 9 : o - 2,
     f = Yr[e.glyph]
       ? Yr[e.glyph](i, iconY, d)
       : e.glyph
@@ -417,7 +417,7 @@ function Zr(e) {
   let numLines = wrappedLines.length + (e.sub ? 1 : 0);
   let totalTextHeight = (numLines - 1) * lineSpacing;
 
-  let minStartY = e.glyph ? o + 7.5 : o + 3.5;
+  let minStartY = e.glyph ? o + 16.5 : o + 5;
   let maxStartY = (o + e.h) - totalTextHeight - 5;
   let idealCenter = o + (e.s * 14 * 0.35 + e.h) * 0.45;
   let startY = Math.max(minStartY, Math.min(maxStartY, idealCenter - totalTextHeight / 2));
