@@ -78,6 +78,7 @@ export default function CommandPalette({
   projects,
 }: PaletteProps): React.JSX.Element | null {
   const [open, setOpen] = useState(false);
+  const [maximized, setMaximized] = useState(false);
   const [input, setInput] = useState('');
   const [entries, setEntries] = useState<PaletteEntry[]>([]);
   const [historyPos, setHistoryPos] = useState(-1);
@@ -680,7 +681,7 @@ export default function CommandPalette({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'k' || e.key === '`')) {
         if (e.repeat) return;
         e.preventDefault();
         if (openRef.current) close();
@@ -721,12 +722,9 @@ export default function CommandPalette({
       const t = e.target;
       if (!(t instanceof Element)) return;
       if (t.closest('[data-open-terminal]')) {
+        e.preventDefault();
         openFromFooter(document.body as HTMLElement);
-        return;
       }
-      if (t.closest('a, button')) return;
-      const foot = t.closest('footer.studio-statusbar');
-      if (foot instanceof HTMLElement) openFromFooter(foot);
     };
 
     const onOpenSearch = (): void => openShortcut();
@@ -820,13 +818,74 @@ export default function CommandPalette({
     <>
       <div className="pal-backdrop" aria-hidden="true" onClick={close}></div>
       <div
-        className="pal-window"
+        className={`pal-window${maximized ? ' pal-window--maximized' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label="Terminal command"
         ref={panelRef}
         onClick={() => inputRef.current?.focus()}
       >
+        <div className="pal-header">
+          <div className="pal-header-tabs">
+            <span className="pal-tab pal-tab--active">
+              <span className="pal-tab-icon" aria-hidden="true">❯_</span>
+              TERMINAL
+            </span>
+          </div>
+          <div className="pal-header-actions">
+            <button
+              type="button"
+              className="pal-action-btn"
+              title="Clear terminal output"
+              aria-label="Clear terminal output"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEntries([]);
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="pal-action-btn hidden sm:inline-flex"
+              title={maximized ? 'Restore panel size' : 'Maximize terminal'}
+              aria-label={maximized ? 'Restore panel size' : 'Maximize terminal'}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMaximized(!maximized);
+              }}
+            >
+              {maximized ? (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 3v6h6V3" />
+                </svg>
+              ) : (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M3 9h18" />
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
+              className="pal-action-btn pal-action-btn--close"
+              title="Close terminal (Esc)"
+              aria-label="Close terminal"
+              onClick={(e) => {
+                e.stopPropagation();
+                close();
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
         <div className="pal-output" role="log" aria-live="polite" ref={outRef} tabIndex={-1}>
           {entries.map((e, i) => entryLine(e, i))}
         </div>
