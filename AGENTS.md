@@ -93,7 +93,7 @@ Does this file render markup?
 server-rendered.
 
 **`.tsx`** — only when React client-side lifecycle is genuinely required:
-`CommandPalette`, `LabRail`, `TokenBurnRail`, `LiveClock`, `RecentActivity`,
+`CommandPalette`, `LabRail`, `TokenBurnRail`, `RecentActivity`,
 `BlogStats`, `CommitGraph`, `GitActivity`.
 
 **`.ts`** — pure logic: `src/lib/`, `src/lib/runtime/`, `src/data/*.ts`, `src/scripts/`,
@@ -183,11 +183,10 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │
 │   ├── components/                     ← [LAYER 3: UI COMPONENT LIBRARY]
 │   │   ├── shell/                      ← Studio layout chrome (SidebarExplorer, TabBar, Rail, Breadcrumb, TerminalFooter)
-│   │   ├── widget/                     ← Live runtime widgets (BlogStats, LiveClock, TokenBurnRail, GitActivity, CommitGraph)
+│   │   ├── widget/                     ← Live runtime widgets (BlogStats, TokenBurnRail, GitActivity, CommitGraph)
 │   │   ├── lab/                        ← Interactive lab UI components
-│   │   │   ├── architecture/           ← DTS Workbench chrome (DtsWorkbench.astro, DtsSceneRenderer.tsx, ChapterPicker)
-│   │   │   ├── sql/                    ← 2D SQL pipeline & B-Tree stage diagrams
-│   │   │   └── java/                   ← 2D JVM thread state & pipeline diagrams
+│   │   │   ├── architecture/           ← DTS Workbench chrome (SimulationWorkbench.astro, SceneRenderer.tsx, ChapterPicker)
+│   │   │   └── sql/                    ← 2D SQL pipeline & B-Tree stage visualizers
 │   │   ├── blog/                       ← Blog post layouts, cards, and reading UI
 │   │   ├── home/                       ← Homepage-specific showcase components
 │   │   ├── about/                      ← About page bio, timeline, and tech stack items
@@ -199,7 +198,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │   ├── BaseLayout.astro            ← Global studio layout shell (sidebar + tabbar + rail + terminal)
 │   │   ├── ArchitectureLabLayout.astro ← Standard reusable full-bleed layout for all DTS & Engine labs
 │   │   ├── PostLayout.astro            ← Long-form blog reading layout (TOC, header, tags, giscus)
-│   │   └── AuthorLayout.astro          ← Author profile layout
+│   │   └── ListLayout.astro            ← Post and topic listing layout
 │   │
 │   ├── pages/                          ← [LAYER 6: ROUTING & API ENDPOINTS]
 │   │   ├── index.astro                 ← Homepage (/)
@@ -1507,7 +1506,6 @@ expand the scope.
 | `src/layouts/BaseLayout.astro` | Root HTML shell: `<head>` meta, font imports, style imports, studio grid, `SidebarExplorer`, `TabBar`, `Rail`, `TerminalFooter`, `CommandPalette`, `ClientRouter` | Page-specific content, blog logic |
 | `src/layouts/PostLayout.astro` | Blog post reading layout: TOC, meta, tags, related posts, Giscus comments | Non-blog layouts |
 | `src/layouts/ListLayout.astro` | Paginated post list layout | Single-post rendering |
-| `src/layouts/AuthorLayout.astro` | Author profile layout | — |
 
 ### Client scripts (loaded by BaseLayout, run on every page)
 
