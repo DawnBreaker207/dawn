@@ -40,6 +40,8 @@ const gl = () => y(-12, -19, { form: `phone`, w: 5, d: 5, label: `Alice’s phon
 
 const _l = (e = {}) =>
     d(13, -7, {
+      s: 5,
+      h: 52,
       color: `orange`,
       glyph: `globe`,
       label: [`Fake`, `Login`],
@@ -49,6 +51,8 @@ const _l = (e = {}) =>
 
 const vl = () =>
     d(-12, -7, {
+      s: 5,
+      h: 52,
       color: `blue`,
       glyph: `idCard`,
       label: [`Identity`, `Provider`],

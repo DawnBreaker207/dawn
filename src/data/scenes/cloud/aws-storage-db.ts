@@ -114,9 +114,9 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          ec2_1: d(-8, -4, { s: 2.4, h: 24, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
-          ec2_2: d(8, -4, { s: 2.4, h: 24, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
-          efs: d(0, 6, { s: 3.2, h: 32, color: `orange`, glyph: `folder`, label: [`Amazon EFS`], sub: `Shared POSIX` }),
+          ec2_1: d(-8, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
+          ec2_2: d(8, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
+          efs: d(0, 6, { s: 4.4, h: 48, color: `orange`, glyph: `folder`, label: [`Amazon EFS`], sub: `Shared POSIX` }),
         },
         links: {
           m1: h(`ec2_1`, `efs`, [`ec2_1`, `efs`], { heads: `both`, label: `NFS Mount` }),
@@ -203,8 +203,8 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          app: d(-10, -4, { s: 2.5, h: 25, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
-          dax: d(0, 0, { s: 2.8, h: 28, color: `orange`, glyph: `zap`, label: [`DAX Cache`], sub: `In-Memory` }),
+          app: d(-10, -4, { s: 4.2, h: 44, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
+          dax: d(0, 0, { s: 4.4, h: 48, color: `orange`, glyph: `zap`, label: [`DAX Cache`], sub: `In-Memory` }),
           dynamo: b(10, 4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
         },
         links: {
@@ -243,8 +243,8 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          app: d(-10, -4, { s: 2.5, h: 25, color: `teal`, glyph: `server`, label: [`API Cluster`] }),
-          redis: d(0, 0, { s: 2.8, h: 28, color: `rose`, glyph: `zap`, label: [`ElastiCache`], sub: `Redis Cluster` }),
+          app: d(-10, -4, { s: 4.2, h: 44, color: `teal`, glyph: `server`, label: [`API Cluster`] }),
+          redis: d(0, 0, { s: 4.4, h: 48, color: `rose`, glyph: `zap`, label: [`ElastiCache`], sub: `Redis Cluster` }),
           db: b(10, 4, { r: 2.2, h: 36, label: `Primary Aurora DB`, color: `purple` }),
         },
         links: {

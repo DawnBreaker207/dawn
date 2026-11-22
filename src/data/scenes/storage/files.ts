@@ -37,7 +37,7 @@ const io = (e = {}) => b(-10, 6, { label: `metadata`, ...e });
 const ao = (e = {}) =>
     d(10, 6, {
       s: 5,
-      h: 40,
+      h: 48,
       color: `yellow`,
       glyph: `package`,
       label: [`Object`, `Storage`],
@@ -482,8 +482,8 @@ const mo = {
           entities: lo({
             db: io({ tags: [{ text: `312 pending > 1 day`, tone: `amber`, icon: `hourglass` }] }),
             sweep: d(-10, -6, {
-              s: 3.6,
-              h: 28,
+              s: 4.2,
+              h: 46,
               color: `slab`,
               glyph: `refresh`,
               label: [`Cleanup`],

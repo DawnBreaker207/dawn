@@ -58,6 +58,7 @@ const issues = {
   outOfBounds: [],
   brokenLinks: [],
   goalErrors: [],
+  glyphHazards: [],
 };
 
 // Categorize diagram nature
@@ -110,6 +111,48 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
       }
       if (to && !ents[to] && to !== 'users' && to !== 'you' && to !== 'client') {
         issues.brokenLinks.push({ sceneId, step: sIdx + 1, linkId, missing: to, role: 'to' });
+      }
+    }
+
+    // Check Glyph Clearance & Cramped Block Dimensions
+    for (const [k, ent] of Object.entries(ents)) {
+      if (!ent || typeof ent !== 'object') continue;
+      if (ent.glyph) {
+        let lines = [];
+        if (Array.isArray(ent.label)) {
+          lines = ent.label;
+        } else if (typeof ent.label === 'string') {
+          lines = ent.label.includes('\n') ? ent.label.split('\n') : [ent.label];
+        }
+        const hasSub = !!ent.sub;
+        const lineCount = lines.length + (hasSub ? 1 : 0);
+        const fontSize = lineCount <= 1 ? 13 : lineCount === 2 ? 11.5 : 10;
+        const lineSpacing = Math.round(fontSize * (hasSub ? 1.15 : 1.25));
+        const totalTextHeight = (lineCount - 1) * lineSpacing;
+
+        // Mathematical clearance condition:
+        // Height h must satisfy: h >= minStartY - o + totalTextHeight + 5px
+        // where minStartY - o = 16.5px => requiredMinHeight = 16.5 + totalTextHeight + 5 = 21.5 + totalTextHeight.
+        const requiredMinHeight = Math.ceil(21.5 + totalTextHeight + 4);
+        // In DTS engine (scene-renderer.ts), blocks default to s=4, h=46 from Xr
+        const h = typeof ent.h === 'number' ? ent.h : (ent.type === 'block' ? 46 : 36);
+        const s = typeof ent.s === 'number' ? ent.s : (ent.type === 'block' ? 4 : 3.5);
+
+        if (h < requiredMinHeight) {
+          issues.glyphHazards.push({
+            sceneId,
+            step: sIdx + 1,
+            entity: k,
+            reason: `Explicitly insufficient height: h=${h} < required ${requiredMinHeight} for glyph + ${lineCount} text lines (risk of glyph-text collision or bottom overflow)`,
+          });
+        } else if (lineCount >= 2 && (s < 3.8 || h < 42)) {
+          issues.glyphHazards.push({
+            sceneId,
+            step: sIdx + 1,
+            entity: k,
+            reason: `Cramped multi-line glyph block: s=${s}, h=${h} (recommended s >= 4.0, h >= 46)`,
+          });
+        }
       }
     }
 
@@ -183,6 +226,7 @@ console.log(`2. Broken Link References:      ${issues.brokenLinks.length}`);
 console.log(`3. Out of Viewport Bounds:      ${issues.outOfBounds.length}`);
 console.log(`4. Critical Overlaps (<90px):   ${issues.criticalOverlaps.length}`);
 console.log(`5. Crowded Pairs (90px..125px): ${issues.crowdedPairs.length}`);
+console.log(`6. Glyph Clearance Hazards:     ${issues.glyphHazards.length}`);
 console.log('='.repeat(75));
 
 if (issues.criticalOverlaps.length > 0) {
@@ -208,4 +252,24 @@ if (issues.outOfBounds.length > 0) {
   issues.outOfBounds.slice(0, 10).forEach(b => {
     console.log(`  - ${b.sceneId} Step ${b.step}: Entity "${b.entity}" at (${b.coords.join(', ')})`);
   });
+}
+
+if (issues.glyphHazards.length > 0) {
+  console.log('\n[GLYPH CLEARANCE / CRAMPED BLOCK HAZARDS DETECTED]:');
+  const grouped = {};
+  const uniqueHazards = new Map();
+  issues.glyphHazards.forEach(g => {
+    grouped[g.sceneId] = (grouped[g.sceneId] || 0) + 1;
+    const key = `${g.sceneId}::${g.entity}`;
+    if (!uniqueHazards.has(key)) {
+      uniqueHazards.set(key, g);
+    }
+  });
+  for (const [id, count] of Object.entries(grouped)) {
+    console.log(`  - ${id}: ${count} entities with glyph clearance/cramped hazards`);
+  }
+  console.log('\nUnique entity hazards:');
+  for (const [_, g] of uniqueHazards) {
+    console.log(`  - ${g.sceneId} [${g.entity}]: ${g.reason}`);
+  }
 }

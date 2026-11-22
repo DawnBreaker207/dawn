@@ -41,6 +41,8 @@ const Wo = (e = {}) => d(0, -9, { color: `orange`, glyph: `cart`, label: [`Order
 
 const Go = (e = {}) =>
     d(0, -0.5, {
+      s: 5,
+      h: 52,
       color: `slab`,
       glyph: `radio`,
       label: [`Event`, `Bus`],

@@ -38,7 +38,7 @@ const on = { x0: 10.2, x1: 23.4, y0: -8.6, y1: -2.4 };
 
 const sn = (e, t = []) => ({
     lz: x(on, `LOG FILE · APPEND ONLY`),
-    wal: d(13, -5, { s: 3.4, h: 22, color: `yellow`, glyph: `scroll`, label: [`Log`], tags: t }),
+    wal: d(13, -5, { s: 4.0, h: 42, color: `yellow`, glyph: `scroll`, label: [`Log`], tags: t }),
     ent: ee(16.2, -5, e, [1, 0], { gap: 1.05, color: `#8d99ae` }),
   });
 

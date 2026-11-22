@@ -36,10 +36,10 @@ const Zu = (e = {}) =>
     d(-12, -4, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `code → URL`, ...e });
 
 const Qu = (e = []) =>
-    d(-7, 10, { s: 3.4, h: 34, color: `yellow`, glyph: `hash`, label: [`ID`, `Blocks`], tags: e });
+    d(-7, 10, { s: 4.2, h: 46, color: `yellow`, glyph: `hash`, label: [`ID`, `Blocks`], tags: e });
 
 const $u = () =>
-    d(8, 10, { s: 3.4, h: 34, color: `orange`, glyph: `waves`, label: [`Click`, `Stream`] });
+    d(8, 10, { s: 4.2, h: 46, color: `orange`, glyph: `waves`, label: [`Click`, `Stream`] });
 
 const ed = () => b(16, 10, { r: 1.6, glyph: `chart`, color: `store`, label: `click counts` });
 

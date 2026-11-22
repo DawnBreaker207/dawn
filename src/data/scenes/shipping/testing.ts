@@ -36,6 +36,8 @@ const eu = (e = {}) => b(11, -4, { label: `orders db`, ...e });
 
 const tu = (e = {}) =>
     d(0, 9, {
+      s: 4.8,
+      h: 52,
       color: `purple`,
       glyph: `creditCard`,
       label: [`Payment`, `provider`],

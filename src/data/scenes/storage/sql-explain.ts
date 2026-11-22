@@ -54,7 +54,7 @@ export const sqlExplainLesson = {
       scene: {
         entities: {
           client: y(-11, -4, { label: `Client`, tags: [{ text: `EXPLAIN`, icon: `terminal` }] }),
-          planner: d(0, -4, { s: 3.8, h: 42, color: `blue`, glyph: `search`, label: [`Cost-Based`, `Planner`], sub: `Optimizer` }),
+          planner: d(0, -4, { s: 4.4, h: 50, color: `blue`, glyph: `search`, label: [`Cost-Based`, `Planner`], sub: `Optimizer` }),
           catalog: b(11, -4, { r: 2.2, h: 36, label: `pg_statistic`, color: `purple` }),
         },
         links: {

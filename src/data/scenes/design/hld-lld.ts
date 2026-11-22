@@ -85,7 +85,7 @@ const Lu = () => [
 
 const Ru = { x0: -17.5, x1: 5.5, y0: -8.5, y1: 16.5 };
 
-const zu = (e, t, n, r, i = {}) => d(e, t, { s: 3.6, h: 28, glyph: n, label: r, ...i });
+const zu = (e, t, n, r, i = {}) => d(e, t, { s: 4.2, h: 46, glyph: n, label: r, ...i });
 
 const Bu = (e = {}) => ({
     oz: x(Ru, `ORDERS SERVICE · INSIDE`),

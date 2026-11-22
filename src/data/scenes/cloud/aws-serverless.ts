@@ -200,8 +200,8 @@ export const awsServerlessLesson = {
         entities: {
           saas: y(-12, -4, { label: `Stripe Webhook`, tags: [{ text: 'Payment.Success', icon: 'zap' }] }),
           bus: d(-2, -4, { s: 3.8, h: 44, color: `purple`, glyph: `workflow`, label: [`EventBridge`], sub: `Event Bus` }),
-          l_refund: d(9, -10, { s: 3.6, h: 44, color: `yellow`, glyph: `zap`, label: [`Lambda Target`], sub: `Refund Handler` }),
-          step_fn: d(9, 2, { s: 3.6, h: 44, color: `blue`, glyph: `workflow`, label: [`Step Functions`], sub: `Order Saga` }),
+          l_refund: d(9, -10, { s: 4.2, h: 48, color: `yellow`, glyph: `zap`, label: [`Lambda Target`], sub: `Refund Handler` }),
+          step_fn: d(9, 2, { s: 4.2, h: 48, color: `blue`, glyph: `workflow`, label: [`Step Functions`], sub: `Order Saga` }),
         },
         links: {
           sb: h(`saas`, `bus`, [`saas`, `bus`], { heads: `end`, label: `putEvents` }),
@@ -243,8 +243,8 @@ export const awsServerlessLesson = {
       scene: {
         entities: {
           client: y(-14, -4, { label: `Mobile / Web User`, tags: [{ text: `HTTPS`, icon: `globe` }] }),
-          apigw: d(-4, -4, { s: 3.6, h: 44, color: `orange`, glyph: `route`, label: [`API Gateway`], sub: `HTTP /api/v1` }),
-          lambda: d(5, -4, { s: 3.6, h: 44, color: `yellow`, glyph: `zap`, label: [`AWS Lambda`], sub: `Stateless Fn` }),
+          apigw: d(-4, -4, { s: 4.2, h: 48, color: `orange`, glyph: `route`, label: [`API Gateway`], sub: `HTTP /api/v1` }),
+          lambda: d(5, -4, { s: 4.2, h: 48, color: `yellow`, glyph: `zap`, label: [`AWS Lambda`], sub: `Stateless Fn` }),
           ddb: b(14, -4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
         },
         links: {

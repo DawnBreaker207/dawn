@@ -46,7 +46,7 @@ export const dockerImagesStorageLesson = {
           mergedDir: makeBlock(-2, -16, { s: 5, h: 44, color: 'green', label: ['Merged View', '/var/lib/docker/merged'] }),
           upperDir: makeBlock(-10, -2, { s: 4, h: 42, color: 'orange', label: ['Upperdir (RW)', 'Container Changes'] }),
           lowerDirs: makeBlock(6, -2, { s: 4, h: 42, color: 'slab', label: ['Lowerdir (RO)', 'Shared Image Layers'] }),
-          workDir: makeBlock(-10, 12, { s: 4, h: 40, color: 'purple', label: ['Workdir', 'Atomic Rename Buffer'] }),
+          workDir: makeBlock(-10, 12, { s: 4.4, h: 48, color: 'purple', label: ['Workdir', 'Atomic Rename Buffer'] }),
           card: makePanel({ x: 4, y: 12 }, 'Mount Command', [
             'mount -t overlay overlay \\',
             '  -o lowerdir=layers,... \\',
@@ -123,7 +123,7 @@ export const dockerImagesStorageLesson = {
       scene: {
         entities: {
           buildStage: makeBlock(-10, -14, { s: 4, h: 42, color: 'slab', label: ['Builder Stage', 'Go SDK (850MB)'] }),
-          binaryArtifact: makeBlock(-10, 4, { s: 3.8, h: 40, color: 'orange', label: ['Compiled Binary', 'ELF Executable (15MB)'] }),
+          binaryArtifact: makeBlock(-10, 4, { s: 4.2, h: 46, color: 'orange', label: ['Compiled Binary', 'ELF Executable (15MB)'] }),
           distrolessBase: makeBlock(6, -14, { s: 4, h: 42, color: 'blue', label: ['Distroless Base', 'Root certs only (2MB)'] }),
           finalImage: makeBlock(6, 4, { s: 4.5, h: 44, color: 'green', label: ['Production Image', 'Total Size: 17MB'] }),
           card: makePanel({ x: -2, y: 14 }, 'Multi-Stage Dockerfile', [

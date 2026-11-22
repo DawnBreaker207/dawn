@@ -32,7 +32,7 @@ const Ld = (e = [], t = {}) => Fd(9, -14, `Bob`, e, t);
 
 const Rd = () => Fd(18, -4, `Cara`);
 
-const zd = (e = [], t = {}) => d(0, -4, { label: [`Chat`, `Service`], tags: e, ...t });
+const zd = (e = [], t = {}) => d(0, -4, { s: 4.8, h: 52, label: [`Chat`, `Service`], tags: e, ...t });
 
 const Bd = (e = []) =>
     d(-9, -4, { s: 3.6, h: 38, color: `orange`, glyph: `network`, label: [`Gateway 1`], tags: e });
@@ -62,7 +62,7 @@ const Hd = (e = []) =>
 const Ud = (e = []) => b(-9, 7, { r: 1.8, glyph: `database`, label: `message store`, tags: e });
 
 const Wd = () =>
-    d(9, 7, { s: 3.4, h: 32, color: `yellow`, glyph: `bell`, label: [`Push`], sub: `APNs / FCM` });
+    d(9, 7, { s: 4.2, h: 46, color: `yellow`, glyph: `bell`, label: [`Push`], sub: `APNs / FCM` });
 
 const q = {
     a1: (e = {}) => h(`alice`, `g1`, [`alice`, `g1`], { heads: `both`, ...e }),

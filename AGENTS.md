@@ -493,11 +493,30 @@ Every component placement and connection link MUST follow the canonical 3D isome
 - **Inter-Block Spacing Flexibility:** Unlike the strict $\ge 7\text{px}$ gap for link paths, the distance between blocks is adaptive: it scales based on the domain, number of clustered nodes, and layout tiers, provided blocks do not collide and remain framed within the canvas.
 
 #### 4. Block Dimensions, Text Wrapping & Glyph Clearance
-- **Standard Sizing:** Blocks displaying both text and glyph icons (e.g. SQS queues, Kafka brokers, microservices) must use $s \ge 3.8$ and $h \ge 42\sim 46\text{px}$.
-- **FORBIDDEN: Cramped Blocks:** Never use tiny blocks ($s < 3.8$ or $h < 40$) for multi-line or icon-bearing entities. Text will collide with the icon or overflow the bottom boundary.
+
+##### A. The SVG Text Baseline Trap (Bẫy Chân Chữ SVG)
+In SVG rendering, the `y` attribute of a `<text>` element defines its **baseline (chân chữ)**, NOT its top bounding box:
+- Characters with ascenders (`h`, `t`, `k`, `B`) extend upwards by approximately $0.72 \times \text{fontSize}$ above the baseline.
+- **The Visual Collision Bug:** If a text baseline is placed at $o + 7.5\text{px}$ with $\text{fontSize} = 11.5\text{px}$, the top of the characters reaches $o - 0.78\text{px}$. Meanwhile, a glyph icon centered at $o - 4$ with height $19\text{px}$ has its bottom edge at $o + 5.5\text{px}$. The glyph and the label intersect by over $6\text{px}$, causing severe visual clumping.
+
+##### B. Mathematical Clearance Formula (Standard in `runtime-draw.ts`)
+To guarantee crisp readability and zero overlap:
+$$\begin{cases} \text{iconY} = o - 9 \\ \text{minStartY} \ge o + 16.5\text{px} \\ \text{Physical Clearance} = (o + 16.5 - 0.72 \times \text{fontSize}) - (o - 9 + \text{iconRadius}) \ge 6.5\text{px} \end{cases}$$
+
+##### C. Entity Dimension Sizing Matrix
+Blocks must have sufficient height $h$ and diamond facet scale $s$ to accommodate the icon and all text lines within the front isometric facet without overflowing the bottom edge ($h \ge \text{minStartY} - o + \text{totalTextHeight} + 5\text{px}$):
+
+| Entity Content | Minimum Scale ($s$) | Minimum Height ($h$) | Max Characters / Line |
+|---|:---:|:---:|:---:|
+| **Text Only (1-2 lines)** | $s \ge 3.5$ | $h \ge 36\text{px}$ | 18 chars |
+| **Glyph + 1-line Label** | $s \ge 3.8$ | $h \ge 42\text{px}$ | 16 chars |
+| **Glyph + 2-line Label** | $s \ge 4.2$ | $h \ge 46\text{px}$ | 14 chars / line |
+| **Glyph + 2-line Label + Subtitle (`sub`)** | $s \ge 4.8$ | $h \ge 52\text{px}$ | 12 chars / line |
+| **Flagship / Central Hub Nodes** | $s \ge 5.2$ | $h \ge 52\sim 56\text{px}$ | 14 chars / line |
+
+- **FORBIDDEN: Cramped Blocks:** Never use $s < 4.0$ or $h < 46\text{px}$ for any node combining an icon glyph and 2+ lines of text.
 - **Label Wrapping:** Split labels into short multi-line arrays: `label: ['Primary SQS', 'Queue']` rather than a single long string that exceeds diamond facet width.
 - **Subtitle Length:** Keep `sub` concise ($\le 24$ characters).
-- **Text & Icon Padding:** Glyphs are raised ($y = o - 4$) and text starting Y is clamped to $[o + 7.5, (o + h) - \text{totalTextHeight} - 5]$ to guarantee safe padding on all faces.
 
 #### 5. Viewport Containment & World Bounding Box
 - **Canvas Framing Standard:** The entire diagram MUST fit comfortably within the camera viewport frame without clipping or overflowing the window edges.
@@ -524,9 +543,10 @@ Every component placement and connection link MUST follow the canonical 3D isome
 - **Pre-Commit Validation:**
   ```bash
   node scripts/lint-scenes.mjs
+  node scripts/audit-all-diagrams.mjs
   cmd /c npm run build
   ```
-  The scene linter **MUST pass with 0 critical overlaps (`CLEAN`)** and the static build must complete with exit code 0.
+  The scene linter and master auditor **MUST pass with 0 critical overlaps (`CLEAN`), 0 broken links, 0 goal alignment errors, and 0 glyph-label collision hazards**, and the static build must complete with exit code 0.
 
 ### Canonical Navigation & Domain Grouping (8 Topics on Navbar)
 

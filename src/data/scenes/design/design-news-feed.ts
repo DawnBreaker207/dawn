@@ -28,12 +28,14 @@ const ud = { x0: -4.5, x1: 4.5, y0: -19, y1: -13 };
 
 const dd = (e = `people opening their feed`) => p(ud, 12, e);
 
-const fd = (e = [], t = {}) => d(0, -4, { label: [`Feed`, `API`], tags: e, ...t });
+const fd = (e = [], t = {}) => d(0, -4, { s: 4.8, h: 52, label: [`Feed`, `API`], tags: e, ...t });
 
 const pd = (e = `Ana posts`) => y(-16, -12, { form: `phone`, label: e });
 
 const md = (e = [], t = {}) =>
     d(-12, -4, {
+      s: 4.8,
+      h: 52,
       color: `green`,
       glyph: `zap`,
       label: [`Feed`, `Cache`],
@@ -47,8 +49,8 @@ const hd = (e = [], t = {}) =>
 
 const gd = (e = [], t = {}) =>
     d(-12, 9, {
-      s: 3.6,
-      h: 38,
+      s: 4.4,
+      h: 46,
       color: `purple`,
       glyph: `workflow`,
       label: [`Fan-out`, `Workers`],
