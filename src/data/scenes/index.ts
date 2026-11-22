@@ -99,6 +99,31 @@ import { k8sServicesIngressLesson } from './cloud/k8s-services-ingress';
 import { k8sStorageCsiLesson } from './cloud/k8s-storage-csi';
 import { k8sAutoscalingHpaLesson } from './cloud/k8s-autoscaling-hpa';
 
+// Network & Web Scale Deep-Dive
+import { tcpInternalsLesson } from './network/tcp-internals';
+import { tlsHandshakeLesson } from './network/tls-handshake';
+import { httpEvolutionLesson } from './network/http-evolution';
+import { dnsAnycastLesson } from './network/dns-anycast';
+import { websocketRealtimeProtocolsLesson } from './network/websocket-realtime-protocols';
+import { reverseProxyL4L7Lesson } from './network/reverse-proxy-l4-l7';
+import { networkSecurityDdosLesson } from './network/network-security-ddos';
+
+// Redis In-Memory & Caching Internals
+import { redisEventLoopLesson } from './storage/redis-event-loop';
+import { redisDataStructuresLesson } from './storage/redis-data-structures';
+import { redisSortedSetsLesson } from './storage/redis-sorted-sets';
+import { redisPersistenceRdbAofLesson } from './storage/redis-persistence-rdb-aof';
+import { redisMemoryEvictionLesson } from './storage/redis-memory-eviction';
+import { redisClusterShardingLesson } from './storage/redis-cluster-sharding';
+
+// Message Brokers & Event Streams (Kafka & RabbitMQ)
+import { kafkaClusterKraftLesson } from './communication/kafka-cluster-kraft';
+import { kafkaStorageEngineLesson } from './communication/kafka-storage-engine';
+import { kafkaReplicationIsrLesson } from './communication/kafka-replication-isr';
+import { rabbitmqAmqpModelLesson } from './communication/rabbitmq-amqp-model';
+import { rabbitmqExchangesRoutingLesson } from './communication/rabbitmq-exchanges-routing';
+import { rabbitmqReliabilityDlxLesson } from './communication/rabbitmq-reliability-dlx';
+
 // Flagship System Design
 import { aiAgentArchitectureLesson } from './design/ai-agent-architecture';
 
@@ -188,6 +213,28 @@ export {
   k8sStorageCsiLesson,
   k8sAutoscalingHpaLesson,
   aiAgentArchitectureLesson,
+  // Network
+  tcpInternalsLesson,
+  tlsHandshakeLesson,
+  httpEvolutionLesson,
+  dnsAnycastLesson,
+  websocketRealtimeProtocolsLesson,
+  reverseProxyL4L7Lesson,
+  networkSecurityDdosLesson,
+  // Redis
+  redisEventLoopLesson,
+  redisDataStructuresLesson,
+  redisSortedSetsLesson,
+  redisPersistenceRdbAofLesson,
+  redisMemoryEvictionLesson,
+  redisClusterShardingLesson,
+  // Kafka & RabbitMQ
+  kafkaClusterKraftLesson,
+  kafkaStorageEngineLesson,
+  kafkaReplicationIsrLesson,
+  rabbitmqAmqpModelLesson,
+  rabbitmqExchangesRoutingLesson,
+  rabbitmqReliabilityDlxLesson,
 };
 
 export const ALL_SCENES: Record<string, any> = {
@@ -280,6 +327,28 @@ export const ALL_SCENES: Record<string, any> = {
   'k8s-autoscaling-hpa': k8sAutoscalingHpaLesson,
   'k8s': k8sControlPlaneLesson,
   'ai-agent-architecture': aiAgentArchitectureLesson,
+  // Network & Web Scale Deep-Dive
+  'tcp-internals': tcpInternalsLesson,
+  'tls-handshake': tlsHandshakeLesson,
+  'http-evolution': httpEvolutionLesson,
+  'dns-anycast': dnsAnycastLesson,
+  'websocket-realtime-protocols': websocketRealtimeProtocolsLesson,
+  'reverse-proxy-l4-l7': reverseProxyL4L7Lesson,
+  'network-security-ddos': networkSecurityDdosLesson,
+  // Redis In-Memory & Caching Internals
+  'redis-event-loop': redisEventLoopLesson,
+  'redis-data-structures': redisDataStructuresLesson,
+  'redis-sorted-sets': redisSortedSetsLesson,
+  'redis-persistence-rdb-aof': redisPersistenceRdbAofLesson,
+  'redis-memory-eviction': redisMemoryEvictionLesson,
+  'redis-cluster-sharding': redisClusterShardingLesson,
+  // Message Brokers & Event Streams (Kafka & RabbitMQ)
+  'kafka-cluster-kraft': kafkaClusterKraftLesson,
+  'kafka-storage-engine': kafkaStorageEngineLesson,
+  'kafka-replication-isr': kafkaReplicationIsrLesson,
+  'rabbitmq-amqp-model': rabbitmqAmqpModelLesson,
+  'rabbitmq-exchanges-routing': rabbitmqExchangesRoutingLesson,
+  'rabbitmq-reliability-dlx': rabbitmqReliabilityDlxLesson,
 };
 
 export const ALL_DTS_LESSONS = ALL_SCENES;
