@@ -258,8 +258,12 @@ export function initMvccSimulator(): void {
     renderTable(); updateButtons();
   });
 
-  resetBtn.addEventListener('click', reset);
+  resetBtn.addEventListener('click', () => {
+    (window as any).umami?.track('sql-mvcc-op', { action: 'reset' });
+    reset();
+  });
   isoSel.addEventListener('change', () => {
+    (window as any).umami?.track('sql-mvcc-op', { action: 'iso-change', iso: isoSel.value });
     renderTable();
     log(`Changed isolation level to: ${isoSel.value.toUpperCase()}`, 'text-cyan-400 font-semibold');
   });
@@ -267,6 +271,7 @@ export function initMvccSimulator(): void {
   // Guided scenarios
   if (presetRcBtn) {
     presetRcBtn.addEventListener('click', async () => {
+      (window as any).umami?.track('sql-mvcc-preset', { scenario: 'read_committed' });
       reset();
       isoSel.value = 'read_committed';
       log('--- START SCENARIO: NON-REPEATABLE READ (READ COMMITTED) ---', 'text-amber-400 font-bold');
@@ -288,6 +293,7 @@ export function initMvccSimulator(): void {
 
   if (presetRrBtn) {
     presetRrBtn.addEventListener('click', async () => {
+      (window as any).umami?.track('sql-mvcc-preset', { scenario: 'repeatable_read' });
       reset();
       isoSel.value = 'repeatable_read';
       log('--- START SCENARIO: SNAPSHOT ISOLATION (REPEATABLE READ) ---', 'text-cyan-400 font-bold');

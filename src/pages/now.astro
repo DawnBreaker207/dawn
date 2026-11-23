@@ -40,7 +40,7 @@ const musicItems: MusicItem[] = Array.isArray(nowData.entertainment.music)
       </p>
     )}
     <p class="mt-2 max-w-[42.5rem] text-base text-(--fg-dim)">
-      A snapshot of what I'm focused on right now — this is my <a href="https://nownownow.com/about" target="_blank" rel="noopener noreferrer" class="text-(--fg) underline hover:text-(--accent)">/now page</a>.
+      A snapshot of what I'm focused on right now — this is my <a href="https://nownownow.com/about" target="_blank" rel="noopener noreferrer" data-umami-event="now-page-info" class="text-(--fg) underline hover:text-(--accent)">/now page</a>.
     </p>
   </header>
 
@@ -102,7 +102,7 @@ const musicItems: MusicItem[] = Array.isArray(nowData.entertainment.music)
         <section>
           <div class="mb-5 flex items-center justify-between border-b border-(--border) pb-2">
             <h2 class="m-0 font-mono text-xs tracking-widest uppercase text-(--fg-faint)">📚 Currently Reading</h2>
-            <a href="/books" class="font-mono text-xs text-(--fg-dim) hover:text-(--accent) no-underline">
+            <a href="/books" data-umami-event="now-books-shelf" class="font-mono text-xs text-(--fg-dim) hover:text-(--accent) no-underline">
               View all shelf →
             </a>
           </div>

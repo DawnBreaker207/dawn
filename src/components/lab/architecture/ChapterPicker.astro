@@ -495,6 +495,7 @@ interface SectionGroup {
           }
 
           // Navigate to the target page
+          (window as any).umami?.track('lab-chapter-select', { lesson: lessonId, title: lessonTitle || '' });
           if (window.location.pathname !== targetHref) {
             window.location.href = targetHref;
             return;

@@ -35,6 +35,7 @@ const posts = await getPosts();
           return (
             <a
               href={`/blog/${post.id}`}
+              data-umami-event="home-latest-post"
               class="grid grid-cols-1 items-start gap-4.5 border-t border-(--border) py-4.5 no-underline first-of-type:border-t-0 md:grid-cols-[92px_1fr_auto]"
             >
               <time class="pt-0.5 font-mono text-xs text-(--fg-dim)">{date}</time>

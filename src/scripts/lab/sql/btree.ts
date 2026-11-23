@@ -197,6 +197,7 @@ export function initBTreeSimulator(): void {
   insertBtn.addEventListener('click', () => {
     const v = parseInt(insertInput.value.trim());
     if (isNaN(v) || v < 0 || v > 9999) { log('Enter a number 0–9999', 'bt-log-warn'); return; }
+    (window as any).umami?.track('sql-btree-op', { op: 'insert', key: v });
     insert(v);
     insertInput.value = '';
   });
@@ -206,6 +207,7 @@ export function initBTreeSimulator(): void {
     const v = parseInt(searchInput.value.trim());
     if (isNaN(v)) { log('Enter a number to search', 'bt-log-warn'); return; }
     const path = search(root, v, []);
+    (window as any).umami?.track('sql-btree-op', { op: 'search', key: v, found: Boolean(path) });
     if (path) {
       log(`Found ${v} — path length: ${path.length} level${path.length>1?'s':''}`, 'bt-log-ok');
       render(path, 'search');
@@ -218,6 +220,7 @@ export function initBTreeSimulator(): void {
   searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') searchBtn.click(); });
 
   resetBtn.addEventListener('click', () => {
+    (window as any).umami?.track('sql-btree-op', { op: 'clear' });
     _idSeq = 0; root = mkNode();
     logEl.innerHTML = '';
     log('Tree cleared.', '');
@@ -225,6 +228,7 @@ export function initBTreeSimulator(): void {
   });
 
   bulkBtn.addEventListener('click', () => {
+    (window as any).umami?.track('sql-btree-op', { op: 'demo-bulk' });
     const vals = [10, 20, 5, 15, 30, 25, 35, 7, 3, 18, 40, 22, 12, 28, 45];
     _idSeq = 0; root = mkNode();
     vals.forEach(v => {

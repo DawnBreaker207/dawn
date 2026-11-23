@@ -747,12 +747,17 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
       if (e.key === 'ArrowRight') {
         if (curIdx === total - 1 && nextLesson?.href) {
+          (window as any).umami?.track('workbench-lesson-complete', { lesson: lesson.id, next: nextLesson.title });
           window.location.href = nextLesson.href;
           return;
         }
+        (window as any).umami?.track('workbench-step-change', { lesson: lesson.id, step: curIdx + 2, trigger: 'key' });
         renderStep(curIdx + 1);
       }
-      if (e.key === 'ArrowLeft') renderStep(curIdx - 1);
+      if (e.key === 'ArrowLeft') {
+        (window as any).umami?.track('workbench-step-change', { lesson: lesson.id, step: curIdx, trigger: 'key' });
+        renderStep(curIdx - 1);
+      }
       if (e.key === 'r' || e.key === 'R') {
         document.getElementById('replay')?.click();
       }

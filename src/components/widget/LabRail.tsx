@@ -29,7 +29,7 @@ export default function LabRail() {
         </div>
 
         {lab ? (
-          <a href={lab.href} className="group block no-underline">
+          <a href={lab.href} data-umami-event="lab-rail-open" className="group block no-underline">
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-semibold tracking-[-0.01em] text-(--fg) transition-colors group-hover:text-(--accent)">
                 {lab.title}

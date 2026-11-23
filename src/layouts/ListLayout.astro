@@ -86,6 +86,7 @@ const { title, posts, pagination, showEmpty = true } = Astro.props;
           aria-label="Search articles"
           type="text"
           data-blog-search
+          data-umami-event="blog-search-input"
           placeholder="Search articles"
           class="focus:border-(--accent) block w-full rounded-md border border-(--border) bg-(--bg-alt) px-4 py-2 text-(--fg) placeholder:text-(--fg-faint) outline-none"
         />

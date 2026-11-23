@@ -51,6 +51,7 @@ const tags = [...counts.keys()].sort(
       return (
         <a
           href={`/topics/${slugify(tag)}`}
+          data-umami-event="topic-card-click"
           class="group flex flex-col justify-between rounded-xl border border-(--border) bg-(--bg-alt) p-4.5 no-underline transition-all hover:-translate-y-0.5 hover:border-(--accent) hover:shadow-sm"
         >
           <div>

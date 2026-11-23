@@ -75,6 +75,9 @@ const labLesson = ALL_SCENES[lessonId] as unknown as Lesson;
 
     updateDtsLayout();
     window.addEventListener('resize', updateDtsLayout);
+
+    const currentLab = window.location.pathname.replace('/lab/', '').replace(/\/$/, '') || 'architecture';
+    (window as any).umami?.track('lab-view', { lab: currentLab });
   }
 
   setupLabPage();

@@ -38,6 +38,7 @@ const afterLines = afterCode.trim().split('\n');
       <button
         type="button"
         data-diff-mode="split"
+        data-umami-event="diff-mode-split"
         class="diff-mode-btn cursor-pointer rounded px-2 py-1 text-[10px] text-(--fg) bg-(--bg) shadow-xs transition-colors"
       >
         Split
@@ -45,6 +46,7 @@ const afterLines = afterCode.trim().split('\n');
       <button
         type="button"
         data-diff-mode="before"
+        data-umami-event="diff-mode-before"
         class="diff-mode-btn cursor-pointer rounded px-2 py-1 text-[10px] text-(--fg-dim) hover:text-(--fg) transition-colors"
       >
         Before
@@ -52,6 +54,7 @@ const afterLines = afterCode.trim().split('\n');
       <button
         type="button"
         data-diff-mode="after"
+        data-umami-event="diff-mode-after"
         class="diff-mode-btn cursor-pointer rounded px-2 py-1 text-[10px] text-(--fg-dim) hover:text-(--fg) transition-colors"
       >
         After

@@ -26,6 +26,7 @@ export const prerender = true;
         <button
           type="button"
           id="pf-run"
+          data-umami-event="pathfinding-run"
           class="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-(--border) bg-(--fg) text-(--bg) px-3 py-1.5 font-medium transition-transform active:scale-95"
         >
           <span>▶ Visualize</span>
@@ -33,6 +34,7 @@ export const prerender = true;
         <button
           type="button"
           id="pf-maze"
+          data-umami-event="pathfinding-maze"
           class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg) hover:border-(--fg-dim)"
         >
           Generate Maze
@@ -40,6 +42,7 @@ export const prerender = true;
         <button
           type="button"
           id="pf-clear-path"
+          data-umami-event="pathfinding-clear-path"
           class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg-dim) hover:text-(--fg)"
         >
           Clear Path
@@ -47,6 +50,7 @@ export const prerender = true;
         <button
           type="button"
           id="pf-clear-walls"
+          data-umami-event="pathfinding-clear-walls"
           class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-2.5 py-1.5 text-(--fg-faint) hover:text-(--fg)"
         >
           Clear Walls
@@ -56,7 +60,7 @@ export const prerender = true;
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-1.5">
           <span class="text-(--fg-faint) text-[11px]">Algorithm:</span>
-          <select id="pf-algo" class="rounded border border-(--border) bg-(--bg) px-2 py-1 text-[11px] text-(--fg) focus:outline-hidden">
+          <select id="pf-algo" data-umami-event="pathfinding-algo" class="rounded border border-(--border) bg-(--bg) px-2 py-1 text-[11px] text-(--fg) focus:outline-hidden">
             <option value="astar">A* Search (Heuristic)</option>
             <option value="dijkstra">Dijkstra's Algorithm</option>
             <option value="bfs">Breadth-First Search (BFS)</option>
