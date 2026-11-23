@@ -20,7 +20,7 @@ const { exp, last = false } = Astro.props;
 
 <li class="relative flex gap-4 pb-8 last:pb-0">
   {!last && <span class="absolute top-12 bottom-0 left-[23px] w-px bg-(--border)" aria-hidden="true"></span>}
-  <div class="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-(--border) bg-white dark:bg-(--bg-subtle) p-1.5 shadow-xs">
+  <div class="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-(--border) bg-white p-1.5 shadow-xs">
     <img
       src={exp.logo}
       alt={exp.org}
@@ -28,7 +28,7 @@ const { exp, last = false } = Astro.props;
       height="88"
       loading="lazy"
       decoding="async"
-      class="h-full w-full object-contain mix-blend-multiply dark:mix-blend-normal"
+      class="h-full w-full object-contain"
     />
   </div>
   <div class="min-w-0 flex-1 pt-0.5">

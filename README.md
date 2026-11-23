@@ -35,7 +35,7 @@ Highlights:
 - ⚛️ **Astro 7** + View Transitions, **React 19** islands, **Tailwind 4**
 - 🎉 Adopting **Typescript**, committing with [Conventional Commits](https://www.conventionalcommits.org/)
 - 🔌 Integrate [Notion](https://www.notion.com) for a CMS blog
-- 👀 Theming in dark mode with [Tokyonight Neovim](https://github.com/folke/tokyonight.nvim) Theme colors for better contrast.
+- 👀 Theming in dark mode with [Andromeda](https://marketplace.visualstudio.com/items?itemName=EliverLara.andromeda) Theme colors for better contrast.
 
 ## Express Your Support
 

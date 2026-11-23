@@ -50,7 +50,7 @@ const techStack = [
   'Tailwind CSS + CSS custom properties for theming',
   'Umami website analytics',
   'Giscus comments',
-  'Dark mode inspired by Tokyonight Neovim Theme',
+  'Dark mode inspired by Andromeda Theme',
 ];
 
 type HelpCmd = readonly [cmd: string, usage: string];
