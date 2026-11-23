@@ -30,13 +30,13 @@ export async function getStaticPaths() {
     mod.lessons
       .filter((lesson) => !EXCLUDED_ROUTES.has(lesson.id))
       .map((lesson) => {
-        const dts = ALL_SCENES[lesson.id];
+        const scene = ALL_SCENES[lesson.id];
         return {
           params: { lesson: lesson.id },
           props: {
             lessonId: lesson.id,
             title: `${lesson.title} · Interactive Visual Architecture Lab`,
-            description: dts?.summary || `Interactive visual architecture lab simulating ${lesson.title}.`,
+            description: scene?.summary || `Interactive visual architecture lab simulating ${lesson.title}.`,
           },
         };
       })

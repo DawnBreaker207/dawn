@@ -1,7 +1,6 @@
 /**
- * Designed to Scale (DTS) — Native Architecture Lab Layout Overrides
- * Specificity fixes on top of designed-to-scale.css for the native workbench.
- * Font-face declarations live in src/styles/dts/_fonts.css (loaded by designed-to-scale.css).
+ * Native Architecture Lab Layout Overrides
+ * Specificity fixes on top of simulation styles for the native workbench.
  */
 
 /* ── 1. Universal JetBrains Mono Enforcement ────────────────────────── */
