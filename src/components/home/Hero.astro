@@ -12,51 +12,73 @@ const NAV_LINKS = [
 ];
 ---
 
-<header class="space-y-5 sm:space-y-7 max-w-full">
-  <!-- 1. Authentic Header -->
-  <div class="space-y-2.5 sm:space-y-3.5">
-    <div class="flex flex-wrap items-center gap-2 font-mono text-xs sm:text-sm text-(--fg-dim)">
-      <span class="font-medium text-(--fg)">Tung Anh</span>
-      <span class="text-(--fg-faint)">/</span>
-      <span class="font-medium text-(--accent)">Dawn</span>
-      <span class="inline-flex items-center ml-0.5 align-middle">
-        <Twemoji emoji="flag-vietnam" size="base" />
-      </span>
-      <span class="text-(--fg-faint)">•</span>
-      <span>Software Engineer</span>
+<header class="max-w-full">
+  <!-- Unified 50/50 Hero Workbench Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 items-start md:items-center gap-6 lg:gap-10 pt-1">
+    <!-- Left Column (50%): Header + Typewriter + Bio + Navigation Links -->
+    <div class="flex flex-col justify-center space-y-4 sm:space-y-5">
+      <!-- 1. Authentic Header & Title at the Top -->
+      <div class="space-y-2 sm:space-y-2.5">
+        <div class="flex flex-wrap items-center gap-2 font-mono text-xs sm:text-sm text-(--fg-dim)">
+          <span class="font-medium text-(--fg)">Tung Anh</span>
+          <span class="text-(--fg-faint)">/</span>
+          <span class="font-medium text-(--accent)">Dawn</span>
+          <span class="inline-flex items-center ml-0.5 align-middle">
+            <Twemoji emoji="flag-vietnam" size="base" />
+          </span>
+          <span class="text-(--fg-faint)">•</span>
+          <span>Software Engineer</span>
+        </div>
+
+        <h1 class="bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 bg-clip-text text-transparent text-3xl font-extrabold tracking-tight leading-tight sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl sm:leading-[1.15] dark:from-rose-400 dark:via-pink-400 dark:to-amber-300 break-words">
+          My little corner of the internet.
+        </h1>
+
+        <p class="text-base font-normal text-(--fg-dim) sm:text-lg md:text-xl leading-relaxed">
+          Part workbench, part notebook — exploring software from the ground up.
+        </p>
+      </div>
+
+      <!-- 2. Personal Typewriter Log -->
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3 sm:p-3.5 shadow-xs">
+        <TypedBios />
+      </div>
+
+      <!-- 3. Grounded, Human Description -->
+      <p class="text-base leading-relaxed text-(--fg-dim) sm:text-lg sm:leading-relaxed">
+        I build web applications with <span class="font-medium text-(--fg)">Java (Spring Boot)</span> and <span class="font-medium text-(--fg)">TypeScript (Angular / React)</span>. Endlessly curious about how real systems come together — from database query planning in PostgreSQL to distributed streaming and memory models. This site is my playground: a mix of interactive 2.5D architecture labs, personal projects, and casual engineering notes.
+      </p>
+
+      <!-- 4. Quiet, Tasteful Navigation Links (Inside Left Column) -->
+      <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-sm sm:text-base text-(--fg-dim) pt-1">
+        {NAV_LINKS.map((link) => (
+          <a
+            href={link.href}
+            target={link.external ? '_blank' : undefined}
+            rel={link.external ? 'noopener noreferrer' : undefined}
+            data-umami-event={link.event}
+            class="py-0.5 font-medium transition-colors hover:text-(--accent) underline underline-offset-4 decoration-(--border) hover:decoration-(--accent)"
+          >
+            {link.label}
+          </a>
+        ))}
+      </nav>
     </div>
 
-    <h1 class="bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 bg-clip-text text-transparent text-3xl font-extrabold tracking-tight leading-tight sm:text-6xl md:text-7xl sm:leading-[1.12] dark:from-rose-400 dark:via-pink-400 dark:to-amber-300 break-words">
-      A small corner of the internet.
-    </h1>
-
-    <p class="text-base font-normal text-(--fg-dim) sm:text-xl md:text-2xl sm:leading-relaxed">
-      Part workbench, part notebook — exploring software from the ground up.
-    </p>
+    <!-- Right Column (50%): Full-width 16:9 Mario Coder GIF Companion -->
+    <div class="w-full flex flex-col justify-center">
+      <div class="relative group rounded-xl border border-(--border) bg-(--bg-alt) p-2 sm:p-2.5 shadow-xs overflow-hidden transition-all duration-300 hover:border-(--accent) hover:shadow-md">
+        <img
+          src="/static/images/mario_coder.gif"
+          alt="Mario coding at desk"
+          class="w-full aspect-video object-cover rounded-lg select-none pointer-events-none"
+          loading="eager"
+        />
+        <div class="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-(--bg)/85 backdrop-blur-xs border border-(--border) font-mono text-[11px] text-(--fg-dim)">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>coding mode</span>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <!-- 2. Personal Typewriter Log -->
-  <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3.5 sm:p-4 shadow-xs">
-    <TypedBios />
-  </div>
-
-  <!-- 3. Grounded, Human Description -->
-  <p class="max-w-3xl text-base leading-relaxed text-(--fg-dim) sm:text-lg md:text-xl md:leading-8">
-    I build web applications with <span class="font-medium text-(--fg)">Java (Spring Boot)</span> and <span class="font-medium text-(--fg)">TypeScript (Angular / React)</span>. Endlessly curious about how real systems come together — from database query planning in PostgreSQL to distributed streaming and memory models. This site is my playground: a mix of interactive 2.5D architecture labs, personal projects, and casual engineering notes.
-  </p>
-
-  <!-- 4. Quiet, Tasteful Navigation Links -->
-  <nav class="flex flex-wrap items-center gap-x-5 gap-y-2.5 font-mono text-sm sm:text-base text-(--fg-dim) pt-1">
-    {NAV_LINKS.map((link) => (
-      <a
-        href={link.href}
-        target={link.external ? '_blank' : undefined}
-        rel={link.external ? 'noopener noreferrer' : undefined}
-        data-umami-event={link.event}
-        class="py-0.5 font-medium transition-colors hover:text-(--accent) underline underline-offset-4 decoration-(--border) hover:decoration-(--accent)"
-      >
-        {link.label}
-      </a>
-    ))}
-  </nav>
 </header>
