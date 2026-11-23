@@ -45,7 +45,6 @@
     "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^26.4.1",
     "jsdom": "^30.0.1",
-    "playwright": "^1.65.1",
     "prisma": "^6.19.3",
     "satori": "^0.33.4",
     "typescript": "^6.0.3"

@@ -83,7 +83,7 @@ const giscusConfig = JSON.stringify({
 
       {GISCUS_ENABLED && (
         <div class="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300" id="comment" data-giscus>
-          <script type="application/json" data-giscus-config set:html={giscusConfig}></script>
+          <script is:inline type="application/json" data-giscus-config set:html={giscusConfig}></script>
         </div>
       )}
     </footer>

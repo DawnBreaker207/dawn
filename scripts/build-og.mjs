@@ -12,7 +12,6 @@ const OUT_DIR = join(process.cwd(), 'public', 'og');
 
 const W = 1200;
 const H = 630;
-const HOST = 'dawn.dev';
 
 const FONT_DIR = join(process.cwd(), 'node_modules', '@fontsource', 'outfit', 'files');
 const fonts = [

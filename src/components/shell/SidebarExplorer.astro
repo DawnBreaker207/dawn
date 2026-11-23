@@ -20,8 +20,6 @@ const recentPosts = sortedPosts.slice(0, 3).map((p) => ({
 }));
 
 const inBlogIndex = activePath === '/blog' || activePath.startsWith('/blog/page/');
-const inPostDetail =
-  activePath.startsWith('/blog/') && !activePath.startsWith('/blog/page/');
 
 const TRACK_SLUG_MAP: Record<string, string[]> = {
   '/lab/foundations': [
