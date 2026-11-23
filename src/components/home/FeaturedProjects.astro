@@ -1,0 +1,173 @@
+---
+interface ProjectTech {
+  name: string;
+  dotColor: string;
+}
+
+interface EngineeringSpec {
+  key: string;
+  val: string;
+}
+
+interface FeaturedProject {
+  title: string;
+  path: string;
+  tagline: string;
+  desc: string;
+  specs: EngineeringSpec[];
+  stack: ProjectTech[];
+  repo?: string;
+}
+
+const PROJECTS: FeaturedProject[] = [
+  {
+    title: 'Auction Platform Architecture',
+    path: '~/projects/auction-system',
+    tagline: 'High-Concurrency Real-Time Bidding SaaS',
+    desc: 'An auction engine exploring optimistic locking to eliminate last-millisecond bid race conditions, paired with Redis caching and WebSocket price broadcasting.',
+    specs: [
+      { key: 'Concurrency', val: 'Optimistic Locking (@Version)' },
+      { key: 'Broadcast', val: 'WebSocket sub-50ms feeds' },
+      { key: 'Data Tier', val: 'PostgreSQL + Redis Cache' },
+    ],
+    stack: [
+      { name: 'Spring Boot 3', dotColor: 'bg-emerald-500' },
+      { name: 'PostgreSQL', dotColor: 'bg-sky-500' },
+      { name: 'Redis', dotColor: 'bg-rose-500' },
+      { name: 'Angular', dotColor: 'bg-red-500' },
+      { name: 'Docker', dotColor: 'bg-blue-500' },
+    ],
+    repo: 'https://github.com/DawnBreaker207',
+  },
+  {
+    title: 'CinePlex',
+    path: '~/projects/cineplex-engine',
+    tagline: 'Cinema Seat Reservation Platform',
+    desc: 'A cinema booking platform solving the concurrent seat-locking problem with Redis TTL keys to prevent overlapping reservations during checkout.',
+    specs: [
+      { key: 'Seat Lock', val: 'Redis SETNX with 10m TTL' },
+      { key: 'Schedule', val: 'Hotspot query caching' },
+      { key: 'Architecture', val: 'Layered Spring + MySQL' },
+    ],
+    stack: [
+      { name: 'Java Spring', dotColor: 'bg-amber-500' },
+      { name: 'MySQL', dotColor: 'bg-sky-500' },
+      { name: 'Redis', dotColor: 'bg-rose-500' },
+      { name: 'Angular', dotColor: 'bg-red-500' },
+    ],
+    repo: 'https://github.com/DawnBreaker207/CinePlex',
+  },
+  {
+    title: 'Microz',
+    path: '~/projects/microz-cloud',
+    tagline: 'Microservices Architecture Ecosystem',
+    desc: 'A distributed service experiment featuring centralized stateless JWT authentication, Spring Cloud Gateway route filtering, and independent database per service.',
+    specs: [
+      { key: 'Gateway', val: 'API Gateway reverse routing' },
+      { key: 'Security', val: 'Stateless JWT validation' },
+      { key: 'Persistence', val: 'Isolated PostgreSQL instances' },
+    ],
+    stack: [
+      { name: 'Spring Boot', dotColor: 'bg-emerald-500' },
+      { name: 'React', dotColor: 'bg-cyan-500' },
+      { name: 'TypeScript', dotColor: 'bg-indigo-500' },
+      { name: 'PostgreSQL', dotColor: 'bg-sky-500' },
+    ],
+    repo: 'https://github.com/DawnBreaker207/Microz',
+  },
+];
+---
+
+<section id="featured-projects" class="space-y-4 md:space-y-5">
+  <div class="flex items-baseline justify-between border-b border-(--border) pb-3">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-(--fg) sm:text-2xl md:text-3xl">
+        Featured Systems
+      </h2>
+      <p class="text-sm text-(--fg-dim) mt-1">
+        Production applications with real-world concurrency control, caching, and clean architecture.
+      </p>
+    </div>
+    <span class="font-mono text-xs sm:text-sm text-(--fg-faint) hidden sm:inline">src/data/projectsData.json</span>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4.5 md:grid-cols-3">
+    {PROJECTS.map((proj) => (
+      <div class="group flex flex-col justify-between rounded-xl border border-(--border) bg-(--bg-alt) overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-(--accent) hover:shadow-[0_4px_20px_-4px_rgba(225,29,72,0.1)] min-w-0">
+        <!-- Studio Window Top Bar -->
+        <div class="flex items-center justify-between border-b border-(--border-subtle) bg-(--bg) px-3.5 py-2.5 font-mono text-xs text-(--fg-faint) min-w-0">
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="h-2 w-2 rounded-full bg-(--border)"></span>
+            <span class="h-2 w-2 rounded-full bg-(--border)"></span>
+            <span class="h-2 w-2 rounded-full bg-(--border)"></span>
+          </div>
+          <span class="truncate ml-2 text-(--fg-dim) font-medium min-w-0">{proj.path}</span>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4.5 sm:p-5 space-y-4 min-w-0">
+          <div>
+            <h3 class="text-lg font-bold text-(--fg) group-hover:text-(--accent) transition-colors">
+              {proj.title}
+            </h3>
+            <p class="font-mono text-xs font-semibold text-(--accent) mt-1">
+              {proj.tagline}
+            </p>
+          </div>
+
+          <p class="text-sm leading-relaxed text-(--fg-dim)">
+            {proj.desc}
+          </p>
+
+          <!-- Engineering Specs Block (Responsive wrap to prevent overflow) -->
+          <div class="rounded-lg border border-(--border-subtle) bg-(--bg)/70 p-3 space-y-2 font-mono text-xs">
+            {proj.specs.map((spec) => (
+              <div class="flex flex-col xs:flex-row xs:items-baseline justify-between gap-0.5 text-xs">
+                <span class="text-(--fg-faint) text-[11px] uppercase tracking-wider shrink-0">{spec.key}:</span>
+                <span class="text-(--fg) font-semibold text-xs break-words">{spec.val}</span>
+              </div>
+            ))}
+          </div>
+
+          <!-- Stack Tags with Micro LED Dots -->
+          <div class="flex flex-wrap gap-2 pt-1">
+            {proj.stack.map((tech) => (
+              <span class="inline-flex items-center gap-1.5 rounded-md border border-(--border-subtle) bg-(--bg) px-2.5 py-1 font-mono text-xs text-(--fg-dim)">
+                <span class:list={['h-1.5 w-1.5 rounded-full shrink-0', tech.dotColor]}></span>
+                <span>{tech.name}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-(--border-subtle) bg-(--bg)/40 px-4.5 sm:px-5 py-3 font-mono text-xs sm:text-sm flex items-center justify-between">
+          <span class="text-xs text-(--fg-faint)">Full-Stack System</span>
+          {proj.repo ? (
+            <a
+              href={proj.repo}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-(--fg-dim) hover:text-(--accent) transition-colors inline-flex items-center gap-1 font-semibold"
+            >
+              <span>source code</span>
+              <span>↗</span>
+            </a>
+          ) : (
+            <span class="text-(--fg-faint)">in progress</span>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="pt-1 text-right">
+    <a
+      href="/projects"
+      class="inline-flex items-center gap-1 font-mono text-sm font-medium text-(--fg-dim) hover:text-(--accent) transition-colors"
+    >
+      <span>Browse all project repositories</span>
+      <span>&rarr;</span>
+    </a>
+  </div>
+</section>

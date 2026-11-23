@@ -1,0 +1,83 @@
+---
+interface ToolCategory {
+  title: string;
+  items: { name: string; dot: string; detail?: string }[];
+}
+
+const CATEGORIES: ToolCategory[] = [
+  {
+    title: 'Languages',
+    items: [
+      { name: 'Java 21', dot: 'bg-amber-500', detail: 'Virtual Threads, Concurrency' },
+      { name: 'TypeScript', dot: 'bg-indigo-500', detail: 'Strict mode, Type safety' },
+      { name: 'SQL', dot: 'bg-cyan-500', detail: 'PostgreSQL, MySQL dialect' },
+    ],
+  },
+  {
+    title: 'Backend & Data',
+    items: [
+      { name: 'Spring Boot 3', dot: 'bg-emerald-500', detail: 'IoC, Security, JPA, Web' },
+      { name: 'PostgreSQL', dot: 'bg-sky-500', detail: 'B-Tree, MVCC, Index tuning' },
+      { name: 'Redis', dot: 'bg-rose-500', detail: 'Caching, Pub/Sub, TTL locks' },
+      { name: 'Apache Kafka', dot: 'bg-purple-500', detail: 'Partitioning, Consumer groups' },
+    ],
+  },
+  {
+    title: 'Frontend & UI',
+    items: [
+      { name: 'Angular', dot: 'bg-red-500', detail: 'Components, RxJS services' },
+      { name: 'React', dot: 'bg-cyan-400', detail: 'Hooks, Islands architecture' },
+      { name: 'Tailwind CSS', dot: 'bg-teal-400', detail: 'Utility-first tokens' },
+    ],
+  },
+  {
+    title: 'DevOps & AI Tooling',
+    items: [
+      { name: 'Docker', dot: 'bg-blue-500', detail: 'Containerization, Compose' },
+      { name: 'Linux', dot: 'bg-amber-400', detail: 'Bash, Server environments' },
+      { name: 'Git & GitHub', dot: 'bg-orange-400', detail: 'Branching, Actions CI/CD' },
+      { name: 'AI Agents', dot: 'bg-violet-500', detail: 'Tool calling, MCP & Workflows' },
+    ],
+  },
+];
+---
+
+<section class="space-y-4 md:space-y-5">
+  <div class="flex items-baseline justify-between border-b border-(--border) pb-3">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-(--fg) sm:text-2xl md:text-3xl">
+        Everyday Toolbox
+      </h2>
+      <p class="text-sm text-(--fg-dim) mt-1">
+        Technologies, runtimes, and engineering tools I reach for on a daily basis.
+      </p>
+    </div>
+    <span class="font-mono text-xs sm:text-sm text-(--fg-faint) hidden sm:inline">core stack</span>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {CATEGORIES.map((cat) => (
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-4.5 space-y-3.5 transition-colors hover:border-(--border-hover)">
+        <div class="font-mono text-xs sm:text-sm font-bold text-(--accent) uppercase tracking-wider">
+          {cat.title}
+        </div>
+
+        <div class="space-y-2.5">
+          {cat.items.map((item) => (
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-2 font-mono text-sm sm:text-base text-(--fg)">
+                <span class:list={['h-2 w-2 rounded-full shrink-0', item.dot]} />
+                <span class="font-semibold">{item.name}</span>
+              </div>
+              {item.detail && (
+                <p class="text-xs text-(--fg-dim) pl-4 leading-tight">
+                  {item.detail}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>

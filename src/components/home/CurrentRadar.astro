@@ -1,0 +1,90 @@
+---
+import nowData from '@/data/now.json';
+
+const building = nowData.building ?? [];
+const studying = (nowData.studying ?? []).slice(0, 4);
+
+const GIT_COMMITS = [
+  { hash: '8a2a415', msg: 'auction: optimistic version check on placeBid()' },
+  { hash: 'c9f401e', msg: 'dts-engine: optimize 2.5D dimetric SVG canvas loops' },
+];
+---
+
+<section class="space-y-4 md:space-y-5">
+  <div class="flex items-baseline justify-between border-b border-(--border) pb-3">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-(--fg) sm:text-2xl md:text-3xl">
+        Workbench Radar
+      </h2>
+      <p class="text-sm text-(--fg-dim) mt-1">
+        Live pulse: what I'm currently engineering and researching.
+      </p>
+    </div>
+    <span class="font-mono text-xs sm:text-sm text-(--fg-faint) hidden sm:inline">src/data/now.json</span>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4.5 sm:grid-cols-2">
+    <!-- Building -->
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-4.5 sm:p-5.5 space-y-4 transition-colors hover:border-(--border-hover) min-w-0">
+      <div class="flex items-center justify-between font-mono text-sm">
+        <span class="font-bold text-(--fg) flex items-center gap-2">
+          <span class="h-2.5 w-2.5 rounded-full bg-amber-500 shrink-0"></span>
+          <span>Currently Building</span>
+        </span>
+        <span class="text-(--fg-faint) text-xs">active branch</span>
+      </div>
+
+      <div class="space-y-3.5">
+        {building.map((item) => (
+          <div class="border-l-2 border-(--border) pl-3.5 space-y-1 hover:border-(--accent) transition-colors">
+            <div class="flex items-center justify-between text-sm sm:text-base">
+              <span class="font-bold text-(--fg)">{item.title}</span>
+              <span class="rounded bg-(--bg-subtle) px-2 py-0.5 font-mono text-xs text-(--fg-faint)">{item.tag}</span>
+            </div>
+            <p class="text-sm leading-relaxed text-(--fg-dim)">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <!-- Simulated Git Commit Trail -->
+      <div class="border-t border-(--border-subtle) pt-3 space-y-1.5 font-mono text-xs text-(--fg-faint)">
+        {GIT_COMMITS.map((c) => (
+          <div class="flex items-center gap-2 truncate min-w-0">
+            <span class="text-(--accent) font-semibold shrink-0">{c.hash}</span>
+            <span class="truncate">{c.msg}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Studying -->
+    <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-4.5 sm:p-5.5 space-y-4 transition-colors hover:border-(--border-hover) min-w-0">
+      <div class="flex items-center justify-between font-mono text-sm">
+        <span class="font-bold text-(--fg) flex items-center gap-2">
+          <span class="h-2.5 w-2.5 rounded-full bg-sky-500 shrink-0"></span>
+          <span>Deep-Dive Research</span>
+        </span>
+        <span class="text-(--fg-faint) text-xs">reading list</span>
+      </div>
+
+      <ul class="space-y-3 text-sm text-(--fg-dim)">
+        {studying.map((topic) => (
+          <li class="flex items-start gap-2.5">
+            <span class="text-(--accent) font-mono select-none mt-0.5 font-bold shrink-0">›</span>
+            <span class="leading-relaxed">{topic}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div class="border-t border-(--border-subtle) pt-3 text-right">
+        <a
+          href="/now"
+          class="font-mono text-sm font-medium text-(--fg-dim) hover:text-(--accent) transition-colors inline-flex items-center gap-1.5"
+        >
+          <span>Read complete /now status</span>
+          <span>&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
