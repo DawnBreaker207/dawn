@@ -362,6 +362,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
         <div
           class={`callout callout--${s0?.callout?.kind || 'insight'}`}
           id="guide-callout"
+          data-umami-event="workbench-callout"
           style={!s0?.callout ? 'display: none;' : ''}
         >
           <div class="callout__icon">
@@ -413,7 +414,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
         <div class="eyebrow">You’ll learn</div>
         <ul id="goals-list">
           {lesson.goals.map((g, idx) => (
-            <li data-goal-step={g.step !== undefined ? g.step : idx + 1}>
+            <li data-goal-step={g.step !== undefined ? g.step : idx + 1} class="cursor-pointer hover:text-(--accent) transition-colors" data-umami-event="workbench-goal-click">
               <span class="check">
                 <svg class="i " width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
               </span>
@@ -702,13 +703,28 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
     }
 
     // Button event handlers
-    elBtnBack?.addEventListener('click', () => renderStep(curIdx - 1));
+    elBtnBack?.addEventListener('click', () => {
+      (window as any).umami?.track('workbench-nav', {
+        lesson: lesson.id,
+        dir: 'prev',
+        fromStep: curIdx + 1,
+        toStep: curIdx,
+      });
+      renderStep(curIdx - 1);
+    });
+
     elBtnNext?.addEventListener('click', () => {
       if (curIdx === total - 1 && nextLesson?.href) {
         (window as any).umami?.track('workbench-lesson-complete', { lesson: lesson.id, next: nextLesson.title });
         window.location.href = nextLesson.href;
         return;
       }
+      (window as any).umami?.track('workbench-nav', {
+        lesson: lesson.id,
+        dir: 'next',
+        fromStep: curIdx + 1,
+        toStep: curIdx + 2,
+      });
       renderStep(curIdx + 1);
     });
 
@@ -717,8 +733,55 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
       const btn = (e.target as HTMLElement).closest('[data-step]') as HTMLElement | null;
       if (btn) {
         const step = parseInt(btn.getAttribute('data-step') || '0', 10);
+        (window as any).umami?.track('workbench-step-select', {
+          lesson: lesson.id,
+          step: step + 1,
+          total,
+        });
         renderStep(step);
       }
+    });
+
+    // Goal item click to jump directly to step
+    elGoalsList?.addEventListener('click', (e) => {
+      const li = (e.target as HTMLElement).closest('li[data-goal-step]');
+      if (li) {
+        const goalStep = parseInt(li.getAttribute('data-goal-step') || '1', 10);
+        (window as any).umami?.track('workbench-goal-jump', {
+          lesson: lesson.id,
+          goalStep,
+          text: (li.textContent || '').trim().slice(0, 60),
+        });
+        renderStep(goalStep - 1);
+      }
+    });
+
+    // Metric HUD chip click
+    elHud?.addEventListener('click', (e) => {
+      const chip = (e.target as HTMLElement).closest('.chip[data-k]') as HTMLElement | null;
+      if (chip) {
+        const k = chip.dataset.k || '';
+        const val = chip.querySelector('.chip__value')?.textContent?.trim() || '';
+        (window as any).umami?.track('workbench-metric-click', {
+          lesson: lesson.id,
+          metric: k,
+          value: val,
+        });
+      }
+    });
+
+    // Stage Tools click tracking
+    document.getElementById('expand')?.addEventListener('click', () => {
+      (window as any).umami?.track('workbench-fullscreen', { lesson: lesson.id });
+    });
+    document.getElementById('replay')?.addEventListener('click', () => {
+      (window as any).umami?.track('workbench-replay', { lesson: lesson.id, step: curIdx + 1 });
+    });
+    document.getElementById('fit')?.addEventListener('click', () => {
+      (window as any).umami?.track('workbench-fit', { lesson: lesson.id });
+    });
+    document.getElementById('pause')?.addEventListener('click', () => {
+      (window as any).umami?.track('workbench-pause', { lesson: lesson.id, step: curIdx + 1 });
     });
 
     // Window event listeners with cleanup

@@ -93,9 +93,13 @@ export default function SceneRenderer({ lesson }: Props) {
       };
     }
 
-    const handleFit = () => engine?.fit();
+    const handleFit = () => {
+      (window as any).umami?.track('workbench-fit', { lesson: lesson.id });
+      engine?.fit();
+    };
     const handleReplay = () => {
       if (engine && lesson.steps?.[currentIdx]) {
+        (window as any).umami?.track('workbench-replay', { lesson: lesson.id, step: currentIdx + 1 });
         engine.goTo(lesson.steps[currentIdx].scene, { instant: true });
         updatePauseUI(false);
       }
@@ -103,6 +107,7 @@ export default function SceneRenderer({ lesson }: Props) {
     const handlePause = () => {
       if (!engine) return;
       engine.paused = !engine.paused;
+      (window as any).umami?.track('workbench-pause', { lesson: lesson.id, paused: engine.paused, step: currentIdx + 1 });
       updatePauseUI(engine.paused);
     };
 
