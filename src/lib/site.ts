@@ -100,6 +100,9 @@ export const SITE = {
   },
 } as const;
 
+export const siteMetadata = SITE;
+export default SITE;
+
 export const SITE_URL =
   (import.meta.env.PUBLIC_SITE_URL as string)?.replace(/\/+$/, '') || SITE.siteUrl;
 
