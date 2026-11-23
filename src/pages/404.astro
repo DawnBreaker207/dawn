@@ -1,26 +1,74 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import Link from '@/components/ui/Link.astro';
 
 export const prerender = true;
 ---
 
-<BaseLayout title="404">
-  <div class="flex flex-col items-start justify-start md:mt-24 md:flex-row md:items-center md:justify-center md:space-x-6">
-    <div class="space-x-2 pt-6 pb-8 md:space-y-5">
-      <h1 class="text-6xl leading-9 font-extrabold tracking-tight text-(--fg) md:border-r-2 md:border-(--border) md:px-6 md:text-8xl md:leading-14">
-        404
-      </h1>
-    </div>
-    <div class="max-w-md">
-      <p class="mb-4 text-xl leading-normal font-bold md:text-2xl text-(--fg)">Sorry we couldn't find this page.</p>
-      <p class="mb-8 text-(--fg-dim)">But dont worry, you can find plenty of other things on our homepage.</p>
-      <Link
-        href="/"
-        class="inline-flex rounded-lg border border-transparent bg-(--accent) px-4 py-2 text-sm leading-5 font-medium text-white shadow-xs transition-colors duration-150 hover:bg-(--accent-hover) focus:outline-hidden"
-      >
-        Back to homepage
-      </Link>
+<BaseLayout title="404 — Not Found">
+  <div class="mx-auto flex max-w-2xl flex-col items-center justify-center py-12 text-center md:py-20">
+    <!-- Retro Terminal Monitor Card -->
+    <div class="w-full overflow-hidden rounded-2xl border border-(--border) bg-(--bg-alt) shadow-xl">
+      <!-- Window Chrome Bar -->
+      <div class="flex items-center justify-between border-b border-(--border) bg-(--bg) px-4 py-2.5">
+        <div class="flex items-center gap-1.5">
+          <span class="h-3 w-3 rounded-full bg-red-500/80"></span>
+          <span class="h-3 w-3 rounded-full bg-yellow-500/80"></span>
+          <span class="h-3 w-3 rounded-full bg-green-500/80"></span>
+        </div>
+        <span class="font-mono text-xs text-(--fg-faint)">bash — 404: route_not_found</span>
+        <div class="w-12"></div>
+      </div>
+
+      <!-- Animated GIF Screen Area -->
+      <div class="relative flex flex-col items-center justify-center p-6 sm:p-8">
+        <div class="relative overflow-hidden rounded-xl border border-(--border) bg-black shadow-inner">
+          <img
+            src="/static/images/404.gif"
+            alt="Lost in 404 void"
+            width="480"
+            height="320"
+            loading="eager"
+            class="max-h-72 w-full object-cover"
+          />
+          <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+          <span class="absolute bottom-3 left-4 font-mono text-xs font-semibold text-rose-400">
+            [404: NULL_POINTER_EXCEPTION]
+          </span>
+        </div>
+
+        <!-- Terminal Error Text -->
+        <div class="mt-6 space-y-2">
+          <h1 class="m-0 font-mono text-2xl font-bold tracking-tight text-(--fg) sm:text-3xl">
+            Whoops! Lost in the Void
+          </h1>
+          <p class="mx-auto max-w-md text-sm text-(--fg-dim)">
+            The route or file you requested does not exist on this branch. It may have been relocated, deleted, or never merged.
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <a
+            href="/"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-(--accent) px-4 py-2 font-mono text-xs font-semibold text-white shadow-md transition-all hover:bg-(--accent-hover) hover:shadow-lg active:translate-y-px"
+          >
+            <span>❯ cd /home</span>
+          </a>
+          <button
+            type="button"
+            data-open-terminal
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-(--border) bg-(--bg) px-4 py-2 font-mono text-xs text-(--fg) shadow-[2px_2px_0_var(--border)] transition-colors hover:text-(--accent) active:translate-y-px"
+          >
+            <span>Search (Ctrl + K)</span>
+          </button>
+          <a
+            href="/blog"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-(--border) bg-(--bg) px-4 py-2 font-mono text-xs text-(--fg-dim) transition-colors hover:text-(--fg)"
+          >
+            <span>Browse Blog</span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </BaseLayout>

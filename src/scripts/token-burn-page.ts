@@ -85,8 +85,11 @@ function buildChartBar(day: TokenBurnFullPayload['daily'][number], maxTokens: nu
   return group;
 }
 
-function updateChart(root: HTMLElement, tb: TokenBurnFullPayload) {
-  const series = tb.daily.slice(-CHART_DAYS);
+let currentChartDays: number | 'all' = 90;
+
+function updateChart(root: HTMLElement, tb: TokenBurnFullPayload, days: number | 'all' = currentChartDays) {
+  currentChartDays = days;
+  const series = days === 'all' ? tb.daily : tb.daily.slice(-days);
   show('[data-tok-chart-section]', series.length > 0, root);
   if (series.length === 0) return;
 
@@ -100,7 +103,7 @@ function updateChart(root: HTMLElement, tb: TokenBurnFullPayload) {
 
   bars.replaceChildren(
     ...series.map((day, index) =>
-      buildChartBar(day, maxTokens, index === peakIndex, 200 + index * 9),
+      buildChartBar(day, maxTokens, index === peakIndex, Math.min(500, 80 + index * 5)),
     ),
   );
 
@@ -110,6 +113,19 @@ function updateChart(root: HTMLElement, tb: TokenBurnFullPayload) {
   text('[data-tok-chart-last]', series.at(-1)?.date ?? '—', root);
   text('[data-tok-chart-max]', formatTokens(maxTokens), root);
   text('[data-tok-chart-mid]', formatTokens(maxTokens * 0.5), root);
+
+  const rangeBtns = root.querySelectorAll<HTMLButtonElement>('[data-tok-ranges] button');
+  rangeBtns.forEach((btn) => {
+    const r = btn.dataset.range;
+    const isSelected = String(days) === r;
+    btn.className = `cursor-pointer rounded-md px-2 py-0.5 font-mono text-[10px] transition-colors ${
+      isSelected ? 'bg-(--accent) text-white font-medium' : 'text-(--fg-dim) hover:text-(--fg)'
+    }`;
+    btn.onclick = () => {
+      const targetDays = r === 'all' ? 'all' : parseInt(r || '90', 10);
+      updateChart(root, tb, targetDays);
+    };
+  });
 }
 
 function buildModelRow(model: TokenBurnModelSlice, rank: number, maxTokens: number, totalTokens: number) {

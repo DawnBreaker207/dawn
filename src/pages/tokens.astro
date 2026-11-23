@@ -88,15 +88,20 @@ const WINDOWS = [
 
     {/* ── Daily burn chart ──────────────────────────────────── */}
     <section data-tok-chart-section class="tok-sec mb-12" style="animation-delay: 160ms">
-      <p class="mb-3 flex items-center gap-3 border-b border-(--border) pb-2 font-mono text-[11px] tracking-widest text-(--fg-faint) uppercase">
-        daily burn
-        <span class="flex-1 border-t border-(--border)" aria-hidden="true"></span>
-        <span class="tracking-normal text-(--fg-dim) normal-case">
-          <span data-tok-chart-count>—</span>
-          ·
-          <span data-tok-chart-peak>—</span>
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-(--border) pb-2 font-mono text-[11px] tracking-widest text-(--fg-faint) uppercase">
+        <span class="flex items-center gap-2">
+          daily burn
+          <span class="tracking-normal text-(--fg-dim) normal-case">
+            (<span data-tok-chart-count>—</span> · <span data-tok-chart-peak>—</span>)
+          </span>
         </span>
-      </p>
+        <div class="flex items-center gap-0.5 rounded-lg border border-(--border) bg-(--bg-alt) p-0.5" data-tok-ranges>
+          <button type="button" data-range="7" class="cursor-pointer rounded-md px-2 py-0.5 font-mono text-[10px] text-(--fg-dim) transition-colors hover:text-(--fg)">7d</button>
+          <button type="button" data-range="30" class="cursor-pointer rounded-md px-2 py-0.5 font-mono text-[10px] text-(--fg-dim) transition-colors hover:text-(--fg)">30d</button>
+          <button type="button" data-range="90" class="cursor-pointer rounded-md px-2 py-0.5 font-mono text-[10px] bg-(--accent) text-white font-medium transition-colors">90d</button>
+          <button type="button" data-range="all" class="cursor-pointer rounded-md px-2 py-0.5 font-mono text-[10px] text-(--fg-dim) transition-colors hover:text-(--fg)">all</button>
+        </div>
+      </div>
       <div class="border border-(--border) bg-(--bg) p-4">
         <div class="relative h-44 pl-11">
           <div class="absolute right-0 left-11 top-0">

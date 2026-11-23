@@ -15,85 +15,189 @@ const commands: Array<[string, string]> = [
   ['exit', 'close the terminal'],
 ];
 
-const shortcuts: Array<[string, string]> = [
-  ['Ctrl / ⌘ + K', 'open the command terminal from anywhere'],
-  ['Esc', 'close the terminal / suggestions'],
-  ['Tab', 'accept the highlighted suggestion'],
-  ['↑ / ↓', 'move through the suggestion list'],
-  ['Enter', 'run a command or open the highlighted result'],
-  ['/', 'open the terminal to search from anywhere'],
-  ['t', 'toggle light / dark theme'],
-  ['g → h / b / p', 'go to home / blog / projects'],
+const shortcuts: Array<{ keys: string[]; rawKey: string; action: string }> = [
+  { keys: ['Ctrl', 'K'], rawKey: 'k', action: 'Open the command terminal from anywhere' },
+  { keys: ['Esc'], rawKey: 'Escape', action: 'Close terminal / modal / search suggestions' },
+  { keys: ['Tab'], rawKey: 'Tab', action: 'Accept the highlighted suggestion' },
+  { keys: ['↑', '↓'], rawKey: 'ArrowUp', action: 'Navigate through suggestions' },
+  { keys: ['Enter'], rawKey: 'Enter', action: 'Run command or open selected result' },
+  { keys: ['/'], rawKey: '/', action: 'Quick focus search from anywhere' },
+  { keys: ['t'], rawKey: 't', action: 'Toggle light / dark color scheme' },
+  { keys: ['g', '→', 'h'], rawKey: 'g', action: 'Quick jump to Home page' },
+  { keys: ['g', '→', 'b'], rawKey: 'g', action: 'Quick jump to Blog page' },
+  { keys: ['g', '→', 'p'], rawKey: 'g', action: 'Quick jump to Projects page' },
 ];
 ---
 
 <BaseLayout title="Help">
   <header class="mb-9 border-b border-(--border) pb-7">
+    <div class="mb-2 flex items-center gap-2 font-mono text-xs text-(--fg-faint)">
+      <span class="text-(--accent)">?</span>
+      <span>Manual</span>
+      <span class="text-(--border)">/</span>
+      <span>Keyboard-First Studio</span>
+    </div>
     <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
       help
     </h1>
     <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
-      This site is built like a developer's editor: everything is reachable from the
-      keyboard. Here's the manual.
+      This site is built like a developer's editor: every action is reachable via keyboard. Test the interactive keycaps below.
     </p>
   </header>
 
-  <section class="pal-help max-w-[56rem] text-[13px] leading-relaxed">
-    <h2 class="pal-h">Command terminal</h2>
-    <p>
-      Press <kbd>Ctrl K</kbd> (or <kbd>⌘ K</kbd>) anywhere to open the command terminal.
-      It works in two modes at once:
-    </p>
-    <ul class="pal-list">
-      <li>
-        <strong>Commands</strong> — type one of the commands below. Autocomplete works like a
-        shell: <kbd>Tab</kbd> accepts the highlighted suggestion, <kbd>↑</kbd>/<kbd>↓</kbd> move
-        through the list, <kbd>Enter</kbd> runs it.
-      </li>
-      <li>
-        <strong>Search</strong> — type anything that isn't a command (e.g.{' '}
-        <code>angular</code>) and it lists matching posts, pages, and projects. Press{' '}
-        <kbd>Enter</kbd> (or click/Tab) to open the highlighted one.
-      </li>
-    </ul>
-    <ul class="pal-list">
+  <!-- Interactive Mechanical Shortcut Deck -->
+  <section class="mb-12 rounded-2xl border border-(--border) bg-(--bg-alt) p-5 sm:p-6">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-(--border) pb-3">
+      <div class="flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded-md border border-(--border) bg-(--bg) font-mono text-xs shadow-xs">⌨</span>
+        <h2 class="m-0 font-mono text-sm font-semibold tracking-tight text-(--fg)">Interactive Keypad Deck</h2>
+      </div>
+      <span class="font-mono text-[11px] text-(--accent)">Press any shortcut key on your physical keyboard</span>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" id="shortcut-deck">
+      {shortcuts.map((sc) => (
+        <div
+          class="keycap-card flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--bg) p-3 transition-all hover:border-(--accent) hover:shadow-xs active:translate-y-0.5"
+          data-key-trigger={sc.rawKey}
+          data-keys={sc.keys.join(',')}
+        >
+          <div class="flex items-center gap-1.5">
+            {sc.keys.map((k) => (
+              <kbd
+                class="keycap inline-flex min-h-6 min-w-6 items-center justify-center rounded-md border border-(--border) bg-(--bg-subtle) px-2 py-0.5 font-mono text-xs font-semibold text-(--fg) shadow-[0_2px_0_var(--border)] transition-all"
+                data-keycap={k.toLowerCase()}
+              >
+                {k}
+              </kbd>
+            ))}
+          </div>
+          <span class="text-right text-xs text-(--fg-dim)">{sc.action}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Command Terminal Reference -->
+  <section class="mb-12">
+    <div class="mb-4 flex items-center justify-between border-b border-(--border) pb-3">
+      <h2 class="m-0 font-mono text-base font-semibold tracking-tight text-(--fg)">
+        Terminal Commands <span class="font-mono text-xs font-normal text-(--fg-dim)">(Ctrl + K)</span>
+      </h2>
+      <span class="font-mono text-xs text-(--fg-faint)">{commands.length} commands</span>
+    </div>
+    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
       {commands.map(([cmd, usage]) => (
-        <li>
-          <span class="pal-help-cmd">{cmd}</span>
-          <span>{usage}</span>
-        </li>
+        <div class="flex flex-col justify-between rounded-xl border border-(--border) bg-(--bg-alt) p-3.5 transition-colors hover:border-(--accent-dim)">
+          <div class="flex items-center justify-between">
+            <code class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs font-semibold text-(--accent)">
+              {cmd}
+            </code>
+            <span class="font-mono text-[10px] text-(--fg-faint)">REPL</span>
+          </div>
+          <p class="mt-2.5 text-xs text-(--fg-dim)">{usage}</p>
+        </div>
       ))}
-    </ul>
+    </div>
+  </section>
 
-    <h2 class="pal-h">Keyboard shortcuts</h2>
-    <ul class="pal-list">
-      {shortcuts.map(([key, action]) => (
-        <li>
-          <span class="pal-help-cmd">
-            <kbd>{key}</kbd>
-          </span>
-          <span>{action}</span>
-        </li>
-      ))}
-    </ul>
-    <p>
-      Shortcuts are ignored while you're typing inside an input or a code editor, so they
-      never get in the way.
-    </p>
-
-    <h2 class="pal-h">On every page</h2>
-    <ul class="pal-list">
-      <li><code>/</code> — open the command terminal and start searching; the footer <strong>?</strong> icon opens this manual.</li>
-      <li><code>t</code> — flip between light and dark theme; the footer ◐ button and the
-      <code>theme</code> command do the same.</li>
-      <li>Footer <span class="pal-help-cmd"> &gt;_</span> opens the terminal lab.</li>
-      <li>Footer <span class="pal-help-cmd"> ?</span> opens this help page.</li>
-      <li>Footer version switcher lets you jump between the <code>main</code> and{' '}
-        <code>v1</code> layouts.</li>
-      <li>Every article shows a reading-progress bar, a table of contents, related posts,
-      and copy buttons with a language badge on each code block.</li>
-      <li>RSS: <a href="/rss.xml" class="underline decoration-(--border) underline-offset-3 hover:decoration-(--fg)">/rss.xml</a> ·
-      sitemap: <a href="/sitemap.xml" class="underline decoration-(--border) underline-offset-3 hover:decoration-(--fg)">/sitemap.xml</a>.</li>
+  <!-- Global Studio Behaviors -->
+  <section class="rounded-xl border border-(--border) bg-(--bg-alt) p-5">
+    <h2 class="m-0 mb-3 font-mono text-sm font-semibold uppercase tracking-wider text-(--fg-dim)">Studio Quick Guide</h2>
+    <ul class="space-y-2 text-xs text-(--fg-dim)">
+      <li class="flex items-start gap-2">
+        <span class="text-(--accent)">❯</span>
+        <span><kbd class="rounded border border-(--border) bg-(--bg) px-1 font-mono text-[11px] text-(--fg)">/</kbd> opens Command Palette search; footer <kbd class="rounded border border-(--border) bg-(--bg) px-1 font-mono text-[11px] text-(--fg)">?</kbd> returns to this manual.</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-(--accent)">❯</span>
+        <span><kbd class="rounded border border-(--border) bg-(--bg) px-1 font-mono text-[11px] text-(--fg)">t</kbd> flips theme between Dark and Light mode.</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-(--accent)">❯</span>
+        <span>Footer <kbd class="rounded border border-(--border) bg-(--bg) px-1 font-mono text-[11px] text-(--fg)">❯_</kbd> or <kbd class="rounded border border-(--border) bg-(--bg) px-1 font-mono text-[11px] text-(--fg)">Ctrl + `</kbd> toggles floating developer terminal.</span>
+      </li>
+      <li class="flex items-start gap-2">
+        <span class="text-(--accent)">❯</span>
+        <span>Feeds: <a href="/rss.xml" class="text-(--fg) underline hover:text-(--accent)">/rss.xml</a> · Sitemap: <a href="/sitemap.xml" class="text-(--fg) underline hover:text-(--accent)">/sitemap.xml</a>.</span>
+      </li>
     </ul>
   </section>
 </BaseLayout>
+
+<script>
+  function setupInteractiveKeycaps() {
+    const cards = document.querySelectorAll<HTMLElement>('.keycap-card');
+    const keycaps = document.querySelectorAll<HTMLElement>('[data-keycap]');
+
+    const keyMap: Record<string, string[]> = {
+      'k': ['k', 'ctrl'],
+      't': ['t'],
+      '/': ['/'],
+      'Escape': ['esc'],
+      'Tab': ['tab'],
+      'Enter': ['enter'],
+      'ArrowUp': ['↑'],
+      'ArrowDown': ['↓'],
+      'g': ['g'],
+      'h': ['h'],
+      'b': ['b'],
+      'p': ['p'],
+    };
+
+    window.addEventListener('keydown', (e) => {
+      // Don't trigger if inside input
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+
+      const key = e.key;
+      const matchedCaps: HTMLElement[] = [];
+
+      keycaps.forEach((cap) => {
+        const capVal = cap.dataset.keycap;
+        if (
+          capVal === key.toLowerCase() ||
+          (key === 'Escape' && capVal === 'esc') ||
+          (key === 'ArrowUp' && capVal === '↑') ||
+          (key === 'ArrowDown' && capVal === '↓') ||
+          (e.ctrlKey && capVal === 'ctrl') ||
+          (e.metaKey && capVal === 'ctrl')
+        ) {
+          matchedCaps.push(cap);
+        }
+      });
+
+      matchedCaps.forEach((cap) => {
+        cap.classList.add('!bg-(--accent)', '!text-white', '!border-(--accent)', 'shadow-none', 'translate-y-0.5');
+      });
+
+      cards.forEach((card) => {
+        if (card.dataset.keyTrigger?.toLowerCase() === key.toLowerCase()) {
+          card.classList.add('!border-(--accent)', 'shadow-sm');
+        }
+      });
+    });
+
+    window.addEventListener('keyup', () => {
+      keycaps.forEach((cap) => {
+        cap.classList.remove('!bg-(--accent)', '!text-white', '!border-(--accent)', 'shadow-none', 'translate-y-0.5');
+      });
+      cards.forEach((card) => {
+        card.classList.remove('!border-(--accent)', 'shadow-sm');
+      });
+    });
+
+    // Clicking keycard can execute helper action
+    cards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const trigger = card.dataset.keyTrigger;
+        if (trigger === 'k') {
+          window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
+        } else if (trigger === 't') {
+          window.dispatchEvent(new KeyboardEvent('keydown', { key: 't' }));
+        }
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', setupInteractiveKeycaps);
+</script>

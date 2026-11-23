@@ -153,10 +153,66 @@ export default function GitActivity() {
     };
   }, []);
 
+  const stats = useMemo(() => {
+    if (!days || days.length === 0) return { total: 0, currentStreak: 0, maxStreak: 0 };
+    const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
+    let total = 0;
+    let maxStreak = 0;
+    let tempStreak = 0;
+    let currentStreak = 0;
+
+    for (let i = 0; i < sorted.length; i++) {
+      const d = sorted[i];
+      total += d.count;
+      if (d.count > 0) {
+        tempStreak++;
+        if (tempStreak > maxStreak) maxStreak = tempStreak;
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      if (sorted[i].count > 0) {
+        currentStreak++;
+      } else if (i === sorted.length - 1) {
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    return { total, currentStreak, maxStreak };
+  }, [days]);
+
   const active = RANGES[range];
 
   return (
     <div className="space-y-6">
+      {/* KPI Stats Deck */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-(--border) bg-(--bg-alt) p-3.5 transition-colors hover:border-(--accent-dim)">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">Total Commits</span>
+          <p className="mt-1 font-mono text-2xl font-bold text-(--fg) tabular-nums">
+            {days ? stats.total.toLocaleString() : <span className="inline-block h-6 w-16 animate-pulse rounded bg-(--border)" />}
+          </p>
+        </div>
+        <div className="rounded-xl border border-(--border) bg-(--bg-alt) p-3.5 transition-colors hover:border-(--accent-dim)">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">Current Streak</span>
+          <p className="mt-1 font-mono text-2xl font-bold text-(--accent) tabular-nums">
+            {days ? stats.currentStreak : <span className="inline-block h-6 w-12 animate-pulse rounded bg-(--border)" />}{' '}
+            <span className="text-xs font-normal text-(--fg-dim)">days</span>
+          </p>
+        </div>
+        <div className="rounded-xl border border-(--border) bg-(--bg-alt) p-3.5 transition-colors hover:border-(--accent-dim)">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-(--fg-faint)">Longest Streak</span>
+          <p className="mt-1 font-mono text-2xl font-bold text-(--fg) tabular-nums">
+            {days ? stats.maxStreak : <span className="inline-block h-6 w-12 animate-pulse rounded bg-(--border)" />}{' '}
+            <span className="text-xs font-normal text-(--fg-dim)">days</span>
+          </p>
+        </div>
+      </div>
+
       <div className="rounded-2xl border border-(--border) bg-(--bg-alt) p-3.5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="m-0 font-mono text-[11px] uppercase tracking-[0.08em] text-(--fg-dim)">
