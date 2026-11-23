@@ -61,6 +61,8 @@ const shortcuts: Array<{ keys: string[]; rawKey: string; action: string }> = [
           class="keycap-card flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--bg) p-3 transition-all hover:border-(--accent) hover:shadow-xs active:translate-y-0.5"
           data-key-trigger={sc.rawKey}
           data-keys={sc.keys.join(',')}
+          data-umami-event="help-keycard-click"
+          data-umami-event-key={sc.rawKey}
         >
           <div class="flex items-center gap-1.5">
             {sc.keys.map((k) => (

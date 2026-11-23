@@ -47,6 +47,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
         href={repoUrl}
         target="_blank"
         rel="noopener noreferrer"
+        data-umami-event="footer-github-repo"
         class="min-w-0 truncate text-(--fg) px-1 py-0.5 rounded hover:bg-(--bg-hover) hover:text-(--fg) transition-colors"
         title={`View ${GITHUB_REPO_PATH} source on GitHub${stargazers ? `, ${stargazers.toLocaleString('en-US')} stars` : ''}`}
       >
@@ -64,6 +65,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
       href={fullCommit || undefined}
       target="_blank"
       rel="noopener noreferrer"
+      data-umami-event="footer-github-commit"
       class="hidden whitespace-nowrap text-(--fg) px-1.5 py-0.5 rounded hover:bg-(--bg-hover) transition-colors md:inline"
       title="View last commit on GitHub"
       data-commit-time={commitDate}
@@ -76,6 +78,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
       href="https://time.is/Hanoi"
       target="_blank"
       rel="noopener noreferrer"
+      data-umami-event="footer-time-hanoi"
       class="hidden sm:inline-flex whitespace-nowrap text-(--fg) px-1.5 py-0.5 rounded hover:bg-(--bg-hover) transition-colors"
     >
       Hanoi <span data-local-time>--:--</span><span class="ml-1 hidden text-(--fg-faint) sm:inline" data-local-time-diff></span>
@@ -140,6 +143,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
             <button
               type="button"
               id="btn-audio-mute"
+              data-umami-event="ambient-mute-toggle"
               class="inline-flex items-center justify-center w-5 h-5 rounded hover:bg-(--bg-hover) text-(--fg-dim) hover:text-(--fg) cursor-pointer select-none transition-colors"
               title="Toggle audio mute"
               aria-label="Toggle audio mute"
@@ -165,6 +169,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
           <span class="text-(--fg-dim)">AI Telemetry:</span>
           <a
             href="/tokens"
+            data-umami-event="footer-tokens"
             class="inline-flex items-center gap-1 text-(--fg) hover:text-(--accent) no-underline font-mono text-[10px]"
             title="View AI Token Burn Telemetry"
           >
@@ -192,6 +197,7 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
     <button
       type="button"
       id="btn-keyboard-help"
+      data-umami-event="footer-keyboard-help"
       class="hidden sm:inline-flex items-center justify-center w-[18px] h-[18px] rounded border border-(--border) text-[10px] text-(--fg-faint) hover:text-(--fg) hover:bg-(--bg-hover) cursor-pointer select-none transition-colors"
       title="Keyboard Shortcuts (?)"
       aria-label="Show keyboard shortcuts"
@@ -234,6 +240,8 @@ const repoUrl = `https://github.com/${GITHUB_REPO_PATH}`;
                 class="version-item"
                 role="menuitem"
                 data-version-item
+                data-umami-event="footer-version-select"
+                data-umami-event-branch={version.branch}
                 aria-current={version.current ? 'true' : undefined}
               >
                 <span class="git-branch-icon" aria-hidden="true">

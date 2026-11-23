@@ -225,6 +225,7 @@ export default function CommitGraph({ total = 28, cols = 14, simple = false, gra
             <button
               type="button"
               onClick={() => setSelected(null)}
+              data-umami-event="commit-clear"
               className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.08em] text-(--fg-dim) hover:text-(--accent)"
             >
               clear
