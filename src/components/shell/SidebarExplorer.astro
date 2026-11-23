@@ -11,8 +11,13 @@ const { activePath } = Astro.props;
 
 const posts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const latestPostId = sortedPosts[0]?.id;
-const latestHref = latestPostId ? `/blog/${latestPostId}` : '/blog';
+const recentPosts = sortedPosts.slice(0, 3).map((p) => ({
+  id: p.id,
+  href: `/blog/${p.id}`,
+  label: `${p.id}.mdx`,
+  title: p.data.title,
+  isActive: activePath === `/blog/${p.id}`,
+}));
 
 const inBlogIndex = activePath === '/blog' || activePath.startsWith('/blog/page/');
 const inPostDetail =
@@ -124,105 +129,42 @@ const CURRICULUM_TRACK_ITEMS = [
         <span class="row-label truncate">blog/</span>
       </summary>
       <div class="tree-children">
-      <a
-        href="/blog"
-        class:list={['explorer-row explorer-row--child no-underline', inBlogIndex && 'is-active']}
-        aria-current={inBlogIndex ? 'page' : undefined}
-      >
-        <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon">
-          <ExplorerFileIcon type="astro" />
-        </span>
-        <span class="row-label truncate">index.astro</span>
-      </a>
-      <a
-        href={latestHref}
-        class:list={['explorer-row explorer-row--child no-underline', inPostDetail && 'is-active']}
-        aria-current={inPostDetail ? 'page' : undefined}
-      >
-        <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon">
-          <ExplorerFileIcon type="astro" />
-        </span>
-        <span class="row-label truncate">[...slug].astro</span>
-      </a>
-      </div>
-    </details>
-
-<details class="tree-sec" data-sec="docs" open>
-      <summary class="explorer-row">
-        <span class="explorer-caret">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </span>
-        <span class="explorer-icon">
-          <svg class="folder-closed" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-          <svg class="folder-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <path d="M6 11.5h12" />
-          </svg>
-        </span>
-        <span class="row-label truncate">docs/</span>
-      </summary>
-      <div class="tree-children">
-      <a
-        href="/about"
-        class:list={['explorer-row explorer-row--child no-underline', activePath === '/about' && 'is-active']}
-        aria-current={activePath === '/about' ? 'page' : undefined}
-      >
-        <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon">
-<ExplorerFileIcon type="markdown" />
-        </span>
-        <span class="row-label truncate">about.md</span>
-      </a>
-      <a
-        href="/now"
-        class:list={['explorer-row explorer-row--child no-underline', activePath === '/now' && 'is-active']}
-        aria-current={activePath === '/now' ? 'page' : undefined}
-      >
-        <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon">
-          <ExplorerFileIcon type="markdown" />
-        </span>
-        <span class="row-label truncate">now.md</span>
-      </a>
-      <a
-        href="/heatmap"
-        class:list={['explorer-row explorer-row--child no-underline', activePath === '/heatmap' && 'is-active']}
-        aria-current={activePath === '/heatmap' ? 'page' : undefined}
-      >
-        <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon">
-          <ExplorerFileIcon type="astro" />
-        </span>
-        <span class="row-label truncate">heatmap.astro</span>
-      </a>
-      <a
-        href="/tokens"
-        class:list={['explorer-row explorer-row--child no-underline', activePath === '/tokens' && 'is-active']}
-        aria-current={activePath === '/tokens' ? 'page' : undefined}
-      >
-        <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon">
-          <ExplorerFileIcon type="astro" />
-        </span>
-        <span class="row-label truncate">tokens.astro</span>
-      </a>
-      <a
-        href="/books"
-        class:list={['explorer-row explorer-row--child no-underline', activePath === '/books' && 'is-active']}
-        aria-current={activePath === '/books' ? 'page' : undefined}
-      >
-        <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon">
-          <ExplorerFileIcon type="astro" />
-        </span>
-        <span class="row-label truncate">books.astro</span>
-      </a>
+        <a
+          href="/blog"
+          class:list={['explorer-row explorer-row--child no-underline', inBlogIndex && 'is-active']}
+          aria-current={inBlogIndex ? 'page' : undefined}
+        >
+          <span class="explorer-caret" aria-hidden="true"></span>
+          <span class="explorer-icon">
+            <ExplorerFileIcon type="astro" />
+          </span>
+          <span class="row-label truncate">index.astro</span>
+        </a>
+        {recentPosts.map((post) => (
+          <a
+            href={post.href}
+            class:list={['explorer-row explorer-row--child no-underline', post.isActive && 'is-active']}
+            aria-current={post.isActive ? 'page' : undefined}
+            title={post.title}
+          >
+            <span class="explorer-caret" aria-hidden="true"></span>
+            <span class="explorer-icon">
+              <ExplorerFileIcon type="markdown" />
+            </span>
+            <span class="row-label truncate">{post.label}</span>
+          </a>
+        ))}
+        <a
+          href="/topics"
+          class:list={['explorer-row explorer-row--child no-underline', activePath.startsWith('/topics') && 'is-active']}
+          aria-current={activePath.startsWith('/topics') ? 'page' : undefined}
+        >
+          <span class="explorer-caret" aria-hidden="true"></span>
+          <span class="explorer-icon">
+            <ExplorerFileIcon type="astro" />
+          </span>
+          <span class="row-label truncate">topics.astro</span>
+        </a>
       </div>
     </details>
 
@@ -239,50 +181,35 @@ const CURRICULUM_TRACK_ITEMS = [
     </a>
 
     <a
-      href="/topics"
-      class:list={['explorer-row no-underline', activePath.startsWith('/topics') && 'is-active']}
-      aria-current={activePath.startsWith('/topics') ? 'page' : undefined}
+      href="/about"
+      class:list={['explorer-row no-underline', activePath === '/about' && 'is-active']}
+      aria-current={activePath === '/about' ? 'page' : undefined}
     >
       <span class="explorer-caret" aria-hidden="true"></span>
       <span class="explorer-icon">
-        <ExplorerFileIcon type="astro" />
+        <ExplorerFileIcon type="markdown" />
       </span>
-      <span class="row-label truncate">topics.astro</span>
+      <span class="row-label truncate">about.md</span>
     </a>
 
     <a
-      href={SITE.analytics.umamiSharedUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="explorer-row group no-underline"
+      href="/now"
+      class:list={['explorer-row no-underline', activePath === '/now' && 'is-active']}
+      aria-current={activePath === '/now' ? 'page' : undefined}
     >
       <span class="explorer-caret" aria-hidden="true"></span>
       <span class="explorer-icon">
-        <ExplorerFileIcon type="umami" />
+        <ExplorerFileIcon type="markdown" />
       </span>
-      <span class="row-label flex min-w-0 items-center gap-1">
-        <span class="truncate">stats.umami</span>
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          class="flex-none opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-          <path d="M15 3h6v6" />
-          <path d="M10 14L21 3" />
-        </svg>
-      </span>
+      <span class="row-label truncate">now.md</span>
     </a>
   </nav>
   </details>
 
-  <details class="sidebar-sec" data-sec="lab" open>
+  <!-- METRICS & TELEMETRY SECTION -->
+  <details class="sidebar-sec" data-sec="metrics" open>
     <summary class="sidebar-section-header">
-      <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-(--fg-faint) uppercase">lab</span>
+      <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-(--fg-faint) uppercase">metrics & telemetry</span>
       <span class="section-toggle" aria-hidden="true">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 6l6 6-6 6" />
@@ -290,66 +217,181 @@ const CURRICULUM_TRACK_ITEMS = [
       </span>
     </summary>
 
-  <nav class="tree-children space-y-0.5 py-1">
-    <div class="px-2 pt-1 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
-      <span>Blog Architecture</span>
-      <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--accent)">Edge-First</span>
-    </div>
-    <a
-      href="/lab/architecture"
-      class:list={['explorer-row no-underline font-medium', activePath === '/lab/architecture' && 'is-active']}
-      aria-current={activePath === '/lab/architecture' ? 'page' : undefined}
-      title="Dawn Blog actual deployment architecture"
-    >
-      <span class="explorer-caret" aria-hidden="true"></span>
-      <span class="explorer-icon">
-        <ExplorerFileIcon type="architecture" />
+    <nav class="tree-children space-y-0.5 py-1">
+      <a
+        href="/heatmap"
+        class:list={['explorer-row no-underline', activePath === '/heatmap' && 'is-active']}
+        aria-current={activePath === '/heatmap' ? 'page' : undefined}
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="astro" />
+        </span>
+        <span class="row-label truncate">heatmap.astro</span>
+      </a>
+
+      <a
+        href="/tokens"
+        class:list={['explorer-row no-underline', activePath === '/tokens' && 'is-active']}
+        aria-current={activePath === '/tokens' ? 'page' : undefined}
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="astro" />
+        </span>
+        <span class="row-label truncate">tokens.astro</span>
+      </a>
+
+      <a
+        href="/books"
+        class:list={['explorer-row no-underline', activePath === '/books' && 'is-active']}
+        aria-current={activePath === '/books' ? 'page' : undefined}
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="astro" />
+        </span>
+        <span class="row-label truncate">books.astro</span>
+      </a>
+
+      <a
+        href={SITE.analytics.umamiSharedUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="explorer-row group no-underline"
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="umami" />
+        </span>
+        <span class="row-label flex min-w-0 items-center gap-1">
+          <span class="truncate">stats.umami</span>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="flex-none opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <path d="M15 3h6v6" />
+            <path d="M10 14L21 3" />
+          </svg>
+        </span>
+      </a>
+    </nav>
+  </details>
+
+  <!-- DTS SIMULATION LABS SECTION -->
+  <details class="sidebar-sec" data-sec="lab" open>
+    <summary class="sidebar-section-header">
+      <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-(--fg-faint) uppercase">dts simulation labs</span>
+      <span class="section-toggle" aria-hidden="true">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </span>
-      <span class="row-label truncate">dawn-blog.arch</span>
-    </a>
+    </summary>
 
-    <div class="px-2 pt-2.5 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
-      <span>Curriculum Tracks</span>
-      <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--fg-dim)">8 tracks</span>
-    </div>
-    {CURRICULUM_TRACK_ITEMS.map((item) => (
+    <nav class="tree-children space-y-0.5 py-1">
+      <div class="px-2 pt-1 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
+        <span>Blog Architecture</span>
+        <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--accent)">Edge-First</span>
+      </div>
       <a
-        href={item.href}
-        class:list={['explorer-row no-underline font-medium', item.isActive && 'is-active']}
-        aria-current={item.isActive ? 'page' : undefined}
-        title={item.title}
+        href="/lab/architecture"
+        class:list={['explorer-row no-underline font-medium', activePath === '/lab/architecture' && 'is-active']}
+        aria-current={activePath === '/lab/architecture' ? 'page' : undefined}
+        title="Dawn Blog actual deployment architecture"
       >
         <span class="explorer-caret" aria-hidden="true"></span>
         <span class="explorer-icon">
-          <ExplorerFileIcon type={item.iconType as any} />
+          <ExplorerFileIcon type="architecture" />
         </span>
-        <span class="row-label truncate">{item.label}</span>
+        <span class="row-label truncate">dawn-blog.arch</span>
       </a>
-    ))}
 
+      <!-- Curriculum Tracks (Folder) -->
+      <details class="tree-sec" data-sec="curriculum" open>
+        <summary class="explorer-row">
+          <span class="explorer-caret">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </span>
+          <span class="explorer-icon">
+            <svg class="folder-closed" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <svg class="folder-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <path d="M6 11.5h12" />
+            </svg>
+          </span>
+          <span class="row-label truncate">curriculum/</span>
+          <span class="ml-auto text-[9px] font-mono text-(--fg-faint) pr-1 whitespace-nowrap">8 tracks</span>
+        </summary>
+        <div class="tree-children">
+          {CURRICULUM_TRACK_ITEMS.map((item) => (
+            <a
+              href={item.href}
+              class:list={['explorer-row explorer-row--child no-underline font-medium', item.isActive && 'is-active']}
+              aria-current={item.isActive ? 'page' : undefined}
+              title={item.title}
+            >
+              <span class="explorer-caret" aria-hidden="true"></span>
+              <span class="explorer-icon">
+                <ExplorerFileIcon type={item.iconType as any} />
+              </span>
+              <span class="row-label truncate">{item.label}</span>
+            </a>
+          ))}
+        </div>
+      </details>
 
-    <div class="px-2 pt-2.5 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80">
-      Simulators & Extras
-    </div>
-    {[
-      ['/lab', 'README.md', 'markdown'],
-      ['/lab/terminal', 'terminal.astro', 'astro'],
-      ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
-      ['/lab/spider', 'spider.astro', 'astro'],
-    ].map(([href, label, icon]) => (
-      <a
-        href={href}
-        class:list={['explorer-row no-underline', activePath === href && 'is-active']}
-        aria-current={activePath === href ? 'page' : undefined}
-      >
-        <span class="explorer-caret" aria-hidden="true"></span>
-        <span class="explorer-icon">
-          <ExplorerFileIcon type={icon as 'markdown' | 'astro' | 'umami'} />
-        </span>
-        <span class="row-label truncate">{label}</span>
-      </a>
-    ))}
-  </nav>
+      <!-- Simulators & Extras (Folder) -->
+      <details class="tree-sec" data-sec="simulators" open={activePath.startsWith('/lab/terminal') || activePath.startsWith('/lab/pathfinding') || activePath.startsWith('/lab/spider') || activePath === '/lab'}>
+        <summary class="explorer-row">
+          <span class="explorer-caret">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </span>
+          <span class="explorer-icon">
+            <svg class="folder-closed" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <svg class="folder-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <path d="M6 11.5h12" />
+            </svg>
+          </span>
+          <span class="row-label truncate">simulators/</span>
+        </summary>
+        <div class="tree-children">
+          {[
+            ['/lab', 'README.md', 'markdown'],
+            ['/lab/terminal', 'terminal.astro', 'astro'],
+            ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
+            ['/lab/spider', 'spider.astro', 'astro'],
+          ].map(([href, label, icon]) => (
+            <a
+              href={href}
+              class:list={['explorer-row explorer-row--child no-underline', activePath === href && 'is-active']}
+              aria-current={activePath === href ? 'page' : undefined}
+            >
+              <span class="explorer-caret" aria-hidden="true"></span>
+              <span class="explorer-icon">
+                <ExplorerFileIcon type={icon as 'markdown' | 'astro' | 'umami'} />
+              </span>
+              <span class="row-label truncate">{label}</span>
+            </a>
+          ))}
+        </div>
+      </details>
+    </nav>
   </details>
   </div>
 
