@@ -67,12 +67,14 @@ function renderTabs() {
     const a = document.createElement('a');
     a.href = tab.path;
     a.className = 'flex min-w-0 items-center gap-2 no-underline';
+    a.setAttribute('data-umami-event', 'tab-select');
     a.innerHTML = `<span class="explorer-icon flex-none text-(--fg-faint)">${tabIconFor(tab.path)}</span><span class="truncate">${tab.label}</span>`;
 
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'flex-none text-(--fg-faint) pointer-coarse:opacity-100 hover:text-(--fg) group-hover:opacity-100 opacity-0';
     close.setAttribute('aria-label', `Close ${tab.label}`);
+    close.setAttribute('data-umami-event', 'tab-close');
     close.innerHTML =
       '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
     close.addEventListener('click', (e) => {

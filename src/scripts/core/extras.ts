@@ -34,6 +34,7 @@ function addCopyButtons(): void {
     btn.type = 'button';
     btn.className = 'copy-btn';
     btn.setAttribute('aria-label', 'Copy code to clipboard');
+    btn.setAttribute('data-umami-event', 'code-copy');
     btn.title = 'Copy';
     btn.innerHTML =
       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' +

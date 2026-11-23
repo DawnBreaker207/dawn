@@ -332,7 +332,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
               : null;
             return (
               <li class={idx === 0 ? 'is-current' : ''} data-step-idx={idx}>
-                <button type="button" data-step={idx} title={step.title}>
+                <button type="button" data-step={idx} title={step.title} data-umami-event="workbench-step-select">
                   <span class={`timeline__dot ${chp ? `chapter-dot--${chp.tone}` : ''}`}>{idx + 1}</span>
                   <span class="timeline__label">{step.short}</span>
                 </button>
@@ -507,6 +507,10 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
       root?.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail, bubbles: true }));
       window.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail }));
       document.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail }));
+
+      if (isInitialized) {
+        (window as any).umami?.track('workbench-step-change', { lesson: lesson.id, step: idx + 1 });
+      }
 
       // Guide meta
       if (elStepLabel) elStepLabel.textContent = `Step ${idx + 1} / ${total}`;
@@ -701,6 +705,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
     elBtnBack?.addEventListener('click', () => renderStep(curIdx - 1));
     elBtnNext?.addEventListener('click', () => {
       if (curIdx === total - 1 && nextLesson?.href) {
+        (window as any).umami?.track('workbench-lesson-complete', { lesson: lesson.id, next: nextLesson.title });
         window.location.href = nextLesson.href;
         return;
       }

@@ -34,8 +34,8 @@ const txnBCode = [
         <span class="state-badge" id="mvcc-badge-iso">READ COMMITTED</span>
       </div>
       <div class="flex items-center gap-1 font-mono text-[10px]">
-        <button type="button" class="mvcc-iso-btn is-active" data-iso="rc">READ COMMITTED</button>
-        <button type="button" class="mvcc-iso-btn" data-iso="rr">REPEATABLE READ</button>
+        <button type="button" class="mvcc-iso-btn is-active" data-iso="rc" data-umami-event="sql-mvcc-iso-rc">READ COMMITTED</button>
+        <button type="button" class="mvcc-iso-btn" data-iso="rr" data-umami-event="sql-mvcc-iso-rr">REPEATABLE READ</button>
       </div>
     </div>
 

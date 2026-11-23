@@ -19,7 +19,7 @@
       { label: '🗓️ Full year', q: 'full' },
       { label: '🚫 No filter', q: 'none' },
     ].map(p => (
-      <button type="button" data-pv-preset={p.q}
+      <button type="button" data-pv-preset={p.q} data-umami-event="sql-partition-preset"
         class="pv-btn cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-[11px] font-semibold text-(--fg-dim) transition-all hover:border-(--fg-dim) hover:text-(--fg) touch-manipulation min-h-[34px]">
         {p.label}
       </button>
@@ -53,11 +53,11 @@
 
   <!-- Run + Replay -->
   <div class="flex items-center gap-2 border-t border-(--border) pt-3">
-    <button type="button" id="pv-run"
+    <button type="button" id="pv-run" data-umami-event="sql-partition-run"
       class="cursor-pointer rounded-lg border border-cyan-500 bg-cyan-500/20 px-4 py-2 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 touch-manipulation min-h-[38px] hover:bg-cyan-500/30 transition-all active:scale-95">
       ▶ Run
     </button>
-    <button type="button" id="pv-replay"
+    <button type="button" id="pv-replay" data-umami-event="sql-partition-replay"
       class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-2 text-[11px] font-semibold text-(--fg-dim) touch-manipulation min-h-[38px] hover:text-(--fg) transition-colors active:scale-95">
       ↻ Replay
     </button>

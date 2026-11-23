@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { trackEvent } from '@/lib/analytics';
 import timelineData from '@/data/timeline.json';
 import { LABS } from '@/data/labs';
 
@@ -102,14 +103,14 @@ export default function CommandPalette({
     const ae = document.activeElement;
     restoreRef.current = ae instanceof HTMLElement && ae !== document.body ? ae : null;
     setOpen(true);
-    (window as { umami?: { track: (e: string) => void } }).umami?.track('palette-open');
+    trackEvent('palette-open');
   }, []);
 
   const close = useCallback(() => {
     setOpen(false);
     setInput('');
     setSel(-1);
-    (window as { umami?: { track: (e: string) => void } }).umami?.track('palette-close');
+    trackEvent('palette-close');
     const el = restoreRef.current;
     restoreRef.current = null;
     if (el && el.isConnected) el.focus();
@@ -120,7 +121,7 @@ export default function CommandPalette({
     restoreRef.current = footer;
     footer.focus();
     setOpen(true);
-    (window as { umami?: { track: (e: string) => void } }).umami?.track('terminal-open');
+    trackEvent('terminal-open');
   }, []);
 
   const welcomeNode = (
@@ -568,6 +569,7 @@ export default function CommandPalette({
 
   const acceptSugg = (item: Sugg): void => {
     if (item.route) {
+      trackEvent('palette-nav', { target: item.text, route: item.route });
       close();
       location.assign(item.route);
       return;
@@ -593,12 +595,17 @@ export default function CommandPalette({
     setInput('');
     setEntries((prev) => [...prev, { kind: 'cmd', text: cmd }]);
     if (key === 'clear') {
+      trackEvent('terminal-cmd', { cmd: 'clear' });
       setEntries([]);
       return;
     }
     const c = commands[key];
-    if (c) c.run(args);
-    else setEntries((prev) => [...prev, { kind: 'err', text: `command not found: ${cmd}` }]);
+    if (c) {
+      trackEvent('terminal-cmd', { cmd: key });
+      c.run(args);
+    } else {
+      setEntries((prev) => [...prev, { kind: 'err', text: `command not found: ${cmd}` }]);
+    }
   };
 
   const goHistory = (dir: 1 | -1): void => {
