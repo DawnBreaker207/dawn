@@ -296,7 +296,20 @@ const CURRICULUM_TRACK_ITEMS = [
     </summary>
 
     <nav class="tree-children space-y-0.5 py-1">
-      <div class="px-2 pt-1 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
+      <a
+        href="/lab"
+        class:list={['explorer-row no-underline font-medium', activePath === '/lab' && 'is-active']}
+        aria-current={activePath === '/lab' ? 'page' : undefined}
+        title="Lab Overview & Directory"
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="markdown" />
+        </span>
+        <span class="row-label truncate">README.md</span>
+      </a>
+
+      <div class="px-2 pt-1.5 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
         <span>Blog Architecture</span>
         <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--accent)">Edge-First</span>
       </div>
@@ -351,7 +364,7 @@ const CURRICULUM_TRACK_ITEMS = [
       </details>
 
       <!-- Simulators & Extras (Folder) -->
-      <details class="tree-sec" data-sec="simulators" open={activePath.startsWith('/lab/terminal') || activePath.startsWith('/lab/pathfinding') || activePath.startsWith('/lab/spider') || activePath === '/lab'}>
+      <details class="tree-sec" data-sec="simulators" open={activePath.startsWith('/lab/terminal') || activePath.startsWith('/lab/pathfinding') || activePath.startsWith('/lab/spider')}>
         <summary class="explorer-row">
           <span class="explorer-caret">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -371,7 +384,6 @@ const CURRICULUM_TRACK_ITEMS = [
         </summary>
         <div class="tree-children">
           {[
-            ['/lab', 'README.md', 'markdown'],
             ['/lab/terminal', 'terminal.astro', 'astro'],
             ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
             ['/lab/spider', 'spider.astro', 'astro'],
