@@ -72,72 +72,48 @@ const SOCIALS = [
       <CareerTimeline />
 
       <h2>Tech stack</h2>
-      <div class="not-prose mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <!-- 1. Backend & Systems -->
-        <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-4.5 shadow-sm transition-all hover:border-(--accent-dim)">
-          <div class="mb-3 flex items-center gap-2">
-            <span class="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border) bg-(--bg) text-sm shadow-[1px_1px_0_var(--border)]">☕</span>
-            <h3 class="m-0 font-mono text-sm font-semibold tracking-tight text-(--fg)">Backend &amp; Systems</h3>
-          </div>
-          <div class="flex flex-wrap gap-1.5">
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Java 21 (LTS)</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Spring Boot 3</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Spring Security</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Apache Kafka</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">RabbitMQ</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Virtual Threads</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Microservices / Sagas</span>
-          </div>
-        </div>
-
-        <!-- 2. Databases & Storage -->
-        <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-4.5 shadow-sm transition-all hover:border-(--accent-dim)">
-          <div class="mb-3 flex items-center gap-2">
-            <span class="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border) bg-(--bg) text-sm shadow-[1px_1px_0_var(--border)]">🗄️</span>
-            <h3 class="m-0 font-mono text-sm font-semibold tracking-tight text-(--fg)">Database &amp; Storage Tier</h3>
-          </div>
-          <div class="flex flex-wrap gap-1.5">
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">PostgreSQL</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Redis Caching</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">MVCC &amp; B-Tree</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Query Optimization</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Prisma ORM</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">JPA / Hibernate</span>
-          </div>
-        </div>
-
-        <!-- 3. Frontend & Studio Engine -->
-        <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-4.5 shadow-sm transition-all hover:border-(--accent-dim)">
-          <div class="mb-3 flex items-center gap-2">
-            <span class="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border) bg-(--bg) text-sm shadow-[1px_1px_0_var(--border)]">⚡</span>
-            <h3 class="m-0 font-mono text-sm font-semibold tracking-tight text-(--fg)">Frontend &amp; Studio Engine</h3>
-          </div>
-          <div class="flex flex-wrap gap-1.5">
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Astro 5 (SSG + SSR)</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">TypeScript Strict</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">React 19 Islands</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Tailwind CSS v4</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">DTS 2.5D Isometric Engine</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">MDX Collections</span>
-          </div>
-        </div>
-
-        <!-- 4. Cloud, DevOps & Infra -->
-        <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-4.5 shadow-sm transition-all hover:border-(--accent-dim)">
-          <div class="mb-3 flex items-center gap-2">
-            <span class="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border) bg-(--bg) text-sm shadow-[1px_1px_0_var(--border)]">☁️</span>
-            <h3 class="m-0 font-mono text-sm font-semibold tracking-tight text-(--fg)">Cloud, DevOps &amp; Infra</h3>
-          </div>
-          <div class="flex flex-wrap gap-1.5">
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">AWS (VPC, RDS, S3)</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Docker Containers</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Kubernetes (k8s)</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">CI/CD GitHub Actions</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Vercel Edge</span>
-            <span class="rounded-md border border-(--border) bg-(--bg) px-2 py-1 font-mono text-xs text-(--fg-dim)">Notion API CMS</span>
-          </div>
-        </div>
-      </div>
+      <ul class="not-prose mt-6 space-y-2.5">
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="desktop-computer" size="base" class="!m-0 shrink-0" />
+          <span>Astro 5 + Vercel adapter — static posts (SSG) &amp; SSR API endpoints.</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="keyboard" size="base" class="!m-0 shrink-0" />
+          <span>TypeScript strict throughout + MDX content collections.</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="atom-symbol" size="base" class="!m-0 shrink-0" />
+          <span>React 19 for interactive islands (CommandPalette, Lab workbench &amp; live widgets).</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="light-bulb" size="base" class="!m-0 shrink-0" />
+          <span>DTS 2.5D Isometric Simulation Engine — interactive SVG system architecture playback.</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="inbox-tray" size="base" class="!m-0 shrink-0" />
+          <span>Notion as CMS — posts synced to MDX via <code>sync-notion</code>.</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="hammer-and-wrench" size="base" class="!m-0 shrink-0" />
+          <span>Tailwind CSS v4 + CSS custom properties for theming.</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="electric-plug" size="base" class="!m-0 shrink-0" />
+          <span>Prisma ORM &amp; PostgreSQL for server runtime database layer.</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="bar-chart" size="base" class="!m-0 shrink-0" />
+          <span><a href="https://umami.is/" target="_blank">Umami</a> for privacy-friendly analytics.</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="clapping-hands" size="base" class="!m-0 shrink-0" />
+          <span><a href="https://giscus.app/" target="_blank">Giscus</a> for comments.</span>
+        </li>
+        <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
+          <Twemoji emoji="face-with-monocle" size="base" class="!m-0 shrink-0" />
+          <span>Dark mode inspired by the <a href="https://github.com/folke/tokyonight.nvim" target="_blank">Tokyonight Neovim Theme</a>.</span>
+        </li>
+      </ul>
 
       <h2>Social</h2>
       <p>Reach me at <a href={`mailto:${SITE.email}`}>{SITE.email}</a> or find me on social:</p>
