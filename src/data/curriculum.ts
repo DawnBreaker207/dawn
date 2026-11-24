@@ -396,6 +396,7 @@ export const DTS_MODULES: Module[] = [
     trackId: 'angular',
     color: 'red',
     lessons: [
+      { id: 'angular-flow', title: 'Angular Flow: End-to-End Request to Render', section: 'Core Building Blocks' },
       { id: 'angular-architecture-overview', title: 'Architecture Overview: Bootstrap to Component Tree', section: 'Core Building Blocks' },
       { id: 'angular-modules-standalone', title: 'NgModules vs Standalone Architecture & Tree-Shaking', section: 'Core Building Blocks' },
       { id: 'angular-component-lifecycle', title: 'Component & Directive Lifecycle Pipeline', section: 'Core Building Blocks' },
@@ -470,7 +471,7 @@ export function getLessonHref(id: string): string {
   if (id === 'hld-lld' || id === 'system-design') return '/lab/system-design';
   if (id === 'aws-cloud') return '/lab/aws-cloud';
   if (id === 'git' || id === 'git-environments-lifecycle') return '/lab/git';
-  if (id === 'angular' || id === 'angular-architecture-overview') return '/lab/angular';
+  if (id === 'angular' || id === 'angular-flow') return '/lab/angular';
   if (id === 'devops' || id === 'devops-culture-silos') return '/lab/devops';
   return `/lab/${id}`;
 }

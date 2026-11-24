@@ -144,6 +144,7 @@ import { gitBisectAutomationLesson } from './git/git-bisect-automation';
 import { gitSubmoduleSubtreeLesson } from './git/git-submodule-subtree';
 
 // Angular Simulation Tracks (Track 11)
+import { angularFlowLesson } from './angular/angular-flow';
 import { angularArchitectureOverviewLesson } from './angular/angular-architecture-overview';
 import { angularModulesStandaloneLesson } from './angular/angular-modules-standalone';
 import { angularComponentLifecycleLesson } from './angular/angular-component-lifecycle';
@@ -291,6 +292,7 @@ export {
   gitBisectAutomationLesson,
   gitSubmoduleSubtreeLesson,
   // Angular Simulation Tracks
+  angularFlowLesson,
   angularArchitectureOverviewLesson,
   angularModulesStandaloneLesson,
   angularComponentLifecycleLesson,
@@ -443,6 +445,7 @@ export const ALL_SCENES: Record<string, any> = {
   'git-submodule-subtree': gitSubmoduleSubtreeLesson,
   'git': gitEnvironmentsLifecycleLesson,
   // Angular Simulation Tracks (Track 11)
+  'angular-flow': angularFlowLesson,
   'angular-architecture-overview': angularArchitectureOverviewLesson,
   'angular-modules-standalone': angularModulesStandaloneLesson,
   'angular-component-lifecycle': angularComponentLifecycleLesson,
@@ -458,7 +461,7 @@ export const ALL_SCENES: Record<string, any> = {
   'angular-control-flow': angularControlFlowLesson,
   'angular-defer-loading': angularDeferLoadingLesson,
   'angular-hydration-replay': angularHydrationReplayLesson,
-  'angular': angularArchitectureOverviewLesson,
+  'angular': angularFlowLesson,
   // DevOps Simulation Tracks (Track 12)
   'devops-culture-silos': devopsCultureSilosLesson,
   'cicd-tools-evolution': cicdToolsEvolutionLesson,
