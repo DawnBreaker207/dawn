@@ -11,7 +11,7 @@ import {
 
 export const devopsCultureSilosLesson = {
   id: 'devops-culture-silos',
-  title: 'From Dev-Ops Silos to CAMS & Shared Ownership',
+  title: 'DevOps Culture & CAMS Model',
   summary: 'Deconstruct the historical "Wall of Confusion" between Development and Operations. Explore the CAMS model (Culture, Automation, Measurement, Sharing), Shift-Left quality gates, and SRE error budget governance.',
   minutes: 25,
   level: 'beginner',
@@ -41,9 +41,11 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Opposed (0%)', wallOfConfusion: 'Fortified Wall', feedbackLatency: 'Weeks (Late Ticket)', deploymentFriction: 'Severe (Weekend War-room)' },
       scene: {
         entities: {
-          devTeam: y(-10, -18, { label: 'dev-team', tags: [{ text: 'Ship 10 Features', tone: 'blue', icon: 'zap' }] }),
-          wall: d(0, -6, { s: 4.8, h: 54, color: 'red', glyph: 'shield', label: ['Wall of Confusion'], sub: 'ticket queues & silos' }),
-          opsTeam: b(10, 8, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['Ops Team'], sub: 'Uptime 99.9% target' }),
+          devTeam: y(-18, -6, { label: 'dev-team', tags: [{ text: 'Ship 10 Features', tone: 'blue', icon: 'zap' }] }),
+          wall: d(-6, -2, { s: 4.8, h: 54, color: 'red', glyph: 'shield', label: ['Wall of Confusion'], sub: 'ticket silos' }),
+          opsTeam: b(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['Ops Team'], sub: '99.9% target' }),
+          zDev: x({ x0: -22, x1: -14, y0: -10, y1: -2 }),
+          zOps: x({ x0: 2, x1: 10, y0: -4, y1: 4 }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Incident Ticket: PROD-892', [
             `Ticket: PROD-892 · Priority: Blocker`,
             `Status: OPEN · Assignee: sysadmin`,
@@ -51,11 +53,10 @@ export const devopsCultureSilosLesson = {
             `Comment: "Works on my machine!" — Dev`,
             `Comment: "Deployment aborted." — Ops`,
           ], { icon: 'terminal' }),
-          zSilo: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'HISTORICAL SILOED ORGANIZATIONAL MODEL'),
         },
         links: {
           dw: h('devTeam', 'wall', ['devTeam', 'wall'], { label: 'toss code over wall' }),
-          wo: h('wall', 'opsTeam', ['wall', 'opsTeam'], { label: 'manual deployment ticket' }),
+          wo: h('wall', 'opsTeam', ['wall', 'opsTeam'], { label: 'manual ticket' }),
         },
         flows: [{ route: ['dw', 'wo'], kind: 'handover', rate: 1.2 }],
       },
@@ -79,9 +80,9 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Unified (100%)', wallOfConfusion: 'Demolished', feedbackLatency: 'Minutes (Automated CI)', deploymentFriction: 'Low (Self-service)' },
       scene: {
         entities: {
-          crossTeam: y(-8, -18, { label: 'cross-functional', tags: [{ text: 'Dev + Ops Unified', tone: 'green', icon: 'shield' }] }),
-          autoPipeline: d(0, -5, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Automated CI/CD'], sub: 'Pipeline-as-code' }),
-          sharedTelemetry: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'clock', label: ['Shared Telemetry'], sub: 'APM, traces, alerts' }),
+          devTeam: y(-18, -6, { label: 'dev-team', tags: [{ text: 'Cross-Team Dev', tone: 'green', icon: 'shield' }] }),
+          ciPipeline: d(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Automated CI/CD'], sub: 'pipeline CI' }),
+          stableFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Shared Fleet'], sub: 'APM & traces' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'CAMS Framework Contract', [
             `Culture:     You build it, you run it`,
             `Automation:  Zero manual SSH to production`,
@@ -89,13 +90,12 @@ export const devopsCultureSilosLesson = {
             `Sharing:     Blameless retrospectives`,
             `= Unified engineering velocity & safety`,
           ], { icon: 'terminal' }),
-          zCams: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'CAMS UNIFIED OWNERSHIP MODEL'),
         },
         links: {
-          ca: h('crossTeam', 'autoPipeline', ['crossTeam', 'autoPipeline'], { label: 'push commit' }),
-          as: h('autoPipeline', 'sharedTelemetry', ['autoPipeline', 'sharedTelemetry'], { label: 'observable release' }),
+          dc: h('devTeam', 'ciPipeline', ['devTeam', 'ciPipeline'], { label: 'push commit' }),
+          cs: h('ciPipeline', 'stableFleet', ['ciPipeline', 'stableFleet'], { label: 'observable release' }),
         },
-        flows: [{ route: ['ca', 'as'], kind: 'feedback', rate: 1.5 }],
+        flows: [{ route: ['dc', 'cs'], kind: 'feedback', rate: 1.5 }],
       },
     },
     {
@@ -114,9 +114,9 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Shift-Left Active', wallOfConfusion: '0', feedbackLatency: '3m 12s (Fast PR Check)', deploymentFriction: 'Automated Gate' },
       scene: {
         entities: {
-          prAuthor: y(-10, -18, { label: 'author', tags: [{ text: 'PR #104: feat/auth', tone: 'blue', icon: 'gitBranch' }] }),
-          prGates: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Shift-Left Gates'], sub: 'SAST + Unit + Lint' }),
-          mainBranch: b(10, 8, { s: 4.6, h: 48, color: 'green', glyph: 'gitBranch', label: ['main Branch'], sub: 'Protected merge target' }),
+          devTeam: y(-18, -6, { label: 'dev-team', tags: [{ text: 'PR #104: feat/auth', tone: 'blue', icon: 'gitBranch' }] }),
+          ciPipeline: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Shift-Left Gates'], sub: 'SAST & unit' }),
+          stableFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['main Trunk'], sub: 'main trunk' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'GitHub Actions PR Matrix', [
             `✓ unit-tests (node 20)        passed (42s)`,
             `✓ dependency-vulnerability    0 high/crit`,
@@ -124,13 +124,12 @@ export const devopsCultureSilosLesson = {
             `✓ e2e-smoke-test              100% pass`,
             `= All checks passed: Ready to merge`,
           ], { icon: 'terminal' }),
-          zLeft: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SHIFT-LEFT QUALITY VERIFICATION'),
         },
         links: {
-          pg: h('prAuthor', 'prGates', ['prAuthor', 'prGates'], { label: 'open PR' }),
-          gm: h('prGates', 'mainBranch', ['prGates', 'mainBranch'], { label: 'auto-approve merge' }),
+          dc: h('devTeam', 'ciPipeline', ['devTeam', 'ciPipeline'], { label: 'open PR' }),
+          cs: h('ciPipeline', 'stableFleet', ['ciPipeline', 'stableFleet'], { label: 'auto merge' }),
         },
-        flows: [{ route: ['pg', 'gm'], kind: 'gate', rate: 1.6 }],
+        flows: [{ route: ['dc', 'cs'], kind: 'gate', rate: 1.6 }],
       },
     },
     {
@@ -149,10 +148,10 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Shift-Right Active', wallOfConfusion: '0', feedbackLatency: 'Realtime (APM stream)', deploymentFriction: '5% Canary Split' },
       scene: {
         entities: {
-          traffic: y(-10, -18, { label: 'users', tags: [{ text: 'Live Traffic', icon: 'globe' }] }),
-          canaryRouter: d(0, -6, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['Canary Router'], sub: '95% Stable / 5% Canary' }),
-          stableFleet: b(10, 2, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Stable Fleet v1.8'], sub: '95% traffic (HTTP 200)' }),
-          canaryPod: d(10, 12, { s: 4.4, h: 48, color: 'cyan', glyph: 'zap', label: ['Canary Pod v1.9'], sub: '5% traffic (Monitored)' }),
+          devTeam: y(-18, -6, { label: 'dev-team', tags: [{ text: 'Live Traffic', icon: 'globe' }] }),
+          ciPipeline: d(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['Canary Router'], sub: 'canary split' }),
+          stableFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Stable Fleet v1.8'], sub: '95% traffic' }),
+          canaryPod: d(-4, 16, { s: 4.4, h: 48, color: 'cyan', glyph: 'zap', label: ['Canary Pod v1.9'], sub: '5% canary' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Prometheus Canary Telemetry', [
             `router: split: stable=95% canary=5%`,
             `v1.8 stable: http_5xx_rate = 0.01%`,
@@ -160,16 +159,15 @@ export const devopsCultureSilosLesson = {
             `p99 latency: 42ms (threshold < 80ms)`,
             `= Status: Healthy -> Promoting to 25%`,
           ], { icon: 'terminal' }),
-          zRight: x({ x0: -14, x1: 14, y0: -22, y1: 16 }, 'SHIFT-RIGHT PROGRESSIVE DELIVERY'),
         },
         links: {
-          tc: h('traffic', 'canaryRouter', ['traffic', 'canaryRouter'], { label: 'incoming requests' }),
-          cs: h('canaryRouter', 'stableFleet', ['canaryRouter', 'stableFleet'], { label: '95% load' }),
-          cc: h('canaryRouter', 'canaryPod', ['canaryRouter', 'canaryPod'], { label: '5% canary' }),
+          dc: h('devTeam', 'ciPipeline', ['devTeam', 'ciPipeline'], { label: 'live traffic' }),
+          cs: h('ciPipeline', 'stableFleet', ['ciPipeline', 'stableFleet'], { label: '95% load' }),
+          cc: h('ciPipeline', 'canaryPod', ['ciPipeline', 'canaryPod'], { label: '5% canary' }),
         },
         flows: [
-          { route: ['tc', 'cs'], kind: 'feedback', rate: 1.8 },
-          { route: ['tc', 'cc'], kind: 'gate', rate: 0.6 },
+          { route: ['dc', 'cs'], kind: 'feedback', rate: 1.8 },
+          { route: ['dc', 'cc'], kind: 'gate', rate: 0.6 },
         ],
       },
     },
@@ -190,9 +188,9 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Psychological Safety', wallOfConfusion: '0', feedbackLatency: 'Postmortem in 24h', deploymentFriction: 'Continuous Learning' },
       scene: {
         entities: {
-          incident: y(-10, -18, { label: 'incident', tags: [{ text: 'Outage Severity 2', tone: 'red', icon: 'alert' }] }),
-          retrospective: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['Blameless Review'], sub: 'Timeline & 5 Whys' }),
-          hardenedCi: b(10, 8, { s: 4.6, h: 48, color: 'green', glyph: 'shield', label: ['Hardened Pipeline'], sub: 'Automated safeguard added' }),
+          devTeam: y(-18, -6, { label: 'dev-team', tags: [{ text: 'Incident Review', tone: 'red', icon: 'alert' }] }),
+          ciPipeline: d(-6, -2, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['Blameless Retro'], sub: '5 whys root' }),
+          stableFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'shield', label: ['Hardened CI'], sub: 'auto guard' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Postmortem Action Items', [
             `Timeline: 14:02 DB connection exhausted`,
             `Root Cause: Missing pool limit in config`,
@@ -200,13 +198,12 @@ export const devopsCultureSilosLesson = {
             `Why 2: Staging config diverged from prod`,
             `Action: Enforce schema lint in CI gate`,
           ], { icon: 'terminal' }),
-          zPost: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'BLAMELESS LEARNING LOOP'),
         },
         links: {
-          ir: h('incident', 'retrospective', ['incident', 'retrospective'], { label: 'incident review' }),
-          rh: h('retrospective', 'hardenedCi', ['retrospective', 'hardenedCi'], { label: 'add guardrail' }),
+          dc: h('devTeam', 'ciPipeline', ['devTeam', 'ciPipeline'], { label: 'incident review' }),
+          cs: h('ciPipeline', 'stableFleet', ['ciPipeline', 'stableFleet'], { label: 'add guardrail' }),
         },
-        flows: [{ route: ['ir', 'rh'], kind: 'feedback', rate: 1.4 }],
+        flows: [{ route: ['dc', 'cs'], kind: 'feedback', rate: 1.4 }],
       },
     },
     {
@@ -225,9 +222,10 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'SRE Mathematical SLA', wallOfConfusion: '0', feedbackLatency: 'Continuous SLI', deploymentFriction: 'Autonomous Release' },
       scene: {
         entities: {
-          sloTracker: y(-10, -18, { label: 'slo-monitor', tags: [{ text: 'SLO 99.95% Active', tone: 'green', icon: 'clock' }] }),
-          policyGate: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Error Budget Gate'], sub: '82% Remaining -> Ship!' }),
-          prodFleet: b(10, 8, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['Production Fleet'], sub: 'Continuous Delivery Flow' }),
+          devTeam: y(-18, -6, { label: 'dev-team', tags: [{ text: 'SLO 99.95% Active', tone: 'green', icon: 'clock' }] }),
+          ciPipeline: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Policy Gate'], sub: '82% budget' }),
+          stableFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['Production Fleet'], sub: 'continuous CD' }),
+          sreGovernance: b(14, 6, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['SLO Registry'], sub: 'CFR < 5%' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'SRE Error Budget Balance', [
             `Target SLO:      99.95% Availability`,
             `Current SLI:     99.98% (Rolling 30d)`,
@@ -235,13 +233,13 @@ export const devopsCultureSilosLesson = {
             `Budget Consumed: 3.8 minutes (18%)`,
             `Budget Status:   HEALTHY -> Deployments ON`,
           ], { icon: 'terminal' }),
-          zSre: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SRE ERROR BUDGET GOVERNANCE'),
         },
         links: {
-          sp: h('sloTracker', 'policyGate', ['sloTracker', 'policyGate'], { label: 'telemetry feed' }),
-          pf: h('policyGate', 'prodFleet', ['policyGate', 'prodFleet'], { label: 'authorize release' }),
+          dc: h('devTeam', 'ciPipeline', ['devTeam', 'ciPipeline'], { label: 'telemetry feed' }),
+          cs: h('ciPipeline', 'stableFleet', ['ciPipeline', 'stableFleet'], { label: 'ship feature' }),
+          sg: h('stableFleet', 'sreGovernance', ['stableFleet', 'sreGovernance'], { label: 'audit SLI' }),
         },
-        flows: [{ route: ['sp', 'pf'], kind: 'gate', rate: 1.6 }],
+        flows: [{ route: ['dc', 'cs', 'sg'], kind: 'gate', rate: 1.6 }],
       },
     },
   ],

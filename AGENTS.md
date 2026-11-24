@@ -149,11 +149,14 @@ Mixing data with logic, server with client, or build scripts with browser module
 │
 ├── src/
 │   ├── data/                           ← [LAYER 1B: STATIC APPLICATION & SIMULATION DATA]
-│   │   ├── scenes/                     ← 108 DTS Simulation Scene Graphs across 10 Canonical Tracks
+│   │   ├── scenes/                     ← 137 DTS Simulation Scene Graphs across 11 Canonical Tracks
+│   │   │   ├── angular/                ← 14 Angular architecture & reactive signal DAG scenes
 │   │   │   ├── architecture/           ← batch-stream.ts, microservices.ts, sagas.ts
 │   │   │   ├── cloud/                  ← aws-vpc.ts, aws-ha.ts, k8s-*.ts, docker-*.ts
 │   │   │   ├── communication/          ← kafka-*.ts, rabbitmq-*.ts, pubsub.ts, queues.ts
 │   │   │   ├── design/                 ← hld-lld.ts, design-url-shortener.ts, design-chat.ts
+│   │   │   ├── devops/                 ← 5 DevOps culture, CI/CD runners, GitOps & DORA scenes
+│   │   │   ├── git/                    ← 14 Git zones, DAG objects, worktrees & diff3 scenes
 │   │   │   ├── network/                ← request-lifecycle.ts, tcp-internals.ts, tls-handshake.ts
 │   │   │   ├── reliability/            ← observability.ts, rate-limiting.ts, timeouts-retries.ts
 │   │   │   ├── scaling/                ← caching.ts, cdn.ts, load-balancing.ts, stateless.ts
@@ -550,15 +553,22 @@ In SVG isometric rendering, text elements are centered relative to the block's d
 
 ##### E. Floor Zone Typography & Clearance Rules
 Floor boundary zones (`makeZone` / `x({ x0, x1, y0, y1 }, 'LABEL')`) render a dashed diamond perimeter with an angled isometric title in the SVG canvas:
-- **Origin of Floor Text:** The renderer (`runtime-draw.ts:810`) places the zone text at the top-left coordinate `(x0 + 0.9, y0 + 0.55)` and projects it along the isometric $y$-axis running along the left dashed boundary.
-- **Zone Label Length Limit ($\le 18$ characters):**
-  - Floor zone labels MUST be concise and punchy (e.g. `'OS FILESYSTEM'`, `'STAGING AREA'`, `'OBJECT STORE'`, `'ROUTER MESH'`).
-  - **MAX LENGTH:** `zone.label` MUST NOT exceed **18 characters**.
-  - **STRICTLY FORBIDDEN:** Long sentences or 30+ character phrases (e.g. `'WRITE-TREE DIRECTORY COMPILATION'`). Lengthy text spans over $250\text{px}$ along the floor edge, slicing straight through entity nodes.
+- **Origin & Vector Projection of Floor Text:**
+  - The renderer (`runtime-draw.ts:810`) places the zone text at `(x0 + 0.9, y0 + 0.55)` and projects it along the isometric $+x$ grid axis using SVG `matrix(1 0.5 -1 0.5 sx sy)`.
+  - In screen pixel coordinates, this trajectory runs along vector $[dx, dy] = [1, 0.5]$ (down-right at $+26.57^\circ$, following the top-left to bottom dashed edge from $(x0, y0)$ toward $(x1, y0)$).
+  - Each character occupies approximately $9.2\text{px}$ in screen width (font-size 10.5, font-weight 800, letter-spacing 1.6).
+- **Zone Label Length Limit ($\le 14$ characters):**
+  - Floor zone labels MUST be concise architectural tags (e.g. `'DEV SILO'`, `'OPS SILO'`, `'PUBLIC SUBNET'`, `'K8S CLUSTER'`).
+  - **MAX LENGTH:** `zone.label` MUST NOT exceed **14 characters** (hard ceiling 16 characters).
+  - **STRICTLY FORBIDDEN:** Long descriptive sentences or chapter titles (e.g. `'HISTORICAL SILOED ORGANIZATIONAL MODEL'`, `'SHIFT-LEFT QUALITY VERIFICATION'`). A 30+ character string spans $> 280\text{px}$ in screen space, slicing straight through entity nodes placed along the top tier.
+- **Strict Anti-Dummy Wrapper Zone Rule:**
+  - A `makeZone` is NOT a decorative picture frame for the entire canvas.
+  - **STRICTLY FORBIDDEN:** Wrapping the entire diagram in an artificial scene-wide zone (e.g. `makeZone({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'STEP TITLE')`). This is a severe anti-pattern that distorts camera auto-fit scaling, pollutes the background with redundant text, and stamps text directly under top-tier entities.
+  - If architectural boundary isolation is not conceptually required, **omit the zone entirely**.
+  - When boundary isolation IS required (e.g., dual silos Dev vs Ops, or Public vs Private Subnet), create localized, tightly-hugged zones enclosing only their respective member nodes. If a boundary line is desired without visual noise, pass an empty string `''` to render a clean dashed boundary with zero floor text.
 - **Zone Label Clearance & Anti-Pill Stamping:**
-  - When placing entities in Tier 1 ($x \in [-12, -8], y \in [-20, -16]$):
-  - Any node, tag pill, or device label (such as `label: 'index-binary'` underneath a laptop) MUST NOT intersect or sit on top of the zone's floor text trajectory.
-  - Maintain at least **$25\text{px}$ physical separation** between any entity pill/tag and the floor zone title text. If space is tight, expand `x0` and `y0` outward (e.g. `x0: -16, y0: -24`) so the zone boundary and its title sit safely behind all Tier 1 components.
+  - Since text projects from $(x0, y0)$ toward $(x1, y0)$, any entity whose coordinates satisfy $y_e \approx y0$ (e.g. $|y_e - y0| \le 5$) and $x_e \in [x0, x0 + \frac{L \times 9.2}{14}]$ sits directly on top of the text trajectory.
+  - Maintain at least **$40\text{px}$ physical separation** between any node base/tag pill and the floor zone title text. If space is tight, either omit the label (`label: ''`) or shift $y0$ safely behind the component tier ($y0 \le y_e - 4$).
 
 ##### F. Viewport Framing, Auto-Fit Camera & Compact Bounding Box Standard
 The simulation canvas dynamically computes the bounding box of all scene entities (including floor zones) to auto-center and scale the camera:
@@ -594,6 +604,11 @@ Every computer science domain possesses a distinct **Mental Model (Data Structur
    - **Topology:** Reference standard `Monolith vs Microservices`: Step 1 renders a large unified monolith slab (`s: 5.5, h: 60`) sharing a single database cylinder. Subsequent steps dynamically decompose it into 4 isolated microservice blocks with dedicated databases.
 8. **Circular Hash Rings (Consistent Hashing, Ring Buffers):**
    - **Topology:** Hash ring (`makeRing`) with physical nodes and virtual vnodes distributed along the perimeter, with keys mapped clockwise.
+9. **Continuous Delivery & Progressive Rollouts (Pipelines, Canaries & Reconciliation):**
+   - **Topology:** Multi-stage delivery flow that progressively unfolds across steps:
+     - *Stage Flow:* Source events trigger execution runners, automated quality gates, and artifact persistence.
+     - *Progressive Traffic Splitting:* Routing balancer directs primary traffic to stable targets while isolating canary workloads to verify live telemetry.
+     - *Reconciliation Feedback:* Declarative target state compared against runtime state in a continuous feedback loop to identify and self-heal configuration drift.
 
 **Dynamic Storytelling across Steps:**
 A 6-step simulation lesson MUST NOT retain an identical, static node diagram from Step 1 to Step 6. Across steps, the learner MUST witness genuine architectural state transitions:
@@ -807,21 +822,24 @@ A floating panel provides high pedagogical value when it presents a **concrete t
   ```
   The scene linter and master auditor **MUST pass with 0 critical overlaps (`CLEAN`), 0 broken links, 0 goal alignment errors, and 0 glyph-label collision hazards**, and the static build must complete with exit code 0.
 
-### Canonical Navigation & Domain Grouping (8 Topics on Navbar)
+### Canonical Navigation & Domain Grouping (11 Topics on Navbar)
 
-All interactive simulations are strictly partitioned into 8 mutually exclusive domain tracks on the Navbar / Sidebar Explorer:
+All interactive simulations are strictly partitioned into 11 mutually exclusive domain tracks on the Navbar / Sidebar Explorer:
 
 | Nav Item | Domain Scope | Included Content & Exclusions | Total Lessons |
 |---|---|---|:---:|
-| **`network.sim`** | Network Protocols & Edge Scaling | TCP internals, TLS 1.3/mTLS, HTTP/3 QUIC, Anycast DNS, WebSockets, Request lifecycle, Latency & Percentiles (P50/P90/P95/P99), L4 DSR vs L7 Envoy, Caching, CDN, DDoS defense | **15** |
+| **`network.sim`** | Network Protocols & Edge Scaling | TCP internals, TLS 1.3/mTLS, HTTP/3 QUIC, Anycast DNS, WebSockets, Request lifecycle, Latency & Percentiles, L4 DSR vs L7 Envoy, Caching, CDN, DDoS defense | **15** |
 | **`storage.sim`** | Database & In-Memory Engines | **PostgreSQL Engine (8 lessons):** Planner, Indexes, Storage Engines, Footprint, SQL vs NoSQL, Pool, MVCC Txns, EXPLAIN.<br>**Redis In-Memory Engine (6 lessons):** Single-thread event loop, Dict & SDS, Skiplist, Persistence (RDB/AOF), Sentinels, Cluster Sharding | **14** |
+| **`git.sim`** | Git Internals & Branching Operations | 4 Git zones, commit DAG objects, symbolic refs, detached HEAD, worktree concurrency, 3-way diff3, rebase surgery, CRLF filters, bisect, submodules | **14** |
+| **`angular.sim`** | Angular Architecture & Reactivity | Component lifecycle, standalone DI, interceptors, router pipeline, Ivy incremental DOM, Signals reactive DAG, zoneless runtime, non-destructive hydration | **14** |
+| **`devops.sim`** | DevOps Engineering & Delivery | Team incentives & culture, toolchain evolution, pipeline runner internals & ephemeral isolation, GitOps reconciliation loop, 4 DORA metrics & error budgets | **5** |
 | **`distributed.sim`** | Distributed Systems Core | Streaming replication, sharding & partitioning, consistent hashing ring, Snowflake IDs, CAP theorem, Raft consensus | **6** |
-| **`microservices.sim`** | Microservices, Kafka & Queues | Monolith vs microservices, service discovery, sagas, REST/gRPC.<br>**Apache Kafka (4 lessons):** Partition log, Consumer groups, ISR, Exactly-once.<br>**RabbitMQ (3 lessons):** AMQP Exchanges, DLQ & Retries, High-Availability Quorum Queues | **14** |
-| **`k8s.sim`** | Containers & Kubernetes Orchestration | Docker namespaces & cgroups, multi-stage builds, K8s Pods & ReplicaSets, Services (ClusterIP/NodePort), Ingress Controller, ConfigMaps/Secrets, StatefulSets & Storage, HPA & Autoscaling | **8** |
+| **`microservices.sim`** | Microservices, Kafka & Queues | Monolith vs microservices, service discovery, sagas, REST/gRPC.<br>**Apache Kafka (4 lessons):** Partition log, Consumer groups, ISR, Exactly-once.<br>**RabbitMQ (3 lessons):** AMQP Exchanges, DLQ & Retries, Quorum Queues | **14** |
+| **`k8s.sim`** | Containers & Kubernetes Orchestration | Docker namespaces & cgroups, multi-stage builds, K8s Pods & ReplicaSets, Services, Ingress Controller, ConfigMaps/Secrets, StatefulSets & Storage, HPA & Autoscaling | **8** |
 | **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6–8 steps):** JVM memory model, GC, monitor locks, thread pools, Virtual Threads (Project Loom), Spring Security filter chain, Spring IoC bean lifecycle (27 lessons total) | **27** |
 | **`system-design.sim`** | System Design & AI Agents | HLD vs LLD, TinyURL, News Feed, Chat app, redundancy, rate limiting, timeouts/retries, observability.<br>**Flagship Lesson:** `ai-agent-architecture` (8-step Onion Model: LLM, RAG, MCP, Loop, Harness, Superpowers, LangChain, BMAD Swarms) | **10** |
-| **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking (Direct Connect/Transit Gateway), IAM & KMS Encryption, Edge Security (WAF/Shield), HA & DR Tiers, Compute (Spot/Fargate/EKS), Storage (S3/EBS/EFS), Databases (Aurora/DynamoDB), Serverless (SQS/SNS/EventBridge/Step Functions), Migration (DMS/Kinesis/Athena) | **10** |
-| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **104 Lessons** |
+| **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking, IAM & KMS Encryption, Edge Security, HA & DR Tiers, Compute, Storage, Databases, Serverless, Migration | **10** |
+| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **137 Lessons** |
 
 ### Unified Single Canvas 3D Architecture & Code-Driven Presentation Standard
 
