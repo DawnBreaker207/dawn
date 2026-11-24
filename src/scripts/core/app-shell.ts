@@ -67,7 +67,7 @@ function renderTabs() {
     const a = document.createElement('a');
     a.href = tab.path;
     a.className = 'flex min-w-0 items-center gap-2 no-underline';
-    a.setAttribute('data-umami-event', 'tab-select');
+    a.setAttribute('data-track-event', 'tab-select');
     a.innerHTML = `<span class="explorer-icon flex-none text-(--fg-faint)">${tabIconFor(tab.path)}</span><span class="truncate">${tab.label}</span>`;
 
     const close = document.createElement('button');

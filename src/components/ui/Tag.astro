@@ -24,11 +24,11 @@ function tagName(text: string): string {
       {tags.map((tag) => (
         <a
           href={`/topics/${slugify(tag)}`}
-          data-umami-event="topic-tag-click"
-          data-umami-event-tag={tag}
+          data-track-event="topic-tag-click"
+          data-track-tag={tag}
           class="rounded-lg bg-slate-100 text-sm font-medium lowercase px-2 py-0.5 font-semibold hover:bg-slate-300 dark:bg-slate-300 dark:hover:bg-slate-100 text-primary-500 dark:text-primary-700"
         >
-          <span data-umami-event={`tag-${tagName(tag)}`}>#{tagName(tag)}</span>
+          <span>#{tagName(tag)}</span>
         </a>
       ))}
     </div>

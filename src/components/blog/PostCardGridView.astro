@@ -20,7 +20,7 @@ const minutes = readingMinutes(post);
   <div class="flex flex-col items-start justify-between gap-4 md:gap-6">
     <Link
       href={`/blog/${id}`}
-      data-umami-event="blog-card-image"
+      data-track-event="blog-card-image"
       class="relative block h-auto w-full shrink-0 pt-0 pr-3 pb-3 pl-0 transition-all ease-in-out hover:pt-1 hover:pr-2 hover:pb-2 hover:pl-1 md:aspect-3/2"
     >
       <img
@@ -43,7 +43,7 @@ const minutes = readingMinutes(post);
       <TagsList tags={data.tags} />
       <div class="group relative">
         <h3 class="text-xl leading-6 font-semibold">
-          <Link href={`/blog/${id}`} data-umami-event="blog-card-title">
+          <Link href={`/blog/${id}`} data-track-event="blog-card-title">
             <GrowingUnderline>{data.title}</GrowingUnderline>
           </Link>
         </h3>

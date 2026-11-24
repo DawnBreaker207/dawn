@@ -50,8 +50,8 @@ export const prerender = true;
     {LABS.map((lab) => (
       <a
         href={lab.href}
-        data-umami-event="lab-card-click"
-        data-umami-event-lab={lab.href.replace('/lab/', '')}
+        data-track-event="lab-card-click"
+        data-track-lab={lab.href.replace('/lab/', '')}
         class="group block rounded-xl border border-(--border) bg-(--bg-alt) p-6 no-underline transition-colors hover:border-(--accent)"
       >
         <div class="flex items-center justify-between">

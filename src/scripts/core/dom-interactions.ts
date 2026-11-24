@@ -187,6 +187,39 @@ function initAnalyticsLinks() {
   });
 }
 
+/* ---- Non-blocking SPA-safe Telemetry Tracker ----
+   Bypasses Umami's default blocking location.href hijack on internal <a> links
+   while guaranteeing 100% event transmission without delaying client-side navigation. */
+let isTrackerBound = false;
+function initNonBlockingTelemetry() {
+  if (isTrackerBound) return;
+  isTrackerBound = true;
+  document.addEventListener(
+    'click',
+    (e) => {
+      const el = (e.target as Element)?.closest?.('[data-track-event]');
+      if (!el) return;
+      const eventName = el.getAttribute('data-track-event');
+      if (eventName && (window as any).umami?.track) {
+        const data: Record<string, string> = {};
+        if (el instanceof HTMLElement) {
+          for (const [key, val] of Object.entries(el.dataset)) {
+            if (key.startsWith('track') && key !== 'trackEvent' && val) {
+              const cleanKey = key.replace(/^track/, '');
+              data[cleanKey.charAt(0).toLowerCase() + cleanKey.slice(1)] = val;
+            } else if (key.startsWith('umamiEvent') && key !== 'umamiEvent' && val) {
+              const cleanKey = key.replace(/^umamiEvent/, '');
+              data[cleanKey.charAt(0).toLowerCase() + cleanKey.slice(1)] = val;
+            }
+          }
+        }
+        (window as any).umami.track(eventName, Object.keys(data).length > 0 ? data : undefined);
+      }
+    },
+    { capture: true, passive: true }
+  );
+}
+
 /* ---- Typed bios ---- */
 let typedTimer: ReturnType<typeof setTimeout> | undefined;
 function initTyped() {
@@ -457,6 +490,7 @@ function init() {
   initThemeSwitch();
   initMobileNav();
   initAnalyticsLinks();
+  initNonBlockingTelemetry();
   initTyped();
   initScrollTop();
   initToc();

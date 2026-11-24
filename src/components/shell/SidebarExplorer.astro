@@ -79,7 +79,7 @@ const CURRICULUM_TRACK_ITEMS = [
   id="sidebar"
   class="flex min-w-0 shrink-0 flex-col border-r border-(--border) bg-(--bg) px-3"
 >
-  <a href="/" data-umami-event="explorer-logo" class="flex items-center gap-2.5 px-1 pt-3 pb-2 font-extrabold no-underline text-(--fg)">
+  <a href="/" data-track-event="explorer-logo" class="flex items-center gap-2.5 px-1 pt-3 pb-2 font-extrabold no-underline text-(--fg)">
     <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-(--border) font-mono text-base shadow-[2px_2px_0_var(--border)]" aria-hidden="true">❯_</span>
     <span class="row-label truncate font-mono">{HOST}.dev</span>
   </a>
@@ -100,7 +100,7 @@ const CURRICULUM_TRACK_ITEMS = [
       href="/"
       class:list={['explorer-row no-underline', activePath === '/' && 'is-active']}
       aria-current={activePath === '/' ? 'page' : undefined}
-      data-umami-event="explorer-readme"
+      data-track-event="explorer-readme"
     >
       <span class="explorer-caret" aria-hidden="true"></span>
       <span class="explorer-icon">
@@ -132,7 +132,7 @@ const CURRICULUM_TRACK_ITEMS = [
           href="/blog"
           class:list={['explorer-row explorer-row--child no-underline', inBlogIndex && 'is-active']}
           aria-current={inBlogIndex ? 'page' : undefined}
-          data-umami-event="explorer-blog-index"
+          data-track-event="explorer-blog-index"
         >
           <span class="explorer-caret" aria-hidden="true"></span>
           <span class="explorer-icon">
@@ -145,7 +145,7 @@ const CURRICULUM_TRACK_ITEMS = [
             href={post.href}
             class:list={['explorer-row explorer-row--child no-underline', post.isActive && 'is-active']}
             aria-current={post.isActive ? 'page' : undefined}
-            data-umami-event="explorer-blog-post"
+            data-track-event="explorer-blog-post"
             title={post.title}
           >
             <span class="explorer-caret" aria-hidden="true"></span>
@@ -159,7 +159,7 @@ const CURRICULUM_TRACK_ITEMS = [
           href="/topics"
           class:list={['explorer-row explorer-row--child no-underline', activePath.startsWith('/topics') && 'is-active']}
           aria-current={activePath.startsWith('/topics') ? 'page' : undefined}
-          data-umami-event="explorer-topics"
+          data-track-event="explorer-topics"
         >
           <span class="explorer-caret" aria-hidden="true"></span>
           <span class="explorer-icon">
@@ -174,7 +174,7 @@ const CURRICULUM_TRACK_ITEMS = [
       href="/projects"
       class:list={['explorer-row no-underline', activePath.startsWith('/projects') && 'is-active']}
       aria-current={activePath.startsWith('/projects') ? 'page' : undefined}
-      data-umami-event="explorer-projects"
+      data-track-event="explorer-projects"
     >
       <span class="explorer-caret" aria-hidden="true"></span>
       <span class="explorer-icon">
@@ -187,7 +187,7 @@ const CURRICULUM_TRACK_ITEMS = [
       href="/about"
       class:list={['explorer-row no-underline', activePath === '/about' && 'is-active']}
       aria-current={activePath === '/about' ? 'page' : undefined}
-      data-umami-event="explorer-about"
+      data-track-event="explorer-about"
     >
       <span class="explorer-caret" aria-hidden="true"></span>
       <span class="explorer-icon">
@@ -200,7 +200,7 @@ const CURRICULUM_TRACK_ITEMS = [
       href="/now"
       class:list={['explorer-row no-underline', activePath === '/now' && 'is-active']}
       aria-current={activePath === '/now' ? 'page' : undefined}
-      data-umami-event="explorer-now"
+      data-track-event="explorer-now"
     >
       <span class="explorer-caret" aria-hidden="true"></span>
       <span class="explorer-icon">
@@ -227,7 +227,7 @@ const CURRICULUM_TRACK_ITEMS = [
         href="/heatmap"
         class:list={['explorer-row no-underline', activePath === '/heatmap' && 'is-active']}
         aria-current={activePath === '/heatmap' ? 'page' : undefined}
-        data-umami-event="explorer-heatmap"
+        data-track-event="explorer-heatmap"
       >
         <span class="explorer-caret" aria-hidden="true"></span>
         <span class="explorer-icon">
@@ -240,7 +240,7 @@ const CURRICULUM_TRACK_ITEMS = [
         href="/tokens"
         class:list={['explorer-row no-underline', activePath === '/tokens' && 'is-active']}
         aria-current={activePath === '/tokens' ? 'page' : undefined}
-        data-umami-event="explorer-tokens"
+        data-track-event="explorer-tokens"
       >
         <span class="explorer-caret" aria-hidden="true"></span>
         <span class="explorer-icon">
@@ -253,7 +253,7 @@ const CURRICULUM_TRACK_ITEMS = [
         href="/books"
         class:list={['explorer-row no-underline', activePath === '/books' && 'is-active']}
         aria-current={activePath === '/books' ? 'page' : undefined}
-        data-umami-event="explorer-books"
+        data-track-event="explorer-books"
       >
         <span class="explorer-caret" aria-hidden="true"></span>
         <span class="explorer-icon">
@@ -310,7 +310,7 @@ const CURRICULUM_TRACK_ITEMS = [
         class:list={['explorer-row no-underline font-medium', activePath === '/lab' && 'is-active']}
         aria-current={activePath === '/lab' ? 'page' : undefined}
         title="Lab Overview & Directory"
-        data-umami-event="explorer-lab-readme"
+        data-track-event="explorer-lab-readme"
       >
         <span class="explorer-caret" aria-hidden="true"></span>
         <span class="explorer-icon">
@@ -328,7 +328,7 @@ const CURRICULUM_TRACK_ITEMS = [
         class:list={['explorer-row no-underline font-medium', activePath === '/lab/architecture' && 'is-active']}
         aria-current={activePath === '/lab/architecture' ? 'page' : undefined}
         title="Dawn Blog actual deployment architecture"
-        data-umami-event="explorer-lab-arch"
+        data-track-event="explorer-lab-arch"
       >
         <span class="explorer-caret" aria-hidden="true"></span>
         <span class="explorer-icon">
@@ -363,7 +363,7 @@ const CURRICULUM_TRACK_ITEMS = [
               class:list={['explorer-row explorer-row--child no-underline font-medium', item.isActive && 'is-active']}
               aria-current={item.isActive ? 'page' : undefined}
               title={item.title}
-              data-umami-event="explorer-curriculum-track"
+              data-track-event="explorer-curriculum-track"
             >
               <span class="explorer-caret" aria-hidden="true"></span>
               <span class="explorer-icon">
@@ -404,7 +404,7 @@ const CURRICULUM_TRACK_ITEMS = [
               href={href}
               class:list={['explorer-row explorer-row--child no-underline', activePath === href && 'is-active']}
               aria-current={activePath === href ? 'page' : undefined}
-              data-umami-event="explorer-simulator"
+              data-track-event="explorer-simulator"
             >
               <span class="explorer-caret" aria-hidden="true"></span>
               <span class="explorer-icon">

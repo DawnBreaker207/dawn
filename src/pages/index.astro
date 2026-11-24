@@ -88,7 +88,7 @@ const latestPosts = posts.slice(0, 4);
             return (
               <a
                 href={`/blog/${post.id}`}
-                data-umami-event="home-latest-post"
+                data-track-event="home-latest-post"
                 class="group flex flex-col gap-2 py-4.5 no-underline transition-colors sm:flex-row sm:items-baseline sm:justify-between min-w-0"
               >
                 <div class="space-y-1.5 max-w-2xl min-w-0">
@@ -120,7 +120,7 @@ const latestPosts = posts.slice(0, 4);
       <div class="pt-2 text-right">
         <a
           href="/blog"
-          data-umami-event="home-view-all-posts"
+          data-track-event="home-view-all-posts"
           class="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-(--fg-dim) hover:text-(--accent) transition-colors"
         >
           <span>All articles ({posts.length})</span>
