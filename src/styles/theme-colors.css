@@ -81,3 +81,37 @@ html.dark,
   --btn-secondary-fg: #e4e4e7;
   --btn-secondary-hover: #2e2e36;
 }
+
+/* ── 3. SECRET MATRIX THEME (Phosphor Green CRT / Hacker Mode) ────────── */
+:root[data-theme='matrix'],
+html[data-theme='matrix'],
+.matrix {
+  --bg: #090d09;
+  --bg-alt: #0f160f;
+  --bg-subtle: #141f14;
+  --bg-hover: #1c2b1c;
+  --terminal: #050805;
+
+  --border: #1f3d1f;
+  --border-subtle: #162c16;
+  --border-hover: #2d592d;
+
+  --fg: #00ff66;
+  --fg-dim: #00cc52;
+  --fg-faint: #008837;
+  --fg-inverted: #090d09;
+
+  --accent: #00ff66;
+  --accent-hover: #33ff85;
+  --accent-dim: #00cc52;
+  --accent-subtle: rgba(0, 255, 102, 0.12);
+
+  --btn-primary-bg: #00ff66;
+  --btn-primary-fg: #090d09;
+  --btn-primary-hover: #33ff85;
+
+  --btn-secondary-bg: #0f160f;
+  --btn-secondary-border: #1f3d1f;
+  --btn-secondary-fg: #00ff66;
+  --btn-secondary-hover: #141f14;
+}

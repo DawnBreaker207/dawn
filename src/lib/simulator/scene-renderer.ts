@@ -127,7 +127,7 @@ export function renderScene(scene: SceneInput, opts: { aspect?: number } = {}): 
     const ms = lk.heads === 'both' ? `marker-start="${arrowUrl}"` : '';
     const sw = lk.sw ?? 1.9;
     // Non-dashed links draw themselves in; dashed (muted) links stay static
-    const draw = muted ? '' : 'class="dts-link" pathLength="1"';
+    const draw = muted ? 'class="dts-link dts-link--muted"' : 'class="dts-link" pathLength="1"';
 
     linksSvg += `<path ${draw} d="${d}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" ${dash} ${me} ${ms}/>`;
 
@@ -163,7 +163,7 @@ export function renderScene(scene: SceneInput, opts: { aspect?: number } = {}): 
     const kp = fl.bounce ? ' keyPoints="0;1;0" keyTimes="0;0.5;1" calcMode="linear"' : '';
     for (let i = 0; i < 3; i++) {
       const begin = i === 0 ? '0s' : `-${A((i * dur) / 3)}s`;
-      packetsSvg += `<circle r="${ping ? 3.6 : 3}" fill="${fill}" stroke="${stroke}" stroke-width="${ping ? 2.1 : 1.5}"><animateMotion dur="${dur}s" begin="${begin}" repeatCount="indefinite"${kp} path="${path}"/></circle>`;
+      packetsSvg += `<circle class="dts-packet" r="${ping ? 3.6 : 3}" fill="${fill}" stroke="${stroke}" stroke-width="${ping ? 2.1 : 1.5}"><animateMotion dur="${dur}s" begin="${begin}" repeatCount="indefinite"${kp} path="${path}"/></circle>`;
     }
   }
 

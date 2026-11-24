@@ -142,6 +142,13 @@ html[data-theme="dark"].is-embedded .timeline,
   background: #18181b !important;
 }
 
+:root[data-theme="matrix"] :is(html.is-embedded, .is-embedded) .timeline,
+html[data-theme="matrix"].is-embedded .timeline,
+html[data-theme="matrix"] .timeline {
+  border-top-color: #1f3d1f !important;
+  background: #090d09 !important;
+}
+
 :is(html.is-embedded, .is-embedded) .timeline__track {
   margin: 2px 0 0 !important;
   padding: 0 !important;
@@ -153,48 +160,41 @@ html[data-theme="dark"].is-embedded .timeline,
 }
 
 /* Light Mode Typography for Timeline ("In this lesson") — black text only, preserving original backgrounds/borders */
-:root:not([data-theme="dark"]) .timeline,
-html:not([data-theme="dark"]) .timeline,
-html:not(.dark) .timeline {
+html[data-theme="light"] .timeline,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .timeline {
   color: #18181b !important;
 }
 
-:root:not([data-theme="dark"]) .timeline .eyebrow,
-html:not([data-theme="dark"]) .timeline .eyebrow,
-html:not(.dark) .timeline .eyebrow {
+html[data-theme="light"] .timeline .eyebrow,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .timeline .eyebrow {
   color: #18181b !important;
   font-weight: 600;
 }
 
-:root:not([data-theme="dark"]) .timeline .timeline__count,
-html:not([data-theme="dark"]) .timeline .timeline__count,
-html:not(.dark) .timeline .timeline__count {
+html[data-theme="light"] .timeline .timeline__count,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .timeline .timeline__count {
   color: #18181b !important;
   font-weight: 600;
 }
 
-:root:not([data-theme="dark"]) .timeline__steps li:not(.is-current) .timeline__dot,
-html:not([data-theme="dark"]) .timeline__steps li:not(.is-current) .timeline__dot,
-html:not(.dark) .timeline__steps li:not(.is-current) .timeline__dot {
+html[data-theme="light"] .timeline__steps li:not(.is-current) .timeline__dot,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .timeline__steps li:not(.is-current) .timeline__dot {
   color: #18181b !important;
 }
 
-:root:not([data-theme="dark"]) .timeline__label,
-html:not([data-theme="dark"]) .timeline__label,
-html:not(.dark) .timeline__label {
+html[data-theme="light"] .timeline__label,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .timeline__label {
   color: #18181b !important;
 }
 
-:root:not([data-theme="dark"]) .timeline__steps li.is-current .timeline__label,
-html:not([data-theme="dark"]) .timeline__steps li.is-current .timeline__label,
-html:not(.dark) .timeline__steps li.is-current .timeline__label {
+html[data-theme="light"] .timeline__steps li.is-current .timeline__label,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .timeline__steps li.is-current .timeline__label {
   color: #18181b !important;
   font-weight: 700;
 }
 
-:root:not([data-theme="dark"]) .timeline__steps li.is-current .timeline__dot,
-html:not([data-theme="dark"]) .timeline__steps li.is-current .timeline__dot,
-html:not(.dark) .timeline__steps li.is-current .timeline__dot {
+html[data-theme="light"] .timeline__steps li.is-current .timeline__dot,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .timeline__steps li.is-current .timeline__dot {
   color: #ffffff !important;
 }
 
@@ -346,6 +346,22 @@ a.btn-pop.is-active,
   color: #ffffff !important;
   font-weight: 700 !important;
   background-color: #e11d48 !important;
+}
+
+:root[data-theme="matrix"] .timeline__steps li.is-current .timeline__dot,
+html[data-theme="matrix"] .timeline__steps li.is-current .timeline__dot {
+  background-color: #00ff66 !important;
+  color: #050805 !important;
+  border-color: #00ff66 !important;
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.8) !important;
+  font-weight: 800 !important;
+}
+
+:root[data-theme="matrix"] .timeline__steps li:not(.is-current) .timeline__dot,
+html[data-theme="matrix"] .timeline__steps li:not(.is-current) .timeline__dot {
+  border-color: #1f3d1f !important;
+  background-color: #0d140d !important;
+  color: #00aa44 !important;
 }
 
 button[style*="background"],

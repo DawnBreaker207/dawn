@@ -23,8 +23,9 @@ const STORAGE_KEY = 'theme';
 
 let scrollTopWin: (() => void) | null = null;
 
-function resolveTheme(): 'light' | 'dark' {
+function resolveTheme(): 'light' | 'dark' | 'matrix' {
   const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === 'matrix') return 'matrix';
   if (stored === 'light' || stored === 'dark') return stored;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
@@ -32,11 +33,11 @@ function resolveTheme(): 'light' | 'dark' {
 function setTheme(next: string) {
   localStorage.setItem(STORAGE_KEY, next);
   const resolved = resolveTheme();
-  document.documentElement.classList.toggle('dark', resolved === 'dark');
+  document.documentElement.classList.toggle('dark', resolved === 'dark' || resolved === 'matrix');
+  document.documentElement.classList.toggle('matrix', resolved === 'matrix');
   document.documentElement.setAttribute('data-theme', resolved);
-  document.documentElement.setAttribute('data-theme', resolved);
-  syncThemeIcons(resolved);
-  applyGiscusTheme(resolved);
+  syncThemeIcons(resolved === 'light' ? 'light' : 'dark');
+  applyGiscusTheme(resolved === 'light' ? 'light' : 'dark');
 }
 
 function applyGiscusTheme(resolved: 'light' | 'dark') {
@@ -90,16 +91,22 @@ function initThemeSwitch() {
   const toggleBtn = $<HTMLButtonElement>('[data-theme-toggle]');
 
   const resolved = resolveTheme();
-  document.documentElement.classList.toggle('dark', resolved === 'dark');
+  document.documentElement.classList.toggle('dark', resolved === 'dark' || resolved === 'matrix');
+  document.documentElement.classList.toggle('matrix', resolved === 'matrix');
   document.documentElement.setAttribute('data-theme', resolved);
 
   if (!toggleBtn) return;
 
-  syncThemeIcons(resolved);
+  syncThemeIcons(resolved === 'light' ? 'light' : 'dark');
 
   bindOnce(toggleBtn, 'click', (e) => {
     e.stopPropagation();
-    setTheme(resolveTheme() === 'dark' ? 'light' : 'dark');
+    const current = resolveTheme();
+    if (current === 'matrix') {
+      setTheme('dark');
+    } else {
+      setTheme(current === 'light' ? 'dark' : 'light');
+    }
   });
 }
 

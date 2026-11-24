@@ -831,6 +831,16 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
       if (e.key === '0') {
         document.getElementById('fit')?.click();
       }
+      if (e.key === 'f' || e.key === 'F') {
+        const dtsView = document.getElementById('dts-view-ts');
+        if (dtsView) {
+          if (!document.fullscreenElement) {
+            dtsView.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
+      }
     }, { signal: controller.signal });
 
     // Initialize Step 0

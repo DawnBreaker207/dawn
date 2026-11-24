@@ -381,9 +381,21 @@ document.addEventListener('astro:before-swap', (e) => {
   const newDoc = ev.newDocument || ev.detail?.newDocument;
   const newRoot = newDoc?.documentElement;
   if (newRoot) {
-    const isDark = document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
-    newRoot.classList.toggle('dark', isDark);
-    newRoot.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    const theme = localStorage.getItem('theme');
+    if (theme === 'matrix') {
+      newRoot.classList.add('dark', 'matrix');
+      newRoot.setAttribute('data-theme', 'matrix');
+    } else {
+      const isDark = document.documentElement.classList.contains('dark') || theme === 'dark';
+      newRoot.classList.toggle('dark', isDark);
+      newRoot.classList.remove('matrix');
+      newRoot.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    }
+
+    if (document.documentElement.classList.contains('zen-mode')) {
+      newRoot.classList.add('zen-mode');
+    }
+
     if (isRailHidden) {
       newRoot.setAttribute('data-rail', 'hidden');
     } else {

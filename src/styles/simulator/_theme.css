@@ -1,16 +1,15 @@
 ﻿/* Dawn Studio DTS theme overrides — accent button colors, nav */
-/* â”€â”€ 3. DAWN STUDIO LINEAR RUBY CRIMSON THEME OVERRIDES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* ==========================================================================
-   DAWN STUDIO â€” DTS EMBEDDED THEME OVERRIDES (LINEAR RUBY CRIMSON)
+   DAWN STUDIO — DTS EMBEDDED THEME OVERRIDES (LINEAR RUBY CRIMSON & MATRIX)
    ==========================================================================
    Synchronized strictly with src/styles/theme-colors.css tokens.
    ========================================================================== */
 
-/* â”€â”€ 1. DARK MODE PALETTE (Charcoal Dark + Linear Ruby Crimson) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── 1. DARK MODE PALETTE (Charcoal Dark + Linear Ruby Crimson) ────────── */
 :root[data-theme="dark"],
 html[data-theme="dark"],
 body.dark,
-html.dark {
+html.dark:not([data-theme="matrix"]) {
   --paper: #18181b !important;
   --paper-2: #141416 !important;
   --sheet: #212126 !important;
@@ -39,16 +38,15 @@ html.dark {
   --drop: rgba(0, 0, 0, 0.5) !important;
   --drop-2: rgba(0, 0, 0, 0.35) !important;
   --radius: 14px !important;
-  /* Stage background hex shortcuts — _tokens.css only overrides these via
-     :root[data-theme=”dark”] but blog uses html.dark class. */
   --c-faf3e9: #292520 !important;
   --c-f6e6c9: #5d4d32 !important;
   --c-fbe5bd: #5a4b30 !important;
 }
 
-/* â”€â”€ 2. LIGHT MODE PALETTE (Soft Zinc Neutral â€” Eye Friendly, Non-Glare) â”€â”€â”€ */
-:root:not([data-theme="dark"]),
-html:not([data-theme="dark"]) {
+/* ── 2. LIGHT MODE PALETTE (Soft Zinc Neutral — Eye Friendly, Non-Glare) ─── */
+:root[data-theme="light"],
+html[data-theme="light"],
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) {
   --paper: #ececed !important;
   --paper-2: #f7f7f9 !important;
   --sheet: #f7f7f9 !important;
@@ -78,24 +76,24 @@ html:not([data-theme="dark"]) {
   --radius: 14px !important;
 }
 
-/* â”€â”€ 3. CARD & CONTAINER OVERRIDES (LIGHT MODE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-:root:not([data-theme="dark"]) .sheet,
-html:not([data-theme="dark"]) .sheet {
+/* ── 3. CARD & CONTAINER OVERRIDES (LIGHT MODE) ────────────────────────── */
+html[data-theme="light"] .sheet,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .sheet {
   background: #ffffff !important;
   border: 1px solid #e4e4e7 !important;
   box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
 }
 
-:root:not([data-theme="dark"]) .guide,
-html:not([data-theme="dark"]) .guide {
+html[data-theme="light"] .guide,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) .guide {
   background: #ffffff !important;
   border: 1px solid #e4e4e7 !important;
   border-radius: 14px !important;
   box-shadow: 0 4px 16px -2px rgba(9, 9, 11, 0.05) !important;
 }
 
-:root:not([data-theme="dark"]) #next,
-html:not([data-theme="dark"]) #next {
+html[data-theme="light"] #next,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) #next {
   background: #e11d48 !important;
   color: #ffffff !important;
   border: 1px solid #e11d48 !important;
@@ -105,16 +103,16 @@ html:not([data-theme="dark"]) #next {
   transition: all 0.2s ease !important;
 }
 
-:root:not([data-theme="dark"]) #next:hover,
-html:not([data-theme="dark"]) #next:hover {
+html[data-theme="light"] #next:hover,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) #next:hover {
   background: #be123c !important;
   border-color: #be123c !important;
   box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35) !important;
   transform: translateY(-1px) !important;
 }
 
-:root:not([data-theme="dark"]) #back,
-html:not([data-theme="dark"]) #back {
+html[data-theme="light"] #back,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) #back {
   background: #ffffff !important;
   color: #18181b !important;
   border: 1px solid #e4e4e7 !important;
@@ -123,13 +121,13 @@ html:not([data-theme="dark"]) #back {
   transition: all 0.2s ease !important;
 }
 
-:root:not([data-theme="dark"]) #back:hover,
-html:not([data-theme="dark"]) #back:hover {
+html[data-theme="light"] #back:hover,
+html:not(.dark):not([data-theme="dark"]):not([data-theme="matrix"]) #back:hover {
   background: #f4f4f5 !important;
   border-color: #d4d4d8 !important;
 }
 
-/* â”€â”€ 4. CARD & CONTAINER OVERRIDES (DARK MODE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── 4. CARD & CONTAINER OVERRIDES (DARK MODE) ─────────────────────────── */
 :root[data-theme="dark"] #next,
 html[data-theme="dark"] #next {
   background: #e11d48 !important;
@@ -165,3 +163,335 @@ html[data-theme="dark"] #back:hover {
   border-color: #52525b !important;
 }
 
+/* ── 5. MATRIX PHOSPHOR GREEN PALETTE FOR DTS SIMULATOR ────────────────── */
+:root[data-theme="matrix"],
+html[data-theme="matrix"] {
+  --paper: #090d09 !important;
+  --paper-2: #050805 !important;
+  --sheet: #0d140d !important;
+  --card: #0d140d !important;
+  --card-2: #121b12 !important;
+  --line: #1f3d1f !important;
+  --line-soft: rgba(0, 255, 102, 0.12) !important;
+  --line-strong: #2d592d !important;
+  --edge: #00ff66 !important;
+  --ink: #00ff66 !important;
+  --ink-2: #00dd55 !important;
+  --muted: #00aa44 !important;
+  --muted-2: #008833 !important;
+  --green: #00ff66 !important;
+  --green-2: #33ff85 !important;
+  --green-3: #00cc52 !important;
+  --green-tile: #0a1f0a !important;
+  --green-tile-line: #1f4d1f !important;
+  --violet: #00ff66 !important;
+  --violet-tile: #0a2010 !important;
+  --violet-tile-line: #1f5025 !important;
+  --orange: #33ff85 !important;
+  --mint: #00ff66 !important;
+  --rust: #00cc52 !important;
+  --drop: rgba(0, 0, 0, 0.8) !important;
+  --drop-2: rgba(0, 255, 102, 0.2) !important;
+  --a-15: #0d140deb !important;
+  --c-faf3e9: #090d09 !important;
+  --c-f6e6c9: #1f3d1f !important;
+  --c-fbe5bd: #121b12 !important;
+}
+
+:root[data-theme="matrix"] .sheet,
+html[data-theme="matrix"] .sheet,
+:root[data-theme="matrix"] .guide,
+html[data-theme="matrix"] .guide {
+  background: #0d140d !important;
+  border: 1px solid #1f3d1f !important;
+  color: #00ff66 !important;
+  box-shadow: 0 4px 20px rgba(0, 255, 102, 0.08) !important;
+}
+
+:root[data-theme="matrix"] .guide__title,
+html[data-theme="matrix"] .guide__title {
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .guide__body p,
+html[data-theme="matrix"] .guide__body p {
+  color: #00dd55 !important;
+}
+
+:root[data-theme="matrix"] .guide__body b,
+html[data-theme="matrix"] .guide__body b {
+  color: #33ff85 !important;
+}
+
+:root[data-theme="matrix"] .guide__meta .eyebrow,
+html[data-theme="matrix"] .guide__meta .eyebrow,
+:root[data-theme="matrix"] .guide__step-label,
+html[data-theme="matrix"] .guide__step-label {
+  color: #00aa44 !important;
+}
+
+:root[data-theme="matrix"] .callout,
+html[data-theme="matrix"] .callout {
+  background: #121b12 !important;
+  border: 1px solid #1f3d1f !important;
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .callout__title,
+html[data-theme="matrix"] .callout__title {
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .callout__body,
+html[data-theme="matrix"] .callout__body {
+  color: #00dd55 !important;
+}
+
+:root[data-theme="matrix"] .timeline,
+html[data-theme="matrix"] .timeline {
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .timeline .eyebrow,
+html[data-theme="matrix"] .timeline .eyebrow,
+:root[data-theme="matrix"] .timeline .timeline__count,
+html[data-theme="matrix"] .timeline .timeline__count,
+:root[data-theme="matrix"] .timeline__label,
+html[data-theme="matrix"] .timeline__label {
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .timeline__steps li.is-current .timeline__label,
+html[data-theme="matrix"] .timeline__steps li.is-current .timeline__label {
+  color: #33ff85 !important;
+}
+
+:root[data-theme="matrix"] .chip,
+html[data-theme="matrix"] .chip {
+  background: #0d140d !important;
+  border: 1px solid #1f3d1f !important;
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .chip__label,
+html[data-theme="matrix"] .chip__label {
+  color: #00aa44 !important;
+}
+
+:root[data-theme="matrix"] .chip__value,
+html[data-theme="matrix"] .chip__value {
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .tool,
+html[data-theme="matrix"] .tool {
+  background: #0d140d !important;
+  border: 1px solid #1f3d1f !important;
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] #next,
+html[data-theme="matrix"] #next {
+  background: #00ff66 !important;
+  color: #050805 !important;
+  border: 1px solid #00ff66 !important;
+  box-shadow: 0 4px 14px rgba(0, 255, 102, 0.4) !important;
+  font-weight: 700 !important;
+}
+
+:root[data-theme="matrix"] #next:hover,
+html[data-theme="matrix"] #next:hover {
+  background: #33ff85 !important;
+  border-color: #33ff85 !important;
+  box-shadow: 0 6px 18px rgba(0, 255, 102, 0.6) !important;
+}
+
+:root[data-theme="matrix"] #back,
+html[data-theme="matrix"] #back {
+  background: #0d140d !important;
+  color: #00ff66 !important;
+  border: 1px solid #1f3d1f !important;
+  font-weight: 600 !important;
+}
+
+:root[data-theme="matrix"] #back:hover,
+html[data-theme="matrix"] #back:hover {
+  background: #141f14 !important;
+  border-color: #2d592d !important;
+}
+
+:root[data-theme="matrix"] .goals,
+html[data-theme="matrix"] .goals {
+  background: #0d140d !important;
+  border: 1px solid #1f3d1f !important;
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .goals .eyebrow,
+html[data-theme="matrix"] .goals .eyebrow {
+  color: #00aa44 !important;
+}
+
+:root[data-theme="matrix"] .lesson-head,
+html[data-theme="matrix"] .lesson-head {
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .lesson-head .title,
+html[data-theme="matrix"] .lesson-head .title {
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .lesson-head .subtitle,
+html[data-theme="matrix"] .lesson-head .subtitle {
+  color: #00dd55 !important;
+}
+
+:root[data-theme="matrix"] .lesson-head .crumb,
+html[data-theme="matrix"] .lesson-head .crumb {
+  color: #008833 !important;
+}
+
+:root[data-theme="matrix"] .tag,
+html[data-theme="matrix"] .tag {
+  background: #122112 !important;
+  color: #00ff66 !important;
+  border: 1px solid #1f401f !important;
+}
+
+:root[data-theme="matrix"] .tag--sand,
+html[data-theme="matrix"] .tag--sand {
+  background: #142416 !important;
+  color: #33ff85 !important;
+}
+
+:root[data-theme="matrix"] .tag--mint,
+html[data-theme="matrix"] .tag--mint {
+  background: #0f2e14 !important;
+  color: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .tag--violet,
+html[data-theme="matrix"] .tag--violet {
+  background: #122416 !important;
+  color: #55ff99 !important;
+}
+
+:root[data-theme="matrix"] .changes,
+html[data-theme="matrix"] .changes {
+  color: #00dd55 !important;
+}
+
+:root[data-theme="matrix"] .changes .eyebrow,
+html[data-theme="matrix"] .changes .eyebrow {
+  color: #00aa44 !important;
+}
+
+:root[data-theme="matrix"] .chg,
+html[data-theme="matrix"] .chg {
+  color: #00dd55 !important;
+}
+
+:root[data-theme="matrix"] .chg span,
+html[data-theme="matrix"] .chg span {
+  color: #00dd55 !important;
+}
+
+:root[data-theme="matrix"] .guide__hint,
+html[data-theme="matrix"] .guide__hint {
+  color: #008833 !important;
+}
+
+:root[data-theme="matrix"] .guide__hint kbd,
+html[data-theme="matrix"] .guide__hint kbd {
+  background: #0d140d !important;
+  border-color: #1f3d1f !important;
+  color: #00ff66 !important;
+}
+
+/* ── Matrix Theme: Arrows, Links & Simulation Canvas ── */
+:root[data-theme="matrix"] #arrow path,
+html[data-theme="matrix"] #arrow path,
+:root[data-theme="matrix"] .dts-arrow-head,
+html[data-theme="matrix"] .dts-arrow-head {
+  fill: #00ff66 !important;
+  stroke: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] #arrow-muted path,
+html[data-theme="matrix"] #arrow-muted path,
+:root[data-theme="matrix"] .dts-arrow-head-muted,
+html[data-theme="matrix"] .dts-arrow-head-muted {
+  fill: #008833 !important;
+  stroke: #008833 !important;
+}
+
+:root[data-theme="matrix"] .dts-link,
+html[data-theme="matrix"] .dts-link,
+:root[data-theme="matrix"] .link,
+html[data-theme="matrix"] .link {
+  stroke: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .dts-link--muted,
+html[data-theme="matrix"] .dts-link--muted,
+:root[data-theme="matrix"] .link--off,
+html[data-theme="matrix"] .link--off {
+  stroke: #008833 !important;
+}
+
+:root[data-theme="matrix"] .pkt circle,
+:root[data-theme="matrix"] .pkt rect,
+html[data-theme="matrix"] .pkt circle,
+html[data-theme="matrix"] .pkt rect {
+  fill: #00ff66 !important;
+  stroke: #050805 !important;
+  filter: drop-shadow(0 0 5px #00ff66) !important;
+}
+
+:root[data-theme="matrix"] .stage svg path[marker-end],
+html[data-theme="matrix"] .stage svg path[marker-end] {
+  stroke: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] .stage svg path[marker-end*="arrow-muted"],
+html[data-theme="matrix"] .stage svg path[marker-end*="arrow-muted"] {
+  stroke: #008833 !important;
+}
+
+:root[data-theme="matrix"] .dts-packet,
+html[data-theme="matrix"] .dts-packet {
+  fill: #00ff66 !important;
+  stroke: #050805 !important;
+  filter: drop-shadow(0 0 5px #00ff66) !important;
+}
+
+:root[data-theme="matrix"] #iso-grid path,
+html[data-theme="matrix"] #iso-grid path,
+:root[data-theme="matrix"] .dts-iso-grid,
+html[data-theme="matrix"] .dts-iso-grid {
+  stroke: #00ff66 !important;
+  stroke-opacity: 0.15 !important;
+}
+
+:root[data-theme="matrix"] .stage .pill rect:first-child,
+html[data-theme="matrix"] .stage .pill rect:first-child {
+  fill: rgba(0, 0, 0, 0.6) !important;
+}
+
+:root[data-theme="matrix"] .stage .pill rect:nth-child(2),
+html[data-theme="matrix"] .stage .pill rect:nth-child(2) {
+  fill: #0d140d !important;
+  stroke: #1f3d1f !important;
+}
+
+:root[data-theme="matrix"] .stage .pill text,
+html[data-theme="matrix"] .stage .pill text {
+  fill: #00ff66 !important;
+}
+
+:root[data-theme="matrix"] #sql-arrow path,
+html[data-theme="matrix"] #sql-arrow path {
+  fill: #00ff66 !important;
+  stroke: #00ff66 !important;
+}

@@ -131,7 +131,9 @@
   --a-28: #503c230f;
   --a-29: #503c2359;
 }
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+:root[data-theme="matrix"],
+html.dark {
   --lightningcss-light: ;
   --lightningcss-dark: initial;
   color-scheme: dark;
