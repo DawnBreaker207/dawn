@@ -1,7 +1,7 @@
 ---
 import type { Lesson } from '@/lib/simulator/types';
 import { CHAPTER_KINDS } from '@/lib/simulator/curriculum';
-import { DTS_MODULES, DTS_TRACKS, getNextLessonInTrack } from '@/data/curriculum';
+import { CURRICULUM_MODULES, CURRICULUM_TRACKS, getNextLessonInTrack } from '@/data/curriculum';
 
 interface Props {
   lesson: Lesson;
@@ -17,13 +17,13 @@ let totalLessonsInMod = 3;
 let currentTrackId: string | undefined;
 
 // Resolve module and track from single source of truth
-const activeModule = DTS_MODULES.find((m) => m.lessons.some((l) => l.id === lesson.id));
+const activeModule = CURRICULUM_MODULES.find((m) => m.lessons.some((l) => l.id === lesson.id));
 if (activeModule) {
   moduleTitle = activeModule.title;
   currentTrackId = activeModule.trackId;
-  const activeTrack = DTS_TRACKS.find((t) => t.id === activeModule.trackId || t.moduleIds.includes(activeModule.id));
+  const activeTrack = CURRICULUM_TRACKS.find((t) => t.id === activeModule.trackId || t.moduleIds.includes(activeModule.id));
   if (activeTrack) {
-    const trackModules = DTS_MODULES.filter((m) => activeTrack.moduleIds.includes(m.id) || m.trackId === activeTrack.id);
+    const trackModules = CURRICULUM_MODULES.filter((m) => activeTrack.moduleIds.includes(m.id) || m.trackId === activeTrack.id);
     const modIdx = trackModules.findIndex((m) => m.id === activeModule.id);
     moduleNum = String((modIdx !== -1 ? modIdx : 0) + 1).padStart(2, '0');
   } else {
@@ -240,7 +240,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
     : [];
 ---
 
-<div class="body" id="dts-body" data-wb-lesson={JSON.stringify(lesson)} data-next-lesson={nextLessonInfo ? JSON.stringify(nextLessonInfo) : ''}>
+<div class="body" id="sim-body" data-wb-lesson={JSON.stringify(lesson)} data-next-lesson={nextLessonInfo ? JSON.stringify(nextLessonInfo) : ''}>
   <!-- LEFT: Sheet (lesson header, 3D stage, bottom timeline) -->
   <main class="sheet">
     <div class="lesson-head is-fresh" id="head">
@@ -308,7 +308,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
         </button>
       </div>
 
-      <!-- Canvas Area for DtsSceneRenderer -->
+      <!-- Canvas Area for SceneRenderer -->
       <div class="stage__canvas" id="canvas">
         <slot name="canvas" />
       </div>
@@ -436,8 +436,8 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
 <script>
   import { CHAPTER_KINDS } from '@/lib/simulator/curriculum';
 
-  function initDtsWorkbench() {
-    const root = document.getElementById('dts-body');
+  function initSimWorkbench() {
+    const root = document.getElementById('sim-body');
     if (!root) return;
 
     const lessonData = root.getAttribute('data-wb-lesson');
@@ -509,7 +509,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
 
       isInitialized = true;
 
-      // Notify DtsSceneRenderer and 2D Deep-Dive Visualizers
+      // Notify SceneRenderer and 2D Deep-Dive Visualizers
       const stepEvtDetail = { idx, step: s, index: idx };
       root?.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail, bubbles: true }));
       window.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail }));
@@ -791,11 +791,11 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
     });
 
     // Window event listeners with cleanup
-    if ((window as any).__dts_wb_controller) {
-      (window as any).__dts_wb_controller.abort();
+    if ((window as any).__sim_wb_controller) {
+      (window as any).__sim_wb_controller.abort();
     }
     const controller = new AbortController();
-    (window as any).__dts_wb_controller = controller;
+    (window as any).__sim_wb_controller = controller;
 
     // Recalculate timeline tightness on window resize
     window.addEventListener('resize', () => {
@@ -838,10 +838,10 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
         document.getElementById('fit')?.click();
       }
       if (e.key === 'f' || e.key === 'F') {
-        const dtsView = document.getElementById('dts-view-ts');
-        if (dtsView) {
+        const simView = document.getElementById('sim-view');
+        if (simView) {
           if (!document.fullscreenElement) {
-            dtsView.requestFullscreen().catch(() => {});
+            simView.requestFullscreen().catch(() => {});
           } else {
             document.exitFullscreen().catch(() => {});
           }
@@ -853,5 +853,5 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
     renderStep(0);
   }
 
-  document.addEventListener('astro:page-load', initDtsWorkbench);
+  document.addEventListener('astro:page-load', initSimWorkbench);
 </script>

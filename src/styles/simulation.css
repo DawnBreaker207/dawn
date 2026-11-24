@@ -1,14 +1,14 @@
 /*
  * designed-to-scale.css — Entry point (do not add rules here)
  *
- * All DTS styles are split into partials under src/styles/dts/.
+ * All Simulator styles are split into partials under src/styles/simulator/.
  * Edit the matching partial for the section you need:
  *
  *   _animations.css  — @keyframes
  *   _tokens.css      — :root color tokens & layout vars
  *   _theme.css       — Dawn Studio accent overrides
  *   _embedded.css    — html.is-embedded (native embed mode)
- *   _workbench.css   — .dts-window scoped rules
+ *   _workbench.css   — .sim-window scoped rules
  *   _responsive.css  — @media breakpoints
  */
 

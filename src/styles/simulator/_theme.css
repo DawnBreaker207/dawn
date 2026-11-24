@@ -1,6 +1,6 @@
-﻿/* Dawn Studio DTS theme overrides — accent button colors, nav */
+﻿/* Dawn Studio Simulator theme overrides — accent button colors, nav */
 /* ==========================================================================
-   DAWN STUDIO — DTS EMBEDDED THEME OVERRIDES (LINEAR RUBY CRIMSON & MATRIX)
+   DAWN STUDIO — Simulator EMBEDDED THEME OVERRIDES (LINEAR RUBY CRIMSON & MATRIX)
    ==========================================================================
    Synchronized strictly with src/styles/theme-colors.css tokens.
    ========================================================================== */
@@ -163,7 +163,7 @@ html[data-theme="dark"] #back:hover {
   border-color: #52525b !important;
 }
 
-/* ── 5. MATRIX PHOSPHOR GREEN PALETTE FOR DTS SIMULATOR ────────────────── */
+/* ── 5. MATRIX PHOSPHOR GREEN PALETTE FOR Simulator SIMULATOR ────────────────── */
 :root[data-theme="matrix"],
 html[data-theme="matrix"] {
   --paper: #090d09 !important;
@@ -412,29 +412,29 @@ html[data-theme="matrix"] .guide__hint kbd {
 /* ── Matrix Theme: Arrows, Links & Simulation Canvas ── */
 :root[data-theme="matrix"] #arrow path,
 html[data-theme="matrix"] #arrow path,
-:root[data-theme="matrix"] .dts-arrow-head,
-html[data-theme="matrix"] .dts-arrow-head {
+:root[data-theme="matrix"] .sim-arrow-head,
+html[data-theme="matrix"] .sim-arrow-head {
   fill: #00ff66 !important;
   stroke: #00ff66 !important;
 }
 
 :root[data-theme="matrix"] #arrow-muted path,
 html[data-theme="matrix"] #arrow-muted path,
-:root[data-theme="matrix"] .dts-arrow-head-muted,
-html[data-theme="matrix"] .dts-arrow-head-muted {
+:root[data-theme="matrix"] .sim-arrow-head-muted,
+html[data-theme="matrix"] .sim-arrow-head-muted {
   fill: #008833 !important;
   stroke: #008833 !important;
 }
 
-:root[data-theme="matrix"] .dts-link,
-html[data-theme="matrix"] .dts-link,
+:root[data-theme="matrix"] .sim-link,
+html[data-theme="matrix"] .sim-link,
 :root[data-theme="matrix"] .link,
 html[data-theme="matrix"] .link {
   stroke: #00ff66 !important;
 }
 
-:root[data-theme="matrix"] .dts-link--muted,
-html[data-theme="matrix"] .dts-link--muted,
+:root[data-theme="matrix"] .sim-link--muted,
+html[data-theme="matrix"] .sim-link--muted,
 :root[data-theme="matrix"] .link--off,
 html[data-theme="matrix"] .link--off {
   stroke: #008833 !important;
@@ -459,8 +459,8 @@ html[data-theme="matrix"] .stage svg path[marker-end*="arrow-muted"] {
   stroke: #008833 !important;
 }
 
-:root[data-theme="matrix"] .dts-packet,
-html[data-theme="matrix"] .dts-packet {
+:root[data-theme="matrix"] .sim-packet,
+html[data-theme="matrix"] .sim-packet {
   fill: #00ff66 !important;
   stroke: #050805 !important;
   filter: drop-shadow(0 0 5px #00ff66) !important;
@@ -468,8 +468,8 @@ html[data-theme="matrix"] .dts-packet {
 
 :root[data-theme="matrix"] #iso-grid path,
 html[data-theme="matrix"] #iso-grid path,
-:root[data-theme="matrix"] .dts-iso-grid,
-html[data-theme="matrix"] .dts-iso-grid {
+:root[data-theme="matrix"] .sim-iso-grid,
+html[data-theme="matrix"] .sim-iso-grid {
   stroke: #00ff66 !important;
   stroke-opacity: 0.15 !important;
 }

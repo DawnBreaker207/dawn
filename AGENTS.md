@@ -121,13 +121,12 @@ Mixing data with logic, server with client, or build scripts with browser module
 
 ---
 
-### What is "DTS"?
-> **DTS = Designed to Scale**  
-> DTS is the **Interactive Isometric 2.5D Architecture Simulation Engine** ported into this project.  
+### What is the Isometric Simulator?
+> The **Interactive Isometric 2.5D Architecture Simulation Engine** used across all architecture, system design, cloud, and runtime labs.  
 > It renders interactive system design architectures (servers, balancers, databases, queues, animated packet flows, real-time metrics, step timelines, and guide rails).  
 >
 > **CRITICAL ARCHITECTURAL RULE — DATA VS ENGINE:**  
-> - **Engine Logic (`src/lib/dts/`):** Pure mathematical & SVG rendering algorithms (`runtime-draw.ts`, `stage-engine.ts`, `scene-builders.ts`, `scene-renderer.ts`, `curriculum.ts`). **Zero scene content is allowed here.**
+> - **Engine Logic (`src/lib/simulator/`):** Pure mathematical & SVG rendering algorithms (`runtime-draw.ts`, `stage-engine.ts`, `scene-builders.ts`, `scene-renderer.ts`, `curriculum.ts`). **Zero scene content is allowed here.**
 > - **Scene Data (`src/data/scenes/`):** The 44 architectural simulation scene definitions (`aws-vpc.ts`, `sql-engine.ts`, `consistent-hashing.ts`...). These files define layout coordinates, packet flow paths, step texts, and metric states — **they are DATA, not engine code**, and must reside in `src/data/scenes/`.
 
 ---
@@ -149,7 +148,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 │
 ├── src/
 │   ├── data/                           ← [LAYER 1B: STATIC APPLICATION & SIMULATION DATA]
-│   │   ├── scenes/                     ← 137 DTS Simulation Scene Graphs across 11 Canonical Tracks
+│   │   ├── scenes/                     ← 137 Simulator Simulation Scene Graphs across 11 Canonical Tracks
 │   │   │   ├── angular/                ← 14 Angular architecture & reactive signal DAG scenes
 │   │   │   ├── architecture/           ← batch-stream.ts, microservices.ts, sagas.ts
 │   │   │   ├── cloud/                  ← aws-vpc.ts, aws-ha.ts, k8s-*.ts, docker-*.ts
@@ -172,13 +171,13 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │   └── now.json                    ← Current activity status
 │   │
 │   ├── lib/                            ← [LAYER 2: CORE ENGINES & LOGIC (Pure Code — No Data)]
-│   │   ├── dts/                        ← DTS Isometric Simulation Engine (SVG renderers, state loop)
+│   │   ├── simulator/                  ← Simulator Isometric Simulation Engine (SVG renderers, state loop)
 │   │   │   ├── runtime-draw.ts         ← Isometric SVG canvas entity renderers (blocks, dbs, queues)
 │   │   │   ├── stage-engine.ts         ← Interactive step playback, packet animations & metric state
 │   │   │   ├── scene-builders.ts       ← Scene entity factory functions (makeBlock, makeDb, makeBalancer)
 │   │   │   ├── scene-renderer.ts       ← Canvas scene serializer
 │   │   │   ├── curriculum.ts           ← Runtime lesson navigation & breadcrumb resolver
-│   │   │   └── types.ts                ← DTS domain types (Lesson, Step, Scene, Entity)
+│   │   │   └── types.ts                ← Simulator domain types (Lesson, Step, Scene, Entity)
 │   │   ├── runtime/                    ← Server-only code (DB, Prisma, GitHub API, LLM tokens — NEVER import in client)
 │   │   ├── utils/                      ← Pure shared utility functions (blog parsing, slugify, date formatting)
 │   │   ├── site.ts & nav.ts            ← Global site config & navigation links
@@ -188,7 +187,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │   ├── shell/                      ← Studio layout chrome (SidebarExplorer, TabBar, Rail, Breadcrumb, TerminalFooter)
 │   │   ├── widget/                     ← Live runtime widgets (BlogStats, TokenBurnRail, GitActivity, CommitGraph)
 │   │   ├── lab/                        ← Interactive lab UI components
-│   │   │   ├── architecture/           ← DTS Workbench chrome (SimulationWorkbench.astro, SceneRenderer.tsx, ChapterPicker)
+│   │   │   ├── architecture/           ← Simulator Workbench chrome (SimulationWorkbench.astro, SceneRenderer.tsx, ChapterPicker)
 │   │   │   └── sql/                    ← 2D SQL pipeline & B-Tree stage visualizers
 │   │   ├── blog/                       ← Blog post layouts, cards, and reading UI
 │   │   ├── home/                       ← Homepage-specific showcase components
@@ -199,7 +198,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │
 │   ├── layouts/                        ← Top-level page wrappers
 │   │   ├── BaseLayout.astro            ← Global studio layout shell (sidebar + tabbar + rail + terminal)
-│   │   ├── ArchitectureLabLayout.astro ← Standard reusable full-bleed layout for all DTS & Engine labs
+│   │   ├── ArchitectureLabLayout.astro ← Standard reusable full-bleed layout for all Simulator & Engine labs
 │   │   ├── PostLayout.astro            ← Long-form blog reading layout (TOC, header, tags, giscus)
 │   │   └── ListLayout.astro            ← Post and topic listing layout
 │   │
@@ -220,7 +219,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │   ├── theme-colors.css            ← CSS custom properties (Light & Dark tokens — single source of truth)
 │   │   ├── global.css                  ← Tailwind setup + design tokens + utility classes
 │   │   ├── shell.css                   ← Studio VS Code chrome styles (.studio-*, .tab-bar, .explorer-*)
-│   │   └── designed-to-scale.css       ← DTS isometric lab theme (scoped under .dts-window)
+│   │   └── simulation.css       ← Simulator isometric lab theme (scoped under .sim-window)
 │   │
 │   └── types/                          ← [LAYER 7B: STRICT TYPESCRIPT CONTRACTS]
 │       ├── books.ts, server.ts...      ← Domain data contracts
@@ -240,7 +239,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 |---|---|---|
 | **MDX Posts & Articles** | `data/blog/`, `data/authors/` | Blog posts, Author profiles |
 | **Static App Data (JSON/TS)** | `src/data/` | `books.json`, `projectsData.json`, `timeline.json`, `labs.ts` |
-| **Curriculum Catalog Metadata** | `src/data/dts-lessons.ts` | List of 6 Tracks, 11 Modules, IDs, Titles |
+| **Curriculum Catalog Metadata** | `src/data/curriculum.ts` | List of 6 Tracks, 11 Modules, IDs, Titles |
 | **Architectural Simulation Scenes** | `src/data/scenes/<domain>/` | `aws-vpc.ts`, `sql-engine.ts`, `consistent-hashing.ts` |
 | **Server Runtime State / DB** | `src/lib/runtime/` | Prisma client, GitHub API tokens |
 | **Static Browser Assets** | `public/static/` | SVGs, WebP images, Favicons |
@@ -258,7 +257,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 4. ❌ **NEVER put non-MDX content in root `data/`**:
    Root `data/` is strictly reserved for Astro content collection loaders (`data/blog/`, `data/authors/`). App data belongs in `src/data/`.
 5. ❌ **NEVER put simulation canvas components in `src/components/widget/`**:
-   `DtsSceneRenderer.tsx` is an architecture simulation component, not a generic widget. It belongs in `src/components/lab/architecture/`.
+   `SceneRenderer.tsx` is an architecture simulation component, not a generic widget. It belongs in `src/components/lab/architecture/`.
 
 ---
 
@@ -359,8 +358,8 @@ mobile panel behavior, version menu.
 Each lab has its own visual language. Keep its CSS contained.
 
 **Pattern:** create a dedicated CSS file scoped under a root class for that lab.
-See `src/styles/designed-to-scale.css` as the reference model — all its rules are
-scoped under `.dts-window { }` so they never leak.
+See `src/styles/simulation.css` as the reference model — all its rules are
+scoped under `.sim-window { }` so they never leak.
 
 ```css
 /* src/styles/lab-sql.css — example */
@@ -455,12 +454,12 @@ Requirements:
 - Interactive simulations → vanilla TS in `src/scripts/lab/` loaded via `<script>` tags
 - Use React (`.tsx` + `client:idle`) only when the interaction genuinely needs
   React state management (e.g. a component with many inter-dependent state values)
-- Lab CSS → isolated file, scoped under a root class (see `designed-to-scale.css` pattern)
+- Lab CSS → isolated file, scoped under a root class (see `simulation.css` pattern)
 
-### DTS Isometric 2.5D Diagram Rules (MANDATORY FOR ALL SCENE GRAPHS)
+### Simulator Isometric 2.5D Diagram Rules (MANDATORY FOR ALL SCENE GRAPHS)
 
 > [!IMPORTANT]
-> **SINGLE SOURCE OF TRUTH:** This section contains the complete architectural rules, concept-to-visual conversion formulas, projection mathematics, and visual specifications for all 108 DTS simulation scene graphs across all 10 canonical tracks. No external plan files are required.
+> **SINGLE SOURCE OF TRUTH:** This section contains the complete architectural rules, concept-to-visual conversion formulas, projection mathematics, and visual specifications for all 108 Simulator simulation scene graphs across all 10 canonical tracks. No external plan files are required.
 
 All architectural simulation scenes (`src/data/scenes/*`) render on a dimetric 2.5D isometric SVG canvas.
 To prevent blocks from overlapping, colliding, or having unreadable cramped link arrows, every scene MUST strictly obey these rules:
@@ -1032,7 +1031,7 @@ src/pages/api/<domain>/<name>.ts    grouped endpoints
 | Page files | kebab-case | `request-lifecycle.astro` |
 | Script files | kebab-case | `app-shell.ts`, `token-burn-page.ts` |
 | Utility/lib files | camelCase | `ttl-cache.ts`, `blog.ts` |
-| Data files | kebab-case | `dts-lessons.ts`, `books.json` |
+| Data files | kebab-case | `curriculum.ts`, `books.json` |
 | Type files | camelCase (no `.type.ts` suffix) | `token-burn.ts`, `server.ts` |
 | CSS class names | kebab-case | `.explorer-row`, `.sidebar-ext-toggle` |
 | TypeScript interfaces | PascalCase | `LabEntry`, `SiteVersion` |
@@ -1329,7 +1328,7 @@ prisma.mjs           check-db.mjs
 One-off audit/debug scripts should be deleted after use, not committed:
 ```
 audit-pills.cjs         inspect-real-page.cjs    spec-all-labs.cjs
-rebuild-dts-bundle.cjs  register-aws-lesson.cjs  generate-system-design.mjs
+audit-all-diagrams.mjs  register-aws-lesson.cjs  generate-system-design.mjs
 ```
 
 ### Root `*.log` and `*.json` artifacts — delete and gitignore
@@ -1386,14 +1385,14 @@ public/static/images/experiences/     ← company logos for about page
 public/static/images/projects/        ← project screenshots
 public/static/resume.pdf
 public/og/                            ← generated OpenGraph images
-public/dts/                           ← pre-built DTS bundle, served as iframe embed
-                                         at /dts/index.html — referenced by lab pages
+public/dts/                           ← pre-built Simulator bundle, served as iframe embed
+                                         at /lab/architecture — referenced by lab pages
 ```
 
-`public/dts/` is a pre-built Vite bundle for the Designed-to-Scale interactive labs.
+`src/lib/simulator/` (legacy `public/dts/` removed) is a pre-built Vite bundle for the Designed-to-Scale interactive labs.
 It is loaded as an iframe in `aws-cloud.astro`, `microservices.astro`,
 `request-lifecycle.astro`, and `ArchitectureChapterPicker.astro`. Do not delete it.
-To update it, re-run the DTS build script (`scripts/rebuild-dts-bundle.cjs`).
+To update it, re-run the Simulator build script (`scripts/audit-all-diagrams.mjs`).
 
 ### What to delete
 
@@ -1543,7 +1542,7 @@ Everything that can go through Astro's pipeline should.
 | Generated assets | `og/*.png` | Built by scripts, not Astro |
 | Pre-built sub-apps | `dts/` | See below |
 
-### Pre-built sub-apps (`public/dts/` pattern)
+### Pre-built sub-apps (`src/lib/simulator/` (legacy `public/dts/` removed) pattern)
 
 A sub-app belongs in `public/` only when **all three** conditions are true:
 
@@ -1551,23 +1550,23 @@ A sub-app belongs in `public/` only when **all three** conditions are true:
 2. **It runs in an isolated context** — an `<iframe>` with its own origin
 3. **It communicates with the parent only via `postMessage`** or URL hash — not imports
 
-The `public/dts/` bundle is the only current example. It is an isometric simulation
+The `src/lib/simulator/` (legacy `public/dts/` removed) bundle is the only current example. It is an isometric simulation
 app (Designed-to-Scale) that runs inside iframes on lab pages. It has its own
-`index.html`, hashed JS/CSS assets, and `dts-bridge.js` which syncs the theme with
+`index.html`, hashed JS/CSS assets, and `simulator-bridge` which syncs the theme with
 the parent page via `postMessage`.
 
 ```
 public/dts/
   index.html          ← the sub-app shell
-  dts-bridge.js       ← postMessage theme sync, runs inside the iframe
-  dts-theme.css       ← base CSS for the sub-app
+  simulator-bridge       ← postMessage theme sync, runs inside the iframe
+  simulator/_theme.css       ← base CSS for the sub-app
   assets/             ← hashed Vite output (JS, CSS, fonts)
 ```
 
-> **Note**: `public/dts/` is actively being migrated to a pure TypeScript renderer
+> **Note**: `src/lib/simulator/` (legacy `public/dts/` removed) is actively being migrated to a pure TypeScript renderer
 > (see Section 29). It remains here as a visual reference during migration.
-> Do not add new lessons to the bundle — add them to `src/lib/dts/lessons.ts`.
-> Once all pages are migrated and verified, `public/dts/` will be deleted.
+> Do not add new lessons to the bundle — add them to `src/lib/simulator/lessons.ts`.
+> Once all pages are migrated and verified, `src/lib/simulator/` (legacy `public/dts/` removed) will be deleted.
 
 **Do not** create a second sub-app bundle in `public/` without a clear reason why
 it cannot be an Astro page or component.
@@ -1638,7 +1637,7 @@ expand the scope.
 |---|---|---|
 | `src/data/labs.ts` | `LABS` array — the registry of all lab pages (title, href, tag, intro) | Lab implementation logic |
 | `src/data/aws-system-design.ts` | Node/step data for the AWS cloud lab visualization | Rendering logic |
-| `src/lib/dts/lessons.ts` | Lesson + step + scene data for all DTS arch labs (TS renderer) | Rendering logic |
+| `src/lib/simulator/lessons.ts` | Lesson + step + scene data for all Simulator arch labs (TS renderer) | Rendering logic |
 | `data/headerNavLinks.ts` | Legacy nav config (root-level, do not move — imported by old data scripts) | — |
 
 ### Utilities
@@ -1690,7 +1689,7 @@ put it in `src/scripts/<page-name>.ts` instead.
 | `src/styles/theme-colors.css` | All CSS custom property tokens: `--bg`, `--fg`, `--accent`, etc. for both themes. **Single source of truth.** |
 | `src/styles/global.css` | Tailwind setup, `@theme` tokens, `@keyframes`, `@layer base`, `@layer utilities` |
 | `src/styles/shell.css` | Studio layout: `.studio-*`, `.explorer-*`, `.tab-bar`, `.sidebar-ext*`, command palette, tooltips |
-| `src/styles/designed-to-scale.css` | DTS isometric lab theme, scoped under `.dts-window` |
+| `src/styles/simulation.css` | Simulator isometric lab theme, scoped under `.sim-window` |
 | `src/styles/prism.css` | Syntax highlighting |
 | `src/styles/twemoji.css` | Twemoji rendering |
 
@@ -1817,7 +1816,7 @@ and has not been converted yet. Update this table as work is completed.
 | `public/system-design.html` deleted | ✅ Done | Deleted dev prototype |
 | Unused `public/static/images/` deleted | ❌ Not done | canada/, ocean.jpeg, google.png, etc. |
 | `.gitignore` gaps added | ✅ Done | Added patterns for screenshots, scratch/, etc. |
-| DTS iframe pages migrated to TS renderer | 🔄 In progress | `request-lifecycle` verified (Playwright Stage 1+2 passed, 3 rendering fixes applied); `aws-cloud`, `microservices`, `ArchitectureChapterPicker` pending |
+| Simulator iframe pages migrated to TS renderer | 🔄 In progress | `request-lifecycle` verified (Playwright Stage 1+2 passed, 3 rendering fixes applied); `aws-cloud`, `microservices`, `ArchitectureChapterPicker` pending |
 
 **When doing a migration task:** pick one row, complete it fully (move files + update
 all imports + verify build passes), then mark it done. Do not do partial migrations.
@@ -1894,49 +1893,49 @@ that is only justified when you have no alternative.
 | Case | Allowed? | Why |
 |---|---|---|
 | Third-party widget (Giscus comments, YouTube embed) | ✅ Yes | No other way to embed |
-| Pre-built external bundle with its own CSS/JS ecosystem (current DTS) | ⚠️ Being phased out | DTS is being migrated to pure TS renderer — do not add new iframe embeds |
+| Pre-built external bundle with its own CSS/JS ecosystem (current Simulator) | ⚠️ Being phased out | Simulator is being migrated to pure TS renderer — do not add new iframe embeds |
 | New animation or simulation you are writing yourself | ❌ No | Write as `.astro` + `<canvas>` / SVG / vanilla TS |
 | A page section you want to isolate from the main layout | ❌ No | Use Astro slots or a scoped component instead |
 
-### The existing DTS iframe — being migrated away
+### The existing Simulator iframe — being migrated away
 
-`/dts/index.html` is a Vite app built separately from Astro. It was embedded in:
+`/lab/architecture` is a Vite app built separately from Astro. It was embedded in:
 - `src/pages/lab/aws-cloud.astro`
 - `src/pages/lab/microservices.astro`
 - `src/pages/lab/request-lifecycle.astro`
 - `src/components/lab/ArchitectureChapterPicker.astro`
 
 These pages are actively being migrated to the pure TS rendering stack (see **Section 29**).
-Do not add new iframe embeds pointing to `/dts/index.html`.
+Do not add new iframe embeds pointing to `/lab/architecture`.
 
-### If you need to add a new DTS lesson
+### If you need to add a new Simulator lesson
 
-Add the lesson data to `src/lib/dts/lessons.ts` using the factory functions from
-`src/lib/dts/scene-builders.ts`. Wire it into `LabWorkbench` via
+Add the lesson data to `src/lib/simulator/lessons.ts` using the factory functions from
+`src/lib/simulator/scene-builders.ts`. Wire it into `LabWorkbench` via
 `src/layouts/ArchitectureLabLayout.astro`. Do **not** rebuild the bundle or add a
 new iframe — that is the old approach being replaced.
 
 ---
 
-## 29. DTS Isometric Rendering — Rules
+## 29. Simulator Isometric Rendering — Rules
 
-### End goal: eliminate `public/dts/` entirely
+### End goal: eliminate `src/lib/simulator/` (legacy `public/dts/` removed) entirely
 
-The long-term goal is to **remove `public/dts/` from the project** — every lab page
+The long-term goal is to **remove `src/lib/simulator/` (legacy `public/dts/` removed) from the project** — every lab page
 that currently uses an iframe pointing to the bundle will be replaced by the TS
-rendering stack. When all pages are migrated and verified, `public/dts/` can be
+rendering stack. When all pages are migrated and verified, `src/lib/simulator/` (legacy `public/dts/` removed) can be
 deleted.
 
 The migration is complete only when:
-1. Every DTS lab page renders via `LabWorkbench` + `DtsSceneRenderer` (no iframes)
+1. Every Simulator lab page renders via `LabWorkbench` + `SceneRenderer` (no iframes)
 2. Each migrated page passes the full Playwright comparison against the bundle page
-3. `public/dts/` is no longer referenced anywhere in `src/`
+3. `src/lib/simulator/` (legacy `public/dts/` removed) is no longer referenced anywhere in `src/`
 
 Until a page is migrated and verified, the bundle stays in place as the reference.
 
 ### The bundle is a reference, not a dependency
 
-`public/dts/` is a pre-built Vite bundle for the original DTS (Designed-to-Scale)
+`src/lib/simulator/` (legacy `public/dts/` removed) is a pre-built Vite bundle for the original Simulator (Designed-to-Scale)
 interactive app. It is kept **only as a visual reference during migration**. It must
 never be imported, injected into, or depended on by any TypeScript/Astro code.
 
@@ -1945,30 +1944,30 @@ never be imported, injected into, or depended on by any TypeScript/Astro code.
 
 The bundle files in `public/dts/assets/*.js` are the **reference implementation**.
 When a visual needs to look a certain way, compare against the bundle by running
-the dev server and opening `/dts/index.html` directly. The goal is **1:1 visual
+the dev server and opening `/lab/architecture` directly. The goal is **1:1 visual
 parity** — the TS page must be indistinguishable from the bundle page so that
-`public/dts/` can eventually be deleted.
+`src/lib/simulator/` (legacy `public/dts/` removed) can eventually be deleted.
 
 ### The TS isometric rendering stack
 
 All isometric lab diagrams are built with this fixed stack:
 
 ```
-src/lib/dts/runtime-draw.ts   ← entity renderers (Zr=block, li=device, fi=db, …)
+src/lib/simulator/runtime-draw.ts   ← entity renderers (Zr=block, li=device, fi=db, …)
                                  color palette, gradient defs, iso projection math
                                  ⚠ edit only to fix a rendering gap vs the bundle —
                                    never to add new abstractions or change behavior
 
-src/lib/dts/scene-builders.ts ← entity factories: makeBlock, makeDevice, makeDb,
+src/lib/simulator/scene-builders.ts ← entity factories: makeBlock, makeDevice, makeDb,
                                  makeUser, makeDns, makeWebServer, makeDatabase, …
 
-src/lib/dts/lessons.ts        ← lesson + step + scene data for all 13 arch labs
+src/lib/simulator/lessons.ts        ← lesson + step + scene data for all 13 arch labs
 
-src/lib/dts/scene-renderer.ts ← renderScene(scene) → { inner: string, viewBox: string }
+src/lib/simulator/scene-renderer.ts ← renderScene(scene) → { inner: string, viewBox: string }
                                  calls ENTITY_RENDERERS[type](entity) for each entity,
                                  trims link paths against entity polys, computes viewBox
 
-src/components/widget/DtsSceneRenderer.tsx
+src/components/widget/SceneRenderer.tsx
                               ← React island that calls renderScene() per step,
                                  listens for 'wb:step-change' on .wb-root,
                                  renders <svg dangerouslySetInnerHTML={inner} />
@@ -1976,10 +1975,10 @@ src/components/widget/DtsSceneRenderer.tsx
 
 ### How to add a new isometric lab scene
 
-1. Define lesson data in `src/lib/dts/lessons.ts` using the factory functions
+1. Define lesson data in `src/lib/simulator/lessons.ts` using the factory functions
    from `scene-builders.ts` (`makeBlock`, `makeDevice`, `makeDb`, `makeLink`, …).
 2. Each step has a `scene: { entities: {}, links: {} }` object.
-3. Wire the lesson into `LabWorkbench` + `DtsSceneRenderer` via
+3. Wire the lesson into `LabWorkbench` + `SceneRenderer` via
    `src/layouts/ArchitectureLabLayout.astro` (add to `LESSON_MAP`).
 4. Verify visual output matches bundle by running dev server and comparing side-by-side.
 
@@ -1999,11 +1998,11 @@ Color names: `blue`, `orange`, `green`, `yellow`, `purple`, `slab`, `store`.
 
 | ❌ Don't | ✅ Do instead |
 |---|---|
-| Import from `public/dts/*.js` | Import from `src/lib/dts/*.ts` |
-| Modify `public/dts/assets/*.js` | Edit `src/lib/dts/runtime-draw.ts` source |
-| Embed `/dts/index.html` in a new iframe | Use `DtsSceneRenderer` + `LabWorkbench` |
+| Import from `public/dts/*.js` | Import from `src/lib/simulator/*.ts` |
+| Modify `public/dts/assets/*.js` | Edit `src/lib/simulator/runtime-draw.ts` source |
+| Embed `/lab/architecture` in a new iframe | Use `SceneRenderer` + `LabWorkbench` |
 | Write a new hand-rolled polygon renderer | Use `ENTITY_RENDERERS` from `runtime-draw.ts` |
-| Add lesson data as inline JSX in a component | Add to `src/lib/dts/lessons.ts` |
+| Add lesson data as inline JSX in a component | Add to `src/lib/simulator/lessons.ts` |
 | Declare 1:1 parity without a Playwright screenshot comparison | Always run the compare script and check the output |
 | Compare only the diagram/canvas area | Compare the **full page** — layout, header, controls, fonts, spacing, everything |
 | Accept any visual difference between bundle page and TS page | Zero tolerance — if it looks different anywhere, it is not done |
@@ -2210,7 +2209,7 @@ await page.evaluate(() => document.documentElement.classList.add('dark')); // or
 ```
 
 **4. React island must hydrate before triggering events**
-`DtsSceneRenderer` is a React island — if `wb:navigate` fires before it has mounted,
+`SceneRenderer` is a React island — if `wb:navigate` fires before it has mounted,
 the scene will not update. Wait for the canvas element to be present and non-empty:
 ```ts
 await page.waitForSelector('.wb-canvas-area svg path', { state: 'attached' });
@@ -2290,7 +2289,7 @@ const ctx = await browser.newContext({
 **not** freeze `requestAnimationFrame` (rAF) — if the bundle drives any animation via
 rAF directly, `tick()` will not capture a deterministic mid-frame.
 
-Check whether DTS uses rAF. If it does, use `page.clock.runFor()` instead of `tick()`
+Check whether Simulator uses rAF. If it does, use `page.clock.runFor()` instead of `tick()`
 so rAF callbacks are executed in sync with the clock:
 ```ts
 // for rAF-driven animations:
@@ -2328,9 +2327,9 @@ Identify exactly what is wrong by comparing the two screenshots pixel-by-pixel:
 
 #### Note: CSS is not part of the comparison
 
-Entity rendering in DTS is **pure SVG with inline attributes** — fill, stroke,
+Entity rendering in Simulator is **pure SVG with inline attributes** — fill, stroke,
 gradients, and filters are all SVG `<defs>` and element attributes. The bundle's
-`dts-theme.css` only styles the page shell, not the entities themselves.
+`simulator/_theme.css` only styles the page shell, not the entities themselves.
 
 The only CSS that can affect SVG visual output is:
 - `font-family` on label text (SVG uses `font-family="inherit"` — make sure the
@@ -2338,14 +2337,14 @@ The only CSS that can affect SVG visual output is:
 - Background color of the canvas area (set as inline style on the React container,
   not CSS — currently `#fffaf2`)
 
-**Conclusion**: comparing against `/dts/index.html` screenshots is the definitive
+**Conclusion**: comparing against `/lab/architecture` screenshots is the definitive
 reference. If the screenshots match visually, CSS is correct by implication.
 Only audit CSS separately if a discrepancy appears that the SVG markup alone
 cannot explain (e.g. font renders differently, canvas background is wrong color).
 
 #### Step 2 — Read the bundle source for that entity
 
-Open the corresponding renderer in `src/lib/dts/runtime-draw.ts` and trace the
+Open the corresponding renderer in `src/lib/simulator/runtime-draw.ts` and trace the
 function responsible for the mismatching entity:
 
 | Entity | Renderer function | Key variables |
@@ -2362,7 +2361,7 @@ something was lost during the bundle-to-TS conversion.
 
 #### Step 3 — Cross-check the bundle output directly
 
-Run the dev server and open `/dts/index.html` directly in a browser. Use DevTools
+Run the dev server and open `/lab/architecture` directly in a browser. Use DevTools
 to inspect the rendered SVG:
 
 ```
@@ -2374,7 +2373,7 @@ calling the renderer in isolation:
 
 ```ts
 // Quick debug in browser console on the TS lab page
-import { ENTITY_RENDERERS, ENTITY_DEFAULTS } from '/src/lib/dts/runtime-draw.ts';
+import { ENTITY_RENDERERS, ENTITY_DEFAULTS } from '/src/lib/simulator/runtime-draw.ts';
 const ent = { ...ENTITY_DEFAULTS.block, x: 0, y: 0, color: 'blue', label: ['Test'] };
 console.log(ENTITY_RENDERERS.block(ent));
 ```

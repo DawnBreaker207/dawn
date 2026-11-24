@@ -1,6 +1,6 @@
-﻿/* DTS workbench — all rules scoped under .dts-window {} */
-/* â”€â”€ 4. WORKBENCH RULES (SCOPED UNDER .dts-window) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.dts-window {
+﻿/* Simulator workbench — all rules scoped under .sim-window {} */
+/* â”€â”€ 4. WORKBENCH RULES (SCOPED UNDER .sim-window) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.sim-window {
   width: 100%;
   height: 100%;
   min-height: 0;

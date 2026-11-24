@@ -465,4 +465,4 @@ export const ALL_SCENES: Record<string, any> = {
   'devops': devopsCultureSilosLesson,
 };
 
-export const ALL_DTS_LESSONS = ALL_SCENES;
+export const ALL_SIM_LESSONS = ALL_SCENES;

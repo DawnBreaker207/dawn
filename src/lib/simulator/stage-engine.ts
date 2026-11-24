@@ -1,8 +1,8 @@
 // @ts-nocheck
 /* eslint-disable */
 /**
- * StageEngine (ap class extracted from DTS runtime-app.ts)
- * 100% ground-truth DTS interactive Stage & Animation Engine.
+ * StageEngine (app class extracted from Simulator runtime-app.ts)
+ * 100% ground-truth Simulator interactive Stage & Animation Engine.
  */
 import {
   round as A,

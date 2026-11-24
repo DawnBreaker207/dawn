@@ -2,7 +2,7 @@
 /**
  * Master Diagram Quality & Sanity Auditor
  * 
- * Verifies all 3D simulation diagrams against DTS Isometric Rules:
+ * Verifies all 3D simulation diagrams against Isometric Simulator Rules:
  *  1. Collision Thresholds: Critical Overlaps (<90px), Crowded pairs (<125px)
  *  2. Viewport Bounding Box: x in [-16, 16], y in [-24, 20]
  *  3. Broken Links: link from/to references non-existent entity
@@ -95,7 +95,7 @@ const scenesMod = await bundle('src/data/scenes/index.ts');
 const currMod = await bundle('src/data/curriculum.ts');
 
 const scenes = scenesMod.ALL_SCENES || {};
-const modules = currMod.DTS_MODULES || [];
+const modules = currMod.CURRICULUM_MODULES || [];
 
 const allCurriculumLessons = [];
 modules.forEach(m => {
@@ -286,7 +286,7 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
         // Height h must satisfy: h >= minStartY - o + totalTextHeight + 5px
         // where minStartY - o = 16.5px => requiredMinHeight = 16.5 + totalTextHeight + 5 = 21.5 + totalTextHeight.
         const requiredMinHeight = Math.ceil(21.5 + totalTextHeight + 4);
-        // In DTS engine (scene-renderer.ts), blocks default to s=4, h=46 from Xr
+        // In simulator engine (scene-renderer.ts), blocks default to s=4, h=46 from Xr
         const h = typeof ent.h === 'number' ? ent.h : (ent.type === 'block' ? 46 : 36);
         const s = typeof ent.s === 'number' ? ent.s : (ent.type === 'block' ? 4 : 3.5);
 

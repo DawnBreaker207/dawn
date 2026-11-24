@@ -6,7 +6,7 @@ export interface Track {
   moduleIds: string[];
 }
 
-export const DTS_TRACKS: Track[] = [
+export const CURRICULUM_TRACKS: Track[] = [
   {
     id: 'architecture',
     title: 'Blog Deployment Architecture',
@@ -117,7 +117,7 @@ export interface Module {
   lessons: Lesson[];
 }
 
-export const DTS_MODULES: Module[] = [
+export const CURRICULUM_MODULES: Module[] = [
   {
     id: 'architecture',
     num: '01',
@@ -455,9 +455,6 @@ export const DTS_MODULES: Module[] = [
   },
 ];
 
-export const CURRICULUM_TRACKS = DTS_TRACKS;
-export const CURRICULUM_MODULES = DTS_MODULES;
-
 export function getLessonHref(id: string): string {
   if (id === 'architecture') return '/lab/architecture';
   if (id === 'sql' || id === 'sql-engine') return '/lab/sql';
@@ -476,7 +473,7 @@ export function getLessonHref(id: string): string {
 
 export function getNextLessonInTrack(lessonId: string, trackId?: string): { id: string; title: string; href: string } | null {
   // Find all lessons in this track (or all lessons if no track)
-  const targetModules = trackId ? DTS_MODULES.filter((m) => m.trackId === trackId) : DTS_MODULES;
+  const targetModules = trackId ? CURRICULUM_MODULES.filter((m) => m.trackId === trackId) : CURRICULUM_MODULES;
   const allLessons = targetModules.flatMap((m) => m.lessons);
   const curIdx = allLessons.findIndex((l) => l.id === lessonId);
   if (curIdx !== -1 && curIdx + 1 < allLessons.length) {
@@ -484,7 +481,7 @@ export function getNextLessonInTrack(lessonId: string, trackId?: string): { id: 
     return { id: next.id, title: next.title, href: getLessonHref(next.id) };
   }
   // If track ended, check global next lesson in curriculum
-  const globalLessons = DTS_MODULES.flatMap((m) => m.lessons);
+  const globalLessons = CURRICULUM_MODULES.flatMap((m) => m.lessons);
   const gIdx = globalLessons.findIndex((l) => l.id === lessonId);
   if (gIdx !== -1 && gIdx + 1 < globalLessons.length) {
     const next = globalLessons[gIdx + 1];

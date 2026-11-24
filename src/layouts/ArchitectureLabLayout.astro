@@ -28,7 +28,7 @@ const labLesson = ALL_SCENES[lessonId] as unknown as Lesson;
     <ChapterPicker currentLessonId={lessonId} trackId={trackId} moduleId={moduleId} />
   </div>
 
-  <div id="dts-view-ts" class="dts-window is-embedded dts-view-container w-full h-full flex flex-col flex-1 min-h-0">
+  <div id="sim-view" class="sim-window is-embedded sim-view-container w-full h-full flex flex-col flex-1 min-h-0">
     <SimulationWorkbench lesson={labLesson!}>
       <SceneRenderer slot="canvas" lesson={labLesson!} client:load />
     </SimulationWorkbench>
@@ -47,10 +47,10 @@ const labLesson = ALL_SCENES[lessonId] as unknown as Lesson;
   const getLayout = (w: number, h: number) =>
     w >= 860 ? 'desktop' : 'stack';
 
-  function updateDtsLayout() {
-    const tsView = document.getElementById('dts-view-ts');
-    const w = tsView && tsView.clientWidth > 0 ? tsView.clientWidth : window.innerWidth;
-    const h = tsView && tsView.clientHeight > 0 ? tsView.clientHeight : window.innerHeight;
+  function updateSimLayout() {
+    const simView = document.getElementById('sim-view');
+    const w = simView && simView.clientWidth > 0 ? simView.clientWidth : window.innerWidth;
+    const h = simView && simView.clientHeight > 0 ? simView.clientHeight : window.innerHeight;
     document.documentElement.dataset.layout = getLayout(w, h);
   }
 
@@ -73,8 +73,8 @@ const labLesson = ALL_SCENES[lessonId] as unknown as Lesson;
       if (shell) shell.dataset.mobilePanel = savedMobile;
     }
 
-    updateDtsLayout();
-    window.addEventListener('resize', updateDtsLayout);
+    updateSimLayout();
+    window.addEventListener('resize', updateSimLayout);
 
     const currentLab = window.location.pathname.replace('/lab/', '').replace(/\/$/, '') || 'architecture';
     (window as any).umami?.track('lab-view', {
@@ -87,7 +87,7 @@ const labLesson = ALL_SCENES[lessonId] as unknown as Lesson;
   setupLabPage();
   document.addEventListener('astro:page-load', setupLabPage);
   document.addEventListener('astro:before-swap', (e: any) => {
-    window.removeEventListener('resize', updateDtsLayout);
+    window.removeEventListener('resize', updateSimLayout);
     document.documentElement.removeAttribute('data-layout');
     // Preserve rail attribute for incoming page based on user preference
     const userRailPref = localStorage.getItem('dawn:railHidden');

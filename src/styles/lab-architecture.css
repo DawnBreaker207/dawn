@@ -4,12 +4,12 @@
  */
 
 /* ── 1. Universal JetBrains Mono Enforcement ────────────────────────── */
-.dts-window,
-.dts-window * {
+.sim-window,
+.sim-window * {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace !important;
 }
 
-.dts-window {
+.sim-window {
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -19,14 +19,14 @@
   background: var(--paper, #18181b);
 }
 
-/* ── 3. Embedded Native DTS Workbench Layout (1:1 with iframe benchmark) ── */
-.dts-window.is-embedded .topbar,
-.dts-window.is-embedded .sidebar,
-.dts-window.is-embedded .drawer-backdrop {
+/* ── 3. Embedded Native Simulator Workbench Layout (1:1 with iframe benchmark) ── */
+.sim-window.is-embedded .topbar,
+.sim-window.is-embedded .sidebar,
+.sim-window.is-embedded .drawer-backdrop {
   display: none !important;
 }
 
-.dts-window.is-embedded .window {
+.sim-window.is-embedded .window {
   width: 100% !important;
   height: 100% !important;
   max-width: none !important;
@@ -37,7 +37,7 @@
   overflow: hidden !important;
 }
 
-.dts-window.is-embedded .body {
+.sim-window.is-embedded .body {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) clamp(240px, 20vw, 300px) !important;
   grid-template-rows: 100% !important;
@@ -52,9 +52,9 @@
 }
 
 /* Force sheet and rail to fit container height */
-.dts-window.is-embedded main.sheet,
-.dts-window.is-embedded .sheet,
-.dts-window.is-embedded .rail {
+.sim-window.is-embedded main.sheet,
+.sim-window.is-embedded .sheet,
+.sim-window.is-embedded .rail {
   height: 100% !important;
   max-height: 100% !important;
   min-height: 0 !important;
@@ -65,7 +65,7 @@
 
 /* Responsive adjustment for narrow viewports (< 860px) */
 @media (max-width: 859px) {
-  .dts-window.is-embedded .body {
+  .sim-window.is-embedded .body {
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
@@ -73,12 +73,12 @@
     gap: 10px !important;
     padding: 8px !important;
   }
-  .dts-window.is-embedded .sheet {
+  .sim-window.is-embedded .sheet {
     height: 58vh !important;
     min-height: 380px !important;
     flex-shrink: 0 !important;
   }
-  .dts-window.is-embedded .rail {
+  .sim-window.is-embedded .rail {
     height: auto !important;
     flex-shrink: 0 !important;
     overflow: visible !important;
@@ -86,14 +86,14 @@
 }
 
 /* Stage (canvas area) fills remaining space, timeline stays pinned at bottom */
-.dts-window.is-embedded .stage {
+.sim-window.is-embedded .stage {
   flex: 1 1 0 !important;
   min-height: 0 !important;
   overflow: hidden !important;
   position: relative !important;
 }
 
-.dts-window.is-embedded .timeline {
+.sim-window.is-embedded .timeline {
   flex-shrink: 0 !important;
 }
 
@@ -148,16 +148,16 @@
 }
 
 /* ── 4. Key Ideas & Guide Highlight (<b> / <strong> in Guide & Callouts) ── */
-.dts-window .guide__body b,
-.dts-window .guide__body strong,
-.dts-window .callout b,
-.dts-window .callout strong {
+.sim-window .guide__body b,
+.sim-window .guide__body strong,
+.sim-window .callout b,
+.sim-window .callout strong {
   font-weight: 700 !important;
   color: var(--ink, var(--fg, #f4f4f5)) !important;
 }
 
-.dts-window .callout b,
-.dts-window .callout strong {
+.sim-window .callout b,
+.sim-window .callout strong {
   color: var(--ink, #f4f4f5) !important;
   background: color-mix(in srgb, var(--accent, #e11d48) 15%, transparent);
   padding: 1px 5px;
@@ -167,13 +167,13 @@
 }
 
 /* ── 5. Pause/Resume Button State ── */
-.dts-window #pause.is-paused {
+.sim-window #pause.is-paused {
   background: color-mix(in srgb, var(--accent, #e11d48) 14%, var(--c-fbf7f1, #fff)) !important;
   color: var(--accent, #e11d48) !important;
   border-color: var(--accent, #e11d48) !important;
 }
 
-.dts-window #pause .hidden {
+.sim-window #pause .hidden {
   display: none !important;
 }
 

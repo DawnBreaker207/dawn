@@ -1,4 +1,4 @@
-﻿/* DTS embedded mode — :is(html.is-embedded, .is-embedded) layout overrides for native integration */
+﻿/* Simulator embedded mode — :is(html.is-embedded, .is-embedded) layout overrides for native integration */
 /* ── 5. EMBEDDED MODE LAYOUT & CARD REFINEMENTS ────────────────────────── */
 :is(html.is-embedded, .is-embedded),
 :is(html.is-embedded, .is-embedded) body {
