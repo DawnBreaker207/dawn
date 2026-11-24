@@ -1,7 +1,26 @@
 import { getPosts, POSTS_PER_PAGE, slugify } from '@/lib/utils/blog';
 import { SITE_URL } from '@/lib/site';
 import { headerNavLinks } from '@/lib/nav';
+import { CURRICULUM_MODULES } from '@/data/curriculum';
 import type { APIRoute } from 'astro';
+
+const dedicatedLabRoutes = [
+  '/lab',
+  '/lab/architecture',
+  '/lab/aws-cloud',
+  '/lab/distributed',
+  '/lab/foundations',
+  '/lab/k8s',
+  '/lab/microservices',
+  '/lab/request-lifecycle',
+  '/lab/security',
+  '/lab/system-design',
+  '/lab/java',
+  '/lab/sql',
+  '/lab/spider',
+  '/lab/terminal',
+  '/lab/pathfinding',
+];
 
 const staticRoutes = [
   '/',
@@ -9,12 +28,7 @@ const staticRoutes = [
   '/books',
   '/heatmap',
   '/topics',
-  '/lab',
-  '/lab/java',
-  '/lab/sql',
-  '/lab/spider',
-  '/lab/terminal',
-  '/lab/pathfinding',
+  ...dedicatedLabRoutes,
   '/help',
 ];
 
@@ -29,8 +43,16 @@ export const GET: APIRoute = async () => {
   const pageCount = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
   const built = new Date().toISOString();
 
+  const lessonRoutes: Url[] = CURRICULUM_MODULES.flatMap((mod) =>
+    mod.lessons.map((lesson) => ({
+      loc: `/lab/${lesson.id}`,
+      lastmod: built,
+    }))
+  );
+
   const urls: Url[] = [
     ...staticRoutes.map((l) => ({ loc: l, lastmod: built })),
+    ...lessonRoutes,
     ...posts.map((p) => ({ loc: `/blog/${p.id}`, lastmod: p.data.date.toISOString() })),
     ...Array.from({ length: Math.max(0, pageCount - 1) }, (_, i) => ({
       loc: `/blog/page/${i + 2}`,

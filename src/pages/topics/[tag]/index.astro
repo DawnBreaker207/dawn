@@ -22,7 +22,10 @@ const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
 const initialDisplayPosts = filteredPosts.slice(0, POSTS_PER_PAGE);
 ---
 
-<BaseLayout title={`${title} — Topic`}>
+<BaseLayout
+  title={`${title} — Topic`}
+  description={`Technical articles, guides, and engineering notes tagged under #${title}.`}
+>
   <ListLayout
     title={title}
     posts={initialDisplayPosts}

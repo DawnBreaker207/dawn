@@ -27,6 +27,11 @@ export default defineConfig({
 
   integrations: [react(), mdx()],
 
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'hover',
+  },
+
   trailingSlash: 'never',
 
   adapter: vercel()
