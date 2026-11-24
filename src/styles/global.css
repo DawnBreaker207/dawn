@@ -179,10 +179,16 @@
   }
 
   code:not(pre code) {
-    color: oklch(0.75 0.08 285.7) !important; /* #BB9AF7 equivalent */
+    color: oklch(0.75 0.08 285.7) !important; /* #BB9AF7 equivalent (dark mode) */
     background-color: oklch(0.16 0.02 258.3);
     padding: 2px 4px;
     border-radius: 0.25rem;
+  }
+
+  html:not(.dark):not([data-theme="dark"]) code:not(pre code) {
+    color: #5b21b6 !important;
+    background-color: #ede9fe;
+    border-color: #ddd6fe;
   }
 }
 
