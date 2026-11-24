@@ -39,7 +39,7 @@ export const gitDagObjectsLesson = {
         entities: {
           file: d(-8, 0, { color: 'amber', glyph: 'terminal', label: ['src/app.ts'], sub: 'raw disk file' }),
           hash: d(0, 0, { color: 'blue', glyph: 'boxes', label: ['SHA-1 Hash'], sub: 'blob 14\\0console.log()' }),
-          blob: b(8, 0, { color: 'green', glyph: 'package', label: 'Blob Object', sub: '.git/objects/4b/825d...' }),
+          blob: d(8, 0, { s: 4.4, h: 48, color: 'green', glyph: 'package', label: ['Blob Object'], sub: '.git/objects/4b/825d...' }),
         },
         links: {
           fh: h('file', 'hash', ['file', 'hash'], { label: 'header + hash' }),
@@ -65,10 +65,10 @@ export const gitDagObjectsLesson = {
       scene: {
         entities: {
           rootTree: d(-6, 0, { color: 'purple', glyph: 'boxes', label: ['Root Tree'], sub: 'tree 8a3f91' }),
-          subTree: d(4, -4, { color: 'purple', glyph: 'boxes', label: ['src/ Tree'], sub: 'tree 1f2c4a' }),
-          blob1: b(12, -6, { color: 'green', glyph: 'package', label: 'app.ts (blob)', sub: 'blob a1b2c3' }),
-          blob2: b(12, -1, { color: 'green', glyph: 'package', label: 'utils.ts (blob)', sub: 'blob d4e5f6' }),
-          blob3: b(4, 5, { color: 'green', glyph: 'package', label: 'README.md (blob)', sub: 'blob 7890ab' }),
+          subTree: d(2, -4, { color: 'purple', glyph: 'boxes', label: ['src/ Tree'], sub: 'tree 1f2c4a' }),
+          blob1: d(10, -8, { s: 4.4, h: 48, color: 'green', glyph: 'package', label: ['app.ts (blob)'], sub: 'blob a1b2c3' }),
+          blob2: d(12, 1, { s: 4.4, h: 48, color: 'green', glyph: 'package', label: ['utils.ts (blob)'], sub: 'blob d4e5f6' }),
+          blob3: d(4, 5, { s: 4.4, h: 48, color: 'green', glyph: 'package', label: ['README.md (blob)'], sub: 'blob 7890ab' }),
         },
         links: {
           rt_st: h('rootTree', 'subTree', ['rootTree', 'subTree'], { label: 'src/' }),

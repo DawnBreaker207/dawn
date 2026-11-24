@@ -35,12 +35,12 @@ export const gitBranchingWorkflowsLesson = {
       metrics: { branchLifespan: '2-4 weeks', mergeFrequency: 'Low (batch)', conflictRisk: 'High (merge hell)', releaseCadence: 'Monthly' },
       scene: {
         entities: {
-          main: d(-10, -5, { color: 'green', glyph: 'gitBranch', label: ['main'], sub: 'production tags' }),
-          hotfix: d(0, -8, { color: 'rose', glyph: 'alert', label: ['hotfix/*'], sub: 'critical patches' }),
-          dev: d(-10, 0, { color: 'blue', glyph: 'gitBranch', label: ['develop'], sub: 'integration mainline' }),
-          feat: d(0, 5, { color: 'yellow', glyph: 'terminal', label: ['feature/*'], sub: 'sprint development' }),
-          rel: d(0, -2, { color: 'purple', glyph: 'package', label: ['release/*'], sub: 'QA stabilization' }),
-          zFlow: x({ x0: -12, x1: 6, y0: -10, y1: 8 }, 'GIT FLOW TOPOLOGY (HIGH CEREMONY)'),
+          main: d(-12, -7, { color: 'green', glyph: 'gitBranch', label: ['main'], sub: 'production tags' }),
+          hotfix: d(0, -9, { color: 'rose', glyph: 'alert', label: ['hotfix/*'], sub: 'critical patches' }),
+          dev: d(-6, 2, { color: 'blue', glyph: 'gitBranch', label: ['develop'], sub: 'integration mainline' }),
+          feat: d(4, 7, { color: 'yellow', glyph: 'terminal', label: ['feature/*'], sub: 'sprint development' }),
+          rel: d(2, -2, { color: 'purple', glyph: 'package', label: ['release/*'], sub: 'QA stabilization' }),
+          zFlow: x({ x0: -14, x1: 7, y0: -11, y1: 9 }, 'GIT FLOW TOPOLOGY (HIGH CEREMONY)'),
         },
         links: {
           df: h('dev', 'feat', ['dev', 'feat'], { heads: 'both', label: 'feature branch' }),

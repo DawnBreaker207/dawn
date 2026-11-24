@@ -93,7 +93,7 @@ export const gitEnvironmentsLifecycleLesson = {
         entities: {
           work: d(-14, 0, { color: 'slab', glyph: 'terminal', label: ['Working Tree'], sub: 'clean' }),
           stage: d(-4, 0, { color: 'slab', glyph: 'boxes', label: ['Staging Area'], sub: 'clean' }),
-          repo: b(8, 0, { color: 'green', glyph: 'gitBranch', label: 'Local Repo', sub: 'HEAD -> main (c4f1a2)' }),
+          repo: d(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'HEAD -> main (c4f1a2)' }),
           zRepo: x({ x0: 4, x1: 12, y0: -7, y1: 7 }, '.GIT OBJECT STORE'),
         },
         links: {
@@ -120,8 +120,8 @@ export const gitEnvironmentsLifecycleLesson = {
         entities: {
           work: d(-16, 0, { color: 'slab', glyph: 'terminal', label: ['Working Tree'], sub: 'clean' }),
           stage: d(-8, 0, { color: 'slab', glyph: 'boxes', label: ['Staging Area'], sub: 'clean' }),
-          repo: b(0, 0, { color: 'green', glyph: 'gitBranch', label: 'Local Repo', sub: 'main' }),
-          remote: b(12, 0, { color: 'purple', glyph: 'cloud', label: 'Remote Repo', sub: 'github.com/org/repo' }),
+          repo: d(0, 0, { s: 4.6, h: 48, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'main' }),
+          remote: d(12, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'cloud', label: ['Remote Repo'], sub: 'github.com/org/repo' }),
           zRemote: x({ x0: 8, x1: 16, y0: -7, y1: 7 }, 'REMOTE HOST (GITHUB)'),
         },
         links: {

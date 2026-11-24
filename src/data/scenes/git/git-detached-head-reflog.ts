@@ -36,10 +36,10 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Detached (c4f1a2)', danglingCommits: '0', reflogEntries: '10', rescueBranch: 'None' },
       scene: {
         entities: {
-          mainBranch: d(-8, -4, { color: 'slab', glyph: 'gitBranch', label: ['main'], sub: 'e8d9c2' }),
-          head: d(0, 0, { color: 'amber', glyph: 'terminal', label: ['HEAD'], sub: 'points directly to c4f1a2' }),
-          commit: d(0, 5, { color: 'green', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'detached target' }),
-          zWarn: x({ x0: -4, x1: 4, y0: -3, y1: 8 }, 'DETACHED HEAD (NO BRANCH SHIELD)'),
+          mainBranch: d(-8, -5, { color: 'slab', glyph: 'gitBranch', label: ['main'], sub: 'e8d9c2' }),
+          head: d(-2, 0, { color: 'amber', glyph: 'terminal', label: ['HEAD'], sub: 'points directly to c4f1a2' }),
+          commit: d(6, 4, { color: 'green', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'detached target' }),
+          zWarn: x({ x0: -10, x1: 8, y0: -7, y1: 7 }, 'DETACHED HEAD (NO BRANCH SHIELD)'),
         },
         links: {
           hc: h('head', 'commit', ['head', 'commit'], { label: 'direct SHA' }),

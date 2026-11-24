@@ -62,7 +62,7 @@ export const gitRerereEngineLesson = {
       scene: {
         entities: {
           pre: d(-8, 0, { color: 'amber', glyph: 'terminal', label: ['Pre-Image Hunk'], sub: 'conflict fingerprint' }),
-          cache: b(0, 0, { color: 'purple', glyph: 'package', label: ['.git/rr-cache'], sub: 'hash: 7a8b9c' }),
+          cache: d(0, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'package', label: ['.git/rr-cache'], sub: 'hash: 7a8b9c' }),
           post: d(8, 0, { color: 'green', glyph: 'boxes', label: ['Post-Image Solution'], sub: 'recorded resolution' }),
         },
         links: {
@@ -89,7 +89,7 @@ export const gitRerereEngineLesson = {
       scene: {
         entities: {
           rebase: d(-8, 0, { color: 'green', glyph: 'terminal', label: ['git rebase main'], sub: 'smooth automated progress' }),
-          cache: b(0, 0, { color: 'purple', glyph: 'package', label: ['.git/rr-cache'], sub: 'matches 7a8b9c' }),
+          cache: d(0, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'package', label: ['.git/rr-cache'], sub: 'matches 7a8b9c' }),
           autoFile: d(8, 0, { color: 'green', glyph: 'boxes', label: ['Clean Working Tree'], sub: 'conflict auto-resolved!' }),
         },
         links: {

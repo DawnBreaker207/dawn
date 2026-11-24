@@ -96,11 +96,11 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Topologically Synchronized', producerVersion: 'v2', consumerState: 'Clean (Evaluated)', glitchFree: '100% Glitch-Free' },
       scene: {
         entities: {
-          rootSig: d(-10, 0, { color: 'blue', glyph: 'database', label: ['sourceSignal'], sub: 'Updated once' }),
-          leftNode: d(-3, -3, { color: 'purple', glyph: 'cpu', label: ['leftBranch'], sub: 'computed' }),
-          rightNode: d(-3, 3, { color: 'purple', glyph: 'cpu', label: ['rightBranch'], sub: 'computed' }),
-          mergedNode: d(8, 0, { color: 'green', glyph: 'terminal', label: ['combinedResult'], sub: 'Evaluates once atomically' }),
-          zGlitch: x({ x0: -12, x1: 11, y0: -6, y1: 6 }, 'DIAMOND DEPENDENCY RECONCILIATION'),
+          rootSig: d(-12, 0, { color: 'blue', glyph: 'database', label: ['sourceSignal'], sub: 'Updated once' }),
+          leftNode: d(-2, -5, { color: 'purple', glyph: 'cpu', label: ['leftBranch'], sub: 'computed' }),
+          rightNode: d(-2, 5, { color: 'purple', glyph: 'cpu', label: ['rightBranch'], sub: 'computed' }),
+          mergedNode: d(9, 0, { color: 'green', glyph: 'terminal', label: ['combinedResult'], sub: 'Evaluates once atomically' }),
+          zGlitch: x({ x0: -14, x1: 12, y0: -7, y1: 7 }, 'DIAMOND DEPENDENCY RECONCILIATION'),
         },
         links: {
           rl: h('rootSig', 'leftNode', ['rootSig', 'leftNode'], { label: 'epoch sync' }),

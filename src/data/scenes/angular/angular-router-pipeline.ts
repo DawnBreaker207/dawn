@@ -64,11 +64,11 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'GuardsCheckPassed', activeGuards: 'authGuard: OK', resolverState: 'orderResolver: OK', outletTarget: 'primary' },
       scene: {
         entities: {
-          matcher: d(-10, 0, { color: 'purple', glyph: 'package', label: ['Matched Route'], sub: 'path: orders/:id' }),
-          canMatch: d(-3, -4, { color: 'red', glyph: 'lock', label: ['canMatch Guard'], sub: 'FeatureFlag / Role' }),
-          canActivate: d(4, -4, { color: 'red', glyph: 'shield', label: ['canActivate Guard'], sub: 'Auth & Permissions' }),
-          resolver: d(10, 0, { color: 'cyan', glyph: 'database', label: ['Data Resolver'], sub: 'orderResolver(id)' }),
-          zGuards: x({ x0: -12, x1: 12, y0: -7, y1: 5 }, 'PIPELINE SECURITY & RESOLUTION GATE'),
+          matcher: d(-12, 0, { color: 'purple', glyph: 'package', label: ['Matched Route'], sub: 'path: orders/:id' }),
+          canMatch: d(-3, -6, { color: 'red', glyph: 'lock', label: ['canMatch Guard'], sub: 'FeatureFlag / Role' }),
+          canActivate: d(5, -6, { color: 'red', glyph: 'shield', label: ['canActivate Guard'], sub: 'Auth & Permissions' }),
+          resolver: d(12, 0, { color: 'cyan', glyph: 'database', label: ['Data Resolver'], sub: 'orderResolver(id)' }),
+          zGuards: x({ x0: -14, x1: 14, y0: -9, y1: 5 }, 'PIPELINE SECURITY & RESOLUTION GATE'),
         },
         links: {
           mc: h('matcher', 'canMatch', ['matcher', 'canMatch'], { label: 'check match' }),

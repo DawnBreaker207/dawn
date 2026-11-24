@@ -39,7 +39,7 @@ export const gitCommandsTaxonomyLesson = {
         entities: {
           plumb: d(-6, -4, { color: 'yellow', glyph: 'terminal', label: ['Plumbing Engine'], sub: 'cat-file, hash-object' }),
           porce: d(-6, 4, { color: 'green', glyph: 'boxes', label: ['Porcelain CLI'], sub: 'add, commit, status' }),
-          storage: b(6, 0, { color: 'slab', glyph: 'gitBranch', label: '.git Storage', sub: 'objects & refs' }),
+          storage: d(6, 0, { s: 4.6, h: 48, color: 'slab', glyph: 'gitBranch', label: ['.git Storage'], sub: 'objects & refs' }),
         },
         links: {
           pp: h('porce', 'plumb', ['porce', 'plumb'], { label: 'wraps' }),
@@ -94,7 +94,7 @@ export const gitCommandsTaxonomyLesson = {
         entities: {
           work: d(-8, 0, { color: 'slab', glyph: 'terminal', label: ['Working Dir'], sub: 'reverted to clean' }),
           head: d(0, 0, { color: 'green', glyph: 'gitBranch', label: ['HEAD'], sub: 'current branch' }),
-          stash: b(8, 0, { color: 'purple', glyph: 'package', label: 'refs/stash', sub: 'shelved commit stack' }),
+          stash: d(8, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'package', label: ['refs/stash'], sub: 'shelved commit stack' }),
         },
         links: {
           ws: h('work', 'stash', ['work', 'stash'], { label: 'git stash push' }),

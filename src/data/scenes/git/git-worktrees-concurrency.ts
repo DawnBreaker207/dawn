@@ -64,7 +64,7 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '2 (isolated)', sharedObjectStore: 'Shared .git/objects', diskSavings: '9.8 GB saved', lockStatus: 'Clean' },
       scene: {
         entities: {
-          mainRepo: b(0, 0, { s: 5.0, color: 'slab', glyph: 'gitBranch', label: 'Central .git Store', sub: 'shared objects, packfiles & config' }),
+          mainRepo: d(0, 0, { s: 5.0, h: 52, color: 'slab', glyph: 'gitBranch', label: ['Central .git Store'], sub: 'shared objects & config' }),
           wtA: d(-10, -5, { color: 'green', glyph: 'terminal', label: ['Workspace A (main)'], sub: 'Agent A: auth branch' }),
           wtB: d(-10, 5, { color: 'purple', glyph: 'terminal', label: ['Workspace B (agent-ui)'], sub: 'Agent B: ui branch' }),
           zWt: x({ x0: -12, x1: 8, y0: -8, y1: 8 }, 'GIT WORKTREE CONCURRENCY ENGINE'),
@@ -95,7 +95,7 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '1 (pruned)', sharedObjectStore: 'Clean', diskSavings: 'Maximized', lockStatus: 'Unlocked' },
       scene: {
         entities: {
-          mainRepo: b(0, 0, { color: 'green', glyph: 'gitBranch', label: 'Central .git Store', sub: 'clean state' }),
+          mainRepo: d(0, 0, { s: 4.8, h: 48, color: 'green', glyph: 'gitBranch', label: ['Central .git Store'], sub: 'clean state' }),
           cmd: d(-10, 0, { color: 'blue', glyph: 'terminal', label: ['git worktree prune'], sub: 'reaps dead pointers' }),
         },
         links: {
