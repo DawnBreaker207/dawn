@@ -40,9 +40,8 @@ export const gitBranchingWorkflowsLesson = {
       metrics: { branchLifespan: '2-4 weeks', mergeFrequency: 'Low (batch)', conflictRisk: 'High (merge hell)', releaseCadence: 'Monthly' },
       scene: {
         entities: {
-          prodMain: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'shield', label: ['main (Prod)'], sub: 'prod trunk' }),
-          developLine: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'gitBranch', label: ['develop Branch'], sub: 'develop branch' }),
-          featureCart: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'boxes', label: ['feature/cart'], sub: '2-week branch' }),
+          trunkMain: d(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['main (Prod)'], sub: 'stable trunk' }),
+          staleDevelop: d(-4, -20, { s: 4.4, h: 54, color: 'amber', glyph: 'gitBranch', label: ['develop Line'], sub: 'develop branch' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Flow Branch Matrix', [
             `Branches: main, develop, release/v1.2, feature/cart`,
             `Lifecycle: 3 weeks development in feature/cart`,
@@ -53,10 +52,9 @@ export const gitBranchingWorkflowsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          md: h('prodMain', 'developLine', ['prodMain', 'developLine'], { label: 'branch develop' }),
-          df: h('developLine', 'featureCart', ['developLine', 'featureCart'], { label: 'cut feature' }),
+          td: h('trunkMain', 'staleDevelop', ['trunkMain', 'staleDevelop'], { label: 'cut develop' }),
         },
-        flows: [{ route: ['md', 'df'], kind: 'feature', rate: 1.2 }],
+        flows: [{ route: ['td'], kind: 'feature', rate: 1.2 }],
       },
     },
     {
@@ -75,9 +73,8 @@ export const gitBranchingWorkflowsLesson = {
       metrics: { branchLifespan: '3 weeks', mergeFrequency: 'Infrequent', conflictRisk: 'CRITICAL (Merge Hell)', releaseCadence: 'Delayed' },
       scene: {
         entities: {
-          developHead: d(-7, 7, { s: 5.0, h: 54, color: 'rose', glyph: 'alert', label: ['develop Head'], sub: '+42 drift' }),
-          conflictZone: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Merge Hell'], sub: '43 conflicts' }),
-          staleFeature: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'boxes', label: ['feature/cart'], sub: '3-week drift' }),
+          trunkMain: d(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['main (Prod)'], sub: 'stable trunk' }),
+          staleDevelop: d(-4, -20, { s: 4.4, h: 54, color: 'rose', glyph: 'alert', label: ['Merge Hell'], sub: '43 conflicts' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merge Conflict Log', [
             `$ git merge feature/checkout`,
             `Auto-merging src/order.ts`,
@@ -88,10 +85,9 @@ export const gitBranchingWorkflowsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dc: h('developHead', 'conflictZone', ['developHead', 'conflictZone'], { label: 'divergent code' }),
-          fc: h('staleFeature', 'conflictZone', ['staleFeature', 'conflictZone'], { label: 'stale diffs' }),
+          td: h('trunkMain', 'staleDevelop', ['trunkMain', 'staleDevelop'], { label: 'divergent drift' }),
         },
-        flows: [{ route: ['dc', 'fc'], kind: 'feature', rate: 1.5 }],
+        flows: [{ route: ['td'], kind: 'feature', rate: 1.5 }],
       },
     },
     {
@@ -110,9 +106,8 @@ export const gitBranchingWorkflowsLesson = {
       metrics: { branchLifespan: '< 24 hours', mergeFrequency: 'Daily (continuous)', conflictRisk: 'Near Zero', releaseCadence: 'Continuous' },
       scene: {
         entities: {
-          trunkMain: d(-7, 0, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'trunk main' }),
-          shortBranch: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'boxes', label: ['Short PR (<24h)'], sub: 'small diff' }),
-          ciGate: d(7, 0, { s: 5.0, h: 54, color: 'green', glyph: 'shield', label: ['CI Test Gate'], sub: 'automated pass' }),
+          trunkMain: d(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'stable trunk' }),
+          featureBranch: d(-6, -2, { s: 4.4, h: 54, color: 'amber', glyph: 'boxes', label: ['Feature PR'], sub: 'short-lived PR' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Trunk-Based Metrics', [
             `Cadence: 12 merges / day directly into main`,
             `Branch lifespan: Average 4 hours`,
@@ -122,10 +117,44 @@ export const gitBranchingWorkflowsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          tm: h('trunkMain', 'shortBranch', ['trunkMain', 'shortBranch'], { label: 'cut short PR' }),
-          mc: h('shortBranch', 'ciGate', ['shortBranch', 'ciGate'], { label: 'pass assertions' }),
+          tf: h('trunkMain', 'featureBranch', ['trunkMain', 'featureBranch'], { label: 'short branch (<24h)' }),
         },
-        flows: [{ route: ['tm', 'mc'], kind: 'trunk', rate: 1.6 }],
+        flows: [{ route: ['tf'], kind: 'trunk', rate: 1.6 }],
+      },
+    },
+    {
+      short: 'CI Gate',
+      chapter: 'technique',
+      title: 'Automated CI Verification Gates for Every PR',
+      body: [
+        'In Trunk-Based Development, <code>main</code> must remain deployable at all times. Automated CI gates run test suites, lint checks, and type validations before any merge is allowed.',
+        'If a PR breaks the build, CI immediately blocks the merge, keeping the trunk healthy and green.',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Merge queues (like GitHub merge queue) guarantee that tested PRs are still valid when merged sequentially.',
+      },
+      changes: ['+ Automated CI test pipeline configured', '+ All PRs must pass unit, integration, and lint checks before merge'],
+      metrics: { branchLifespan: '< 12 hours', mergeFrequency: 'Continuous', conflictRisk: 'Near Zero', releaseCadence: 'Daily' },
+      scene: {
+        entities: {
+          trunkMain: d(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'stable trunk' }),
+          featureBranch: d(-6, -2, { s: 4.4, h: 54, color: 'amber', glyph: 'boxes', label: ['Feature PR'], sub: 'short-lived PR' }),
+          ciGate: d(-2, 16, { s: 4.4, h: 56, color: 'green', glyph: 'shield', label: ['CI Test Gate'], sub: 'automated pass' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'CI Verification Pipeline', [
+            `$ git push origin feat/cart`,
+            `Running GitHub Actions:`,
+            `  ✓ Lint & Typecheck (45s)`,
+            `  ✓ 1,420 Unit Tests (1m 12s)`,
+            `  ✓ E2E Smoke Tests (2m 05s)`,
+            `Status: All checks passed. Ready to merge!`,
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          tf: h('trunkMain', 'featureBranch', ['trunkMain', 'featureBranch'], { label: 'branch from main' }),
+          fc: h('featureBranch', 'ciGate', ['featureBranch', 'ciGate'], { label: 'validate suite' }),
+        },
+        flows: [{ route: ['tf', 'fc'], kind: 'trunk', rate: 1.6 }],
       },
     },
     {
@@ -144,93 +173,65 @@ export const gitBranchingWorkflowsLesson = {
       metrics: { branchLifespan: 'Hours', mergeFrequency: 'Continuous', conflictRisk: 'Minimal', releaseCadence: 'On demand' },
       scene: {
         entities: {
-          trunkCommit: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Trunk Commit'], sub: 'code in prod' }),
-          flagEngine: d(0, 0, { s: 5.2, h: 56, color: 'amber', glyph: 'cpu', label: ['Feature Toggle'], sub: 'flag: OFF' }),
-          userTraffic: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Prod Traffic'], sub: 'prod users' }),
+          trunkMain: d(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'code in prod' }),
+          featureBranch: d(-6, -2, { s: 4.4, h: 54, color: 'amber', glyph: 'boxes', label: ['Feature PR'], sub: 'short-lived PR' }),
+          ciGate: d(-2, 16, { s: 4.4, h: 56, color: 'green', glyph: 'shield', label: ['CI Test Gate'], sub: 'automated pass' }),
+          flagToggle: d(6, 0, { s: 4.4, h: 54, color: 'cyan', glyph: 'cpu', label: ['Feature Flag'], sub: 'runtime toggle' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Feature Flag Architecture', [
-            `const isNewCheckout = await flags.get('checkout_v2', user);`,
-            `if (isNewCheckout) {`,
-            `  return renderModernCheckout(); // Tested internally`,
+            `const showNewCheckout = await flags.get('checkout_v2', user);`,
+            `if (showNewCheckout) {`,
+            `  return <NewCheckoutFlow />;`,
             `} else {`,
-            `  return renderLegacyCheckout(); // Production safe`,
+            `  return <LegacyCheckout />;`,
             `}`,
-            `= Code deployed daily, released when 100% ready`,
+            `= Ship incomplete features without leaking to end users`,
           ], { icon: 'terminal' }),
         },
         links: {
-          tf: h('trunkCommit', 'flagEngine', ['trunkCommit', 'flagEngine'], { label: 'deploy dark code' }),
-          fu: h('flagEngine', 'userTraffic', ['flagEngine', 'userTraffic'], { label: 'gate user traffic' }),
+          tf: h('trunkMain', 'featureBranch', ['trunkMain', 'featureBranch'], { label: 'merge to main' }),
+          fc: h('featureBranch', 'ciGate', ['featureBranch', 'ciGate'], { label: 'pass assertions' }),
+          ff: h('featureBranch', 'flagToggle', ['featureBranch', 'flagToggle'], { label: 'evaluate flag' }),
         },
-        flows: [{ route: ['tf', 'fu'], kind: 'trunk', rate: 1.5 }],
+        flows: [{ route: ['tf', 'ff'], kind: 'trunk', rate: 1.6 }],
       },
     },
     {
-      short: 'Automated CI Gates',
-      chapter: 'execution',
-      title: 'Automated CI/CD Validation Matrix',
+      short: 'Continuous CD',
+      chapter: 'scaling',
+      title: 'High-Frequency Continuous Deployment Topology',
       body: [
-        'Trunk-Based Development relies on bulletproof automation. Every Pull Request triggers a matrix of fast CI checks:',
-        '1. Static type checking (tsc)<br>2. Unit tests with coverage thresholds<br>3. Security dependency vulnerability scans<br>4. Ephemeral preview environment deployment.',
+        'With Trunk-Based Development and Feature Flags, code flows uninterrupted from developer commit to production in under 15 minutes.',
+        'There is no "release day", no freeze period, and no merge ceremony. Releases are continuous and friction-free.',
       ],
       callout: {
         kind: 'insight',
-        text: 'If CI fails, the PR is automatically blocked. Only clean, tested commits reach the trunk.',
+        text: 'Continuous Delivery removes release stress: small diffs mean small rollback surfaces and instantaneous mean time to recovery (MTTR).',
       },
-      changes: ['+ Automated test suite executes in 3.5 minutes', '+ Ephemeral preview URL generated for QA review'],
-      metrics: { branchLifespan: 'Hours', mergeFrequency: 'High', conflictRisk: 'Protected by CI', releaseCadence: 'Continuous' },
+      changes: ['+ Fully automated continuous deployment pipeline enabled', '+ 15-minute commit-to-production lead time'],
+      metrics: { branchLifespan: '< 4 hours', mergeFrequency: 'Hourly', conflictRisk: 'Near Zero', releaseCadence: 'Continuous' },
       scene: {
         entities: {
-          prRequest: y(-7, 7, { label: 'Pull Request', tags: [{ text: 'PR #418: auth refactor', tone: 'blue', icon: 'gitBranch' }] }),
-          ciMatrix: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['CI Pipeline'], sub: 'lint & test' }),
-          trunkMain: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'clean trunk' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'CI Gate Pipeline Run', [
-            `GitHub Actions Run: PR #418`,
-            `[PASS] Lint & Format (12s)`,
-            `[PASS] TypeScript Strict Check (24s)`,
-            `[PASS] 248 Unit & Integration Tests (88s)`,
-            `[PASS] Snyk Security Vulnerability Scan (15s)`,
-            `= All checks passed: Ready for instantaneous merge`,
-          ], { icon: 'terminal' }),
-        },
-        links: {
-          pc: h('prRequest', 'ciMatrix', ['prRequest', 'ciMatrix'], { label: 'run checks' }),
-          cm: h('ciMatrix', 'trunkMain', ['ciMatrix', 'trunkMain'], { label: 'merge to main' }),
-        },
-        flows: [{ route: ['pc', 'cm'], kind: 'trunk', rate: 1.6 }],
-      },
-    },
-    {
-      short: 'Continuous Delivery',
-      chapter: 'scaling',
-      title: 'Continuous Delivery: 10x Velocity with 0 Merge Hell',
-      body: [
-        'By combining short-lived branches, feature flags, and automated CI gates, the team achieves true continuous delivery.',
-        'Developers spend zero time in stressful merge conflict resolution, code reviews are small and easy to review (under 100 lines), and features ship continuously.',
-      ],
-      callout: {
-        kind: 'tip',
-        text: 'The best way to solve merge conflicts is to merge so frequently that conflicts never have time to grow.',
-      },
-      changes: ['+ Zero merge meetings needed', '+ 15 production releases per week', '+ 99.99% deployment success rate'],
-      metrics: { branchLifespan: '< 6 hours', mergeFrequency: '15x / week', conflictRisk: 'Eliminated', releaseCadence: 'Multiple / day' },
-      scene: {
-        entities: {
-          trunkStream: d(-7, 0, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Active Trunk'], sub: 'linear history' }),
-          continuousDeploy: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'cpu', label: ['Auto Deploy'], sub: 'auto deploy' }),
-          prodGlobal: d(7, 0, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Global Edge'], sub: 'live edge' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Continuous Delivery Cadence', [
-            `Deploy frequency: 15 releases / day`,
-            `Lead time for changes: 38 minutes (commit to prod)`,
+          trunkMain: d(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'stable trunk' }),
+          featureBranch: d(-6, -2, { s: 4.4, h: 54, color: 'amber', glyph: 'boxes', label: ['Feature PR'], sub: 'short-lived PR' }),
+          ciGate: d(-2, 16, { s: 4.4, h: 56, color: 'green', glyph: 'shield', label: ['CI Test Gate'], sub: 'automated pass' }),
+          flagToggle: d(6, 0, { s: 4.4, h: 54, color: 'cyan', glyph: 'cpu', label: ['Feature Flag'], sub: 'runtime toggle' }),
+          prodRelease: d(18, 4, { s: 4.4, h: 56, color: 'green', glyph: 'server', label: ['Prod Release'], sub: 'continuous CD' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Continuous Deployment Pipeline', [
+            `Pipeline: Developer -> PR -> CI Pass -> Merge -> Production`,
+            `Lead time for changes: 12 minutes`,
+            `Deployment frequency: 15 / day`,
             `Change failure rate: < 0.5%`,
-            `Mean time to recovery (MTTR): 8 minutes`,
-            `= High velocity, low risk, zero merge hell`,
+            `Mean time to recover: 4 minutes (toggle flag OFF)`,
+            `= Elite engineering velocity achieved`,
           ], { icon: 'terminal' }),
         },
         links: {
-          tc: h('trunkStream', 'continuousDeploy', ['trunkStream', 'continuousDeploy'], { label: 'auto trigger' }),
-          cp: h('continuousDeploy', 'prodGlobal', ['continuousDeploy', 'prodGlobal'], { label: 'zero-downtime deploy' }),
+          tf: h('trunkMain', 'featureBranch', ['trunkMain', 'featureBranch'], { label: 'merge to main' }),
+          fc: h('featureBranch', 'ciGate', ['featureBranch', 'ciGate'], { label: 'pass assertions' }),
+          ff: h('featureBranch', 'flagToggle', ['featureBranch', 'flagToggle'], { label: 'evaluate flag' }),
+          fp: h('flagToggle', 'prodRelease', ['flagToggle', 'prodRelease'], { label: 'continuous CD' }),
         },
-        flows: [{ route: ['tc', 'cp'], kind: 'release', rate: 1.8 }],
+        flows: [{ route: ['tf', 'ff', 'fp'], kind: 'release', rate: 1.8 }],
       },
     },
   ],
