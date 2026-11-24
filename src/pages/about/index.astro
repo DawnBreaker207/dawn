@@ -14,7 +14,10 @@ const SOCIALS = [
 ];
 ---
 
-<BaseLayout title="About">
+<BaseLayout
+  title="About"
+  description="Background, technical journey, and career timeline of Tung Anh (Dawn) — a software engineer based in Hanoi exploring distributed systems and web architectures."
+>
   <div class="about divide-y divide-(--border)">
     <div class="space-y-2 pt-6 pb-8 md:mb-6 md:space-y-5">
       <h1 class="text-3xl leading-9 font-extrabold tracking-tight text-(--fg) sm:text-4xl sm:leading-10 md:text-6xl md:leading-14">
@@ -104,20 +107,20 @@ const SOCIALS = [
         </li>
         <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
           <Twemoji emoji="bar-chart" size="base" class="!m-0 shrink-0" />
-          <span><a href="https://umami.is/" target="_blank">Umami</a> for privacy-friendly analytics.</span>
+          <span><a href="https://umami.is/" target="_blank" data-umami-event="about-credit-umami">Umami</a> for privacy-friendly analytics.</span>
         </li>
         <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
           <Twemoji emoji="clapping-hands" size="base" class="!m-0 shrink-0" />
-          <span><a href="https://giscus.app/" target="_blank">Giscus</a> for comments.</span>
+          <span><a href="https://giscus.app/" target="_blank" data-umami-event="about-credit-giscus">Giscus</a> for comments.</span>
         </li>
         <li class="flex items-center gap-2.5 text-[15px] leading-relaxed">
           <Twemoji emoji="face-with-monocle" size="base" class="!m-0 shrink-0" />
-          <span>Dark mode inspired by the <a href="https://marketplace.visualstudio.com/items?itemName=EliverLara.andromeda" target="_blank">Andromeda Theme</a>.</span>
+          <span>Dark mode inspired by the <a href="https://marketplace.visualstudio.com/items?itemName=EliverLara.andromeda" target="_blank" data-umami-event="about-credit-andromeda">Andromeda Theme</a>.</span>
         </li>
       </ul>
 
       <h2>Social</h2>
-      <p>Reach me at <a href={`mailto:${SITE.email}`}>{SITE.email}</a> or find me on social:</p>
+      <p>Reach me at <a href={`mailto:${SITE.email}`} data-umami-event="about-contact-email">{SITE.email}</a> or find me on social:</p>
       <ul class="not-prose flex flex-wrap items-center gap-2.5">
         {SOCIALS.map(({ platform, href }) => (
           <li>

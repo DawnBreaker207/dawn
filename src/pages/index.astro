@@ -17,6 +17,33 @@ const latestPosts = posts.slice(0, 4);
 <BaseLayout
   title="Tung Anh (Dawn) — Software Engineer"
   description="A small corner of the internet. Personal workbench of Tung Anh exploring Java, TypeScript, PostgreSQL, and interactive 2.5D architecture simulations."
+  jsonLd={{
+    '@type': 'Person',
+    name: 'Tung Anh Ngo',
+    alternateName: 'Dawn',
+    jobTitle: 'Software Engineer',
+    url: 'https://dawn.io.vn',
+    sameAs: [
+      'https://github.com/DawnBreaker207',
+      'https://twitter.com/DawnBreaker207',
+      'https://www.linkedin.com/in/tunganh207'
+    ],
+    knowsAbout: [
+      'Java',
+      'Spring Boot',
+      'TypeScript',
+      'Angular',
+      'React',
+      'PostgreSQL',
+      'Distributed Systems',
+      'System Architecture'
+    ],
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Hanoi',
+      addressCountry: 'Vietnam'
+    }
+  }}
 >
   <div class="relative space-y-12 pt-3 pb-16 md:space-y-18 lg:pt-6 max-w-full overflow-x-hidden">
     <!-- 1. Quiet Status Pill -->
@@ -93,6 +120,7 @@ const latestPosts = posts.slice(0, 4);
       <div class="pt-2 text-right">
         <a
           href="/blog"
+          data-umami-event="home-view-all-posts"
           class="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-(--fg-dim) hover:text-(--accent) transition-colors"
         >
           <span>All articles ({posts.length})</span>

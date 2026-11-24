@@ -110,6 +110,9 @@ function setupReadingProgress(): void {
     scroller.prepend(bar);
   }
 
+  let milestone50Fired = false;
+  let milestone100Fired = false;
+
   let raf = 0;
   const update = (): void => {
     const scrollable =
@@ -117,6 +120,21 @@ function setupReadingProgress(): void {
     const max = scrollable.scrollHeight - scrollable.clientHeight;
     const ratio = max > 0 ? scrollable.scrollTop / max : 0;
     bar!.style.transform = `scaleX(${Math.min(1, Math.max(0, ratio)).toFixed(4)})`;
+
+    if (max > 200) {
+      if (!milestone50Fired && ratio >= 0.5) {
+        milestone50Fired = true;
+        try {
+          (window as any).umami?.track('reading-milestone', { depth: '50%', path: window.location.pathname });
+        } catch {}
+      }
+      if (!milestone100Fired && ratio >= 0.9) {
+        milestone100Fired = true;
+        try {
+          (window as any).umami?.track('reading-milestone', { depth: '100%', path: window.location.pathname });
+        } catch {}
+      }
+    }
   };
 
   const onScroll = (): void => {
@@ -250,6 +268,9 @@ function playVictoryChime(): void {
 }
 
 export function launchConfetti(): void {
+  try {
+    (window as any).umami?.track('easter-egg-unlocked');
+  } catch {}
   playVictoryChime();
 
   // Floating retro toast banner with 100% inline styles (cannot be broken by Tailwind purging)
@@ -455,10 +476,14 @@ function recordKeyForEasterEgg(key: string, code: string, keyCode = 0): void {
   }
 }
 
-function showKeyboardHelpModal(): void {
+function showKeyboardHelpModal(forceOpen?: boolean): void {
   let modal = document.getElementById('keyboard-help-modal');
   if (modal) {
-    modal.classList.toggle('hidden');
+    if (forceOpen === true) {
+      modal.classList.remove('hidden');
+    } else {
+      modal.classList.toggle('hidden');
+    }
     return;
   }
 
@@ -473,7 +498,7 @@ function showKeyboardHelpModal(): void {
           <span>⌨️ Keyboard Shortcuts</span>
           <span class="rounded bg-(--accent)/10 text-(--accent) px-1.5 py-0.5 text-[10px]">VIM</span>
         </span>
-        <button type="button" id="close-keyboard-help" class="cursor-pointer text-(--fg-faint) hover:text-(--fg)">✕</button>
+        <button type="button" id="close-keyboard-help" data-umami-event="help-modal-close" class="cursor-pointer text-(--fg-faint) hover:text-(--fg)">✕</button>
       </div>
       <div class="space-y-2.5 text-(--fg-dim)">
         <div class="flex justify-between items-center"><span class="text-(--fg)">Navigation</span></div>
@@ -486,10 +511,11 @@ function showKeyboardHelpModal(): void {
         <div class="mt-4 flex justify-between items-center"><span class="text-(--fg)">Actions</span></div>
         <div class="flex justify-between py-1 border-b border-(--border)/60"><span>Command Search</span><kbd class="rounded border border-(--border) px-1.5 py-0.5 text-[10px] bg-(--bg-alt) text-(--fg)">/ or Ctrl+K</kbd></div>
         <div class="flex justify-between py-1 border-b border-(--border)/60"><span>Toggle Dark / Light theme</span><kbd class="rounded border border-(--border) px-1.5 py-0.5 text-[10px] bg-(--bg-alt) text-(--fg)">t</kbd></div>
+        <div class="flex justify-between py-1 border-b border-(--border)/60"><span>Toggle Zen Reading Mode</span><kbd class="rounded border border-(--border) px-1.5 py-0.5 text-[10px] bg-(--bg-alt) text-(--fg)">z</kbd></div>
         <div class="flex justify-between py-1"><span>Show this cheat sheet</span><kbd class="rounded border border-(--border) px-1.5 py-0.5 text-[10px] bg-(--bg-alt) text-(--fg)">?</kbd></div>
         <div class="mt-4 pt-3 border-t border-(--border)/60 flex items-center justify-between">
           <span class="text-[11px] text-(--fg-faint)">Secret Easter Egg</span>
-          <button type="button" id="btn-modal-easter-egg" class="cursor-pointer text-amber-400 hover:text-amber-300 text-[11px] font-semibold underline">
+          <button type="button" id="btn-modal-easter-egg" data-umami-event="easter-egg-test" class="cursor-pointer text-amber-400 hover:text-amber-300 text-[11px] font-semibold underline">
             🎮 Test Fireworks & Chime
           </button>
         </div>
@@ -559,15 +585,115 @@ function setupKeymap(): void {
     updateStatusbarVimMode('NORMAL');
   });
 
-  document.getElementById('btn-keyboard-help')?.addEventListener('click', () => {
-    showKeyboardHelpModal();
-  });
+  const helpBtn = document.getElementById('btn-keyboard-help');
+  if (helpBtn && !helpBtn.dataset.bound) {
+    helpBtn.dataset.bound = '1';
+    helpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showKeyboardHelpModal();
+    });
+  }
+
+  // Zen Mode Controller: Fullscreen on desktop + floating exit pill for casual users
+  const toggleZenMode = (force?: boolean): void => {
+    const isCurrentlyZen = document.documentElement.classList.contains('zen-mode');
+    const targetState = typeof force === 'boolean' ? force : !isCurrentlyZen;
+
+    if (targetState === isCurrentlyZen) return;
+
+    if (targetState) {
+      document.documentElement.classList.add('zen-mode');
+
+      // Add intuitive floating exit badge for users who don't know keyboard shortcuts
+      let pill = document.getElementById('zen-exit-pill');
+      if (!pill) {
+        pill = document.createElement('button');
+        pill.id = 'zen-exit-pill';
+        pill.className = 'zen-exit-pill';
+        pill.type = 'button';
+        pill.setAttribute('aria-label', 'Thoát chế độ Zen Mode');
+        pill.innerHTML = `<span>✕</span><span>Thoát Zen Mode</span><kbd class="rounded border border-(--border) bg-(--bg) px-1 text-[10px] text-(--fg-dim)">Esc</kbd>`;
+        pill.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          toggleZenMode(false);
+        });
+        document.body.appendChild(pill);
+      } else {
+        pill.style.display = 'flex';
+      }
+
+      // True Fullscreen on Desktop (screen width >= 768px)
+      if (window.innerWidth >= 768 && !document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+
+      showMicroToast('🧘 Zen Mode (Nhấn ✕ góc trên hoặc Esc để thoát)');
+    } else {
+      document.documentElement.classList.remove('zen-mode');
+
+      const pill = document.getElementById('zen-exit-pill');
+      if (pill) pill.remove();
+
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+
+      showMicroToast('Đã khôi phục giao diện mặc định');
+    }
+  };
+
+  // Sync when user exits browser native fullscreen (F11 / browser Esc)
+  if (!(window as any).__dawn_fullscreen_bound) {
+    (window as any).__dawn_fullscreen_bound = true;
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && document.documentElement.classList.contains('zen-mode')) {
+        toggleZenMode(false);
+      }
+    });
+  }
+
+  // Bind clickable Zen Mode buttons on page (Post Header & Footer)
+  const articleZenBtn = document.getElementById('btn-article-zen');
+  if (articleZenBtn && !articleZenBtn.dataset.bound) {
+    articleZenBtn.dataset.bound = '1';
+    articleZenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleZenMode();
+    });
+  }
+
+  const footerZenBtn = document.getElementById('btn-footer-zen');
+  if (footerZenBtn && !footerZenBtn.dataset.bound) {
+    footerZenBtn.dataset.bound = '1';
+    footerZenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleZenMode();
+    });
+  }
 
   const isTyping = (t: EventTarget | null): boolean =>
     t instanceof HTMLElement &&
     (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
 
   let gAt = 0;
+
+  let hasShownVimToast = false;
+  const notifyVimScroll = (): void => {
+    if (!hasShownVimToast) {
+      hasShownVimToast = true;
+      showMicroToast('✦ Vim Navigation Active · Press ? for help');
+    }
+  };
+
+  const showMicroToast = (text: string): void => {
+    const existing = document.querySelector('.dawn-micro-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'dawn-micro-toast';
+    toast.textContent = text;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2200);
+  };
 
   let vimClickCount = 0;
   let vimClickTimer: any = null;
@@ -596,27 +722,48 @@ function setupKeymap(): void {
     recordKeyForEasterEgg(key, code, keyCode);
 
     if (isTyping(e.target)) return;
-    if (document.querySelector('[role="dialog"]') || !document.getElementById('keyboard-help-modal')?.classList.contains('hidden') && document.getElementById('keyboard-help-modal')) {
-      if (e.key === 'Escape') {
-        document.getElementById('keyboard-help-modal')?.classList.add('hidden');
+
+    const helpModal = document.getElementById('keyboard-help-modal');
+    const isHelpOpen = !!(helpModal && !helpModal.classList.contains('hidden'));
+
+    if (e.key === 'Escape') {
+      if (isHelpOpen) {
+        helpModal?.classList.add('hidden');
+        return;
       }
-      return; // palette or help open
+      if (document.documentElement.classList.contains('zen-mode')) {
+        toggleZenMode(false);
+        return;
+      }
+    }
+
+    if (document.querySelector('[role="dialog"]') || isHelpOpen) {
+      return; // palette or help modal open
     }
 
     if (e.key === '?') {
       e.preventDefault();
-      showKeyboardHelpModal();
+      try { (window as any).umami?.track('shortcut-press', { key: '?' }); } catch {}
+      showKeyboardHelpModal(true);
       return;
     }
 
     if (kLower === '/') {
       e.preventDefault();
+      try { (window as any).umami?.track('shortcut-press', { key: '/' }); } catch {}
       document.dispatchEvent(new CustomEvent('dawn:open-search'));
       return;
     }
     if (kLower === 't') {
       e.preventDefault();
+      try { (window as any).umami?.track('shortcut-press', { key: 't' }); } catch {}
       document.querySelector<HTMLElement>('[data-theme-toggle]')?.click();
+      return;
+    }
+    if (kLower === 'z') {
+      e.preventDefault();
+      try { (window as any).umami?.track('shortcut-press', { key: 'z' }); } catch {}
+      toggleZenMode();
       return;
     }
 
@@ -626,11 +773,13 @@ function setupKeymap(): void {
 
     // Vim scrolling: j (down), k (up)
     if (kLower === 'j') {
+      notifyVimScroll();
       e.preventDefault();
       scroller.scrollBy({ top: 120, behavior: 'smooth' });
       return;
     }
     if (kLower === 'k') {
+      notifyVimScroll();
       e.preventDefault();
       scroller.scrollBy({ top: -120, behavior: 'smooth' });
       return;
@@ -672,6 +821,7 @@ function setupKeymap(): void {
     // Two-key quick navigation
     if (gAt && Date.now() - gAt <= 900) {
       gAt = 0;
+      try { (window as any).umami?.track('shortcut-jump', { target: kLower }); } catch {}
       if (kLower === 'h') location.assign('/');
       else if (kLower === 'b') location.assign('/blog');
       else if (kLower === 'p') location.assign('/projects');

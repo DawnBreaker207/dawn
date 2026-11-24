@@ -195,6 +195,7 @@ export default function CommandPalette({
           href="https://github.com/DawnBreaker207/dawn"
           target="_blank"
           rel="noopener noreferrer"
+          data-umami-event="terminal-link-github"
         >
           repository
         </a>{' '}
@@ -206,12 +207,13 @@ export default function CommandPalette({
           href="/static/resume.pdf"
           target="_blank"
           rel="noopener noreferrer"
+          data-umami-event="terminal-link-resume"
         >
           View resume
         </a>
       </p>
       <p>
-        <a className="pal-link" href="/about">
+        <a className="pal-link" href="/about" data-umami-event="terminal-link-about">
           → About (full version)
         </a>
       </p>
@@ -274,21 +276,30 @@ export default function CommandPalette({
       run: () => close(),
     },
     theme: {
-      desc: 'set the theme: theme <dark | light | system>',
+      desc: 'set the theme: theme <dark | light | system | matrix>',
       run: (args) => {
         const t = (args[0] || '').toLowerCase();
-        if (t !== 'dark' && t !== 'light' && t !== 'system') {
+        if (t !== 'dark' && t !== 'light' && t !== 'system' && t !== 'matrix') {
           push({
             kind: 'txt',
-            text: 'Usage: theme <dark | light | system>',
+            text: 'Usage: theme <dark | light | system | matrix>',
           });
           return;
         }
+        if (t === 'matrix') {
+          document.documentElement.setAttribute('data-theme', 'matrix');
+          document.documentElement.classList.add('dark', 'matrix');
+          localStorage.setItem('theme', 'matrix');
+          push({ kind: 'txt', text: '🕶️ MATRIX Phosphor Green Mode Activated. Follow the white rabbit.' });
+          return;
+        }
+        document.documentElement.classList.remove('matrix');
         localStorage.setItem('theme', t);
         const resolved =
           t === 'dark' ||
           (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.classList.toggle('dark', resolved);
+        document.documentElement.setAttribute('data-theme', resolved ? 'dark' : 'light');
         document
           .querySelectorAll<HTMLElement>('[data-theme-sun]')
           .forEach((el) => el.classList.toggle('hidden', resolved));
@@ -545,7 +556,7 @@ export default function CommandPalette({
     }
     const cmd = words[0];
     if (cmd === 'theme' && words.length === 2) {
-      return ['dark', 'light', 'system']
+      return ['dark', 'light', 'system', 'matrix']
         .filter((t) => t.startsWith(last) && t !== last)
         .map((t) => ({ text: t, desc: `theme: ${t} scheme`, type: 'arg' as const }));
     }
@@ -845,6 +856,8 @@ export default function CommandPalette({
                 className={`pal-autoc-row${i === selIdx ? ' pal-autoc-row--sel' : ''}`}
                 onMouseOver={() => setSel(i)}
                 onClick={() => acceptSugg(s)}
+                data-umami-event="palette-sugg-click"
+                data-umami-event-cmd={s.text}
               >
                 <span className="pal-autoc-id">
                   <span className="pal-autoc-type" aria-hidden="true">
@@ -874,6 +887,7 @@ export default function CommandPalette({
               onChange={onInputChange}
               onKeyDown={onInputKeyDown}
               aria-label="Type a command"
+              placeholder="Type a command... (try 'theme matrix', 'weather storm', 'help')"
               autoComplete="off"
               spellCheck={false}
             />

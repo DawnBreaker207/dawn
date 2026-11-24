@@ -86,7 +86,7 @@ const CURRICULUM_TRACK_ITEMS = [
 
   <div class="thin-scrollbar min-h-0 flex-1 overflow-y-auto">
   <details class="sidebar-sec" open>
-    <summary class="sidebar-section-header">
+    <summary class="sidebar-section-header" data-umami-event="sidebar-sec-explorer">
       <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-(--fg-faint) uppercase">explorer</span>
       <span class="section-toggle" aria-hidden="true">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -110,7 +110,7 @@ const CURRICULUM_TRACK_ITEMS = [
     </a>
 
     <details class="tree-sec" data-sec="blog" open>
-      <summary class="explorer-row">
+      <summary class="explorer-row" data-umami-event="sidebar-folder-blog">
         <span class="explorer-caret">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 6l6 6-6 6" />
@@ -213,7 +213,7 @@ const CURRICULUM_TRACK_ITEMS = [
 
   <!-- METRICS & TELEMETRY SECTION -->
   <details class="sidebar-sec" data-sec="metrics" open>
-    <summary class="sidebar-section-header">
+    <summary class="sidebar-section-header" data-umami-event="sidebar-sec-metrics">
       <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-(--fg-faint) uppercase">metrics & telemetry</span>
       <span class="section-toggle" aria-hidden="true">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -295,7 +295,7 @@ const CURRICULUM_TRACK_ITEMS = [
 
   <!-- ARCHITECTURE LABS SECTION -->
   <details class="sidebar-sec" data-sec="lab" open>
-    <summary class="sidebar-section-header">
+    <summary class="sidebar-section-header" data-umami-event="sidebar-sec-labs">
       <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-(--fg-faint) uppercase">architecture labs</span>
       <span class="section-toggle" aria-hidden="true">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -339,7 +339,7 @@ const CURRICULUM_TRACK_ITEMS = [
 
       <!-- Curriculum Tracks (Folder) -->
       <details class="tree-sec" data-sec="curriculum" open>
-        <summary class="explorer-row">
+        <summary class="explorer-row" data-umami-event="sidebar-folder-curriculum">
           <span class="explorer-caret">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 6l6 6-6 6" />
@@ -377,7 +377,7 @@ const CURRICULUM_TRACK_ITEMS = [
 
       <!-- Simulators & Extras (Folder) -->
       <details class="tree-sec" data-sec="simulators" open={activePath.startsWith('/lab/terminal') || activePath.startsWith('/lab/pathfinding') || activePath.startsWith('/lab/spider')}>
-        <summary class="explorer-row">
+        <summary class="explorer-row" data-umami-event="sidebar-folder-simulators">
           <span class="explorer-caret">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 6l6 6-6 6" />

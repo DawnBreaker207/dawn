@@ -8,7 +8,7 @@ const { toc, class: cls } = Astro.props;
 ---
 
 <details class={`space-y-4 [&_.chevron-right]:open:rotate-90 ${cls ?? ''}`} open>
-  <summary class="flex cursor-pointer items-center gap-1.5 marker:content-none text-(--fg)">
+  <summary class="flex cursor-pointer items-center gap-1.5 marker:content-none text-(--fg)" data-umami-event="toc-toggle">
     <svg
       class="chevron-right rotate-0 transition-transform text-(--fg-faint)"
       xmlns="http://www.w3.org/2000/svg"
