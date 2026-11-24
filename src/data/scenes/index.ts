@@ -156,6 +156,7 @@ import { angularIvyIncrementalDomLesson } from './angular/angular-ivy-incrementa
 import { angularZonejsDirtyCheckingLesson } from './angular/angular-zonejs-dirty-checking';
 import { angularChangeDetectionOnpushLesson } from './angular/angular-change-detection-onpush';
 import { angularRxjsReactivityLesson } from './angular/angular-rxjs-reactivity';
+import { angularRxjsFlatteningMapsLesson } from './angular/angular-rxjs-flattening-maps';
 import { angularSignalsDagLesson } from './angular/angular-signals-dag';
 import { angularZonelessArchitectureLesson } from './angular/angular-zoneless-architecture';
 import { angularControlFlowLesson } from './angular/angular-control-flow';
@@ -305,6 +306,7 @@ export {
   angularZonejsDirtyCheckingLesson,
   angularChangeDetectionOnpushLesson,
   angularRxjsReactivityLesson,
+  angularRxjsFlatteningMapsLesson,
   angularSignalsDagLesson,
   angularZonelessArchitectureLesson,
   angularControlFlowLesson,
@@ -459,6 +461,7 @@ export const ALL_SCENES: Record<string, any> = {
   'angular-zonejs-dirty-checking': angularZonejsDirtyCheckingLesson,
   'angular-change-detection-onpush': angularChangeDetectionOnpushLesson,
   'angular-rxjs-reactivity': angularRxjsReactivityLesson,
+  'angular-rxjs-flattening-maps': angularRxjsFlatteningMapsLesson,
   'angular-signals-dag': angularSignalsDagLesson,
   'angular-zoneless-architecture': angularZonelessArchitectureLesson,
   'angular-control-flow': angularControlFlowLesson,
