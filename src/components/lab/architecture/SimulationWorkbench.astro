@@ -1,7 +1,7 @@
 ---
 import type { Lesson } from '@/lib/simulator/types';
-import { MODULES, CHAPTER_KINDS } from '@/lib/simulator/curriculum';
-import { getNextLessonInTrack } from '@/data/curriculum';
+import { CHAPTER_KINDS } from '@/lib/simulator/curriculum';
+import { DTS_MODULES, DTS_TRACKS, getNextLessonInTrack } from '@/data/curriculum';
 
 interface Props {
   lesson: Lesson;
@@ -16,16 +16,22 @@ let lessonIdxInMod = 1;
 let totalLessonsInMod = 3;
 let currentTrackId: string | undefined;
 
-for (const mod of MODULES) {
-  const idx = mod.lessons.findIndex(l => l.id === lesson.id);
-  if (idx !== -1) {
-    moduleNum = mod.num;
-    moduleTitle = mod.title;
-    lessonIdxInMod = idx + 1;
-    totalLessonsInMod = mod.lessons.length;
-    currentTrackId = (mod as any).trackId;
-    break;
+// Resolve module and track from single source of truth
+const activeModule = DTS_MODULES.find((m) => m.lessons.some((l) => l.id === lesson.id));
+if (activeModule) {
+  moduleTitle = activeModule.title;
+  currentTrackId = activeModule.trackId;
+  const activeTrack = DTS_TRACKS.find((t) => t.id === activeModule.trackId || t.moduleIds.includes(activeModule.id));
+  if (activeTrack) {
+    const trackModules = DTS_MODULES.filter((m) => activeTrack.moduleIds.includes(m.id) || m.trackId === activeTrack.id);
+    const modIdx = trackModules.findIndex((m) => m.id === activeModule.id);
+    moduleNum = String((modIdx !== -1 ? modIdx : 0) + 1).padStart(2, '0');
+  } else {
+    moduleNum = activeModule.num || '01';
   }
+  const idx = activeModule.lessons.findIndex((l) => l.id === lesson.id);
+  lessonIdxInMod = idx !== -1 ? idx + 1 : 1;
+  totalLessonsInMod = activeModule.lessons.length;
 }
 
 const nextLessonInfo = getNextLessonInTrack(lesson.id, currentTrackId);

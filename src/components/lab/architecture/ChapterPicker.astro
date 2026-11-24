@@ -27,15 +27,19 @@ if (!activeTrack) {
   activeTrack = DTS_TRACKS[0];
 }
 
-// 3. Resolve all modules in this track (e.g. 05B Java Runtime & 05C Spring)
+// 3. Resolve all modules in this track
 const visibleModules = DTS_MODULES.filter((m) => activeTrack.moduleIds.includes(m.id) || m.trackId === activeTrack.id);
 const totalVisibleLessons = visibleModules.reduce((acc, m) => acc + m.lessons.length, 0);
 
-let activeLessonTitle = `${activeModule.num} · ${activeModule.lessons[0]?.title || activeModule.title}`;
-for (const mod of visibleModules) {
+const activeModIdx = visibleModules.findIndex((m) => m.id === activeModule.id);
+const initialModNum = String((activeModIdx !== -1 ? activeModIdx : 0) + 1).padStart(2, '0');
+let activeLessonTitle = `${initialModNum} · ${activeModule.lessons[0]?.title || activeModule.title}`;
+for (let i = 0; i < visibleModules.length; i++) {
+  const mod = visibleModules[i];
+  const modNum = String(i + 1).padStart(2, '0');
   const found = mod.lessons.find((l) => l.id === currentLessonId);
   if (found) {
-    activeLessonTitle = `${mod.num} · ${found.title}`;
+    activeLessonTitle = `${modNum} · ${found.title}`;
     break;
   }
 }
@@ -63,7 +67,9 @@ interface SectionGroup {
       <path d="M6 10h10"></path>
     </svg>
     <span id="chapter-active-title" class="chapter-name font-mono">{activeLessonTitle}</span>
-    <span class="chapter-tag font-mono">{totalVisibleLessons} Chapters ▾</span>
+    <svg class="chapter-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   </button>
 
   <!-- Dropdown Menu (Floating Panel) -->
@@ -78,14 +84,15 @@ interface SectionGroup {
         id="dropdown-search-input"
         type="text"
         data-umami-event="chapter-picker-search"
-        placeholder={`Filter ${activeTrack.title} chapters...`}
+        placeholder="Search chapters..."
         autocomplete="off"
       />
     </div>
 
     <!-- Scoped to Track Modules -->
     <div class="dropdown-list-scroll thin-scrollbar" id="dropdown-list-container">
-      {visibleModules.map((mod: Module) => {
+      {visibleModules.map((mod: Module, modIdx: number) => {
+        const modNum = String(modIdx + 1).padStart(2, '0');
         const sectionGroups: SectionGroup[] = [];
         for (const lesson of mod.lessons) {
           const curSection = lesson.section || null;
@@ -99,18 +106,16 @@ interface SectionGroup {
 
         return (
           <div class="dropdown-module-group" data-module-id={mod.id} data-track-id={mod.trackId}>
-            <div class="dropdown-module-header">
-              <span class="mod-num font-mono">{mod.num}</span>
+            <div class="dropdown-module-header font-mono">
+              <span class="mod-num">{modNum}</span>
               <span class="mod-title">{mod.title}</span>
-              <span class="mod-count font-mono">{mod.lessons.length}</span>
             </div>
             <div class="dropdown-lessons-list">
               {sectionGroups.map((group) => (
                 <div class="dropdown-section-group" data-section-title={group.title || ''}>
                   {group.title && (
-                    <div class="dropdown-section-divider">
-                      <span class="section-badge font-mono">{group.title}</span>
-                      <span class="section-count font-mono">{group.lessons.length}</span>
+                    <div class="dropdown-section-label font-mono">
+                      {group.title}
                     </div>
                   )}
                   {group.lessons.map((lesson: Lesson) => {
@@ -124,14 +129,14 @@ interface SectionGroup {
                           isCurrent && 'is-current',
                         ]}
                         data-lesson-id={lesson.id}
-                        data-lesson-title={`${mod.num} · ${lesson.title}`}
+                        data-lesson-title={`${modNum} · ${lesson.title}`}
                         data-lesson-href={href}
                         data-native="true"
                         data-umami-event="chapter-select"
                       >
                         <span class="lesson-dot">●</span>
                         <span class="lesson-text">{lesson.title}</span>
-                        <span class="active-pill" data-lesson-pill={lesson.id} hidden={!isCurrent}>Active</span>
+                        <span class="active-check font-mono" data-lesson-pill={lesson.id} hidden={!isCurrent}>✓</span>
                       </button>
                     );
                   })}
@@ -184,16 +189,16 @@ interface SectionGroup {
     text-overflow: ellipsis;
   }
 
-  .chapter-tag {
-    font-size: 9.5px;
-    padding: 1px 5px;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--accent);
-    font-weight: 700;
-    margin-inline-start: 6px;
+  .chapter-caret {
+    width: 11px;
+    height: 11px;
+    color: var(--fg-faint);
+    transition: transform 0.15s ease;
     flex-shrink: 0;
-    white-space: nowrap;
+  }
+
+  .chapter-dropdown-trigger[aria-expanded="true"] .chapter-caret {
+    transform: rotate(180deg);
   }
 
   .chapter-dropdown-menu {
@@ -204,8 +209,8 @@ interface SectionGroup {
     max-height: 420px;
     background: var(--bg-alt, #ffffff);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    box-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--border);
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -302,37 +307,14 @@ interface SectionGroup {
     flex-direction: column;
   }
 
-  .dropdown-section-divider {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 7px 8px 3px 8px;
-    margin-top: 5px;
-    border-top: 1px dashed var(--border);
-  }
-
-  .dropdown-section-group:first-child .dropdown-section-divider {
-    border-top: none;
-    margin-top: 0;
-    padding-top: 4px;
-  }
-
-  .section-badge {
+  .dropdown-section-label {
     font-size: 9.5px;
-    font-weight: 700;
-    font-family: var(--font-mono, monospace);
+    font-weight: 600;
+    color: var(--fg-faint);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--accent);
-  }
-
-  .section-count {
-    font-size: 9px;
-    color: var(--fg-faint);
-    background: var(--bg-hover);
-    padding: 1px 5px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
+    padding: 6px 8px 2px 8px;
+    opacity: 0.85;
   }
 
   .dropdown-lesson-btn {
@@ -376,16 +358,15 @@ interface SectionGroup {
     text-overflow: ellipsis;
   }
 
-  .active-pill {
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: var(--accent);
-    color: #ffffff;
+  .active-check {
+    font-size: 11px;
+    color: var(--accent);
     font-weight: 700;
+    margin-inline-start: 6px;
+    flex-shrink: 0;
   }
 
-  .active-pill[hidden] {
+  .active-check[hidden] {
     display: none !important;
   }
 </style>
