@@ -397,13 +397,11 @@ export const DTS_MODULES: Module[] = [
     color: 'red',
     lessons: [
       { id: 'angular-flow', title: 'Angular Flow: End-to-End Request to Render', section: 'Core Building Blocks' },
-      { id: 'angular-architecture-overview', title: 'Architecture Overview: Bootstrap to Component Tree', section: 'Core Building Blocks' },
-      { id: 'angular-modules-standalone', title: 'NgModules vs Standalone Architecture & Tree-Shaking', section: 'Core Building Blocks' },
+      { id: 'angular-architecture-overview', title: 'Bootstrap, Standalone & Component Tree', section: 'Core Building Blocks' },
       { id: 'angular-component-lifecycle', title: 'Component & Directive Lifecycle Pipeline', section: 'Core Building Blocks' },
-      { id: 'angular-services-di', title: 'Services, Hierarchical DI & Functional inject()', section: 'Core Building Blocks' },
-      { id: 'angular-http-interceptors', title: 'HTTP Interceptors Pipeline & Request Cloning', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-services-di', title: 'Services, Hierarchical DI & Functional inject()', section: 'HTTP & Routing Infrastructure' },
       { id: 'angular-router-pipeline', title: 'Router Navigation Lifecycle, Guards & Resolvers', section: 'HTTP & Routing Infrastructure' },
-      { id: 'angular-pipes-memoization', title: 'Pipes Engine: Pure vs Impure & AsyncPipe Mechanics', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-http-interceptors', title: 'HTTP Interceptors Pipeline & Request Cloning', section: 'HTTP & Routing Infrastructure' },
     ],
   },
   {
@@ -414,12 +412,9 @@ export const DTS_MODULES: Module[] = [
     color: 'pink',
     lessons: [
       { id: 'angular-ivy-incremental-dom', title: 'Ivy Incremental DOM vs React Virtual DOM', section: 'Compilation & Change Detection' },
-      { id: 'angular-zonejs-dirty-checking', title: 'Zone.js Era: Monkey-Patching & Top-Down Checking', section: 'Compilation & Change Detection' },
-      { id: 'angular-change-detection-onpush', title: 'ChangeDetectionStrategy.OnPush & Subtree Pruning', section: 'Compilation & Change Detection' },
-      { id: 'angular-rxjs-reactivity', title: 'Pure RxJS: .pipe() Operators, Flattening & Streams', section: 'Fine-Grained Reactivity' },
-      { id: 'angular-rxjs-flattening-maps', title: 'RxJS Flattening: switchMap, exhaustMap, concatMap, mergeMap', section: 'Fine-Grained Reactivity' },
+      { id: 'angular-zonejs-dirty-checking', title: 'Change Detection Evolution: Zone.js -> OnPush -> Zoneless', section: 'Compilation & Change Detection' },
+      { id: 'angular-rxjs-reactivity', title: 'Pure RxJS: .pipe(), Operators & Flattening Maps', section: 'Fine-Grained Reactivity' },
       { id: 'angular-signals-dag', title: 'Signals Reactivity & Glitch-Free Push-Pull DAG', section: 'Fine-Grained Reactivity' },
-      { id: 'angular-zoneless-architecture', title: 'Zoneless Angular (provideExperimentalZonelessChangeDetection)', section: 'Fine-Grained Reactivity' },
     ],
   },
   {
@@ -429,8 +424,7 @@ export const DTS_MODULES: Module[] = [
     trackId: 'angular',
     color: 'amber',
     lessons: [
-      { id: 'angular-control-flow', title: 'Built-in Control Flow Engine (@if, @for track, @switch)', section: 'Modern Templates & SSR' },
-      { id: 'angular-defer-loading', title: 'Deferred Views Architecture (@defer) & Prefetching', section: 'Modern Templates & SSR' },
+      { id: 'angular-control-flow', title: 'Modern Template Engine: Control Flow, @defer & Pipes', section: 'Modern Templates & SSR' },
       { id: 'angular-hydration-replay', title: 'Non-Destructive Hydration & Event Replay in SSR', section: 'Modern Templates & SSR' },
     ],
   },

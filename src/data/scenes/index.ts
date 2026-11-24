@@ -143,24 +143,18 @@ import { gitIndexLockStashLesson } from './git/git-index-lock-stash';
 import { gitBisectAutomationLesson } from './git/git-bisect-automation';
 import { gitSubmoduleSubtreeLesson } from './git/git-submodule-subtree';
 
-// Angular Simulation Tracks (Track 11)
+// Angular Simulation Tracks (Track 11 - 12 Canonical Lessons)
 import { angularFlowLesson } from './angular/angular-flow';
 import { angularArchitectureOverviewLesson } from './angular/angular-architecture-overview';
-import { angularModulesStandaloneLesson } from './angular/angular-modules-standalone';
 import { angularComponentLifecycleLesson } from './angular/angular-component-lifecycle';
 import { angularServicesDiLesson } from './angular/angular-services-di';
 import { angularHttpInterceptorsLesson } from './angular/angular-http-interceptors';
 import { angularRouterPipelineLesson } from './angular/angular-router-pipeline';
-import { angularPipesMemoizationLesson } from './angular/angular-pipes-memoization';
 import { angularIvyIncrementalDomLesson } from './angular/angular-ivy-incremental-dom';
 import { angularZonejsDirtyCheckingLesson } from './angular/angular-zonejs-dirty-checking';
-import { angularChangeDetectionOnpushLesson } from './angular/angular-change-detection-onpush';
 import { angularRxjsReactivityLesson } from './angular/angular-rxjs-reactivity';
-import { angularRxjsFlatteningMapsLesson } from './angular/angular-rxjs-flattening-maps';
 import { angularSignalsDagLesson } from './angular/angular-signals-dag';
-import { angularZonelessArchitectureLesson } from './angular/angular-zoneless-architecture';
 import { angularControlFlowLesson } from './angular/angular-control-flow';
-import { angularDeferLoadingLesson } from './angular/angular-defer-loading';
 import { angularHydrationReplayLesson } from './angular/angular-hydration-replay';
 
 // DevOps Simulation Tracks (Track 12)
@@ -296,21 +290,15 @@ export {
   // Angular Simulation Tracks
   angularFlowLesson,
   angularArchitectureOverviewLesson,
-  angularModulesStandaloneLesson,
   angularComponentLifecycleLesson,
   angularServicesDiLesson,
   angularHttpInterceptorsLesson,
   angularRouterPipelineLesson,
-  angularPipesMemoizationLesson,
   angularIvyIncrementalDomLesson,
   angularZonejsDirtyCheckingLesson,
-  angularChangeDetectionOnpushLesson,
   angularRxjsReactivityLesson,
-  angularRxjsFlatteningMapsLesson,
   angularSignalsDagLesson,
-  angularZonelessArchitectureLesson,
   angularControlFlowLesson,
-  angularDeferLoadingLesson,
   angularHydrationReplayLesson,
   // DevOps Simulation Tracks
   devopsCultureSilosLesson,
@@ -451,21 +439,15 @@ export const ALL_SCENES: Record<string, any> = {
   // Angular Simulation Tracks (Track 11)
   'angular-flow': angularFlowLesson,
   'angular-architecture-overview': angularArchitectureOverviewLesson,
-  'angular-modules-standalone': angularModulesStandaloneLesson,
   'angular-component-lifecycle': angularComponentLifecycleLesson,
   'angular-services-di': angularServicesDiLesson,
   'angular-http-interceptors': angularHttpInterceptorsLesson,
   'angular-router-pipeline': angularRouterPipelineLesson,
-  'angular-pipes-memoization': angularPipesMemoizationLesson,
   'angular-ivy-incremental-dom': angularIvyIncrementalDomLesson,
   'angular-zonejs-dirty-checking': angularZonejsDirtyCheckingLesson,
-  'angular-change-detection-onpush': angularChangeDetectionOnpushLesson,
   'angular-rxjs-reactivity': angularRxjsReactivityLesson,
-  'angular-rxjs-flattening-maps': angularRxjsFlatteningMapsLesson,
   'angular-signals-dag': angularSignalsDagLesson,
-  'angular-zoneless-architecture': angularZonelessArchitectureLesson,
   'angular-control-flow': angularControlFlowLesson,
-  'angular-defer-loading': angularDeferLoadingLesson,
   'angular-hydration-replay': angularHydrationReplayLesson,
   'angular': angularFlowLesson,
   // DevOps Simulation Tracks (Track 12)

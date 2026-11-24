@@ -10,28 +10,30 @@ import {
 
 export const angularRxjsReactivityLesson = {
   id: 'angular-rxjs-reactivity',
-  title: 'Pure RxJS: .pipe() Operators, Flattening & Streams',
-  summary: 'Deep-dive into pure RxJS reactive pipelines: composable .pipe() chains, transformation & stateful operators (map, filter, scan, tap), time & rate-limiting (debounceTime, throttleTime, takeUntil), multi-stream combination (combineLatest, forkJoin, withLatestFrom), flattening (switchMap, mergeMap, concatMap, exhaustMap), and Subject multicasting.',
-  minutes: 30,
+  title: 'Pure RxJS: .pipe(), Operators & Flattening Maps',
+  summary: 'Master pure RxJS reactive pipelines: composable .pipe() chains, map/filter/scan/tap, debounceTime/throttleTime/takeUntil, combineLatest/forkJoin/withLatestFrom, all 4 flattening maps (switchMap, exhaustMap, concatMap, mergeMap), Subject multicasting & catchError/retry/finalize.',
+  minutes: 35,
   level: 'advanced',
   metrics: ['streamState', 'activePipe', 'concurrency', 'subscription'],
-  legend: ['flow', ['stream', 'observable emission'], ['cancel', 'cancel / complete'], ['combine', 'multi-stream join']],
+  legend: ['flow', ['stream', 'observable emission'], ['cancel', 'abort / ignore'], ['combine', 'multi-stream / parallel']],
   goals: [
     { text: 'Observable Push Streams & pure .pipe() functional composition', step: 1 },
-    { text: 'Transformation & State pipes: map, filter, tap & scan', step: 2 },
-    { text: 'Time & Lifecycle pipes: debounceTime, throttleTime, distinctUntilChanged & takeUntil', step: 3 },
-    { text: 'Multi-Stream Combination: combineLatest, forkJoin, withLatestFrom & merge', step: 4 },
-    { text: 'Higher-Order Flattening: switchMap, mergeMap, concatMap & exhaustMap', step: 5 },
-    { text: 'Subject Multicasting & Resilience: BehaviorSubject, shareReplay, catchError & finalize', step: 6 },
+    { text: 'Transform, Filter & Stateful Accumulator (map, filter, tap, scan)', step: 2 },
+    { text: 'Time & Lifecycle Pipes (debounceTime, throttleTime, distinctUntilChanged, takeUntil)', step: 3 },
+    { text: 'Multi-Stream Combination (combineLatest, forkJoin, withLatestFrom, merge)', step: 4 },
+    { text: 'Flattening Maps Part 1: switchMap (cancel stale) vs exhaustMap (anti-double-click)', step: 5 },
+    { text: 'Flattening Maps Part 2: concatMap (FIFO queue), mergeMap (parallel) & Decision Matrix', step: 6 },
+    { text: 'Subject Multicasting: Subject, BehaviorSubject & shareReplay(1)', step: 7 },
+    { text: 'Error Resilience & Guaranteed Cleanup: catchError, retry & finalize', step: 8 },
   ],
   steps: [
     {
       short: '.pipe() Chain',
       chapter: 'concept',
-      title: 'Observable Push Streams & .pipe() Composition',
+      title: '1. Observable Push Streams & .pipe() Composition',
       body: [
         'In pure RxJS, an <code>Observable</code> is a lazy push stream of <code>0..N</code> values over time. Nothing executes until <code>.subscribe()</code> is called.',
-        'The <code>.pipe(op1(), op2())</code> method composes pure operator functions: each operator wraps the upstream Observable, transforms emissions, and returns a <b>new immutable Observable</b> without mutating the source.',
+        '<code>.pipe(op1(), op2())</code> composes pure operator functions: each operator wraps the upstream Observable, transforms emissions, and returns a <b>new immutable Observable</b>.',
       ],
       callout: {
         kind: 'insight',
@@ -48,7 +50,6 @@ export const angularRxjsReactivityLesson = {
             `  map(e => (e.target as HTMLInputElement).value),`,
             `  filter(text => text.length >= 2)`,
             `);`,
-            `// Lazy: nothing runs until .subscribe()!`,
             `const sub = stream$.subscribe(val => console.log(val));`,
           ], { icon: 'terminal' }),
         },
@@ -62,15 +63,15 @@ export const angularRxjsReactivityLesson = {
     {
       short: 'map / filter / scan',
       chapter: 'concept',
-      title: 'Transform, Filter & Stateful Accumulator (scan)',
+      title: '2. Transform, Filter & Stateful Accumulator (scan)',
       body: [
-        '• <b><code>map()</code> / <code>filter()</code></b>: Transform or drop values mid-flight.<br>' +
-        '• <b><code>tap()</code></b>: Inspect or log emissions without altering the stream.<br>' +
-        '• <b><code>scan((acc, val) =&gt; ..., seed)</code></b>: Like <code>Array.reduce</code> over time—maintains reactive state across emissions and emits every intermediate result!',
+        '• <b><code>map()</code> / <code>filter()</code></b>: Transform (1-to-1) or drop values mid-flight.<br>' +
+        '• <b><code>tap()</code></b>: Inspect/log emissions without altering the stream.<br>' +
+        '• <b><code>scan((acc, val) =&gt; ..., seed)</code></b>: Like <code>Array.reduce</code> over time—maintains reactive state across emissions!',
       ],
       callout: {
         kind: 'tip',
-        text: 'Use scan() to build reactive counters, shopping carts, or undo stacks with zero external mutable variables.',
+        text: 'map() is the single most-used operator in RxJS, appearing in 80-90% of all .pipe() chains.',
       },
       changes: ['+ filter() drops invalid values early', '+ scan() accumulates state reactively across emissions'],
       metrics: { streamState: 'Transforming', activePipe: 'map/filter/scan', concurrency: 'Synchronous', subscription: 'Active' },
@@ -86,7 +87,7 @@ export const angularRxjsReactivityLesson = {
             `  tap(n => console.log('delta:', n)),`,
             `  scan((acc, n) => acc + n, 0),`,
             `  startWith(0)`,
-            `); // Emits running total on every emission!`,
+            `);`,
           ], { icon: 'terminal' }),
         },
         links: {
@@ -100,17 +101,16 @@ export const angularRxjsReactivityLesson = {
     {
       short: 'Time & takeUntil',
       chapter: 'execution',
-      title: 'Time & Lifecycle Pipes: debounceTime, throttleTime, takeUntil',
+      title: '3. Time & Lifecycle Pipes: debounceTime, throttleTime, takeUntil',
       body: [
-        'RxJS treats <b>time</b> as a first-class operator dimension:<br>' +
         '• <b><code>debounceTime(300)</code></b>: Emits only after 300ms of silence (search input).<br>' +
         '• <b><code>throttleTime(1000)</code></b>: Emits at most once per 1000ms (scroll/click spam).<br>' +
-        '• <b><code>distinctUntilChanged()</code></b>: Drops consecutive identical values.<br>' +
+        '• <b><code>distinctUntilChanged()</code></b>: Drops consecutive duplicates.<br>' +
         '• <b><code>takeUntil(destroy$)</code></b>: Auto-completes the stream when notifier fires.',
       ],
       callout: {
         kind: 'insight',
-        text: 'Putting distinctUntilChanged() after debounceTime(300) ensures typing "abc" -> "abcd" -> "abc" within 300ms fires 0 redundant emissions.',
+        text: 'distinctUntilChanged() after debounceTime(300) drops redundant queries when typing "abc" -> "abcd" -> "abc" within 300ms.',
       },
       changes: ['+ debounceTime + distinctUntilChanged filter noise', '+ takeUntil() guarantees deterministic completion'],
       metrics: { streamState: 'Time-Gated', activePipe: 'debounceTime', concurrency: 'Rate-Limited', subscription: 'Auto-Complete' },
@@ -124,7 +124,7 @@ export const angularRxjsReactivityLesson = {
             `search$.pipe(`,
             `  debounceTime(300),`,
             `  distinctUntilChanged(),`,
-            `  takeUntil(destroy$) // Completes & unsubscribes cleanly`,
+            `  takeUntil(destroy$)`,
             `);`,
           ], { icon: 'terminal' }),
         },
@@ -139,18 +139,18 @@ export const angularRxjsReactivityLesson = {
     {
       short: 'Multi-Stream Join',
       chapter: 'execution',
-      title: 'Combination: combineLatest, forkJoin, withLatestFrom & merge',
+      title: '4. Combination: combineLatest, forkJoin, withLatestFrom & merge',
       body: [
-        '• <b><code>combineLatest([a$, b$])</code></b>: Emits <code>[a, b]</code> whenever *either* stream emits (after both emit once).<br>' +
-        '• <b><code>forkJoin([a$, b$])</code></b>: Waits for all Observables to complete, then emits final values (like <code>Promise.all</code>).<br>' +
-        '• <b><code>a$.pipe(withLatestFrom(b$))</code></b>: Triggers ONLY when <code>a$</code> emits, sampling the latest <code>b$</code>.<br>' +
-        '• <b><code>merge(a$, b$)</code></b>: Interleaves emissions from both as they arrive.',
+        '• <b><code>combineLatest([a$, b$])</code></b>: Emits <code>[a, b]</code> whenever *either* emits.<br>' +
+        '• <b><code>forkJoin([a$, b$])</code></b>: Waits for all to complete (like <code>Promise.all</code>).<br>' +
+        '• <b><code>a$.pipe(withLatestFrom(b$))</code></b>: Triggers ONLY on <code>a$</code>, sampling latest <code>b$</code>.<br>' +
+        '• <b><code>merge(a$, b$)</code></b>: Interleaves both as they arrive.',
       ],
       callout: {
         kind: 'tip',
-        text: 'Use withLatestFrom() when clicking Submit should read the latest Form state without re-triggering on every keystroke!',
+        text: 'Use withLatestFrom() when clicking Submit should read the latest Form state without re-triggering on keystrokes!',
       },
-      changes: ['+ Multiple independent streams joined declaratively', '+ Zero nested callbacks or manual synchronization flags'],
+      changes: ['+ Multiple independent streams joined declaratively'],
       metrics: { streamState: 'Synchronized', activePipe: 'combineLatest', concurrency: 'Multi-Stream', subscription: 'Active' },
       scene: {
         entities: {
@@ -159,12 +159,9 @@ export const angularRxjsReactivityLesson = {
           streamB: y(-16, 8, { label: 'page$', tags: [{ text: 'Stream B', tone: 'cyan', icon: 'zap' }] }),
           observerOut: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['[filter, page]'], sub: 'tuple output' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Combination Operators', [
-            `// Re-emit whenever filter$ OR page$ changes:`,
-            `combineLatest([filter$, page$])`,
-            `// Wait for all HTTP calls to complete:`,
-            `forkJoin({ user: user$, roles: roles$ })`,
-            `// Trigger on click$, sample latest form$:`,
-            `click$.pipe(withLatestFrom(form$))`,
+            `combineLatest([filter$, page$])     // Any changes`,
+            `forkJoin({ user: user$, roles: roles$ }) // All complete`,
+            `click$.pipe(withLatestFrom(form$))   // Sample B on A`,
           ], { icon: 'terminal' }),
         },
         links: {
@@ -179,77 +176,155 @@ export const angularRxjsReactivityLesson = {
       },
     },
     {
-      short: 'Flattening Maps',
+      short: 'switch vs exhaust',
       chapter: 'technique',
-      title: 'Higher-Order Flattening: switchMap / exhaustMap / concatMap / mergeMap',
+      title: '5. Flattening Maps: switchMap vs exhaustMap (Most Used)',
       body: [
-        'When an outer emission maps to an inner Observable (e.g. an HTTP call), flattening operators control concurrency:<br>' +
-        '• <b><code>switchMap</code></b>: Cancels previous inner stream (search, route params).<br>' +
-        '• <b><code>exhaustMap</code></b>: Ignores new outer events while inner is running (login/pay button).<br>' +
-        '• <b><code>concatMap</code></b>: Queues inner streams sequentially in FIFO order.<br>' +
-        '• <b><code>mergeMap</code></b>: Runs all inner streams in parallel.',
+        'Plain <code>map(id =&gt; http.get())</code> produces nested <code>Observable&lt;Observable&lt;T&gt;&gt;</code>! Use flattening operators to unwrap:<br>' +
+        '• <b><code>switchMap</code> (#1 Most Used):</b> Immediately <b>aborts/cancels</b> the previous inner stream when a new value arrives (Search, Route params).<br>' +
+        '• <b><code>exhaustMap</code>:</b> <b>Ignores/drops</b> new outer clicks while current inner stream is running (Login, Pay, Submit).',
       ],
       callout: {
         kind: 'warning',
-        text: 'Choosing the right flattening operator eliminates 99% of async race conditions and duplicate submit bugs.',
+        text: 'Use switchMap for reads/search (cancel stale); use exhaustMap for submits/payments (block double-clicks)!',
       },
-      changes: ['+ Inner Observable flattened cleanly into single stream', '+ Stale in-flight requests auto-aborted by switchMap'],
-      metrics: { streamState: 'Flattening', activePipe: 'switchMap()', concurrency: '1 Active (Latest)', subscription: 'Race-Free' },
+      changes: ['+ switchMap aborts stale Req 1 when Req 2 arrives', '+ exhaustMap drops duplicate Click 2 while Req 1 runs'],
+      metrics: { streamState: 'Flattening', activePipe: 'switchMap()', concurrency: '1 Active', subscription: 'Race-Free' },
       scene: {
         entities: {
-          sourceStream: y(-16, -6, { label: 'query$', tags: [{ text: 'a -> ab -> abc', tone: 'amber', icon: 'zap' }] }),
-          flattenHub: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['switchMap()'], sub: 'switchMap()' }),
-          observerOut: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Inner HTTP$'], sub: 'abort old req' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Flattening Concurrency Matrix', [
-            `switchMap  -> Cancel old, keep latest (Search / Typeahead)`,
-            `exhaustMap -> Ignore new while busy   (Submit / Pay click)`,
-            `concatMap  -> Queue in strict order   (Ordered writes)`,
-            `mergeMap   -> Parallel execution      (Bulk uploads)`,
+          outerSrc: y(-18, 0, { label: 'query$', tags: [{ text: 'Req 1 -> Req 2', tone: 'blue', icon: 'zap' }] }),
+          operatorHub: d(-4, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['switchMap()'], sub: 'cancel old' }),
+          workerTop: d(10, -10, { s: 4.4, h: 50, color: 'rose', glyph: 'boxes', label: ['HTTP Req 1'], sub: 'ABORTED' }),
+          workerBot: d(10, 10, { s: 4.4, h: 50, color: 'green', glyph: 'boxes', label: ['HTTP Req 2'], sub: 'latest wins' }),
+          outputStream: b(22, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['output$'], sub: 'only Req 2' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'switchMap vs exhaustMap', [
+            `// Search / Route (Cancel stale):`,
+            `query$.pipe(debounceTime(300), switchMap(q => api.search(q)))`,
+            `// Pay / Login (Ignore double-click):`,
+            `payClick$.pipe(exhaustMap(() => api.chargeOrder()))`,
           ], { icon: 'terminal' }),
         },
         links: {
-          sf: h('sourceStream', 'flattenHub', ['sourceStream', 'flattenHub'], { label: 'outer emit' }),
-          fo: h('flattenHub', 'observerOut', ['flattenHub', 'observerOut'], { label: 'cancel old, run new' }),
+          uo: h('outerSrc', 'operatorHub', ['outerSrc', 'operatorHub'], { label: 'emit 1, then 2' }),
+          ot: h('operatorHub', 'workerTop', ['operatorHub', 'workerTop'], { label: 'abort Req 1' }),
+          ob: h('operatorHub', 'workerBot', ['operatorHub', 'workerBot'], { label: 'switch to 2' }),
+          bo: h('workerBot', 'outputStream', ['workerBot', 'outputStream'], { label: 'emit Req 2' }),
         },
-        flows: [{ route: ['sf', 'fo'], kind: 'cancel', rate: 1.6 }],
+        flows: [
+          { route: ['uo', 'ot'], kind: 'cancel', rate: 1.4 },
+          { route: ['uo', 'ob', 'bo'], kind: 'stream', rate: 1.6 },
+        ],
       },
     },
     {
-      short: 'Subject & Resilience',
-      chapter: 'scaling',
-      title: 'Subject Multicasting & Error Resilience (catchError, retry, finalize)',
+      short: 'concat vs merge',
+      chapter: 'technique',
+      title: '6. Flattening Maps: concatMap (FIFO) vs mergeMap (Parallel)',
       body: [
-        '• <b><code>Subject</code> / <code>BehaviorSubject(init)</code> / <code>ReplaySubject(n)</code></b>: Both Observer and Observable—used for hot event buses and reactive state.<br>' +
-        '• <b><code>shareReplay({ bufferSize: 1, refCount: true })</code></b>: Multicasts a cold stream to N subscribers with 1 execution.<br>' +
-        '• <b><code>catchError()</code> + <code>retry()</code> + <code>finalize()</code></b>: Recover gracefully inside inner pipes and always clean up loading spinners in <code>finalize()</code>.',
+        '• <b><code>concatMap</code> (Strict FIFO Queue):</b> Buffers emissions and runs inner streams strictly <b>one at a time</b> in order (<code>1 -> 2 -> 3</code>). Ideal for sequential writes.<br>' +
+        '• <b><code>mergeMap</code> (Parallel Fan-Out):</b> Subscribes to <b>all</b> inner streams concurrently (optional cap <code>mergeMap(fn, 3)</code>); fastest finishes first (bulk deletes/uploads).',
       ],
       callout: {
         kind: 'insight',
-        text: 'finalize(() => isLoading = false) runs on BOTH completion and error/unsubscription—never get stuck with a spinning loader!',
+        text: 'Decision Matrix: switchMap (latest read), exhaustMap (anti-double-submit), concatMap (FIFO order), mergeMap (parallel bulk).',
       },
-      changes: ['+ shareReplay(1) shares single execution across subscribers', '+ catchError + retry + finalize make pipeline fault-tolerant'],
-      metrics: { streamState: 'Hot & Resilient', activePipe: 'catch + finalize', concurrency: 'Multicast', subscription: 'Guaranteed Clean' },
+      changes: ['+ concatMap preserves strict 1 -> 2 -> 3 FIFO order', '+ mergeMap fans out concurrently across parallel workers'],
+      metrics: { streamState: 'Concurrent', activePipe: 'concat / merge', concurrency: 'FIFO vs Parallel', subscription: 'Deterministic' },
+      scene: {
+        entities: {
+          outerSrc: y(-18, 0, { label: 'tasks$', tags: [{ text: '1, 2, 3', tone: 'green', icon: 'zap' }] }),
+          operatorHub: d(-4, 0, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['mergeMap()'], sub: 'parallel / FIFO' }),
+          workerTop: d(10, -10, { s: 4.4, h: 50, color: 'green', glyph: 'boxes', label: ['Worker #1'], sub: 'task 1' }),
+          workerMid: d(10, 0, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['Worker #2'], sub: 'task 2' }),
+          workerBot: d(10, 10, { s: 4.4, h: 50, color: 'purple', glyph: 'boxes', label: ['Worker #3'], sub: 'task 3' }),
+          outputStream: b(22, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['output$'], sub: 'flattened' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'concatMap vs mergeMap', [
+            `concatMap -> 1 at a time FIFO (Sequential saves)`,
+            `mergeMap  -> All in parallel  (Bulk deletes, max N)`,
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          uo: h('outerSrc', 'operatorHub', ['outerSrc', 'operatorHub'], { label: 'emit 1, 2, 3' }),
+          ot: h('operatorHub', 'workerTop', ['operatorHub', 'workerTop'], { label: 'task 1' }),
+          om: h('operatorHub', 'workerMid', ['operatorHub', 'workerMid'], { label: 'task 2' }),
+          ob: h('operatorHub', 'workerBot', ['operatorHub', 'workerBot'], { label: 'task 3' }),
+          to: h('workerTop', 'outputStream', ['workerTop', 'outputStream'], { label: 'emit #1' }),
+          mo: h('workerMid', 'outputStream', ['workerMid', 'outputStream'], { label: 'emit #2' }),
+          bo: h('workerBot', 'outputStream', ['workerBot', 'outputStream'], { label: 'emit #3' }),
+        },
+        flows: [
+          { route: ['uo', 'ot', 'to'], kind: 'combine', rate: 1.5 },
+          { route: ['uo', 'om', 'mo'], kind: 'combine', rate: 1.7 },
+          { route: ['uo', 'ob', 'bo'], kind: 'combine', rate: 1.9 },
+        ],
+      },
+    },
+    {
+      short: 'Subject & shareReplay',
+      chapter: 'scaling',
+      title: '7. Subject Multicasting & shareReplay(1)',
+      body: [
+        '• <b><code>Subject</code> / <code>BehaviorSubject(init)</code> / <code>ReplaySubject(n)</code></b>: Act as both Observer and Observable for hot event buses and reactive state.<br>' +
+        '• <b><code>shareReplay({ bufferSize: 1, refCount: true })</code></b>: Turns a cold unicast HTTP Observable into a hot multicast cache—3 subscribers share 1 network call!',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Always set refCount: true in shareReplay(1) so the underlying stream tears down when the last subscriber unsubscribes.',
+      },
+      changes: ['+ Cold unicast stream converted to Hot multicast', '+ 3 subscribers share single cached HTTP emission'],
+      metrics: { streamState: 'Hot Multicast', activePipe: 'shareReplay(1)', concurrency: '1 Shared Call', subscription: 'refCount: true' },
       scene: {
         entities: {
           sourceStream: y(-16, -6, { label: 'BehaviorSubj', tags: [{ text: 'Hot Multicast', tone: 'purple', icon: 'zap' }] }),
           pipeStage: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['shareReplay(1)'], sub: 'multicast cache' }),
-          resilience: d(8, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'shield', label: ['catch + retry'], sub: 'catch/finalize' }),
-          observerOut: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['N Subscribers'], sub: 'safe fallback' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Multicast & Fault-Tolerant Pipe', [
-            `data$ = trigger$.pipe(`,
-            `  switchMap(id => fetch$(id).pipe(`,
-            `    retry({ count: 2, delay: 1000 }),`,
-            `    catchError(() => of(FALLBACK)),`,
-            `    finalize(() => setLoading(false))`,
-            `  )),`,
+          observerOut: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['N Subscribers'], sub: '1 shared req' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Hot Multicasting', [
+            `user$ = this.http.get<User>('/api/me').pipe(`,
             `  shareReplay({ bufferSize: 1, refCount: true })`,
             `);`,
           ], { icon: 'terminal' }),
         },
         links: {
           sp: h('sourceStream', 'pipeStage', ['sourceStream', 'pipeStage'], { label: 'multicast' }),
+          po: h('pipeStage', 'observerOut', ['pipeStage', 'observerOut'], { label: 'replay cached' }),
+        },
+        flows: [{ route: ['sp', 'po'], kind: 'stream', rate: 1.5 }],
+      },
+    },
+    {
+      short: 'catchError & finalize',
+      chapter: 'scaling',
+      title: '8. Error Resilience: catchError, retry & finalize',
+      body: [
+        'An uncaught error <b>terminates</b> an Observable forever. Always place <code>catchError()</code> <b>inside</b> <code>switchMap</code> so a failed HTTP call returns fallback data without killing the outer stream.',
+        'Pair with <code>retry({ count: 2, delay: 1000 })</code> and <code>finalize(() =&gt; loading = false)</code>—which runs on completion, error, AND unsubscription.',
+      ],
+      callout: {
+        kind: 'warning',
+        text: 'Putting catchError() outside switchMap kills your search input stream after the first HTTP 500 error!',
+      },
+      changes: ['+ Inner catchError + retry protect outer stream', '+ finalize() guarantees loading state cleanup'],
+      metrics: { streamState: 'Resilient', activePipe: 'catch + finalize', concurrency: 'Auto-Retry', subscription: 'Guaranteed Clean' },
+      scene: {
+        entities: {
+          sourceStream: y(-16, -6, { label: 'trigger$', tags: [{ text: 'Fault-Tolerant', tone: 'rose', icon: 'zap' }] }),
+          pipeStage: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['switchMap()'], sub: 'inner pipe' }),
+          resilience: d(8, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'shield', label: ['catch + retry'], sub: 'catch/finalize' }),
+          observerOut: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Safe Output'], sub: 'stream alive' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Fault-Tolerant Pipeline', [
+            `trigger$.pipe(`,
+            `  switchMap(id => fetch$(id).pipe(`,
+            `    retry({ count: 2, delay: 1000 }),`,
+            `    catchError(() => of(FALLBACK)),`,
+            `    finalize(() => setLoading(false))`,
+            `  ))`,
+            `);`,
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          sp: h('sourceStream', 'pipeStage', ['sourceStream', 'pipeStage'], { label: 'emit id' }),
           pr: h('pipeStage', 'resilience', ['pipeStage', 'resilience'], { label: 'guard errors' }),
-          ro: h('resilience', 'observerOut', ['resilience', 'observerOut'], { label: 'safe emit' }),
+          ro: h('resilience', 'observerOut', ['resilience', 'observerOut'], { label: 'safe fallback' }),
         },
         flows: [{ route: ['sp', 'pr', 'ro'], kind: 'stream', rate: 1.5 }],
       },

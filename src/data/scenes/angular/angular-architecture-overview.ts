@@ -3,7 +3,6 @@
 import {
   makeBlock as d,
   makeLink as h,
-  makeZone as x,
   makePanel as S,
   makeDevice as y,
   makeDb as b,
@@ -11,44 +10,112 @@ import {
 
 export const angularArchitectureOverviewLesson = {
   id: 'angular-architecture-overview',
-  title: 'Architecture Overview: Bootstrap to Component Tree',
-  summary: 'Trace an Angular application lifecycle from main.ts bootstrapApplication, Platform Injector, ApplicationRef, to the Hierarchical Component & View Tree.',
-  minutes: 25,
+  title: 'Bootstrap, Standalone & Component Tree',
+  summary: 'Trace modern Angular from legacy NgModule bloat vs Standalone tree-shaking, through main.ts bootstrapApplication, Platform & Environment Injectors, ApplicationRef, to the Hierarchical Component Tree & isStable.',
+  minutes: 30,
   level: 'beginner',
-  metrics: ['bootstrapPhase', 'platformInjector', 'applicationRef', 'componentTreeDepth'],
-  legend: ['flow', ['boot', 'bootstrap sequence'], ['view', 'component tree'], ['render', 'DOM rendering']],
+  metrics: ['architectureModel', 'bootstrapPhase', 'bundleSize', 'componentTreeDepth'],
+  legend: ['flow', ['module', 'NgModule coupling'], ['boot', 'standalone bootstrap'], ['view', 'component tree'], ['render', 'DOM rendering']],
   goals: [
-    { text: 'main.ts bootstrap: platformBrowser vs bootstrapApplication', step: 1 },
-    { text: 'The Platform Injector vs Environment Injector hierarchy', step: 2 },
-    { text: 'ApplicationRef and the Root Component instantiation', step: 3 },
-    { text: 'View hierarchy construction: components, embedded views, and templates', step: 4 },
-    { text: 'Change detection registration: linking views to the CD scheduler', step: 5 },
-    { text: 'Final DOM attachment and lifecycle stability', step: 6 },
+    { text: 'Legacy NgModules & SharedModule transitive dependency bloat', step: 1 },
+    { text: 'Standalone Components (standalone: true) & ESBuild tree-shaking', step: 2 },
+    { text: 'main.ts bootstrapApplication & Platform Injector singleton', step: 3 },
+    { text: 'appConfig Environment Injector (provideRouter, provideHttpClient)', step: 4 },
+    { text: 'ApplicationRef & Root AppComponent instantiation', step: 5 },
+    { text: 'Hierarchical Component & LView/TView tree construction', step: 6 },
+    { text: 'Change Detection Scheduler binding & real DOM updates', step: 7 },
+    { text: 'Application stability & ApplicationRef.isStable for SSR', step: 8 },
   ],
   steps: [
     {
+      short: 'NgModule Bloat',
+      chapter: 'setup',
+      title: 'Legacy NgModules vs Transitive Dependency Leakage',
+      body: [
+        'Historically, components had to be declared inside an <code>@NgModule</code>. Teams built giant <code>SharedModule</code> containers importing 50+ libraries.',
+        'Because bundlers could not statically prove which declarations were unused in dynamic templates, unused mega-libraries (like <code>HeavyChart</code>) leaked into <code>main.js</code>, bloating bundles over 2.8MB.',
+      ],
+      callout: {
+        kind: 'warning',
+        text: 'SharedModule creates opaque compilation bubbles that block fine-grained dead-code elimination.',
+      },
+      metrics: { architectureModel: 'NgModule (Legacy)', bootstrapPhase: 'Compile Bubble', bundleSize: '2.8 MB (Bloated)', componentTreeDepth: '0' },
+      scene: {
+        entities: {
+          mainTs: y(-16, -10, { label: 'AppModule', tags: [{ text: '@NgModule', tone: 'purple', icon: 'boxes' }] }),
+          platInj: d(-4, -8, { s: 4.8, h: 52, color: 'rose', glyph: 'boxes', label: ['SharedModule'], sub: 'mega container' }),
+          envInj: d(8, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'package', label: ['HeavyChart'], sub: 'leaked 1.2MB' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Legacy NgModule Monolith', [
+            `@NgModule({`,
+            `  declarations: [UserComponent, ButtonComponent],`,
+            `  imports: [CommonModule, HeavyChartModule]`,
+            `})`,
+            `export class SharedModule {} // Leaks unused code!`,
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          ms: h('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'imports shared' }),
+          sh: h('platInj', 'envInj', ['platInj', 'envInj'], { label: 'leaks unused' }),
+        },
+        flows: [{ route: ['ms', 'sh'], kind: 'module', rate: 1.4 }],
+      },
+    },
+    {
+      short: 'Standalone Shake',
+      chapter: 'setup',
+      title: 'Standalone Architecture & ESBuild Tree-Shaking',
+      body: [
+        'Modern Angular uses <code>standalone: true</code> (now the default) with direct <code>imports: [ButtonComponent]</code> and lazy <code>loadComponent</code> routes.',
+        'With a crystal-clear static ES module graph, ESBuild/Vite prunes every unused component—slashing initial bundle size by 40–60% (automated via <code>ng generate @angular/core:standalone</code>).',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Direct component-to-component imports eliminate AppModule boilerplate and unlock peak tree-shaking.',
+      },
+      changes: ['+ NgModules replaced by direct standalone ESM imports', '+ ESBuild prunes unused code (-64% bundle size)'],
+      metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Tree-Shaken', bundleSize: '450 KB (-64%)', componentTreeDepth: '0' },
+      scene: {
+        entities: {
+          mainTs: y(-16, -10, { label: 'UserComp', tags: [{ text: 'standalone', tone: 'green', icon: 'zap' }] }),
+          platInj: d(-4, -8, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['Direct Imports'], sub: 'Button only' }),
+          envInj: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['ESBuild Shaker'], sub: '450KB lean' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Standalone Component', [
+            `@Component({`,
+            `  selector: 'app-user',`,
+            `  standalone: true,`,
+            `  imports: [ButtonComponent], // Explicit ESM graph`,
+            `  template: \`<app-button>Save</app-button>\``,
+            `})`,
+            `export class UserComponent {}`,
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          ms: h('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'imports direct' }),
+          sh: h('platInj', 'envInj', ['platInj', 'envInj'], { label: 'prune dead code' }),
+        },
+        flows: [{ route: ['ms', 'sh'], kind: 'boot', rate: 1.5 }],
+      },
+    },
+    {
       short: 'Bootstrap',
       chapter: 'setup',
-      title: 'Bootstrap Sequence: main.ts to Platform',
+      title: 'Bootstrap Sequence: main.ts to Platform Injector',
       body: [
         'Modern Angular bootstraps via <code>bootstrapApplication(AppComponent, appConfig)</code>.',
-        'Before rendering any HTML, Angular creates the <b>Platform Injector</b> (singleton across applications on the page, handling DOM sanitation), then prepares the application scope.',
+        'Before rendering any HTML, Angular creates the <b>Platform Injector</b> (singleton across apps on the page, handling DOM sanitization and platform services).',
       ],
       callout: {
         kind: 'insight',
         text: 'Angular separates the platform (browser vs server vs worker) from the application environment.',
       },
-      metrics: { bootstrapPhase: 'Platform Init', platformInjector: 'Active', applicationRef: 'Pending', componentTreeDepth: '0' },
+      changes: ['+ main.ts invokes bootstrapApplication()', '+ Platform Injector singleton initialized'],
+      metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Platform Init', bundleSize: '450 KB', componentTreeDepth: '0' },
       scene: {
         entities: {
           mainTs: y(-16, -10, { label: 'main.ts', tags: [{ text: 'bootstrapApp', tone: 'blue', icon: 'terminal' }] }),
           platInj: d(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Bootstrap Entrypoint', [
             `// src/main.ts`,
-            `import { bootstrapApplication } from '@angular/platform-browser';`,
-            `import { AppComponent } from './app/app.component';`,
-            `import { appConfig } from './app/app.config';`,
-            ``,
             `bootstrapApplication(AppComponent, appConfig)`,
             `  .catch((err) => console.error(err));`,
           ], { icon: 'terminal' }),
@@ -64,27 +131,26 @@ export const angularArchitectureOverviewLesson = {
       chapter: 'setup',
       title: 'Configuring the Environment Injector (appConfig)',
       body: [
-        '<code>appConfig</code> supplies essential application services: routing (<code>provideRouter</code>), HTTP client (<code>provideHttpClient</code>), and animations.',
-        'These providers live inside the <b>Environment Injector</b> and are accessible to any component, directive, or pipe throughout the application lifecycle.',
+        '<code>appConfig</code> supplies essential application services: routing (<code>provideRouter</code>), HTTP client (<code>provideHttpClient</code>), and hydration.',
+        'These functional providers live inside the <b>Environment Injector</b> and are accessible throughout the application lifecycle.',
       ],
       callout: {
         kind: 'tip',
-        text: 'Functional providers replace legacy NgModule imports, drastically improving dead-code elimination during production builds.',
+        text: 'Functional providers replace legacy NgModule.forRoot() calls, enabling superior dead-code elimination.',
       },
-      changes: ['+ Initialized Environment Injector with appConfig', '+ Registered Router and HttpClient singletons'],
-      metrics: { bootstrapPhase: 'Providers Loaded', platformInjector: 'Active', applicationRef: 'Pending', componentTreeDepth: '0' },
+      changes: ['+ Environment Injector initialized with appConfig', '+ Router and HttpClient singletons registered'],
+      metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Providers Loaded', bundleSize: '450 KB', componentTreeDepth: '0' },
       scene: {
         entities: {
           mainTs: y(-16, -10, { label: 'main.ts', tags: [{ text: 'bootstrapApp', tone: 'blue', icon: 'terminal' }] }),
           platInj: d(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
           envInj: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Application Config', [
-            `// src/app/app.config.ts`,
             `export const appConfig: ApplicationConfig = {`,
             `  providers: [`,
             `    provideRouter(routes, withComponentInputBinding()),`,
             `    provideHttpClient(withFetch()),`,
-            `    provideClientHydration()`,
+            `    provideClientHydration(withEventReplay())`,
             `  ]`,
             `};`,
           ], { icon: 'terminal' }),
@@ -102,17 +168,16 @@ export const angularArchitectureOverviewLesson = {
       title: 'ApplicationRef & Root Component Instantiation',
       body: [
         'The bootstrap engine creates <b>ApplicationRef</b>, the central orchestrator that monitors application stability and manages the view tree.',
-        'Angular locates <code>&lt;app-root&gt;</code> in <code>index.html</code>, instantiates <code>AppComponent</code> via its <code>ComponentFactory</code>, and injects root dependencies.',
+        'Angular locates <code>&lt;app-root&gt;</code> in <code>index.html</code> and mounts <code>AppComponent</code>.',
       ],
       callout: {
         kind: 'insight',
-        text: 'ApplicationRef connects the component to Angular’s change detection loop and provides the tick() method.',
+        text: 'ApplicationRef connects the root component to Angular’s change detection loop.',
       },
-      changes: ['+ ApplicationRef initialized to coordinate views', '+ AppComponent mounted into <app-root>'],
-      metrics: { bootstrapPhase: 'Root Mounted', platformInjector: 'Active', applicationRef: 'Instantiated', componentTreeDepth: '1' },
+      changes: ['+ ApplicationRef initialized', '+ Root AppComponent mounted into <app-root>'],
+      metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Root Mounted', bundleSize: '450 KB', componentTreeDepth: '1' },
       scene: {
         entities: {
-          mainTs: y(-16, -10, { label: 'main.ts', tags: [{ text: 'bootstrapApp', tone: 'blue', icon: 'terminal' }] }),
           platInj: d(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
           envInj: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
           appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
@@ -140,15 +205,15 @@ export const angularArchitectureOverviewLesson = {
       chapter: 'execution',
       title: 'Constructing the Hierarchical Component & View Tree',
       body: [
-        'As <code>AppComponent</code> executes its template, it parses child tags (<code>&lt;app-nav&gt;</code>, <code>&lt;router-outlet&gt;</code>), creating a tree of <b>LView</b> (Logical View) and <b>TView</b> (Template View) data structures.',
-        'Each component receives its own <b>NodeInjector</b>, inheriting services from parent components up to the root.',
+        'As <code>AppComponent</code> executes its template, it creates a tree of <b>LView</b> (Logical View) and <b>TView</b> (Template View) structures for child components (<code>&lt;app-nav&gt;</code>, <code>&lt;router-outlet&gt;</code>).',
+        'Each component receives its own <b>NodeInjector</b>, inheriting services from parents up to the root.',
       ],
       callout: {
         kind: 'tip',
-        text: 'The view tree is a directed graph where data flows down via @Input / signals, and events bubble up via @Output / callbacks.',
+        text: 'Data flows down via @Input / signals, and events bubble up via @Output / callbacks.',
       },
-      changes: ['+ NavComponent attached as header child', '+ FeedComponent projected into RouterOutlet'],
-      metrics: { bootstrapPhase: 'Tree Assembled', platformInjector: 'Active', applicationRef: 'Tracking 3 views', componentTreeDepth: '3' },
+      changes: ['+ NavComponent & FeedComponent mounted as child views', '+ Hierarchical NodeInjector tree established'],
+      metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Tree Assembled', bundleSize: '450 KB', componentTreeDepth: '3' },
       scene: {
         entities: {
           appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
@@ -160,7 +225,6 @@ export const angularArchitectureOverviewLesson = {
             `  ├── NavComponent (Header / Logo)`,
             `  └── RouterOutlet (Viewport)`,
             `        └── FeedComponent (Posts list)`,
-            `= Complete UI rendered as hierarchical views`,
           ], { icon: 'terminal' }),
         },
         links: {
@@ -176,15 +240,15 @@ export const angularArchitectureOverviewLesson = {
       chapter: 'scaling',
       title: 'Registering Views with the Change Detection Scheduler',
       body: [
-        'Each mounted view is registered with the change detection engine. Angular tracks dirty state via either <code>NgZone</code> notifications or the new Zoneless <code>ChangeDetectionScheduler</code>.',
-        'When data updates, the scheduler traverses the registered view tree, executing template update instructions (<code>ɵɵtextInterpolate</code>) to synchronize the real DOM.',
+        'Each mounted view is registered with the change detection engine (<code>NgZone</code> or Zoneless <code>ChangeDetectionScheduler</code>).',
+        'When data updates, the scheduler traverses dirty views, executing Ivy update instructions (<code>ɵɵtextInterpolate</code>) to synchronize the real DOM.',
       ],
       callout: {
         kind: 'insight',
-        text: 'OnPush components and Signals allow Angular to skip entire subtrees during change detection, maximizing rendering performance.',
+        text: 'OnPush and Signals allow Angular to skip clean subtrees during change detection.',
       },
-      changes: ['+ Registered view tree with ChangeDetectionScheduler', '+ Coalesced microtask render cycle ready'],
-      metrics: { bootstrapPhase: 'CD Armed', platformInjector: 'Active', applicationRef: 'Running', componentTreeDepth: '3' },
+      changes: ['+ Views registered with ChangeDetectionScheduler', '+ Browser DOM attached and synchronized'],
+      metrics: { architectureModel: 'Standalone', bootstrapPhase: 'CD Armed', bundleSize: '450 KB', componentTreeDepth: '3' },
       scene: {
         entities: {
           appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
@@ -193,13 +257,9 @@ export const angularArchitectureOverviewLesson = {
           feedComp: d(-6, 20, { s: 4.4, h: 50, color: 'amber', glyph: 'boxes', label: ['FeedComponent', '(Outlet)'], sub: 'outlet child' }),
           realDom: b(16, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Browser DOM'], sub: 'DOM mutations' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Change Detection Loop', [
-            `// Scheduler execution:`,
             `scheduler.schedule({`,
             `  priority: Priority.Render,`,
-            `  run: () => {`,
-            `    appRef.tick(); // walks LView tree`,
-            `    // executes ɵɵadvance(1); ɵɵtextInterpolate(title);`,
-            `  }`,
+            `  run: () => appRef.tick()`,
             `});`,
           ], { icon: 'terminal' }),
         },
@@ -218,27 +278,26 @@ export const angularArchitectureOverviewLesson = {
       title: 'Application Stability & isStable Observable',
       body: [
         'Once all pending microtasks, promises, and HTTP requests resolve, <code>ApplicationRef.isStable</code> emits <code>true</code>.',
-        'This stability signal is critical: in Server-Side Rendering (SSR), Angular waits for <code>isStable</code> before serializing HTML to send over the wire to the browser.',
+        'In Server-Side Rendering (SSR), Angular waits for <code>isStable</code> before serializing the final HTML string over the wire.',
       ],
       callout: {
         kind: 'tip',
-        text: 'Long-running setInterval calls outside ngZone.runOutsideAngular() will prevent isStable from ever emitting, hanging SSR builds!',
+        text: 'Long-running setInterval calls outside ngZone.runOutsideAngular() prevent isStable from emitting, hanging SSR builds!',
       },
-      changes: ['+ All microtasks resolved: ApplicationRef.isStable = true', '+ Ready for user interaction or SSR HTML serialization'],
-      metrics: { bootstrapPhase: 'Stable (Running)', platformInjector: 'Active', applicationRef: 'isStable = true', componentTreeDepth: '3' },
+      changes: ['+ Application reaches stable state (isStable = true)', '+ Ready for user interaction or SSR HTML serialization'],
+      metrics: { architectureModel: 'Modern Standalone', bootstrapPhase: 'isStable = true', bundleSize: '450 KB', componentTreeDepth: '3' },
       scene: {
         entities: {
           platInj: d(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
           envInj: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
-          appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
+          appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'isStable=true' }),
           appComp: d(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
           realDom: b(16, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Browser DOM'], sub: 'DOM mutations' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Stability Observable', [
             `appRef.isStable.pipe(`,
             `  first((stable) => stable === true)`,
             `).subscribe(() => {`,
-            `  console.log('Application is fully stable!');`,
-            `  // SSR engine captures serialized HTML string`,
+            `  // SSR engine serializes HTML!`,
             `});`,
           ], { icon: 'terminal' }),
         },
