@@ -485,7 +485,7 @@ $$\begin{cases} sx = 14 \times (x + y) \\ sy = 7 \times (x - y) - z \end{cases}$
   - **CRITICAL OVERLAP THRESHOLD ($D < 90\text{px}$):** **STRICTLY FORBIDDEN.** Blocks intersect or touch faces.
   - **CROWDED THRESHOLD ($90\text{px} \le D < 125\text{px}$):** Discouraged. Link arrows become cramped.
   - **SAFE / HEALTHY DISTANCE ($D \ge 125\text{px}$):** Required for all major compute blocks, databases, and gateways.
-  - **THE EXPANSION RULE (Kéo giãn khoảng cách):** When an element has tags, badge labels, or connects multiple links, default to expanding distance ($D \ge 160\sim 190\text{px}$) to avoid visual clutter.
+  - **THE EXPANSION RULE (Expanding Distance):** When an element has tags, badge labels, or connects multiple links, default to expanding distance ($D \ge 160\sim 190\text{px}$) to avoid visual clutter.
 
 #### 2. The Standard 4-Tier Layout Grid
 Never invent arbitrary `(x, y)` coordinates. Assign components to these architectural tiers:
@@ -515,8 +515,8 @@ Every component placement and connection link MUST follow the canonical 3D isome
 
 #### 4. Block Dimensions, Text Wrapping & Glyph Clearance
 
-##### A. The SVG Text Baseline Trap (Bẫy Chân Chữ SVG)
-In SVG rendering, the `y` attribute of a `<text>` element defines its **baseline (chân chữ)**, NOT its top bounding box:
+##### A. The SVG Text Baseline Trap
+In SVG rendering, the `y` attribute of a `<text>` element defines its **baseline**, NOT its top bounding box:
 - Characters with ascenders (`h`, `t`, `k`, `B`) extend upwards by approximately $0.72 \times \text{fontSize}$ above the baseline.
 - **The Visual Collision Bug:** If a text baseline is placed at $o + 7.5\text{px}$ with $\text{fontSize} = 11.5\text{px}$, the top of the characters reaches $o - 0.78\text{px}$. Meanwhile, a glyph icon centered at $o - 4$ with height $19\text{px}$ has its bottom edge at $o + 5.5\text{px}$. The glyph and the label intersect by over $6\text{px}$, causing severe visual clumping.
 
@@ -538,7 +538,7 @@ Blocks must have sufficient height $h$ and diamond facet scale $s$ to accommodat
 - **FORBIDDEN: Cramped Blocks:** Never use $s < 4.0$ or $h < 46\text{px}$ for any node combining an icon glyph and 2+ lines of text.
 - **Label Wrapping:** Split labels into short multi-line arrays: `label: ['Primary SQS', 'Queue']` rather than a single long string that exceeds diamond facet width.
 
-##### D. The Zero-Spillover Block Containment Rule (Tuyệt đối không để chữ tràn ra ngoài khối)
+##### D. The Zero-Spillover Block Containment Rule
 In SVG isometric rendering, text elements are centered relative to the block's diamond facets. If text lines are too long or too numerous, they will **spill over the perimeter borders** of the 3D block:
 - **Zero-Bleed Requirement:** Every character of glyphs, `label` lines, and `sub` subtitles MUST remain 100% enclosed within the illuminated front faces of the block. No letter may intersect or cross over the block's outline borders.
 - **Strict Subtitle (`sub`) Constraint:**
@@ -601,6 +601,64 @@ A 6-step simulation lesson MUST NOT retain an identical, static node diagram fro
 - Packets circulate along routes; severed connections failover to dashed alert lines.
 - Conflicts ignite in the center and are subsequently replaced by synthesized, sealed commits.
 
+##### H. Progressive Mental Model & State Machine Standard
+Interactive simulation scenes must NOT be treated as static presentation slides. Regardless of whether a lesson explains a distributed system, an internal data structure, a network protocol, or a programming language feature, it MUST be modeled as a **Dynamic State Machine that unfolds progressively over time**.
+
+Every lesson must follow these fundamental principles:
+
+1. **The Minimal Seed:**
+   - **Step 1 begins with the minimal initiating actor** (e.g. an initiator device, a single raw file, an initial state variable, or a single component).
+   - **Strictly forbidden:** Dumping the completed architecture onto the canvas at Step 1. The initial step must be clean and focused to eliminate cognitive overload.
+
+2. **Persistent Anchors:**
+   - Entities must preserve their semantic IDs and spatial positions across steps.
+   - **Strictly forbidden:** Wiping the canvas clean between steps to spawn disconnected clumps. The animation engine relies on persistent entity keys to smoothly interpolate state transitions without jarring visual flickering.
+
+3. **Single Operational Delta (`WHAT CHANGED`):**
+   - Each subsequent step introduces **at most 1–2 new entities** or **1 state mutation** (e.g. an added caching layer, a split leaf node, a created data object, or an acquired lock).
+   - The majority of the canvas acts as a persistent anchor; only the newly added or mutated component represents the active operational delta. Always document this in the `changes: [...]` array.
+
+4. **Predetermined Spatial Staging:**
+   - The initial seed actor's coordinates must be planned with the final expanded topology in mind.
+   - New entities emerging in later steps slot cleanly into predetermined positions along isometric axes without colliding with or displacing existing nodes.
+
+5. **Living Semantic Links:**
+   - Links must represent meaningful domain interactions and protocol dialogue, accompanied by telemetry metrics (latency, resource load, pipeline speed) that quantify the engineering impact of each transition.
+
+6. **Geometric Block Clearance & Non-Overlap Standard ($D \ge 185\text{px}$):**
+   - **Diamond Footprint Math:** In dimetric 2.5D isometric projection ($sx = 14(x+y)$, $sy = 7(x-y)-h$), a block with scale $s$ occupies a 2D bounding diamond of width $W = 28 \times s$ pixels. For $s = 4.2 \sim 4.4$, $W \approx 118\text{px} \sim 123\text{px}$; for $s = 5.2$, $W \approx 146\text{px}$.
+   - **Critical Clearance Standard:** Whenever multiple blocks or database cylinders exist on canvas simultaneously, the 2D Euclidean distance between any two node centers MUST satisfy:
+     $$D = \sqrt{\Delta sx^2 + \Delta sy^2} \ge 185\text{px} \sim 240\text{px}$$
+   - **Enforced Margin:** This guarantees at least $60\text{px} \sim 100\text{px}$ of visible blank canvas clearance between block vertices, preventing touching edges, visual clumping, or label clipping.
+   - **Normalized Block Scale:** Standardize non-hub blocks in multi-node scenes to $s = 4.2 \sim 4.4$ with height $h \ge 50\text{px}$, reserving $s \ge 5.0$ solely for central monolithic hubs.
+
+7. **Intermediate Node Occlusion Prevention (Anti-Through-Cutting & Diagonal Piercing Standard):**
+   - **The Through-Cutting Defect:** When a link connects a distant source to a target across the canvas (e.g., from a left worktree to a right mutex across a central repository directory), a straight link line slices directly or diagonally through intermediate node blocks, tags, or database cylinders.
+   - **Mandatory Prevention:** A link line MUST NEVER pass through, pierce, graze, or cross diagonally underneath any intervening entity.
+   - **Clearance Metric ($d_{\perp} \ge 70\text{px}$):** The perpendicular distance from any link line segment to the center of any uninvolved node MUST be at least $70\text{px}$ (exceeding block diamond radius $r \approx 60\text{px}$).
+   - **Resolution Strategies:**
+     1. *Operational Domain Chaining:* Route the interaction logically through the intermediary (e.g., `worktree_main` $\to$ `objects_store` $\to$ `worktree_auth` $\to$ `branch_mutex`), reflecting the true system architecture.
+     2. *Isometric Manhattan Waypoints:* If a direct relationship must bypass an intermediary, define explicit waypoints via `pts: [source, [offset_x, offset_y], target]` that route cleanly around the perimeter along canonical isometric grid rays.
+
+8. **Independent Concurrent Flows vs Chained Routes:**
+   - **The Sequential Chaining Pitfall:** When modeling concurrent workers or multi-branch operations (e.g., two independent worktrees committing to a shared object store simultaneously), DO NOT chain independent spoke links into a single sequential route array like `flows: [{ route: ['link_a', 'link_b'] }]`. The engine animates this as a single continuous packet journey, making it appear that packets unnaturally jump across independent branches.
+   - **Parallel Flow Modeling:** Declare distinct parallel flow objects for independent concurrent actors:
+     ```ts
+     flows: [
+       { route: ['auth_to_store'], type: 'sync', packetCount: 2 },
+       { route: ['ui_to_store'], type: 'sync', packetCount: 2 },
+     ]
+     ```
+   - Each flow animates its own packets concurrently along its own path, correctly illustrating local concurrency.
+
+9. **Ephemeral Node Pruning & Teardown Semantics:**
+   - **Clean Retirement over Artificial Nodes:** In cleanup, teardown, or garbage collection steps (e.g., `git worktree prune`, `git branch -d`, or connection pool disposal), DO NOT invent artificial, distant floating "command blocks" or "cleaner nodes" to represent the action, as they clutter the canvas and induce long occluding link lines.
+   - **Standard Teardown Pattern:** The primary initiator node communicates directly with the persistent storage engine or lifecycle manager (e.g., sending a `prune metadata` packet to `.git/objects`), and the deleted ephemeral nodes cleanly retire or deactivate from the canvas. The terminal card documents the CLI invocation (e.g., `git worktree prune`).
+
+10. **Maximum Link Length Budget ($D_{\text{link}} \le 360\text{px}$):**
+    - **Sprawling Link Ban:** Direct link lines spanning $> 380\text{px}$ across the canvas are strictly forbidden. Excessive span times degrade packet animation velocity, slash across unrelated subsystems, and signal architectural anti-patterns (such as skipping domain tiers).
+    - **Topology Restructuring:** When two communicating nodes exceed $360\text{px}$, relocate them closer within the isometric grid or introduce an intermediate coordinator/hub node.
+
 #### 5. Labeled Link Clearance & Detached Label Prevention (Link Length & Anti-Teleport Standard)
 
 ##### A. Link Length vs Text Label Width ($L_{\text{effective}} \ge W_{\text{text}} + 30\text{px}$)
@@ -611,7 +669,7 @@ When a link features an explanatory text label (`label: '...'`):
   $$L_{\text{effective}} \ge W_{\text{text}} + 30\text{px}$$
 - **FORBIDDEN: Overwritten Link Paths:** If a link is too short ($D < 165\text{px}$), the text label badge ($W_{\text{text}} \approx \text{chars} \times 7.2 + 24\text{px}$) will physically overwrite the arrow line, clip into block corners, and collide with arrowheads.
 
-##### B. Anti-Detached Label Rule (Chống Văng Nhãn Lơ Lửng)
+##### B. Anti-Detached Label Rule (Preventing Floating Disconnected Labels)
 The engine's collision avoidance algorithm (`Vf` in `stage-engine.ts`) calculates potential bounding box collisions around the link midpoint:
 1. **Vertical Projection Trap ($\Delta sx = 0$):** When two nodes are aligned along the vertical screen depth axis ($\Delta x = -\Delta y$), the tangent vector forces the label laterally into the adjacent block or tag bounding box.
 2. **Tag Collision Penalty:** If the source or target node has active tags (`tags: [...]`), the label area overlaps with the tag pill.
@@ -620,11 +678,36 @@ The engine's collision avoidance algorithm (`Vf` in `stage-engine.ts`) calculate
    - Always maintain a healthy $30^\circ$ isometric skew angle ($\Delta x \neq -\Delta y$) for labeled links.
    - When connecting to a node with a Tag, expand distance to $D \ge 220\text{px}$ and set `labelAt: 0.6` to bias the label safely away from the tag badge.
 
+##### C. Maximum Link Length Budget ($D_{\text{max}} \le 360\text{px}$)
+While links require a minimum distance to accommodate text labels ($D \ge 185\text{px}$), links MUST NOT sprawl excessively across the canvas:
+- **Maximum Distance Limit:** The Euclidean center-to-center distance for any direct link MUST satisfy:
+  $$D \le 360\text{px} \quad (\text{absolute ceiling: } D_{\text{max}} = 380\text{px})$$
+- **The Sprawling Link Anti-Pattern:** When a link spans $> 380\text{px}$ across the entire screen:
+  1. *Animation Sluggishness:* Packets take too long to traverse the canvas, causing flow animations to appear sparse, delayed, and uncoordinated.
+  2. *Canvas Clutter:* An excessively long diagonal line dominates and slices the visual field, distracting the eye from focal architecture blocks.
+  3. *Architectural Smelling:* Direct connections spanning across multiple tiers (e.g. Client directly to deep Shard storage) violate tiered architectural principles.
+- **Remediation:** If two components are $> 360\text{px}$ apart, either:
+  - Reposition the interacting components closer together within the isometric grid.
+  - Route the interaction through intermediate architectural actors (e.g., Gateway, Router, or Dispatcher).
+  - Use a Hub-and-Spoke topology with a central core.
+
+##### D. Diagonal Piercing & Intervening Node Clearance ($d_{\perp} \ge 70\text{px}$)
+- **The Diagonal Piercing Trap:** When two nodes are placed diagonally apart across quadrants, a straight link line can inadvertently graze, pierce, or slice diagonally across the 3D diamond faces of an unrelated intervening node.
+- **Minimum Perpendicular Clearance ($d_{\perp} \ge 70\text{px}$):**
+  For any link path between Node A and Node B, the perpendicular distance from the line segment $\overline{AB}$ to the center of any third node $C$ (not participating as source or target) MUST be:
+  $$d_{\perp}(C, \overline{AB}) \ge 70\text{px}$$
+  (This exceeds the diamond radius $r_{\text{block}} \approx 60\text{px}$ of standard blocks, ensuring zero visual intersection).
+- **Mandatory Rerouting:** If $d_{\perp} < 70\text{px}$, the link is strictly forbidden from running straight. It MUST be rerouted via isometric Manhattan waypoints:
+  ```ts
+  pts: ['node_a', [waypoint_x, waypoint_y], 'node_b']
+  ```
+  routing cleanly around the outer perimeter of Node C along canonical isometric grid rays.
+
 ---
 
-#### 6. Semantic Unique Link IDs Across Steps (Chống Liệt / Giật Animation Xuất Hiện)
+#### 6. Semantic Unique Link IDs Across Steps (Preventing Animation Snapping & Bypassed Tweens)
 
-- **THE TELEPORT SNAP BUG (Lỗi Liệt Animation Vẽ Nét):**
+- **THE TELEPORT SNAP BUG (Link Draw Animation Bypass):**
   In `StageEngine`, links are stored in an active Map keyed by their Link ID:
   ```ts
   if (this.links.has(linkId)) {
@@ -654,44 +737,44 @@ The engine's collision avoidance algorithm (`Vf` in `stage-engine.ts`) calculate
 
 ---
 
-#### 7. Purpose-Driven Panel Standard: Technical Artifacts vs Generic Text (Phân Định Mục Đích Panel Trong SVG)
+#### 7. Purpose-Driven Panel Standard: Technical Artifacts vs Generic Text
 
-Panel nổi trong không gian SVG 2.5D (`card: makePanel`) **phải được sử dụng tùy theo mục đích kỹ thuật thực tế**, KHÔNG áp dụng máy móc việc cấm đoán hay lạm dụng:
+Floating panels in 2.5D SVG space (`card: makePanel`) **must be used strictly according to concrete technical necessity**, avoiding both dogmatic prohibition and indiscriminate overuse:
 
-##### A. Mục Đích HỢP LỆ — Technical Artifact Panels (BẮT BUỘC GIỮ)
-Một panel có giá trị cao khi nó cung cấp một **vật phẩm kỹ thuật cụ thể (Technical Artifact / Payload on the Wire)** mà các khối 3D không thể biểu diễn trực quan hết được:
-1. **Mã nguồn & Truy vấn thực tế (Code & Query Snippets):**
-   - Code Java (Loom, CompletableFuture, Spring annotations).
-   - Truy vấn SQL (`EXPLAIN ANALYZE`, CTE, window functions).
-   - C structs trong Database / Kernel (Redis `robj`, `sdshdr8`, Linux `epoll_event`).
-2. **Giao thức mạng, HTTP Requests & Payload mẫu (Network & Protocol Payloads):**
-   - *Điển hình:* **`Files & Media` (Step 5 - Presigned URL):**
+##### A. Valid Purpose — Technical Artifact Panels (MANDATORY TO KEEP)
+A floating panel provides high pedagogical value when it presents a **concrete technical artifact or wire payload** that 3D blocks cannot visually represent on their own:
+1. **Concrete Source Code & Database Queries:**
+   - Java code (Loom, CompletableFuture, Spring annotations).
+   - SQL queries (`EXPLAIN ANALYZE`, CTE, window functions).
+   - Low-level C structs in Database / OS kernels (Redis `robj`, `sdshdr8`, Linux `epoll_event`).
+2. **Network Protocols, HTTP Requests & Payload Samples:**
+   - *Example:* **`Files & Media` (Step 5 - Presigned URL):**
      `PUT https://bucket…/videos/7a1e.mp4?expires=900&signature=3b9f…`
      `= one key · one upload · 15 minutes`
      `# the app never touches the bytes`
-     *(Panel này trực quan hóa chính xác chuỗi URL chữ ký mà client gửi trực tiếp lên S3).*
-   - Header gói tin, JWT token payload, JSON-RPC schema.
-3. **Quy trình trạng thái & Công thức tính toán cụ thể (State Transitions & Math Specs):**
-   - *Điển hình:* **`Files & Media` (Step 6 - Multipart Upload):**
+     *(This panel visualizes the exact signed URL string the client sends directly to object storage).*
+   - Packet headers, JWT token claims, JSON-RPC schemas.
+3. **State Transition Workflows & Mathematical Formulas:**
+   - *Example:* **`Files & Media` (Step 6 - Multipart Upload):**
      `start      → upload id + 200 URLs`
      `part 1…200  10 MB each, 4 at a time`
      `! part 37 failed → send part 37 again`
      `= complete  → videos/7a1e.mp4`
-   - Công thức giải thuật (HPA replica math, Snowflake bit allocation, Token bucket leak rate).
-4. **Cấu hình & Câu lệnh vận hành (Manifests & CLI Commands):**
-   - Dockerfile, K8s YAML specs, lệnh `iptables`, `kubectl`, `tcpdump`.
+   - Algorithmic formulas (HPA replica autoscaling math, Snowflake ID bit allocation, Token bucket leak rate).
+4. **Declarative Manifests & CLI Commands:**
+   - Dockerfile snippets, Kubernetes YAML manifests, commands for `iptables`, `kubectl`, `tcpdump`.
 
-##### B. Mục Đích BỊ CẤM — Generic Conceptual Summaries (BẮT BUỘC LOẠI BỎ)
-**TUYỆT ĐỐI KHÔNG** chèn panel vào canvas SVG khi nội dung của nó chỉ là **các câu tóm tắt lý thuyết định tính chung chung**:
-- *Ví dụ cấm:* Các panel kiểu: `'# Raw statistical engine'`, `'= Stateless generation'`, `'Microservices are loosely coupled'`, `'Replication ensures high availability'`.
-- *Nguyên nhân:* 
-  1. Toàn bộ lý thuyết, tiêu đề bước và bài học **ĐÃ CÓ Ở CỘT STEP GUIDE BÊN PHẢI VÀ BOTTOM TIMELINE**.
-  2. Panel chữ nhật lơ lửng chứa text lý thuyết sẽ che khuất các khối kiến trúc 3D, cản trở đường link và gây cảm giác chật chội rác canvas.
+##### B. Prohibited Purpose — Generic Conceptual Summaries (MANDATORY TO REMOVE)
+**NEVER** insert a floating panel into the SVG canvas when its content consists merely of **generic, qualitative theoretical summaries**:
+- *Prohibited examples:* Panels displaying: `'# Raw statistical engine'`, `'= Stateless generation'`, `'Microservices are loosely coupled'`, `'Replication ensures high availability'`.
+- *Root causes:*
+  1. All conceptual theory, step titles, and explanations **ALREADY EXIST IN THE STEP GUIDE RAIL AND BOTTOM TIMELINE**.
+  2. Floating rectangular panels displaying generic text occlude 3D architecture blocks, obstruct link routes, and clutter the canvas.
 
-##### C. Quy Tắc Vàng Phân Định (The Golden Litmus Test)
-> **Quy tắc phân định:** *"Nếu xóa panel này đi, người học có bị mất đi một cú pháp mã lệnh, một URL/API payload thực tế, hay một công thức kỹ thuật trên đường truyền không?"*
-> - Nếu **CÓ** (như đoạn Presigned URL ở `files`, hay câu lệnh CLI) $\implies$ **GIỮ LẠI TRONG SVG**.
-> - Nếu **KHÔNG** (chỉ là đoạn tóm tắt giải thích bằng lời) $\implies$ **GỠ KHỎI SVG**, chuyển trọn vẹn nội dung đó sang cột Step Guide bên phải.
+##### C. The Golden Litmus Test
+> **Litmus Test:** *"If this panel is removed, does the learner lose an essential code snippet, an actual wire URL/payload, or a concrete technical formula?"*
+> - If **YES** (e.g. presigned URLs, shell commands, SQL plans) $\implies$ **RETAIN IN SVG CANVAS**.
+> - If **NO** (merely qualitative prose or summary sentences) $\implies$ **REMOVE FROM SVG CANVAS**, keeping the explanation strictly within the Step Guide rail.
 
 ---
 
@@ -710,7 +793,7 @@ Một panel có giá trị cao khi nó cung cấp một **vật phẩm kỹ thu�
 - **Key Milestones Standard (6 to 8 Steps):** Reject artificial 4-step templates and avoid 33 micro-step debugger traces. Every lesson must have exactly **6 to 8 milestone steps**.
 
 #### 11. Mandatory Automated Verification & Pre-Commit Validation
-- **Zero Tolerance for Blind / Guesswork Editing ("Sửa Chay"):** No lesson modification or creation is considered done without automated verification against real browser rendering.
+- **Zero Tolerance for Guesswork Editing:** No lesson modification or creation is considered done without automated verification against real browser rendering.
 - **Automated Verification Command:**
   For every lesson created or touched, run:
   ```bash
@@ -738,7 +821,7 @@ All interactive simulations are strictly partitioned into 8 mutually exclusive d
 | **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6–8 steps):** JVM memory model, GC, monitor locks, thread pools, Virtual Threads (Project Loom), Spring Security filter chain, Spring IoC bean lifecycle (27 lessons total) | **27** |
 | **`system-design.sim`** | System Design & AI Agents | HLD vs LLD, TinyURL, News Feed, Chat app, redundancy, rate limiting, timeouts/retries, observability.<br>**Flagship Lesson:** `ai-agent-architecture` (8-step Onion Model: LLM, RAG, MCP, Loop, Harness, Superpowers, LangChain, BMAD Swarms) | **10** |
 | **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking (Direct Connect/Transit Gateway), IAM & KMS Encryption, Edge Security (WAF/Shield), HA & DR Tiers, Compute (Spot/Fargate/EKS), Storage (S3/EBS/EFS), Databases (Aurora/DynamoDB), Serverless (SQS/SNS/EventBridge/Step Functions), Migration (DMS/Kinesis/Athena) | **10** |
-| **TỔNG CỘNG** | **Toàn bộ hệ thống mô phỏng kiến trúc 3D** | **100% Single Canvas 3D + Code-Driven Cards** | **104 Bài** |
+| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **104 Lessons** |
 
 ### Unified Single Canvas 3D Architecture & Code-Driven Presentation Standard
 
@@ -1920,9 +2003,9 @@ The comparison is **the same URL, before vs after** — not bundle URL vs TS URL
 
 | What | Must match |
 |---|---|
-| **Khung / layout** | Page structure, panel proportions, sidebar vs canvas split, padding |
-| **Bố cục** | Position of every element — step counter, buttons, title, description |
-| **Màu sắc** | Background, text, buttons, borders, diagram color palette |
+| **Frame / layout** | Page structure, panel proportions, sidebar vs canvas split, padding |
+| **Layout & alignment** | Position of every element — step counter, buttons, title, description |
+| **Colors & palette** | Background, text, buttons, borders, diagram color palette |
 | **Typography** | Font family, size, weight, line height for all visible text |
 | **Controls** | Button shape, size, active/disabled state, hover effect |
 | **Diagram** | Entity shapes, gradients, link arrows, label pills at every step |
