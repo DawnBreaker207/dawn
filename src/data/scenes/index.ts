@@ -154,6 +154,7 @@ import { angularIvyIncrementalDomLesson } from './angular/angular-ivy-incrementa
 import { angularZonejsDirtyCheckingLesson } from './angular/angular-zonejs-dirty-checking';
 import { angularRxjsReactivityLesson } from './angular/angular-rxjs-reactivity';
 import { angularSignalsDagLesson } from './angular/angular-signals-dag';
+import { angularNgrxStateLesson } from './angular/angular-ngrx-state';
 import { angularControlFlowLesson } from './angular/angular-control-flow';
 import { angularHydrationReplayLesson } from './angular/angular-hydration-replay';
 
@@ -298,6 +299,7 @@ export {
   angularZonejsDirtyCheckingLesson,
   angularRxjsReactivityLesson,
   angularSignalsDagLesson,
+  angularNgrxStateLesson,
   angularControlFlowLesson,
   angularHydrationReplayLesson,
   // DevOps Simulation Tracks
@@ -447,6 +449,7 @@ export const ALL_SCENES: Record<string, any> = {
   'angular-zonejs-dirty-checking': angularZonejsDirtyCheckingLesson,
   'angular-rxjs-reactivity': angularRxjsReactivityLesson,
   'angular-signals-dag': angularSignalsDagLesson,
+  'angular-ngrx-state': angularNgrxStateLesson,
   'angular-control-flow': angularControlFlowLesson,
   'angular-hydration-replay': angularHydrationReplayLesson,
   'angular': angularFlowLesson,

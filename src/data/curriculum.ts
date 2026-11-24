@@ -415,6 +415,7 @@ export const DTS_MODULES: Module[] = [
       { id: 'angular-zonejs-dirty-checking', title: 'Change Detection Evolution: Zone.js -> OnPush -> Zoneless', section: 'Compilation & Change Detection' },
       { id: 'angular-rxjs-reactivity', title: 'Pure RxJS: .pipe(), Operators & Flattening Maps', section: 'Fine-Grained Reactivity' },
       { id: 'angular-signals-dag', title: 'Signals Reactivity & Glitch-Free Push-Pull DAG', section: 'Fine-Grained Reactivity' },
+      { id: 'angular-ngrx-state', title: 'NgRx State Architecture: Store/Effects vs SignalStore', section: 'Fine-Grained Reactivity' },
     ],
   },
   {
