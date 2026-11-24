@@ -78,17 +78,17 @@ const labSlug = activePath.startsWith('/lab/') ? activePath.replace('/lab/', '')
 const isSpecializedRoute = ['architecture', '', 'terminal', 'pathfinding', 'spider'].includes(labSlug);
 
 const CURRICULUM_TRACK_ITEMS = [
-  { href: '/lab/foundations', label: 'network.sim', iconType: 'network', title: '1. Networking & Web Scale (8 labs)' },
-  { href: '/lab/sql', label: 'storage.sim', iconType: 'storage', title: '2. Database & Storage Tier (8 labs)' },
-  { href: '/lab/distributed', label: 'distributed.sim', iconType: 'distributed', title: '3. Distributed Systems Core (6 labs)' },
-  { href: '/lab/microservices', label: 'microservices.sim', iconType: 'microservices', title: '4. Microservices & Event-Driven (7 labs)' },
-  { href: '/lab/k8s', label: 'k8s.sim', iconType: 'k8s', title: '5. Containers & Kubernetes Orchestration (8 labs)' },
-  { href: '/lab/java', label: 'java.sim', iconType: 'java', title: '6. Java Runtime & Concurrency Engine (27 labs)' },
-  { href: '/lab/system-design', label: 'system-design.sim', iconType: 'system', title: '7. System Design & AI Agents (10 labs)' },
-  { href: '/lab/aws-cloud', label: 'aws-cloud.sim', iconType: 'cloud', title: '8. AWS Cloud Architecture SAA-C03 (6 labs)' },
-  { href: '/lab/git', label: 'git.sim', iconType: 'git', title: '10. Git Deep Internals & Practical Case Resolver (14 labs)' },
-  { href: '/lab/angular', label: 'angular.sim', iconType: 'angular', title: '11. Angular Core Architecture & Modern Mechanics (15 labs)' },
-  { href: '/lab/devops', label: 'devops.sim', iconType: 'devops', title: '12. DevOps Engineering & Progressive Delivery (5 labs)' },
+  { href: '/lab/git', label: 'git.sim', iconType: 'git', title: 'Git Deep Internals & Practical Case Resolver (14 labs)' },
+  { href: '/lab/foundations', label: 'network.sim', iconType: 'network', title: 'Networking & Web Scale (8 labs)' },
+  { href: '/lab/sql', label: 'storage.sim', iconType: 'storage', title: 'Database & Storage Tier (8 labs)' },
+  { href: '/lab/angular', label: 'angular.sim', iconType: 'angular', title: 'Angular Core Architecture & Modern Mechanics (15 labs)' },
+  { href: '/lab/java', label: 'java.sim', iconType: 'java', title: 'Java Runtime & Concurrency Engine (27 labs)' },
+  { href: '/lab/devops', label: 'devops.sim', iconType: 'devops', title: 'DevOps Engineering & Progressive Delivery (5 labs)' },
+  { href: '/lab/k8s', label: 'k8s.sim', iconType: 'k8s', title: 'Containers & Kubernetes Orchestration (8 labs)' },
+  { href: '/lab/distributed', label: 'distributed.sim', iconType: 'distributed', title: 'Distributed Systems Core (6 labs)' },
+  { href: '/lab/microservices', label: 'microservices.sim', iconType: 'microservices', title: 'Microservices & Event-Driven (7 labs)' },
+  { href: '/lab/aws-cloud', label: 'aws-cloud.sim', iconType: 'cloud', title: 'AWS Cloud Architecture SAA-C03 (6 labs)' },
+  { href: '/lab/system-design', label: 'system-design.sim', iconType: 'system', title: 'System Design & AI Agents (10 labs)' },
 ].map((item) => ({
   ...item,
   isActive: activePath === item.href || (!isSpecializedRoute && !!TRACK_SLUG_MAP[item.href]?.includes(labSlug)),
