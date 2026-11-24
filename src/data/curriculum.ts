@@ -91,6 +91,13 @@ export const DTS_TRACKS: Track[] = [
     emoji: '📐',
     moduleIds: ['system-design', 'reliability'],
   },
+  {
+    id: 'devsecops',
+    title: 'Security, Cryptography & DevSecOps',
+    subtitle: 'Authentication, OAuth2, RBAC, Data Encryption, Secrets Management & CI/CD Pipelines',
+    emoji: '🔒',
+    moduleIds: ['security', 'shipping'],
+  },
 ];
 
 
@@ -113,7 +120,7 @@ export interface Module {
 export const DTS_MODULES: Module[] = [
   {
     id: 'architecture',
-    num: '00',
+    num: '01',
     title: 'Blog Deployment Architecture',
     trackId: 'architecture',
     color: 'emerald',
@@ -156,7 +163,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'storage',
-    num: '03',
+    num: '01',
     title: 'Database & Storage Tier',
     trackId: 'storage-tier',
     color: 'violet',
@@ -179,7 +186,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'distributed',
-    num: '04',
+    num: '01',
     title: 'Distributed Systems Core',
     trackId: 'distributed',
     color: 'cyan',
@@ -194,7 +201,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'microservices',
-    num: '05',
+    num: '01',
     title: 'Microservices Architecture',
     trackId: 'microservices',
     color: 'teal',
@@ -206,7 +213,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'java-runtime',
-    num: '05B',
+    num: '01',
     title: 'Java Runtime & Concurrency Engine',
     trackId: 'java-runtime',
     color: 'sky',
@@ -230,7 +237,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'java-enterprise',
-    num: '05C',
+    num: '02',
     title: 'Spring Framework & Enterprise Architecture',
     trackId: 'java-runtime',
     color: 'indigo',
@@ -250,7 +257,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'k8s',
-    num: '05D',
+    num: '01',
     title: 'Containers & Kubernetes Orchestration',
     trackId: 'k8s',
     color: 'sky',
@@ -267,7 +274,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'communication',
-    num: '06',
+    num: '02',
     title: 'Event-Driven & Messaging',
     trackId: 'microservices',
     color: 'orange',
@@ -286,7 +293,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'reliability',
-    num: '07',
+    num: '01',
     title: 'Reliability & Resilience',
     trackId: 'system-design',
     color: 'blue',
@@ -299,7 +306,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'system-design',
-    num: '08',
+    num: '02',
     title: 'System Design Case Studies',
     trackId: 'system-design',
     color: 'slate',
@@ -314,7 +321,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'cloud',
-    num: '09',
+    num: '01',
     title: 'AWS Cloud Architecture (SAA-C03)',
     trackId: 'cloud-aws',
     color: 'amber',
@@ -329,7 +336,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'security',
-    num: '10',
+    num: '01',
     title: 'Security & Secrets',
     trackId: 'devsecops',
     color: 'rose',
@@ -341,7 +348,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'shipping',
-    num: '11',
+    num: '02',
     title: 'DevOps & CI/CD',
     trackId: 'devsecops',
     color: 'olive',
@@ -352,7 +359,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'git-core',
-    num: '10A',
+    num: '01',
     title: 'Git Core Architecture & 4 Zones',
     trackId: 'git',
     color: 'orange',
@@ -366,7 +373,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'git-cases',
-    num: '10B',
+    num: '02',
     title: 'Git Real-World Gnarly Cases & Agent Scenarios',
     trackId: 'git',
     color: 'rose',
@@ -384,7 +391,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'angular-core',
-    num: '11A',
+    num: '01',
     title: 'Angular Core Building Blocks',
     trackId: 'angular',
     color: 'red',
@@ -400,7 +407,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'angular-reactivity',
-    num: '11B',
+    num: '02',
     title: 'Angular Reactivity, Ivy & Performance Engine',
     trackId: 'angular',
     color: 'pink',
@@ -414,7 +421,7 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'angular-modern',
-    num: '11C',
+    num: '03',
     title: 'Angular Modern Template Ergonomics & Hydration',
     trackId: 'angular',
     color: 'amber',
@@ -426,25 +433,25 @@ export const DTS_MODULES: Module[] = [
   },
   {
     id: 'devops-core',
-    num: '12A',
+    num: '01',
     title: 'DevOps Philosophy & Continuous Integration',
     trackId: 'devops',
     color: 'blue',
     lessons: [
-      { id: 'devops-culture-silos', title: 'From Dev-Ops Silos to CAMS & Shared Ownership', section: 'Culture & Pipeline Foundations' },
-      { id: 'cicd-tools-evolution', title: 'CI/CD Tool Evolution: CruiseControl to Jenkins to ArgoCD', section: 'Culture & Pipeline Foundations' },
-      { id: 'cicd-pipeline-internals', title: 'Inside Pipeline Runners: Webhooks, MicroVMs & Cache', section: 'Quality Gates & Automation' },
+      { id: 'devops-culture-silos', title: 'DevOps Culture & CAMS Model', section: 'Culture & Pipeline Foundations' },
+      { id: 'cicd-tools-evolution', title: 'CI/CD Toolchain Evolution', section: 'Culture & Pipeline Foundations' },
+      { id: 'cicd-pipeline-internals', title: 'Pipeline Runner Internals', section: 'Quality Gates & Automation' },
     ],
   },
   {
     id: 'devops-delivery',
-    num: '12B',
+    num: '02',
     title: 'Continuous Delivery, GitOps & SRE',
     trackId: 'devops',
     color: 'indigo',
     lessons: [
-      { id: 'gitops-argocd', title: 'GitOps Engine & Reconciliation Loop (ArgoCD / Flux)', section: 'Progressive Delivery & SRE' },
-      { id: 'devops-dora-metrics', title: '4 DORA Metrics & SRE Error Budget Governance', section: 'Progressive Delivery & SRE' },
+      { id: 'gitops-argocd', title: 'GitOps Reconciliation Loop', section: 'Progressive Delivery & SRE' },
+      { id: 'devops-dora-metrics', title: 'DORA Metrics & SRE Budgets', section: 'Progressive Delivery & SRE' },
     ],
   },
 ];

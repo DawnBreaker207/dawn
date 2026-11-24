@@ -38,6 +38,8 @@ export async function getStaticPaths() {
           params: { lesson: lesson.id },
           props: {
             lessonId: lesson.id,
+            moduleId: mod.id,
+            trackId: mod.trackId,
             title: `${lesson.title} · Interactive Visual Architecture Lab`,
             description: scene?.summary || `Interactive visual architecture lab simulating ${lesson.title}.`,
           },
@@ -48,15 +50,19 @@ export async function getStaticPaths() {
 
 interface Props {
   lessonId: string;
+  moduleId?: string;
+  trackId?: string;
   title: string;
   description: string;
 }
 
-const { lessonId, title, description } = Astro.props;
+const { lessonId, moduleId, trackId, title, description } = Astro.props;
 ---
 
 <ArchitectureLabLayout
   lessonId={lessonId}
+  moduleId={moduleId}
+  trackId={trackId}
   title={title}
   description={description}
 >
