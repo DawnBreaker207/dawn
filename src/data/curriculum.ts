@@ -416,6 +416,7 @@ export const DTS_MODULES: Module[] = [
       { id: 'angular-ivy-incremental-dom', title: 'Ivy Incremental DOM vs React Virtual DOM', section: 'Compilation & Change Detection' },
       { id: 'angular-zonejs-dirty-checking', title: 'Zone.js Era: Monkey-Patching & Top-Down Checking', section: 'Compilation & Change Detection' },
       { id: 'angular-change-detection-onpush', title: 'ChangeDetectionStrategy.OnPush & Subtree Pruning', section: 'Compilation & Change Detection' },
+      { id: 'angular-rxjs-reactivity', title: 'RxJS Reactive Engine: Streams, Flattening & Interop', section: 'Fine-Grained Reactivity' },
       { id: 'angular-signals-dag', title: 'Signals Reactivity & Glitch-Free Push-Pull DAG', section: 'Fine-Grained Reactivity' },
       { id: 'angular-zoneless-architecture', title: 'Zoneless Angular (provideExperimentalZonelessChangeDetection)', section: 'Fine-Grained Reactivity' },
     ],

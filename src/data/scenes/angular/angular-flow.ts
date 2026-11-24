@@ -137,16 +137,16 @@ export const angularFlowLesson = {
     {
       short: 'DI & Lifecycle',
       chapter: 'execution',
-      title: '4. Hierarchical DI (inject()) & Component Lifecycle',
+      title: '4. Hierarchical DI (inject()), Lifecycle & RxJS Streams',
       body: [
-        '<code>&lt;router-outlet&gt;</code> instantiates the component. Angular’s <b>Dual-Tree DI</b> bubbles from <code>NodeInjector</code> (<code>@Self</code>, <code>@SkipSelf</code>, <code>@Host</code>) up to <code>EnvironmentInjector</code> (<code>providedIn: \'root\'</code>, <code>InjectionToken</code>) via functional <code>inject()</code>.',
-        '<b>Lifecycle hooks</b> execute in order: <code>constructor</code> $\\rightarrow$ <code>ngOnChanges</code> $\\rightarrow$ <code>ngOnInit</code> $\\rightarrow$ <code>ngAfterViewInit</code>, while <code>DestroyRef</code> / <code>takeUntilDestroyed()</code> arms automatic teardown.',
+        '<code>&lt;router-outlet&gt;</code> instantiates the component. Angular’s <b>Dual-Tree DI</b> resolves services via <code>inject()</code> from <code>NodeInjector</code> up to <code>EnvironmentInjector</code>, while Lifecycle hooks run <code>constructor</code> $\\rightarrow$ <code>ngOnInit</code> $\\rightarrow$ <code>ngAfterViewInit</code>.',
+        'For reactive events (search, filters), <b>RxJS</b> orchestrates streams with <code>debounceTime()</code>, <code>distinctUntilChanged()</code>, and <code>switchMap()</code> (auto-cancelling stale requests) plus <code>takeUntilDestroyed()</code> for zero-leak cleanup.',
       ],
       callout: {
         kind: 'tip',
-        text: 'Never call HTTP inside constructor(); wait for ngOnInit() or Resolvers when inputs are bound.',
+        text: 'RxJS flattening operators (switchMap, exhaustMap, concatMap) eliminate race conditions without manual AbortController boilerplate.',
       },
-      changes: ['+ Hierarchical DI resolved services via inject()', '+ Component mounted & ngOnInit triggers HTTP call'],
+      changes: ['+ Hierarchical DI resolved services via inject()', '+ RxJS pipe (debounceTime + switchMap) orchestrates outgoing stream'],
       metrics: { activeStage: 'DI + Lifecycle', networkState: 'Preparing Req', reactivityMode: 'ngOnInit', domMutations: 'Mount' },
       scene: {
         entities: {
@@ -155,12 +155,12 @@ export const angularFlowLesson = {
           routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
           diLifecycle: d(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
           interceptors: d(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '4. DI & Lifecycle Pipeline', [
-            `export class OrdersComponent implements OnInit {`,
-            `  private http = inject(HttpClient);`,
-            `  private destroyRef = inject(DestroyRef);`,
-            `  ngOnInit() { /* inputs bound, call API */ }`,
-            `}`,
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '4. DI, Lifecycle & RxJS Stream', [
+            `orders$ = this.query$.pipe(`,
+            `  debounceTime(300), distinctUntilChanged(),`,
+            `  switchMap(q => inject(HttpClient).get('/api/orders?q=' + q)),`,
+            `  shareReplay({ bufferSize: 1, refCount: true })`,
+            `);`,
           ], { icon: 'terminal' }),
         },
         links: {
@@ -214,10 +214,10 @@ export const angularFlowLesson = {
     {
       short: 'Backend & Interop',
       chapter: 'execution',
-      title: '6. Backend API Response, Retry & toSignal() Bridge',
+      title: '6. Backend API Response, catchError/retry & toSignal()',
       body: [
-        'The <b>Backend API</b> validates the JWT, queries the database, and returns JSON <code>200 OK</code> (if <code>503</code> occurs, the interceptor retries with exponential backoff).',
-        'On return, the interceptor unwraps <code>HttpResponse</code> via <code>map()</code>, and <code>toSignal()</code> bridges the async RxJS Observable into a synchronous Angular Signal.',
+        'The <b>Backend API</b> validates the JWT, queries the database, and returns JSON <code>200 OK</code>. If <code>503</code> occurs, RxJS <code>retry()</code> with exponential backoff recovers while inner <code>catchError()</code> protects the outer stream.',
+        'The response flows back through the Interceptor pipe, and <code>toSignal()</code> bridges the async RxJS Observable into a synchronous Angular Signal.',
       ],
       callout: {
         kind: 'insight',

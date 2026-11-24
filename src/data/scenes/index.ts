@@ -155,6 +155,7 @@ import { angularPipesMemoizationLesson } from './angular/angular-pipes-memoizati
 import { angularIvyIncrementalDomLesson } from './angular/angular-ivy-incremental-dom';
 import { angularZonejsDirtyCheckingLesson } from './angular/angular-zonejs-dirty-checking';
 import { angularChangeDetectionOnpushLesson } from './angular/angular-change-detection-onpush';
+import { angularRxjsReactivityLesson } from './angular/angular-rxjs-reactivity';
 import { angularSignalsDagLesson } from './angular/angular-signals-dag';
 import { angularZonelessArchitectureLesson } from './angular/angular-zoneless-architecture';
 import { angularControlFlowLesson } from './angular/angular-control-flow';
@@ -303,6 +304,7 @@ export {
   angularIvyIncrementalDomLesson,
   angularZonejsDirtyCheckingLesson,
   angularChangeDetectionOnpushLesson,
+  angularRxjsReactivityLesson,
   angularSignalsDagLesson,
   angularZonelessArchitectureLesson,
   angularControlFlowLesson,
@@ -456,6 +458,7 @@ export const ALL_SCENES: Record<string, any> = {
   'angular-ivy-incremental-dom': angularIvyIncrementalDomLesson,
   'angular-zonejs-dirty-checking': angularZonejsDirtyCheckingLesson,
   'angular-change-detection-onpush': angularChangeDetectionOnpushLesson,
+  'angular-rxjs-reactivity': angularRxjsReactivityLesson,
   'angular-signals-dag': angularSignalsDagLesson,
   'angular-zoneless-architecture': angularZonelessArchitectureLesson,
   'angular-control-flow': angularControlFlowLesson,
