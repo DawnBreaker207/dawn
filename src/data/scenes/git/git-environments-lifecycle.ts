@@ -3,7 +3,6 @@
 import {
   makeBlock as d,
   makeLink as h,
-  makeZone as x,
   makePanel as S,
   makeDevice as y,
   makeDb as b,
@@ -11,19 +10,19 @@ import {
 
 export const gitEnvironmentsLifecycleLesson = {
   id: 'git-environments-lifecycle',
-  title: '4 Git Zones: Working Dir to Remote Push',
-  summary: 'Trace code progression through the 4 fundamental environments of Git: Working Directory, Staging Area (Index), Local Repository, and Remote Server.',
+  title: 'Git Environments: Working Directory, Index & Object Store',
+  summary: 'Trace the lifecycle of a byte from local disk edits through the staging index, sealed commit objects, and remote packfile synchronization.',
   minutes: 25,
   level: 'beginner',
   metrics: ['workingTree', 'stagingIndex', 'localCommits', 'remoteSynced'],
-  legend: ['flow', ['change', 'file write'], ['stage', 'git add staging'], ['commit', 'snapshot commit'], ['sync', 'remote sync']],
+  legend: ['flow', ['change', 'working tree edit'], ['stage', 'staged into index'], ['commit', 'sealed commit'], ['sync', 'remote sync']],
   goals: [
-    { text: 'Working Directory: untracked & modified files on OS filesystem', step: 1 },
-    { text: 'Staging Area (Index): preparing the binary tree snapshot', step: 2 },
-    { text: 'Local Repository: creating immutable Commit objects', step: 3 },
-    { text: 'Remote Push: transferring packfiles over SSH/HTTPS', step: 4 },
-    { text: 'Remote Fetch: updating tracking refs without touching working tree', step: 5 },
-    { text: 'Merge & Fast-Forward: integrating remote and local branches', step: 6 },
+    { text: 'The Working Directory: Untracked and dirty disk states', step: 1 },
+    { text: 'The Staging Area: Crafting atomic commits via .git/index', step: 2 },
+    { text: 'The Local Repository: Sealing immutable commit snapshots', step: 3 },
+    { text: 'Remote Push: Negotiating packfiles and updating remote refs', step: 4 },
+    { text: 'Remote Fetch: Updating tracking branches without touching disk', step: 5 },
+    { text: 'Fast-forward vs 3-way merge integration (git pull)', step: 6 },
   ],
   steps: [
     {
@@ -41,21 +40,20 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { workingTree: '1 file (dirty)', stagingIndex: '0 files', localCommits: '0 commits', remoteSynced: 'None' },
       scene: {
         entities: {
-          dev: y(-10, -18, { label: 'developer', tags: [{ text: 'touch feature.ts', tone: 'blue', icon: 'terminal' }] }),
-          work: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['Working Tree'], sub: 'untracked / dirty' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Local Filesystem Status', [
+          devWorkspace: y(-7, 7, { label: 'Working Tree', tags: [{ text: 'touch feature.ts', tone: 'blue', icon: 'terminal' }] }),
+          diskSandbox: d(0, 0, { s: 5.2, h: 56, color: 'amber', glyph: 'terminal', label: ['Local Disk'], sub: 'untracked file' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Local Filesystem Status', [
             `$ git status -s`,
             `?? src/feature.ts (Untracked file)`,
             `$ echo "export const auth = () => {}" > src/feature.ts`,
             `File exists on disk: size = 32 bytes`,
             `= Git object store (.git/objects) remains untouched`,
           ], { icon: 'terminal' }),
-          zWork: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'OS FILESYSTEM (SANDBOX)'),
         },
         links: {
-          dw: h('dev', 'work', ['dev', 'work'], { label: 'write file' }),
+          dd: h('devWorkspace', 'diskSandbox', ['devWorkspace', 'diskSandbox'], { label: 'write file' }),
         },
-        flows: [{ route: ['dw'], kind: 'change', rate: 1.2 }],
+        flows: [{ route: ['dd'], kind: 'change', rate: 1.2 }],
       },
     },
     {
@@ -74,21 +72,20 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { workingTree: '1 file (clean)', stagingIndex: '1 file (staged)', localCommits: '0 commits', remoteSynced: 'None' },
       scene: {
         entities: {
-          work: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'terminal', label: ['Working Tree'], sub: 'clean disk' }),
-          stage: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'boxes', label: ['Staging Area'], sub: '.git/index binary cache' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Git Index Inspection', [
+          diskSandbox: d(-7, 7, { s: 5.0, h: 54, color: 'amber', glyph: 'terminal', label: ['Working Tree'], sub: 'clean disk' }),
+          stagingIndex: b(0, 0, { r: 2.2, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/index'], sub: 'staged cache' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Index Inspection', [
             `$ git add src/feature.ts`,
             `$ git ls-files --stage`,
             `100644 4b825dc642cb6eb9a060e54bf8d69288fbee4904 0 src/feature.ts`,
             `Blob written: .git/objects/4b/825dc6...`,
             `= Staged and ready for snapshot commit`,
           ], { icon: 'terminal' }),
-          zStage: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'STAGING AREA (.GIT/INDEX)'),
         },
         links: {
-          ws: h('work', 'stage', ['work', 'stage'], { label: 'git add' }),
+          ds: h('diskSandbox', 'stagingIndex', ['diskSandbox', 'stagingIndex'], { label: 'git add' }),
         },
-        flows: [{ route: ['ws'], kind: 'stage', rate: 1.5 }],
+        flows: [{ route: ['ds'], kind: 'stage', rate: 1.5 }],
       },
     },
     {
@@ -107,9 +104,9 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { workingTree: 'Clean', stagingIndex: 'Clean', localCommits: '1 commit (c4f1a2)', remoteSynced: 'Behind (1 unpushed)' },
       scene: {
         entities: {
-          stage: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['Staging Area'], sub: 'clean index' }),
-          localRepo: b(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'HEAD -> main (c4f1a2)' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Commit Object Inspection', [
+          stagingIndex: b(-7, 7, { r: 2.2, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/index'], sub: 'clean index' }),
+          localRepo: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'HEAD -> main' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Commit Object Inspection', [
             `$ git cat-file -p c4f1a2`,
             `tree 8a3f91b2c4...`,
             `parent e8d9c2...`,
@@ -117,10 +114,9 @@ export const gitEnvironmentsLifecycleLesson = {
             `committer Developer <dev@company.com> 1700000000 +0000`,
             `feat: add auth`,
           ], { icon: 'terminal' }),
-          zRepo: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'LOCAL OBJECT DATABASE (.GIT)'),
         },
         links: {
-          sl: h('stage', 'localRepo', ['stage', 'localRepo'], { label: 'git commit' }),
+          sl: h('stagingIndex', 'localRepo', ['stagingIndex', 'localRepo'], { label: 'git commit' }),
         },
         flows: [{ route: ['sl'], kind: 'commit', rate: 1.6 }],
       },
@@ -141,9 +137,9 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { workingTree: 'Clean', stagingIndex: 'Clean', localCommits: '1 commit', remoteSynced: '100% Synced' },
       scene: {
         entities: {
-          localRepo: b(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'main (c4f1a2)' }),
-          remoteServer: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cloud', label: ['Remote (GitHub)'], sub: 'origin/main (c4f1a2)' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Git Smart Transfer Protocol', [
+          localRepo: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'main (c4f1a2)' }),
+          remoteServer: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'cloud', label: ['Remote GitHub'], sub: 'origin/main' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Smart Transfer Protocol', [
             `$ git push origin main`,
             `Counting objects: 4, done.`,
             `Delta compression using up to 8 threads`,
@@ -152,10 +148,9 @@ export const gitEnvironmentsLifecycleLesson = {
             `To github.com:org/repo.git`,
             `   e8d9c2..c4f1a2  main -> main`,
           ], { icon: 'terminal' }),
-          zPush: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'REMOTE REPOSITORY SYNCHRONIZATION'),
         },
         links: {
-          lr: h('localRepo', 'remoteServer', ['localRepo', 'remoteServer'], { label: 'git push origin main' }),
+          lr: h('localRepo', 'remoteServer', ['localRepo', 'remoteServer'], { label: 'push packfile' }),
         },
         flows: [{ route: ['lr'], kind: 'sync', rate: 1.8 }],
       },
@@ -176,10 +171,10 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { workingTree: 'Clean', stagingIndex: 'Clean', localCommits: '1 commit behind', remoteSynced: 'Remote Ahead (+3)' },
       scene: {
         entities: {
-          remoteServer: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'cloud', label: ['Remote (GitHub)'], sub: 'HEAD -> 9f8a7b' }),
-          trackingRef: b(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'gitBranch', label: ['origin/main'], sub: 'Tracking Ref: 9f8a7b' }),
-          localMain: b(10, 8, { s: 4.6, h: 48, color: 'green', glyph: 'terminal', label: ['Local main'], sub: 'Untouched at c4f1a2' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Git Fetch Log', [
+          remoteServer: d(-7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'cloud', label: ['Remote GitHub'], sub: 'HEAD: 9f8a7b' }),
+          trackingRef: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'gitBranch', label: ['origin/main'], sub: 'tracking 9f8a7b' }),
+          localMain: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['Local main'], sub: 'untouched c4f1a2' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Fetch Log', [
             `$ git fetch origin`,
             `From github.com:org/repo`,
             `   c4f1a2..9f8a7b  main       -> origin/main`,
@@ -187,11 +182,10 @@ export const gitEnvironmentsLifecycleLesson = {
             `Your branch is behind 'origin/main' by 3 commits.`,
             `= Working tree safely unmodified`,
           ], { icon: 'terminal' }),
-          zFetch: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'REMOTE TRACKING REFS'),
         },
         links: {
           rt: h('remoteServer', 'trackingRef', ['remoteServer', 'trackingRef'], { label: 'git fetch' }),
-          tl: h('trackingRef', 'localMain', ['trackingRef', 'localMain'], { label: 'inspect divergence' }),
+          tl: h('trackingRef', 'localMain', ['trackingRef', 'localMain'], { label: 'inspect delta' }),
         },
         flows: [{ route: ['rt', 'tl'], kind: 'sync', rate: 1.4 }],
       },
@@ -212,10 +206,10 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { workingTree: 'Updated & Clean', stagingIndex: 'Clean', localCommits: 'Synced with Remote', remoteSynced: '100% In-Sync' },
       scene: {
         entities: {
-          trackingRef: b(-10, -18, { s: 4.8, h: 50, color: 'cyan', glyph: 'gitBranch', label: ['origin/main'], sub: '9f8a7b' }),
-          mergeEngine: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Merge Engine'], sub: 'Fast-Forward (ff-only)' }),
-          updatedWork: d(10, 8, { s: 4.6, h: 48, color: 'green', glyph: 'terminal', label: ['Working Tree'], sub: 'Files synced to 9f8a7b' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Fast-Forward Merge', [
+          trackingRef: d(-7, 7, { s: 5.0, h: 54, color: 'cyan', glyph: 'gitBranch', label: ['origin/main'], sub: 'upstream tip' }),
+          mergeEngine: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'shield', label: ['Merge Engine'], sub: 'fast-forward' }),
+          updatedWork: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Working Tree'], sub: 'synced 9f8a7b' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Fast-Forward Merge', [
             `$ git merge origin/main --ff-only`,
             `Updating c4f1a2..9f8a7b`,
             `Fast-forward`,
@@ -224,11 +218,10 @@ export const gitEnvironmentsLifecycleLesson = {
             ` 2 files changed, 42 insertions(+), 8 deletions(-)`,
             `= Local branch and working directory fully updated`,
           ], { icon: 'terminal' }),
-          zMerge: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'BRANCH INTEGRATION (MERGE)'),
         },
         links: {
-          tm: h('trackingRef', 'mergeEngine', ['trackingRef', 'mergeEngine'], { label: 'merge changes' }),
-          mu: h('mergeEngine', 'updatedWork', ['mergeEngine', 'updatedWork'], { label: 'update working files' }),
+          tm: h('trackingRef', 'mergeEngine', ['trackingRef', 'mergeEngine'], { label: 'merge ff-only' }),
+          mu: h('mergeEngine', 'updatedWork', ['mergeEngine', 'updatedWork'], { label: 'update files' }),
         },
         flows: [{ route: ['tm', 'mu'], kind: 'commit', rate: 1.6 }],
       },

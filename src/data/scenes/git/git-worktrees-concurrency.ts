@@ -3,7 +3,6 @@
 import {
   makeBlock as d,
   makeLink as h,
-  makeZone as x,
   makePanel as S,
   makeDevice as y,
   makeDb as b,
@@ -11,19 +10,19 @@ import {
 
 export const gitWorktreesConcurrencyLesson = {
   id: 'git-worktrees-concurrency',
-  title: 'Case 2: Multi-Agent Parallelism with Git Worktrees',
-  summary: 'How multiple AI agents work concurrently on different branches of a repository using git worktree without duplicate clones or index locks.',
+  title: 'Git Worktrees: Multi-Branch Local Concurrency',
+  summary: 'Eliminate context switching friction and repo bloat by checking out multiple branches simultaneously in isolated directories linked to a single Git object store.',
   minutes: 25,
-  level: 'advanced',
+  level: 'intermediate',
   metrics: ['worktreeCount', 'sharedObjectStore', 'diskSavings', 'lockStatus'],
-  legend: ['shared', ['agent', 'isolated workspace'], ['lock', 'branch lockout'], ['sync', 'shared objects']],
+  legend: ['flow', ['shared', 'shared object store'], ['isolated', 'private worktree'], ['lock', 'branch lockfile']],
   goals: [
-    { text: 'The problem with concurrent agents sharing one working directory', step: 1 },
-    { text: 'git worktree add: spinning up independent workspaces backed by one .git', step: 2 },
-    { text: 'Per-worktree private index and HEAD architecture', step: 3 },
-    { text: 'Branch lockouts: why two worktrees cannot checkout the same branch', step: 4 },
-    { text: 'Multi-agent parallel execution without build collision', step: 5 },
-    { text: 'Cleaning up and pruning stale agent worktrees with git worktree prune', step: 6 },
+    { text: 'The multi-agent concurrency collision: 1 repo, 1 index, 1 HEAD', step: 1 },
+    { text: 'Spawning linked worktrees with git worktree add', step: 2 },
+    { text: 'Per-worktree private index and private HEAD architecture', step: 3 },
+    { text: 'Branch mutual exclusion: Preventing duplicate checkouts', step: 4 },
+    { text: 'Parallel development: Building, testing, and committing concurrently', step: 5 },
+    { text: 'Pruning stale worktrees with git worktree prune', step: 6 },
   ],
   steps: [
     {
@@ -41,21 +40,20 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '1 (shared)', sharedObjectStore: 'Single repo', diskSavings: '0 GB', lockStatus: 'Collision risk' },
       scene: {
         entities: {
-          agentA: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['Agent Alpha'], sub: 'checkout feat-auth' }),
-          sharedDir: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'boxes', label: ['Shared Repo'], sub: '1x .git/index & HEAD' }),
-          agentB: d(10, 8, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['Agent Bravo'], sub: 'checkout feat-ui' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Concurrency Deadlock', [
+          agentAlpha: y(-7, 7, { label: 'Agent Alpha', tags: [{ text: 'checkout auth', tone: 'blue', icon: 'terminal' }] }),
+          sharedRepo: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Single Repo'], sub: 'index lock clash' }),
+          agentBravo: y(7, -7, { label: 'Agent Bravo', tags: [{ text: 'checkout ui', tone: 'amber', icon: 'terminal' }] }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Concurrency Deadlock', [
             `Agent A: $ git checkout feature-auth`,
             `Agent B: $ git commit -m "update UI"`,
             `fatal: Unable to create '.git/index.lock': File exists.`,
-            `! Head switched while Agent B was building`,
+            `! HEAD switched while Agent B was building`,
             `= Race condition corrupts developer state`,
           ], { icon: 'terminal' }),
-          zWt: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SHARED REPOSITORY WORKSPACE COLLISION'),
         },
         links: {
-          as: h('agentA', 'sharedDir', ['agentA', 'sharedDir'], { label: 'locks index' }),
-          bs: h('agentB', 'sharedDir', ['agentB', 'sharedDir'], { label: 'index collision' }),
+          as: h('agentAlpha', 'sharedRepo', ['agentAlpha', 'sharedRepo'], { label: 'fight for index' }),
+          bs: h('agentBravo', 'sharedRepo', ['agentBravo', 'sharedRepo'], { label: 'lock collision' }),
         },
         flows: [{ route: ['as', 'bs'], kind: 'lock', rate: 1.5 }],
       },
@@ -76,10 +74,10 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '2 worktrees', sharedObjectStore: '10GB (shared)', diskSavings: '10GB saved', lockStatus: 'Isolated' },
       scene: {
         entities: {
-          mainRepo: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['Main Repo'], sub: '/repo (on main)' }),
-          worktreeEngine: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['git worktree'], sub: 'add ../wt-auth' }),
-          wtAuth: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['Worktree wt-auth'], sub: '/wt-auth (on auth)' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Worktree Creation CLI', [
+          mainRepo: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['Main Worktree'], sub: '/repo (main)' }),
+          coreObjects: b(0, 0, { r: 2.2, h: 50, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'shared storage' }),
+          wtAuth: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['Auth Worktree'], sub: '/wt-auth (auth)' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Worktree Creation CLI', [
             `$ git worktree add ../wt-auth feature-auth`,
             `Preparing worktree (checking out 'feature-auth')`,
             `HEAD is now at 7d9e44 feat: initial auth`,
@@ -87,13 +85,12 @@ export const gitWorktreesConcurrencyLesson = {
             `gitdir: /repo/.git/worktrees/wt-auth`,
             `= Instant creation: 0 network transfer, 0 object duplication`,
           ], { icon: 'terminal' }),
-          zWt: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'LINKED WORKTREE GENERATION'),
         },
         links: {
-          mw: h('mainRepo', 'worktreeEngine', ['mainRepo', 'worktreeEngine'], { label: 'spawn workspace' }),
-          ww: h('worktreeEngine', 'wtAuth', ['worktreeEngine', 'wtAuth'], { label: 'linked worktree' }),
+          mc: h('mainRepo', 'coreObjects', ['mainRepo', 'coreObjects'], { label: 'shares store' }),
+          wc: h('wtAuth', 'coreObjects', ['wtAuth', 'coreObjects'], { label: 'linked store' }),
         },
-        flows: [{ route: ['mw', 'ww'], kind: 'shared', rate: 1.5 }],
+        flows: [{ route: ['mc', 'wc'], kind: 'shared', rate: 1.5 }],
       },
     },
     {
@@ -112,10 +109,10 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '2 active', sharedObjectStore: 'Single .git/objects', diskSavings: '10GB saved', lockStatus: 'No collisions' },
       scene: {
         entities: {
-          wtStore: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/worktrees/'], sub: 'wt-auth private dir' }),
-          privateIndex: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['Private Index'], sub: 'wt-auth/.git/index' }),
-          sharedObjects: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['.git/objects'], sub: 'shared object store' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Per-Worktree Directory Layout', [
+          wtStore: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['.git/worktrees'], sub: 'wt-auth state' }),
+          privateHead: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'gitBranch', label: ['Private HEAD'], sub: 'refs/feat-auth' }),
+          coreObjects: b(7, -7, { r: 2.2, h: 50, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'shared storage' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Per-Worktree Directory Layout', [
             `.git/worktrees/wt-auth/`,
             `  ├── HEAD (ref: refs/heads/feature-auth)`,
             `  ├── index (private binary staging area)`,
@@ -123,13 +120,12 @@ export const gitWorktreesConcurrencyLesson = {
             `  └── gitdir (points to /wt-auth/.git)`,
             `= Completely private index and HEAD`,
           ], { icon: 'terminal' }),
-          zWt: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'PRIVATE WORKTREE STATE ISOLATION'),
         },
         links: {
-          wp: h('wtStore', 'privateIndex', ['wtStore', 'privateIndex'], { label: 'isolated index' }),
-          ps: h('privateIndex', 'sharedObjects', ['privateIndex', 'sharedObjects'], { label: 'commit to shared DB' }),
+          wp: h('wtStore', 'privateHead', ['wtStore', 'privateHead'], { label: 'private ref' }),
+          pc: h('privateHead', 'coreObjects', ['privateHead', 'coreObjects'], { label: 'commit to db' }),
         },
-        flows: [{ route: ['wp', 'ps'], kind: 'sync', rate: 1.5 }],
+        flows: [{ route: ['wp', 'pc'], kind: 'isolated', rate: 1.5 }],
       },
     },
     {
@@ -148,20 +144,19 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '2 active', sharedObjectStore: 'Shared', diskSavings: '10GB saved', lockStatus: 'Protected' },
       scene: {
         entities: {
-          agentB: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['Agent Bravo'], sub: 'tries checkout' }),
-          lockValidator: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'boxes', label: ['Ref Validator'], sub: 'checks worktree refs' }),
-          lockedBranch: d(10, 8, { s: 4.8, h: 50, color: 'slab', glyph: 'gitBranch', label: ['feature-auth'], sub: 'LOCKED by wt-auth' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Branch Exclusion Enforcement', [
+          agentBravo: y(-7, 7, { label: 'Agent Bravo', tags: [{ text: 'checkout auth', tone: 'amber', icon: 'terminal' }] }),
+          lockValidator: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'shield', label: ['Ref Validator'], sub: 'detects lockout' }),
+          lockedBranch: d(7, -7, { s: 5.0, h: 54, color: 'slab', glyph: 'gitBranch', label: ['feature-auth'], sub: 'locked by auth' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Branch Exclusion Enforcement', [
             `$ git checkout feature-auth`,
             `fatal: 'feature-auth' is already checked out at:`,
             `  '/home/dev/wt-auth'`,
             `Hint: Use 'git checkout --detach' if you only want to inspect`,
             `= Mathematical guarantee: 1 branch checkout per worktree`,
           ], { icon: 'terminal' }),
-          zWt: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'BRANCH MUTUAL EXCLUSION CHECK'),
         },
         links: {
-          al: h('agentB', 'lockValidator', ['agentB', 'lockValidator'], { label: 'request branch' }),
+          al: h('agentBravo', 'lockValidator', ['agentBravo', 'lockValidator'], { label: 'check ref' }),
           lb: h('lockValidator', 'lockedBranch', ['lockValidator', 'lockedBranch'], { label: 'blocked by lock' }),
         },
         flows: [{ route: ['al', 'lb'], kind: 'lock', rate: 1.5 }],
@@ -183,10 +178,10 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '3 concurrent', sharedObjectStore: 'Shared .git', diskSavings: '20GB saved', lockStatus: 'Zero lock contention' },
       scene: {
         entities: {
-          agentAlpha: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['Agent Alpha'], sub: 'wt-auth (testing)' }),
-          agentBravo: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['Agent Bravo'], sub: 'wt-ui (building)' }),
-          centralGit: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['Core .git'], sub: 'single object repository' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Parallel Agent Status', [
+          wtAuth: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'terminal', label: ['wt-auth Test'], sub: 'npm test (auth)' }),
+          coreHub: b(0, 0, { r: 2.2, h: 50, color: 'purple', glyph: 'database', label: ['.git/ Core'], sub: 'central hub' }),
+          wtUi: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['wt-ui Build'], sub: 'npm build (ui)' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Parallel Agent Status', [
             `$ git worktree list`,
             `/repo          3f8a12 [main]`,
             `/repo/wt-auth  7d9e44 [feature-auth]`,
@@ -194,13 +189,12 @@ export const gitWorktreesConcurrencyLesson = {
             `Agent Alpha: npm test (Pass)`,
             `Agent Bravo: npm run build (Success)`,
           ], { icon: 'terminal' }),
-          zWt: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'CONCURRENT AGENT EXECUTION MESH'),
         },
         links: {
-          ac: h('agentAlpha', 'centralGit', ['agentAlpha', 'centralGit'], { label: 'commit auth' }),
-          bc: h('agentBravo', 'centralGit', ['agentBravo', 'centralGit'], { label: 'commit ui' }),
+          ac: h('wtAuth', 'coreHub', ['wtAuth', 'coreHub'], { label: 'commit auth' }),
+          bc: h('wtUi', 'coreHub', ['wtUi', 'coreHub'], { label: 'commit ui' }),
         },
-        flows: [{ route: ['ac', 'bc'], kind: 'agent', rate: 1.6 }],
+        flows: [{ route: ['ac', 'bc'], kind: 'isolated', rate: 1.6 }],
       },
     },
     {
@@ -219,10 +213,10 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '1 remaining', sharedObjectStore: 'Clean', diskSavings: 'Reclaimed', lockStatus: 'Fully pruned' },
       scene: {
         entities: {
-          remover: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['rm -rf ../wt-auth'], sub: 'delete directory' }),
-          pruneEngine: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'cpu', label: ['git worktree prune'], sub: 'clean dead metadata' }),
-          cleanRepo: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Clean .git/'], sub: 'stale worktrees purged' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Worktree Cleanup Commands', [
+          pruneTrigger: y(-7, 7, { label: 'Directory Del', tags: [{ text: 'rm -rf ../wt-auth', tone: 'rose', icon: 'terminal' }] }),
+          pruneEngine: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'cpu', label: ['worktree prune'], sub: 'clean metadata' }),
+          cleanHub: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Clean .git/'], sub: 'stale refs freed' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Worktree Cleanup Commands', [
             `$ git worktree remove ../wt-auth`,
             `# Or if manually deleted:`,
             `$ rm -rf ../wt-auth`,
@@ -230,13 +224,12 @@ export const gitWorktreesConcurrencyLesson = {
             `Removing worktrees/wt-auth: gitdir file points to non-existent location`,
             `= Repository returned to pristine single-root state`,
           ], { icon: 'terminal' }),
-          zWt: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'WORKTREE ADMINISTRATIVE PRUNING'),
         },
         links: {
-          rp: h('remover', 'pruneEngine', ['remover', 'pruneEngine'], { label: 'stale directory' }),
-          pc: h('pruneEngine', 'cleanRepo', ['pruneEngine', 'cleanRepo'], { label: 'purge metadata' }),
+          tp: h('pruneTrigger', 'pruneEngine', ['pruneTrigger', 'pruneEngine'], { label: 'stale dir' }),
+          pc: h('pruneEngine', 'cleanHub', ['pruneEngine', 'cleanHub'], { label: 'purge metadata' }),
         },
-        flows: [{ route: ['rp', 'pc'], kind: 'shared', rate: 1.5 }],
+        flows: [{ route: ['tp', 'pc'], kind: 'shared', rate: 1.5 }],
       },
     },
   ],

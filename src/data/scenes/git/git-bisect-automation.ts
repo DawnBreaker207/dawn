@@ -3,7 +3,6 @@
 import {
   makeBlock as d,
   makeLink as h,
-  makeZone as x,
   makePanel as S,
   makeDevice as y,
   makeDb as b,
@@ -11,19 +10,19 @@ import {
 
 export const gitBisectAutomationLesson = {
   id: 'git-bisect-automation',
-  title: 'Case 8: Automated Regression Hunting with git bisect run',
-  summary: 'Binary searching 1,000 commits in O(log N) steps: automating bug regression detection using git bisect start HEAD v1.0.0 and headless test scripts.',
+  title: 'Git Bisect: Automated Binary Search Regression Hunting',
+  summary: 'Isolate bug-introducing commits in seconds across thousands of revisions using git bisect binary search and headless automated test scripts.',
   minutes: 25,
   level: 'advanced',
   metrics: ['searchSpace', 'stepsRemaining', 'commitTested', 'culpritFound'],
-  legend: ['bisect', ['bad', 'broken commit'], ['good', 'passing commit'], ['eval', 'test script run']],
+  legend: ['flow', ['good', 'passing commit'], ['bad', 'regressed commit'], ['eval', 'automated test run']],
   goals: [
-    { text: 'The problem: a bug was introduced somewhere across 1,000 commits', step: 1 },
-    { text: 'Binary search mechanics: how Git cuts the search range in half each step', step: 2 },
-    { text: 'Initializing bisect: git bisect start, marking bad and good bounds', step: 3 },
-    { text: 'Automating with git bisect run <script>: zero human intervention', step: 4 },
-    { text: 'Isolating the culprit commit with author, timestamp, and diff', step: 5 },
-    { text: 'Resetting bisect state and landing a targeted git revert', step: 6 },
+    { text: 'The mystery regression across 1,024 commits: O(N) vs O(log N)', step: 1 },
+    { text: 'Binary halving mathematics in Git commit DAGs', step: 2 },
+    { text: 'Initializing bisect: Marking good and bad boundary commits', step: 3 },
+    { text: 'Automating with git bisect run <script> for zero-touch diagnosis', step: 4 },
+    { text: 'Pinpointing the exact offending commit hash and diff', step: 5 },
+    { text: 'Resetting the bisect session and deploying a surgical git revert', step: 6 },
   ],
   steps: [
     {
@@ -41,20 +40,19 @@ export const gitBisectAutomationLesson = {
       metrics: { searchSpace: '1,024 commits', stepsRemaining: '10 steps', commitTested: 'None', culpritFound: 'Unknown' },
       scene: {
         entities: {
-          goodTag: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'gitBranch', label: ['tag: v1.0.0'], sub: 'known GOOD (pass)' }),
-          commitRange: d(0, -6, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['1,024 Commits'], sub: 'untested history' }),
-          badHead: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'gitBranch', label: ['HEAD (Broken)'], sub: 'known BAD (fail)' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Regression Scale Analysis', [
+          goodTag: d(-7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['tag: v1.0.0'], sub: 'known GOOD' }),
+          commitRange: d(0, 0, { s: 5.2, h: 56, color: 'slab', glyph: 'boxes', label: ['1,024 Commits'], sub: 'untested space' }),
+          badHead: d(7, 7, { s: 5.0, h: 54, color: 'rose', glyph: 'gitBranch', label: ['HEAD (Broken)'], sub: 'known BAD' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Regression Scale Analysis', [
             `Range: v1.0.0..HEAD`,
             `Total commits in range: 1024`,
             `Linear test time (3m / build): 51.2 HOURS`,
             `Bisect binary search (log2 1024): 10 STEPS (~30 MIN)`,
             `! Manual searching is completely intractable`,
           ], { icon: 'terminal' }),
-          zBisect: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'REGRESSION HUNTING SEARCH SPACE'),
         },
         links: {
-          gc: h('goodTag', 'commitRange', ['goodTag', 'commitRange'], { label: 'known working' }),
+          gc: h('goodTag', 'commitRange', ['goodTag', 'commitRange'], { label: 'known good' }),
           cb: h('commitRange', 'badHead', ['commitRange', 'badHead'], { label: 'bug detected' }),
         },
         flows: [{ route: ['gc', 'cb'], kind: 'eval', rate: 1.5 }],
@@ -76,21 +74,20 @@ export const gitBisectAutomationLesson = {
       metrics: { searchSpace: '512 commits', stepsRemaining: '9 steps', commitTested: 'Commit 512', culpritFound: 'Narrowing' },
       scene: {
         entities: {
-          discardedHalf: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['Commits 1..512'], sub: 'DISCARDED (all pass)' }),
-          midpoint: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['Midpoint Check'], sub: 'Commit 512 tested PASS' }),
-          remainingHalf: d(10, 8, { s: 4.8, h: 50, color: 'amber', glyph: 'boxes', label: ['Commits 513..1024'], sub: 'active search range' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Binary Halving Math', [
+          discardedHalf: d(-7, -7, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['Commits 1..512'], sub: 'DISCARDED pass' }),
+          midpoint: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'cpu', label: ['Commit 512'], sub: 'tested PASS' }),
+          remainingHalf: d(7, 7, { s: 5.0, h: 54, color: 'amber', glyph: 'boxes', label: ['Commits 513..1024'], sub: 'active search' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Binary Halving Math', [
             `Step 1: 1024 commits -> test commit 512`,
             `Result: PASS (good)`,
             `Deduction: Bug was NOT present in first 512 commits`,
             `New range: 512 commits left (~9 steps remaining)`,
             `= Search space cut by 50% in 1 evaluation`,
           ], { icon: 'terminal' }),
-          zBisect: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DAG TOPOLOGICAL MIDPOINT HALVING'),
         },
         links: {
           dm: h('discardedHalf', 'midpoint', ['discardedHalf', 'midpoint'], { label: 'proven good' }),
-          mr: h('midpoint', 'remainingHalf', ['midpoint', 'remainingHalf'], { label: 'isolate bad range' }),
+          mr: h('midpoint', 'remainingHalf', ['midpoint', 'remainingHalf'], { label: 'isolate bad' }),
         },
         flows: [{ route: ['dm', 'mr'], kind: 'good', rate: 1.5 }],
       },
@@ -113,10 +110,10 @@ export const gitBisectAutomationLesson = {
       metrics: { searchSpace: '256 commits', stepsRemaining: '8 steps', commitTested: 'Commit 768', culpritFound: 'In progress' },
       scene: {
         entities: {
-          startCmd: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['git bisect start'], sub: 'set boundaries' }),
-          bisectOrchestrator: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Bisect Engine'], sub: 'calculates midpoint' }),
-          detachedMid: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['Checkout SHA'], sub: 'detached for testing' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Bisect Initialization CLI', [
+          startCmd: y(-7, -7, { label: 'Bisect Init', tags: [{ text: 'bisect start', tone: 'green', icon: 'terminal' }] }),
+          bisectOrchestrator: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['Bisect Engine'], sub: 'picks midpoint' }),
+          detachedMid: d(7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Commit 768'], sub: 'detached test' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Bisect Initialization CLI', [
             `$ git bisect start`,
             `$ git bisect bad HEAD`,
             `$ git bisect good v1.0.0`,
@@ -124,7 +121,6 @@ export const gitBisectAutomationLesson = {
             `[c4f1a2b...] perf: optimize buffer allocator`,
             `= Git automatically checks out the exact midpoint commit`,
           ], { icon: 'terminal' }),
-          zBisect: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'BISECT BOUNDARY INITIALIZATION'),
         },
         links: {
           sb: h('startCmd', 'bisectOrchestrator', ['startCmd', 'bisectOrchestrator'], { label: 'set bounds' }),
@@ -149,10 +145,10 @@ export const gitBisectAutomationLesson = {
       metrics: { searchSpace: '16 commits', stepsRemaining: '4 steps', commitTested: 'Autonomous', culpritFound: 'Closing in' },
       scene: {
         entities: {
-          bisectRun: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['git bisect run'], sub: 'headless test loop' }),
-          scriptRunner: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['test-script.sh'], sub: 'exit code evaluator' }),
-          fastIterations: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['10 Test Runs'], sub: 'executes in 90 seconds' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Autonomous Bisect Script', [
+          bisectRun: y(-7, -7, { label: 'Test Script', tags: [{ text: 'bisect run test', tone: 'green', icon: 'terminal' }] }),
+          scriptRunner: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'cpu', label: ['Test Evaluator'], sub: 'exit code test' }),
+          fastIterations: d(7, 7, { s: 5.0, h: 54, color: 'cyan', glyph: 'package', label: ['10 Test Runs'], sub: '90s automated' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Autonomous Bisect Script', [
             `$ cat test-regression.sh`,
             `npm run build || exit 125  # cannot build, skip`,
             `npm test -- auth.test.ts   # exit 0 = pass, 1 = fail`,
@@ -160,11 +156,10 @@ export const gitBisectAutomationLesson = {
             `running ./test-regression.sh -> 0 (good)`,
             `running ./test-regression.sh -> 1 (bad)...`,
           ], { icon: 'terminal' }),
-          zBisect: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'AUTONOMOUS SCRIPT EVALUATION LOOP'),
         },
         links: {
-          br: h('bisectRun', 'scriptRunner', ['bisectRun', 'scriptRunner'], { label: 'execute script' }),
-          sf: h('scriptRunner', 'fastIterations', ['scriptRunner', 'fastIterations'], { label: 'loop until zero' }),
+          br: h('bisectRun', 'scriptRunner', ['bisectRun', 'scriptRunner'], { label: 'run script' }),
+          sf: h('scriptRunner', 'fastIterations', ['scriptRunner', 'fastIterations'], { label: 'loop midpoints' }),
         },
         flows: [{ route: ['br', 'sf'], kind: 'eval', rate: 1.6 }],
       },
@@ -185,10 +180,10 @@ export const gitBisectAutomationLesson = {
       metrics: { searchSpace: '1 commit (Culprit)', stepsRemaining: '0 (Done)', commitTested: 'a5b8c9', culpritFound: 'FOUND' },
       scene: {
         entities: {
-          bisectResult: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Bisect Result'], sub: 'zero candidates left' }),
-          culpritCommit: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'boxes', label: ['Commit a5b8c9'], sub: 'FIRST BAD COMMIT' }),
-          culpritDiff: d(10, 8, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['Offending Diff'], sub: 'off-by-one index error' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Culprit Identification Output', [
+          bisectResult: d(-7, -7, { s: 5.0, h: 54, color: 'purple', glyph: 'cpu', label: ['Bisect Result'], sub: '1 candidate' }),
+          culpritCommit: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Commit a5b8c9'], sub: 'FIRST BAD COMMIT' }),
+          culpritDiff: d(7, 7, { s: 5.0, h: 54, color: 'amber', glyph: 'terminal', label: ['Offending Diff'], sub: 'off-by-one bug' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Culprit Identification Output', [
             `a5b8c9f1a2b3c4... is the first bad commit`,
             `commit a5b8c9f1a2b3c4`,
             `Author: Bob <bob@company.com>`,
@@ -197,7 +192,6 @@ export const gitBisectAutomationLesson = {
             `src/parser.ts | 2 +-`,
             `= 1,000 commits narrowed to 1 commit automatically`,
           ], { icon: 'terminal' }),
-          zBisect: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'CULPRIT IDENTIFICATION VERDICT'),
         },
         links: {
           bc: h('bisectResult', 'culpritCommit', ['bisectResult', 'culpritCommit'], { label: 'isolated culprit' }),
@@ -222,10 +216,10 @@ export const gitBisectAutomationLesson = {
       metrics: { searchSpace: 'Fixed', stepsRemaining: 'Complete', commitTested: 'Reverted', culpritFound: 'Resolved' },
       scene: {
         entities: {
-          resetCmd: d(-10, -18, { s: 4.8, h: 50, color: 'cyan', glyph: 'terminal', label: ['git bisect reset'], sub: 'return to main' }),
-          revertCommit: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'gitBranch', label: ['git revert a5b8c9'], sub: 'inverts broken patch' }),
-          healthyHead: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Healthy main'], sub: 'regression resolved' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Resolution Execution', [
+          resetCmd: y(-7, -7, { label: 'Bisect Reset', tags: [{ text: 'bisect reset', tone: 'cyan', icon: 'terminal' }] }),
+          revertCommit: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'gitBranch', label: ['git revert'], sub: 'inverts patch' }),
+          healthyHead: d(7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Healthy main'], sub: 'bug eradicated' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Resolution Execution', [
             `$ git bisect reset`,
             `Checking out files: 100%, done.`,
             `Previous HEAD position was a5b8c9...`,
@@ -234,11 +228,10 @@ export const gitBisectAutomationLesson = {
             `[main 9d8e7f] Revert "fix: optimize parser loop"`,
             `= Bug permanently eradicated from main`,
           ], { icon: 'terminal' }),
-          zBisect: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'BISECT RESET & REVERT RESOLUTION'),
         },
         links: {
-          rr: h('resetCmd', 'revertCommit', ['resetCmd', 'revertCommit'], { label: 'reset session' }),
-          rh: h('revertCommit', 'healthyHead', ['revertCommit', 'healthyHead'], { label: 'land clean revert' }),
+          rr: h('resetCmd', 'revertCommit', ['resetCmd', 'revertCommit'], { label: 'restore HEAD' }),
+          rh: h('revertCommit', 'healthyHead', ['revertCommit', 'healthyHead'], { label: 'land fix' }),
         },
         flows: [{ route: ['rr', 'rh'], kind: 'good', rate: 1.6 }],
       },

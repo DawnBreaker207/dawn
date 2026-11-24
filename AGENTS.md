@@ -548,17 +548,58 @@ In SVG isometric rendering, text elements are centered relative to the block's d
 - **Height Budget for Nodes with Subtitles:**
   - If a node contains both a `glyph`, 2 lines of `label`, AND a `sub`, the height budget requires $h \ge 54\text{px}$ to prevent `sub` from being shoved down past the bottom edge.
 
-##### E. Floor Zone Typography & Clearance Rules (Quy tắc Chữ Trên Sàn)
+##### E. Floor Zone Typography & Clearance Rules
 Floor boundary zones (`makeZone` / `x({ x0, x1, y0, y1 }, 'LABEL')`) render a dashed diamond perimeter with an angled isometric title in the SVG canvas:
 - **Origin of Floor Text:** The renderer (`runtime-draw.ts:810`) places the zone text at the top-left coordinate `(x0 + 0.9, y0 + 0.55)` and projects it along the isometric $y$-axis running along the left dashed boundary.
 - **Zone Label Length Limit ($\le 18$ characters):**
-  - Tên vùng sàn MUST be concise and punchy (e.g. `'OS FILESYSTEM'`, `'STAGING AREA'`, `'OBJECT STORE'`, `'ROUTER MESH'`).
+  - Floor zone labels MUST be concise and punchy (e.g. `'OS FILESYSTEM'`, `'STAGING AREA'`, `'OBJECT STORE'`, `'ROUTER MESH'`).
   - **MAX LENGTH:** `zone.label` MUST NOT exceed **18 characters**.
   - **STRICTLY FORBIDDEN:** Long sentences or 30+ character phrases (e.g. `'WRITE-TREE DIRECTORY COMPILATION'`). Lengthy text spans over $250\text{px}$ along the floor edge, slicing straight through entity nodes.
 - **Zone Label Clearance & Anti-Pill Stamping:**
   - When placing entities in Tier 1 ($x \in [-12, -8], y \in [-20, -16]$):
   - Any node, tag pill, or device label (such as `label: 'index-binary'` underneath a laptop) MUST NOT intersect or sit on top of the zone's floor text trajectory.
   - Maintain at least **$25\text{px}$ physical separation** between any entity pill/tag and the floor zone title text. If space is tight, expand `x0` and `y0` outward (e.g. `x0: -16, y0: -24`) so the zone boundary and its title sit safely behind all Tier 1 components.
+
+##### F. Viewport Framing, Auto-Fit Camera & Compact Bounding Box Standard
+The simulation canvas dynamically computes the bounding box of all scene entities (including floor zones) to auto-center and scale the camera:
+$$\text{bounds} = [\min(sx), \min(sy), \max(sx), \max(sy)] \implies \text{scale} = \min\left(\frac{W_{\text{view}}}{\Delta sx + 120}, \frac{H_{\text{view}}}{\Delta sy + 120}\right)$$
+- **The Empty Perimeter Trap (Cause of excessively small / zoomed-out diagrams):**
+  - **STRICTLY FORBIDDEN:** Creating arbitrary massive floor zones (e.g. `makeZone({ x0: -14, x1: 14, y0: -22, y1: 14 })`) when nodes only occupy a small center region. This inflates the bounding box to $> 950\text{px} \times 520\text{px}$, forcing camera scale down to $0.65\times$ and turning blocks into tiny, unreadable specks.
+  - **Floor Zone Tight-Hug Rule:** Only create a `makeZone` when boundary isolation (VPC subnet, OS boundary, transaction boundary) is conceptually essential. When used, its perimeter MUST tightly enclose its constituent nodes with padding $\le 2$ grid units.
+- **Compact World Coordinates Budget ($\Delta x \le 18, \Delta y \le 16$):**
+  - To ensure crisp, bold, prominent nodes with a natural camera zoom factor of **$1.2\times \sim 1.5\times$**, all entity world coordinates MUST sit within a compact cluster.
+  - Node sizes MUST be generous: $s \in [4.8, 5.5]$, block heights $h \in [50, 60]\text{px}$, database cylinders $r \in [2.0, 2.5], h \in [44, 52]\text{px}$.
+
+##### G. Mental Model-First Topology Design & Dynamic Storytelling
+NEVER dogmatically repeat a generic template (such as an identical 3-node diagonal line `(-10, -18) -> (0, -6) -> (10, 8)` or a forced Y-shape) across every lesson.
+Every computer science domain possesses a distinct **Mental Model (Data Structure & State Machine)**. Graphical topologies MUST obey the law of *"Form follows Function"*:
+
+1. **Branching & Merging (DAG / Git Merges / Divergence):**
+   - **Topology:** Y-Branch or Diamond DAG.
+   - Base Ancestor at top `(-7, 7)` $(sx=0, sy=-98)$, two branches Ours and Theirs diverging left `(-7, -7)` and right `(7, 7)`, and Merge Commit converging at bottom `(7, -7)` $(sx=0, sy=+98)$ with dual parent links.
+2. **Linear Trains & Surgery (Rebase, Timelines, Bisect):**
+   - **Topology:** Sequential commit train.
+   - Surgical Rebase: The old feature branch diverged from an obsolete parent is sliced off (turning into a muted ghost/slab), and its commit range is transplanted onto the tip of the new upstream trunk.
+   - Git Bisect: Horizontal timeline array of commits, with a binary search pointer bisecting the search space at the midpoint across steps.
+3. **Content-Addressable Storage & Plumbing (Blobs, Trees, Commits):**
+   - **Topology:** 3-tier subsystem (UI/CLI Terminal $\to$ Plumbing Execution Engine $\to$ Object Storage `.git/objects/`).
+   - Objects are faithfully depicted: Blobs (database cylinders storing raw zlib bytes), Trees (package blocks storing mode, name, and SHA entries), Commits (diamond blocks storing author metadata and parent pointers).
+4. **Hub-and-Spoke (Git Worktrees, Multi-tenant, Central Registries):**
+   - **Topology:** Central repository core (`.git` directory) at center hub, radiating outward to independent active worktrees (main, feature, hotfix), each maintaining its own HEAD pointer and index.
+5. **Stacks & Append-Only Ledgers (Git Stash, Reflog, WAL Logs):**
+   - **Topology:** Vertical LIFO stack (increasing $z$) or sequential ledger where new entries are pushed onto the head.
+6. **Stream Pipes & Filter Drivers (CRLF/LF, Smudge/Clean Filters):**
+   - **Topology:** Unidirectional stream pipeline (Working Copy $\to$ Filter Processors $\to$ Object Store), visualizing byte conversions (CRLF $\to$ LF on commit, LF $\to$ CRLF on checkout).
+7. **Service Decomposition (Monolith vs Microservices):**
+   - **Topology:** Reference standard `Monolith vs Microservices`: Step 1 renders a large unified monolith slab (`s: 5.5, h: 60`) sharing a single database cylinder. Subsequent steps dynamically decompose it into 4 isolated microservice blocks with dedicated databases.
+8. **Circular Hash Rings (Consistent Hashing, Ring Buffers):**
+   - **Topology:** Hash ring (`makeRing`) with physical nodes and virtual vnodes distributed along the perimeter, with keys mapped clockwise.
+
+**Dynamic Storytelling across Steps:**
+A 6-step simulation lesson MUST NOT retain an identical, static node diagram from Step 1 to Step 6. Across steps, the learner MUST witness genuine architectural state transitions:
+- New nodes emerge, monolithic blocks split, or obsolete branches dissolve.
+- Packets circulate along routes; severed connections failover to dashed alert lines.
+- Conflicts ignite in the center and are subsequently replaced by synthesized, sealed commits.
 
 #### 5. Labeled Link Clearance & Detached Label Prevention (Link Length & Anti-Teleport Standard)
 

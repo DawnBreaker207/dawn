@@ -3,7 +3,6 @@
 import {
   makeBlock as d,
   makeLink as h,
-  makeZone as x,
   makePanel as S,
   makeDevice as y,
   makeDb as b,
@@ -11,19 +10,19 @@ import {
 
 export const gitSubmoduleSubtreeLesson = {
   id: 'git-submodule-subtree',
-  title: 'Case 9: Git Submodule vs Git Subtree in Monorepos',
-  summary: 'Architectural comparison for embedding external code: Submodule pointer references vs Subtree commit inlining, and avoiding detached submodules in CI.',
+  title: 'Git Submodules vs Subtree: Monorepo Dependency Architectures',
+  summary: 'Architectural evaluation of external code embedding: 160000 gitlink commit pointers (.gitmodules) vs inlined commit history (git subtree).',
   minutes: 25,
   level: 'advanced',
   metrics: ['embeddingType', 'pointerStyle', 'ciOverhead', 'repoAutonomy'],
-  legend: ['flow', ['submodule', 'gitlink pointer'], ['subtree', 'inlined tree'], ['sync', 'remote sync']],
+  legend: ['flow', ['submodule', 'gitlink 160000 pointer'], ['subtree', 'inlined tree commit'], ['sync', 'bidirectional sync']],
   goals: [
-    { text: 'Submodules: 160000 gitlink commit pointers and the .gitmodules manifest', step: 1 },
-    { text: 'The common CI failure: forgetting git submodule update --init --recursive', step: 2 },
-    { text: 'The detached submodule trap: edits made in unanchored HEAD', step: 3 },
-    { text: 'Git Subtree: inlining code and history directly without gitlink pointers', step: 4 },
-    { text: 'Subtree pulling and pushing: syncing upstream changes with ease', step: 5 },
-    { text: 'Architectural tradeoff matrix: Submodule vs Subtree decision guide', step: 6 },
+    { text: 'Submodule architecture: Mode 160000 gitlinks and .gitmodules', step: 1 },
+    { text: 'The empty directory CI trap: Why standard clone fails', step: 2 },
+    { text: 'The detached HEAD trap: Committing inside submodules without pushing', step: 3 },
+    { text: 'The Subtree alternative: Inlining external trees directly into history', step: 4 },
+    { text: 'Bidirectional synchronization: git subtree pull & push', step: 5 },
+    { text: 'Architectural tradeoff matrix: When to choose submodules vs subtree', step: 6 },
   ],
   steps: [
     {
@@ -41,10 +40,10 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Submodule', pointerStyle: '160000 gitlink SHA', ciOverhead: 'Requires recursive init', repoAutonomy: 'Independent' },
       scene: {
         entities: {
-          parentRepo: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'holds .gitmodules' }),
-          gitLinkMode: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['160000 Gitlink'], sub: 'libs/common -> 7d9e44' }),
-          externalRepo: d(10, 8, { s: 4.8, h: 50, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'org/common on GitHub' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Submodule Manifest & Tree Entry', [
+          parentRepo: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'holds .gitmodules' }),
+          gitLinkMode: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'terminal', label: ['160000 Gitlink'], sub: 'libs/common -> SHA' }),
+          externalRepo: d(7, -7, { s: 5.0, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'org/common on web' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Submodule Manifest & Tree Entry', [
             `$ cat .gitmodules`,
             `[submodule "libs/common"]`,
             `    path = libs/common`,
@@ -53,11 +52,10 @@ export const gitSubmoduleSubtreeLesson = {
             `160000 commit 7d9e44a1... libs/common`,
             `= Mode 160000 indicates a gitlink commit pointer`,
           ], { icon: 'terminal' }),
-          zSub: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'GIT SUBMODULE GITLINK POINTER MODEL'),
         },
         links: {
           pg: h('parentRepo', 'gitLinkMode', ['parentRepo', 'gitLinkMode'], { label: 'declares gitlink' }),
-          ge: h('gitLinkMode', 'externalRepo', ['gitLinkMode', 'externalRepo'], { label: 'external URL pointer' }),
+          ge: h('gitLinkMode', 'externalRepo', ['gitLinkMode', 'externalRepo'], { label: 'remote pointer' }),
         },
         flows: [{ route: ['pg', 'ge'], kind: 'submodule', rate: 1.5 }],
       },
@@ -78,10 +76,10 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Submodule', pointerStyle: 'Uninitialized', ciOverhead: 'CRASH (empty folder)', repoAutonomy: 'Broken' },
       scene: {
         entities: {
-          ciClone: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'terminal', label: ['git clone repo'], sub: 'shallow / non-recursive' }),
-          emptyDir: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'boxes', label: ['Empty libs/common'], sub: '0 bytes on disk' }),
-          ciCrash: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['CI Build Crash'], sub: 'ModuleNotFoundError' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Empty Submodule CI Crash', [
+          ciClone: y(-7, 7, { label: 'CI Runner', tags: [{ text: 'git clone (plain)', tone: 'rose', icon: 'terminal' }] }),
+          emptyFolder: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Empty libs/common'], sub: '0 bytes on disk' }),
+          buildCrash: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'server', label: ['CI Build Crash'], sub: 'Cannot find mod' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Empty Submodule CI Crash', [
             `$ git clone https://github.com/org/app.git`,
             `$ cd app && npm run build`,
             `Error: Cannot find module 'libs/common/index.ts'`,
@@ -89,13 +87,12 @@ export const gitSubmoduleSubtreeLesson = {
             `Fix: git submodule update --init --recursive`,
             `= Common headache for new contributors and CI scripts`,
           ], { icon: 'terminal' }),
-          zSub: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'UNINITIALIZED SUBMODULE CI HAZARD'),
         },
         links: {
-          ce: h('ciClone', 'emptyDir', ['ciClone', 'emptyDir'], { label: 'skips submodules' }),
-          ec: h('emptyDir', 'ciCrash', ['emptyDir', 'ciCrash'], { label: 'missing files' }),
+          ce: h('ciClone', 'emptyFolder', ['ciClone', 'emptyFolder'], { label: 'skips submodule' }),
+          eb: h('emptyFolder', 'buildCrash', ['emptyFolder', 'buildCrash'], { label: 'missing code' }),
         },
-        flows: [{ route: ['ce', 'ec'], kind: 'submodule', rate: 1.5 }],
+        flows: [{ route: ['ce', 'eb'], kind: 'submodule', rate: 1.5 }],
       },
     },
     {
@@ -114,10 +111,10 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Submodule', pointerStyle: 'Detached SHA', ciOverhead: 'High', repoAutonomy: 'Split commits' },
       scene: {
         entities: {
-          submoduleDir: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['cd libs/common'], sub: 'HEAD detached at 7d9e44' }),
-          subCommit: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'boxes', label: ['Local Sub Commit'], sub: 'not pushed to origin/common' }),
-          parentPointer: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'package', label: ['Parent Ref Update'], sub: 'points to unpushed SHA!' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Detached Submodule Hazard', [
+          submoduleDir: y(-7, 7, { label: 'Submodule Dir', tags: [{ text: 'detached HEAD', tone: 'amber', icon: 'terminal' }] }),
+          unpushedCommit: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Local Sub Commit'], sub: 'unpushed to origin' }),
+          brokenParent: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'package', label: ['Parent Pointer'], sub: 'dangling remote' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Detached Submodule Hazard', [
             `$ cd libs/common`,
             `$ git status  # HEAD detached at 7d9e44`,
             `$ git commit -am "fix helper"`,
@@ -126,13 +123,12 @@ export const gitSubmoduleSubtreeLesson = {
             `$ git push origin main`,
             `! Teammate error: Server does not have commit 8f1a2b!`,
           ], { icon: 'terminal' }),
-          zSub: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DETACHED SUBMODULE WORKFLOW TRAP'),
         },
         links: {
-          ss: h('submoduleDir', 'subCommit', ['submoduleDir', 'subCommit'], { label: 'unanchored edit' }),
-          sp: h('subCommit', 'parentPointer', ['subCommit', 'parentPointer'], { label: 'points to private SHA' }),
+          su: h('submoduleDir', 'unpushedCommit', ['submoduleDir', 'unpushedCommit'], { label: 'unpushed edit' }),
+          ub: h('unpushedCommit', 'brokenParent', ['unpushedCommit', 'brokenParent'], { label: 'unfetchable SHA' }),
         },
-        flows: [{ route: ['ss', 'sp'], kind: 'submodule', rate: 1.5 }],
+        flows: [{ route: ['su', 'ub'], kind: 'submodule', rate: 1.5 }],
       },
     },
     {
@@ -152,10 +148,10 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Subtree', pointerStyle: 'Inlined tree object', ciOverhead: 'Zero (clone works)', repoAutonomy: 'Monorepo' },
       scene: {
         entities: {
-          subtreeCmd: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['git subtree add'], sub: '--prefix=libs/common' }),
-          inlinedTree: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['Inlined Tree'], sub: 'tree entry (not 160000)' }),
-          monorepoFs: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Standard Monorepo'], sub: 'zero CI configuration' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Subtree Addition CLI', [
+          subtreeCmd: y(-7, 7, { label: 'Subtree CLI', tags: [{ text: 'git subtree add', tone: 'green', icon: 'terminal' }] }),
+          inlinedTree: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'boxes', label: ['Inlined Tree'], sub: '040000 tree' }),
+          monorepoFs: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Clean Monorepo'], sub: 'zero CI config' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Subtree Addition CLI', [
             `$ git subtree add --prefix=libs/common \\`,
             `    https://github.com/org/common.git main --squash`,
             `Added dir 'libs/common'`,
@@ -163,11 +159,10 @@ export const gitSubmoduleSubtreeLesson = {
             `040000 tree 8a3f91... libs/common`,
             `= Pure standard tree object! No gitlink, no .gitmodules`,
           ], { icon: 'terminal' }),
-          zSub: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'GIT SUBTREE INLINED REPOSITORY MODEL'),
         },
         links: {
           si: h('subtreeCmd', 'inlinedTree', ['subtreeCmd', 'inlinedTree'], { label: 'merge commit' }),
-          im: h('inlinedTree', 'monorepoFs', ['inlinedTree', 'monorepoFs'], { label: 'normal filesystem' }),
+          im: h('inlinedTree', 'monorepoFs', ['inlinedTree', 'monorepoFs'], { label: 'normal disk files' }),
         },
         flows: [{ route: ['si', 'im'], kind: 'subtree', rate: 1.5 }],
       },
@@ -189,10 +184,10 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Subtree', pointerStyle: 'Squashed merge', ciOverhead: 'Zero', repoAutonomy: 'Bidirectional sync' },
       scene: {
         entities: {
-          subtreePull: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['git subtree pull'], sub: 'fetch upstream delta' }),
-          mergeIntegrator: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Squash Integrator'], sub: 'creates 1 clean merge' }),
-          updatedCommon: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Updated libs/common'], sub: 'cleanly synchronized' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Subtree Synchronization CLI', [
+          subtreePull: y(-7, 7, { label: 'Sync Runner', tags: [{ text: 'git subtree pull', tone: 'blue', icon: 'terminal' }] }),
+          squashIntegrator: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['Squash Integrator'], sub: '1 clean merge' }),
+          updatedCommon: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['libs/common Sync'], sub: 'synced code' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Subtree Synchronization CLI', [
             `# Pull upstream updates:`,
             `$ git subtree pull --prefix=libs/common \\`,
             `    https://github.com/org/common.git main --squash`,
@@ -200,11 +195,10 @@ export const gitSubmoduleSubtreeLesson = {
             `$ git subtree push --prefix=libs/common \\`,
             `    https://github.com/org/common.git feature-patch`,
           ], { icon: 'terminal' }),
-          zSub: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SUBTREE BIDIRECTIONAL SYNCHRONIZATION'),
         },
         links: {
-          sm: h('subtreePull', 'mergeIntegrator', ['subtreePull', 'mergeIntegrator'], { label: 'fetch & squash' }),
-          mu: h('mergeIntegrator', 'updatedCommon', ['mergeIntegrator', 'updatedCommon'], { label: 'commit to parent' }),
+          sm: h('subtreePull', 'squashIntegrator', ['subtreePull', 'squashIntegrator'], { label: 'fetch & squash' }),
+          mu: h('squashIntegrator', 'updatedCommon', ['squashIntegrator', 'updatedCommon'], { label: 'commit to parent' }),
         },
         flows: [{ route: ['sm', 'mu'], kind: 'sync', rate: 1.5 }],
       },
@@ -225,10 +219,10 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Decision Matrix', pointerStyle: 'Strategic Choice', ciOverhead: 'Minimized', repoAutonomy: 'Optimized' },
       scene: {
         entities: {
-          decisionMatrix: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['Architecture Choice'], sub: 'evaluate constraints' }),
-          submodulePath: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cloud', label: ['Submodules'], sub: 'massive assets / strict SHA' }),
-          subtreePath: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Subtree'], sub: 'monorepo / zero CI friction' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Architectural Decision Matrix', [
+          submoduleChoice: d(-7, 7, { s: 5.0, h: 54, color: 'amber', glyph: 'cloud', label: ['Submodules'], sub: 'massive assets' }),
+          decisionEngine: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'boxes', label: ['Repo Strategy'], sub: 'evaluate needs' }),
+          subtreeChoice: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Subtree'], sub: 'monorepo speed' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Architectural Decision Matrix', [
             `Dimension         | Submodule        | Subtree`,
             `------------------+------------------+-----------------`,
             `Storage           | 160000 pointer   | Inlined trees`,
@@ -237,11 +231,10 @@ export const gitSubmoduleSubtreeLesson = {
             `Detached Hazard   | Yes (frequent)   | No (standard repo)`,
             `Recommendation    | Heavy binaries   | Web & libraries`,
           ], { icon: 'terminal' }),
-          zSub: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SUBMODULE VS SUBTREE ARCHITECTURAL MATRIX'),
         },
         links: {
-          ds: h('decisionMatrix', 'submodulePath', ['decisionMatrix', 'submodulePath'], { label: 'heavy binaries' }),
-          dt: h('decisionMatrix', 'subtreePath', ['decisionMatrix', 'subtreePath'], { label: 'recommended for web' }),
+          ds: h('decisionEngine', 'submoduleChoice', ['decisionEngine', 'submoduleChoice'], { label: 'pin binaries' }),
+          dt: h('decisionEngine', 'subtreeChoice', ['decisionEngine', 'subtreeChoice'], { label: 'inlined code' }),
         },
         flows: [{ route: ['ds', 'dt'], kind: 'subtree', rate: 1.5 }],
       },

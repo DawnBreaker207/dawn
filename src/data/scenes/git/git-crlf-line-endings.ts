@@ -3,7 +3,6 @@
 import {
   makeBlock as d,
   makeLink as h,
-  makeZone as x,
   makePanel as S,
   makeDevice as y,
   makeDb as b,
@@ -11,19 +10,19 @@ import {
 
 export const gitCrlfLineEndingsLesson = {
   id: 'git-crlf-line-endings',
-  title: 'Case 6: CRLF vs LF Normalization Disaster',
-  summary: 'When a Windows developer or AI agent marks 10,000 files modified due to carriage return (\\r\\n) drift, and resolving it permanently via .gitattributes and git add --renormalize .',
+  title: 'CRLF vs LF Line Endings: The 10,000 File Diff Disaster',
+  summary: 'Solve cross-platform line ending churn permanently using repo-enforced .gitattributes, git add --renormalize, and .git-blame-ignore-revs.',
   minutes: 25,
   level: 'intermediate',
   metrics: ['crlfFiles', 'gitAttributes', 'blameIntegrity', 'repoCleanliness'],
-  legend: ['flow', ['corrupt', 'CRLF drift (10,000 files)'], ['clean', 'LF normalized'], ['attr', 'gitattributes rules']],
+  legend: ['flow', ['corrupt', 'false diff churn'], ['attr', 'gitattributes filter'], ['clean', 'normalized LF storage']],
   goals: [
-    { text: 'Why Windows CRLF (\\r\\n) and Linux LF (\\n) trigger false diffs', step: 1 },
-    { text: 'The fatal failure of core.autocrlf across team environments', step: 2 },
-    { text: 'Enforcing repository-level truth with .gitattributes', step: 3 },
-    { text: 'Normalizing the entire repository: git add --renormalize .', step: 4 },
-    { text: 'Pre-commit hook enforcement: blocking unwanted carriage returns', step: 5 },
-    { text: 'Preserving git blame history across line ending normalization', step: 6 },
+    { text: 'The 10,000 modified files disaster: Why Windows vs Linux line endings diverge', step: 1 },
+    { text: 'The inadequacy of local core.autocrlf configuration', step: 2 },
+    { text: 'Enforcing repository-level truth with .gitattributes (* text=auto)', step: 3 },
+    { text: 'Normalizing the entire repository safely with git add --renormalize .', step: 4 },
+    { text: 'Automated pre-commit hooks to permanently block CRLF leaks', step: 5 },
+    { text: 'Preserving git blame history with .git-blame-ignore-revs', step: 6 },
   ],
   steps: [
     {
@@ -41,10 +40,10 @@ export const gitCrlfLineEndingsLesson = {
       metrics: { crlfFiles: '10,000 modified', gitAttributes: 'None', blameIntegrity: 'Critical risk', repoCleanliness: 'Dirty' },
       scene: {
         entities: {
-          windowsFs: d(-10, -18, { s: 4.8, h: 50, color: 'rose', glyph: 'terminal', label: ['Windows Disk'], sub: '10k files with CRLF' }),
-          gitStatus: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['git status'], sub: 'detects false diffs' }),
-          blobDiff: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'package', label: ['False Blobs'], sub: 'hash mismatch on all files' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '10k False Diffs Output', [
+          windowsDisk: y(-7, 7, { label: 'Windows FS', tags: [{ text: '10k CRLF files', tone: 'rose', icon: 'terminal' }] }),
+          gitStatusEngine: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['git status'], sub: '10k false diffs' }),
+          falseBlobDiff: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'package', label: ['Hash Mismatch'], sub: 'new blob SHAs' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, '10k False Diffs Output', [
             `$ git status -s | wc -l`,
             `10240`,
             `$ git diff src/index.ts`,
@@ -52,13 +51,12 @@ export const gitCrlfLineEndingsLesson = {
             `The file will have its original line endings in your working tree`,
             `! Every line in every file appears modified!`,
           ], { icon: 'terminal' }),
-          zCrlf: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'CRLF / LF BYTE CORRUPTION HAZARD'),
         },
         links: {
-          wg: h('windowsFs', 'gitStatus', ['windowsFs', 'gitStatus'], { label: 'scans disk files' }),
-          gb: h('gitStatus', 'blobDiff', ['gitStatus', 'blobDiff'], { label: 'SHA mismatch' }),
+          wg: h('windowsDisk', 'gitStatusEngine', ['windowsDisk', 'gitStatusEngine'], { label: 'scan disk files' }),
+          gf: h('gitStatusEngine', 'falseBlobDiff', ['gitStatusEngine', 'falseBlobDiff'], { label: 'byte mismatch' }),
         },
-        flows: [{ route: ['wg', 'gb'], kind: 'corrupt', rate: 1.5 }],
+        flows: [{ route: ['wg', 'gf'], kind: 'corrupt', rate: 1.5 }],
       },
     },
     {
@@ -77,20 +75,19 @@ export const gitCrlfLineEndingsLesson = {
       metrics: { crlfFiles: '10,000', gitAttributes: 'None', blameIntegrity: 'Vulnerable', repoCleanliness: 'Inconsistent' },
       scene: {
         entities: {
-          localConfig: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'terminal', label: ['core.autocrlf'], sub: 'per-machine setting' }),
-          ciContainer: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'server', label: ['Linux CI Docker'], sub: 'core.autocrlf = false' }),
-          driftClash: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'boxes', label: ['Drift Clash'], sub: 'PRs fail on whitespace' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Workstation Config Inconsistency', [
+          localConfig: y(-7, 7, { label: 'core.autocrlf', tags: [{ text: 'local per-user', tone: 'amber', icon: 'terminal' }] }),
+          ciContainer: d(0, 0, { s: 5.2, h: 56, color: 'amber', glyph: 'server', label: ['Linux CI Docker'], sub: 'autocrlf=false' }),
+          driftClash: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'boxes', label: ['Drift Clash'], sub: 'PRs fail on EOL' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Workstation Config Inconsistency', [
             `Dev 1 (Mac): core.autocrlf = input`,
             `Dev 2 (Win): core.autocrlf = true`,
             `CI Server (Linux): core.autocrlf = false`,
             `$ git diff --ignore-space-at-eol  # workaround, not a fix`,
             `= Team constantly fights whitespace PR battles`,
           ], { icon: 'terminal' }),
-          zCrlf: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'LOCAL CONFIGURATION INCONSISTENCY'),
         },
         links: {
-          lc: h('localConfig', 'ciContainer', ['localConfig', 'ciContainer'], { label: 'mismatched settings' }),
+          lc: h('localConfig', 'ciContainer', ['localConfig', 'ciContainer'], { label: 'mismatched EOL' }),
           cd: h('ciContainer', 'driftClash', ['ciContainer', 'driftClash'], { label: 'causes CI failures' }),
         },
         flows: [{ route: ['lc', 'cd'], kind: 'corrupt', rate: 1.5 }],
@@ -112,10 +109,10 @@ export const gitCrlfLineEndingsLesson = {
       metrics: { crlfFiles: 'Pending normalize', gitAttributes: 'Committed', blameIntegrity: 'Guaranteed', repoCleanliness: 'Configured' },
       scene: {
         entities: {
-          attrFile: d(-10, -18, { s: 5.2, h: 50, color: 'green', glyph: 'terminal', label: ['.gitattributes'], sub: 'repo-level truth' }),
-          gitFilter: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Filter Engine'], sub: 'clean/smudge filter' }),
-          enforcedStore: d(10, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'package', label: ['LF Store'], sub: 'universal LF objects' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Standard .gitattributes File', [
+          attrFile: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['.gitattributes'], sub: 'repo truth' }),
+          filterEngine: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['Clean/Smudge'], sub: 'LF normalization' }),
+          enforcedStore: b(7, -7, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Universal LF'], sub: 'normalized store' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Standard .gitattributes File', [
             `# Set default behavior: auto-normalize text files to LF`,
             `* text=auto`,
             ``,
@@ -125,13 +122,12 @@ export const gitCrlfLineEndingsLesson = {
             `*.json text eol=lf`,
             `*.png binary`,
           ], { icon: 'terminal' }),
-          zCrlf: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'REPOSITORY-LEVEL RULE DECLARATION'),
         },
         links: {
-          ag: h('attrFile', 'gitFilter', ['attrFile', 'gitFilter'], { label: 'enforce rules' }),
-          ge: h('gitFilter', 'enforcedStore', ['gitFilter', 'enforcedStore'], { label: 'universal LF' }),
+          af: h('attrFile', 'filterEngine', ['attrFile', 'filterEngine'], { label: 'declare rules' }),
+          fe: h('filterEngine', 'enforcedStore', ['filterEngine', 'enforcedStore'], { label: 'universal LF' }),
         },
-        flows: [{ route: ['ag', 'ge'], kind: 'attr', rate: 1.5 }],
+        flows: [{ route: ['af', 'fe'], kind: 'attr', rate: 1.5 }],
       },
     },
     {
@@ -150,10 +146,10 @@ export const gitCrlfLineEndingsLesson = {
       metrics: { crlfFiles: '0 (normalized)', gitAttributes: 'Active', blameIntegrity: 'Preserved', repoCleanliness: 'Clean' },
       scene: {
         entities: {
-          renormCmd: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['git add --renorm'], sub: 'process all files' }),
-          smudgeClean: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Smudge / Clean'], sub: 'strip 0x0D bytes' }),
-          pureIndex: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'boxes', label: ['Clean Index'], sub: '100% LF blob hashes' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Renormalization Execution', [
+          renormCmd: y(-7, 7, { label: 'Renormalizer', tags: [{ text: 'git add --renorm', tone: 'green', icon: 'terminal' }] }),
+          smudgeClean: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['Byte Scrubber'], sub: 'strip 0x0D bytes' }),
+          pureIndex: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Clean Index'], sub: '100% LF blobs' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Renormalization Execution', [
             `$ git add --renormalize .`,
             `$ git commit -m "chore: normalize line endings via .gitattributes"`,
             `[main a5b8c9] chore: normalize line endings via .gitattributes`,
@@ -161,10 +157,9 @@ export const gitCrlfLineEndingsLesson = {
             `$ git status`,
             `nothing to commit, working tree clean`,
           ], { icon: 'terminal' }),
-          zCrlf: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'WHOLE-REPO RENORMALIZATION PASS'),
         },
         links: {
-          rs: h('renormCmd', 'smudgeClean', ['renormCmd', 'smudgeClean'], { label: 'scan repository' }),
+          rs: h('renormCmd', 'smudgeClean', ['renormCmd', 'smudgeClean'], { label: 'read all files' }),
           sp: h('smudgeClean', 'pureIndex', ['smudgeClean', 'pureIndex'], { label: 'stage LF blobs' }),
         },
         flows: [{ route: ['rs', 'sp'], kind: 'clean', rate: 1.6 }],
@@ -186,10 +181,10 @@ export const gitCrlfLineEndingsLesson = {
       metrics: { crlfFiles: '0', gitAttributes: 'Enforced', blameIntegrity: 'Protected', repoCleanliness: 'Guarded' },
       scene: {
         entities: {
-          commitAttempt: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['git commit'], sub: 'triggers hook' }),
-          hookValidator: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['CRLF Hook Guard'], sub: 'grep -U $\'\\r\'' }),
-          approvedCommit: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Approved Git SHA'], sub: 'sealed commit' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Pre-Commit Hook Guard Script', [
+          commitAttempt: y(-7, 7, { label: 'Developer Commit', tags: [{ text: 'git commit', tone: 'blue', icon: 'terminal' }] }),
+          hookValidator: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'shield', label: ['CRLF Hook Guard'], sub: 'grep -U $\'\\r\'' }),
+          approvedCommit: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Approved Commit'], sub: 'sealed SHA-1' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Pre-Commit Hook Guard Script', [
             `#!/bin/sh`,
             `# .husky/pre-commit`,
             `if git grep --cached -I -l $'\\r'; then`,
@@ -198,7 +193,6 @@ export const gitCrlfLineEndingsLesson = {
             `  exit 1`,
             `fi`,
           ], { icon: 'terminal' }),
-          zCrlf: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'PRE-COMMIT HOOK AUTOMATED GUARD'),
         },
         links: {
           ch: h('commitAttempt', 'hookValidator', ['commitAttempt', 'hookValidator'], { label: 'scan staged bytes' }),
@@ -223,21 +217,20 @@ export const gitCrlfLineEndingsLesson = {
       metrics: { crlfFiles: '0', gitAttributes: 'Permanent', blameIntegrity: '100% Intact', repoCleanliness: 'Pristine' },
       scene: {
         entities: {
-          blameReq: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['git blame src/auth.ts'], sub: 'query authorship' }),
-          ignoreFilter: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['.git-blame-ignore'], sub: 'skips a5b8c9 normalization' }),
-          originalAuthor: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['True Author (Linus)'], sub: 'blame history intact' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Ignore-Revs Blame Configuration', [
+          blameReq: y(-7, 7, { label: 'git blame CLI', tags: [{ text: 'blame auth.ts', tone: 'cyan', icon: 'terminal' }] }),
+          ignoreFilter: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'boxes', label: ['.git-blame-ignore'], sub: 'skips a5b8c9' }),
+          originalAuthor: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['True Author'], sub: 'original author' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Ignore-Revs Blame Configuration', [
             `$ echo "a5b8c9... # chore: normalize line endings" >> .git-blame-ignore-revs`,
             `$ git config blame.ignoreRevsFile .git-blame-ignore-revs`,
             `$ git blame src/auth.ts`,
             `1a2b3c (Linus 2022-01-15) export const auth = () => {`,
             `= Blame correctly points to Linus, completely skipping normalization commit!`,
           ], { icon: 'terminal' }),
-          zCrlf: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'BLAME INTEGRITY PRESERVATION'),
         },
         links: {
           bi: h('blameReq', 'ignoreFilter', ['blameReq', 'ignoreFilter'], { label: 'read ignore list' }),
-          io: h('ignoreFilter', 'originalAuthor', ['ignoreFilter', 'originalAuthor'], { label: 'resolve original author' }),
+          io: h('ignoreFilter', 'originalAuthor', ['ignoreFilter', 'originalAuthor'], { label: 'resolve author' }),
         },
         flows: [{ route: ['bi', 'io'], kind: 'clean', rate: 1.6 }],
       },

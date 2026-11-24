@@ -3,7 +3,6 @@
 import {
   makeBlock as d,
   makeLink as h,
-  makeZone as x,
   makePanel as S,
   makeDevice as y,
   makeDb as b,
@@ -11,19 +10,19 @@ import {
 
 export const gitDagObjectsLesson = {
   id: 'git-dag-objects',
-  title: '4 Immutable Objects: Blob, Tree, Commit & Tag',
-  summary: 'Dissect Git’s internal content-addressable storage model: how SHA hashes, zlib compression, Blobs, Trees, Commits, and Annotated Tags construct the Git Merkle DAG.',
+  title: 'Git Under the Hood: The Object DAG',
+  summary: 'Deconstruct Git internal object store: Blobs, Trees, Commits, and Annotated Tags. Understand content-addressable storage, zlib compression, and Merkle tree immutability.',
   minutes: 25,
-  level: 'advanced',
+  level: 'intermediate',
   metrics: ['objectType', 'contentAddress', 'compression', 'immutability'],
-  legend: ['hash', ['tree', 'directory pointer'], ['blob', 'file content'], ['commit', 'graph snapshot'], ['pack', 'packfile delta']],
+  legend: ['flow', ['blob', 'blob object'], ['tree', 'tree manifest'], ['commit', 'commit node'], ['pack', 'packed object']],
   goals: [
-    { text: 'Blobs: pure byte streams without filenames or permissions', step: 1 },
-    { text: 'Trees: directories representing the hierarchy and filenames', step: 2 },
-    { text: 'Commits: immutable snapshots with tree, parent, and author', step: 3 },
-    { text: 'Annotated Tags: cryptographic pointers with PGP signature', step: 4 },
-    { text: 'Merkle DAG Cascading: why 1 byte edit re-hashes all parents', step: 5 },
-    { text: 'Packfile Delta Compression: packing loose objects into .pack and .idx', step: 6 },
+    { text: 'The Blob: Raw byte storage with zlib compression', step: 1 },
+    { text: 'The Tree: Hierarchical directory manifests and file permissions', step: 2 },
+    { text: 'The Commit: Cryptographic snapshot with author metadata and parent hashes', step: 3 },
+    { text: 'The Annotated Tag: GPG-signed release references', step: 4 },
+    { text: 'Merkle tree cascade: Why modifying one byte ripples all upstream hashes', step: 5 },
+    { text: 'Packfile optimization: Sliding-window delta compression and git gc', step: 6 },
   ],
   steps: [
     {
@@ -41,21 +40,20 @@ export const gitDagObjectsLesson = {
       metrics: { objectType: 'blob', contentAddress: 'SHA-1 (40 hex)', compression: 'zlib level 6', immutability: '100% frozen' },
       scene: {
         entities: {
-          file: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['src/app.ts'], sub: 'raw disk file' }),
-          hash: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'boxes', label: ['SHA-1 Hash'], sub: 'blob 14\\0console.log()' }),
-          blob: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Blob Object'], sub: '.git/objects/4b/825d...' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Low-Level Blob Plumbing', [
+          fileInput: y(-7, 7, { label: 'Raw File', tags: [{ text: 'src/app.ts', tone: 'blue', icon: 'terminal' }] }),
+          hashEngine: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'cpu', label: ['SHA-1 Engine'], sub: 'blob 14\\0byte' }),
+          blobObject: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Blob Object'], sub: '4b825d zlib' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Low-Level Blob Plumbing', [
             `$ echo "console.log()" | git hash-object -w --stdin`,
             `4b825dc642cb6eb9a060e54bf8d69288fbee4904`,
             `$ git cat-file -p 4b825d`,
             `console.log()`,
             `$ git cat-file -t 4b825d  # => blob`,
           ], { icon: 'terminal' }),
-          zDag: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'GIT OBJECT STORE (.GIT/OBJECTS)'),
         },
         links: {
-          fh: h('file', 'hash', ['file', 'hash'], { label: 'header + sha' }),
-          hb: h('hash', 'blob', ['hash', 'blob'], { label: 'zlib compress' }),
+          fh: h('fileInput', 'hashEngine', ['fileInput', 'hashEngine'], { label: 'header + size' }),
+          hb: h('hashEngine', 'blobObject', ['hashEngine', 'blobObject'], { label: 'zlib compress' }),
         },
         flows: [{ route: ['fh', 'hb'], kind: 'blob', rate: 1.5 }],
       },
@@ -76,21 +74,20 @@ export const gitDagObjectsLesson = {
       metrics: { objectType: 'tree', contentAddress: 'SHA-1 (40 hex)', compression: 'zlib binary manifest', immutability: 'Deterministic' },
       scene: {
         entities: {
-          rootTree: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['Root Tree'], sub: 'tree 8a3f91' }),
-          subTree: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['src/ Tree'], sub: 'tree 1f2c4a' }),
-          blob1: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['app.ts (blob)'], sub: 'blob 4b825d' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Tree Manifest Inspection', [
+          rootTree: d(-7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Tree'], sub: 'tree 8a3f91' }),
+          subTree: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'boxes', label: ['src/ Tree'], sub: 'tree 1f2c4a' }),
+          blobFile: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['app.ts (Blob)'], sub: 'blob 4b825d' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Tree Manifest Inspection', [
             `$ git cat-file -p 8a3f91`,
             `040000 tree 1f2c4a... src`,
             `100644 blob e69de2... package.json`,
             `$ git cat-file -p 1f2c4a`,
             `100644 blob 4b825d... app.ts`,
           ], { icon: 'terminal' }),
-          zDag: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'TREE HIERARCHY DIRECTORY STORE'),
         },
         links: {
           rs: h('rootTree', 'subTree', ['rootTree', 'subTree'], { label: 'subdir pointer' }),
-          sb: h('subTree', 'blob1', ['subTree', 'blob1'], { label: 'file pointer' }),
+          sb: h('subTree', 'blobFile', ['subTree', 'blobFile'], { label: 'file pointer' }),
         },
         flows: [{ route: ['rs', 'sb'], kind: 'tree', rate: 1.5 }],
       },
@@ -111,10 +108,10 @@ export const gitDagObjectsLesson = {
       metrics: { objectType: 'commit', contentAddress: 'SHA-1 (40 hex)', compression: 'zlib plain text', immutability: 'Sealed DAG' },
       scene: {
         entities: {
-          parent: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'gitBranch', label: ['Parent Commit'], sub: 'commit 3f8a12' }),
-          commit: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['Commit Object'], sub: 'commit 7d9e44' }),
-          tree: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['Root Tree'], sub: 'tree 8a3f91' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Raw Commit Object Body', [
+          parentCommit: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Parent Commit'], sub: 'commit 3f8a12' }),
+          commitObj: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'gitBranch', label: ['Commit Object'], sub: 'commit 7d9e44' }),
+          rootTree: d(7, -7, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Tree'], sub: 'tree 8a3f91' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Raw Commit Object Body', [
             `$ git cat-file -p 7d9e44`,
             `tree 8a3f91...`,
             `parent 3f8a12...`,
@@ -122,11 +119,10 @@ export const gitDagObjectsLesson = {
             `committer Linus <torvalds@kernel.org> 1700000000 +0000`,
             `feat: implement auth service`,
           ], { icon: 'terminal' }),
-          zDag: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'COMMIT SNAPSHOT IN DAG'),
         },
         links: {
-          cp: h('commit', 'parent', ['commit', 'parent'], { label: 'parent pointer' }),
-          ct: h('commit', 'tree', ['commit', 'tree'], { label: 'tree snapshot' }),
+          cp: h('commitObj', 'parentCommit', ['commitObj', 'parentCommit'], { label: 'parent SHA' }),
+          ct: h('commitObj', 'rootTree', ['commitObj', 'rootTree'], { label: 'root tree SHA' }),
         },
         flows: [{ route: ['cp', 'ct'], kind: 'commit', rate: 1.5 }],
       },
@@ -147,10 +143,10 @@ export const gitDagObjectsLesson = {
       metrics: { objectType: 'tag', contentAddress: 'SHA-1 (40 hex)', compression: 'zlib sealed object', immutability: 'Cryptographic' },
       scene: {
         entities: {
-          refTag: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'gitBranch', label: ['refs/tags/v1.0'], sub: 'tag pointer' }),
-          tagObj: d(0, -6, { s: 4.8, h: 50, color: 'yellow', glyph: 'package', label: ['Annotated Tag'], sub: 'tag b2c4d6' }),
-          target: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['Target Commit'], sub: 'commit 7d9e44' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Annotated Tag Object Dump', [
+          refPointer: y(-7, 7, { label: 'Ref Pointer', tags: [{ text: 'refs/tags/v1.0', tone: 'amber', icon: 'gitBranch' }] }),
+          tagObject: d(0, 0, { s: 5.2, h: 56, color: 'yellow', glyph: 'package', label: ['Annotated Tag'], sub: 'tag b2c4d6' }),
+          targetCommit: d(7, -7, { s: 5.0, h: 54, color: 'cyan', glyph: 'gitBranch', label: ['Target Commit'], sub: 'commit 7d9e44' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Annotated Tag Object Dump', [
             `$ git cat-file -p v1.0`,
             `object 7d9e44...`,
             `type commit`,
@@ -158,11 +154,10 @@ export const gitDagObjectsLesson = {
             `tagger Alice <alice@corp.com> 1700000050 +0000`,
             `-----BEGIN PGP SIGNATURE-----...`,
           ], { icon: 'terminal' }),
-          zDag: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ANNOTATED TAG RELEASE STORE'),
         },
         links: {
-          rt: h('refTag', 'tagObj', ['refTag', 'tagObj'], { label: 'refs pointer' }),
-          tt: h('tagObj', 'target', ['tagObj', 'target'], { label: 'target commit' }),
+          rt: h('refPointer', 'tagObject', ['refPointer', 'tagObject'], { label: 'ref pointer' }),
+          tt: h('tagObject', 'targetCommit', ['tagObject', 'targetCommit'], { label: 'target commit' }),
         },
         flows: [{ route: ['rt', 'tt'], kind: 'commit', rate: 1.5 }],
       },
@@ -183,23 +178,22 @@ export const gitDagObjectsLesson = {
       metrics: { objectType: 'merkle', contentAddress: 'Cascading SHA', compression: 'Deduplicated tree', immutability: 'Tamper-evident' },
       scene: {
         entities: {
-          diff: d(-10, -18, { s: 4.8, h: 50, color: 'rose', glyph: 'terminal', label: ['1-Byte Edit'], sub: 'app.ts modified' }),
-          newTree: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['New Root Tree'], sub: 'tree 9f4a12' }),
-          newCommit: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['New Commit'], sub: 'commit a5b8c9' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Merkle Ripple Calculation', [
+          byteEdit: y(-7, 7, { label: 'Disk Edit', tags: [{ text: '+1 byte app.ts', tone: 'rose', icon: 'terminal' }] }),
+          newRootTree: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'package', label: ['New Root Tree'], sub: 'tree 9f4a12' }),
+          newCommitObj: d(7, -7, { s: 5.0, h: 54, color: 'cyan', glyph: 'gitBranch', label: ['New Commit'], sub: 'commit a5b8c9' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merkle Ripple Calculation', [
             `Delta: +1 byte in src/app.ts`,
             `Blob: 4b825d -> f1a2b3 (new blob written)`,
             `Tree: 8a3f91 -> 9f4a12 (new tree written)`,
             `Commit: 7d9e44 -> a5b8c9 (parent: 7d9e44)`,
             `History preserved: 7d9e44 still points to 8a3f91`,
           ], { icon: 'terminal' }),
-          zDag: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'MERKLE TREE CASCADE INTEGRITY'),
         },
         links: {
-          dt: h('diff', 'newTree', ['diff', 'newTree'], { label: 'hashes cascade' }),
-          tc: h('newTree', 'newCommit', ['newTree', 'newCommit'], { label: 'seals commit' }),
+          bn: h('byteEdit', 'newRootTree', ['byteEdit', 'newRootTree'], { label: 'hashes cascade' }),
+          nc: h('newRootTree', 'newCommitObj', ['newRootTree', 'newCommitObj'], { label: 'seals commit' }),
         },
-        flows: [{ route: ['dt', 'tc'], kind: 'blob', rate: 1.6 }],
+        flows: [{ route: ['bn', 'nc'], kind: 'blob', rate: 1.6 }],
       },
     },
     {
@@ -218,10 +212,10 @@ export const gitDagObjectsLesson = {
       metrics: { objectType: 'packfile', contentAddress: 'Binary index offset', compression: 'Sliding delta + zlib', immutability: 'Packed storage' },
       scene: {
         entities: {
-          loose: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['Loose Objects'], sub: '10,000 files in .git' }),
-          gcEngine: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['git gc engine'], sub: 'sliding window delta' }),
-          packfile: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['pack-*.pack'], sub: 'single compressed pack' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Garbage Collection Output', [
+          looseFiles: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Loose Objects'], sub: '10,000 files' }),
+          gcEngine: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'cpu', label: ['git gc engine'], sub: 'sliding delta' }),
+          packfileDb: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['pack-*.pack'], sub: 'binary delta' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Garbage Collection Output', [
             `$ git gc --aggressive`,
             `Enumerating objects: 1250, done.`,
             `Counting objects: 100% (1250/1250), done.`,
@@ -229,11 +223,10 @@ export const gitDagObjectsLesson = {
             `Writing objects: 100% (1250/1250), done.`,
             `Total 1250 (delta 720), reused 0 (delta 0)`,
           ], { icon: 'terminal' }),
-          zDag: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'PACKFILE BINARY STORAGE'),
         },
         links: {
-          lg: h('loose', 'gcEngine', ['loose', 'gcEngine'], { label: 'pack loose objects' }),
-          gp: h('gcEngine', 'packfile', ['gcEngine', 'packfile'], { label: 'write .pack + .idx' }),
+          lg: h('looseFiles', 'gcEngine', ['looseFiles', 'gcEngine'], { label: 'pack loose' }),
+          gp: h('gcEngine', 'packfileDb', ['gcEngine', 'packfileDb'], { label: 'write .pack' }),
         },
         flows: [{ route: ['lg', 'gp'], kind: 'pack', rate: 1.6 }],
       },

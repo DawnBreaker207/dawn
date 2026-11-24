@@ -3,7 +3,6 @@
 import {
   makeBlock as d,
   makeLink as h,
-  makeZone as x,
   makePanel as S,
   makeDevice as y,
   makeDb as b,
@@ -41,20 +40,19 @@ export const gitCommandsTaxonomyLesson = {
       metrics: { commandLayer: 'Porcelain UI', objectState: 'Abstracted', refState: 'Managed', pipelineSpeed: 'Standard' },
       scene: {
         entities: {
-          userCli: y(-10, -18, { label: 'developer', tags: [{ text: 'git add / commit', tone: 'blue', icon: 'terminal' }] }),
-          porcelainLayer: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'boxes', label: ['Porcelain CLI'], sub: 'High-level user interface' }),
-          plumbingEngine: b(10, 8, { s: 4.6, h: 48, color: 'yellow', glyph: 'cpu', label: ['Plumbing Engine'], sub: 'Primitive operations' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Command Taxonomy Breakdown', [
+          userCli: y(-7, 7, { label: 'Developer', tags: [{ text: 'git commit', tone: 'blue', icon: 'terminal' }] }),
+          porcelainLayer: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'boxes', label: ['Porcelain CLI'], sub: 'UI wrapper' }),
+          plumbingEngine: b(7, -7, { s: 4.8, h: 50, color: 'yellow', glyph: 'cpu', label: ['Plumbing Engine'], sub: 'C primitives' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Command Taxonomy Breakdown', [
             `PORCELAIN: git add, commit, checkout, branch`,
             `PLUMBING:   git hash-object, cat-file, write-tree`,
             `            git commit-tree, update-ref, rev-parse`,
             `= Porcelain automates multi-step plumbing chains`,
           ], { icon: 'terminal' }),
-          zTaxonomy: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'PORCELAIN VS PLUMBING ARCHITECTURE'),
         },
         links: {
-          up: h('userCli', 'porcelainLayer', ['userCli', 'porcelainLayer'], { label: 'invoke command' }),
-          pp: h('porcelainLayer', 'plumbingEngine', ['porcelainLayer', 'plumbingEngine'], { label: 'calls primitives' }),
+          up: h('userCli', 'porcelainLayer', ['userCli', 'porcelainLayer'], { label: 'invoke cli' }),
+          pp: h('porcelainLayer', 'plumbingEngine', ['porcelainLayer', 'plumbingEngine'], { label: 'call engine' }),
         },
         flows: [{ route: ['up', 'pp'], kind: 'cli', rate: 1.5 }],
       },
@@ -75,23 +73,22 @@ export const gitCommandsTaxonomyLesson = {
       metrics: { commandLayer: 'Plumbing (hash-object)', objectState: 'Blob Written', refState: 'Unchanged', pipelineSpeed: 'Sub-millisecond' },
       scene: {
         entities: {
-          fileInput: y(-10, -18, { label: 'stdin', tags: [{ text: 'echo "hello"', icon: 'terminal' }] }),
-          hashObject: d(0, -6, { s: 4.8, h: 50, color: 'yellow', glyph: 'cpu', label: ['git hash-object'], sub: '-w --stdin' }),
-          objectStore: b(10, 8, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'b75618... (zlib)' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Raw Blob Creation', [
+          stdinStream: y(-7, 7, { label: 'Standard In', tags: [{ text: 'echo "hello"', icon: 'terminal' }] }),
+          hashObjectCmd: d(0, 0, { s: 5.2, h: 56, color: 'yellow', glyph: 'cpu', label: ['git hash-object'], sub: '-w --stdin' }),
+          objectStore: b(7, -7, { s: 4.8, h: 50, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: '3b18e5 blob' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Raw Blob Creation', [
             `$ echo "hello world" | git hash-object -w --stdin`,
             `3b18e512dba79e4c8300dd08aeb37f8e728b8dad`,
             `File created: .git/objects/3b/18e512...`,
             `Header: blob 12\\0hello world\\n`,
             `= Content stored immutably without filename`,
           ], { icon: 'terminal' }),
-          zHash: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'HASH-OBJECT STORAGE PIPELINE'),
         },
         links: {
-          fh: h('fileInput', 'hashObject', ['fileInput', 'hashObject'], { label: 'pipe bytes' }),
-          ho: h('hashObject', 'objectStore', ['hashObject', 'objectStore'], { label: 'write zlib blob' }),
+          sh: h('stdinStream', 'hashObjectCmd', ['stdinStream', 'hashObjectCmd'], { label: 'pipe bytes' }),
+          ho: h('hashObjectCmd', 'objectStore', ['hashObjectCmd', 'objectStore'], { label: 'write zlib' }),
         },
-        flows: [{ route: ['fh', 'ho'], kind: 'raw', rate: 1.8 }],
+        flows: [{ route: ['sh', 'ho'], kind: 'raw', rate: 1.8 }],
       },
     },
     {
@@ -109,10 +106,10 @@ export const gitCommandsTaxonomyLesson = {
       metrics: { commandLayer: 'Plumbing (cat-file)', objectState: 'Inspected', refState: 'Unchanged', pipelineSpeed: 'Instant' },
       scene: {
         entities: {
-          cliReader: y(-10, -18, { label: 'terminal', tags: [{ text: 'git cat-file -p 3b18e5', icon: 'terminal' }] }),
-          catFileEngine: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'boxes', label: ['git cat-file'], sub: 'Decompresses zlib object' }),
-          rawByteStore: b(10, 8, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: '3b/18e512...' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'cat-file Inspection', [
+          terminalReader: y(-7, 7, { label: 'Stdout Read', tags: [{ text: 'cat-file -p', icon: 'terminal' }] }),
+          catFileEngine: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'boxes', label: ['git cat-file'], sub: 'zlib inflate' }),
+          objectStore: b(7, -7, { s: 4.8, h: 50, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: '3b18e5 blob' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'cat-file Inspection', [
             `$ git cat-file -t 3b18e5`,
             `blob`,
             `$ git cat-file -s 3b18e5`,
@@ -120,13 +117,12 @@ export const gitCommandsTaxonomyLesson = {
             `$ git cat-file -p 3b18e5`,
             `hello world`,
           ], { icon: 'terminal' }),
-          zCat: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'CAT-FILE OBJECT DECOMPRESSION'),
         },
         links: {
-          cr: h('cliReader', 'catFileEngine', ['cliReader', 'catFileEngine'], { label: 'read request' }),
-          co: h('catFileEngine', 'rawByteStore', ['catFileEngine', 'rawByteStore'], { label: 'fetch & inflate' }),
+          co: h('catFileEngine', 'objectStore', ['catFileEngine', 'objectStore'], { label: 'read bytes' }),
+          ct: h('catFileEngine', 'terminalReader', ['catFileEngine', 'terminalReader'], { label: 'print text' }),
         },
-        flows: [{ route: ['cr', 'co'], kind: 'raw', rate: 1.6 }],
+        flows: [{ route: ['co', 'ct'], kind: 'raw', rate: 1.6 }],
       },
     },
     {
@@ -145,10 +141,10 @@ export const gitCommandsTaxonomyLesson = {
       metrics: { commandLayer: 'Plumbing (write-tree)', objectState: 'Tree Serialized', refState: 'Pending Commit', pipelineSpeed: 'Fast' },
       scene: {
         entities: {
-          stagingIndex: y(-10, -18, { label: 'index-binary', tags: [{ text: '.git/index cache', tone: 'blue', icon: 'boxes' }] }),
-          writeTreeCmd: d(0, -6, { s: 4.8, h: 50, color: 'yellow', glyph: 'cpu', label: ['git write-tree'], sub: 'Serializes directory tree' }),
-          treeObject: b(10, 8, { s: 4.6, h: 48, color: 'green', glyph: 'package', label: ['Tree d8329f'], sub: '100644 blob 3b18e5 app.ts' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Tree Object Structure', [
+          stagingIndex: b(-7, -7, { s: 4.8, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/index'], sub: 'staged cache' }),
+          writeTreeCmd: d(0, 0, { s: 5.2, h: 56, color: 'yellow', glyph: 'cpu', label: ['git write-tree'], sub: 'tree compiler' }),
+          treeObject: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Tree d8329f'], sub: 'dir snapshot' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Tree Object Structure', [
             `$ git write-tree`,
             `d8329fc1cc938780ffdd9f94e0d364e0ea74f579`,
             `$ git cat-file -p d8329f`,
@@ -156,11 +152,10 @@ export const gitCommandsTaxonomyLesson = {
             `100755 blob 4a9f8e4b8a...    build.sh`,
             `040000 tree 8a3f91b2c4...    src`,
           ], { icon: 'terminal' }),
-          zTree: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'WRITE-TREE DIRECTORY COMPILATION'),
         },
         links: {
-          sw: h('stagingIndex', 'writeTreeCmd', ['stagingIndex', 'writeTreeCmd'], { label: 'read staged paths' }),
-          wt: h('writeTreeCmd', 'treeObject', ['writeTreeCmd', 'treeObject'], { label: 'write tree object' }),
+          sw: h('stagingIndex', 'writeTreeCmd', ['stagingIndex', 'writeTreeCmd'], { label: 'read index' }),
+          wt: h('writeTreeCmd', 'treeObject', ['writeTreeCmd', 'treeObject'], { label: 'write tree' }),
         },
         flows: [{ route: ['sw', 'wt'], kind: 'raw', rate: 1.5 }],
       },
@@ -181,10 +176,10 @@ export const gitCommandsTaxonomyLesson = {
       metrics: { commandLayer: 'Plumbing (commit-tree)', objectState: 'Commit Sealed', refState: 'Ref not updated yet', pipelineSpeed: 'Instant' },
       scene: {
         entities: {
-          treeHash: y(-10, -18, { label: 'tree-sha', tags: [{ text: 'Tree: d8329f', icon: 'package' }] }),
-          commitTreeCmd: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['git commit-tree'], sub: 'Stamps author & parents' }),
-          commitObj: b(10, 8, { s: 4.6, h: 48, color: 'green', glyph: 'gitBranch', label: ['Commit 7f8a9b'], sub: 'Immutable snapshot' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'commit-tree Execution', [
+          treeHash: b(-7, -7, { s: 4.8, h: 50, color: 'blue', glyph: 'package', label: ['Tree d8329f'], sub: 'root snapshot' }),
+          commitTreeCmd: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'cpu', label: ['git commit-tree'], sub: 'author & parent' }),
+          commitObj: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Commit 7f8a9b'], sub: 'new snapshot' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'commit-tree Execution', [
             `$ echo "feat: add core" | git commit-tree d8329f -p a1b2c3`,
             `7f8a9b2c4e1a0d8e9f8a7b6c5d4e3f2a1b0c9d8e`,
             `$ git cat-file -p 7f8a9b`,
@@ -193,11 +188,10 @@ export const gitCommandsTaxonomyLesson = {
             `author Dev <dev@org.com> 1700000000 +0000`,
             `feat: add core`,
           ], { icon: 'terminal' }),
-          zCommit: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'COMMIT-TREE SNAPSHOT CREATION'),
         },
         links: {
-          tc: h('treeHash', 'commitTreeCmd', ['treeHash', 'commitTreeCmd'], { label: 'tree SHA + metadata' }),
-          co: h('commitTreeCmd', 'commitObj', ['commitTreeCmd', 'commitObj'], { label: 'write commit object' }),
+          tc: h('treeHash', 'commitTreeCmd', ['treeHash', 'commitTreeCmd'], { label: 'bind tree' }),
+          co: h('commitTreeCmd', 'commitObj', ['commitTreeCmd', 'commitObj'], { label: 'write commit' }),
         },
         flows: [{ route: ['tc', 'co'], kind: 'raw', rate: 1.6 }],
       },
@@ -218,10 +212,10 @@ export const gitCommandsTaxonomyLesson = {
       metrics: { commandLayer: 'Plumbing (update-ref)', objectState: 'Complete Snapshot', refState: 'main -> 7f8a9b', pipelineSpeed: 'Atomic' },
       scene: {
         entities: {
-          newCommitSha: y(-10, -18, { label: 'new-commit', tags: [{ text: 'SHA: 7f8a9b', icon: 'gitBranch' }] }),
-          updateRefCmd: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['git update-ref'], sub: 'Atomic lockfile writer' }),
-          branchRefFile: b(10, 8, { s: 4.6, h: 48, color: 'green', glyph: 'terminal', label: ['refs/heads/main'], sub: 'Contains 7f8a9b\\n' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Atomic Ref Update', [
+          commitSha: d(-7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Commit 7f8a9b'], sub: 'new SHA-1' }),
+          updateRefCmd: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'shield', label: ['git update-ref'], sub: 'atomic lockfile' }),
+          branchRefFile: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['refs/heads/main'], sub: 'ref pointer' }),
+          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Atomic Ref Update', [
             `$ git update-ref refs/heads/main 7f8a9b a1b2c3`,
             `1. Acquire lock: .git/refs/heads/main.lock`,
             `2. Verify old value equals a1b2c3 (prevent race)`,
@@ -229,13 +223,12 @@ export const gitCommandsTaxonomyLesson = {
             `4. Atomic rename(lockfile, target)`,
             `= Branch updated cleanly with zero corruption`,
           ], { icon: 'terminal' }),
-          zRef: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ATOMIC REFERENCE MANAGEMENT'),
         },
         links: {
-          nu: h('newCommitSha', 'updateRefCmd', ['newCommitSha', 'updateRefCmd'], { label: 'pass new SHA' }),
+          cu: h('commitSha', 'updateRefCmd', ['commitSha', 'updateRefCmd'], { label: 'feed sha' }),
           ub: h('updateRefCmd', 'branchRefFile', ['updateRefCmd', 'branchRefFile'], { label: 'atomic write' }),
         },
-        flows: [{ route: ['nu', 'ub'], kind: 'raw', rate: 1.8 }],
+        flows: [{ route: ['cu', 'ub'], kind: 'raw', rate: 1.8 }],
       },
     },
   ],
