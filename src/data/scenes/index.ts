@@ -127,6 +127,46 @@ import { rabbitmqReliabilityDlxLesson } from './communication/rabbitmq-reliabili
 // Flagship System Design
 import { aiAgentArchitectureLesson } from './design/ai-agent-architecture';
 
+// Git Simulation Tracks (Track 10)
+import { gitEnvironmentsLifecycleLesson } from './git/git-environments-lifecycle';
+import { gitCommandsTaxonomyLesson } from './git/git-commands-taxonomy';
+import { gitBranchingWorkflowsLesson } from './git/git-branching-workflows';
+import { gitDagObjectsLesson } from './git/git-dag-objects';
+import { gitRefsSymbolicLesson } from './git/git-refs-symbolic';
+import { gitDetachedHeadReflogLesson } from './git/git-detached-head-reflog';
+import { gitWorktreesConcurrencyLesson } from './git/git-worktrees-concurrency';
+import { gitThreeWayDiff3Lesson } from './git/git-three-way-diff3';
+import { gitRerereEngineLesson } from './git/git-rerere-engine';
+import { gitRebaseOntoSurgeryLesson } from './git/git-rebase-onto-surgery';
+import { gitCrlfLineEndingsLesson } from './git/git-crlf-line-endings';
+import { gitIndexLockStashLesson } from './git/git-index-lock-stash';
+import { gitBisectAutomationLesson } from './git/git-bisect-automation';
+import { gitSubmoduleSubtreeLesson } from './git/git-submodule-subtree';
+
+// Angular Simulation Tracks (Track 11)
+import { angularArchitectureOverviewLesson } from './angular/angular-architecture-overview';
+import { angularModulesStandaloneLesson } from './angular/angular-modules-standalone';
+import { angularComponentLifecycleLesson } from './angular/angular-component-lifecycle';
+import { angularServicesDiLesson } from './angular/angular-services-di';
+import { angularHttpInterceptorsLesson } from './angular/angular-http-interceptors';
+import { angularRouterPipelineLesson } from './angular/angular-router-pipeline';
+import { angularPipesMemoizationLesson } from './angular/angular-pipes-memoization';
+import { angularIvyIncrementalDomLesson } from './angular/angular-ivy-incremental-dom';
+import { angularZonejsDirtyCheckingLesson } from './angular/angular-zonejs-dirty-checking';
+import { angularChangeDetectionOnpushLesson } from './angular/angular-change-detection-onpush';
+import { angularSignalsDagLesson } from './angular/angular-signals-dag';
+import { angularZonelessArchitectureLesson } from './angular/angular-zoneless-architecture';
+import { angularControlFlowLesson } from './angular/angular-control-flow';
+import { angularDeferLoadingLesson } from './angular/angular-defer-loading';
+import { angularHydrationReplayLesson } from './angular/angular-hydration-replay';
+
+// DevOps Simulation Tracks (Track 12)
+import { devopsCultureSilosLesson } from './devops/devops-culture-silos';
+import { cicdToolsEvolutionLesson } from './devops/cicd-tools-evolution';
+import { cicdPipelineInternalsLesson } from './devops/cicd-pipeline-internals';
+import { gitopsArgocdLesson } from './devops/gitops-argocd';
+import { devopsDoraMetricsLesson } from './devops/devops-dora-metrics';
+
 export {
   requestLifecycleLesson,
   latencyThroughputLesson,
@@ -235,6 +275,43 @@ export {
   rabbitmqAmqpModelLesson,
   rabbitmqExchangesRoutingLesson,
   rabbitmqReliabilityDlxLesson,
+  // Git Simulation Tracks
+  gitEnvironmentsLifecycleLesson,
+  gitCommandsTaxonomyLesson,
+  gitBranchingWorkflowsLesson,
+  gitDagObjectsLesson,
+  gitRefsSymbolicLesson,
+  gitDetachedHeadReflogLesson,
+  gitWorktreesConcurrencyLesson,
+  gitThreeWayDiff3Lesson,
+  gitRerereEngineLesson,
+  gitRebaseOntoSurgeryLesson,
+  gitCrlfLineEndingsLesson,
+  gitIndexLockStashLesson,
+  gitBisectAutomationLesson,
+  gitSubmoduleSubtreeLesson,
+  // Angular Simulation Tracks
+  angularArchitectureOverviewLesson,
+  angularModulesStandaloneLesson,
+  angularComponentLifecycleLesson,
+  angularServicesDiLesson,
+  angularHttpInterceptorsLesson,
+  angularRouterPipelineLesson,
+  angularPipesMemoizationLesson,
+  angularIvyIncrementalDomLesson,
+  angularZonejsDirtyCheckingLesson,
+  angularChangeDetectionOnpushLesson,
+  angularSignalsDagLesson,
+  angularZonelessArchitectureLesson,
+  angularControlFlowLesson,
+  angularDeferLoadingLesson,
+  angularHydrationReplayLesson,
+  // DevOps Simulation Tracks
+  devopsCultureSilosLesson,
+  cicdToolsEvolutionLesson,
+  cicdPipelineInternalsLesson,
+  gitopsArgocdLesson,
+  devopsDoraMetricsLesson,
 };
 
 export const ALL_SCENES: Record<string, any> = {
@@ -349,6 +426,46 @@ export const ALL_SCENES: Record<string, any> = {
   'rabbitmq-amqp-model': rabbitmqAmqpModelLesson,
   'rabbitmq-exchanges-routing': rabbitmqExchangesRoutingLesson,
   'rabbitmq-reliability-dlx': rabbitmqReliabilityDlxLesson,
+  // Git Simulation Tracks (Track 10)
+  'git-environments-lifecycle': gitEnvironmentsLifecycleLesson,
+  'git-commands-taxonomy': gitCommandsTaxonomyLesson,
+  'git-branching-workflows': gitBranchingWorkflowsLesson,
+  'git-dag-objects': gitDagObjectsLesson,
+  'git-refs-symbolic': gitRefsSymbolicLesson,
+  'git-detached-head-reflog': gitDetachedHeadReflogLesson,
+  'git-worktrees-concurrency': gitWorktreesConcurrencyLesson,
+  'git-three-way-diff3': gitThreeWayDiff3Lesson,
+  'git-rerere-engine': gitRerereEngineLesson,
+  'git-rebase-onto-surgery': gitRebaseOntoSurgeryLesson,
+  'git-crlf-line-endings': gitCrlfLineEndingsLesson,
+  'git-index-lock-stash': gitIndexLockStashLesson,
+  'git-bisect-automation': gitBisectAutomationLesson,
+  'git-submodule-subtree': gitSubmoduleSubtreeLesson,
+  'git': gitEnvironmentsLifecycleLesson,
+  // Angular Simulation Tracks (Track 11)
+  'angular-architecture-overview': angularArchitectureOverviewLesson,
+  'angular-modules-standalone': angularModulesStandaloneLesson,
+  'angular-component-lifecycle': angularComponentLifecycleLesson,
+  'angular-services-di': angularServicesDiLesson,
+  'angular-http-interceptors': angularHttpInterceptorsLesson,
+  'angular-router-pipeline': angularRouterPipelineLesson,
+  'angular-pipes-memoization': angularPipesMemoizationLesson,
+  'angular-ivy-incremental-dom': angularIvyIncrementalDomLesson,
+  'angular-zonejs-dirty-checking': angularZonejsDirtyCheckingLesson,
+  'angular-change-detection-onpush': angularChangeDetectionOnpushLesson,
+  'angular-signals-dag': angularSignalsDagLesson,
+  'angular-zoneless-architecture': angularZonelessArchitectureLesson,
+  'angular-control-flow': angularControlFlowLesson,
+  'angular-defer-loading': angularDeferLoadingLesson,
+  'angular-hydration-replay': angularHydrationReplayLesson,
+  'angular': angularArchitectureOverviewLesson,
+  // DevOps Simulation Tracks (Track 12)
+  'devops-culture-silos': devopsCultureSilosLesson,
+  'cicd-tools-evolution': cicdToolsEvolutionLesson,
+  'cicd-pipeline-internals': cicdPipelineInternalsLesson,
+  'gitops-argocd': gitopsArgocdLesson,
+  'devops-dora-metrics': devopsDoraMetricsLesson,
+  'devops': devopsCultureSilosLesson,
 };
 
 export const ALL_DTS_LESSONS = ALL_SCENES;

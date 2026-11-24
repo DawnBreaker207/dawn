@@ -55,6 +55,23 @@ const TRACK_SLUG_MAP: Record<string, string[]> = {
   '/lab/aws-cloud': [
     'aws-cloud', 'aws-vpc', 'aws-ha', 'aws-storage-db', 'files', 'aws-serverless',
   ],
+  '/lab/git': [
+    'git', 'git-environments-lifecycle', 'git-commands-taxonomy', 'git-branching-workflows',
+    'git-dag-objects', 'git-refs-symbolic', 'git-detached-head-reflog', 'git-worktrees-concurrency',
+    'git-three-way-diff3', 'git-rerere-engine', 'git-rebase-onto-surgery', 'git-crlf-line-endings',
+    'git-index-lock-stash', 'git-bisect-automation', 'git-submodule-subtree',
+  ],
+  '/lab/angular': [
+    'angular', 'angular-architecture-overview', 'angular-modules-standalone', 'angular-component-lifecycle',
+    'angular-services-di', 'angular-http-interceptors', 'angular-router-pipeline', 'angular-pipes-memoization',
+    'angular-ivy-incremental-dom', 'angular-zonejs-dirty-checking', 'angular-change-detection-onpush',
+    'angular-signals-dag', 'angular-zoneless-architecture', 'angular-control-flow', 'angular-defer-loading',
+    'angular-hydration-replay',
+  ],
+  '/lab/devops': [
+    'devops', 'devops-culture-silos', 'cicd-tools-evolution', 'cicd-pipeline-internals',
+    'gitops-argocd', 'devops-dora-metrics',
+  ],
 };
 
 const labSlug = activePath.startsWith('/lab/') ? activePath.replace('/lab/', '') : '';
@@ -69,6 +86,9 @@ const CURRICULUM_TRACK_ITEMS = [
   { href: '/lab/java', label: 'java.sim', iconType: 'java', title: '6. Java Runtime & Concurrency Engine (27 labs)' },
   { href: '/lab/system-design', label: 'system-design.sim', iconType: 'system', title: '7. System Design & AI Agents (10 labs)' },
   { href: '/lab/aws-cloud', label: 'aws-cloud.sim', iconType: 'cloud', title: '8. AWS Cloud Architecture SAA-C03 (6 labs)' },
+  { href: '/lab/git', label: 'git.sim', iconType: 'git', title: '10. Git Deep Internals & Practical Case Resolver (14 labs)' },
+  { href: '/lab/angular', label: 'angular.sim', iconType: 'angular', title: '11. Angular Core Architecture & Modern Mechanics (15 labs)' },
+  { href: '/lab/devops', label: 'devops.sim', iconType: 'devops', title: '12. DevOps Engineering & Progressive Delivery (5 labs)' },
 ].map((item) => ({
   ...item,
   isActive: activePath === item.href || (!isSpecializedRoute && !!TRACK_SLUG_MAP[item.href]?.includes(labSlug)),

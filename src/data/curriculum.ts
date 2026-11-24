@@ -77,6 +77,27 @@ export const DTS_TRACKS: Track[] = [
     emoji: '🛡️',
     moduleIds: ['security', 'shipping'],
   },
+  {
+    id: 'git',
+    title: '10. Git Deep Internals & Practical Case Resolver',
+    subtitle: '4 Git Zones, DAG Objects, branching models, worktrees, 3-way diff3 & agent surgery cases',
+    emoji: '🐙',
+    moduleIds: ['git-core', 'git-cases'],
+  },
+  {
+    id: 'angular',
+    title: '11. Angular Core Architecture & Modern Mechanics',
+    subtitle: 'Component Lifecycle, Standalone, DI, Interceptors, Router, Ivy, Signals DAG & Hydration',
+    emoji: '🅰️',
+    moduleIds: ['angular-core', 'angular-reactivity', 'angular-modern'],
+  },
+  {
+    id: 'devops',
+    title: '12. DevOps Engineering & Progressive Delivery',
+    subtitle: 'DevOps culture, Tool evolution, CI quality gates, CD canary releases, GitOps & DORA metrics',
+    emoji: '🚀',
+    moduleIds: ['devops-core', 'devops-delivery'],
+  },
 ];
 
 
@@ -336,6 +357,103 @@ export const DTS_MODULES: Module[] = [
       { id: 'cicd', title: 'CI/CD & Deployments' },
     ],
   },
+  {
+    id: 'git-core',
+    num: '10A',
+    title: 'Git Core Architecture & 4 Zones',
+    trackId: 'git',
+    color: 'orange',
+    lessons: [
+      { id: 'git-environments-lifecycle', title: '4 Git Zones: Working Dir to Remote Push', section: 'Architecture & Command Taxonomy' },
+      { id: 'git-commands-taxonomy', title: 'Git Command Taxonomy & State Transitions', section: 'Architecture & Command Taxonomy' },
+      { id: 'git-branching-workflows', title: 'Git Branching Models: Git Flow, GitHub Flow & Trunk-Based', section: 'Branching & Data Structures' },
+      { id: 'git-dag-objects', title: '4 Immutable Objects: Blob, Tree, Commit & Tag', section: 'Branching & Data Structures' },
+      { id: 'git-refs-symbolic', title: 'Refs, HEAD Symbolic Pointer & Packed-Refs', section: 'Branching & Data Structures' },
+    ],
+  },
+  {
+    id: 'git-cases',
+    num: '10B',
+    title: 'Git Real-World Gnarly Cases & Agent Scenarios',
+    trackId: 'git',
+    color: 'rose',
+    lessons: [
+      { id: 'git-detached-head-reflog', title: 'Case 1: Detached HEAD & Reflog Rescue', section: 'Real-World Tree Surgery' },
+      { id: 'git-worktrees-concurrency', title: 'Case 2: Multi-Agent Parallelism with Git Worktrees', section: 'Real-World Tree Surgery' },
+      { id: 'git-three-way-diff3', title: 'Case 3: 3-Way Merge Conflicts & Diff3 Topology', section: 'Real-World Tree Surgery' },
+      { id: 'git-rerere-engine', title: 'Case 4: git rerere in Long-Running Rebase Hell', section: 'Real-World Tree Surgery' },
+      { id: 'git-rebase-onto-surgery', title: 'Case 5: Rebase --onto History Splicing', section: 'Edge Case Troubleshooting' },
+      { id: 'git-crlf-line-endings', title: 'Case 6: CRLF vs LF Normalization Disaster', section: 'Edge Case Troubleshooting' },
+      { id: 'git-index-lock-stash', title: 'Case 7: Ghost index.lock & Aborted Stash Pop', section: 'Edge Case Troubleshooting' },
+      { id: 'git-bisect-automation', title: 'Case 8: Automated Regression Hunting with git bisect run', section: 'Edge Case Troubleshooting' },
+      { id: 'git-submodule-subtree', title: 'Case 9: Git Submodule vs Git Subtree in Monorepos', section: 'Edge Case Troubleshooting' },
+    ],
+  },
+  {
+    id: 'angular-core',
+    num: '11A',
+    title: 'Angular Core Building Blocks',
+    trackId: 'angular',
+    color: 'red',
+    lessons: [
+      { id: 'angular-architecture-overview', title: 'Architecture Overview: Bootstrap to Component Tree', section: 'Core Building Blocks' },
+      { id: 'angular-modules-standalone', title: 'NgModules vs Standalone Architecture & Tree-Shaking', section: 'Core Building Blocks' },
+      { id: 'angular-component-lifecycle', title: 'Component & Directive Lifecycle Pipeline', section: 'Core Building Blocks' },
+      { id: 'angular-services-di', title: 'Services, Hierarchical DI & Functional inject()', section: 'Core Building Blocks' },
+      { id: 'angular-http-interceptors', title: 'HTTP Interceptors Pipeline & Request Cloning', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-router-pipeline', title: 'Router Navigation Lifecycle, Guards & Resolvers', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-pipes-memoization', title: 'Pipes Engine: Pure vs Impure & AsyncPipe Mechanics', section: 'HTTP & Routing Infrastructure' },
+    ],
+  },
+  {
+    id: 'angular-reactivity',
+    num: '11B',
+    title: 'Angular Reactivity, Ivy & Performance Engine',
+    trackId: 'angular',
+    color: 'pink',
+    lessons: [
+      { id: 'angular-ivy-incremental-dom', title: 'Ivy Incremental DOM vs React Virtual DOM', section: 'Compilation & Change Detection' },
+      { id: 'angular-zonejs-dirty-checking', title: 'Zone.js Era: Monkey-Patching & Top-Down Checking', section: 'Compilation & Change Detection' },
+      { id: 'angular-change-detection-onpush', title: 'ChangeDetectionStrategy.OnPush & Subtree Pruning', section: 'Compilation & Change Detection' },
+      { id: 'angular-signals-dag', title: 'Signals Reactivity & Glitch-Free Push-Pull DAG', section: 'Fine-Grained Reactivity' },
+      { id: 'angular-zoneless-architecture', title: 'Zoneless Angular (provideExperimentalZonelessChangeDetection)', section: 'Fine-Grained Reactivity' },
+    ],
+  },
+  {
+    id: 'angular-modern',
+    num: '11C',
+    title: 'Angular Modern Template Ergonomics & Hydration',
+    trackId: 'angular',
+    color: 'amber',
+    lessons: [
+      { id: 'angular-control-flow', title: 'Built-in Control Flow Engine (@if, @for track, @switch)', section: 'Modern Templates & SSR' },
+      { id: 'angular-defer-loading', title: 'Deferred Views Architecture (@defer) & Prefetching', section: 'Modern Templates & SSR' },
+      { id: 'angular-hydration-replay', title: 'Non-Destructive Hydration & Event Replay in SSR', section: 'Modern Templates & SSR' },
+    ],
+  },
+  {
+    id: 'devops-core',
+    num: '12A',
+    title: 'DevOps Philosophy & Continuous Integration',
+    trackId: 'devops',
+    color: 'blue',
+    lessons: [
+      { id: 'devops-culture-silos', title: 'From Dev-Ops Silos to CAMS & Shared Ownership', section: 'Culture & Pipeline Foundations' },
+      { id: 'cicd-tools-evolution', title: 'CI/CD Tool Evolution: CruiseControl to Jenkins to ArgoCD', section: 'Culture & Pipeline Foundations' },
+      { id: 'cicd-pipeline-internals', title: 'Inside Pipeline Runners: Webhooks, MicroVMs & Cache', section: 'Quality Gates & Automation' },
+    ],
+  },
+  {
+    id: 'devops-delivery',
+    num: '12B',
+    title: 'Continuous Delivery, GitOps & SRE',
+    trackId: 'devops',
+    color: 'indigo',
+    lessons: [
+      { id: 'gitops-argocd', title: 'GitOps Engine & Reconciliation Loop (ArgoCD / Flux)', section: 'Progressive Delivery & SRE' },
+      { id: 'devops-dora-metrics', title: '4 DORA Metrics & SRE Error Budget Governance', section: 'Progressive Delivery & SRE' },
+    ],
+  },
 ];
 
 export const CURRICULUM_TRACKS = DTS_TRACKS;
@@ -351,6 +469,9 @@ export function getLessonHref(id: string): string {
   if (id === 'k8s' || id === 'docker-internals') return '/lab/k8s';
   if (id === 'hld-lld' || id === 'system-design') return '/lab/system-design';
   if (id === 'aws-cloud') return '/lab/aws-cloud';
+  if (id === 'git' || id === 'git-environments-lifecycle') return '/lab/git';
+  if (id === 'angular' || id === 'angular-architecture-overview') return '/lab/angular';
+  if (id === 'devops' || id === 'devops-culture-silos') return '/lab/devops';
   return `/lab/${id}`;
 }
 
