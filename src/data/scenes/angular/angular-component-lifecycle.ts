@@ -24,6 +24,7 @@ export const angularComponentLifecycleLesson = {
     { text: 'View & DOM readiness: ngAfterViewInit and ViewChild resolution', step: 4 },
     { text: 'Template render cycles: ngAfterViewChecked and ExpressionChangedAfterItHasBeenCheckedError', step: 5 },
     { text: 'Teardown & cleanup: ngOnDestroy and DestroyRef takeUntilDestroyed', step: 6 },
+    { text: 'Directive Composition (hostDirectives) & Multi-Slot <ng-content>', step: 7 },
   ],
   steps: [
     {
@@ -238,6 +239,40 @@ export const angularComponentLifecycleLesson = {
           df: h('destroyRef', 'freedMemory', ['destroyRef', 'freedMemory'], { label: 'release streams' }),
         },
         flows: [{ route: ['vd', 'df'], kind: 'destroy', rate: 1.6 }],
+      },
+    },
+    {
+      short: 'Directives & Slots',
+      chapter: 'scaling',
+      title: 'Directive Composition (hostDirectives) & Multi-Slot Content',
+      body: [
+        'Modern Angular composes reusable behaviors cleanly without inheritance via <b><code>hostDirectives</code></b> (e.g. attaching <code>TooltipDirective</code> & <code>RippleDirective</code> directly in <code>@Component</code> metadata).',
+        'Pair with multi-slot <b><code>&lt;ng-content select="[slot=header]"&gt;</code></b> and <code>ngTemplateOutlet</code> for flexible, headless UI components.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'hostDirectives enables true composition over inheritance—exposing directive inputs/outputs cleanly on the host component.',
+      },
+      changes: ['+ hostDirectives composes reusable directives onto host element', '+ Multi-slot <ng-content select> projects targeted DOM slots'],
+      metrics: { activeHook: 'hostDirectives', domReady: 'Projected', inputsBound: 'Exposed', subscriptionsCleaned: 'Auto-Managed' },
+      scene: {
+        entities: {
+          freedMemory: d(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['hostDirectives'], sub: 'composition' }),
+          ctorInst: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['<ng-content>'], sub: 'multi-slot' }),
+          viewHook: b(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Composed Host'], sub: 'headless UI' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'hostDirectives & Multi-Slot Projection', [
+            `@Component({`,
+            `  selector: 'app-card',`,
+            `  hostDirectives: [{ directive: FocusRingDirective, inputs: ['color'] }],`,
+            `  template: \`<ng-content select="[header]" /><ng-content />\``,
+            `})`,
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          fc: h('freedMemory', 'ctorInst', ['freedMemory', 'ctorInst'], { label: 'compose host' }),
+          cv: h('ctorInst', 'viewHook', ['ctorInst', 'viewHook'], { label: 'project slots' }),
+        },
+        flows: [{ route: ['fc', 'cv'], kind: 'view', rate: 1.5 }],
       },
     },
   ],

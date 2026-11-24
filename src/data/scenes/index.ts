@@ -149,6 +149,7 @@ import { angularArchitectureOverviewLesson } from './angular/angular-architectur
 import { angularComponentLifecycleLesson } from './angular/angular-component-lifecycle';
 import { angularServicesDiLesson } from './angular/angular-services-di';
 import { angularHttpInterceptorsLesson } from './angular/angular-http-interceptors';
+import { angularReactiveFormsLesson } from './angular/angular-reactive-forms';
 import { angularRouterPipelineLesson } from './angular/angular-router-pipeline';
 import { angularIvyIncrementalDomLesson } from './angular/angular-ivy-incremental-dom';
 import { angularZonejsDirtyCheckingLesson } from './angular/angular-zonejs-dirty-checking';
@@ -294,6 +295,7 @@ export {
   angularComponentLifecycleLesson,
   angularServicesDiLesson,
   angularHttpInterceptorsLesson,
+  angularReactiveFormsLesson,
   angularRouterPipelineLesson,
   angularIvyIncrementalDomLesson,
   angularZonejsDirtyCheckingLesson,
@@ -444,6 +446,7 @@ export const ALL_SCENES: Record<string, any> = {
   'angular-component-lifecycle': angularComponentLifecycleLesson,
   'angular-services-di': angularServicesDiLesson,
   'angular-http-interceptors': angularHttpInterceptorsLesson,
+  'angular-reactive-forms': angularReactiveFormsLesson,
   'angular-router-pipeline': angularRouterPipelineLesson,
   'angular-ivy-incremental-dom': angularIvyIncrementalDomLesson,
   'angular-zonejs-dirty-checking': angularZonejsDirtyCheckingLesson,

@@ -402,6 +402,7 @@ export const DTS_MODULES: Module[] = [
       { id: 'angular-services-di', title: 'Services, Hierarchical DI & Functional inject()', section: 'HTTP & Routing Infrastructure' },
       { id: 'angular-router-pipeline', title: 'Router Navigation Lifecycle, Guards & Resolvers', section: 'HTTP & Routing Infrastructure' },
       { id: 'angular-http-interceptors', title: 'HTTP Interceptors Pipeline & Request Cloning', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-reactive-forms', title: 'Typed Reactive Forms, Validators & ControlValueAccessor', section: 'HTTP & Routing Infrastructure' },
     ],
   },
   {

@@ -24,6 +24,8 @@ export const angularSignalsDagLesson = {
     { text: 'Glitch-Free guarantee: solving the diamond dependency dilemma', step: 4 },
     { text: 'Reactive side effects: effect() execution and cleanup callbacks', step: 5 },
     { text: 'Signal-to-RxJS Interoperability: toSignal() and toObservable()', step: 6 },
+    { text: 'Signal Component APIs: input(), output(), model() & viewChild()', step: 7 },
+    { text: 'Modern derived & async state: linkedSignal() & resource()/rxResource()', step: 8 },
   ],
   steps: [
     {
@@ -258,6 +260,75 @@ export const angularSignalsDagLesson = {
         links: {
           pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'pipe stream' }),
           tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'expose signal' }),
+        },
+        flows: [{ route: ['pt', 'tc'], kind: 'pull', rate: 1.6 }],
+      },
+    },
+    {
+      short: 'Signal APIs',
+      chapter: 'scaling',
+      title: 'Signal Component APIs: input(), model(), output() & viewChild()',
+      body: [
+        'Modern Angular replaces decorator boilerplate (<code>@Input()</code>, <code>@Output()</code>, <code>@ViewChild()</code>) with reactive Signal functions:',
+        '• <b><code>input.required&lt;T&gt;()</code> / <code>output&lt;T&gt;()</code></b>: Type-safe signal inputs without <code>ngOnChanges</code>.<br>' +
+        '• <b><code>model&lt;T&gt;()</code></b>: Built-in two-way writable signal binding (<code>[(value)]="..."</code>).<br>' +
+        '• <b><code>viewChild()</code> / <code>contentChild()</code></b>: Reactive Signal DOM & component queries.',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Signal inputs and Signal queries plug directly into computed() and effect(), eliminating lifecycle timing bugs!',
+      },
+      changes: ['+ Decorator @Input/@ViewChild replaced by input()/model()/viewChild()', '+ Two-way binding simplified via model()'],
+      metrics: { graphState: 'Component Signals', producerVersion: 'v3', consumerState: 'Signal APIs', glitchFree: '100% Reactive' },
+      scene: {
+        entities: {
+          priceSignal: y(-16, 0, { label: 'Parent [(v)]', tags: [{ text: 'model() bind', tone: 'blue', icon: 'zap' }] }),
+          taxComp: d(0, 0, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['input / model'], sub: 'signal props' }),
+          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['viewChild()'], sub: 'reactive DOM' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Signal Component APIs', [
+            `user = input.required<User>();        // Replaces @Input()`,
+            `checked = model(false);               // Two-way [(checked)]`,
+            `saved = output<void>();               // Replaces @Output()`,
+            `canvas = viewChild<ElementRef>('cv'); // Signal query`,
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'two-way model()' }),
+          tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'query viewChild' }),
+        },
+        flows: [{ route: ['pt', 'tc'], kind: 'push', rate: 1.5 }],
+      },
+    },
+    {
+      short: 'linked & resource',
+      chapter: 'scaling',
+      title: 'linkedSignal() & Async resource() / rxResource()',
+      body: [
+        '• <b><code>linkedSignal(() =&gt; options()[0])</code></b>: Creates a writable signal that stays synchronized and automatically resets whenever its source signal changes (e.g. resetting selected page/option when category changes).',
+        '• <b><code>resource()</code> / <code>rxResource()</code></b>: Declarative async data fetching driven by signal parameters—tracking <code>value()</code>, <code>isLoading()</code>, and <code>error()</code> with automatic cancellation.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'linkedSignal + resource() complete the Signal ecosystem—handling both resettable UI state and declarative async loading.',
+      },
+      changes: ['+ linkedSignal() enables resettable writable derivations', '+ resource() / rxResource() manages async signal fetches'],
+      metrics: { graphState: 'Complete Signals', producerVersion: 'v3', consumerState: 'Async Resource', glitchFree: 'Auto-Cancel' },
+      scene: {
+        entities: {
+          priceSignal: y(-16, 0, { label: 'userId()', tags: [{ text: 'linkedSignal', tone: 'amber', icon: 'zap' }] }),
+          taxComp: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['rxResource()'], sub: 'auto-cancel' }),
+          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['data / loading'], sub: 'signal state' }),
+          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'linkedSignal & rxResource', [
+            `page = linkedSignal(() => { this.filter(); return 1; });`,
+            `users = rxResource({`,
+            `  request: () => ({ id: this.userId(), p: this.page() }),`,
+            `  loader: ({ request }) => this.api.getUsers(request)`,
+            `}); // Exposes users.value(), users.isLoading(), users.error()`,
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'param changed' }),
+          tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'emit value()' }),
         },
         flows: [{ route: ['pt', 'tc'], kind: 'pull', rate: 1.6 }],
       },
