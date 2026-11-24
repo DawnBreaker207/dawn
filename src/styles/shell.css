@@ -210,11 +210,13 @@ html, body {
   grid-template-columns: 16px 16px minmax(0, 1fr);
   align-items: center;
   gap: 7px;
-  margin-inline: -12px;
+  margin-inline: 0;
   padding: 6px 12px;
   font-family: var(--font-mono);
   font-size: 13px;
   overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
   color: var(--fg-dim);
 }
 .explorer-row:hover {
@@ -245,7 +247,19 @@ html, body {
 
 #sidebar {
   position: relative;
+  overflow-x: hidden !important;
   overflow-y: hidden;
+}
+
+#sidebar .thin-scrollbar {
+  overflow-x: hidden !important;
+  overflow-y: auto;
+}
+
+#sidebar::-webkit-scrollbar:horizontal,
+#sidebar *::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0 !important;
 }
 
 /* EXTENSIONS panel — anchored to sidebar floor as a natural flex footer (no overlapping overlay) */
@@ -256,7 +270,9 @@ html, body {
   flex-direction: column-reverse;
   background: var(--bg);
   border-top: 1px solid var(--border);
-  margin-inline: -0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 .sidebar-ext-toggle {
   display: flex;
@@ -298,6 +314,7 @@ html, body {
   list-style: none;
   max-height: 220px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 .sidebar-ext-list[hidden] {
   display: none;
@@ -338,6 +355,7 @@ html, body {
   cursor: pointer;
   user-select: none;
   border-radius: 4px;
+  padding: 4px 12px;
 }
 /* Safari/Chrome polyfill: hide details marker on section header */
 .sidebar-section-header::-webkit-details-marker {
