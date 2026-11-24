@@ -77,7 +77,7 @@ export const gitRerereEngineLesson = {
       scene: {
         entities: {
           configCmd: y(-7, 7, { label: 'git config', tags: [{ text: 'rerere.enabled true', tone: 'green', icon: 'terminal' }] }),
-          rerereDaemon: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['rerere Engine'], sub: 'monitoring merges' }),
+          rerereDaemon: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['rerere Engine'], sub: 'daemon active' }),
           rrCacheDir: b(7, -7, { s: 4.8, h: 50, color: 'purple', glyph: 'database', label: ['.git/rr-cache/'], sub: 'resolution db' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'rerere Global Config', [
             `$ git config --global rerere.enabled true`,
@@ -110,7 +110,7 @@ export const gitRerereEngineLesson = {
       metrics: { rerereStatus: 'Recording', conflictFingerprint: 'SHA: 68a2bc', autoResolutions: '0', rrCacheSize: '1 preimage' },
       scene: {
         entities: {
-          conflictFile: d(-7, 7, { s: 5.0, h: 54, color: 'amber', glyph: 'terminal', label: ['auth.ts Clash'], sub: 'unresolved hunk' }),
+          conflictFile: d(-7, 7, { s: 5.0, h: 54, color: 'amber', glyph: 'terminal', label: ['auth.ts Clash'], sub: 'conflict hunk' }),
           fingerprintEngine: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'cpu', label: ['Fingerprinter'], sub: 'hashes hunk' }),
           preimageStore: b(7, -7, { s: 4.8, h: 50, color: 'purple', glyph: 'database', label: ['rr-cache/68a2bc'], sub: 'preimage saved' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Pre-image Recording Output', [
@@ -150,7 +150,7 @@ export const gitRerereEngineLesson = {
         entities: {
           resolvedAuth: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['auth.ts Clean'], sub: 'resolved hunk' }),
           diffComparator: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'cpu', label: ['Diff Extractor'], sub: 'extracts fix' }),
-          postimageStore: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['postimage File'], sub: 'solution cached' }),
+          postimageStore: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['postimage File'], sub: 'solution saved' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Post-image Recording Event', [
             `$ git add src/auth.ts`,
             `Recorded resolution for 'src/auth.ts'.`,

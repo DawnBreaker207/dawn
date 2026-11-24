@@ -41,7 +41,7 @@ export const gitCrlfLineEndingsLesson = {
       scene: {
         entities: {
           windowsDisk: y(-7, 7, { label: 'Windows FS', tags: [{ text: '10k CRLF files', tone: 'rose', icon: 'terminal' }] }),
-          gitStatusEngine: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['git status'], sub: '10k false diffs' }),
+          gitStatusEngine: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['git status'], sub: '10k diffs' }),
           falseBlobDiff: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'package', label: ['Hash Mismatch'], sub: 'new blob SHAs' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, '10k False Diffs Output', [
             `$ git status -s | wc -l`,
@@ -77,7 +77,7 @@ export const gitCrlfLineEndingsLesson = {
         entities: {
           localConfig: y(-7, 7, { label: 'core.autocrlf', tags: [{ text: 'local per-user', tone: 'amber', icon: 'terminal' }] }),
           ciContainer: d(0, 0, { s: 5.2, h: 56, color: 'amber', glyph: 'server', label: ['Linux CI Docker'], sub: 'autocrlf=false' }),
-          driftClash: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'boxes', label: ['Drift Clash'], sub: 'PRs fail on EOL' }),
+          driftClash: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'boxes', label: ['Drift Clash'], sub: 'CI EOL failure' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Workstation Config Inconsistency', [
             `Dev 1 (Mac): core.autocrlf = input`,
             `Dev 2 (Win): core.autocrlf = true`,
@@ -110,8 +110,8 @@ export const gitCrlfLineEndingsLesson = {
       scene: {
         entities: {
           attrFile: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['.gitattributes'], sub: 'repo truth' }),
-          filterEngine: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['Clean/Smudge'], sub: 'LF normalization' }),
-          enforcedStore: b(7, -7, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Universal LF'], sub: 'normalized store' }),
+          filterEngine: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['Clean/Smudge'], sub: 'clean filter' }),
+          enforcedStore: b(7, -7, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Universal LF'], sub: 'pure LF store' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Standard .gitattributes File', [
             `# Set default behavior: auto-normalize text files to LF`,
             `* text=auto`,
@@ -147,7 +147,7 @@ export const gitCrlfLineEndingsLesson = {
       scene: {
         entities: {
           renormCmd: y(-7, 7, { label: 'Renormalizer', tags: [{ text: 'git add --renorm', tone: 'green', icon: 'terminal' }] }),
-          smudgeClean: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['Byte Scrubber'], sub: 'strip 0x0D bytes' }),
+          smudgeClean: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['Byte Scrubber'], sub: 'strip 0x0D' }),
           pureIndex: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Clean Index'], sub: '100% LF blobs' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Renormalization Execution', [
             `$ git add --renormalize .`,
@@ -219,7 +219,7 @@ export const gitCrlfLineEndingsLesson = {
         entities: {
           blameReq: y(-7, 7, { label: 'git blame CLI', tags: [{ text: 'blame auth.ts', tone: 'cyan', icon: 'terminal' }] }),
           ignoreFilter: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'boxes', label: ['.git-blame-ignore'], sub: 'skips a5b8c9' }),
-          originalAuthor: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['True Author'], sub: 'original author' }),
+          originalAuthor: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['True Author'], sub: 'true author' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Ignore-Revs Blame Configuration', [
             `$ echo "a5b8c9... # chore: normalize line endings" >> .git-blame-ignore-revs`,
             `$ git config blame.ignoreRevsFile .git-blame-ignore-revs`,

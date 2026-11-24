@@ -40,8 +40,8 @@ export const gitRefsSymbolicLesson = {
       metrics: { headRef: 'ref: refs/heads/main', branchTarget: 'Commit 3f8a12', refType: 'Loose ref', packedState: 'Unpacked' },
       scene: {
         entities: {
-          mainRef: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Branch Ref'], sub: '41-byte text ref' }),
-          commitObj: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'target snapshot' }),
+          mainRef: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Branch Ref'], sub: '41-byte ref' }),
+          commitObj: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'commit 3f8a12' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Branch File on Filesystem', [
             `$ cat .git/refs/heads/main`,
             `3f8a12c49b56f890e123456789abcdef01234567`,
@@ -74,7 +74,7 @@ export const gitRefsSymbolicLesson = {
         entities: {
           headSymbol: y(-7, 7, { label: 'HEAD Pointer', tags: [{ text: 'ref: refs/heads/main', tone: 'cyan', icon: 'terminal' }] }),
           branchRef: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: '41-byte ref' }),
-          commitNode: d(7, -7, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'active snapshot' }),
+          commitNode: d(7, -7, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'commit 3f8a12' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'HEAD Symbolic Dereference', [
             `$ cat .git/HEAD`,
             `ref: refs/heads/main`,
@@ -108,7 +108,7 @@ export const gitRefsSymbolicLesson = {
       scene: {
         entities: {
           localBranch: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Local main'], sub: 'local branch' }),
-          remoteRef: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'cloud', label: ['origin/main'], sub: 'remote tracking' }),
+          remoteRef: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'cloud', label: ['origin/main'], sub: 'remote ref' }),
           remoteServer: d(7, -7, { s: 5.0, h: 54, color: 'slab', glyph: 'server', label: ['GitHub Host'], sub: 'upstream repo' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Remote Tracking State', [
             `$ git branch -r`,
@@ -144,7 +144,7 @@ export const gitRefsSymbolicLesson = {
         entities: {
           configTree: y(-7, 7, { label: 'Config Map', tags: [{ text: '.git/config map', tone: 'amber', icon: 'terminal' }] }),
           localMain: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'gitBranch', label: ['Local main'], sub: 'ahead 1 commit' }),
-          upstreamTarget: d(7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'cloud', label: ['origin/main'], sub: 'tracking target' }),
+          upstreamTarget: d(7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'cloud', label: ['origin/main'], sub: 'tracking ref' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Upstream Config Section', [
             `$ git branch -vv`,
             `* main 7d9e44 [origin/main: ahead 1] feat: auth`,
@@ -179,7 +179,7 @@ export const gitRefsSymbolicLesson = {
         entities: {
           looseRefs: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Loose Refs'], sub: '50,000 files' }),
           packEngine: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['git pack-refs'], sub: 'table builder' }),
-          packedTable: b(7, -7, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['packed-refs'], sub: 'flat index table' }),
+          packedTable: b(7, -7, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['packed-refs'], sub: 'packed table' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Packed-Refs File Format', [
             `$ cat .git/packed-refs`,
             `# pack-refs with: peeled-tags fully-peeled sorted`,

@@ -181,7 +181,7 @@ export const gitBisectAutomationLesson = {
       scene: {
         entities: {
           bisectResult: d(-7, -7, { s: 5.0, h: 54, color: 'purple', glyph: 'cpu', label: ['Bisect Result'], sub: '1 candidate' }),
-          culpritCommit: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Commit a5b8c9'], sub: 'FIRST BAD COMMIT' }),
+          culpritCommit: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Commit a5b8c9'], sub: 'culprit commit' }),
           culpritDiff: d(7, 7, { s: 5.0, h: 54, color: 'amber', glyph: 'terminal', label: ['Offending Diff'], sub: 'off-by-one bug' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Culprit Identification Output', [
             `a5b8c9f1a2b3c4... is the first bad commit`,

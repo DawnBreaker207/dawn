@@ -41,7 +41,7 @@ export const gitWorktreesConcurrencyLesson = {
       scene: {
         entities: {
           agentAlpha: y(-7, 7, { label: 'Agent Alpha', tags: [{ text: 'checkout auth', tone: 'blue', icon: 'terminal' }] }),
-          sharedRepo: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Single Repo'], sub: 'index lock clash' }),
+          sharedRepo: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Single Repo'], sub: 'index lock' }),
           agentBravo: y(7, -7, { label: 'Agent Bravo', tags: [{ text: 'checkout ui', tone: 'amber', icon: 'terminal' }] }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Concurrency Deadlock', [
             `Agent A: $ git checkout feature-auth`,
@@ -76,7 +76,7 @@ export const gitWorktreesConcurrencyLesson = {
         entities: {
           mainRepo: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['Main Worktree'], sub: '/repo (main)' }),
           coreObjects: b(0, 0, { r: 2.2, h: 50, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'shared storage' }),
-          wtAuth: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['Auth Worktree'], sub: '/wt-auth (auth)' }),
+          wtAuth: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['Auth Worktree'], sub: '/wt-auth' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Worktree Creation CLI', [
             `$ git worktree add ../wt-auth feature-auth`,
             `Preparing worktree (checking out 'feature-auth')`,
@@ -145,7 +145,7 @@ export const gitWorktreesConcurrencyLesson = {
       scene: {
         entities: {
           agentBravo: y(-7, 7, { label: 'Agent Bravo', tags: [{ text: 'checkout auth', tone: 'amber', icon: 'terminal' }] }),
-          lockValidator: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'shield', label: ['Ref Validator'], sub: 'detects lockout' }),
+          lockValidator: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'shield', label: ['Ref Validator'], sub: 'branch locked' }),
           lockedBranch: d(7, -7, { s: 5.0, h: 54, color: 'slab', glyph: 'gitBranch', label: ['feature-auth'], sub: 'locked by auth' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Branch Exclusion Enforcement', [
             `$ git checkout feature-auth`,
@@ -178,7 +178,7 @@ export const gitWorktreesConcurrencyLesson = {
       metrics: { worktreeCount: '3 concurrent', sharedObjectStore: 'Shared .git', diskSavings: '20GB saved', lockStatus: 'Zero lock contention' },
       scene: {
         entities: {
-          wtAuth: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'terminal', label: ['wt-auth Test'], sub: 'npm test (auth)' }),
+          wtAuth: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'terminal', label: ['wt-auth Test'], sub: 'npm test' }),
           coreHub: b(0, 0, { r: 2.2, h: 50, color: 'purple', glyph: 'database', label: ['.git/ Core'], sub: 'central hub' }),
           wtUi: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['wt-ui Build'], sub: 'npm build (ui)' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Parallel Agent Status', [
@@ -215,7 +215,7 @@ export const gitWorktreesConcurrencyLesson = {
         entities: {
           pruneTrigger: y(-7, 7, { label: 'Directory Del', tags: [{ text: 'rm -rf ../wt-auth', tone: 'rose', icon: 'terminal' }] }),
           pruneEngine: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'cpu', label: ['worktree prune'], sub: 'clean metadata' }),
-          cleanHub: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Clean .git/'], sub: 'stale refs freed' }),
+          cleanHub: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Clean .git/'], sub: 'pruned clean' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Worktree Cleanup Commands', [
             `$ git worktree remove ../wt-auth`,
             `# Or if manually deleted:`,

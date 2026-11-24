@@ -40,7 +40,7 @@ export const gitThreeWayDiff3Lesson = {
       metrics: { baseAncestor: 'Commit 1a2b3c', localOurs: 'Commit 4d5e6f', remoteTheirs: 'Commit 7g8h9i', conflictStyle: '3-way DAG' },
       scene: {
         entities: {
-          base: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c ancestor' }),
+          base: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c base' }),
           ours: d(-7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['HEAD (Ours)'], sub: '4d5e6f main' }),
           theirs: d(7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Theirs (Feat)'], sub: '7g8h9i branch' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merge Base Discovery', [
@@ -150,7 +150,7 @@ export const gitThreeWayDiff3Lesson = {
       metrics: { baseAncestor: '1a2b3c', localOurs: 'Add discount', remoteTheirs: 'Update rate', conflictStyle: 'diff3 (3-way)' },
       scene: {
         entities: {
-          base: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c rate*0.1' }),
+          base: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: 'rate * 0.1' }),
           ours: d(-7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['HEAD (Ours)'], sub: '- disc added' }),
           theirs: d(7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Theirs (Feat)'], sub: 'rate -> 0.15' }),
           analyzer: d(0, 0, { s: 5.2, h: 56, color: 'amber', glyph: 'layers', label: ['Intent Logic'], sub: 'deduce changes' }),
@@ -187,9 +187,9 @@ export const gitThreeWayDiff3Lesson = {
       metrics: { baseAncestor: 'Stage 1', localOurs: 'Stage 2 (--ours)', remoteTheirs: 'Stage 3 (--theirs)', conflictStyle: 'diff3 (3-way)' },
       scene: {
         entities: {
-          base: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Stage 1 (:1:)'], sub: '1a2b3c ancestor' }),
-          ours: d(-7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Stage 2 (:2:)'], sub: '--ours checkout' }),
-          theirs: d(7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Stage 3 (:3:)'], sub: '--theirs checkout' }),
+          base: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Stage 1 (:1:)'], sub: '1a2b3c base' }),
+          ours: d(-7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Stage 2 (:2:)'], sub: 'stage 2 (:2:)' }),
+          theirs: d(7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Stage 3 (:3:)'], sub: 'stage 3 (:3:)' }),
           synth: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'terminal', label: ['Index Stager'], sub: 'git add tax.ts' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Index Stages (ls-files -u)', [
             `$ git ls-files -u`,
@@ -223,7 +223,7 @@ export const gitThreeWayDiff3Lesson = {
       metrics: { baseAncestor: '1a2b3c', localOurs: 'Parent 1', remoteTheirs: 'Parent 2', conflictStyle: 'Resolved DAG' },
       scene: {
         entities: {
-          base: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c ancestor' }),
+          base: d(-7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c base' }),
           ours: d(-7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Parent 1 (Ours)'], sub: '4d5e6f HEAD' }),
           theirs: d(7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Parent 2 (Theirs)'], sub: '7g8h9i feature' }),
           mergeCommit: d(7, -7, { s: 5.2, h: 56, color: 'green', glyph: 'gitBranch', label: ['Merge Commit'], sub: 'b3c4d5 dual' }),

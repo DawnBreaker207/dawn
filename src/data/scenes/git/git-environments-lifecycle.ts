@@ -172,8 +172,8 @@ export const gitEnvironmentsLifecycleLesson = {
       scene: {
         entities: {
           remoteServer: d(-7, 7, { s: 5.0, h: 54, color: 'purple', glyph: 'cloud', label: ['Remote GitHub'], sub: 'HEAD: 9f8a7b' }),
-          trackingRef: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'gitBranch', label: ['origin/main'], sub: 'tracking 9f8a7b' }),
-          localMain: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['Local main'], sub: 'untouched c4f1a2' }),
+          trackingRef: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'gitBranch', label: ['origin/main'], sub: 'tracks 9f8a7b' }),
+          localMain: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['Local main'], sub: 'head c4f1a2' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Fetch Log', [
             `$ git fetch origin`,
             `From github.com:org/repo`,

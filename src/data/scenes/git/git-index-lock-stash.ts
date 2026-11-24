@@ -146,7 +146,7 @@ export const gitIndexLockStashLesson = {
       scene: {
         entities: {
           stashCmd: y(-7, 7, { label: 'Stash Pusher', tags: [{ text: 'git stash push', tone: 'green', icon: 'terminal' }] }),
-          stashStack: b(0, 0, { r: 2.2, h: 50, color: 'green', glyph: 'package', label: ['stash@{0}'], sub: 'LIFO commit stack' }),
+          stashStack: b(0, 0, { r: 2.2, h: 50, color: 'green', glyph: 'package', label: ['stash@{0}'], sub: 'LIFO stack' }),
           workingTree: d(7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['Clean Worktree'], sub: 'reset to HEAD' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Stash Architecture Dump', [
             `$ git stash push -m "WIP auth"`,
@@ -183,7 +183,7 @@ export const gitIndexLockStashLesson = {
         entities: {
           popCmd: y(-7, 7, { label: 'Stash Popper', tags: [{ text: 'git stash pop', tone: 'cyan', icon: 'terminal' }] }),
           stashStack: b(0, 0, { r: 2.2, h: 50, color: 'green', glyph: 'package', label: ['stash@{0}'], sub: 'eval drop' }),
-          restoredTree: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'boxes', label: ['Restored WIP'], sub: 'diffs reapplied' }),
+          restoredTree: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'boxes', label: ['Restored WIP'], sub: 'reapplied' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Stash Pop Output', [
             `$ git stash pop`,
             `Auto-merging src/app.ts`,
@@ -218,8 +218,8 @@ export const gitIndexLockStashLesson = {
       scene: {
         entities: {
           untrackedCmd: y(-7, 7, { label: 'Stash -u', tags: [{ text: 'git stash -u', tone: 'green', icon: 'terminal' }] }),
-          stash3Parent: b(0, 0, { r: 2.2, h: 50, color: 'purple', glyph: 'package', label: ['3-Parent Stash'], sub: 'untracked included' }),
-          pristineTree: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Pristine Disk'], sub: '0 untracked files' }),
+          stash3Parent: b(0, 0, { r: 2.2, h: 50, color: 'purple', glyph: 'package', label: ['3-Parent Stash'], sub: 'with untracked' }),
+          pristineTree: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Pristine Disk'], sub: '0 untracked' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Untracked Stash Architecture', [
             `$ git stash -u -m "auth + new files"`,
             `Saved working directory and index state...`,

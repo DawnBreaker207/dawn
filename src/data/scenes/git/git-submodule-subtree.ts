@@ -40,9 +40,9 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Submodule', pointerStyle: '160000 gitlink SHA', ciOverhead: 'Requires recursive init', repoAutonomy: 'Independent' },
       scene: {
         entities: {
-          parentRepo: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'holds .gitmodules' }),
-          gitLinkMode: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'terminal', label: ['160000 Gitlink'], sub: 'libs/common -> SHA' }),
-          externalRepo: d(7, -7, { s: 5.0, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'org/common on web' }),
+          parentRepo: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: '.gitmodules' }),
+          gitLinkMode: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'terminal', label: ['160000 Gitlink'], sub: '160000 gitlink' }),
+          externalRepo: d(7, -7, { s: 5.0, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'external repo' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Submodule Manifest & Tree Entry', [
             `$ cat .gitmodules`,
             `[submodule "libs/common"]`,
@@ -77,8 +77,8 @@ export const gitSubmoduleSubtreeLesson = {
       scene: {
         entities: {
           ciClone: y(-7, 7, { label: 'CI Runner', tags: [{ text: 'git clone (plain)', tone: 'rose', icon: 'terminal' }] }),
-          emptyFolder: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Empty libs/common'], sub: '0 bytes on disk' }),
-          buildCrash: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'server', label: ['CI Build Crash'], sub: 'Cannot find mod' }),
+          emptyFolder: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Empty libs/common'], sub: 'empty folder' }),
+          buildCrash: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'server', label: ['CI Build Crash'], sub: 'build crash' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Empty Submodule CI Crash', [
             `$ git clone https://github.com/org/app.git`,
             `$ cd app && npm run build`,
@@ -112,8 +112,8 @@ export const gitSubmoduleSubtreeLesson = {
       scene: {
         entities: {
           submoduleDir: y(-7, 7, { label: 'Submodule Dir', tags: [{ text: 'detached HEAD', tone: 'amber', icon: 'terminal' }] }),
-          unpushedCommit: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Local Sub Commit'], sub: 'unpushed to origin' }),
-          brokenParent: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'package', label: ['Parent Pointer'], sub: 'dangling remote' }),
+          unpushedCommit: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Local Sub Commit'], sub: 'unpushed SHA' }),
+          brokenParent: d(7, -7, { s: 5.0, h: 54, color: 'rose', glyph: 'package', label: ['Parent Pointer'], sub: 'dangling ref' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Detached Submodule Hazard', [
             `$ cd libs/common`,
             `$ git status  # HEAD detached at 7d9e44`,

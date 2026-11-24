@@ -177,7 +177,7 @@ export const gitCommandsTaxonomyLesson = {
       scene: {
         entities: {
           treeHash: b(-7, -7, { s: 4.8, h: 50, color: 'blue', glyph: 'package', label: ['Tree d8329f'], sub: 'root snapshot' }),
-          commitTreeCmd: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'cpu', label: ['git commit-tree'], sub: 'author & parent' }),
+          commitTreeCmd: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'cpu', label: ['git commit-tree'], sub: 'commit author' }),
           commitObj: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Commit 7f8a9b'], sub: 'new snapshot' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'commit-tree Execution', [
             `$ echo "feat: add core" | git commit-tree d8329f -p a1b2c3`,
@@ -213,7 +213,7 @@ export const gitCommandsTaxonomyLesson = {
       scene: {
         entities: {
           commitSha: d(-7, -7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Commit 7f8a9b'], sub: 'new SHA-1' }),
-          updateRefCmd: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'shield', label: ['git update-ref'], sub: 'atomic lockfile' }),
+          updateRefCmd: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'shield', label: ['git update-ref'], sub: 'atomic update' }),
           branchRefFile: b(7, -7, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['refs/heads/main'], sub: 'ref pointer' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Atomic Ref Update', [
             `$ git update-ref refs/heads/main 7f8a9b a1b2c3`,

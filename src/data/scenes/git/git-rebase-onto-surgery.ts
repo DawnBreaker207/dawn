@@ -154,7 +154,7 @@ export const gitRebaseOntoSurgeryLesson = {
           m2: d(-7, 0, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Commit M2'], sub: 'main parent' }),
           b1Prime: d(0, 0, { s: 5.0, h: 54, color: 'green', glyph: 'boxes', label: ['Commit B1\''], sub: 'parent M2' }),
           b2Prime: d(7, 0, { s: 5.0, h: 54, color: 'green', glyph: 'boxes', label: ['Commit B2\''], sub: 'parent B1\'' }),
-          abandonedA: d(0, -7, { s: 4.6, h: 46, color: 'slab', glyph: 'boxes', label: ['feat-A (Dead)'], sub: 'abandoned A1..A2' }),
+          abandonedA: d(0, -7, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['feat-A (Dead)'], sub: 'stale A1..A2' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Transplantation Progress', [
             `Applying: feat-B: step 1 (B1 -> B1')`,
             `Applying: feat-B: step 2 (B2 -> B2')`,
@@ -186,7 +186,7 @@ export const gitRebaseOntoSurgeryLesson = {
       metrics: { upstreamBase: 'main', sourceBranch: 'feat-B (clean)', targetDestination: 'main', graftedCommits: 'Verified' },
       scene: {
         entities: {
-          testRunner: d(-7, 0, { s: 5.0, h: 54, color: 'blue', glyph: 'terminal', label: ['npm test'], sub: 'unit assertions' }),
+          testRunner: d(-7, 0, { s: 5.0, h: 54, color: 'blue', glyph: 'terminal', label: ['npm test'], sub: 'npm test pass' }),
           gitLog: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'boxes', label: ['git log --graph'], sub: 'linear history' }),
           verifiedRef: d(7, 0, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['feat-B Ref'], sub: 'points to B2\'' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Verification Audit', [
@@ -223,7 +223,7 @@ export const gitRebaseOntoSurgeryLesson = {
         entities: {
           mainFastForward: d(-7, 0, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['main (Fast-Fwd)'], sub: 'points to B2\'' }),
           deleteBranchCmd: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'terminal', label: ['git branch -D'], sub: 'kill feat-A' }),
-          gcGraveyard: d(0, -7, { s: 4.6, h: 46, color: 'slab', glyph: 'package', label: ['Reflog Stale'], sub: 'swept by gc' }),
+          gcGraveyard: d(0, -7, { s: 4.8, h: 50, color: 'slab', glyph: 'package', label: ['Reflog Stale'], sub: 'swept by gc' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Final Merge and Cleanup', [
             `$ git checkout main`,
             `$ git merge --ff-only feat-B`,

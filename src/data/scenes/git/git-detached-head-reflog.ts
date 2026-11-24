@@ -42,7 +42,7 @@ export const gitDetachedHeadReflogLesson = {
         entities: {
           headPointer: y(-7, 7, { label: 'HEAD Ref', tags: [{ text: 'c4f1a2 (raw SHA)', tone: 'rose', icon: 'terminal' }] }),
           detachedCommit: d(0, 0, { s: 5.2, h: 56, color: 'purple', glyph: 'gitBranch', label: ['Commit c4f1a2'], sub: 'raw commit SHA' }),
-          mainBranch: d(7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points to 7d9e44' }),
+          mainBranch: d(7, 7, { s: 5.0, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Detached HEAD Status', [
             `$ git checkout c4f1a2`,
             `Note: switching to 'c4f1a2'.`,
@@ -111,7 +111,7 @@ export const gitDetachedHeadReflogLesson = {
         entities: {
           headPointer: y(-7, 7, { label: 'HEAD Ref', tags: [{ text: 'refs/heads/main', tone: 'blue', icon: 'gitBranch' }] }),
           mainBranch: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active branch' }),
-          danglingCommit: d(7, -7, { s: 4.8, h: 50, color: 'slab', glyph: 'alert', label: ['e8a1b2 (Lost)'], sub: 'dangling commit' }),
+          danglingCommit: d(7, -7, { s: 4.8, h: 50, color: 'slab', glyph: 'alert', label: ['e8a1b2 (Lost)'], sub: 'dangling SHA' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Dangling Commit Hazard', [
             `$ git checkout main`,
             `Switched to branch 'main'`,
@@ -146,7 +146,7 @@ export const gitDetachedHeadReflogLesson = {
         entities: {
           reflogViewer: y(-7, 7, { label: 'Reflog Audit', tags: [{ text: 'git reflog', tone: 'cyan', icon: 'terminal' }] }),
           reflogLedger: b(0, 0, { r: 2.2, h: 50, color: 'blue', glyph: 'database', label: ['.git/logs/HEAD'], sub: 'ledger index' }),
-          recoveredSha: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'gitBranch', label: ['Found e8a1b2'], sub: 'HEAD@{1} located' }),
+          recoveredSha: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'gitBranch', label: ['Found e8a1b2'], sub: 'HEAD@{1} found' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Reflog Transaction Log', [
             `$ git reflog`,
             `7d9e44 HEAD@{0}: checkout: moving from e8a1b2 to main`,

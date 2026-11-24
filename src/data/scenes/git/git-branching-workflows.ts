@@ -40,8 +40,8 @@ export const gitBranchingWorkflowsLesson = {
       metrics: { branchLifespan: '2-4 weeks', mergeFrequency: 'Low (batch)', conflictRisk: 'High (merge hell)', releaseCadence: 'Monthly' },
       scene: {
         entities: {
-          prodMain: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'shield', label: ['main (Prod)'], sub: 'stable releases' }),
-          developLine: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'gitBranch', label: ['develop Branch'], sub: 'integration trunk' }),
+          prodMain: d(-7, 7, { s: 5.0, h: 54, color: 'green', glyph: 'shield', label: ['main (Prod)'], sub: 'prod trunk' }),
+          developLine: d(0, 0, { s: 5.2, h: 56, color: 'blue', glyph: 'gitBranch', label: ['develop Branch'], sub: 'develop branch' }),
           featureCart: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'boxes', label: ['feature/cart'], sub: '2-week branch' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Flow Branch Matrix', [
             `Branches: main, develop, release/v1.2, feature/cart`,
@@ -75,9 +75,9 @@ export const gitBranchingWorkflowsLesson = {
       metrics: { branchLifespan: '3 weeks', mergeFrequency: 'Infrequent', conflictRisk: 'CRITICAL (Merge Hell)', releaseCadence: 'Delayed' },
       scene: {
         entities: {
-          developHead: d(-7, 7, { s: 5.0, h: 54, color: 'rose', glyph: 'alert', label: ['develop Head'], sub: '+42 commits drift' }),
-          conflictZone: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Merge Hell'], sub: '43 conflicting files' }),
-          staleFeature: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'boxes', label: ['feature/cart'], sub: 'diverged 3 weeks' }),
+          developHead: d(-7, 7, { s: 5.0, h: 54, color: 'rose', glyph: 'alert', label: ['develop Head'], sub: '+42 drift' }),
+          conflictZone: d(0, 0, { s: 5.2, h: 56, color: 'rose', glyph: 'alert', label: ['Merge Hell'], sub: '43 conflicts' }),
+          staleFeature: d(7, -7, { s: 5.0, h: 54, color: 'amber', glyph: 'boxes', label: ['feature/cart'], sub: '3-week drift' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merge Conflict Log', [
             `$ git merge feature/checkout`,
             `Auto-merging src/order.ts`,
@@ -110,7 +110,7 @@ export const gitBranchingWorkflowsLesson = {
       metrics: { branchLifespan: '< 24 hours', mergeFrequency: 'Daily (continuous)', conflictRisk: 'Near Zero', releaseCadence: 'Continuous' },
       scene: {
         entities: {
-          trunkMain: d(-7, 0, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'continuous trunk' }),
+          trunkMain: d(-7, 0, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'trunk main' }),
           shortBranch: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'boxes', label: ['Short PR (<24h)'], sub: 'small diff' }),
           ciGate: d(7, 0, { s: 5.0, h: 54, color: 'green', glyph: 'shield', label: ['CI Test Gate'], sub: 'automated pass' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Trunk-Based Metrics', [
@@ -145,8 +145,8 @@ export const gitBranchingWorkflowsLesson = {
       scene: {
         entities: {
           trunkCommit: d(-7, 7, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Trunk Commit'], sub: 'code in prod' }),
-          flagEngine: d(0, 0, { s: 5.2, h: 56, color: 'amber', glyph: 'cpu', label: ['Feature Toggle'], sub: 'flag: OFF (users safe)' }),
-          userTraffic: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Prod Traffic'], sub: 'stable code only' }),
+          flagEngine: d(0, 0, { s: 5.2, h: 56, color: 'amber', glyph: 'cpu', label: ['Feature Toggle'], sub: 'flag: OFF' }),
+          userTraffic: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Prod Traffic'], sub: 'prod users' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Feature Flag Architecture', [
             `const isNewCheckout = await flags.get('checkout_v2', user);`,
             `if (isNewCheckout) {`,
@@ -181,8 +181,8 @@ export const gitBranchingWorkflowsLesson = {
       scene: {
         entities: {
           prRequest: y(-7, 7, { label: 'Pull Request', tags: [{ text: 'PR #418: auth refactor', tone: 'blue', icon: 'gitBranch' }] }),
-          ciMatrix: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['CI Pipeline'], sub: 'lint · test · scan' }),
-          trunkMain: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'clean integration' }),
+          ciMatrix: d(0, 0, { s: 5.2, h: 56, color: 'cyan', glyph: 'cpu', label: ['CI Pipeline'], sub: 'lint & test' }),
+          trunkMain: d(7, -7, { s: 5.0, h: 54, color: 'green', glyph: 'gitBranch', label: ['Trunk (main)'], sub: 'clean trunk' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'CI Gate Pipeline Run', [
             `GitHub Actions Run: PR #418`,
             `[PASS] Lint & Format (12s)`,
@@ -216,8 +216,8 @@ export const gitBranchingWorkflowsLesson = {
       scene: {
         entities: {
           trunkStream: d(-7, 0, { s: 5.0, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Active Trunk'], sub: 'linear history' }),
-          continuousDeploy: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'cpu', label: ['Auto Deploy'], sub: 'automated deploy' }),
-          prodGlobal: d(7, 0, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Global Edge'], sub: 'live in 90 seconds' }),
+          continuousDeploy: d(0, 0, { s: 5.2, h: 56, color: 'green', glyph: 'cpu', label: ['Auto Deploy'], sub: 'auto deploy' }),
+          prodGlobal: d(7, 0, { s: 5.0, h: 54, color: 'green', glyph: 'package', label: ['Global Edge'], sub: 'live edge' }),
           card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Continuous Delivery Cadence', [
             `Deploy frequency: 15 releases / day`,
             `Lead time for changes: 38 minutes (commit to prod)`,
