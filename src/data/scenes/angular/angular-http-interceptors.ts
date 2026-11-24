@@ -16,7 +16,7 @@ export const angularHttpInterceptorsLesson = {
   minutes: 25,
   level: 'advanced',
   metrics: ['pipelineStage', 'authHeaderInjected', 'retryAttempt', 'responseTransformed'],
-  legend: ['req', ['auth', 'token injection'], ['retry', 'backoff loop'], ['res', 'response stream'], ['ctx', 'http context']],
+  legend: ['flow', ['req', 'request forward'], ['auth', 'token injection'], ['retry', 'backoff loop'], ['res', 'response stream']],
   goals: [
     { text: 'The Chain of Responsibility: how HTTP requests traverse interceptors', step: 1 },
     { text: 'Immutability: why you must call req.clone() to modify headers or body', step: 2 },
@@ -41,9 +41,9 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Traversing Chain', authHeaderInjected: 'No', retryAttempt: '0', responseTransformed: 'Pending' },
       scene: {
         entities: {
-          clientReq: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['http.get(/profile)'], sub: 'client call' }),
-          authInter: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'injects JWT bearer' }),
-          backendXhr: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'server', label: ['HTTP Backend'], sub: 'fetch() / XHR execution' }),
+          clientReq: y(-16, -6, { label: 'HttpClient', tags: [{ text: 'GET /profile', tone: 'blue', icon: 'zap' }] }),
+          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'auth token' }),
+          backendXhr: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'fetch wire' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Interceptor Chain Traversals', [
             `Component -> HttpClient.get('/api/profile')`,
             `  -> Interceptor 1: LoggingInterceptor (req in)`,
@@ -52,7 +52,6 @@ export const angularHttpInterceptorsLesson = {
             `  -> HttpBackend: executes fetch() over wire`,
             `= Clean separation of cross-cutting network concerns`,
           ], { icon: 'terminal' }),
-          zHttp: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'CHAIN OF RESPONSIBILITY PIPELINE'),
         },
         links: {
           ca: h('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'next(req)' }),
@@ -77,9 +76,10 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Cloned with Token', authHeaderInjected: 'Bearer JWT', retryAttempt: '0', responseTransformed: 'Pending' },
       scene: {
         entities: {
-          rawReq: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['Raw HttpRequest'], sub: 'immutable original' }),
-          cloner: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['req.clone()'], sub: 'injects Bearer token' }),
-          clonedReq: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['Cloned Request'], sub: 'Authorization: Bearer...' }),
+          clientReq: y(-16, -6, { label: 'HttpClient', tags: [{ text: 'GET /profile', tone: 'blue', icon: 'zap' }] }),
+          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'auth token' }),
+          clonedReq: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Cloned Request'], sub: 'Bearer JWT' }),
+          backendXhr: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'fetch wire' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Request Cloning Code', [
             `export const authInterceptor: HttpInterceptorFn = (req, next) => {`,
             `  const token = inject(AuthService).getToken();`,
@@ -89,13 +89,13 @@ export const angularHttpInterceptorsLesson = {
             `  return next(authReq);`,
             `};`,
           ], { icon: 'terminal' }),
-          zHttp: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'IMMUTABLE REQUEST CLONING MECHANISM'),
         },
         links: {
-          rc: h('rawReq', 'cloner', ['rawReq', 'cloner'], { label: 'pass immutable' }),
-          cc: h('cloner', 'clonedReq', ['cloner', 'clonedReq'], { label: 'emit cloned copy' }),
+          ca: h('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'pass raw req' }),
+          ac: h('authInter', 'clonedReq', ['authInter', 'clonedReq'], { label: 'req.clone()' }),
+          cb: h('clonedReq', 'backendXhr', ['clonedReq', 'backendXhr'], { label: 'dispatch clone' }),
         },
-        flows: [{ route: ['rc', 'cc'], kind: 'auth', rate: 1.5 }],
+        flows: [{ route: ['ca', 'ac', 'cb'], kind: 'auth', rate: 1.5 }],
       },
     },
     {
@@ -114,9 +114,9 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Response Pipe', authHeaderInjected: 'Bearer JWT', retryAttempt: '0', responseTransformed: 'Unwrapped { data }' },
       scene: {
         entities: {
-          serverWire: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'server', label: ['Server 200 OK'], sub: '{ status: 200, data: {...} }' }),
-          responseFilter: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['map() Unwrapper'], sub: 'strips envelope' }),
-          componentData: d(10, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['Component Sub'], sub: 'receives pure data object' }),
+          backendXhr: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: '200 OK wire' }),
+          resPipe: d(-4, 8, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['map() Unwrapper'], sub: 'unwraps data' }),
+          consumerApp: y(-16, 8, { label: 'Consumer', tags: [{ text: 'Clean Payload', tone: 'green', icon: 'shield' }] }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Response Transformation Code', [
             `return next(req).pipe(`,
             `  map((event: HttpEvent<any>) => {`,
@@ -128,13 +128,12 @@ export const angularHttpInterceptorsLesson = {
             `  })`,
             `);`,
           ], { icon: 'terminal' }),
-          zHttp: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'RESPONSE STREAM TRANSFORMATION'),
         },
         links: {
-          sr: h('serverWire', 'responseFilter', ['serverWire', 'responseFilter'], { label: 'pipe response' }),
-          rc: h('responseFilter', 'componentData', ['responseFilter', 'componentData'], { label: 'clean payload' }),
+          bp: h('backendXhr', 'resPipe', ['backendXhr', 'resPipe'], { label: 'return event' }),
+          rc: h('resPipe', 'consumerApp', ['resPipe', 'consumerApp'], { label: 'deliver payload' }),
         },
-        flows: [{ route: ['sr', 'rc'], kind: 'res', rate: 1.5 }],
+        flows: [{ route: ['bp', 'rc'], kind: 'res', rate: 1.5 }],
       },
     },
     {
@@ -153,9 +152,9 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Retry Backoff', authHeaderInjected: 'Active', retryAttempt: 'Retry 2 (2000ms delay)', responseTransformed: 'Recovered' },
       scene: {
         entities: {
-          errCatch: d(-10, -18, { s: 4.8, h: 50, color: 'rose', glyph: 'terminal', label: ['503 Throttle'], sub: 'catchError() triggered' }),
-          backoffTimer: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['Exponential Delay'], sub: 'timer(1000 * 2^attempt)' }),
-          recoveredReq: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['200 Recovered'], sub: 'retry attempt 2 succeeds' }),
+          backendXhr: b(8, 8, { s: 4.6, h: 48, color: 'rose', glyph: 'server', label: ['HttpBackend'], sub: '503 throttle' }),
+          retryEngine: d(-4, 8, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Retry Engine'], sub: 'backoff delay' }),
+          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'replay req' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Exponential Backoff Code', [
             `return next(req).pipe(`,
             `  retry({`,
@@ -169,13 +168,12 @@ export const angularHttpInterceptorsLesson = {
             `  })`,
             `);`,
           ], { icon: 'terminal' }),
-          zHttp: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'EXPONENTIAL BACKOFF RETRY LOOP'),
         },
         links: {
-          eb: h('errCatch', 'backoffTimer', ['errCatch', 'backoffTimer'], { label: 'delay backoff' }),
-          br: h('backoffTimer', 'recoveredReq', ['backoffTimer', 'recoveredReq'], { label: 'replay clone' }),
+          br: h('backendXhr', 'retryEngine', ['backendXhr', 'retryEngine'], { label: 'catch 503 error' }),
+          ra: h('retryEngine', 'authInter', ['retryEngine', 'authInter'], { label: 'replay clone' }),
         },
-        flows: [{ route: ['eb', 'br'], kind: 'retry', rate: 1.5 }],
+        flows: [{ route: ['br', 'ra'], kind: 'retry', rate: 1.5 }],
       },
     },
     {
@@ -194,9 +192,9 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Functional Setup', authHeaderInjected: 'Functional inject()', retryAttempt: '0', responseTransformed: 'Clean' },
       scene: {
         entities: {
-          appConfigTs: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['app.config.ts'], sub: 'provideHttpClient' }),
-          withFn: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['withInterceptors'], sub: '[authInterceptor, logFn]' }),
-          runtimePipeline: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['Lightweight Chain'], sub: 'zero class overhead' }),
+          clientReq: y(-16, -6, { label: 'app.config.ts', tags: [{ text: 'withInterceptors', tone: 'green', icon: 'zap' }] }),
+          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['authInterceptor'], sub: 'pure function' }),
+          backendXhr: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'native fetch' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional HttpClient Setup', [
             `// src/app/app.config.ts`,
             `export const appConfig: ApplicationConfig = {`,
@@ -208,13 +206,12 @@ export const angularHttpInterceptorsLesson = {
             `  ]`,
             `};`,
           ], { icon: 'terminal' }),
-          zHttp: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'FUNCTIONAL INTERCEPTOR REGISTRATION'),
         },
         links: {
-          aw: h('appConfigTs', 'withFn', ['appConfigTs', 'withFn'], { label: 'configure providers' }),
-          wr: h('withFn', 'runtimePipeline', ['withFn', 'runtimePipeline'], { label: 'compile chain' }),
+          ca: h('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'pass req function' }),
+          ab: h('authInter', 'backendXhr', ['authInter', 'backendXhr'], { label: 'next(req)' }),
         },
-        flows: [{ route: ['aw', 'wr'], kind: 'req', rate: 1.5 }],
+        flows: [{ route: ['ca', 'ab'], kind: 'req', rate: 1.5 }],
       },
     },
     {
@@ -233,9 +230,9 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Context Bypass', authHeaderInjected: 'Bypassed (Public)', retryAttempt: '0', responseTransformed: 'Clean' },
       scene: {
         entities: {
-          publicCall: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['http.get(/login)'], sub: 'context: IS_PUBLIC' }),
-          contextFilter: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['Context Check'], sub: 'if (req.context.get(IS_PUBLIC))' }),
-          bypassedReq: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Clean Public Req'], sub: 'zero Authorization header' }),
+          clientReq: y(-16, -6, { label: 'LoginService', tags: [{ text: 'IS_PUBLIC: true', tone: 'cyan', icon: 'shield' }] }),
+          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Context Filter'], sub: 'IS_PUBLIC flag' }),
+          backendXhr: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'public route' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'HttpContext Token Implementation', [
             `export const IS_PUBLIC = new HttpContextToken<boolean>(() => false);`,
             ``,
@@ -249,13 +246,12 @@ export const angularHttpInterceptorsLesson = {
             `  context: new HttpContext().set(IS_PUBLIC, true)`,
             `});`,
           ], { icon: 'terminal' }),
-          zHttp: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'HTTP CONTEXT TOKEN METADATA ROUTING'),
         },
         links: {
-          pc: h('publicCall', 'contextFilter', ['publicCall', 'contextFilter'], { label: 'attach context token' }),
-          cb: h('contextFilter', 'bypassedReq', ['contextFilter', 'bypassedReq'], { label: 'bypass token check' }),
+          ca: h('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'read context' }),
+          ab: h('authInter', 'backendXhr', ['authInter', 'backendXhr'], { label: 'bypass token' }),
         },
-        flows: [{ route: ['pc', 'cb'], kind: 'ctx', rate: 1.6 }],
+        flows: [{ route: ['ca', 'ab'], kind: 'req', rate: 1.6 }],
       },
     },
   ],

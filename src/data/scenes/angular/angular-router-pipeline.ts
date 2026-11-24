@@ -41,9 +41,8 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'NavigationStart', activeGuards: 'None', resolverState: 'Pending', outletTarget: 'UrlTree Parsed' },
       scene: {
         entities: {
-          userClick: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['[routerLink]'], sub: 'href="/orders/42?tab=items"' }),
-          serializer: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses /orders/42' }),
-          urlTree: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['UrlTree AST'], sub: 'segments: [orders, 42]' }),
+          userClick: y(-16, -6, { label: 'routerLink', tags: [{ text: '/orders/42', tone: 'blue', icon: 'zap' }] }),
+          serializer: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'UrlTree Parsing Output', [
             `$ router.navigate(['/orders', 42], { queryParams: { tab: 'items' } })`,
             `UrlTree {`,
@@ -53,13 +52,11 @@ export const angularRouterPipelineLesson = {
             `  queryParams: { tab: 'items' }`,
             `}`,
           ], { icon: 'terminal' }),
-          zRoute: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'URL PARSING & SERIALIZATION'),
         },
         links: {
           us: h('userClick', 'serializer', ['userClick', 'serializer'], { label: 'navigate event' }),
-          su: h('serializer', 'urlTree', ['serializer', 'urlTree'], { label: 'emit UrlTree' }),
         },
-        flows: [{ route: ['us', 'su'], kind: 'nav', rate: 1.5 }],
+        flows: [{ route: ['us'], kind: 'nav', rate: 1.5 }],
       },
     },
     {
@@ -78,9 +75,9 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'RoutesRecognized', activeGuards: 'Pending', resolverState: 'Pending', outletTarget: 'OrderComponent' },
       scene: {
         entities: {
-          urlSegments: d(-10, -18, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['UrlSegments'], sub: 'primary: orders/42' }),
-          routeMatcher: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['Route Matcher'], sub: 'path: orders/:orderId' }),
-          matchedSnapshot: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['RouteSnapshot'], sub: 'params: { orderId: 42 }' }),
+          userClick: y(-16, -6, { label: 'routerLink', tags: [{ text: '/orders/42', tone: 'blue', icon: 'zap' }] }),
+          serializer: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
+          routeMatcher: d(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Route Matching Definition', [
             `const routes: Routes = [`,
             `  {`,
@@ -92,13 +89,12 @@ export const angularRouterPipelineLesson = {
             `  }`,
             `];`,
           ], { icon: 'terminal' }),
-          zRoute: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ROUTE TREE MATCHING PIPELINE'),
         },
         links: {
-          ur: h('urlSegments', 'routeMatcher', ['urlSegments', 'routeMatcher'], { label: 'match segments' }),
-          rm: h('routeMatcher', 'matchedSnapshot', ['routeMatcher', 'matchedSnapshot'], { label: 'create snapshot' }),
+          us: h('userClick', 'serializer', ['userClick', 'serializer'], { label: 'navigate event' }),
+          sr: h('serializer', 'routeMatcher', ['serializer', 'routeMatcher'], { label: 'match segments' }),
         },
-        flows: [{ route: ['ur', 'rm'], kind: 'nav', rate: 1.5 }],
+        flows: [{ route: ['us', 'sr'], kind: 'nav', rate: 1.5 }],
       },
     },
     {
@@ -117,9 +113,9 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'GuardsCheckStart', activeGuards: 'canMatch (Pass)', resolverState: 'Pending', outletTarget: 'OrderComponent' },
       scene: {
         entities: {
-          flagCheck: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['canMatch Fn'], sub: 'featureFlagGuard' }),
-          guardEvaluator: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Flag Service'], sub: 'flags.isEnabled("orders-v2")' }),
-          chunkLoader: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Load JS Chunk'], sub: 'order.component.js' }),
+          serializer: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
+          routeMatcher: d(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
+          guardEvaluator: d(8, 8, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['canMatch'], sub: 'feature flag' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional canMatch Guard', [
             `export const v2OrdersGuard: CanMatchFn = (route, segments) => {`,
             `  const flags = inject(FeatureFlagService);`,
@@ -127,13 +123,12 @@ export const angularRouterPipelineLesson = {
             `  return flags.isEnabled('orders-v2');`,
             `};`,
           ], { icon: 'terminal' }),
-          zRoute: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'CANMATCH CONDITIONAL ROUTE SELECTION'),
         },
         links: {
-          fg: h('flagCheck', 'guardEvaluator', ['flagCheck', 'guardEvaluator'], { label: 'check flag' }),
-          gc: h('guardEvaluator', 'chunkLoader', ['guardEvaluator', 'chunkLoader'], { label: 'allow chunk download' }),
+          sr: h('serializer', 'routeMatcher', ['serializer', 'routeMatcher'], { label: 'match segments' }),
+          rg: h('routeMatcher', 'guardEvaluator', ['routeMatcher', 'guardEvaluator'], { label: 'evaluate flag' }),
         },
-        flows: [{ route: ['fg', 'gc'], kind: 'guard', rate: 1.5 }],
+        flows: [{ route: ['sr', 'rg'], kind: 'guard', rate: 1.5 }],
       },
     },
     {
@@ -152,9 +147,8 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'GuardsChecked', activeGuards: 'canActivate (Pass)', resolverState: 'Pending', outletTarget: 'OrderComponent' },
       scene: {
         entities: {
-          authCheck: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['canActivate Guard'], sub: 'authGuard' }),
-          authSvc: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['AuthService'], sub: 'auth.isLoggedIn()' }),
-          authPassed: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Approved Route'], sub: 'access granted' }),
+          routeMatcher: d(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
+          guardEvaluator: d(8, 8, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['canActivate'], sub: 'auth session' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional canActivate with Redirect', [
             `export const authGuard: CanActivateFn = (route, state) => {`,
             `  const auth = inject(AuthService);`,
@@ -167,13 +161,11 @@ export const angularRouterPipelineLesson = {
             `  return true;`,
             `};`,
           ], { icon: 'terminal' }),
-          zRoute: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'AUTHENTICATION & AUTHORIZATION GUARDS'),
         },
         links: {
-          aa: h('authCheck', 'authSvc', ['authCheck', 'authSvc'], { label: 'verify session' }),
-          ap: h('authSvc', 'authPassed', ['authSvc', 'authPassed'], { label: 'return true' }),
+          rg: h('routeMatcher', 'guardEvaluator', ['routeMatcher', 'guardEvaluator'], { label: 'check auth' }),
         },
-        flows: [{ route: ['aa', 'ap'], kind: 'guard', rate: 1.5 }],
+        flows: [{ route: ['rg'], kind: 'guard', rate: 1.5 }],
       },
     },
     {
@@ -192,9 +184,8 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'ResolveEnd', activeGuards: 'All Passed', resolverState: 'Resolved (200 OK)', outletTarget: 'Ready to Mount' },
       scene: {
         entities: {
-          resolverFn: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['orderResolver'], sub: 'ResolveFn<Order>' }),
-          apiQuery: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Order API'], sub: 'GET /api/orders/42' }),
-          resolvedData: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Resolved Order'], sub: '{ id: 42, total: $120 }' }),
+          guardEvaluator: d(8, 8, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['canActivate'], sub: 'auth session' }),
+          resolver: b(-4, 8, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['orderResolver'], sub: 'pre-fetch API' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional Resolver Pattern', [
             `export const orderResolver: ResolveFn<Order> = (route) => {`,
             `  const api = inject(OrderService);`,
@@ -206,13 +197,11 @@ export const angularRouterPipelineLesson = {
             `  order = input.required<Order>(); // auto-bound from resolver!`,
             `}`,
           ], { icon: 'terminal' }),
-          zRoute: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DATA RESOLVER PRE-FETCHING PIPELINE'),
         },
         links: {
-          ra: h('resolverFn', 'apiQuery', ['resolverFn', 'apiQuery'], { label: 'fetch data' }),
-          ar: h('apiQuery', 'resolvedData', ['apiQuery', 'resolvedData'], { label: 'payload ready' }),
+          gr: h('guardEvaluator', 'resolver', ['guardEvaluator', 'resolver'], { label: 'trigger resolve' }),
         },
-        flows: [{ route: ['ra', 'ar'], kind: 'resolve', rate: 1.5 }],
+        flows: [{ route: ['gr'], kind: 'resolve', rate: 1.5 }],
       },
     },
     {
@@ -231,9 +220,9 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'NavigationEnd', activeGuards: 'Done', resolverState: 'Consumed', outletTarget: 'Active in DOM' },
       scene: {
         entities: {
-          outletHost: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['<router-outlet>'], sub: 'activates view' }),
-          orderView: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['OrderComponent'], sub: 'mounted with data' }),
-          browserHistory: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['Browser History'], sub: 'pushState /orders/42' }),
+          resolver: b(-4, 8, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['orderResolver'], sub: 'pre-fetch API' }),
+          outletHost: d(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['<router-outlet>'], sub: 'mount view' }),
+          orderView: d(-16, -6, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['OrderComponent'], sub: 'DOM active' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Navigation Complete', [
             `Router Events Sequence:`,
             `  1. NavigationStart (/orders/42)`,
@@ -243,13 +232,12 @@ export const angularRouterPipelineLesson = {
             `  5. ActivationEnd (<router-outlet> mounted)`,
             `  6. NavigationEnd (Scroll restored to top)`,
           ], { icon: 'terminal' }),
-          zRoute: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ROUTER OUTLET ACTIVATION COMPLETE'),
         },
         links: {
-          oo: h('outletHost', 'orderView', ['outletHost', 'orderView'], { label: 'mount component' }),
-          ob: h('orderView', 'browserHistory', ['orderView', 'browserHistory'], { label: 'update history' }),
+          ro: h('resolver', 'outletHost', ['resolver', 'outletHost'], { label: 'hydrate outlet' }),
+          ov: h('outletHost', 'orderView', ['outletHost', 'orderView'], { label: 'render component' }),
         },
-        flows: [{ route: ['oo', 'ob'], kind: 'mount', rate: 1.6 }],
+        flows: [{ route: ['ro', 'ov'], kind: 'mount', rate: 1.6 }],
       },
     },
   ],

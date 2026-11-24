@@ -41,9 +41,8 @@ export const angularHydrationReplayLesson = {
       metrics: { ssrState: 'Server HTML Delivered', domDestruction: '0 nodes destroyed', eventReplayQueue: '0 events', flickerPrevention: '100% Flicker-Free' },
       scene: {
         entities: {
-          serverHtml: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server HTML'], sub: 'rendered on Node / Edge' }),
-          hydrationMatcher: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Hydration Engine'], sub: 'walks existing DOM' }),
-          preservedDom: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['Preserved DOM'], sub: 'reused in-place' }),
+          serverHtml: b(-16, -6, { s: 4.6, h: 48, color: 'blue', glyph: 'server', label: ['Server HTML'], sub: 'SSR Node/Edge' }),
+          hydrationMatcher: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Hydration Match'], sub: 'walks DOM' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Legacy vs Non-Destructive Hydration', [
             `Legacy Angular SSR (Destructive):`,
             `  Server HTML rendered -> JS loads -> document.body.innerHTML = ''`,
@@ -53,13 +52,11 @@ export const angularHydrationReplayLesson = {
             `  Server HTML rendered -> JS loads -> walks existing nodes`,
             `  -> Re-attaches listeners in place -> ZERO DOM nodes destroyed!`,
           ], { icon: 'terminal' }),
-          zHydrate: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'NON-DESTRUCTIVE HYDRATION ARCHITECTURE'),
         },
         links: {
-          sh: h('serverHtml', 'hydrationMatcher', ['serverHtml', 'hydrationMatcher'], { label: 'parse HTML string' }),
-          hp: h('hydrationMatcher', 'preservedDom', ['hydrationMatcher', 'preservedDom'], { label: 'match in-place' }),
+          sh: h('serverHtml', 'hydrationMatcher', ['serverHtml', 'hydrationMatcher'], { label: 'stream HTML' }),
         },
-        flows: [{ route: ['sh', 'hp'], kind: 'dom', rate: 1.5 }],
+        flows: [{ route: ['sh'], kind: 'dom', rate: 1.5 }],
       },
     },
     {
@@ -78,9 +75,9 @@ export const angularHydrationReplayLesson = {
       metrics: { ssrState: 'Annotated HTML', domDestruction: '0 nodes', eventReplayQueue: '0 events', flickerPrevention: 'Aligned' },
       scene: {
         entities: {
-          serverSerializer: d(-10, -18, { s: 4.8, h: 50, color: 'cyan', glyph: 'server', label: ['Server Serializer'], sub: 'adds <!--nghm--> comments' }),
-          markerParser: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Marker Parser'], sub: 'reconstructs LView tree' }),
-          alignedLView: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Aligned LView'], sub: '1:1 DOM correspondence' }),
+          serverHtml: b(-16, -6, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['Server Serializer'], sub: 'nghm comments' }),
+          hydrationMatcher: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Marker Parser'], sub: 'aligns LView' }),
+          preservedDom: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Aligned LView'], sub: '1:1 DOM slots' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Hydration Comment Markers', [
             `<app-root>`,
             `  <!--nghm id="c0" v="1"-->`,
@@ -90,13 +87,12 @@ export const angularHydrationReplayLesson = {
             `</app-root>`,
             `// Client matches exact DOM elements without querySelector search`,
           ], { icon: 'terminal' }),
-          zHydrate: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SERVER HYDRATION ANNOTATIONS'),
         },
         links: {
-          sm: h('serverSerializer', 'markerParser', ['serverSerializer', 'markerParser'], { label: 'stream annotated HTML' }),
-          ma: h('markerParser', 'alignedLView', ['markerParser', 'alignedLView'], { label: 'map LView slots' }),
+          sh: h('serverHtml', 'hydrationMatcher', ['serverHtml', 'hydrationMatcher'], { label: 'stream annotated HTML' }),
+          hp: h('hydrationMatcher', 'preservedDom', ['hydrationMatcher', 'preservedDom'], { label: 'map LView slots' }),
         },
-        flows: [{ route: ['sm', 'ma'], kind: 'dom', rate: 1.5 }],
+        flows: [{ route: ['sh', 'hp'], kind: 'dom', rate: 1.5 }],
       },
     },
     {
@@ -115,9 +111,9 @@ export const angularHydrationReplayLesson = {
       metrics: { ssrState: 'Bundle Downloading', domDestruction: '0 nodes', eventReplayQueue: '1 click buffered', flickerPrevention: 'Zero Lost Clicks' },
       scene: {
         entities: {
-          userEarlyClick: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['Early Click'], sub: 'user clicks "Add to Cart"' }),
-          inlineRecorder: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'cpu', label: ['Inline Event Dispatch'], sub: 'captures in window.__jsaction' }),
-          eventBuffer: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['Event Replay Queue'], sub: 'buffered: [click, target]' }),
+          serverHtml: y(-16, -6, { label: 'Early Click', tags: [{ text: 'Add to Cart', tone: 'amber', icon: 'zap' }] }),
+          hydrationMatcher: d(-4, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'cpu', label: ['Inline Recorder'], sub: 'jsaction hook' }),
+          eventBuffer: d(8, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'package', label: ['Replay Queue'], sub: 'buffered click' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Event Replay Buffer Queue', [
             `// Inline script in index.html captures early interactions:`,
             `window.__jsaction = {`,
@@ -127,13 +123,12 @@ export const angularHydrationReplayLesson = {
             `};`,
             `// User click is safe! Angular will replay it once hydrated.`,
           ], { icon: 'terminal' }),
-          zHydrate: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'EARLY USER EVENT RECORDING BUFFER'),
         },
         links: {
-          ui: h('userEarlyClick', 'inlineRecorder', ['userEarlyClick', 'inlineRecorder'], { label: 'click before JS' }),
-          ie: h('inlineRecorder', 'eventBuffer', ['inlineRecorder', 'eventBuffer'], { label: 'store event in queue' }),
+          sh: h('serverHtml', 'hydrationMatcher', ['serverHtml', 'hydrationMatcher'], { label: 'click before JS' }),
+          he: h('hydrationMatcher', 'eventBuffer', ['hydrationMatcher', 'eventBuffer'], { label: 'store event in queue' }),
         },
-        flows: [{ route: ['ui', 'ie'], kind: 'event', rate: 1.5 }],
+        flows: [{ route: ['sh', 'he'], kind: 'event', rate: 1.5 }],
       },
     },
     {
@@ -152,9 +147,10 @@ export const angularHydrationReplayLesson = {
       metrics: { ssrState: 'DOM Matched', domDestruction: '0 nodes', eventReplayQueue: '1 click buffered', flickerPrevention: 'Attached' },
       scene: {
         entities: {
-          clientBootstrap: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['main.js Loaded'], sub: 'bootstrapApplication()' }),
-          domWalker: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['Hydration DOM Walker'], sub: 'ɵɵelementStart reuses node' }),
-          matchedTree: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['Hydrated LView Tree'], sub: 'all listeners wired up' }),
+          serverHtml: y(-16, -6, { label: 'main.js', tags: [{ text: 'Bootstrap App', tone: 'blue', icon: 'zap' }] }),
+          hydrationMatcher: d(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['Hydration Walker'], sub: 'elementStart' }),
+          preservedDom: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Hydrated LView'], sub: 'attached wires' }),
+          eventBuffer: b(8, 8, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['Buffered Queue'], sub: 'queued click' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'In-Place Matching Code', [
             `// Client bootstrap with Event Replay:`,
             `export const appConfig: ApplicationConfig = {`,
@@ -164,13 +160,13 @@ export const angularHydrationReplayLesson = {
             `};`,
             `// Ivy links existing DOM elements directly to LView slots`,
           ], { icon: 'terminal' }),
-          zHydrate: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'IN-PLACE DOM MATCHING ENGINE'),
         },
         links: {
-          cd: h('clientBootstrap', 'domWalker', ['clientBootstrap', 'domWalker'], { label: 'execute hydration' }),
-          dm: h('domWalker', 'matchedTree', ['domWalker', 'matchedTree'], { label: 'wire event listeners' }),
+          sh: h('serverHtml', 'hydrationMatcher', ['serverHtml', 'hydrationMatcher'], { label: 'execute hydration' }),
+          hp: h('hydrationMatcher', 'preservedDom', ['hydrationMatcher', 'preservedDom'], { label: 'wire event listeners' }),
+          pe: h('preservedDom', 'eventBuffer', ['preservedDom', 'eventBuffer'], { label: 'check queue' }),
         },
-        flows: [{ route: ['cd', 'dm'], kind: 'dom', rate: 1.5 }],
+        flows: [{ route: ['sh', 'hp', 'pe'], kind: 'dom', rate: 1.5 }],
       },
     },
     {
@@ -189,9 +185,9 @@ export const angularHydrationReplayLesson = {
       metrics: { ssrState: 'Events Replayed', domDestruction: '0 nodes', eventReplayQueue: '0 events (Drained)', flickerPrevention: '100% Interactive' },
       scene: {
         entities: {
-          drainedQueue: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['Drain Event Queue'], sub: 'pop click event' }),
-          eventDispatcher: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['Event Dispatcher'], sub: 'dispatches to listener' }),
-          cartUpdated: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Cart: 1 Item'], sub: 'addToCart() executed' }),
+          hydrationMatcher: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Drain Queue'], sub: 'pop event' }),
+          preservedDom: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Event Dispatch'], sub: 'dispatch event' }),
+          cartUpdated: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Cart: 1 Item'], sub: 'signal updated' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Event Replay Execution', [
             `Event Replay Pipeline:`,
             `  1. Hydration complete for CartComponent`,
@@ -200,13 +196,12 @@ export const angularHydrationReplayLesson = {
             `  4. addToCart() executes -> Cart signal increments to 1`,
             `= Seamless user experience during initial page load`,
           ], { icon: 'terminal' }),
-          zHydrate: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'EVENT REPLAY DISPATCH SEQUENCE'),
         },
         links: {
-          de: h('drainedQueue', 'eventDispatcher', ['drainedQueue', 'eventDispatcher'], { label: 'replay queued event' }),
-          ec: h('eventDispatcher', 'cartUpdated', ['eventDispatcher', 'cartUpdated'], { label: 'execute component handler' }),
+          hp: h('hydrationMatcher', 'preservedDom', ['hydrationMatcher', 'preservedDom'], { label: 'replay queued event' }),
+          pc: h('preservedDom', 'cartUpdated', ['preservedDom', 'cartUpdated'], { label: 'execute handler' }),
         },
-        flows: [{ route: ['de', 'ec'], kind: 'replay', rate: 1.6 }],
+        flows: [{ route: ['hp', 'pc'], kind: 'replay', rate: 1.6 }],
       },
     },
     {
@@ -225,9 +220,9 @@ export const angularHydrationReplayLesson = {
       metrics: { ssrState: 'Fully Hydrated', domDestruction: '0 nodes', eventReplayQueue: 'Clean', flickerPrevention: 'Production Stable' },
       scene: {
         entities: {
-          appTree: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'boxes', label: ['Angular App'], sub: 'non-destructive hydration' }),
-          skipTag: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['ngSkipHydration'], sub: 'bypasses third-party DOM' }),
-          d3MapWidget: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['D3 / Map Widget'], sub: 'client-only render' }),
+          serverHtml: y(-16, -6, { label: 'Angular App', tags: [{ text: 'Hydrated Page', tone: 'green', icon: 'zap' }] }),
+          hydrationMatcher: d(-4, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'terminal', label: ['ngSkipHydrate'], sub: 'bypasses D3' }),
+          cartUpdated: b(8, -6, { s: 4.6, h: 48, color: 'purple', glyph: 'server', label: ['D3 / Map Widget'], sub: 'client render' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'ngSkipHydration Usage', [
             `// In template:`,
             `<app-google-map ngSkipHydration />`,
@@ -239,13 +234,12 @@ export const angularHydrationReplayLesson = {
             `})`,
             `export class D3ChartComponent {}`,
           ], { icon: 'terminal' }),
-          zHydrate: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'INCREMENTAL HYDRATION & SKIP DIRECTIVE'),
         },
         links: {
-          as: h('appTree', 'skipTag', ['appTree', 'skipTag'], { label: 'isolate widget' }),
-          sd: h('skipTag', 'd3MapWidget', ['skipTag', 'd3MapWidget'], { label: 'allow direct D3 DOM' }),
+          sh: h('serverHtml', 'hydrationMatcher', ['serverHtml', 'hydrationMatcher'], { label: 'isolate widget' }),
+          hc: h('hydrationMatcher', 'cartUpdated', ['hydrationMatcher', 'cartUpdated'], { label: 'allow direct D3 DOM' }),
         },
-        flows: [{ route: ['as', 'sd'], kind: 'stable', rate: 1.5 }],
+        flows: [{ route: ['sh', 'hc'], kind: 'stable', rate: 1.5 }],
       },
     },
   ],

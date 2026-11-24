@@ -41,12 +41,14 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'DAG Built', producerVersion: 'v1', consumerState: 'Clean', glitchFree: '100% Guaranteed' },
       scene: {
         entities: {
-          producerA: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['price = signal(10)'], sub: 'Producer Node' }),
-          computedNode: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['tax = computed()'], sub: 'Producer & Consumer' }),
-          consumerEffect: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['total = computed()'], sub: 'Final Consumer Node' }),
+          priceSignal: y(-16, -8, { label: 'price = 10', tags: [{ text: 'WritableSignal', tone: 'blue', icon: 'zap' }] }),
+          taxSignal: y(-16, 8, { label: 'taxRate = 0.2', tags: [{ text: 'WritableSignal', tone: 'purple', icon: 'zap' }] }),
+          computedNode: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['tax = computed()'], sub: 'tax: $2.00' }),
+          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['total = computed()'], sub: 'total: $12.00' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Signals Reactive Graph', [
             `const price = signal(10);`,
-            `const tax = computed(() => price() * 0.2);`,
+            `const taxRate = signal(0.2);`,
+            `const tax = computed(() => price() * taxRate());`,
             `const total = computed(() => price() + tax());`,
             `// Graph edges:`,
             `// price -> tax`,
@@ -54,13 +56,16 @@ export const angularSignalsDagLesson = {
             `// tax -> total`,
             `= Directed Acyclic Graph (DAG) constructed`,
           ], { icon: 'terminal' }),
-          zSig: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SIGNALS REACTIVE DIRECTED ACYCLIC GRAPH'),
         },
         links: {
-          pt: h('producerA', 'computedNode', ['producerA', 'computedNode'], { label: 'subscribes to price' }),
-          tt: h('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'subscribes to tax' }),
+          pt: h('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'track price' }),
+          rt: h('taxSignal', 'computedNode', ['taxSignal', 'computedNode'], { label: 'track rate' }),
+          tc: h('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'track tax' }),
         },
-        flows: [{ route: ['pt', 'tt'], kind: 'push', rate: 1.5 }],
+        flows: [
+          { route: ['pt', 'tc'], kind: 'push', rate: 1.5 },
+          { route: ['rt'], kind: 'push', rate: 1.2 },
+        ],
       },
     },
     {
@@ -80,9 +85,10 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Dirty Flagged', producerVersion: 'v2', consumerState: 'DIRTY (Uncomputed)', glitchFree: 'Guaranteed' },
       scene: {
         entities: {
-          priceSet: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['price.set(20)'], sub: 'version v1 -> v2' }),
-          dirtyMarker: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['Push Dirty Flag'], sub: 'marks tax DIRTY' }),
-          lazyReader: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['Pull on Read'], sub: 'total() recomputes to 24' }),
+          priceSignal: y(-16, -8, { label: 'price.set(20)', tags: [{ text: 'version v2', tone: 'green', icon: 'zap' }] }),
+          taxSignal: y(-16, 8, { label: 'taxRate = 0.2', tags: [{ text: 'WritableSignal', tone: 'purple', icon: 'zap' }] }),
+          computedNode: d(0, 0, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['tax = computed()'], sub: 'marked DIRTY' }),
+          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['total = computed()'], sub: 'pulls on read' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Push-Pull Algorithm Execution', [
             `1. price.set(20) [PUSH PHASE]:`,
             `   - price increments version to v2`,
@@ -92,13 +98,12 @@ export const angularSignalsDagLesson = {
             `   - tax is dirty -> recomputes tax to 4`,
             `   - total calculates 20 + 4 = 24`,
           ], { icon: 'terminal' }),
-          zSig: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'TWO-PHASE PUSH-PULL EXECUTION'),
         },
         links: {
-          pd: h('priceSet', 'dirtyMarker', ['priceSet', 'dirtyMarker'], { label: 'push dirty notification' }),
-          dl: h('dirtyMarker', 'lazyReader', ['dirtyMarker', 'lazyReader'], { label: 'pull value on read' }),
+          pt: h('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'push dirty flag' }),
+          tc: h('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'lazy value pull' }),
         },
-        flows: [{ route: ['pd', 'dl'], kind: 'pull', rate: 1.5 }],
+        flows: [{ route: ['pt', 'tc'], kind: 'pull', rate: 1.5 }],
       },
     },
     {
@@ -117,9 +122,10 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Dynamic DAG', producerVersion: 'v2', consumerState: 'Clean', glitchFree: 'Pruned' },
       scene: {
         entities: {
-          toggleCondition: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['showDetails = false'], sub: 'branch switch' }),
-          activeBranch: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['summary() Edge'], sub: 'active DAG link' }),
-          unlinkedBranch: d(10, 8, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['userDetails()'], sub: 'UNLINKED (Pruned edge)' }),
+          priceSignal: y(-16, -8, { label: 'showDetails', tags: [{ text: 'false', tone: 'rose', icon: 'zap' }] }),
+          taxSignal: y(-16, 8, { label: 'summary()', tags: [{ text: 'active branch', tone: 'green', icon: 'zap' }] }),
+          computedNode: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['info = computed'], sub: 'dynamic graph' }),
+          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'slab', glyph: 'server', label: ['details()'], sub: 'unlinked edge' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dynamic Dependency Tracking', [
             `const info = computed(() => {`,
             `  if (this.showDetails()) {`,
@@ -129,13 +135,13 @@ export const angularSignalsDagLesson = {
             `});`,
             `// If details() updates now, info is NOT triggered!`,
           ], { icon: 'terminal' }),
-          zSig: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DYNAMIC DEPENDENCY EDGE PRUNING'),
         },
         links: {
-          ta: h('toggleCondition', 'activeBranch', ['toggleCondition', 'activeBranch'], { label: 'link active dependency' }),
-          au: h('activeBranch', 'unlinkedBranch', ['activeBranch', 'unlinkedBranch'], { label: 'sever inactive edge' }),
+          pt: h('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'read condition' }),
+          xt: h('taxSignal', 'computedNode', ['taxSignal', 'computedNode'], { label: 'active branch edge' }),
+          cd: h('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'severed branch' }),
         },
-        flows: [{ route: ['ta', 'au'], kind: 'push', rate: 1.5 }],
+        flows: [{ route: ['xt'], kind: 'push', rate: 1.5 }],
       },
     },
     {
@@ -154,9 +160,10 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Topological Sort', producerVersion: 'v2', consumerState: 'Glitch-Free', glitchFree: '100% Clean' },
       scene: {
         entities: {
-          rootA: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['Node A (Root)'], sub: 'price updated' }),
-          intermediateBC: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Nodes B & C'], sub: 'both updated before D' }),
-          glitchFreeD: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['Node D (Total)'], sub: 'evaluates 1 time cleanly' }),
+          priceSignal: y(-16, 0, { label: 'price.set(20)', tags: [{ text: 'Node A Root', tone: 'blue', icon: 'zap' }] }),
+          taxComp: d(0, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['tax (Node B)'], sub: 'recomputed 1st' }),
+          discountComp: d(0, 10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['disc (Node C)'], sub: 'recomputed 2nd' }),
+          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['total (Node D)'], sub: 'evaluates once' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'The Diamond Problem & Fix', [
             `Diamond Topology:`,
             `       [Price]`,
@@ -167,13 +174,17 @@ export const angularSignalsDagLesson = {
             `Naive: Total evaluates twice (glitch: old Discount + new Tax)`,
             `Signals: Total evaluates ONCE with both updated! (Glitch-Free)`,
           ], { icon: 'terminal' }),
-          zSig: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'GLITCH-FREE DIAMOND TOPOLOGY ENGINE'),
         },
         links: {
-          ri: h('rootA', 'intermediateBC', ['rootA', 'intermediateBC'], { label: 'mark both dirty' }),
-          ig: h('intermediateBC', 'glitchFreeD', ['intermediateBC', 'glitchFreeD'], { label: 'atomic pull' }),
+          px: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'mark dirty B' }),
+          pd: h('priceSignal', 'discountComp', ['priceSignal', 'discountComp'], { label: 'mark dirty C' }),
+          tt: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'topological 1' }),
+          dt: h('discountComp', 'consumerEffect', ['discountComp', 'consumerEffect'], { label: 'topological 2' }),
         },
-        flows: [{ route: ['ri', 'ig'], kind: 'glitch', rate: 1.5 }],
+        flows: [
+          { route: ['px', 'tt'], kind: 'glitch', rate: 1.5 },
+          { route: ['pd', 'dt'], kind: 'glitch', rate: 1.5 },
+        ],
       },
     },
     {
@@ -192,9 +203,9 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Effect Armed', producerVersion: 'v2', consumerState: 'Executed', glitchFree: 'Active' },
       scene: {
         entities: {
-          sigDep: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['themeSignal()'], sub: 'dependency read' }),
-          effectEngine: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['effect() Runner'], sub: 'schedules microtask' }),
-          sideEffect: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['localStorage Write'], sub: 'side effect executed' }),
+          priceSignal: y(-16, 0, { label: 'themeSignal', tags: [{ text: 'dark-theme', tone: 'blue', icon: 'zap' }] }),
+          taxComp: d(0, 0, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['effect() Runner'], sub: 'microtask run' }),
+          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['localStorage'], sub: 'side effect' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'effect() Implementation', [
             `effect((onCleanup) => {`,
             `  const currentTheme = this.theme();`,
@@ -206,13 +217,12 @@ export const angularSignalsDagLesson = {
             `  });`,
             `});`,
           ], { icon: 'terminal' }),
-          zSig: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'EFFECT SCHEDULER & CLEANUP LIFECYCLE'),
         },
         links: {
-          se: h('sigDep', 'effectEngine', ['sigDep', 'effectEngine'], { label: 'notify scheduler' }),
-          es: h('effectEngine', 'sideEffect', ['effectEngine', 'sideEffect'], { label: 'execute side effect' }),
+          pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'notify scheduler' }),
+          tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'execute side effect' }),
         },
-        flows: [{ route: ['se', 'es'], kind: 'effect', rate: 1.5 }],
+        flows: [{ route: ['pt', 'tc'], kind: 'effect', rate: 1.5 }],
       },
     },
     {
@@ -232,9 +242,9 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Unified Reactive', producerVersion: 'v2', consumerState: 'Bridged', glitchFree: '100% Interop' },
       scene: {
         entities: {
-          rxjsStream: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['http.get() Stream'], sub: 'RxJS Observable' }),
-          toSignalBridge: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['toSignal(obs$)'], sub: 'auto-subscribes & unsubscribes' }),
-          signalVal: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['usersSignal()'], sub: 'synchronous Signal in template' }),
+          priceSignal: y(-16, 0, { label: 'http.get()', tags: [{ text: 'RxJS Observable', tone: 'purple', icon: 'zap' }] }),
+          taxComp: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['toSignal(obs$)'], sub: 'auto bridge' }),
+          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['usersSignal()'], sub: 'signal in DOM' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'RxJS Interop Code', [
             `import { toSignal, toObservable } from '@angular/core/rxjs-interop';`,
             ``,
@@ -244,13 +254,12 @@ export const angularSignalsDagLesson = {
             `// Convert Signal to Observable:`,
             `query$ = toObservable(this.searchQuery);`,
           ], { icon: 'terminal' }),
-          zSig: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'RXJS & SIGNALS INTEROPERABILITY BRIDGE'),
         },
         links: {
-          rt: h('rxjsStream', 'toSignalBridge', ['rxjsStream', 'toSignalBridge'], { label: 'pipe stream' }),
-          ts: h('toSignalBridge', 'signalVal', ['toSignalBridge', 'signalVal'], { label: 'expose signal' }),
+          pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'pipe stream' }),
+          tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'expose signal' }),
         },
-        flows: [{ route: ['rt', 'ts'], kind: 'pull', rate: 1.6 }],
+        flows: [{ route: ['pt', 'tc'], kind: 'pull', rate: 1.6 }],
       },
     },
   ],

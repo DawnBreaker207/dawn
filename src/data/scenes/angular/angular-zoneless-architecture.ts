@@ -41,9 +41,9 @@ export const angularZonelessArchitectureLesson = {
       metrics: { zonejsStatus: 'REMOVED (Zero polyfill)', bundleDelta: '-35 KB payload', schedulerMode: 'Zoneless', notificationModel: 'Signal-Driven' },
       scene: {
         entities: {
-          appConfig: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['app.config.ts'], sub: 'provideZonelessChangeDetection' }),
-          droppedPoly: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'boxes', label: ['zone.js Dropped'], sub: 'removed from angular.json' }),
-          leanBundle: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Leaner App (-35KB)'], sub: 'clean native browser runtime' }),
+          appConfig: y(-16, -6, { label: 'app.config.ts', tags: [{ text: 'Zoneless Mode', tone: 'green', icon: 'zap' }] }),
+          droppedPoly: d(-4, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'boxes', label: ['zone.js Dropped'], sub: 'no polyfill' }),
+          leanBundle: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Lean App (-35KB)'], sub: 'native runtime' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zoneless Application Setup', [
             `// src/app/app.config.ts`,
             `export const appConfig: ApplicationConfig = {`,
@@ -54,7 +54,6 @@ export const angularZonelessArchitectureLesson = {
             `};`,
             `// In angular.json: Remove 'zone.js' from "polyfills" array!`,
           ], { icon: 'terminal' }),
-          zZoneless: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ZONELESS RUNTIME ACTIVATION'),
         },
         links: {
           ad: h('appConfig', 'droppedPoly', ['appConfig', 'droppedPoly'], { label: 'drop polyfill' }),
@@ -79,9 +78,9 @@ export const angularZonelessArchitectureLesson = {
       metrics: { zonejsStatus: 'Zoneless', bundleDelta: '-35 KB', schedulerMode: 'Coalesced Microtask', notificationModel: 'Active' },
       scene: {
         entities: {
-          sigMutate: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['count.set(5)'], sub: 'notifies scheduler' }),
-          cdScheduler: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['CD Scheduler'], sub: 'coalesces into queueMicrotask' }),
-          renderTick: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['Single Render Pass'], sub: '1 tick for all updates' }),
+          appConfig: y(-16, -6, { label: 'count.set(5)', tags: [{ text: 'Signal Mutate', tone: 'blue', icon: 'zap' }] }),
+          cdScheduler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['CD Scheduler'], sub: 'coalesce tick' }),
+          renderTick: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Render Pass'], sub: '1 pass only' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Scheduler Coalescing Logic', [
             `count.set(1);`,
             `count.set(2);`,
@@ -91,13 +90,12 @@ export const angularZonelessArchitectureLesson = {
             `  renderDirtyViews(); // Executes only ONCE!`,
             `});`,
           ], { icon: 'terminal' }),
-          zZoneless: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'CHANGE DETECTION SCHEDULER ENGINE'),
         },
         links: {
-          sc: h('sigMutate', 'cdScheduler', ['sigMutate', 'cdScheduler'], { label: 'notify mutation' }),
-          cr: h('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'coalesced tick' }),
+          ac: h('appConfig', 'cdScheduler', ['appConfig', 'cdScheduler'], { label: 'notify mutation' }),
+          cr: h('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'coalesce pass' }),
         },
-        flows: [{ route: ['sc', 'cr'], kind: 'schedule', rate: 1.5 }],
+        flows: [{ route: ['ac', 'cr'], kind: 'schedule', rate: 1.5 }],
       },
     },
     {
@@ -116,9 +114,9 @@ export const angularZonelessArchitectureLesson = {
       metrics: { zonejsStatus: 'Zoneless', bundleDelta: '-35 KB', schedulerMode: 'Targeted', notificationModel: 'Precise View Hit' },
       scene: {
         entities: {
-          writableSig: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['user.name.set()'], sub: 'producer mutation' }),
-          viewConsumer: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Template Consumer'], sub: 'tracks LView binding' }),
-          dirtyComponent: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Targeted View'], sub: 'marked for update' }),
+          appConfig: y(-16, -6, { label: 'user.name.set', tags: [{ text: 'Producer', tone: 'green', icon: 'zap' }] }),
+          cdScheduler: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Template Link'], sub: 'tracks LView' }),
+          renderTick: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Targeted View'], sub: 'marked dirty' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Targeted Template Consumer', [
             `@Component({`,
             `  template: \`<h1>{{ userName() }}</h1>\``,
@@ -129,13 +127,12 @@ export const angularZonelessArchitectureLesson = {
             `  // Zero parent or sibling components are notified.`,
             `}`,
           ], { icon: 'terminal' }),
-          zZoneless: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SIGNAL-DRIVEN NOTIFICATION MODEL'),
         },
         links: {
-          wv: h('writableSig', 'viewConsumer', ['writableSig', 'viewConsumer'], { label: 'signal notify' }),
-          vd: h('viewConsumer', 'dirtyComponent', ['viewConsumer', 'dirtyComponent'], { label: 'mark view dirty' }),
+          ac: h('appConfig', 'cdScheduler', ['appConfig', 'cdScheduler'], { label: 'signal push' }),
+          cr: h('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'mark view dirty' }),
         },
-        flows: [{ route: ['wv', 'vd'], kind: 'signal', rate: 1.5 }],
+        flows: [{ route: ['ac', 'cr'], kind: 'signal', rate: 1.5 }],
       },
     },
     {
@@ -154,9 +151,9 @@ export const angularZonelessArchitectureLesson = {
       metrics: { zonejsStatus: 'Zoneless', bundleDelta: '-35 KB', schedulerMode: 'Targeted Walk', notificationModel: '1 Component Checked' },
       scene: {
         entities: {
-          dirtyViewNode: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'boxes', label: ['Dirty Component'], sub: 'only this node checked' }),
-          skippedTree: d(0, -6, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['499 Clean Views'], sub: '100% BYPASSED' }),
-          directDomWrite: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['DOM Mutated'], sub: 'render in 0.2ms' }),
+          cdScheduler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['CD Scheduler'], sub: 'dirty walk' }),
+          renderTick: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Dirty View'], sub: '1 node check' }),
+          cleanDom: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['DOM Mutated'], sub: '0.2ms update' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Render Cost Comparison', [
             `Top-Down Zone.js:`,
             `  Checked: 500 components`,
@@ -166,13 +163,12 @@ export const angularZonelessArchitectureLesson = {
             `  Checked: 1 component`,
             `  Duration: 0.2 ms (-98% CPU reduction!)`,
           ], { icon: 'terminal' }),
-          zZoneless: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'TARGETED BRANCH RENDERING IN ZONELESS'),
         },
         links: {
-          ds: h('dirtyViewNode', 'skippedTree', ['dirtyViewNode', 'skippedTree'], { label: 'isolate dirty node' }),
-          dd: h('dirtyViewNode', 'directDomWrite', ['dirtyViewNode', 'directDomWrite'], { label: 'in-place update' }),
+          cr: h('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'traverse dirty' }),
+          rc: h('renderTick', 'cleanDom', ['renderTick', 'cleanDom'], { label: 'mutate DOM' }),
         },
-        flows: [{ route: ['ds', 'dd'], kind: 'dom', rate: 1.5 }],
+        flows: [{ route: ['cr', 'rc'], kind: 'dom', rate: 1.5 }],
       },
     },
     {
@@ -191,22 +187,21 @@ export const angularZonelessArchitectureLesson = {
       metrics: { zonejsStatus: 'Native JS', bundleDelta: '-35 KB', schedulerMode: 'Native Promises', notificationModel: 'Clean Traces' },
       scene: {
         entities: {
-          asyncFunction: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['await fetchOrder()'], sub: 'native ES async/await' }),
-          nativePromise: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['V8 Native Promise'], sub: 'zero monkey patching' }),
-          pristineTrace: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Clean Stack Trace'], sub: 'order.service.ts:42' }),
+          appConfig: y(-16, -6, { label: 'async/await', tags: [{ text: 'Native ES2022', tone: 'blue', icon: 'zap' }] }),
+          cdScheduler: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Native Promise'], sub: 'zero patches' }),
+          renderTick: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Pristine Trace'], sub: 'clean source' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Pristine Error Stack Trace', [
             `Error: Order failed!`,
             `    at OrderService.fetch (order.service.ts:42)`,
             `    at async UserComponent.load (user.component.ts:18)`,
             `# Notice: Zero zone.js frames cluttering the console!`,
           ], { icon: 'terminal' }),
-          zZoneless: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'NATIVE ASYNC/AWAIT DEBUGGING'),
         },
         links: {
-          an: h('asyncFunction', 'nativePromise', ['asyncFunction', 'nativePromise'], { label: 'await native promise' }),
-          np: h('nativePromise', 'pristineTrace', ['nativePromise', 'pristineTrace'], { label: 'trace source map' }),
+          ac: h('appConfig', 'cdScheduler', ['appConfig', 'cdScheduler'], { label: 'await promise' }),
+          cr: h('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'trace source' }),
         },
-        flows: [{ route: ['an', 'np'], kind: 'signal', rate: 1.5 }],
+        flows: [{ route: ['ac', 'cr'], kind: 'signal', rate: 1.5 }],
       },
     },
     {
@@ -225,9 +220,9 @@ export const angularZonelessArchitectureLesson = {
       metrics: { zonejsStatus: 'Production Ready', bundleDelta: '-35 KB permanent', schedulerMode: 'Peak Performance', notificationModel: 'Zoneless Mastery' },
       scene: {
         entities: {
-          benchmarkGrid: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['10,000 Row Table'], sub: 'high throughput updates' }),
-          zonelessEngine: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['Zoneless Scheduler'], sub: 'targeted signal updates' }),
-          locked60Fps: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['60 FPS Locked'], sub: '80% CPU reduction' }),
+          appConfig: y(-16, -6, { label: '10k Rows Table', tags: [{ text: 'High Churn', tone: 'purple', icon: 'zap' }] }),
+          cdScheduler: d(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['Zoneless Core'], sub: 'targeted CD' }),
+          cleanDom: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['60 FPS Locked'], sub: '80% CPU saved' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Enterprise Performance Benchmark', [
             `Metric            | Zone.js         | Zoneless (Signals)`,
             `------------------+-----------------+-------------------`,
@@ -237,13 +232,12 @@ export const angularZonelessArchitectureLesson = {
             `FPS Stability     | 24-45 fps       | 60 fps rock-solid`,
             `Recommendation    | Legacy apps     | Modern standard`,
           ], { icon: 'terminal' }),
-          zZoneless: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ENTERPRISE PERFORMANCE COMPARISON'),
         },
         links: {
-          bz: h('benchmarkGrid', 'zonelessEngine', ['benchmarkGrid', 'zonelessEngine'], { label: 'stream row deltas' }),
-          zl: h('zonelessEngine', 'locked60Fps', ['zonelessEngine', 'locked60Fps'], { label: 'lock 60fps frame rate' }),
+          ac: h('appConfig', 'cdScheduler', ['appConfig', 'cdScheduler'], { label: 'stream row deltas' }),
+          cl: h('cdScheduler', 'cleanDom', ['cdScheduler', 'cleanDom'], { label: 'render 60fps' }),
         },
-        flows: [{ route: ['bz', 'zl'], kind: 'schedule', rate: 1.6 }],
+        flows: [{ route: ['ac', 'cl'], kind: 'schedule', rate: 1.6 }],
       },
     },
   ],

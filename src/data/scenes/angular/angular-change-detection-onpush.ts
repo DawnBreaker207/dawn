@@ -41,9 +41,11 @@ export const angularChangeDetectionOnpushLesson = {
       metrics: { strategy: 'OnPush', subtreeStatus: 'Pruned / Skipped', changeTrigger: 'None', skippedBranches: '100% of subtree' },
       scene: {
         entities: {
-          rootComp: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'strategy: Default' }),
-          onPushSubtree: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'boxes', label: ['OnPush Subtree'], sub: 'ChangeDetectionStrategy.OnPush' }),
-          childLeaves: d(10, 8, { s: 4.8, h: 50, color: 'slab', glyph: 'package', label: ['Child Components'], sub: 'SKIPPED (zero CPU check)' }),
+          rootComp: d(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'strategy: Def' }),
+          branchDefault: d(-12, 0, { s: 4.8, h: 52, color: 'amber', glyph: 'boxes', label: ['Default Branch'], sub: 'always checked' }),
+          branchOnPush: d(12, 0, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['OnPush Branch'], sub: 'pruned scope' }),
+          leafDefault: b(-12, 14, { s: 4.6, h: 48, color: 'amber', glyph: 'server', label: ['Child View A'], sub: 'checked leaf' }),
+          leafOnPush: b(12, 14, { s: 4.6, h: 48, color: 'slab', glyph: 'server', label: ['Child View B'], sub: 'pruned view' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'OnPush Component Declaration', [
             `@Component({`,
             `  selector: 'app-user-card',`,
@@ -55,13 +57,17 @@ export const angularChangeDetectionOnpushLesson = {
             `  @Input() user!: User; // Only checks when user reference changes!`,
             `}`,
           ], { icon: 'terminal' }),
-          zPush: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ONPUSH SUBTREE PRUNING BOUNDARY'),
         },
         links: {
-          ro: h('rootComp', 'onPushSubtree', ['rootComp', 'onPushSubtree'], { label: 'checks parent' }),
-          oc: h('onPushSubtree', 'childLeaves', ['onPushSubtree', 'childLeaves'], { label: 'prunes children' }),
+          rd: h('rootComp', 'branchDefault', ['rootComp', 'branchDefault'], { label: 'traverse default' }),
+          dl: h('branchDefault', 'leafDefault', ['branchDefault', 'leafDefault'], { label: 'check leaf' }),
+          ro: h('rootComp', 'branchOnPush', ['rootComp', 'branchOnPush'], { label: 'check boundary' }),
+          ol: h('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'skip subtree' }),
         },
-        flows: [{ route: ['ro', 'oc'], kind: 'bypass', rate: 1.5 }],
+        flows: [
+          { route: ['rd', 'dl'], kind: 'tick', rate: 1.5 },
+          { route: ['ro', 'ol'], kind: 'bypass', rate: 1.2 },
+        ],
       },
     },
     {
@@ -80,9 +86,9 @@ export const angularChangeDetectionOnpushLesson = {
       metrics: { strategy: 'OnPush', subtreeStatus: 'Checked (Input change)', changeTrigger: 'newInput !== oldInput', skippedBranches: 'Active branch' },
       scene: {
         entities: {
-          parentFeed: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['Parent Component'], sub: 'user = { ...user, name }' }),
-          refComparator: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['=== Check'], sub: 'newPtr !== oldPtr (true)' }),
-          onPushCard: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'boxes', label: ['UserCard View'], sub: 'CHECKED & MUTATED' }),
+          rootComp: d(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'strategy: Def' }),
+          branchOnPush: d(12, 0, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['OnPush Branch'], sub: 'ref changed' }),
+          leafOnPush: b(12, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Child View B'], sub: 'checked leaf' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Input Reference Change', [
             `// In Parent Component:`,
             `// ❌ In-place mutation: OnPush SKIPS update!`,
@@ -92,13 +98,12 @@ export const angularChangeDetectionOnpushLesson = {
             `this.user = { ...this.user, name: 'Bob' };`,
             `= Reference pointer changed: triggers OnPush re-render`,
           ], { icon: 'terminal' }),
-          zPush: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'INPUT REFERENCE IDENTITY TRIGGER'),
         },
         links: {
-          pr: h('parentFeed', 'refComparator', ['parentFeed', 'refComparator'], { label: 'pass new reference' }),
-          ro: h('refComparator', 'onPushCard', ['refComparator', 'onPushCard'], { label: 'run checkView()' }),
+          ro: h('rootComp', 'branchOnPush', ['rootComp', 'branchOnPush'], { label: 'pass new pointer' }),
+          ol: h('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'run checkView()' }),
         },
-        flows: [{ route: ['pr', 'ro'], kind: 'tick', rate: 1.5 }],
+        flows: [{ route: ['ro', 'ol'], kind: 'tick', rate: 1.5 }],
       },
     },
     {
@@ -117,9 +122,10 @@ export const angularChangeDetectionOnpushLesson = {
       metrics: { strategy: 'OnPush', subtreeStatus: 'Self-Triggered', changeTrigger: '(click) inside template', skippedBranches: 'Siblings skipped' },
       scene: {
         entities: {
-          btnClick: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['Button Click', 'Template Event'], sub: 'user click inside template' }),
-          markDirty: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['Branch Marker'], sub: 'marks component & ancestors' }),
-          siblingPruned: d(10, 8, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['Sibling OnPush'], sub: 'SKIPPED (0ms spent)' }),
+          rootComp: d(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'ancestor' }),
+          branchDefault: d(-12, 0, { s: 4.8, h: 52, color: 'slab', glyph: 'boxes', label: ['Sibling OnPush'], sub: 'skipped view' }),
+          branchOnPush: d(12, 0, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['Active OnPush'], sub: 'event branch' }),
+          leafOnPush: y(12, 14, { label: 'Template Btn', tags: [{ text: '(click) event', tone: 'green', icon: 'zap' }] }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Internal Event Trigger', [
             `@Component({`,
             `  template: \`<button (click)="isExpanded = !isExpanded">Toggle</button>\``,
@@ -130,13 +136,12 @@ export const angularChangeDetectionOnpushLesson = {
             `  // Sibling components on the page are NOT checked!`,
             `}`,
           ], { icon: 'terminal' }),
-          zPush: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'INTERNAL TEMPLATE EVENT TRIGGER'),
         },
         links: {
-          bm: h('btnClick', 'markDirty', ['btnClick', 'markDirty'], { label: 'event fires' }),
-          ms: h('markDirty', 'siblingPruned', ['markDirty', 'siblingPruned'], { label: 'bypass siblings' }),
+          lb: h('leafOnPush', 'branchOnPush', ['leafOnPush', 'branchOnPush'], { label: 'bubble mark' }),
+          br: h('branchOnPush', 'rootComp', ['branchOnPush', 'rootComp'], { label: 'mark ancestor' }),
         },
-        flows: [{ route: ['bm', 'ms'], kind: 'event', rate: 1.5 }],
+        flows: [{ route: ['lb', 'br'], kind: 'event', rate: 1.5 }],
       },
     },
     {
@@ -155,9 +160,9 @@ export const angularChangeDetectionOnpushLesson = {
       metrics: { strategy: 'OnPush', subtreeStatus: 'Marked For Check', changeTrigger: 'Observable.next()', skippedBranches: 'Clean' },
       scene: {
         entities: {
-          streamEmit: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['user$.next(data)'], sub: 'RxJS stream emits' }),
-          asyncPipe: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['AsyncPipe'], sub: 'cdRef.markForCheck()' }),
-          onPushView: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['OnPush View'], sub: 'checked on next tick' }),
+          rootComp: d(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'root tick' }),
+          branchOnPush: d(12, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['AsyncPipe'], sub: 'markForCheck' }),
+          leafOnPush: b(12, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Stream View'], sub: 'checked leaf' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'AsyncPipe in OnPush', [
             `@Component({`,
             `  changeDetection: ChangeDetectionStrategy.OnPush,`,
@@ -165,13 +170,12 @@ export const angularChangeDetectionOnpushLesson = {
             `})`,
             `// AsyncPipe handles markForCheck() automatically on every emission!`,
           ], { icon: 'terminal' }),
-          zPush: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ASYNCPIPE ONPUSH REACTIVITY'),
         },
         links: {
-          sa: h('streamEmit', 'asyncPipe', ['streamEmit', 'asyncPipe'], { label: 'emit data' }),
-          ao: h('asyncPipe', 'onPushView', ['asyncPipe', 'onPushView'], { label: 'markForCheck()' }),
+          ba: h('branchOnPush', 'rootComp', ['branchOnPush', 'rootComp'], { label: 'mark path dirty' }),
+          bl: h('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'update template' }),
         },
-        flows: [{ route: ['sa', 'ao'], kind: 'mark', rate: 1.5 }],
+        flows: [{ route: ['ba', 'bl'], kind: 'mark', rate: 1.5 }],
       },
     },
     {
@@ -191,9 +195,9 @@ export const angularChangeDetectionOnpushLesson = {
       metrics: { strategy: 'OnPush', subtreeStatus: 'Manually Triggered', changeTrigger: 'cdRef API', skippedBranches: 'Targeted' },
       scene: {
         entities: {
-          wsMsg: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['ws.onmessage'], sub: 'non-Angular event' }),
-          cdRefControl: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['ChangeDetectorRef'], sub: 'markForCheck() vs detectChanges()' }),
-          syncedView: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Synced UI'], sub: 'updated safely' }),
+          rootComp: d(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'coalesced tick' }),
+          branchOnPush: d(12, 0, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['cdRef Control'], sub: 'markForCheck' }),
+          leafOnPush: b(12, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Synced UI'], sub: 'synced DOM' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'ChangeDetectorRef Methods', [
             `constructor(private cdr: ChangeDetectorRef) {}`,
             ``,
@@ -203,13 +207,12 @@ export const angularChangeDetectionOnpushLesson = {
             `// Synchronous (Use with caution):`,
             `this.cdr.detectChanges(); // Executes immediately`,
           ], { icon: 'terminal' }),
-          zPush: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'MANUAL CHANGE DETECTOR CONTROL'),
         },
         links: {
-          wc: h('wsMsg', 'cdRefControl', ['wsMsg', 'cdRefControl'], { label: 'external callback' }),
-          cs: h('cdRefControl', 'syncedView', ['cdRefControl', 'syncedView'], { label: 'schedule / run check' }),
+          bc: h('branchOnPush', 'rootComp', ['branchOnPush', 'rootComp'], { label: 'mark path' }),
+          bl: h('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'execute check' }),
         },
-        flows: [{ route: ['wc', 'cs'], kind: 'mark', rate: 1.5 }],
+        flows: [{ route: ['bc', 'bl'], kind: 'mark', rate: 1.5 }],
       },
     },
     {
@@ -228,9 +231,9 @@ export const angularChangeDetectionOnpushLesson = {
       metrics: { strategy: 'Detached', subtreeStatus: '100% Isolated', changeTrigger: 'Custom RAF loop', skippedBranches: 'Detached' },
       scene: {
         entities: {
-          detachCmd: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['cdr.detach()'], sub: 'disconnects from tree' }),
-          rafLoop: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['rAF Loop', 'Animation'], sub: 'custom 60Hz loop' }),
-          chartCanvas: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['60Hz Canvas View'], sub: 'cdr.detectChanges() on demand' }),
+          rootComp: d(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'standard CD' }),
+          branchOnPush: d(12, 0, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['cdr.detach()'], sub: 'detached scope' }),
+          leafOnPush: b(12, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['60Hz Canvas'], sub: 'manual CD' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Detached Component Pattern', [
             `constructor(private cdr: ChangeDetectorRef) {`,
             `  this.cdr.detach(); // Completely stops automatic checking`,
@@ -241,13 +244,12 @@ export const angularChangeDetectionOnpushLesson = {
             `  this.cdr.detectChanges();`,
             `}, 500);`,
           ], { icon: 'terminal' }),
-          zPush: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DETACHED COMPONENT ARCHITECTURE'),
         },
         links: {
-          dr: h('detachCmd', 'rafLoop', ['detachCmd', 'rafLoop'], { label: 'detach from CD' }),
-          rc: h('rafLoop', 'chartCanvas', ['rafLoop', 'chartCanvas'], { label: 'manual check on demand' }),
+          br: h('branchOnPush', 'rootComp', ['branchOnPush', 'rootComp'], { label: 'sever connection' }),
+          bl: h('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'custom 60Hz loop' }),
         },
-        flows: [{ route: ['dr', 'rc'], kind: 'bypass', rate: 1.6 }],
+        flows: [{ route: ['bl'], kind: 'bypass', rate: 1.6 }],
       },
     },
   ],

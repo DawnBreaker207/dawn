@@ -41,9 +41,9 @@ export const angularDeferLoadingLesson = {
       metrics: { deferState: 'Initial (Idle)', activeTrigger: 'Declared', chunkStatus: 'Chunk Split', prefetchStrategy: 'On demand' },
       scene: {
         entities: {
-          mainBundle: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['main.js (Page)'], sub: 'initial page load' }),
-          deferSplitter: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['@defer Compiler'], sub: 'extracts chunk split' }),
-          lazyChunkFile: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['comments.chunk.js'], sub: 'deferred download' }),
+          mainBundle: y(-16, -6, { label: 'main.js', tags: [{ text: 'Page Bundle', tone: 'blue', icon: 'zap' }] }),
+          deferSplitter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['@defer Splitter'], sub: '@defer split' }),
+          lazyChunkFile: b(8, -6, { s: 4.6, h: 48, color: 'cyan', glyph: 'database', label: ['comments.chunk'], sub: 'lazy chunk' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Declarative @defer Syntax', [
             `@defer {`,
             `  <app-comments-section [postId]="post.id" />`,
@@ -53,11 +53,10 @@ export const angularDeferLoadingLesson = {
             `// Angular compiler automatically extracts app-comments-section`,
             `// and all its dependencies into an independent chunk!`,
           ], { icon: 'terminal' }),
-          zDefer: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DECLARATIVE CODE-SPLITTING ENGINE'),
         },
         links: {
-          md: h('mainBundle', 'deferSplitter', ['mainBundle', 'deferSplitter'], { label: 'split dependencies' }),
-          dl: h('deferSplitter', 'lazyChunkFile', ['deferSplitter', 'lazyChunkFile'], { label: 'emit deferred chunk' }),
+          md: h('mainBundle', 'deferSplitter', ['mainBundle', 'deferSplitter'], { label: 'extract dependencies' }),
+          dl: h('deferSplitter', 'lazyChunkFile', ['deferSplitter', 'lazyChunkFile'], { label: 'emit chunk' }),
         },
         flows: [{ route: ['md', 'dl'], kind: 'chunk', rate: 1.5 }],
       },
@@ -78,9 +77,9 @@ export const angularDeferLoadingLesson = {
       metrics: { deferState: 'Placeholder Active', activeTrigger: 'Waiting', chunkStatus: 'Pending', prefetchStrategy: 'CLS Protected' },
       scene: {
         entities: {
-          placeholderView: d(-10, -18, { s: 4.8, h: 50, color: 'slab', glyph: 'boxes', label: ['@placeholder'], sub: 'skeleton placeholder' }),
-          timerGuard: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['Timer Guard'], sub: 'after 100ms; minimum 500ms' }),
-          loadingSpinner: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['@loading State'], sub: 'smooth flicker-free spinner' }),
+          mainBundle: y(-16, -6, { label: '@placeholder', tags: [{ text: 'Skeleton Box', tone: 'slab', icon: 'zap' }] }),
+          deferSplitter: d(-4, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Timer Guard'], sub: 'minimum 500ms' }),
+          loadingSpinner: d(8, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'package', label: ['@loading State'], sub: 'smooth spinner' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '@placeholder & @loading Timers', [
             `@defer {`,
             `  <app-heavy-chart />`,
@@ -90,13 +89,12 @@ export const angularDeferLoadingLesson = {
             `  <div class="skeleton-box"></div>`,
             `}`,
           ], { icon: 'terminal' }),
-          zDefer: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'PLACEHOLDER & LOADING FLICKER GUARDS'),
         },
         links: {
-          pt: h('placeholderView', 'timerGuard', ['placeholderView', 'timerGuard'], { label: 'init skeleton' }),
-          tl: h('timerGuard', 'loadingSpinner', ['timerGuard', 'loadingSpinner'], { label: 'gate spinner duration' }),
+          md: h('mainBundle', 'deferSplitter', ['mainBundle', 'deferSplitter'], { label: 'init skeleton' }),
+          ds: h('deferSplitter', 'loadingSpinner', ['deferSplitter', 'loadingSpinner'], { label: 'gate duration' }),
         },
-        flows: [{ route: ['pt', 'tl'], kind: 'placeholder', rate: 1.5 }],
+        flows: [{ route: ['md', 'ds'], kind: 'placeholder', rate: 1.5 }],
       },
     },
     {
@@ -115,9 +113,9 @@ export const angularDeferLoadingLesson = {
       metrics: { deferState: 'Viewport Triggered', activeTrigger: 'on viewport', chunkStatus: 'Downloading', prefetchStrategy: 'Scroll-linked' },
       scene: {
         entities: {
-          userScroll: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['User Scrolls Down'], sub: 'page scroll event' }),
-          observerApi: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Intersection', 'Observer'], sub: 'placeholder enters viewport' }),
-          chunkFetch: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Fetch Chunk'], sub: 'GET comments.chunk.js' }),
+          mainBundle: y(-16, -6, { label: 'User Scroll', tags: [{ text: 'Scroll Down', tone: 'blue', icon: 'zap' }] }),
+          deferSplitter: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Observer API'], sub: 'enters view' }),
+          lazyChunkFile: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Fetch Chunk'], sub: 'downloading' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'on viewport Implementation', [
             `@defer (on viewport) {`,
             `  <app-comment-thread />`,
@@ -126,13 +124,12 @@ export const angularDeferLoadingLesson = {
             `}`,
             `// Zero network bytes consumed until scrolled into view!`,
           ], { icon: 'terminal' }),
-          zDefer: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'VIEWPORT INTERSECTION OBSERVER TRIGGER'),
         },
         links: {
-          uo: h('userScroll', 'observerApi', ['userScroll', 'observerApi'], { label: 'scroll intersects' }),
-          oc: h('observerApi', 'chunkFetch', ['observerApi', 'chunkFetch'], { label: 'download JS chunk' }),
+          md: h('mainBundle', 'deferSplitter', ['mainBundle', 'deferSplitter'], { label: 'scroll intersects' }),
+          dl: h('deferSplitter', 'lazyChunkFile', ['deferSplitter', 'lazyChunkFile'], { label: 'download JS chunk' }),
         },
-        flows: [{ route: ['uo', 'oc'], kind: 'trigger', rate: 1.5 }],
+        flows: [{ route: ['md', 'dl'], kind: 'trigger', rate: 1.5 }],
       },
     },
     {
@@ -151,9 +148,9 @@ export const angularDeferLoadingLesson = {
       metrics: { deferState: 'Hover Triggered', activeTrigger: 'on hover(triggerBtn)', chunkStatus: 'Downloaded', prefetchStrategy: 'Pre-click' },
       scene: {
         entities: {
-          mouseHover: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['mouseenter event'], sub: 'user hovers trigger' }),
-          hoverTrigger: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['on hover(btn)'], sub: 'fires load on hover' }),
-          hydratedComponent: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Dropdown Ready'], sub: 'instant click response' }),
+          mainBundle: y(-16, -6, { label: 'mouseenter', tags: [{ text: 'Hover Event', tone: 'amber', icon: 'zap' }] }),
+          deferSplitter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['on hover(btn)'], sub: 'hover trigger' }),
+          hydratedComponent: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Tooltip View'], sub: 'mounted view' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'on hover Trigger Syntax', [
             `<button #infoBtn>Details</button>`,
             ``,
@@ -163,13 +160,12 @@ export const angularDeferLoadingLesson = {
             `  <span>Hover to preview</span>`,
             `}`,
           ], { icon: 'terminal' }),
-          zDefer: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'INTERACTION & HOVER TRIGGER PIPELINE'),
         },
         links: {
-          mh: h('mouseHover', 'hoverTrigger', ['mouseHover', 'hoverTrigger'], { label: 'user intent' }),
-          hh: h('hoverTrigger', 'hydratedComponent', ['hoverTrigger', 'hydratedComponent'], { label: 'mount component' }),
+          md: h('mainBundle', 'deferSplitter', ['mainBundle', 'deferSplitter'], { label: 'user intent' }),
+          dh: h('deferSplitter', 'hydratedComponent', ['deferSplitter', 'hydratedComponent'], { label: 'mount component' }),
         },
-        flows: [{ route: ['mh', 'hh'], kind: 'trigger', rate: 1.5 }],
+        flows: [{ route: ['md', 'dh'], kind: 'trigger', rate: 1.5 }],
       },
     },
     {
@@ -188,9 +184,9 @@ export const angularDeferLoadingLesson = {
       metrics: { deferState: 'Idle Triggered', activeTrigger: 'on idle', chunkStatus: 'Downloaded (Idle)', prefetchStrategy: 'Background' },
       scene: {
         entities: {
-          mainThreadLull: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['requestIdleCallback'], sub: 'CPU idle period' }),
-          idleScheduler: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Idle Scheduler'], sub: 'executes in idle slot' }),
-          backgroundLoad: d(10, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'package', label: ['Silent Download'], sub: 'zero main-thread blocking' }),
+          mainBundle: y(-16, -6, { label: 'requestIdle', tags: [{ text: 'CPU Idle', tone: 'green', icon: 'zap' }] }),
+          deferSplitter: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Idle Scheduler'], sub: 'runs in idle' }),
+          lazyChunkFile: b(8, -6, { s: 4.6, h: 48, color: 'blue', glyph: 'database', label: ['Silent Chunk'], sub: 'silent load' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'on idle Execution', [
             `@defer (on idle) {`,
             `  <app-analytics-graph />`,
@@ -200,13 +196,12 @@ export const angularDeferLoadingLesson = {
             `  import('./analytics-graph.chunk.js');`,
             `});`,
           ], { icon: 'terminal' }),
-          zDefer: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'IDLE CALLBACK SCHEDULING PIPELINE'),
         },
         links: {
-          mi: h('mainThreadLull', 'idleScheduler', ['mainThreadLull', 'idleScheduler'], { label: 'browser idle' }),
-          ib: h('idleScheduler', 'backgroundLoad', ['idleScheduler', 'backgroundLoad'], { label: 'download background chunk' }),
+          md: h('mainBundle', 'deferSplitter', ['mainBundle', 'deferSplitter'], { label: 'browser idle' }),
+          dl: h('deferSplitter', 'lazyChunkFile', ['deferSplitter', 'lazyChunkFile'], { label: 'download background chunk' }),
         },
-        flows: [{ route: ['mi', 'ib'], kind: 'chunk', rate: 1.5 }],
+        flows: [{ route: ['md', 'dl'], kind: 'chunk', rate: 1.5 }],
       },
     },
     {
@@ -225,9 +220,9 @@ export const angularDeferLoadingLesson = {
       metrics: { deferState: 'Hydrated (Instant)', activeTrigger: 'on interaction', chunkStatus: 'Prefetched', prefetchStrategy: 'Prefetch on idle' },
       scene: {
         entities: {
-          prefetchIdle: d(-10, -18, { s: 4.8, h: 50, color: 'cyan', glyph: 'terminal', label: ['prefetch on idle'], sub: 'silent background download' }),
-          cachedChunk: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'boxes', label: ['Memory Cache'], sub: 'chunk cached in browser' }),
-          instantClickRender: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['0ms Instant Mount'], sub: 'renders immediately on click' }),
+          mainBundle: y(-16, -6, { label: 'prefetch idle', tags: [{ text: 'Pre-cache', tone: 'cyan', icon: 'zap' }] }),
+          deferSplitter: d(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['Memory Cache'], sub: 'cached in HTTP' }),
+          hydratedComponent: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['0ms Dialog'], sub: 'instant mount' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Optimistic Prefetching Pattern', [
             `@defer (on interaction; prefetch on idle) {`,
             `  <app-dialog-content />`,
@@ -237,13 +232,12 @@ export const angularDeferLoadingLesson = {
             `1. On idle: Browser downloads dialog chunk into HTTP cache`,
             `2. On click: Dialog opens with ZERO loading spinner!`,
           ], { icon: 'terminal' }),
-          zDefer: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'OPTIMISTIC PREFETCHING PIPELINE'),
         },
         links: {
-          pc: h('prefetchIdle', 'cachedChunk', ['prefetchIdle', 'cachedChunk'], { label: 'prefetch JS' }),
-          ci: h('cachedChunk', 'instantClickRender', ['cachedChunk', 'instantClickRender'], { label: 'instant hydration' }),
+          md: h('mainBundle', 'deferSplitter', ['mainBundle', 'deferSplitter'], { label: 'prefetch JS' }),
+          dh: h('deferSplitter', 'hydratedComponent', ['deferSplitter', 'hydratedComponent'], { label: 'instant hydration' }),
         },
-        flows: [{ route: ['pc', 'ci'], kind: 'hydrate', rate: 1.6 }],
+        flows: [{ route: ['md', 'dh'], kind: 'hydrate', rate: 1.6 }],
       },
     },
   ],

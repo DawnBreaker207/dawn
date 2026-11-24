@@ -16,7 +16,7 @@ export const angularServicesDiLesson = {
   minutes: 25,
   level: 'advanced',
   metrics: ['injectorTree', 'scopeLevel', 'lookupStrategy', 'injectionContext'],
-  legend: ['di', ['env', 'environment injector'], ['node', 'component node injector'], ['resolve', 'service resolution']],
+  legend: ['flow', ['env', 'environment injector'], ['node', 'component node injector'], ['resolve', 'service resolution']],
   goals: [
     { text: 'The dual injector trees: EnvironmentInjector vs NodeInjector', step: 1 },
     { text: 'providedIn: "root" singleton vs Component-level providers', step: 2 },
@@ -43,9 +43,9 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Dual Tree (Env + Node)', scopeLevel: 'Root + Component', lookupStrategy: 'Upward bubble', injectionContext: 'Active' },
       scene: {
         entities: {
-          nodeTree: d(-10, -18, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['Node Injector'], sub: 'mirrors DOM hierarchy' }),
-          bubbleLookup: d(0, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['Resolution Bubble'], sub: 'walks up to root' }),
-          envTree: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['Root Env', 'Injector'], sub: 'global singleton store' }),
+          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Route Injector'], sub: 'route scope' }),
+          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'boxes', label: ['Node Injector'], sub: 'view scope' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dual Tree Resolution Flow', [
             `Component requests AuthStateService:`,
             `1. Search Child Component NodeInjector (Not found)`,
@@ -54,13 +54,12 @@ export const angularServicesDiLesson = {
             `4. Fallback to EnvironmentInjector (Found in Root!)`,
             `= Injects singleton AuthStateService instance`,
           ], { icon: 'terminal' }),
-          zDi: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DUAL-TREE HIERARCHICAL INJECTOR ENGINE'),
         },
         links: {
-          nb: h('nodeTree', 'bubbleLookup', ['nodeTree', 'bubbleLookup'], { label: 'bubble upwards' }),
-          be: h('bubbleLookup', 'envTree', ['bubbleLookup', 'envTree'], { label: 'fallback to env' }),
+          cn: h('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'bubble upwards' }),
+          nr: h('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'fallback to root' }),
         },
-        flows: [{ route: ['nb', 'be'], kind: 'di', rate: 1.5 }],
+        flows: [{ route: ['cn', 'nr'], kind: 'node', rate: 1.5 }],
       },
     },
     {
@@ -79,9 +78,10 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Root vs Component', scopeLevel: 'Singleton & Scoped', lookupStrategy: 'Direct cache hit', injectionContext: 'Active' },
       scene: {
         entities: {
-          rootService: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['AuthService', '(Root)'], sub: 'providedIn: "root" (1 instance)' }),
-          compA: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget A'], sub: 'providers: [CartService] (inst 1)' }),
-          compB: d(10, 8, { s: 4.8, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget B'], sub: 'providers: [CartService] (inst 2)' }),
+          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          authSvc: b(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['AuthService'], sub: 'app singleton' }),
+          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget A'], sub: 'inst 1' }),
+          sibInj: d(12, 12, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget B'], sub: 'inst 2' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Scoped Service Definition', [
             `// Global singleton:`,
             `@Injectable({ providedIn: 'root' })`,
@@ -94,13 +94,13 @@ export const angularServicesDiLesson = {
             `})`,
             `export class CartComponent {}`,
           ], { icon: 'terminal' }),
-          zDi: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SINGLETON VS SCOPED PROVIDER ISOLATION'),
         },
         links: {
-          ra: h('rootService', 'compA', ['rootService', 'compA'], { label: 'shared singleton' }),
-          rb: h('rootService', 'compB', ['rootService', 'compB'], { label: 'shared singleton' }),
+          ra: h('rootInj', 'authSvc', ['rootInj', 'authSvc'], { label: 'binds singleton' }),
+          ac: h('authSvc', 'compInj', ['authSvc', 'compInj'], { label: 'shared instance' }),
+          as: h('authSvc', 'sibInj', ['authSvc', 'sibInj'], { label: 'shared instance' }),
         },
-        flows: [{ route: ['ra', 'rb'], kind: 'env', rate: 1.5 }],
+        flows: [{ route: ['ac', 'as'], kind: 'env', rate: 1.5 }],
       },
     },
     {
@@ -122,9 +122,10 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Controlled Bubble', scopeLevel: 'Constrained', lookupStrategy: '@SkipSelf / @Host', injectionContext: 'Active' },
       scene: {
         entities: {
-          childNode: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['Child Node'], sub: 'injects @SkipSelf()' }),
-          parentBoundary: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['Parent Host'], sub: 'satisfies @Host() boundary' }),
-          nullSafeFallback: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['@Optional() Null'], sub: 'safe fallback (no crash)' }),
+          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Parent Host'], sub: 'host boundary' }),
+          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'boxes', label: ['Child Node'], sub: 'skip self' }),
+          childComp: y(-12, 24, { label: 'leaf-view', tags: [{ text: '@SkipSelf()', tone: 'amber', icon: 'zap' }] }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Resolution Flags in Action', [
             `constructor(`,
             `  // Start search from parent, not self:`,
@@ -135,13 +136,13 @@ export const angularServicesDiLesson = {
             `  @Host() private formGroup: FormGroupDirective`,
             `) {}`,
           ], { icon: 'terminal' }),
-          zDi: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'RESOLUTION BOUNDARY CONTROL FLAGS'),
         },
         links: {
-          cp: h('childNode', 'parentBoundary', ['childNode', 'parentBoundary'], { label: 'skip self -> parent' }),
-          pn: h('parentBoundary', 'nullSafeFallback', ['parentBoundary', 'nullSafeFallback'], { label: 'optional fallback' }),
+          lc: h('childComp', 'compInj', ['childComp', 'compInj'], { label: 'lookup start' }),
+          cr: h('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'skip self -> parent' }),
+          rn: h('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'host check' }),
         },
-        flows: [{ route: ['cp', 'pn'], kind: 'resolve', rate: 1.5 }],
+        flows: [{ route: ['lc', 'cr'], kind: 'resolve', rate: 1.5 }],
       },
     },
     {
@@ -160,9 +161,10 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Functional DI', scopeLevel: 'Clean', lookupStrategy: 'inject(Token)', injectionContext: 'Valid context' },
       scene: {
         entities: {
-          fieldInit: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['inject(HttpClient)'], sub: 'property initializer' }),
-          contextValidator: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Injection Context'], sub: 'assertInInjectionContext()' }),
-          resolvedInstance: d(10, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['HttpClient Svc'], sub: 'instantiated cleanly' }),
+          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['Injection Context'], sub: 'assert context' }),
+          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'green', glyph: 'terminal', label: ['UserComponent'], sub: 'inject(Http)' }),
+          authSvc: b(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['HttpClient'], sub: 'resolved token' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional inject() Pattern', [
             `export class UserComponent {`,
             `  // Direct property initialization:`,
@@ -172,13 +174,13 @@ export const angularServicesDiLesson = {
             `  // Zero constructor parameter clutter!`,
             `}`,
           ], { icon: 'terminal' }),
-          zDi: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'FUNCTIONAL INJECT API PIPELINE'),
         },
         links: {
-          fc: h('fieldInit', 'contextValidator', ['fieldInit', 'contextValidator'], { label: 'verify context' }),
-          cr: h('contextValidator', 'resolvedInstance', ['contextValidator', 'resolvedInstance'], { label: 'resolve token' }),
+          ci: h('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'run inject()' }),
+          ir: h('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'fetch token' }),
+          ra: h('rootInj', 'authSvc', ['rootInj', 'authSvc'], { label: 'return singleton' }),
         },
-        flows: [{ route: ['fc', 'cr'], kind: 'di', rate: 1.5 }],
+        flows: [{ route: ['ci', 'ir', 'ra'], kind: 'resolve', rate: 1.5 }],
       },
     },
     {
@@ -197,9 +199,10 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Token Registry', scopeLevel: 'Config', lookupStrategy: 'Token key', injectionContext: 'Active' },
       scene: {
         entities: {
-          tokenDecl: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['InjectionToken'], sub: 'API_BASE_URL' }),
-          factoryProvider: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'boxes', label: ['Factory Provider'], sub: 'useFactory: () => env.url' }),
-          injectedValue: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['https://api.io'], sub: 'string value injected' }),
+          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          authSvc: b(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['API_URL Token'], sub: 'factory token' }),
+          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Factory Provider'], sub: 'useFactory' }),
+          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'terminal', label: ['Consumer View'], sub: 'inject token' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'InjectionToken Factory', [
             `export const API_URL = new InjectionToken<string>('API_URL', {`,
             `  providedIn: 'root',`,
@@ -209,13 +212,12 @@ export const angularServicesDiLesson = {
             `// Injecting the token:`,
             `const apiUrl = inject(API_URL);`,
           ], { icon: 'terminal' }),
-          zDi: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'INJECTION TOKEN & FACTORY REGISTRY'),
         },
         links: {
-          tf: h('tokenDecl', 'factoryProvider', ['tokenDecl', 'factoryProvider'], { label: 'define token' }),
-          fi: h('factoryProvider', 'injectedValue', ['factoryProvider', 'injectedValue'], { label: 'execute factory' }),
+          cr: h('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'request token' }),
+          rt: h('routeInj', 'authSvc', ['routeInj', 'authSvc'], { label: 'execute factory' }),
         },
-        flows: [{ route: ['tf', 'fi'], kind: 'resolve', rate: 1.5 }],
+        flows: [{ route: ['cr', 'rt'], kind: 'resolve', rate: 1.5 }],
       },
     },
     {
@@ -234,9 +236,10 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Dynamic Runtime Scope', scopeLevel: 'Dynamic', lookupStrategy: 'Custom child', injectionContext: 'Scoped' },
       scene: {
         entities: {
-          parentInj: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'package', label: ['Parent Injector'], sub: 'root environment' }),
-          creatorFn: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['createEnvInjector'], sub: 'spawns isolated scope' }),
-          modalScope: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['Modal Scope'], sub: 'private DialogRef provider' }),
+          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Parent Injector'], sub: 'root env' }),
+          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['createEnvInj'], sub: 'spawns scope' }),
+          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'green', glyph: 'terminal', label: ['Modal Scope'], sub: 'DialogRef' }),
+          sibInj: d(12, 12, { s: 4.6, h: 50, color: 'purple', glyph: 'package', label: ['Dynamic Component'], sub: 'mounted modal' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dynamic Environment Injector Creation', [
             `const modalInjector = createEnvironmentInjector(`,
             `  [{ provide: DIALOG_DATA, useValue: data }],`,
@@ -247,13 +250,13 @@ export const angularServicesDiLesson = {
             `});`,
             `modalInjector.destroy(); // Cleanup when closed`,
           ], { icon: 'terminal' }),
-          zDi: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DYNAMIC RUNTIME ENVIRONMENT INJECTOR'),
         },
         links: {
-          pc: h('parentInj', 'creatorFn', ['parentInj', 'creatorFn'], { label: 'derive child' }),
-          cm: h('creatorFn', 'modalScope', ['creatorFn', 'modalScope'], { label: 'bind custom providers' }),
+          rp: h('rootInj', 'routeInj', ['rootInj', 'routeInj'], { label: 'parent injector' }),
+          rc: h('routeInj', 'compInj', ['routeInj', 'compInj'], { label: 'create scope' }),
+          cs: h('compInj', 'sibInj', ['compInj', 'sibInj'], { label: 'mount modal' }),
         },
-        flows: [{ route: ['pc', 'cm'], kind: 'env', rate: 1.6 }],
+        flows: [{ route: ['rp', 'rc', 'cs'], kind: 'env', rate: 1.6 }],
       },
     },
   ],

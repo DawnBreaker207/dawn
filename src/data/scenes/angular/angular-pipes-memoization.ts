@@ -16,7 +16,7 @@ export const angularPipesMemoizationLesson = {
   minutes: 25,
   level: 'intermediate',
   metrics: ['pipeType', 'memoCache', 'executionsPerCycle', 'perfImpact'],
-  legend: ['flow', ['data', 'data transform'], ['check', 'reference equality check'], ['impure', 'per-tick run'], ['signal', 'computed signal']],
+  legend: ['flow', ['check', 'reference equality check'], ['impure', 'per-tick run'], ['data', 'data transform'], ['signal', 'computed signal']],
   goals: [
     { text: 'Pure Pipes & Identity Memoization Cache (=== equality)', step: 1 },
     { text: 'Impure Pipes and Per-Tick Execution Cost (pure: false)', step: 2 },
@@ -41,9 +41,9 @@ export const angularPipesMemoizationLesson = {
       metrics: { pipeType: 'Pure (default)', memoCache: 'Hit (Cached)', executionsPerCycle: '0 (Skipped)', perfImpact: 'Zero cost' },
       scene: {
         entities: {
-          inputVal: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['price: 150'], sub: 'reference unchanged' }),
-          memoCheck: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['=== Equality Check'], sub: 'curr === prev (true)' }),
-          cachedOutput: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['$150.00 (Cache)'], sub: 'transform() bypassed' }),
+          dataSource: y(-16, -6, { label: 'Template', tags: [{ text: 'price: 150', tone: 'blue', icon: 'zap' }] }),
+          purePipe: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Pure Pipe'], sub: '=== identity' }),
+          memoCache: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['$150.00 Cache'], sub: 'memo hit' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Pure Pipe Implementation', [
             `@Pipe({`,
             `  name: 'currencyFormat',`,
@@ -56,13 +56,12 @@ export const angularPipesMemoizationLesson = {
             `  }`,
             `}`,
           ], { icon: 'terminal' }),
-          zPipe: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'PURE PIPE IDENTITY MEMOIZATION'),
         },
         links: {
-          im: h('inputVal', 'memoCheck', ['inputVal', 'memoCheck'], { label: 'compare inputs' }),
-          mc: h('memoCheck', 'cachedOutput', ['memoCheck', 'cachedOutput'], { label: 'return cached output' }),
+          dp: h('dataSource', 'purePipe', ['dataSource', 'purePipe'], { label: 'compare inputs' }),
+          pm: h('purePipe', 'memoCache', ['purePipe', 'memoCache'], { label: 'return cached' }),
         },
-        flows: [{ route: ['im', 'mc'], kind: 'check', rate: 1.5 }],
+        flows: [{ route: ['dp', 'pm'], kind: 'check', rate: 1.5 }],
       },
     },
     {
@@ -81,9 +80,9 @@ export const angularPipesMemoizationLesson = {
       metrics: { pipeType: 'Impure (pure: false)', memoCache: 'Disabled', executionsPerCycle: '1,000 / tick', perfImpact: 'Severe jank' },
       scene: {
         entities: {
-          keyEvent: d(-10, -18, { s: 4.8, h: 50, color: 'amber', glyph: 'terminal', label: ['Keystroke Event'], sub: 'triggers CD tick' }),
-          impureRunner: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'cpu', label: ['Impure Pipe'], sub: 'runs for all 1,000 items' }),
-          domThrash: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'package', label: ['Frame Drop (30fps)'], sub: 'CPU starved by pipe' }),
+          dataSource: y(-16, -6, { label: 'Keystroke', tags: [{ text: '1000 items', tone: 'amber', icon: 'zap' }] }),
+          impurePipe: d(-4, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'cpu', label: ['Impure Pipe'], sub: 'runs per tick' }),
+          domThrash: d(8, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'package', label: ['CPU Starved'], sub: '30 FPS drop' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Impure Pipe Disaster Example', [
             `@Pipe({ name: 'filterList', pure: false }) // AVOID THIS!`,
             `export class FilterPipe implements PipeTransform {`,
@@ -94,13 +93,12 @@ export const angularPipesMemoizationLesson = {
             `}`,
             `Better: Filter in component or use computed() signal!`,
           ], { icon: 'terminal' }),
-          zPipe: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'IMPURE PIPE PER-TICK OVERHEAD'),
         },
         links: {
-          ki: h('keyEvent', 'impureRunner', ['keyEvent', 'impureRunner'], { label: 'trigger change cycle' }),
-          id: h('impureRunner', 'domThrash', ['impureRunner', 'domThrash'], { label: 'burn CPU cycles' }),
+          di: h('dataSource', 'impurePipe', ['dataSource', 'impurePipe'], { label: 'trigger change cycle' }),
+          id: h('impurePipe', 'domThrash', ['impurePipe', 'domThrash'], { label: 'burn CPU cycles' }),
         },
-        flows: [{ route: ['ki', 'id'], kind: 'impure', rate: 1.5 }],
+        flows: [{ route: ['di', 'id'], kind: 'impure', rate: 1.5 }],
       },
     },
     {
@@ -119,9 +117,9 @@ export const angularPipesMemoizationLesson = {
       metrics: { pipeType: 'Pure', memoCache: 'False Hit (Stale)', executionsPerCycle: '0 (Missed update)', perfImpact: 'UI Bug' },
       scene: {
         entities: {
-          arrayPush: d(-10, -18, { s: 4.8, h: 50, color: 'rose', glyph: 'terminal', label: ['items.push(item)'], sub: 'same reference in memory' }),
-          refCheck: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['prev === curr'], sub: 'returns TRUE (stale cache)' }),
-          staleView: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'package', label: ['Stale UI Output'], sub: 'new item not rendered' }),
+          dataSource: y(-16, -6, { label: 'Array.push', tags: [{ text: 'Same pointer', tone: 'rose', icon: 'zap' }] }),
+          purePipe: d(-4, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Ref Check'], sub: 'prev === curr' }),
+          memoCache: b(8, -6, { s: 4.6, h: 48, color: 'rose', glyph: 'database', label: ['Stale Cache'], sub: 'missed update' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'The Immutability Fix', [
             `// ❌ BROKEN: In-place mutation keeps same pointer`,
             `this.items.push(newItem); // Pure pipe will NOT update!`,
@@ -129,13 +127,12 @@ export const angularPipesMemoizationLesson = {
             `// ✅ CORRECT: New array reference triggers pure pipe`,
             `this.items = [...this.items, newItem];`,
           ], { icon: 'terminal' }),
-          zPipe: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ARRAY MUTATION IMMUTABILITY TRAP'),
         },
         links: {
-          ar: h('arrayPush', 'refCheck', ['arrayPush', 'refCheck'], { label: 'pointer comparison' }),
-          rs: h('refCheck', 'staleView', ['refCheck', 'staleView'], { label: 'reuses old result' }),
+          dp: h('dataSource', 'purePipe', ['dataSource', 'purePipe'], { label: 'pointer compare' }),
+          pm: h('purePipe', 'memoCache', ['purePipe', 'memoCache'], { label: 'reuse stale' }),
         },
-        flows: [{ route: ['ar', 'rs'], kind: 'check', rate: 1.5 }],
+        flows: [{ route: ['dp', 'pm'], kind: 'check', rate: 1.5 }],
       },
     },
     {
@@ -154,9 +151,9 @@ export const angularPipesMemoizationLesson = {
       metrics: { pipeType: 'AsyncPipe (Stateful)', memoCache: 'Stream Buffer', executionsPerCycle: 'On emission', perfImpact: 'Leak-free' },
       scene: {
         entities: {
-          obsStream: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['Observable Stream'], sub: 'user$ = http.get()' }),
-          asyncPipe: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['AsyncPipe Instance'], sub: 'subscribes & marks dirty' }),
-          renderedVal: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Template View'], sub: '{{ user.name }}' }),
+          dataSource: y(-16, -6, { label: 'Observable', tags: [{ text: 'user$ stream', tone: 'purple', icon: 'zap' }] }),
+          asyncPipe: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['AsyncPipe'], sub: 'markForCheck' }),
+          renderedDom: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Template View'], sub: 'DOM updated' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'AsyncPipe Template Usage', [
             `@Component({`,
             `  template: \``,
@@ -167,13 +164,12 @@ export const angularPipesMemoizationLesson = {
             `})`,
             `// Zero manual subscribe() or unsubscribe() required!`,
           ], { icon: 'terminal' }),
-          zPipe: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ASYNCPIPE STATEFUL SUBSCRIPTION'),
         },
         links: {
-          oa: h('obsStream', 'asyncPipe', ['obsStream', 'asyncPipe'], { label: 'stream emission' }),
-          ar: h('asyncPipe', 'renderedVal', ['asyncPipe', 'renderedVal'], { label: 'markForCheck()' }),
+          da: h('dataSource', 'asyncPipe', ['dataSource', 'asyncPipe'], { label: 'stream emission' }),
+          ar: h('asyncPipe', 'renderedDom', ['asyncPipe', 'renderedDom'], { label: 'markForCheck()' }),
         },
-        flows: [{ route: ['oa', 'ar'], kind: 'data', rate: 1.5 }],
+        flows: [{ route: ['da', 'ar'], kind: 'data', rate: 1.5 }],
       },
     },
     {
@@ -192,9 +188,9 @@ export const angularPipesMemoizationLesson = {
       metrics: { pipeType: 'Computed Signal', memoCache: 'DAG Memoized', executionsPerCycle: '0 (Lazy)', perfImpact: 'Optimal' },
       scene: {
         entities: {
-          searchQuery: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['query = signal()'], sub: 'reactive dependency' }),
-          computedDag: d(0, -6, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['filteredItems'], sub: 'computed(() => items().filter)' }),
-          memoizedList: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['Memoized Array'], sub: 'evaluated only on change' }),
+          dataSource: y(-16, -6, { label: 'query()', tags: [{ text: 'WritableSignal', tone: 'blue', icon: 'zap' }] }),
+          computedDag: d(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['filteredItems'], sub: 'computed DAG' }),
+          memoCache: b(8, -6, { s: 4.6, h: 48, color: 'cyan', glyph: 'database', label: ['Memo Cache'], sub: 'lazy evaluated' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Computed Signal vs Pipe', [
             `export class ListComponent {`,
             `  items = signal<Item[]>([]);`,
@@ -207,13 +203,12 @@ export const angularPipesMemoizationLesson = {
             `  });`,
             `}`,
           ], { icon: 'terminal' }),
-          zPipe: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'SIGNALS COMPUTED MEMOIZATION DAG'),
         },
         links: {
-          sc: h('searchQuery', 'computedDag', ['searchQuery', 'computedDag'], { label: 'notify dirty' }),
-          cm: h('computedDag', 'memoizedList', ['computedDag', 'memoizedList'], { label: 'read cached value' }),
+          dc: h('dataSource', 'computedDag', ['dataSource', 'computedDag'], { label: 'notify dirty' }),
+          cm: h('computedDag', 'memoCache', ['computedDag', 'memoCache'], { label: 'read cached' }),
         },
-        flows: [{ route: ['sc', 'cm'], kind: 'signal', rate: 1.5 }],
+        flows: [{ route: ['dc', 'cm'], kind: 'signal', rate: 1.5 }],
       },
     },
     {
@@ -232,9 +227,9 @@ export const angularPipesMemoizationLesson = {
       metrics: { pipeType: 'Optimized', memoCache: 'Verified', executionsPerCycle: 'Minimal', perfImpact: '60 FPS Smooth' },
       scene: {
         entities: {
-          devtools: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['Angular DevTools'], sub: 'Profiler Flame Chart' }),
-          hotspotDetector: d(0, -6, { s: 4.8, h: 50, color: 'rose', glyph: 'cpu', label: ['Pipe Hotspot'], sub: '24ms spent in transform()' }),
-          optimizedFps: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['60 FPS Clean'], sub: 'render time < 2ms' }),
+          dataSource: y(-16, -6, { label: 'DevTools', tags: [{ text: 'Flame Chart', tone: 'purple', icon: 'zap' }] }),
+          computedDag: d(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['computed DAG'], sub: '1.4ms check' }),
+          renderedDom: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['60 FPS DOM'], sub: 'smooth UI' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'DevTools Performance Audit', [
             `Angular DevTools Profiler Record:`,
             `  Change Detection Duration: 1.4ms (Healthy)`,
@@ -243,13 +238,12 @@ export const angularPipesMemoizationLesson = {
             `  Fix: Replaced with computed() signal`,
             `= 95% CPU reduction during user typing`,
           ], { icon: 'terminal' }),
-          zPipe: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'DEVTOOLS PERFORMANCE PROFILING'),
         },
         links: {
-          dh: h('devtools', 'hotspotDetector', ['devtools', 'hotspotDetector'], { label: 'profile flame chart' }),
-          ho: h('hotspotDetector', 'optimizedFps', ['hotspotDetector', 'optimizedFps'], { label: 'refactor to computed' }),
+          dc: h('dataSource', 'computedDag', ['dataSource', 'computedDag'], { label: 'profile timings' }),
+          cr: h('computedDag', 'renderedDom', ['computedDag', 'renderedDom'], { label: 'render 60fps' }),
         },
-        flows: [{ route: ['dh', 'ho'], kind: 'check', rate: 1.6 }],
+        flows: [{ route: ['dc', 'cr'], kind: 'check', rate: 1.6 }],
       },
     },
   ],

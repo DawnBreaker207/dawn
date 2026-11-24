@@ -41,9 +41,8 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { zoneStatus: 'Active', patchedApis: '150+ Web APIs', tickTrigger: 'Listening', nodesChecked: '0' },
       scene: {
         entities: {
-          browserApi: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['window.setTimeout'], sub: 'native browser API' }),
-          zonePatch: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Zone.js Intercept'], sub: 'patches prototype' }),
-          wrappedCb: d(10, 8, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['Wrapped Callback'], sub: 'tracks task lifecycle' }),
+          browserApi: y(-16, -6, { label: 'Web APIs', tags: [{ text: 'setTimeout', tone: 'blue', icon: 'zap' }] }),
+          zonePatch: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Zone.js Patch'], sub: 'patch proto' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zone.js Monkey Patching', [
             `// Zone.js patches browser prototypes on startup:`,
             `const originalSetTimeout = window.setTimeout;`,
@@ -54,13 +53,11 @@ export const angularZonejsDirtyCheckingLesson = {
             `  }, delay);`,
             `};`,
           ], { icon: 'terminal' }),
-          zZone: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ZONE.JS MONKEY PATCHING PIPELINE'),
         },
         links: {
-          bz: h('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'patch function' }),
-          zw: h('zonePatch', 'wrappedCb', ['zonePatch', 'wrappedCb'], { label: 'wrap callback' }),
+          bz: h('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'intercept callback' }),
         },
-        flows: [{ route: ['bz', 'zw'], kind: 'async', rate: 1.5 }],
+        flows: [{ route: ['bz'], kind: 'async', rate: 1.5 }],
       },
     },
     {
@@ -79,9 +76,9 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { zoneStatus: 'Microtask Empty', patchedApis: '150+ Web APIs', tickTrigger: 'appRef.tick()', nodesChecked: '0' },
       scene: {
         entities: {
-          taskDone: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['Callback Complete'], sub: 'state updated in memory' }),
-          ngZone: d(0, -6, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['NgZone Dispatcher'], sub: 'onMicrotaskEmpty.emit()' }),
-          appRefTick: d(10, 8, { s: 4.8, h: 50, color: 'amber', glyph: 'package', label: ['appRef.tick()'], sub: 'triggers global walk' }),
+          browserApi: y(-16, -6, { label: 'Web APIs', tags: [{ text: 'setTimeout', tone: 'blue', icon: 'zap' }] }),
+          zonePatch: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Zone.js Patch'], sub: 'patch proto' }),
+          appRefTick: d(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'package', label: ['appRef.tick()'], sub: 'microtask' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'NgZone Event Hookup', [
             `// Inside ApplicationRef:`,
             `this.ngZone.onMicrotaskEmpty.subscribe(() => {`,
@@ -90,13 +87,12 @@ export const angularZonejsDirtyCheckingLesson = {
             `  });`,
             `});`,
           ], { icon: 'terminal' }),
-          zZone: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'NGZONE TICK DISPATCH SEQUENCE'),
         },
         links: {
-          tn: h('taskDone', 'ngZone', ['taskDone', 'ngZone'], { label: 'queue empty' }),
-          na: h('ngZone', 'appRefTick', ['ngZone', 'appRefTick'], { label: 'trigger tick()' }),
+          bz: h('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'intercept callback' }),
+          za: h('zonePatch', 'appRefTick', ['zonePatch', 'appRefTick'], { label: 'emit microtask empty' }),
         },
-        flows: [{ route: ['tn', 'na'], kind: 'async', rate: 1.5 }],
+        flows: [{ route: ['bz', 'za'], kind: 'async', rate: 1.5 }],
       },
     },
     {
@@ -111,13 +107,13 @@ export const angularZonejsDirtyCheckingLesson = {
         kind: 'warning',
         text: 'In a large app with 500 components, a single button click anywhere causes Angular to check all 500 components by default!',
       },
-      changes: ['+ Top-down recursive walk initiated from root', '+ All 500 components checked sequentially'],
+      changes: ['+ Top-down recursive walk initiated from root', '+ All components checked sequentially'],
       metrics: { zoneStatus: 'Walking Tree', patchedApis: '150+ Web APIs', tickTrigger: 'Tick in progress', nodesChecked: '500 nodes' },
       scene: {
         entities: {
-          appRoot: d(-10, -18, { s: 4.8, h: 50, color: 'purple', glyph: 'boxes', label: ['AppComponent (Root)'], sub: 'checked first' }),
-          navChild: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'boxes', label: ['Nav (Child)'], sub: 'checked second' }),
-          leafChild: d(10, 8, { s: 4.8, h: 50, color: 'amber', glyph: 'boxes', label: ['Button (Leaf)'], sub: 'checked third' }),
+          appRefTick: d(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'package', label: ['appRef.tick()'], sub: 'microtask' }),
+          appRoot: d(8, 8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['AppComponent'], sub: 'walk root' }),
+          leafChild: b(-4, 8, { s: 4.6, h: 48, color: 'amber', glyph: 'server', label: ['Leaf Components'], sub: 'check leaves' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Top-Down Traversal Order', [
             `appRef.tick():`,
             `  1. checkView(AppComponent)`,
@@ -126,13 +122,12 @@ export const angularZonejsDirtyCheckingLesson = {
             `           └── 4. checkView(UserAvatarComponent)`,
             `= Complete tree checked depth-first in O(N) time`,
           ], { icon: 'terminal' }),
-          zZone: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'TOP-DOWN DIRTY CHECKING TRAVERSAL'),
         },
         links: {
-          an: h('appRoot', 'navChild', ['appRoot', 'navChild'], { label: 'check child' }),
-          nl: h('navChild', 'leafChild', ['navChild', 'leafChild'], { label: 'check leaf' }),
+          ta: h('appRefTick', 'appRoot', ['appRefTick', 'appRoot'], { label: 'start check' }),
+          al: h('appRoot', 'leafChild', ['appRoot', 'leafChild'], { label: 'traverse tree' }),
         },
-        flows: [{ route: ['an', 'nl'], kind: 'tick', rate: 1.5 }],
+        flows: [{ route: ['ta', 'al'], kind: 'tick', rate: 1.5 }],
       },
     },
     {
@@ -151,9 +146,9 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { zoneStatus: 'Outside Angular', patchedApis: 'Bypassed', tickTrigger: '0 ticks (Suppressed)', nodesChecked: '0 nodes' },
       scene: {
         entities: {
-          scrollEvent: d(-10, -18, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['Scroll / Canvas'], sub: '60 events / second' }),
-          outsideZone: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['runOutsideAngular'], sub: 'bypasses onMicrotaskEmpty' }),
-          nativeCanvas: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Direct DOM Write'], sub: '60fps locked, 0 ticks' }),
+          browserApi: y(-16, -6, { label: 'Scroll/Canvas', tags: [{ text: '60 events/sec', tone: 'blue', icon: 'zap' }] }),
+          zonePatch: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['runOutside'], sub: 'bypass Zone' }),
+          leafChild: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Direct DOM'], sub: '0 ticks' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'runOutsideAngular Pattern', [
             `constructor(private ngZone: NgZone) {}`,
             ``,
@@ -165,13 +160,12 @@ export const angularZonejsDirtyCheckingLesson = {
             `  });`,
             `}`,
           ], { icon: 'terminal' }),
-          zZone: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ESCAPING ZONE VIA RUNOUTSIDEANGULAR'),
         },
         links: {
-          so: h('scrollEvent', 'outsideZone', ['scrollEvent', 'outsideZone'], { label: 'execute outside' }),
-          on: h('outsideZone', 'nativeCanvas', ['outsideZone', 'nativeCanvas'], { label: 'direct canvas paint' }),
+          bz: h('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'execute outside' }),
+          zl: h('zonePatch', 'leafChild', ['zonePatch', 'leafChild'], { label: 'direct canvas paint' }),
         },
-        flows: [{ route: ['so', 'on'], kind: 'outside', rate: 1.5 }],
+        flows: [{ route: ['bz', 'zl'], kind: 'outside', rate: 1.5 }],
       },
     },
     {
@@ -192,9 +186,9 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { zoneStatus: 'Bottlenecked', patchedApis: '35KB bundle penalty', tickTrigger: 'Excessive ticks', nodesChecked: 'High CPU' },
       scene: {
         entities: {
-          polySize: d(-10, -18, { s: 4.8, h: 50, color: 'rose', glyph: 'package', label: ['zone.js (35KB)'], sub: 'bundle size tax' }),
-          stackMangler: d(0, -6, { s: 4.8, h: 50, color: 'amber', glyph: 'cpu', label: ['Mangled Traces'], sub: 'zone.js:1042 obscuring error' }),
-          wastedTicks: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'boxes', label: ['False Ticks'], sub: 'checks unchanged views' }),
+          browserApi: y(-16, -6, { label: 'zone.js', tags: [{ text: '35KB Tax', tone: 'rose', icon: 'zap' }] }),
+          zonePatch: d(-4, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'cpu', label: ['Zone Wrapping'], sub: 'mangled traces' }),
+          leafChild: b(8, -6, { s: 4.6, h: 48, color: 'rose', glyph: 'server', label: ['Wasted Ticks'], sub: 'CPU starved' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zone.js Bottleneck Audit', [
             `DevTools Performance Profile:`,
             `  Total JS Execution: 180ms`,
@@ -203,13 +197,12 @@ export const angularZonejsDirtyCheckingLesson = {
             `  Native async/await debugging: Obscured`,
             `= Motivated Angular's shift to Zoneless`,
           ], { icon: 'terminal' }),
-          zZone: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ZONE.JS ARCHITECTURAL OVERHEAD'),
         },
         links: {
-          ps: h('polySize', 'stackMangler', ['polySize', 'stackMangler'], { label: 'patch prototypes' }),
-          sw: h('stackMangler', 'wastedTicks', ['stackMangler', 'wastedTicks'], { label: 'trigger unnecessary ticks' }),
+          bz: h('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'wrap prototypes' }),
+          zl: h('zonePatch', 'leafChild', ['zonePatch', 'leafChild'], { label: 'trigger false ticks' }),
         },
-        flows: [{ route: ['ps', 'sw'], kind: 'async', rate: 1.5 }],
+        flows: [{ route: ['bz', 'zl'], kind: 'async', rate: 1.5 }],
       },
     },
     {
@@ -228,9 +221,9 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { zoneStatus: 'Selective Patching', patchedApis: 'Custom tuned', tickTrigger: 'Optimized', nodesChecked: 'Reduced' },
       scene: {
         entities: {
-          zoneFlags: d(-10, -18, { s: 4.8, h: 50, color: 'green', glyph: 'terminal', label: ['zone-flags.ts'], sub: 'unpatch scroll & rAF' }),
-          selectivePatcher: d(0, -6, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Selective Patcher'], sub: 'skips unpatched symbols' }),
-          leanZone: d(10, 8, { s: 4.8, h: 50, color: 'green', glyph: 'package', label: ['Lean Zone'], sub: 'zero scroll tick spam' }),
+          browserApi: y(-16, -6, { label: 'zone-flags', tags: [{ text: 'Unpatch scroll', tone: 'green', icon: 'zap' }] }),
+          zonePatch: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Selective Patch'], sub: 'custom hooks' }),
+          leanZone: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Zone'], sub: 'zero tick spam' }),
           card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'zone-flags.ts Configuration', [
             `// src/zone-flags.ts (imported before zone.js):`,
             `(window as any).__Zone_disable_requestAnimationFrame = true;`,
@@ -241,13 +234,12 @@ export const angularZonejsDirtyCheckingLesson = {
             `];`,
             `= Prevents CD from firing during user scrolling`,
           ], { icon: 'terminal' }),
-          zZone: x({ x0: -14, x1: 14, y0: -22, y1: 14 }, 'ZONE-FLAGS SELECTIVE API BYPASS'),
         },
         links: {
-          zs: h('zoneFlags', 'selectivePatcher', ['zoneFlags', 'selectivePatcher'], { label: 'set global flags' }),
-          sl: h('selectivePatcher', 'leanZone', ['selectivePatcher', 'leanZone'], { label: 'apply selective patches' }),
+          bz: h('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'set flags' }),
+          zp: h('zonePatch', 'leanZone', ['zonePatch', 'leanZone'], { label: 'apply patches' }),
         },
-        flows: [{ route: ['zs', 'sl'], kind: 'bypass', rate: 1.6 }],
+        flows: [{ route: ['bz', 'zp'], kind: 'bypass', rate: 1.6 }],
       },
     },
   ],
