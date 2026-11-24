@@ -532,12 +532,33 @@ Blocks must have sufficient height $h$ and diamond facet scale $s$ to accommodat
 | **Text Only (1-2 lines)** | $s \ge 3.5$ | $h \ge 36\text{px}$ | 18 chars |
 | **Glyph + 1-line Label** | $s \ge 3.8$ | $h \ge 42\text{px}$ | 16 chars |
 | **Glyph + 2-line Label** | $s \ge 4.2$ | $h \ge 46\text{px}$ | 14 chars / line |
-| **Glyph + 2-line Label + Subtitle (`sub`)** | $s \ge 4.8$ | $h \ge 52\text{px}$ | 12 chars / line |
-| **Flagship / Central Hub Nodes** | $s \ge 5.2$ | $h \ge 52\sim 56\text{px}$ | 14 chars / line |
+| **Glyph + 2-line Label + Subtitle (`sub`)** | $s \ge 4.8$ | $h \ge 54\text{px}$ | 12 chars / line |
+| **Flagship / Central Hub Nodes** | $s \ge 5.2$ | $h \ge 54\sim 58\text{px}$ | 14 chars / line |
 
 - **FORBIDDEN: Cramped Blocks:** Never use $s < 4.0$ or $h < 46\text{px}$ for any node combining an icon glyph and 2+ lines of text.
 - **Label Wrapping:** Split labels into short multi-line arrays: `label: ['Primary SQS', 'Queue']` rather than a single long string that exceeds diamond facet width.
-- **Subtitle Length:** Keep `sub` concise ($\le 24$ characters).
+
+##### D. The Zero-Spillover Block Containment Rule (Tuyệt đối không để chữ tràn ra ngoài khối)
+In SVG isometric rendering, text elements are centered relative to the block's diamond facets. If text lines are too long or too numerous, they will **spill over the perimeter borders** of the 3D block:
+- **Zero-Bleed Requirement:** Every character of glyphs, `label` lines, and `sub` subtitles MUST remain 100% enclosed within the illuminated front faces of the block. No letter may intersect or cross over the block's outline borders.
+- **Strict Subtitle (`sub`) Constraint:**
+  - `sub` is **strictly for a short category or state descriptor** (e.g. `'dirty tree'`, `'v1.0 tag'`, `'41-byte ref'`).
+  - **MAX LENGTH:** `sub` MUST NEVER exceed **12 to 14 characters** ($\text{length} \le 14$).
+  - **STRICTLY FORBIDDEN:** Full sentences or verbose descriptions in `sub` (e.g. `sub: 'Serializes directory tree.'` or `'100644 blob 3b18e5 app.ts'`). These 25+ character phrases protrude past the bottom vertex and puncture the block boundary.
+- **Height Budget for Nodes with Subtitles:**
+  - If a node contains both a `glyph`, 2 lines of `label`, AND a `sub`, the height budget requires $h \ge 54\text{px}$ to prevent `sub` from being shoved down past the bottom edge.
+
+##### E. Floor Zone Typography & Clearance Rules (Quy tắc Chữ Trên Sàn)
+Floor boundary zones (`makeZone` / `x({ x0, x1, y0, y1 }, 'LABEL')`) render a dashed diamond perimeter with an angled isometric title in the SVG canvas:
+- **Origin of Floor Text:** The renderer (`runtime-draw.ts:810`) places the zone text at the top-left coordinate `(x0 + 0.9, y0 + 0.55)` and projects it along the isometric $y$-axis running along the left dashed boundary.
+- **Zone Label Length Limit ($\le 18$ characters):**
+  - Tên vùng sàn MUST be concise and punchy (e.g. `'OS FILESYSTEM'`, `'STAGING AREA'`, `'OBJECT STORE'`, `'ROUTER MESH'`).
+  - **MAX LENGTH:** `zone.label` MUST NOT exceed **18 characters**.
+  - **STRICTLY FORBIDDEN:** Long sentences or 30+ character phrases (e.g. `'WRITE-TREE DIRECTORY COMPILATION'`). Lengthy text spans over $250\text{px}$ along the floor edge, slicing straight through entity nodes.
+- **Zone Label Clearance & Anti-Pill Stamping:**
+  - When placing entities in Tier 1 ($x \in [-12, -8], y \in [-20, -16]$):
+  - Any node, tag pill, or device label (such as `label: 'index-binary'` underneath a laptop) MUST NOT intersect or sit on top of the zone's floor text trajectory.
+  - Maintain at least **$25\text{px}$ physical separation** between any entity pill/tag and the floor zone title text. If space is tight, expand `x0` and `y0` outward (e.g. `x0: -16, y0: -24`) so the zone boundary and its title sit safely behind all Tier 1 components.
 
 #### 5. Labeled Link Clearance & Detached Label Prevention (Link Length & Anti-Teleport Standard)
 
