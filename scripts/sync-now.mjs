@@ -59,6 +59,7 @@ const out = {
   updatedAt: fmtMonth(new Date()),
   location: previous.location ?? 'Hanoi, Vietnam',
   status: desc || previous.status || '',
+  currentStatus: [],
   building: [],
   studying: [],
   entertainment: { games: [], music: previous.entertainment?.music ?? '' },
@@ -72,7 +73,9 @@ for (const page of res.results) {
   const status = props['Status']?.status?.name ?? props['Status']?.select?.name ?? '';
   if (status !== 'Public') continue; // publishing gate
 
-  if (type === 'Building' && stage !== 'Done') {
+  if (type === 'Status') {
+    out.currentStatus.push(...lines(await notion.blocks.children.list({ block_id: page.id, page_size: 100 })));
+  } else if (type === 'Building' && stage !== 'Done') {
     const body = lines(await notion.blocks.children.list({ block_id: page.id, page_size: 100 }));
     out.building.push({
       title: name,
