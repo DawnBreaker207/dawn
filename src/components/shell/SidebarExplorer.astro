@@ -364,7 +364,7 @@ const CURRICULUM_TRACK_ITEMS = [
       </a>
 
       <!-- Curriculum Tracks (Folder) -->
-      <details class="tree-sec" data-sec="curriculum" open>
+      <details class="tree-sec" data-sec="curriculum">
         <summary class="explorer-row" data-umami-event="sidebar-folder-curriculum">
           <span class="explorer-caret">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -460,54 +460,34 @@ const CURRICULUM_TRACK_ITEMS = [
       </svg>
     </button>
     <ul id="sidebar-ext-list" class="sidebar-ext-list" hidden>
-      <li class="sidebar-ext-item">
-        <img src="/static/icons/java.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
-        <span>Java</span>
-        <span class="text-(--fg-faint)">20</span>
-        <span class="ext-check ml-auto" aria-hidden="true">☑</span>
-      </li>
-      <li class="sidebar-ext-item">
-        <img src="/static/icons/typescript.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
-        <span>TypeScript</span>
-        <span class="text-(--fg-faint)">5</span>
-        <span class="ext-check ml-auto" aria-hidden="true">☑</span>
-      </li>
-      <li class="sidebar-ext-item">
-        <img src="/static/icons/spring.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
-        <span>Spring Boot</span>
-        <span class="text-(--fg-faint)">3.4</span>
-        <span class="ext-check ml-auto" aria-hidden="true">☑</span>
-      </li>
-      <li class="sidebar-ext-item">
-        <img src="/static/icons/angular.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
-        <span>Angular</span>
-        <span class="text-(--fg-faint)">20</span>
-        <span class="ext-check ml-auto" aria-hidden="true">☑</span>
-      </li>
-      <li class="sidebar-ext-item">
-        <img src="/static/icons/react.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
-        <span>React</span>
-        <span class="text-(--fg-faint)">19</span>
-        <span class="ext-check ml-auto" aria-hidden="true">☑</span>
-      </li>
-      <li class="sidebar-ext-item">
-        <img src="/static/icons/postgres.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
-        <span>PostgreSQL</span>
-        <span class="text-(--fg-faint)">16</span>
-        <span class="ext-check ml-auto" aria-hidden="true">☑</span>
-      </li>
-      <li class="sidebar-ext-item">
-        <img src="/static/icons/mysql.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
-        <span>MySQL</span>
-        <span class="text-(--fg-faint)">8</span>
-        <span class="ext-check ml-auto" aria-hidden="true">☑</span>
-      </li>
-      <li class="sidebar-ext-item">
-        <img src="/static/icons/redis.svg" alt="" loading="lazy" class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5" />
-        <span>Redis</span>
-        <span class="text-(--fg-faint)">7</span>
-        <span class="ext-check ml-auto" aria-hidden="true">☑</span>
-      </li>
+      {[
+        { icon: 'java', name: 'Java', ver: '21', href: '/lab/java' },
+        { icon: 'typescript', name: 'TypeScript', ver: '5', href: '/lab/angular' },
+        { icon: 'spring', name: 'Spring Boot', ver: '3.4', href: '/lab/java' },
+        { icon: 'angular', name: 'Angular', ver: '20', href: '/lab/angular' },
+        { icon: 'react', name: 'React', ver: '19', href: '/about' },
+        { icon: 'postgres', name: 'PostgreSQL', ver: '17', href: '/lab/sql' },
+        { icon: 'mysql', name: 'MySQL', ver: '8', href: '/lab/mysql-innodb' },
+        { icon: 'redis', name: 'Redis', ver: '7', href: '/lab/redis-event-loop' },
+      ].map((ext) => (
+        <li class="sidebar-ext-item">
+          <a
+            href={ext.href}
+            data-track-event="explorer-extension"
+            class="flex w-full items-center gap-2 text-inherit no-underline hover:text-(--accent)"
+          >
+            <img
+              src={`/static/icons/${ext.icon}.svg`}
+              alt=""
+              loading="lazy"
+              class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5"
+            />
+            <span>{ext.name}</span>
+            <span class="text-(--fg-faint)">{ext.ver}</span>
+            <span class="ext-check ml-auto" aria-hidden="true">☑</span>
+          </a>
+        </li>
+      ))}
     </ul>
   </div>
 </aside>
