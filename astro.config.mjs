@@ -9,7 +9,7 @@ import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://www.dawn.io.vn',
+  site: 'https://dawn.io.vn',
 
   vite: {
     plugins: [tailwindcss()],
