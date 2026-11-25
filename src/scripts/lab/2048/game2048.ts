@@ -322,8 +322,15 @@ function init2048Lab(): void {
       localStorage.setItem(BEST_KEY, String(best));
     }
     addRandomTile(grid);
-    if (!won && grid.some((row) => row.some((t) => t && t.value >= 2048))) won = true;
-    if (!hasMoves(grid)) gameOver = true;
+    const umami = (window as unknown as { umami?: { track: (name: string, data?: Record<string, unknown>) => void } }).umami;
+    if (!won && grid.some((row) => row.some((t) => t && t.value >= 2048))) {
+      won = true;
+      umami?.track('2048-win', { score });
+    }
+    if (!hasMoves(grid)) {
+      gameOver = true;
+      umami?.track('2048-game-over', { score });
+    }
     render(true);
   }
 

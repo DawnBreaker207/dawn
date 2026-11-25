@@ -34,7 +34,7 @@ export const prerender = true;
         <button
           type="button"
           id="boids-mode"
-          data-umami-event="boids-toggle-mode"
+          data-track-event="boids-toggle-mode"
           class="cursor-pointer rounded-lg border border-(--accent) bg-(--accent) px-3 py-1.5 font-semibold text-white transition-colors hover:bg-(--accent-hover)"
         >
           Mode: Attract
@@ -42,7 +42,7 @@ export const prerender = true;
         <button
           type="button"
           id="boids-scatter"
-          data-umami-event="boids-scatter"
+          data-track-event="boids-scatter"
           class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-(--fg) transition-colors hover:border-(--accent) hover:text-(--accent)"
         >
           Scatter
@@ -50,7 +50,7 @@ export const prerender = true;
         <button
           type="button"
           id="boids-pause"
-          data-umami-event="boids-pause"
+          data-track-event="boids-pause"
           class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent) hover:text-(--fg)"
         >
           ⏸ Pause
@@ -60,7 +60,7 @@ export const prerender = true;
     </div>
 
     <section class="overflow-hidden rounded-xl border border-(--border) bg-(--bg)" style="height: 60vh; min-height: 360px;">
-      <canvas id="boids-canvas" data-umami-event="boids-interact" class="block h-full w-full cursor-crosshair"></canvas>
+      <canvas id="boids-canvas" data-track-event="boids-interact" class="block h-full w-full cursor-crosshair"></canvas>
     </section>
   </div>
 

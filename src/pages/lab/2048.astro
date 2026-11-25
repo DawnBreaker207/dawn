@@ -47,7 +47,7 @@ export const prerender = true;
         <button
           type="button"
           id="g2048-undo"
-          data-umami-event="2048-undo"
+          data-track-event="2048-undo"
           class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent) hover:text-(--fg) disabled:cursor-not-allowed disabled:opacity-45"
         >
           Undo
@@ -55,7 +55,7 @@ export const prerender = true;
         <button
           type="button"
           id="g2048-new"
-          data-umami-event="2048-new-game"
+          data-track-event="2048-new-game"
           class="cursor-pointer rounded-lg border border-(--accent) bg-(--accent) px-3 py-1.5 font-semibold text-white transition-colors hover:bg-(--accent-hover)"
         >
           New Game
@@ -81,10 +81,10 @@ export const prerender = true;
     <div class="flex flex-wrap items-center justify-between gap-3 px-1 font-mono text-xs sm:text-sm text-(--fg-faint)">
       <span id="g2048-status">Use Arrow keys, WASD, or swipe.</span>
       <div class="flex items-center gap-1.5">
-        <button type="button" data-g2048-dir="left" aria-label="Move left" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">←</button>
-        <button type="button" data-g2048-dir="up" aria-label="Move up" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">↑</button>
-        <button type="button" data-g2048-dir="down" aria-label="Move down" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">↓</button>
-        <button type="button" data-g2048-dir="right" aria-label="Move right" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">→</button>
+        <button type="button" data-g2048-dir="left" data-track-event="2048-dpad" data-track-dir="left" aria-label="Move left" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">←</button>
+        <button type="button" data-g2048-dir="up" data-track-event="2048-dpad" data-track-dir="up" aria-label="Move up" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">↑</button>
+        <button type="button" data-g2048-dir="down" data-track-event="2048-dpad" data-track-dir="down" aria-label="Move down" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">↓</button>
+        <button type="button" data-g2048-dir="right" data-track-event="2048-dpad" data-track-dir="right" aria-label="Move right" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">→</button>
       </div>
     </div>
   </div>
