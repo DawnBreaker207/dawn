@@ -2402,6 +2402,21 @@ If the TS renderer is 90% right, the remaining 10% is still a bug.
 
 ---
 
+## 29. Typography & Font Size Scale (Root Reference)
+
+All content pages (`/`, `/about`, `/now`, `/projects`, `/books`, `/blog`, `/topics`, `/heatmap`, `/tokens`) must follow the root typography scale defined by `src/components/home/Hero.astro`, `src/pages/index.astro`, and `src/pages/about/index.astro`. Never shrink readable body or list text below `text-sm sm:text-base`.
+
+| Role | Tailwind Classes | Notes |
+|---|---|---|
+| **Page H1 (`<h1>`)** | `text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight` | Hero may scale to `xl:text-6xl` |
+| **Lead / Hero Subtitle** | `text-base sm:text-lg md:text-xl leading-relaxed` | Or `text-base sm:text-lg leading-relaxed` |
+| **Section H2 (`<h2>`)** | `text-xl sm:text-2xl md:text-3xl font-bold tracking-tight` | Standard section heading across all pages |
+| **Card / Item Title** | `text-base sm:text-lg font-bold` (or `font-semibold`) | Game names, project titles, card titles |
+| **Body / List / Description** | `text-sm sm:text-base leading-relaxed` | Minimum readable size for paragraphs, lists, and descriptions |
+| **Eyebrow / Mono Meta / Badges** | `text-xs sm:text-sm` (never `< 12px`) | Avoid `text-[10px]` / `text-[11px]` for readable labels |
+
+---
+
 ## 30. What Not to Do
 
 | ❌ Don't | ✅ Do instead |
