@@ -1,0 +1,115 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="2048 Studio Edition"
+  description="Playable 2048 puzzle game styled to match the Dawn Studio workspace — supports keyboard, WASD, and touch swipe."
+>
+  <header class="mb-7 space-y-4 border-b border-(--border) pt-1 pb-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-sm text-(--fg-faint)">
+      <div class="flex items-center gap-2">
+        <span class="inline-block size-2 rounded-full bg-(--accent)"></span>
+        <span class="text-(--fg)">~/dawn/lab/2048</span>
+      </div>
+      <a href="/lab" class="text-(--fg-dim) no-underline hover:text-(--accent)">
+        All labs →
+      </a>
+    </div>
+    <div class="space-y-2.5">
+      <h1 class="m-0 bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl font-extrabold leading-[1.15] pb-1 tracking-tight dark:from-rose-400 dark:via-pink-400 dark:to-amber-300">
+        2048
+      </h1>
+      <p class="m-0 max-w-2xl border-l-2 border-(--accent) pl-3.5 text-base sm:text-lg leading-relaxed text-(--fg-dim)">
+        Slide and merge matching tiles to reach 2048. Best score is saved locally in your browser.
+      </p>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-md space-y-4 pb-12">
+    <!-- Score & Actions -->
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--bg-alt) p-3.5 font-mono">
+      <div class="flex items-center gap-4">
+        <div>
+          <div class="text-xs uppercase tracking-[0.1em] text-(--fg-faint)">Score</div>
+          <div id="g2048-score" class="text-xl font-bold text-(--fg) tabular-nums">0</div>
+        </div>
+        <div class="h-8 w-px bg-(--border)"></div>
+        <div>
+          <div class="text-xs uppercase tracking-[0.1em] text-(--fg-faint)">Best</div>
+          <div id="g2048-best" class="text-xl font-bold text-(--accent) tabular-nums">0</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs sm:text-sm">
+        <button
+          type="button"
+          id="g2048-undo"
+          data-umami-event="2048-undo"
+          class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent) hover:text-(--fg) disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          Undo
+        </button>
+        <button
+          type="button"
+          id="g2048-new"
+          data-umami-event="2048-new-game"
+          class="cursor-pointer rounded-lg border border-(--accent) bg-(--accent) px-3 py-1.5 font-semibold text-white transition-colors hover:bg-(--accent-hover)"
+        >
+          New Game
+        </button>
+      </div>
+    </div>
+
+    <!-- 4x4 Board (Background Grid + Animated Tile Layer) -->
+    <div
+      id="g2048-grid"
+      class="relative rounded-xl border border-(--border) bg-(--bg-alt) p-3 touch-none select-none"
+      aria-label="2048 game board"
+    >
+      <div id="g2048-bg" class="grid grid-cols-4 gap-2.5">
+        {Array.from({ length: 16 }).map(() => (
+          <div class="aspect-square rounded-lg border border-(--border)/60 bg-(--bg)" />
+        ))}
+      </div>
+      <div id="g2048-tiles" class="pointer-events-none absolute inset-0"></div>
+    </div>
+
+    <!-- Status + Optional On-Screen D-Pad -->
+    <div class="flex flex-wrap items-center justify-between gap-3 px-1 font-mono text-xs sm:text-sm text-(--fg-faint)">
+      <span id="g2048-status">Use Arrow keys, WASD, or swipe.</span>
+      <div class="flex items-center gap-1.5">
+        <button type="button" data-g2048-dir="left" aria-label="Move left" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">←</button>
+        <button type="button" data-g2048-dir="up" aria-label="Move up" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">↑</button>
+        <button type="button" data-g2048-dir="down" aria-label="Move down" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">↓</button>
+        <button type="button" data-g2048-dir="right" aria-label="Move right" class="cursor-pointer rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-(--fg-dim) hover:border-(--accent) hover:text-(--accent)">→</button>
+      </div>
+    </div>
+  </div>
+
+  <script>import '@/scripts/lab/2048/game2048.ts';</script>
+
+  <style is:global>
+    .g2048-tile {
+      transition: transform 130ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+    .g2048-appear {
+      animation: g2048-appear 150ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    }
+    .g2048-pop {
+      animation: g2048-pop 170ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes g2048-appear {
+      from { opacity: 0; transform: scale(0.45); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes g2048-pop {
+      0% { transform: scale(0.85); }
+      55% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</BaseLayout>
