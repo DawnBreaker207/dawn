@@ -7,6 +7,7 @@ import TableOfContents from '@/components/blog/TableOfContents.astro';
 import PostRowView from '@/components/blog/PostRowView.astro';
 import Reactions from '@/components/blog/Reactions.astro';
 import BlogNav from '@/components/blog/BlogNav.astro';
+import { LABS, type LabEntry } from '@/data/labs';
 import type { Post } from '@/lib/utils/blog';
 import { GISCUS_ENABLED, SITE } from '@/lib/site';
 
@@ -23,6 +24,30 @@ interface Props {
 }
 
 const { title, tags, date, slug, minutes, toc, next, prev, related } = Astro.props;
+
+const LAB_KEYWORD_MAP: Array<{ keywords: RegExp; href: string }> = [
+  { keywords: /microservice|saga|distributed/i, href: '/lab/microservices' },
+  { keywords: /jdbc|sql|postgres|mysql|database|query/i, href: '/lab/sql' },
+  { keywords: /java|spring|jvm|backend/i, href: '/lab/java' },
+  { keywords: /angular|frontend|rxjs|signal/i, href: '/lab/angular' },
+  { keywords: /\bgit\b|branch|rebase/i, href: '/lab/git' },
+  { keywords: /devops|ci\/cd|gitops|pipeline/i, href: '/lab/devops' },
+  { keywords: /k8s|kubernetes|docker|container/i, href: '/lab/k8s' },
+  { keywords: /network|tcp|tls|http|dns|proxy/i, href: '/lab/foundations' },
+  { keywords: /\bai\b|agent|llm/i, href: '/lab/ai-agent-architecture' },
+];
+
+const searchHaystack = `${title} ${slug} ${tags.join(' ')}`;
+const matchedHrefs = Array.from(
+  new Set(LAB_KEYWORD_MAP.filter((m) => m.keywords.test(searchHaystack)).map((m) => m.href))
+);
+if (matchedHrefs.length === 0) {
+  matchedHrefs.push('/lab/architecture');
+}
+const relatedLabs: LabEntry[] = matchedHrefs
+  .map((href) => LABS.find((l) => l.href === href))
+  .filter((l): l is LabEntry => Boolean(l))
+  .slice(0, 2);
 
 const giscusConfig = JSON.stringify({
   'data-repo': SITE.comments.giscusConfig.repo,
@@ -114,6 +139,41 @@ const giscusConfig = JSON.stringify({
 
     <footer>
       <BlogNav next={next} prev={prev} />
+
+      {relatedLabs.length > 0 && (
+        <section class="mt-10 border-t border-(--border) pt-6" aria-label="Interactive labs">
+          <div class="mb-3 flex items-baseline justify-between gap-2">
+            <h2 class="m-0 font-mono text-xs sm:text-sm font-semibold uppercase tracking-[0.12em] text-(--accent)">
+              Try the Interactive Lab
+            </h2>
+            <a href="/lab" class="font-mono text-xs sm:text-sm text-(--fg-faint) hover:text-(--accent) no-underline">
+              All labs →
+            </a>
+          </div>
+          <div class={`grid grid-cols-1 gap-3 ${relatedLabs.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+            {relatedLabs.map((lab) => (
+              <a
+                href={lab.href}
+                data-umami-event="post-related-lab"
+                class="group flex items-center justify-between gap-4 rounded-xl border border-(--border) bg-(--bg-alt) p-4 no-underline transition-colors hover:border-(--accent)"
+              >
+                <div class="min-w-0 space-y-1">
+                  <div class="font-mono text-xs text-(--fg-faint)">{lab.tag}</div>
+                  <div class="text-base font-bold text-(--fg) group-hover:text-(--accent) leading-snug">
+                    {lab.title}
+                  </div>
+                  <p class="m-0 line-clamp-2 text-xs sm:text-sm text-(--fg-dim) leading-relaxed">
+                    {lab.intro}
+                  </p>
+                </div>
+                <span class="shrink-0 font-mono text-xs sm:text-sm text-(--fg-dim) group-hover:text-(--accent)">
+                  ▶ Launch
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {related && related.length > 0 && (
         <section class="mt-12 border-t border-(--border) pt-6" aria-label="Related posts">
