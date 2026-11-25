@@ -10,14 +10,59 @@ const NAV_LINKS = [
   { label: 'about/', href: '/about', event: 'home-nav-about' },
   { label: 'github ↗', href: `https://github.com/${GITHUB_USERNAME}`, external: true, event: 'home-nav-github' },
 ];
+
+const STARTER_TOURS = [
+  {
+    title: 'How AI Agents think',
+    hint: '8 layers reasoning & tools',
+    tag: '2.5D Sim',
+    href: '/lab/ai-agent-architecture',
+  },
+  {
+    title: 'Surviving 1M users',
+    hint: 'Traffic & load splitting',
+    tag: 'Interactive',
+    href: '/lab/load-balancing',
+  },
+  {
+    title: 'Maze solver (no code)',
+    hint: 'Draw walls with your mouse',
+    tag: 'Playable',
+    href: '/lab/pathfinding',
+  },
+  {
+    title: 'What happens in 0.2s?',
+    hint: 'Click through a web request',
+    tag: '30s tour',
+    href: '/lab/request-lifecycle',
+  },
+  {
+    title: 'Inside a SQL Engine',
+    hint: 'Watch B-Trees & queries run',
+    tag: 'Visual',
+    href: '/lab/sql-engine',
+  },
+];
+
+const RANDOM_LAB_URLS = [
+  '/lab/request-lifecycle',
+  '/lab/ai-agent-architecture',
+  '/lab/load-balancing',
+  '/lab/sql-execution-order',
+  '/lab/mysql-innodb',
+  '/lab/kafka-cluster-kraft',
+  '/lab/redis-event-loop',
+  '/lab/git-dag-objects',
+  '/lab/k8s',
+  '/lab/pathfinding',
+];
 ---
 
 <header class="max-w-full">
   <!-- Unified 50/50 Hero Workbench Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-2 items-start md:items-center gap-6 lg:gap-10 pt-1">
-    <!-- Left Column (50%): Header + Typewriter + Bio + Navigation Links -->
+  <div class="grid grid-cols-1 md:grid-cols-2 items-start gap-6 lg:gap-10 pt-1">
+    <!-- Left Column (50%): Header + Typewriter + Plain-English Hook + Actions -->
     <div class="flex flex-col justify-center space-y-4 sm:space-y-5">
-      <!-- 1. Authentic Header & Title at the Top -->
       <div class="space-y-2 sm:space-y-2.5">
         <div class="flex flex-wrap items-center gap-2 font-mono text-xs sm:text-sm text-(--fg-dim)">
           <span class="font-medium text-(--fg)">Tung Anh</span>
@@ -39,17 +84,48 @@ const NAV_LINKS = [
         </p>
       </div>
 
-      <!-- 2. Personal Typewriter Log -->
+      <!-- Personal Typewriter Log -->
       <div class="rounded-xl border border-(--border) bg-(--bg-alt) p-3 sm:p-3.5 shadow-xs">
         <TypedBios />
       </div>
 
-      <!-- 3. Grounded, Human Description -->
+      <!-- Grounded, Human Description -->
       <p class="text-base leading-relaxed text-(--fg-dim) sm:text-lg sm:leading-relaxed">
-        I build web applications with <span class="font-medium text-(--fg)">Java (Spring Boot)</span> and <span class="font-medium text-(--fg)">TypeScript (Angular / React)</span>. Endlessly curious about how real systems come together — from database query planning in PostgreSQL to distributed streaming and memory models. This site is my playground: a mix of interactive 2.5D architecture labs, personal projects, and casual engineering notes.
+        I build web applications with <span class="font-medium text-(--fg)">Java (Spring Boot)</span> and <span class="font-medium text-(--fg)">TypeScript (Angular / React)</span>. This workbench is my playground — part visual architecture simulator, part engineering notebook.
       </p>
 
-      <!-- 4. Quiet, Tasteful Navigation Links (Inside Left Column) -->
+      <!-- Primary Entry Actions -->
+      <div class="flex flex-wrap items-center gap-3 pt-0.5">
+        <a
+          href="/lab/request-lifecycle"
+          data-track-event="home-start-tour"
+          class="inline-flex items-center gap-2 rounded-lg border border-(--accent) bg-(--accent) px-4 py-2 font-mono text-sm font-semibold text-white no-underline transition-colors hover:bg-(--accent-hover)"
+        >
+          <span>Start a 30s tour</span>
+          <span aria-hidden="true">→</span>
+        </a>
+        <button
+          type="button"
+          id="hero-cmdk-btn"
+          data-track-event="home-hero-cmdk"
+          class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-(--border) bg-(--bg-alt) px-3.5 py-2 font-mono text-sm text-(--fg) transition-colors hover:border-(--accent) hover:text-(--accent)"
+        >
+          <span>Explore with</span>
+          <kbd class="rounded border border-(--border) bg-(--bg) px-1.5 py-0.5 text-xs text-(--fg-dim)">Ctrl+K</kbd>
+        </button>
+      </div>
+
+      <!-- Gentle path for non-tech visitors -->
+      <p class="font-mono text-sm text-(--fg-faint) leading-relaxed">
+        Not into code? Try the{' '}
+        <a href="/lab/pathfinding" class="text-(--fg-dim) underline underline-offset-4 hover:text-(--accent)">Pathfinding maze</a>,
+        {' '}read{' '}
+        <a href="/about" class="text-(--fg-dim) underline underline-offset-4 hover:text-(--accent)">About me</a>
+        {' '}or{' '}
+        <a href="/books" class="text-(--fg-dim) underline underline-offset-4 hover:text-(--accent)">Books</a>.
+      </p>
+
+      <!-- Quiet Navigation Links -->
       <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-sm sm:text-base text-(--fg-dim) pt-1">
         {NAV_LINKS.map((link) => (
           <a
@@ -65,20 +141,114 @@ const NAV_LINKS = [
       </nav>
     </div>
 
-    <!-- Right Column (50%): Full-width 16:9 Mario Coder GIF Companion -->
-    <div class="w-full flex flex-col justify-center">
-      <div class="relative group rounded-xl border border-(--border) bg-(--bg-alt) p-2 sm:p-2.5 shadow-xs overflow-hidden transition-all duration-300 hover:border-(--accent) hover:shadow-md">
+    <!-- Right Column (50%): Companion GIF + Start Here 1 Random Interactive Pick -->
+    <div class="w-full flex flex-col gap-4">
+      <div class="relative group rounded-xl border border-(--border) bg-(--bg-alt) p-2 shadow-xs overflow-hidden transition-all duration-300 hover:border-(--accent)">
         <img
           src="/static/images/mario_coder.gif"
           alt="Mario coding at desk"
-          class="w-full aspect-video object-cover rounded-lg select-none pointer-events-none"
+          class="w-full aspect-[16/8] object-cover rounded-lg select-none pointer-events-none"
           loading="eager"
         />
-        <div class="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-(--bg)/85 backdrop-blur-xs border border-(--border) font-mono text-[11px] text-(--fg-dim)">
+        <div class="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-(--bg)/85 backdrop-blur-xs border border-(--border) font-mono text-xs text-(--fg-dim)">
           <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>coding mode</span>
         </div>
       </div>
+
+      <section
+        aria-label="Start here interactive tour"
+        class="rounded-xl border border-(--border) bg-(--bg-alt) p-4 shadow-xs space-y-3"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-mono text-xs font-semibold uppercase tracking-[0.1em] text-(--accent) whitespace-nowrap">
+            Start here · Random pick
+          </span>
+          <span class="font-mono text-xs text-(--fg-faint) whitespace-nowrap">click &amp; play</span>
+        </div>
+
+        <a
+          id="hero-starter-card"
+          href={STARTER_TOURS[0].href}
+          data-tours={JSON.stringify(STARTER_TOURS)}
+          data-track-event="home-starter-tour"
+          class="group flex items-center justify-between gap-3 rounded-lg border border-(--border) bg-(--bg) px-3.5 py-3 no-underline transition-colors hover:border-(--accent) hover:bg-(--bg-hover)"
+        >
+          <div class="min-w-0">
+            <div id="hero-starter-title" class="truncate text-sm sm:text-base font-semibold text-(--fg) group-hover:text-(--accent) leading-snug">
+              {STARTER_TOURS[0].title}
+            </div>
+            <div id="hero-starter-hint" class="truncate text-xs sm:text-sm text-(--fg-dim) leading-snug mt-0.5">
+              {STARTER_TOURS[0].hint}
+            </div>
+          </div>
+          <span class="shrink-0 inline-flex items-center gap-1 rounded border border-(--border) bg-(--bg-alt) px-2.5 py-1 font-mono text-xs text-(--fg-dim) group-hover:border-(--accent) group-hover:text-(--accent)">
+            <span aria-hidden="true">▶</span>
+            <span id="hero-starter-tag">{STARTER_TOURS[0].tag}</span>
+          </span>
+        </a>
+
+        <div class="flex items-center justify-between pt-1.5 border-t border-(--border) font-mono text-xs sm:text-sm">
+          <button
+            type="button"
+            id="hero-random-lab"
+            data-labs={JSON.stringify(RANDOM_LAB_URLS)}
+            data-track-event="home-random-lab"
+            class="inline-flex cursor-pointer items-center gap-1.5 text-(--fg-dim) hover:text-(--accent) transition-colors"
+          >
+            <span>🎲 Shuffle pick</span>
+          </button>
+          <a href="/lab" class="text-(--fg-faint) hover:text-(--accent) no-underline transition-colors">
+            All labs →
+          </a>
+        </div>
+      </section>
     </div>
   </div>
 </header>
+
+<script>
+  function bindHeroOnboarding() {
+    document.getElementById('hero-cmdk-btn')?.addEventListener('click', () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+    });
+    const card = document.getElementById('hero-starter-card') as HTMLAnchorElement | null;
+    const titleEl = document.getElementById('hero-starter-title');
+    const hintEl = document.getElementById('hero-starter-hint');
+    const tagEl = document.getElementById('hero-starter-tag');
+    const randomBtn = document.getElementById('hero-random-lab');
+
+    if (card && titleEl && hintEl && tagEl) {
+      try {
+        const tours = JSON.parse(card.getAttribute('data-tours') || '[]') as Array<{
+          title: string;
+          hint: string;
+          tag: string;
+          href: string;
+        }>;
+        let currentIdx = Math.floor(Math.random() * Math.max(1, tours.length));
+        const applyTour = (idx: number) => {
+          const t = tours[idx];
+          if (!t) return;
+          card.href = t.href;
+          titleEl.textContent = t.title;
+          hintEl.textContent = t.hint;
+          tagEl.textContent = t.tag;
+        };
+        if (tours.length > 0) applyTour(currentIdx);
+
+        randomBtn?.addEventListener('click', () => {
+          if (tours.length <= 1) return;
+          let next = Math.floor(Math.random() * tours.length);
+          if (next === currentIdx) next = (currentIdx + 1) % tours.length;
+          currentIdx = next;
+          applyTour(currentIdx);
+        });
+      } catch {
+        // Fallback keeps SSR default card intact
+      }
+    }
+  }
+  bindHeroOnboarding();
+  document.addEventListener('astro:page-load', bindHeroOnboarding);
+</script>

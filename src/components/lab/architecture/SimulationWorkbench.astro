@@ -413,6 +413,27 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
         <svg class="i " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 8h.01"></path><path d="M12 12h.01"></path><path d="M14 8h.01"></path><path d="M16 12h.01"></path><path d="M18 8h.01"></path><path d="M6 8h.01"></path><path d="M7 16h10"></path><path d="M8 12h.01"></path><rect width="20" height="16" x="2" y="4" rx="2"></rect></svg>
         <span><kbd>←</kbd> <kbd>→</kbd> step · <kbd>R</kbd> replay · <kbd>Space</kbd> pause</span>
       </div>
+
+      <div class="mt-3 pt-2.5 border-t border-(--border) flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
+        <button
+          type="button"
+          id="wb-random-lab"
+          data-labs={JSON.stringify(CURRICULUM_MODULES.flatMap((m) => m.lessons.map((l) => `/lab/${l.id}`)).filter((h) => h !== `/lab/${lesson.id}`))}
+          class="inline-flex cursor-pointer items-center gap-1 text-(--fg-dim) hover:text-(--accent) transition-colors"
+        >
+          <span>🎲 Random lab</span>
+        </button>
+        <div class="flex items-center gap-3">
+          {nextLessonInfo && (
+            <a href={nextLessonInfo.href} class="text-(--accent) hover:underline no-underline">
+              Next: {nextLessonInfo.title} →
+            </a>
+          )}
+          <a href="/lab" class="text-(--fg-faint) hover:text-(--accent) no-underline">
+            All labs
+          </a>
+        </div>
+      </div>
     </section>
 
     {lesson.goals && lesson.goals.length > 0 && (
@@ -732,6 +753,20 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
         toStep: curIdx + 2,
       });
       renderStep(curIdx + 1);
+    });
+
+    // Random lab sandbox jump
+    const elRandomLab = document.getElementById('wb-random-lab');
+    elRandomLab?.addEventListener('click', () => {
+      try {
+        const urls = JSON.parse(elRandomLab.getAttribute('data-labs') || '[]');
+        if (urls.length > 0) {
+          const pick = urls[Math.floor(Math.random() * urls.length)];
+          window.location.assign(pick);
+        }
+      } catch {
+        window.location.assign('/lab');
+      }
     });
 
     // Timeline clicks
