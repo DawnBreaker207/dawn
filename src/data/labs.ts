@@ -29,11 +29,11 @@ export const LABS: LabEntry[] = [
   },
   {
     href: '/lab/sql',
-    title: 'Postgres & SQL Query Engine',
+    title: 'PostgreSQL, MySQL InnoDB & SQL Engine',
     tag: 'Database Core',
     tagClass: 'border-cyan-500 text-cyan-500',
-    intro: 'Parser, Planner, Executor, Buffer Pool, WAL, B-Tree index traversal, and fixing N+1 queries.',
-    desc: 'Visual query execution plans — compare Seq Scan vs B-Tree index lookups, dissect Hash Joins, MVCC snapshots, and connection pool sizing.',
+    intro: '10 SQL chapters: 7-Step Execution, EXPLAIN & Tuning, Complex/Temporal SQL, B-Tree/GIN/BRIN, MVCC, Locking & MySQL InnoDB.',
+    desc: 'Compare PostgreSQL (Heap, xmin/xmax, SSI, VACUUM, PgBouncer) and MySQL InnoDB (Clustered PK, Undo Log, Gap/Next-Key Locks) with query tuning.',
     cta: 'Inspect query plans',
   },
   {

@@ -65,7 +65,9 @@ import { designChatLesson } from './design/design-chat';
 
 
 // SQL deep-dive concepts
-import { sqlExplainLesson } from './storage/sql-explain';
+import { sqlExecutionOrderLesson } from './storage/sql-execution-order';
+import { sqlComplexQueriesLesson } from './storage/sql-complex-queries';
+import { mysqlInnodbLesson } from './storage/mysql-innodb';
 import { sqlFootprintLesson } from './storage/sql-footprint';
 import { sqlConnectionPoolLesson } from './storage/sql-connection-pool';
 
@@ -232,7 +234,9 @@ export {
   javaSpringJpaLesson,
   javaSpringSecurityLesson,
   javaSpringActuatorTestingLesson,
-  sqlExplainLesson,
+  sqlExecutionOrderLesson,
+  sqlComplexQueriesLesson,
+  mysqlInnodbLesson,
   sqlFootprintLesson,
   sqlConnectionPoolLesson,
   dockerInternalsLesson,
@@ -377,7 +381,9 @@ export const ALL_SCENES: Record<string, any> = {
   'java-spring-security': javaSpringSecurityLesson,
   'java-spring-actuator-testing': javaSpringActuatorTestingLesson,
   'java': javaTypesBoxingLesson,
-  'sql-explain': sqlExplainLesson,
+  'sql-execution-order': sqlExecutionOrderLesson,
+  'sql-complex-queries': sqlComplexQueriesLesson,
+  'mysql-innodb': mysqlInnodbLesson,
   'sql-footprint': sqlFootprintLesson,
   'sql-connection-pool': sqlConnectionPoolLesson,
   'docker-internals': dockerInternalsLesson,

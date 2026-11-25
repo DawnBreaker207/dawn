@@ -828,7 +828,7 @@ All interactive simulations are strictly partitioned into 11 mutually exclusive 
 | Nav Item | Domain Scope | Included Content & Exclusions | Total Lessons |
 |---|---|---|:---:|
 | **`network.sim`** | Network Protocols & Edge Scaling | TCP internals, TLS 1.3/mTLS, HTTP/3 QUIC, Anycast DNS, WebSockets, Request lifecycle, Latency & Percentiles, L4 DSR vs L7 Envoy, Caching, CDN, DDoS defense | **15** |
-| **`storage.sim`** | Database & In-Memory Engines | **PostgreSQL Engine (8 lessons):** Planner, Indexes, Storage Engines, Footprint, SQL vs NoSQL, Pool, MVCC Txns, EXPLAIN.<br>**Redis In-Memory Engine (6 lessons):** Single-thread event loop, Dict & SDS, Skiplist, Persistence (RDB/AOF), Sentinels, Cluster Sharding | **14** |
+| **`storage.sim`** | Database & In-Memory Engines | **SQL Engines (10 lessons — PostgreSQL & MySQL InnoDB):** Query Engine/EXPLAIN/Tuning, 7-Step SQL Execution, Complex Queries/Temporal, B-Tree/GIN/BRIN Indexes, PgBouncer, Storage Engines, 8KB Page Footprint, SQL vs NoSQL, Transactions/MVCC/Locking/CDC, MySQL InnoDB vs PostgreSQL.<br>**Redis In-Memory Engine (6 lessons):** Single-thread event loop, Dict & SDS, Skiplist, Persistence (RDB/AOF), Sentinels, Cluster Sharding | **16** |
 | **`git.sim`** | Git Internals & Branching Operations | 4 Git zones, commit DAG objects, symbolic refs, detached HEAD, worktree concurrency, 3-way diff3, rebase surgery, CRLF filters, bisect, submodules | **14** |
 | **`angular.sim`** | Angular Architecture & Reactivity | Component lifecycle, standalone DI, interceptors, router pipeline, Ivy incremental DOM, Signals reactive DAG, zoneless runtime, non-destructive hydration | **14** |
 | **`devops.sim`** | DevOps Engineering & Delivery | Team incentives & culture, toolchain evolution, pipeline runner internals & ephemeral isolation, GitOps reconciliation loop, 4 DORA metrics & error budgets | **5** |
@@ -838,7 +838,7 @@ All interactive simulations are strictly partitioned into 11 mutually exclusive 
 | **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6+ steps, Why & Core Mechanics):** Types/Boxing/Generics, String Pool & Compact Strings, HashMap & ConcurrentHashMap, Lambda & Lazy Streams, Modern Java & Core APIs, I/O/NIO.2/Selector, JDBC Pool/TX/Batch, Exceptions/Reflection/Proxy, ClassLoader & HotSpot JIT, JVM Memory/GC/Refs, Monitors/JMM/CAS/AQS, Pools/ThreadLocal/Loom, Spring IoC & Boot Auto-Config, AOP/@Transactional/@Async/Cache, MVC/Loom/WebFlux, JPA/N+1/Locking, Security/OAuth2, Actuator/Test Cache (18 lessons total) | **18** |
 | **`system-design.sim`** | System Design & AI Agents | HLD vs LLD, TinyURL, News Feed, Chat app, redundancy, rate limiting, timeouts/retries, observability.<br>**Flagship Lesson:** `ai-agent-architecture` (8-step Onion Model: LLM, RAG, MCP, Loop, Harness, Superpowers, LangChain, BMAD Swarms) | **10** |
 | **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking, IAM & KMS Encryption, Edge Security, HA & DR Tiers, Compute, Storage, Databases, Serverless, Migration | **10** |
-| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **133 Lessons** |
+| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **135 Lessons** |
 
 ### Unified Single Canvas 3D Architecture & Code-Driven Presentation Standard
 

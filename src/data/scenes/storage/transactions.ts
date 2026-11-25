@@ -76,7 +76,12 @@ const $a = {
       { text: `Phantoms and write skew`, step: 7 },
       { text: `Deadlocks and constraints as a safety net`, step: 9 },
       { text: `Short transactions with holds that expire`, step: 11 },
-    ],
+      { text: 'Evaluate tuple visibility via xmin, xmax & Snapshot xip[]', step: 7 },
+      { text: 'Prevent 32-bit txid Wraparound with VACUUM FREEZE', step: 8 },
+      { text: 'Catch Write Skew via Serializable Snapshot Isolation (SSI)', step: 9 },
+      { text: 'Build lock-free job queues with FOR UPDATE SKIP LOCKED', step: 10 },
+      { text: 'Avoid AccessExclusiveLock outages & use CONCURRENTLY', step: 11 },
+      { text: 'Scale with Declarative Partitioning & WAL CDC', step: 12 },],
     steps: [
       {
         short: `Last seat`,
@@ -536,7 +541,205 @@ const $a = {
           flows: Xa({ ben: { rate: 0.5 } }),
         },
       },
-    ],
+      {
+      short: 'xmin / xmax',
+      chapter: 'mvcc',
+      title: '1. MVCC Tuple Visibility: xmin, xmax & Snapshot xip[]',
+      body: [
+        'Every PostgreSQL row tuple carries hidden system columns: <code>xmin</code> (the <code>txid</code> that inserted it) and <code>xmax</code> (the <code>txid</code> that deleted/updated it, or <code>0</code> if live).',
+        'When a transaction starts, it takes a <strong>Snapshot</strong> <code>(xmin, xmax, xip[])</code> and checks commit status in <code>pg_xact</code> (clog) — so readers never block writers and writers never block readers.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'An UPDATE in PostgreSQL sets xmax = current_txid on the old tuple and inserts a brand-new tuple with xmin = current_txid!',
+      },
+      metrics: { mvcc_state: 'xmin / xmax', lock_mode: 'Zero read lock', index_type: 'Snapshot xip[]', scale_feature: 'pg_xact clog' },
+      scene: {
+        entities: {
+          snap: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Tx Snapshot'], sub: 'xip=[104,105]' }),
+          tup: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['Heap Tuple'], sub: 'xmin=102 xmax=0' }),
+          clog: b(15, -10, { r: 2.2, h: 48, color: 'green', label: ['pg_xact (clog)'], sub: '102 COMMITTED' }),
+          card: S({ x: -12, y: 12 }, '1. Inspecting Hidden MVCC Tuple Columns', [
+            'SELECT xmin, xmax, ctid, * FROM accounts WHERE id = 1;',
+            '// Visible if: xmin committed && xmin < snap.xmax && xmin not in xip[]',
+            '//         AND (xmax == 0 || xmax uncommitted || xmax >= snap.xmax)',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          sn_tp: h('snap', 'tup', ['snap', 'tup'], { heads: 'end', label: 'check xmin' }),
+          tp_cl: h('tup', 'clog', ['tup', 'clog'], { heads: 'end', label: 'commit?' }),
+        },
+        flows: [{ route: ['sn_tp', 'tp_cl'], kind: 'res', rate: 1.8 }],
+      },
+    },
+      {
+      short: 'VACUUM FREEZE',
+      chapter: 'mvcc',
+      title: '2. Transaction ID Wraparound & VACUUM FREEZE',
+      body: [
+        'PostgreSQL <code>txid</code> is a 32-bit circular counter (~4 billion total, 2 billion in the past / 2 billion in the future). Without freezing old rows, an ancient tuple’s <code>xmin</code> would eventually wrap around and look like it’s in the <em>future</em> — making old data vanish!',
+        '<strong>Aggressive Autovacuum (Freeze)</strong> marks old committed tuples as <code>HEAP_XMIN_FROZEN</code> so they remain unconditionally visible forever.',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Long-running idle transactions or orphaned replication slots block VACUUM FREEZE — eventually forcing Postgres to refuse writes!',
+      },
+      changes: ['+ 32-bit txid circular space (2B past / 2B future)', '+ VACUUM FREEZE pins old rows permanently visible'],
+      metrics: { mvcc_state: 'FROZEN xmin', lock_mode: 'Anti-wraparound', index_type: '32-bit txid', scale_feature: 'autovacuum_freeze' },
+      scene: {
+        entities: {
+          old: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['Old Tuple'], sub: 'age > 200M tx' }),
+          frz: d(0, -10, { s: 4.8, h: 54, color: 'cyan', glyph: 'shield', label: ['VACUUM FREEZE'], sub: 'mark FROZEN' }),
+          safe: b(15, -10, { r: 2.2, h: 48, color: 'green', label: ['Frozen Row'], sub: 'always visible' }),
+          card: S({ x: -12, y: 12 }, '2. Monitoring Transaction ID Wraparound Age', [
+            'SELECT datname, age(datfrozenxid) FROM pg_database ORDER BY 2 DESC;',
+            '-- Triggers aggressive freeze at autovacuum_freeze_max_age (200M)',
+            '-- Emergency stop at ~2B txids to prevent data corruption!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          ol_fr: h('old', 'frz', ['old', 'frz'], { heads: 'end', label: 'age limit' }),
+          fr_sf: h('frz', 'safe', ['frz', 'safe'], { heads: 'end', label: 'XMIN_FROZEN' }),
+        },
+        flows: [{ route: ['ol_fr', 'fr_sf'], kind: 'res', rate: 1.7 }],
+      },
+    },
+      {
+      short: 'SSI Write Skew',
+      chapter: 'mvcc',
+      title: '3. Write Skew & Serializable Snapshot Isolation (SSI)',
+      body: [
+        'In <code>REPEATABLE READ</code> (Snapshot Isolation), two concurrent doctors can both see 2 doctors on-call and each take themselves off-call — leaving <strong>0 doctors on-call</strong> (<strong>Write Skew</strong>), because they modified <em>disjoint</em> rows.',
+        'PostgreSQL <code>SERIALIZABLE</code> uses <strong>SSI</strong>: it tracks <code>SIREAD</code> predicate locks without blocking and aborts one transaction (<code>40001 serialization_failure</code>) when a dangerous rw-antidependency cycle forms.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'Applications using SERIALIZABLE must implement an automatic retry loop for SQLSTATE 40001!',
+      },
+      changes: ['+ REPEATABLE READ allows disjoint Write Skew', '+ SSI SIREAD locks detect cycle & abort 40001'],
+      metrics: { mvcc_state: 'SIREAD Lock', lock_mode: 'Optimistic SSI', index_type: 'Predicate', scale_feature: 'Retry 40001' },
+      scene: {
+        entities: {
+          tx1: d(-14, -15, { s: 4.6, h: 52, color: 'blue', glyph: 'cpu', label: ['Tx A (Dr Alice)'], sub: 'writes row A' }),
+          tx2: d(-14, -1, { s: 4.6, h: 52, color: 'cyan', glyph: 'cpu', label: ['Tx B (Dr Bob)'], sub: 'writes row B' }),
+          ssi: d(1, -8, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['SSI Detector'], sub: 'SIREAD cycle' }),
+          abr: d(15, -8, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Abort 40001'], sub: 'retry Tx B' }),
+          card: S({ x: -12, y: 12 }, '3. Catching Write Skew with SERIALIZABLE', [
+            'BEGIN ISOLATION LEVEL SERIALIZABLE;',
+            'SELECT COUNT(*) FROM on_call WHERE shift = \'night\'; -- both see 2',
+            'UPDATE on_call SET active = false WHERE doctor = \'Alice\';',
+            '-- Tx B fails on COMMIT: ERROR: could not serialize (40001)',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          t1_ss: h('tx1', 'ssi', ['tx1', 'ssi'], { heads: 'end', label: 'rw-dep' }),
+          t2_ss: h('tx2', 'ssi', ['tx2', 'ssi'], { heads: 'end', label: 'rw-dep' }),
+          ss_ab: h('ssi', 'abr', ['ssi', 'abr'], { heads: 'end', label: '40001 abort' }),
+        },
+        flows: [{ route: ['t1_ss', 'ss_ab'], kind: 'fail', rate: 1.7 }, { route: ['t2_ss'], kind: 'req', rate: 1.7 }],
+      },
+    },
+      {
+      short: 'SKIP LOCKED',
+      chapter: 'locking',
+      title: '4. Job Queues with FOR UPDATE SKIP LOCKED & NOWAIT',
+      body: [
+        'Plain <code>SELECT ... FOR UPDATE LIMIT 1</code> makes Worker 2 block and wait behind Worker 1 on the exact same row.',
+        'Add <strong><code>SKIP LOCKED</code></strong>: Worker 2 immediately skips any locked row and grabs the next unlocked job in $O(1)$! Use <code>NOWAIT</code> when you want an instant error instead of waiting.',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'FOR UPDATE SKIP LOCKED turns PostgreSQL into a rock-solid, transactional Outbox / Job Queue without Redis or RabbitMQ.',
+      },
+      changes: ['+ SKIP LOCKED bypasses rows locked by peers', '+ NOWAIT fails immediately on lock conflict'],
+      metrics: { mvcc_state: 'Row-level lock', lock_mode: 'SKIP LOCKED', index_type: 'Job Queue', scale_feature: '0 worker stall' },
+      scene: {
+        entities: {
+          w1: d(-14, -15, { s: 4.6, h: 52, color: 'green', glyph: 'cpu', label: ['Worker 1'], sub: 'locks job #1' }),
+          w2: d(-14, -1, { s: 4.6, h: 52, color: 'cyan', glyph: 'cpu', label: ['Worker 2'], sub: 'skips job #1' }),
+          q: b(2, -8, { r: 2.3, h: 50, color: 'purple', label: ['jobs Table'], sub: '#1 lock, #2 free' }),
+          j2: d(15, -8, { s: 4.6, h: 52, color: 'green', glyph: 'zap', label: ['Job #2 Claimed'], sub: 'parallel exec' }),
+          card: S({ x: -12, y: 12 }, '4. Transactional Job Queue with SKIP LOCKED', [
+            'UPDATE jobs SET status = \'RUNNING\'',
+            'WHERE id = (',
+            '  SELECT id FROM jobs WHERE status = \'PENDING\'',
+            '  ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1',
+            ') RETURNING *;',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          w1_q: h('w1', 'q', ['w1', 'q'], { heads: 'end', label: 'claim #1' }),
+          w2_q: h('w2', 'q', ['w2', 'q'], { heads: 'end', label: 'skip #1' }),
+          q_j2: h('q', 'j2', ['q', 'j2'], { heads: 'end', label: 'claim #2' }),
+        },
+        flows: [{ route: ['w1_q'], kind: 'req', rate: 1.7 }, { route: ['w2_q', 'q_j2'], kind: 'res', rate: 1.9 }],
+      },
+    },
+      {
+      short: 'DDL Lock Queue',
+      chapter: 'locking',
+      title: '5. AccessExclusiveLock Queue Disaster & CONCURRENTLY',
+      body: [
+        '<code>ALTER TABLE</code> and <code>CREATE INDEX</code> (without <code>CONCURRENTLY</code>) request an <code>AccessExclusiveLock</code> (or <code>ShareLock</code>). If a slow analytics <code>SELECT</code> holds <code>AccessShareLock</code>, the DDL waits — and <strong>every new SELECT queues behind the DDL</strong>, taking down production!',
+        'Always set <code>SET lock_timeout = \'2s\'</code> before migrations and use <code>CREATE INDEX CONCURRENTLY</code>.',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Never run raw ALTER TABLE / CREATE INDEX in prod without lock_timeout — a single slow query behind it causes a total outage!',
+      },
+      changes: ['+ Waiting AccessExclusiveLock blocks all new SELECTs', '+ lock_timeout + CONCURRENTLY prevent pile-up'],
+      metrics: { mvcc_state: 'Lock Queue', lock_mode: 'AccessExclusive', index_type: 'CONCURRENTLY', scale_feature: 'lock_timeout=2s' },
+      scene: {
+        entities: {
+          slow: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Slow SELECT'], sub: 'holds Share' }),
+          ddl: d(0, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['ALTER TABLE'], sub: 'waits Exclusive' }),
+          web: d(15, -10, { s: 4.8, h: 54, color: 'red', glyph: 'server', label: ['All App Reads'], sub: 'BLOCKED!' }),
+          card: S({ x: -12, y: 12 }, '5. Safe Zero-Downtime Migrations', [
+            'SET lock_timeout = \'2s\'; -- fail fast instead of piling up!',
+            'CREATE INDEX CONCURRENTLY idx_orders_uid ON orders (user_id);',
+            '-- Safe: 2-phase scan, never blocks reads or writes!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          sl_dd: h('slow', 'ddl', ['slow', 'ddl'], { heads: 'end', label: 'blocks DDL', style: 'dashed' }),
+          dd_wb: h('ddl', 'web', ['ddl', 'web'], { heads: 'end', label: 'blocks reads!', style: 'dashed' }),
+        },
+        flows: [{ route: ['sl_dd', 'dd_wb'], kind: 'fail', rate: 1.8 }],
+      },
+    },
+      {
+      short: 'Partition & CDC',
+      chapter: 'scale',
+      title: '7. Declarative Partitioning & WAL Logical CDC',
+      body: [
+        '<strong>Declarative Partitioning</strong> (<code>RANGE</code> by month or <code>HASH</code>) splits billion-row tables into small child tables. <strong>Partition Pruning</strong> skips irrelevant months, and dropping old data is an instant <code>DROP TABLE events_2025_01</code> (zero <code>DELETE</code> bloat!).',
+        '<strong>CDC (Logical Decoding / Debezium)</strong> streams committed row changes straight from <code>pg_wal</code> to Kafka/Search, eliminating Dual-Write inconsistencies.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'DROP/DETACH PARTITION reclaims gigabytes instantaneously without generating dead tuples or triggering VACUUM!',
+      },
+      changes: ['+ Partition Pruning scans only matching month', '+ WAL Logical Decoding streams CDC to Kafka'],
+      metrics: { mvcc_state: 'pg_wal CDC', lock_mode: 'Instant DROP', index_type: 'Pruned Part', scale_feature: '0 Dual-Write' },
+      scene: {
+        entities: {
+          part: b(-14, -10, { r: 2.2, h: 48, color: 'blue', label: ['Partitioned Tbl'], sub: 'RANGE / month' }),
+          wal: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'workflow', label: ['WAL Decoding'], sub: 'pgoutput CDC' }),
+          kafka: d(15, -10, { s: 4.8, h: 54, color: 'green', glyph: 'server', label: ['Kafka / Search'], sub: '0 dual-write' }),
+          card: S({ x: -12, y: 12 }, '7. Partition Pruning & Debezium WAL CDC', [
+            'CREATE TABLE events (...) PARTITION BY RANGE (created_at);',
+            '-- Instant retention cleanup (0 dead tuples, 0 VACUUM!):',
+            'ALTER TABLE events DETACH PARTITION events_2025_01 CONCURRENTLY;',
+            '-- Debezium reads pg_wal logical slot -> publishes to Kafka',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          pt_wl: h('part', 'wal', ['part', 'wal'], { heads: 'end', label: 'pg_wal' }),
+          wl_kf: h('wal', 'kafka', ['wal', 'kafka'], { heads: 'end', label: 'CDC stream' }),
+        },
+        flows: [{ route: ['pt_wl', 'wl_kf'], kind: 'res', rate: 1.9 }],
+      },
+    },],
   };
 
 export { $a as transactionsLesson };

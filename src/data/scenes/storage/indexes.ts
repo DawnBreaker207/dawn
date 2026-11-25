@@ -96,7 +96,7 @@ const $t = Qt(
 
 export const indexesLesson = {
     id: `indexes`,
-    title: `Indexes`,
+    title: `Indexes: B-Tree, GIN, BRIN & Partial`,
     summary: `Why the same query can take two seconds or two milliseconds.`,
     minutes: 12,
     level: `beginner`,
@@ -108,7 +108,7 @@ export const indexesLesson = {
       { text: `What indexes cost on every write`, step: 4 },
       { text: `Composite indexes and column order`, step: 5 },
       { text: 'When an index can’t help', step: 6 },
-    ],
+      { text: 'Choose GIN (JSONB), BRIN (Time-Series) & Partial Index', step: 6 },],
     steps: [
       {
         short: `Slow query`,
@@ -436,7 +436,37 @@ export const indexesLesson = {
         metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
         scene: { entities: { ...Wt(), ...Gt(), ...qt() }, links: Yt, flows: Xt() },
       },
-    ],
+      {
+      short: 'GIN/BRIN/Part',
+      chapter: 'indexes',
+      title: '6. Specialized Indexes: GIN (JSONB), BRIN & Partial',
+      body: [
+        'B-Tree isn’t always optimal:<br>• <strong>GIN</strong> (Inverted Index): indexes keys/elements inside <code>JSONB</code> (<code>@&gt;</code>), arrays, and Full-Text Search (<code>tsvector</code>).<br>• <strong>BRIN</strong>: stores only <code>min/max</code> per 128-page block — <strong>1000x smaller</strong> than B-Tree for append-only time-series!<br>• <strong>Partial Index</strong>: indexes only hot rows (<code>WHERE status = \'PENDING\'</code>).',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'For a 500 GB append-only event log table sorted by created_at, a BRIN index takes ~50 KB instead of 15 GB!',
+      },
+      changes: ['+ GIN indexes JSONB / Array / Full-Text Search', '+ BRIN summarizes min/max per 128 pages'],
+      metrics: { mvcc_state: 'Index Family', lock_mode: 'Fastupdate', index_type: 'GIN / BRIN', scale_feature: '1000x smaller' },
+      scene: {
+        entities: {
+          gin: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'code', label: ['GIN Index'], sub: 'JSONB @> / FTS' }),
+          brin: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['BRIN Index'], sub: 'min/max block' }),
+          part: b(15, -10, { r: 2.2, h: 48, color: 'blue', label: ['Partial Index'], sub: 'WHERE active' }),
+          card: S({ x: -12, y: 12 }, '6. Choosing GIN vs BRIN vs Partial Index', [
+            'CREATE INDEX idx_meta ON events USING GIN (payload jsonb_path_ops);',
+            'CREATE INDEX idx_ts   ON logs   USING BRIN (created_at); -- tiny!',
+            'CREATE INDEX idx_pend ON jobs (id) WHERE status = \'PENDING\';',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          gn_br: h('gin', 'brin', ['gin', 'brin'], { heads: 'end', label: 'time-series' }),
+          br_pt: h('brin', 'part', ['brin', 'part'], { heads: 'end', label: 'hot subset' }),
+        },
+        flows: [{ route: ['gn_br', 'br_pt'], kind: 'res', rate: 1.8 }],
+      },
+    },],
   };
 
 export default indexesLesson;
