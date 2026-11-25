@@ -41,12 +41,20 @@ const STACK_ICONS: Record<string, string> = {
 };
 
 const repository = typeof project.repo === 'object' && project.repo !== null ? project.repo : null;
+const rawRepoSlug =
+  typeof project.repo === 'string'
+    ? project.repo
+        .trim()
+        .replace(/^https?:\/\/(?:www\.)?github\.com\//i, '')
+        .replace(/\.git$/i, '')
+        .replace(/^\/+|\/+$/g, '')
+    : '';
 
-const owner = repository?.nameWithOwner || (typeof project.repo === 'string' ? project.repo : '');
+const owner = repository?.nameWithOwner || rawRepoSlug;
 const homepage = project.url || repository?.homepageUrl || '';
 const homepageHref = homepage && !/^https?:\/\//i.test(homepage) ? `http://${homepage}` : homepage;
-const href = repository?.url || (project.repo ? `https://github.com/${String(project.repo)}` : homepage);
-const repoHref = repository?.url || (project.repo ? `https://github.com/${String(project.repo)}` : '');
+const repoHref = repository?.url || (rawRepoSlug ? `https://github.com/${rawRepoSlug}` : '');
+const href = repoHref || homepageHref;
 const description = repository?.description || project.description || 'No description provided yet.';
 
 const mainLanguage = repository

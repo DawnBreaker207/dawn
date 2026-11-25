@@ -24,12 +24,24 @@ export async function fetchContributions(username = GITHUB_USERNAME): Promise<Co
   }));
 }
 
+function normalizeGithubSlug(repo: string): string {
+  const cleaned = repo
+    .trim()
+    .replace(/^https?:\/\/(?:www\.)?github\.com\//i, '')
+    .replace(/\.git$/i, '')
+    .replace(/^\/+|\/+$/g, '');
+  const [owner, name] = cleaned.split('/');
+  return owner && name ? `${owner}/${name}` : '';
+}
+
 export async function fetchRepoData(repo: string): Promise<GithubRepository | null> {
+  const normalized = normalizeGithubSlug(repo);
+  if (!normalized) return null;
   const token = env('GITHUB_API_TOKEN');
   if (!token) {
-    return fetchRepoDataRest(repo);
+    return fetchRepoDataRest(normalized);
   }
-  const [owner, name] = repo.split('/');
+  const [owner, name] = normalized.split('/');
   if (!owner || !name) return null;
   try {
     const query = `
