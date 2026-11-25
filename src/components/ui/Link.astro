@@ -5,9 +5,7 @@ interface Props {
   'aria-label'?: string;
   title?: string;
   rel?: string;
-  'data-umami-event'?: string;
-  'data-track-event'?: string;
-}
+  }
 
 const { href, class: cls } = Astro.props;
 const rest = Object.fromEntries(

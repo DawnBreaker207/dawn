@@ -195,7 +195,7 @@ export default function CommandPalette({
           href="https://github.com/DawnBreaker207/dawn"
           target="_blank"
           rel="noopener noreferrer"
-          data-umami-event="terminal-link-github"
+          data-track-event="terminal-link-github"
         >
           repository
         </a>{' '}
@@ -207,13 +207,13 @@ export default function CommandPalette({
           href="/static/resume.pdf"
           target="_blank"
           rel="noopener noreferrer"
-          data-umami-event="terminal-link-resume"
+          data-track-event="terminal-link-resume"
         >
           View resume
         </a>
       </p>
       <p>
-        <a className="pal-link" href="/about" data-umami-event="terminal-link-about">
+        <a className="pal-link" href="/about" data-track-event="terminal-link-about">
           → About (full version)
         </a>
       </p>
@@ -856,8 +856,8 @@ export default function CommandPalette({
                 className={`pal-autoc-row${i === selIdx ? ' pal-autoc-row--sel' : ''}`}
                 onMouseOver={() => setSel(i)}
                 onClick={() => acceptSugg(s)}
-                data-umami-event="palette-sugg-click"
-                data-umami-event-cmd={s.text}
+                data-track-event="palette-sugg-click"
+                data-track-cmd={s.text}
               >
                 <span className="pal-autoc-id">
                   <span className="pal-autoc-type" aria-hidden="true">

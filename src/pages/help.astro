@@ -64,8 +64,8 @@ const shortcuts: Array<{ keys: string[]; rawKey: string; action: string }> = [
           class="keycap-card flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--bg) p-3 transition-all hover:border-(--accent) hover:shadow-xs active:translate-y-0.5"
           data-key-trigger={sc.rawKey}
           data-keys={sc.keys.join(',')}
-          data-umami-event="help-keycard-click"
-          data-umami-event-key={sc.rawKey}
+          data-track-event="help-keycard-click"
+          data-track-key={sc.rawKey}
         >
           <div class="flex items-center gap-1.5">
             {sc.keys.map((k) => (
@@ -124,7 +124,7 @@ const shortcuts: Array<{ keys: string[]; rawKey: string; action: string }> = [
       </li>
       <li class="flex items-start gap-2">
         <span class="text-(--accent)">❯</span>
-        <span>Feeds: <a href="/rss.xml" data-umami-event="help-rss" class="text-(--fg) underline hover:text-(--accent)">/rss.xml</a> · Sitemap: <a href="/sitemap.xml" data-umami-event="help-sitemap" class="text-(--fg) underline hover:text-(--accent)">/sitemap.xml</a>.</span>
+        <span>Feeds: <a href="/rss.xml" data-track-event="help-rss" class="text-(--fg) underline hover:text-(--accent)">/rss.xml</a> · Sitemap: <a href="/sitemap.xml" data-track-event="help-sitemap" class="text-(--fg) underline hover:text-(--accent)">/sitemap.xml</a>.</span>
       </li>
     </ul>
   </section>

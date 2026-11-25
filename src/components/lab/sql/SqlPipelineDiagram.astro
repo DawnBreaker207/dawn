@@ -298,7 +298,7 @@ const lines = sqlCode.trim().split('\n');
 
     nodes.forEach((node) => {
       node.style.cursor = 'pointer';
-      node.setAttribute('data-umami-event', 'sql-pipeline-stage-click');
+      node.setAttribute('data-track-event', 'sql-pipeline-stage-click');
       node.addEventListener('click', () => {
         const stageNum = parseInt(node.dataset.stage || '1', 10);
         (window as any).umami?.track('sql-pipeline-stage-click', { stage: stageNum });

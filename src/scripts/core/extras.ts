@@ -34,7 +34,7 @@ function addCopyButtons(): void {
     btn.type = 'button';
     btn.className = 'copy-btn';
     btn.setAttribute('aria-label', 'Copy code to clipboard');
-    btn.setAttribute('data-umami-event', 'code-copy');
+    btn.setAttribute('data-track-event', 'code-copy');
     btn.title = 'Copy';
     btn.innerHTML =
       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' +
@@ -498,7 +498,7 @@ function showKeyboardHelpModal(forceOpen?: boolean): void {
           <span>⌨️ Keyboard Shortcuts</span>
           <span class="rounded bg-(--accent)/10 text-(--accent) px-1.5 py-0.5 text-[10px]">VIM</span>
         </span>
-        <button type="button" id="close-keyboard-help" data-umami-event="help-modal-close" class="cursor-pointer text-(--fg-faint) hover:text-(--fg)">✕</button>
+        <button type="button" id="close-keyboard-help" data-track-event="help-modal-close" class="cursor-pointer text-(--fg-faint) hover:text-(--fg)">✕</button>
       </div>
       <div class="space-y-2.5 text-(--fg-dim)">
         <div class="flex justify-between items-center"><span class="text-(--fg)">Navigation</span></div>
@@ -515,7 +515,7 @@ function showKeyboardHelpModal(forceOpen?: boolean): void {
         <div class="flex justify-between py-1"><span>Show this cheat sheet</span><kbd class="rounded border border-(--border) px-1.5 py-0.5 text-[10px] bg-(--bg-alt) text-(--fg)">?</kbd></div>
         <div class="mt-4 pt-3 border-t border-(--border)/60 flex items-center justify-between">
           <span class="text-[11px] text-(--fg-faint)">Secret Easter Egg</span>
-          <button type="button" id="btn-modal-easter-egg" data-umami-event="easter-egg-test" class="cursor-pointer text-amber-400 hover:text-amber-300 text-[11px] font-semibold underline">
+          <button type="button" id="btn-modal-easter-egg" data-track-event="easter-egg-test" class="cursor-pointer text-amber-400 hover:text-amber-300 text-[11px] font-semibold underline">
             🎮 Test Fireworks & Chime
           </button>
         </div>

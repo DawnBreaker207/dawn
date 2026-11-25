@@ -66,7 +66,7 @@ export default function RecentActivity() {
           <Tag
             key={`${e.type}-${i}`}
             {...linkProps}
-            data-umami-event={`activity-${e.type}`}
+            data-track-event={`activity-${e.type}`}
             className="grid grid-cols-[40px_1fr] items-center gap-3 rounded-xl border border-(--border) bg-(--bg) p-2.5 no-underline"
           >
             {e.imageUrl ? (

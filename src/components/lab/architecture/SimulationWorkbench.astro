@@ -289,21 +289,21 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
 
       <!-- Stage Tools -->
       <div class="stage__tools">
-        <button class="tool tool--fit" id="fit" data-umami-event="workbench-fit" data-t-title="Back to the whole diagram (0)" title="Back to the whole diagram (0)" hidden="">
+        <button class="tool tool--fit" id="fit" data-track-event="workbench-fit" data-t-title="Back to the whole diagram (0)" title="Back to the whole diagram (0)" hidden="">
           <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line><line x1="8" x2="14" y1="11" y2="11"></line></svg>
           <span data-t="Fit">Fit</span>
         </button>
-        <button class="tool" id="replay" data-umami-event="workbench-replay" data-t-title="Replay this step (R)" title="Replay this step (R)">
+        <button class="tool" id="replay" data-track-event="workbench-replay" data-t-title="Replay this step (R)" title="Replay this step (R)">
           <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
           <span data-t="Replay">Replay</span>
         </button>
-        <button class="tool" id="pause" data-umami-event="workbench-pause" title="Pause traffic (Space)">
+        <button class="tool" id="pause" data-track-event="workbench-pause" title="Pause traffic (Space)">
           <svg class="i icon-pause" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1"></rect><rect x="5" y="3" width="5" height="18" rx="1"></rect></svg>
           <svg class="i icon-play hidden" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           <span class="label-pause">Pause</span>
           <span class="label-play hidden">Play</span>
         </button>
-        <button class="tool tool--expand" id="expand" data-umami-event="workbench-fullscreen" title="Full screen" aria-label="Show the diagram full screen">
+        <button class="tool tool--expand" id="expand" data-track-event="workbench-fullscreen" title="Full screen" aria-label="Show the diagram full screen">
           <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"></path><path d="m21 3-7 7"></path><path d="m3 21 7-7"></path><path d="M9 21H3v-6"></path></svg>
         </button>
       </div>
@@ -338,7 +338,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
               : null;
             return (
               <li class={idx === 0 ? 'is-current' : ''} data-step-idx={idx}>
-                <button type="button" data-step={idx} title={step.title} data-umami-event="workbench-step-select">
+                <button type="button" data-step={idx} title={step.title} data-track-event="workbench-step-select">
                   <span class={`timeline__dot ${chp ? `chapter-dot--${chp.tone}` : ''}`}>{idx + 1}</span>
                   <span class="timeline__label">{step.short}</span>
                 </button>
@@ -368,7 +368,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
         <div
           class={`callout callout--${s0?.callout?.kind || 'insight'}`}
           id="guide-callout"
-          data-umami-event="workbench-callout"
+          data-track-event="workbench-callout"
           style={!s0?.callout ? 'display: none;' : ''}
         >
           <div class="callout__icon">
@@ -397,11 +397,11 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
       </div>
 
       <div class="guide__nav">
-        <button class="btn-ghost" id="back" type="button" data-umami-event="workbench-step-prev" disabled>
+        <button class="btn-ghost" id="back" type="button" data-track-event="workbench-step-prev" disabled>
           <svg class="i " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
           Back
         </button>
-        <button class="btn-pop btn-next" id="next" type="button" data-umami-event="workbench-step-next" disabled={totalSteps <= 1 && !nextLessonInfo}>
+        <button class="btn-pop btn-next" id="next" type="button" data-track-event="workbench-step-next" disabled={totalSteps <= 1 && !nextLessonInfo}>
           <span class="btn-next__label" id="guide-next-label">
             {lesson.steps[1]?.short ? `Next: ${lesson.steps[1].short}` : nextLessonInfo ? `Next: ${nextLessonInfo.title}` : 'Finish Track ✓'}
           </span>
@@ -441,7 +441,7 @@ const activeMetricKeys = lesson.metrics && lesson.metrics.length > 0
         <div class="eyebrow">You’ll learn</div>
         <ul id="goals-list">
           {lesson.goals.map((g, idx) => (
-            <li data-goal-step={g.step !== undefined ? g.step : idx + 1} class="cursor-pointer hover:text-(--accent) transition-colors" data-umami-event="workbench-goal-click">
+            <li data-goal-step={g.step !== undefined ? g.step : idx + 1} class="cursor-pointer hover:text-(--accent) transition-colors" data-track-event="workbench-goal-click">
               <span class="check">
                 <svg class="i " width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
               </span>

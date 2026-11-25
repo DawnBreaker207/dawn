@@ -56,7 +56,7 @@ interface SectionGroup {
     id="btn-chapter-dropdown"
     type="button"
     class="chapter-dropdown-trigger"
-    data-umami-event="chapter-picker-toggle"
+    data-track-event="chapter-picker-toggle"
     aria-haspopup="true"
     aria-expanded="false"
     title={`Browse ${activeTrack.title} chapters`}
@@ -83,7 +83,7 @@ interface SectionGroup {
       <input
         id="dropdown-search-input"
         type="text"
-        data-umami-event="chapter-picker-search"
+        data-track-event="chapter-picker-search"
         placeholder="Search chapters..."
         autocomplete="off"
       />
@@ -132,7 +132,7 @@ interface SectionGroup {
                         data-lesson-title={`${modNum} · ${lesson.title}`}
                         data-lesson-href={href}
                         data-native="true"
-                        data-umami-event="chapter-select"
+                        data-track-event="chapter-select"
                       >
                         <span class="lesson-dot">●</span>
                         <span class="lesson-text">{lesson.title}</span>

@@ -132,7 +132,7 @@ export default function TokenBurnRail() {
             <div className="mt-2 border-t border-(--border) pt-2 text-right">
               <a
                 href="/tokens"
-                data-umami-event="rail-tokens"
+                data-track-event="rail-tokens"
                 className="font-mono text-[10px] text-(--fg-faint) no-underline transition-colors hover:text-(--fg)"
               >
                 all-time {formatTokens(data.allTime.tokens)} ↗

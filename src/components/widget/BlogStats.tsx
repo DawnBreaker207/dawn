@@ -96,7 +96,7 @@ export default function BlogStats({ slug, className }: { slug: string; className
           <button
             key={key}
             type="button"
-            data-umami-event="post-reaction"
+            data-track-event="post-reaction"
             className="flex flex-col items-center gap-1 text-lg"
             title={key}
             onMouseUp={() => bump(key)}

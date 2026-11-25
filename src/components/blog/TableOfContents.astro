@@ -8,7 +8,7 @@ const { toc, class: cls } = Astro.props;
 ---
 
 <details class={`space-y-4 [&_.chevron-right]:open:rotate-90 ${cls ?? ''}`} open>
-  <summary class="flex cursor-pointer items-center gap-1.5 marker:content-none text-(--fg)" data-umami-event="toc-toggle">
+  <summary class="flex cursor-pointer items-center gap-1.5 marker:content-none text-(--fg)" data-track-event="toc-toggle">
     <svg
       class="chevron-right rotate-0 transition-transform text-(--fg-faint)"
       xmlns="http://www.w3.org/2000/svg"
@@ -35,7 +35,7 @@ const { toc, class: cls } = Astro.props;
         <a
           href={url}
           data-toc-id={url.slice(1)}
-          data-umami-event={`toc-${value.toLowerCase().replace(/[^\w]+/g, '-').slice(0, 30)}`}
+          data-track-event={`toc-${value.toLowerCase().replace(/[^\w]+/g, '-').slice(0, 30)}`}
           class="toc-link block py-1 pl-3 text-xs leading-relaxed text-(--fg-dim) transition-colors hover:text-(--fg)"
         >
           {value}

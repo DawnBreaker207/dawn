@@ -16,7 +16,7 @@ const active = tabs.at(-1) ?? { path: '/', label: 'README.md' };
     type="button"
     class="studio-mobile-toggle flex h-11 w-11 min-w-11 shrink-0 cursor-pointer items-center justify-center border-r border-(--border) text-(--fg-faint) hover:bg-(--bg-alt) hover:text-(--fg) lg:hidden"
     data-mobile-toggle="sidebar"
-    data-umami-event="toggle-sidebar"
+    data-track-event="toggle-sidebar"
     aria-controls="sidebar"
     aria-expanded="false"
     aria-label="Open site explorer"
@@ -45,7 +45,7 @@ const active = tabs.at(-1) ?? { path: '/', label: 'README.md' };
     type="button"
     class="tip tip--down flex h-11 w-11 min-w-11 shrink-0 cursor-pointer items-center justify-center border-l border-(--border) text-(--fg-faint) hover:bg-(--bg-alt) hover:text-(--fg)"
     data-rail-toggle
-    data-umami-event="toggle-rail"
+    data-track-event="toggle-rail"
     data-tip="toggle right panel"
     aria-controls="rail"
     aria-expanded="true"

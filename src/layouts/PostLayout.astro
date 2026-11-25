@@ -96,7 +96,7 @@ const giscusConfig = JSON.stringify({
                 href={`https://github.com/DawnBreaker207/dawn/blob/main/data/blog/${slug}.mdx`}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-umami-event="post-view-source"
+                data-track-event="post-view-source"
                 class="inline-flex items-center gap-1 hover:text-(--accent) underline underline-offset-2 transition-colors"
                 title="Open source file on GitHub"
               >
@@ -108,7 +108,7 @@ const giscusConfig = JSON.stringify({
             <button
               type="button"
               id="btn-article-zen"
-              data-umami-event="article-zen-toggle"
+              data-track-event="article-zen-toggle"
               class="inline-flex items-center gap-1.5 rounded-md border border-(--border) bg-(--bg-alt) px-2.5 py-1 text-xs text-(--fg-dim) hover:text-(--fg) hover:border-(--accent) cursor-pointer select-none transition-colors"
               title="Chế độ đọc toàn màn hình tập trung (Phím tắt: Z)"
               aria-label="Bật chế độ Zen Mode"
@@ -154,7 +154,7 @@ const giscusConfig = JSON.stringify({
             {relatedLabs.map((lab) => (
               <a
                 href={lab.href}
-                data-umami-event="post-related-lab"
+                data-track-event="post-related-lab"
                 class="group flex items-center justify-between gap-4 rounded-xl border border-(--border) bg-(--bg-alt) p-4 no-underline transition-colors hover:border-(--accent)"
               >
                 <div class="min-w-0 space-y-1">

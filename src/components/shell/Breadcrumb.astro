@@ -44,7 +44,7 @@ if (pathname === '/' || pathname === '') {
     <span class="flex min-w-0 items-center gap-1.5">
       {i > 0 && <span class="select-none">/</span>}
       {crumb.href ? (
-        <a href={crumb.href} class="min-w-0 truncate hover:text-(--accent) hover:no-underline" data-umami-event="breadcrumb-click">
+        <a href={crumb.href} class="min-w-0 truncate hover:text-(--accent) hover:no-underline" data-track-event="breadcrumb-click">
           {crumb.label}
         </a>
       ) : (

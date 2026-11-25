@@ -38,7 +38,7 @@ function rating(r: string): number {
         href="https://www.goodreads.com/review/list/204322578"
         target="_blank"
         rel="noopener noreferrer"
-        data-umami-event="goodreads-link"
+        data-track-event="goodreads-link"
         class="text-(--fg-dim) no-underline hover:text-(--accent)"
       >
         Goodreads ↗
@@ -68,7 +68,7 @@ function rating(r: string): number {
             href={book.link}
             target="_blank"
             rel="noopener noreferrer"
-            data-umami-event="book-link-current"
+            data-track-event="book-link-current"
             class="group flex min-h-[120px] gap-4 rounded-2xl border border-(--border) bg-(--bg) p-4 no-underline transition-shadow hover:shadow-[4px_4px_0_var(--border)]"
           >
             {book.bookMediumImageUrl && (
@@ -107,7 +107,7 @@ function rating(r: string): number {
             href={book.link}
             target="_blank"
             rel="noopener noreferrer"
-            data-umami-event="book-link-read"
+            data-track-event="book-link-read"
             class="group grid grid-cols-1 items-start gap-4.5 py-4.5 no-underline md:grid-cols-[56px_1fr_auto]"
           >
             {book.bookMediumImageUrl && (
@@ -136,7 +136,7 @@ function rating(r: string): number {
       </div>
       {read.length > READ_LIMIT && (
         <details class="mt-4">
-          <summary class="cursor-pointer font-mono text-[13px] text-(--accent) select-none hover:underline" data-umami-event="books-show-more">
+          <summary class="cursor-pointer font-mono text-[13px] text-(--accent) select-none hover:underline" data-track-event="books-show-more">
             Show more ({read.length - READ_LIMIT} more)
           </summary>
           <div class="mt-4 divide-y divide-(--border)">
@@ -145,7 +145,7 @@ function rating(r: string): number {
                 href={book.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-umami-event="book-link-read-more"
+                data-track-event="book-link-read-more"
                 class="group grid grid-cols-1 items-start gap-4.5 py-4.5 no-underline md:grid-cols-[56px_1fr_auto]"
               >
                 {book.bookMediumImageUrl && (

@@ -80,7 +80,7 @@ const hasDetails = Array.isArray(exp.details) && exp.details.length > 0;
                 href={exp.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-umami-event={exp.event}
+                data-track-event={exp.event}
                 class="text-base sm:text-lg font-semibold text-(--fg) no-underline hover:text-(--accent)"
                 onclick="event.stopPropagation()"
               >
