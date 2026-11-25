@@ -1,6 +1,6 @@
 ---
 import Link from '@/components/ui/Link.astro';
-import type { Post } from '@/lib/utils/blog';
+import { readingMinutes, type Post } from '@/lib/utils/blog';
 
 interface Props {
   post: Post;
@@ -9,19 +9,29 @@ interface Props {
 const { post } = Astro.props;
 const { id, data } = post;
 const date = new Intl.DateTimeFormat('en-CA').format(data.date);
+const minutes = readingMinutes(post);
 ---
 
 <Link
   href={`/blog/${id}`}
   data-track-event="blog-row-click"
-  class="grid grid-cols-1 items-start gap-4.5 border-t border-(--border) py-4.5 no-underline first-of-type:border-t-0 md:grid-cols-[92px_1fr_auto]"
+  class="group grid grid-cols-1 items-baseline gap-2.5 py-4.5 no-underline transition-colors md:grid-cols-[100px_1fr_auto]"
 >
-  <time class="pt-0.5 font-mono text-xs text-(--fg-dim)">{date}</time>
-  <div>
-    <h3 class="m-0 text-[20px] leading-tight tracking-[-0.04em] text-(--fg)">{data.title}</h3>
-    <p class="mt-1 m-0 leading-snug text-(--fg-dim)">{data.summary}</p>
+  <time class="font-mono text-xs sm:text-sm text-(--fg-faint) tabular-nums">{date}</time>
+  <div class="min-w-0 space-y-1">
+    <h3 class="m-0 text-base sm:text-lg font-semibold leading-snug text-(--fg) transition-colors group-hover:text-(--accent)">
+      {data.title}
+    </h3>
+    {data.summary && (
+      <p class="m-0 line-clamp-1 text-sm text-(--fg-dim)">{data.summary}</p>
+    )}
   </div>
-  {data.tags[0] && (
-    <span class="pt-0.5 font-mono text-[12px] text-(--accent-dim)">#{data.tags[0]}</span>
-  )}
+  <div class="flex shrink-0 items-center gap-3 font-mono text-xs text-(--fg-faint)">
+    {data.tags[0] && (
+      <span class="rounded border border-(--border) bg-(--bg-alt) px-2 py-0.5 text-(--accent)">
+        #{data.tags[0]}
+      </span>
+    )}
+    <span>{minutes} min</span>
+  </div>
 </Link>

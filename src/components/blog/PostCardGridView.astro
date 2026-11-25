@@ -1,8 +1,5 @@
 ---
 import Link from '@/components/ui/Link.astro';
-import GrowingUnderline from '@/components/ui/GrowingUnderline.astro';
-import GritBackground from '@/components/ui/GritBackground.astro';
-import TagsList from '@/components/ui/Tag.astro';
 import { SITE, formatDate } from '@/lib/site';
 import { readingMinutes, type Post } from '@/lib/utils/blog';
 
@@ -16,38 +13,51 @@ const image = data.images && data.images.length > 0 ? data.images[0] : SITE.soci
 const minutes = readingMinutes(post);
 ---
 
-<article>
-  <div class="flex flex-col items-start justify-between gap-4 md:gap-6">
-    <Link
-      href={`/blog/${id}`}
-      data-track-event="blog-card-image"
-      class="relative block h-auto w-full shrink-0 pt-0 pr-3 pb-3 pl-0 transition-all ease-in-out hover:pt-1 hover:pr-2 hover:pb-2 hover:pl-1 md:aspect-3/2"
-    >
-      <img
-        src={image}
-        alt={data.title}
-        width="600"
-        height="400"
-        class="aspect-video h-full w-full rounded-xl shadow-2xl"
-      />
-      <GritBackground
-        class="top-3 right-0 bottom-0 left-3 rounded-xl border-2 border-gray-800 dark:border-gray-400"
-      />
-    </Link>
-    <div class="w-full space-y-3">
-      <div class="flex items-center gap-x-1.5 text-sm text-gray-600 dark:text-gray-400">
+<article class="group h-full flex flex-col overflow-hidden rounded-xl border border-(--border) bg-(--bg-alt) transition-colors hover:border-(--accent)">
+  <Link
+    href={`/blog/${id}`}
+    data-track-event="blog-card-image"
+    class="block aspect-video w-full overflow-hidden border-b border-(--border) bg-(--bg)"
+  >
+    <img
+      src={image}
+      alt={data.title}
+      width="600"
+      height="338"
+      loading="lazy"
+      class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+    />
+  </Link>
+
+  <div class="flex flex-1 flex-col justify-between gap-3 p-4 sm:p-5">
+    <div class="space-y-2">
+      <div class="flex flex-wrap items-center gap-2 font-mono text-xs text-(--fg-faint)">
         <time datetime={data.date.toISOString()}>{formatDate(data.date)}</time>
-        <span class="mx-1 text-gray-400">/</span>
-        <span>{minutes} mins read</span>
+        <span class="text-(--border)">·</span>
+        <span>{minutes} min read</span>
       </div>
-      <TagsList tags={data.tags} />
-      <div class="group relative">
-        <h3 class="text-xl leading-6 font-semibold">
-          <Link href={`/blog/${id}`} data-track-event="blog-card-title">
-            <GrowingUnderline>{data.title}</GrowingUnderline>
-          </Link>
-        </h3>
-      </div>
+
+      <h3 class="m-0 text-base sm:text-lg font-bold leading-snug text-(--fg) group-hover:text-(--accent) transition-colors">
+        <Link href={`/blog/${id}`} data-track-event="blog-card-title" class="no-underline text-inherit">
+          {data.title}
+        </Link>
+      </h3>
+
+      {data.summary && (
+        <p class="m-0 line-clamp-2 text-sm leading-relaxed text-(--fg-dim)">
+          {data.summary}
+        </p>
+      )}
     </div>
+
+    {data.tags.length > 0 && (
+      <div class="flex flex-wrap gap-1.5 pt-1">
+        {data.tags.slice(0, 3).map((tag) => (
+          <span class="rounded border border-(--border) bg-(--bg) px-2 py-0.5 font-mono text-[11px] text-(--fg-dim)">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    )}
   </div>
 </article>

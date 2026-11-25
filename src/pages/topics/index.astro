@@ -27,19 +27,26 @@ const tags = [...counts.keys()].sort(
 ---
 
 <BaseLayout title="Topics" description="Topics I write about">
-  <header class="mb-9 border-b border-(--border) pb-7">
-    <div class="mb-2 flex items-center gap-2 font-mono text-xs text-(--fg-faint)">
-      <span class="text-(--accent)">#</span>
-      <span>Index</span>
-      <span class="text-(--border)">/</span>
-      <span>{tags.length} topics</span>
+  <header class="mb-9 space-y-5 border-b border-(--border) pt-1 pb-7">
+    <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-sm text-(--fg-faint)">
+      <div class="flex items-center gap-2">
+        <span class="inline-block size-2 rounded-full bg-(--accent)"></span>
+        <span class="text-(--fg)">~/dawn/topics.astro</span>
+        <span class="text-(--border)">·</span>
+        <span>{tags.length} topics</span>
+      </div>
+      <a href="/blog" class="text-(--fg-dim) no-underline hover:text-(--accent)">
+        /blog →
+      </a>
     </div>
-    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
-      topics
-    </h1>
-    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
-      Explore articles cataloged by domain, architecture patterns, and engineering technologies.
-    </p>
+    <div class="space-y-3">
+      <h1 class="m-0 bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight dark:from-rose-400 dark:via-pink-400 dark:to-amber-300">
+        Topics
+      </h1>
+      <p class="m-0 max-w-2xl border-l-2 border-(--accent) pl-3.5 text-base sm:text-lg leading-relaxed text-(--fg-dim)">
+        Explore articles cataloged by domain, architecture patterns, and engineering technologies.
+      </p>
+    </div>
   </header>
 
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -35,13 +35,24 @@ const groups = [
   title="Projects"
   description="Explore commercial software and open-source side projects built by Tung Anh (Dawn) with Java, TypeScript, Spring Boot, and modern web frameworks."
 >
-  <header class="mb-9 border-b border-(--border) pb-7">
-    <h1 class="m-0 font-mono text-[clamp(40px,6vw,74px)] leading-[0.96] tracking-[-0.07em] text-(--fg)">
-      projects
-    </h1>
-    <p class="mt-4 max-w-[42.5rem] text-lg text-(--fg-dim)">
-      Side projects I've built and shipped on my own.
-    </p>
+  <header class="mb-9 space-y-5 border-b border-(--border) pt-1 pb-7">
+    <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-sm text-(--fg-faint)">
+      <div class="flex items-center gap-2">
+        <span class="inline-block size-2 rounded-full bg-(--accent)"></span>
+        <span class="text-(--fg)">~/dawn/projects.astro</span>
+      </div>
+      <a href="/lab" class="text-(--fg-dim) no-underline hover:text-(--accent)">
+        /lab →
+      </a>
+    </div>
+    <div class="space-y-3">
+      <h1 class="m-0 bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight dark:from-rose-400 dark:via-pink-400 dark:to-amber-300">
+        Projects
+      </h1>
+      <p class="m-0 max-w-2xl border-l-2 border-(--accent) pl-3.5 text-base sm:text-lg leading-relaxed text-(--fg-dim)">
+        Side projects I've built and shipped on my own.
+      </p>
+    </div>
   </header>
 
   {groups.map((group) =>
