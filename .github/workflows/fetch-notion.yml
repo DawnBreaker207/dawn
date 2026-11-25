@@ -34,6 +34,11 @@ jobs:
       - name: Run Notion sync (posts + timeline)
         run: npm run sync:notion
 
+      - name: Run Goodreads books sync
+        env:
+          GOODREADS_USER_ID: ${{ secrets.GOODREADS_USER_ID }}
+        run: node scripts/build-books.mjs
+
       - name: Commit & Push changes (if any)
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

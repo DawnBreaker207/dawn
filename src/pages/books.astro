@@ -168,4 +168,21 @@ function rating(r: string): number {
       )}
     </section>
   )}
+
+  {currentlyReading.length === 0 && read.length === 0 && (
+    <section class="rounded-2xl border border-(--border) bg-(--bg-alt) p-6">
+      <p class="m-0 text-sm text-(--fg-dim)">
+        No books synced yet. Browse the full shelf directly on{' '}
+        <a
+          href="https://www.goodreads.com/review/list/204322578"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-mono text-(--accent) hover:underline"
+        >
+          Goodreads ↗
+        </a>
+        .
+      </p>
+    </section>
+  )}
 </BaseLayout>

@@ -47,7 +47,6 @@ test/
 public/dts/src/
 # generated at build time
 src/build-stats.json
-src/data/books.json
 
 # synced from Notion — auto-generated, not committed manually
 src/data/now.json
