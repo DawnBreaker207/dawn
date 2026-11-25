@@ -218,14 +218,19 @@ export const CURRICULUM_MODULES: Module[] = [
     trackId: 'java-runtime',
     color: 'sky',
     lessons: [
-      { id: 'java-generics', title: 'Generics, Type Erasure & Collections Internals', section: 'Java Core & Language' },
-      { id: 'java-lambda', title: 'Lambda (invokedynamic) & Lazy Stream Pipelines', section: 'Java Core & Language' },
-      { id: 'java-metaprogramming', title: 'Exceptions, Reflection, Annotations & Dynamic Proxies', section: 'Java Core & Language' },
-      { id: 'java-core-apis', title: 'Modern Java & Core APIs (Records, Sealed, Optional, HttpClient)', section: 'Java Core & Language' },
-      { id: 'java-classloader', title: 'ClassLoader Subsystem & Bytecode Lifecycle', section: 'JVM Internals & Memory' },
-      { id: 'java-jvm-memory', title: 'JVM Memory Model, GC, Metaspace & String Pool', section: 'JVM Internals & Memory' },
-      { id: 'java-jmm-cas-aqs', title: 'Threads, Monitors, JMM (volatile, CAS & AQS)', section: 'Concurrency & Project Loom' },
-      { id: 'java-virtual-threads', title: 'Executors, CompletableFuture & Virtual Threads (Loom)', section: 'Concurrency & Project Loom' },
+      { id: 'java-types-boxing', title: 'Primitives, Autoboxing, IntegerCache & equals/hashCode', section: 'Java Core & Type System' },
+      { id: 'java-string-internals', title: 'String Immutability, StringTable, Compact byte[] & Concat', section: 'Java Core & Type System' },
+      { id: 'java-generics', title: 'Generics, Type Erasure, Bridge Methods & PECS', section: 'Java Core & Type System' },
+      { id: 'java-collections', title: 'Collections Internals, HashMap Treeify & ConcurrentHashMap', section: 'Java Core & Type System' },
+      { id: 'java-lambda', title: 'Lambda (invokedynamic) & Lazy Stream Pipelines', section: 'Java Core & Type System' },
+      { id: 'java-core-apis', title: 'Modern Java: Records, Sealed, Optional & java.time', section: 'Java Core & Type System' },
+      { id: 'java-io-nio', title: 'I/O Streams, NIO.2 Files, Selector & Serialization Risk', section: 'I/O, NIO & JDBC' },
+      { id: 'java-jdbc', title: 'JDBC DataSource, PreparedStatement, TX & Batching', section: 'I/O, NIO & JDBC' },
+      { id: 'java-metaprogramming', title: 'Exceptions, Reflection, Annotations & Dynamic Proxies', section: 'JVM Internals & Concurrency' },
+      { id: 'java-classloader', title: 'ClassLoader Subsystem & Bytecode Lifecycle', section: 'JVM Internals & Concurrency' },
+      { id: 'java-jvm-memory', title: 'JVM Memory Model, GC, Metaspace & OOM', section: 'JVM Internals & Concurrency' },
+      { id: 'java-jmm-cas-aqs', title: 'Threads, Monitors, JMM (volatile, CAS & AQS)', section: 'JVM Internals & Concurrency' },
+      { id: 'java-virtual-threads', title: 'Executors, CompletableFuture & Virtual Threads (Loom)', section: 'JVM Internals & Concurrency' },
     ],
   },
   {
@@ -235,12 +240,15 @@ export const CURRICULUM_MODULES: Module[] = [
     trackId: 'java-runtime',
     color: 'indigo',
     lessons: [
-      { id: 'java-spring-ioc', title: 'Spring IoC Container, Bean Lifecycle & Scopes', section: 'Spring Core & AOP' },
-      { id: 'java-spring-aop', title: 'Spring AOP, Dynamic Proxies & @Transactional', section: 'Spring Core & AOP' },
-      { id: 'java-spring-boot-autoconfig', title: 'Spring Boot Auto-Configuration, Profiles & Config Hierarchy', section: 'Spring Boot & Web' },
-      { id: 'java-spring-mvc', title: 'Spring MVC & Request Pipeline (DispatcherServlet)', section: 'Spring Boot & Web' },
-      { id: 'java-spring-jpa', title: 'Spring Data JPA, Hibernate Persistence Context & N+1', section: 'Data & Security' },
-      { id: 'java-spring-security', title: 'Spring Security & Filter Chain Architecture', section: 'Data & Security' },
+      { id: 'java-spring-ioc', title: 'Spring IoC, 3-Level Cache, Bean Lifecycle & Scopes', section: 'Spring Core & Boot' },
+      { id: 'java-spring-aop', title: 'Spring AOP, Dynamic Proxies & @Transactional', section: 'Spring Core & Boot' },
+      { id: 'java-spring-boot-autoconfig', title: 'Spring Boot Auto-Configuration, Profiles & Config Hierarchy', section: 'Spring Core & Boot' },
+      { id: 'java-spring-mvc', title: 'Spring MVC & Request Pipeline (DispatcherServlet)', section: 'Spring Core & Boot' },
+      { id: 'java-spring-jpa', title: 'Spring Data JPA, Hibernate L1 Context & N+1', section: 'Persistence & Transactions' },
+      { id: 'java-spring-locking-tx', title: 'JPA Locking (@Version vs Pessimistic) & TX Propagation', section: 'Persistence & Transactions' },
+      { id: 'java-spring-security', title: 'Spring Security, FilterChain, JWT & RBAC (401/403)', section: 'Security & Production' },
+      { id: 'java-spring-oauth2-auth', title: 'AuthenticationProvider, BCrypt, CSRF/CORS & OAuth2 JWK', section: 'Security & Production' },
+      { id: 'java-spring-actuator-testing', title: 'Actuator Probes, Micrometer & @SpringBootTest Context Cache', section: 'Security & Production' },
     ],
   },
   {
@@ -446,7 +454,7 @@ export const CURRICULUM_MODULES: Module[] = [
 export function getLessonHref(id: string): string {
   if (id === 'architecture') return '/lab/architecture';
   if (id === 'sql' || id === 'sql-engine') return '/lab/sql';
-  if (id === 'java' || id === 'java-generics') return '/lab/java';
+  if (id === 'java' || id === 'java-types-boxing') return '/lab/java';
   if (id === 'request-lifecycle' || id === 'foundations') return '/lab/foundations';
   if (id === 'consistent-hashing' || id === 'distributed') return '/lab/distributed';
   if (id === 'microservices') return '/lab/microservices';

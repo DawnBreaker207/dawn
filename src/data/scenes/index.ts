@@ -66,6 +66,11 @@ import { sqlFootprintLesson } from './storage/sql-footprint';
 import { sqlConnectionPoolLesson } from './storage/sql-connection-pool';
 
 // Java Core & JVM deep-dive concepts
+import { javaTypesBoxingLesson } from './specialized/java-types-boxing';
+import { javaStringInternalsLesson } from './specialized/java-string-internals';
+import { javaCollectionsLesson } from './specialized/java-collections';
+import { javaIoNioLesson } from './specialized/java-io-nio';
+import { javaJdbcLesson } from './specialized/java-jdbc';
 import { javaLambdaLesson } from './specialized/java-lambda';
 import { javaGenericsLesson } from './specialized/java-generics';
 import { javaMetaprogrammingLesson } from './specialized/java-metaprogramming';
@@ -76,6 +81,9 @@ import { javaCoreApisLesson } from './specialized/java-core-apis';
 // Spring Enterprise concepts
 import { javaSpringMvcLesson } from './specialized/java-spring-mvc';
 import { javaSpringBootAutoconfigLesson } from './specialized/java-spring-boot-autoconfig';
+import { javaSpringLockingTxLesson } from './specialized/java-spring-locking-tx';
+import { javaSpringOauth2AuthLesson } from './specialized/java-spring-oauth2-auth';
+import { javaSpringActuatorTestingLesson } from './specialized/java-spring-actuator-testing';
 
 // Containers & Kubernetes (k8s.sim)
 import { dockerInternalsLesson } from './cloud/docker-internals';
@@ -202,10 +210,15 @@ export {
   awsServerlessLesson,
   systemDesignLesson,
   sqlEngineLesson,
+  javaTypesBoxingLesson,
+  javaStringInternalsLesson,
   javaGenericsLesson,
+  javaCollectionsLesson,
   javaLambdaLesson,
-  javaMetaprogrammingLesson,
   javaCoreApisLesson,
+  javaIoNioLesson,
+  javaJdbcLesson,
+  javaMetaprogrammingLesson,
   javaClassloaderLesson,
   javaJvmMemoryLesson,
   javaJmmCasAqsLesson,
@@ -215,7 +228,10 @@ export {
   javaSpringBootAutoconfigLesson,
   javaSpringMvcLesson,
   javaSpringJpaLesson,
+  javaSpringLockingTxLesson,
   javaSpringSecurityLesson,
+  javaSpringOauth2AuthLesson,
+  javaSpringActuatorTestingLesson,
   sqlExplainLesson,
   sqlFootprintLesson,
   sqlConnectionPoolLesson,
@@ -338,10 +354,15 @@ export const ALL_SCENES: Record<string, any> = {
   'architecture': systemDesignLesson,
   'sql-engine': sqlEngineLesson,
   'sql': sqlEngineLesson,
+  'java-types-boxing': javaTypesBoxingLesson,
+  'java-string-internals': javaStringInternalsLesson,
   'java-generics': javaGenericsLesson,
+  'java-collections': javaCollectionsLesson,
   'java-lambda': javaLambdaLesson,
-  'java-metaprogramming': javaMetaprogrammingLesson,
   'java-core-apis': javaCoreApisLesson,
+  'java-io-nio': javaIoNioLesson,
+  'java-jdbc': javaJdbcLesson,
+  'java-metaprogramming': javaMetaprogrammingLesson,
   'java-classloader': javaClassloaderLesson,
   'java-jvm-memory': javaJvmMemoryLesson,
   'java-jmm-cas-aqs': javaJmmCasAqsLesson,
@@ -351,8 +372,11 @@ export const ALL_SCENES: Record<string, any> = {
   'java-spring-boot-autoconfig': javaSpringBootAutoconfigLesson,
   'java-spring-mvc': javaSpringMvcLesson,
   'java-spring-jpa': javaSpringJpaLesson,
+  'java-spring-locking-tx': javaSpringLockingTxLesson,
   'java-spring-security': javaSpringSecurityLesson,
-  'java': javaGenericsLesson,
+  'java-spring-oauth2-auth': javaSpringOauth2AuthLesson,
+  'java-spring-actuator-testing': javaSpringActuatorTestingLesson,
+  'java': javaTypesBoxingLesson,
   'sql-explain': sqlExplainLesson,
   'sql-footprint': sqlFootprintLesson,
   'sql-connection-pool': sqlConnectionPoolLesson,

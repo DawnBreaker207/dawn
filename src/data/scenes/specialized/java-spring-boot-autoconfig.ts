@@ -149,7 +149,7 @@ export const javaSpringBootAutoconfigLesson: Lesson = {
         },
         links: {
           y_reg: h('yml', 'reg', ['yml', 'reg'], { heads: 'end', label: 'fallback' }),
-          e_reg: h('env', 'reg', ['env', 'reg'], { heads: 'end', label: 'override' }),
+          e_reg: h('env', 'reg', ['env', 'reg'], { heads: 'end', label: 'wins' }),
         },
         flows: [{ route: ['e_reg'], kind: 'res', rate: 2.0 }, { route: ['y_reg'], kind: 'req', rate: 1.3 }],
       },
