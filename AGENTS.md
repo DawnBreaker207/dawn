@@ -162,7 +162,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │   │   ├── security/               ← authentication.ts, authorization.ts, encryption.ts
 │   │   │   ├── shipping/               ← cicd.ts, testing.ts
 │   │   │   ├── storage/                ← sql-engine.ts, redis-*.ts, sharding.ts, consensus.ts
-│   │   │   └── specialized/            ← 26 Java Runtime & Spring Enterprise scenes (java-*.ts)
+│   │   │   └── specialized/            ← 14 Java Runtime & Spring Enterprise scenes (java-*.ts)
 │   │   ├── curriculum.ts               ← Curriculum metadata: 10 canonical tracks, 15 modules, 104 lesson IDs & titles
 │   │   ├── labs.ts                     ← Directory list of playable labs
 │   │   ├── projectsData.json           ← Portfolio projects list
@@ -835,10 +835,10 @@ All interactive simulations are strictly partitioned into 11 mutually exclusive 
 | **`distributed.sim`** | Distributed Systems Core | Streaming replication, sharding & partitioning, consistent hashing ring, Snowflake IDs, CAP theorem, Raft consensus | **6** |
 | **`microservices.sim`** | Microservices, Kafka & Queues | Monolith vs microservices, service discovery, sagas, REST/gRPC.<br>**Apache Kafka (4 lessons):** Partition log, Consumer groups, ISR, Exactly-once.<br>**RabbitMQ (3 lessons):** AMQP Exchanges, DLQ & Retries, Quorum Queues | **14** |
 | **`k8s.sim`** | Containers & Kubernetes Orchestration | Docker namespaces & cgroups, multi-stage builds, K8s Pods & ReplicaSets, Services, Ingress Controller, ConfigMaps/Secrets, StatefulSets & Storage, HPA & Autoscaling | **8** |
-| **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6–8 steps):** JVM memory model, GC, monitor locks, thread pools, Virtual Threads (Project Loom), Spring Security filter chain, Spring IoC bean lifecycle (27 lessons total) | **27** |
+| **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6–8 steps, Seed → Result):** Generics & Collections, Lambda & Streams, Exceptions/Reflection/Proxies, Modern Core APIs, ClassLoader, JVM Memory/GC/String Pool, JMM/CAS/AQS, Executors/CompletableFuture/Virtual Threads, Spring IoC & Scopes, Spring AOP & @Transactional, Spring Boot AutoConfig & Profiles, Spring MVC, Spring Data JPA & N+1, Spring Security (14 lessons total) | **14** |
 | **`system-design.sim`** | System Design & AI Agents | HLD vs LLD, TinyURL, News Feed, Chat app, redundancy, rate limiting, timeouts/retries, observability.<br>**Flagship Lesson:** `ai-agent-architecture` (8-step Onion Model: LLM, RAG, MCP, Loop, Harness, Superpowers, LangChain, BMAD Swarms) | **10** |
 | **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking, IAM & KMS Encryption, Edge Security, HA & DR Tiers, Compute, Storage, Databases, Serverless, Migration | **10** |
-| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **137 Lessons** |
+| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **140 Lessons** |
 
 ### Unified Single Canvas 3D Architecture & Code-Driven Presentation Standard
 

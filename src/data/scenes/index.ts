@@ -18,13 +18,8 @@ import { indexesLesson } from './storage/indexes';
 import { storageEnginesLesson } from './storage/storage-engines';
 import { replicationLesson } from './storage/replication';
 import { shardingLesson } from './storage/sharding';
-import { javaConcurrencyLesson } from './specialized/java-concurrency';
-import { javaExecutorsLesson } from './specialized/java-executors';
-import { javaCompletableLesson } from './specialized/java-completable';
 import { javaVirtualThreadsLesson } from './specialized/java-virtual-threads';
 import { javaJvmMemoryLesson } from './specialized/java-jvm-memory';
-import { javaCollectionsLesson } from './specialized/java-collections';
-import { javaStreamsLesson } from './specialized/java-streams';
 import { javaSpringIocLesson } from './specialized/java-spring-ioc';
 import { javaSpringAopLesson } from './specialized/java-spring-aop';
 import { javaSpringJpaLesson } from './specialized/java-spring-jpa';
@@ -71,23 +66,16 @@ import { sqlFootprintLesson } from './storage/sql-footprint';
 import { sqlConnectionPoolLesson } from './storage/sql-connection-pool';
 
 // Java Core & JVM deep-dive concepts
-import { javaStringPoolLesson } from './specialized/java-string-pool';
 import { javaLambdaLesson } from './specialized/java-lambda';
-import { javaIoNioLesson } from './specialized/java-io-nio';
 import { javaGenericsLesson } from './specialized/java-generics';
-import { javaJitCompilerLesson } from './specialized/java-jit-compiler';
-import { javaExceptionsErrorsLesson } from './specialized/java-exceptions-errors';
 import { javaMetaprogrammingLesson } from './specialized/java-metaprogramming';
-import { javaModernLesson } from './specialized/java-modern';
+import { javaJmmCasAqsLesson } from './specialized/java-jmm-cas-aqs';
+import { javaClassloaderLesson } from './specialized/java-classloader';
+import { javaCoreApisLesson } from './specialized/java-core-apis';
 
 // Spring Enterprise concepts
-import { javaSpringScopesLesson } from './specialized/java-spring-scopes';
 import { javaSpringMvcLesson } from './specialized/java-spring-mvc';
-import { javaSpringTxLesson } from './specialized/java-spring-tx';
 import { javaSpringBootAutoconfigLesson } from './specialized/java-spring-boot-autoconfig';
-import { javaSpringTestingLesson } from './specialized/java-spring-testing';
-import { javaSpringMessagingLesson } from './specialized/java-spring-messaging';
-import { javaSpringConfigLesson } from './specialized/java-spring-config';
 
 // Containers & Kubernetes (k8s.sim)
 import { dockerInternalsLesson } from './cloud/docker-internals';
@@ -214,35 +202,23 @@ export {
   awsServerlessLesson,
   systemDesignLesson,
   sqlEngineLesson,
-  javaConcurrencyLesson,
-  javaExecutorsLesson,
-  javaCompletableLesson,
-  javaVirtualThreadsLesson,
+  javaGenericsLesson,
+  javaLambdaLesson,
+  javaMetaprogrammingLesson,
+  javaCoreApisLesson,
+  javaClassloaderLesson,
   javaJvmMemoryLesson,
-  javaCollectionsLesson,
-  javaStreamsLesson,
+  javaJmmCasAqsLesson,
+  javaVirtualThreadsLesson,
   javaSpringIocLesson,
   javaSpringAopLesson,
+  javaSpringBootAutoconfigLesson,
+  javaSpringMvcLesson,
   javaSpringJpaLesson,
   javaSpringSecurityLesson,
   sqlExplainLesson,
   sqlFootprintLesson,
   sqlConnectionPoolLesson,
-  javaStringPoolLesson,
-  javaLambdaLesson,
-  javaIoNioLesson,
-  javaGenericsLesson,
-  javaJitCompilerLesson,
-  javaExceptionsErrorsLesson,
-  javaMetaprogrammingLesson,
-  javaModernLesson,
-  javaSpringScopesLesson,
-  javaSpringMvcLesson,
-  javaSpringTxLesson,
-  javaSpringBootAutoconfigLesson,
-  javaSpringTestingLesson,
-  javaSpringMessagingLesson,
-  javaSpringConfigLesson,
   dockerInternalsLesson,
   dockerImagesStorageLesson,
   k8sControlPlaneLesson,
@@ -362,36 +338,24 @@ export const ALL_SCENES: Record<string, any> = {
   'architecture': systemDesignLesson,
   'sql-engine': sqlEngineLesson,
   'sql': sqlEngineLesson,
-  'java-concurrency': javaConcurrencyLesson,
-  'java-executors': javaExecutorsLesson,
-  'java-completable': javaCompletableLesson,
-  'java-virtual-threads': javaVirtualThreadsLesson,
+  'java-generics': javaGenericsLesson,
+  'java-lambda': javaLambdaLesson,
+  'java-metaprogramming': javaMetaprogrammingLesson,
+  'java-core-apis': javaCoreApisLesson,
+  'java-classloader': javaClassloaderLesson,
   'java-jvm-memory': javaJvmMemoryLesson,
-  'java-collections': javaCollectionsLesson,
-  'java-streams': javaStreamsLesson,
+  'java-jmm-cas-aqs': javaJmmCasAqsLesson,
+  'java-virtual-threads': javaVirtualThreadsLesson,
   'java-spring-ioc': javaSpringIocLesson,
   'java-spring-aop': javaSpringAopLesson,
+  'java-spring-boot-autoconfig': javaSpringBootAutoconfigLesson,
+  'java-spring-mvc': javaSpringMvcLesson,
   'java-spring-jpa': javaSpringJpaLesson,
   'java-spring-security': javaSpringSecurityLesson,
+  'java': javaGenericsLesson,
   'sql-explain': sqlExplainLesson,
   'sql-footprint': sqlFootprintLesson,
   'sql-connection-pool': sqlConnectionPoolLesson,
-  'java-string-pool': javaStringPoolLesson,
-  'java-lambda': javaLambdaLesson,
-  'java-io-nio': javaIoNioLesson,
-  'java-generics': javaGenericsLesson,
-  'java-jit-compiler': javaJitCompilerLesson,
-  'java-exceptions-errors': javaExceptionsErrorsLesson,
-  'java-metaprogramming': javaMetaprogrammingLesson,
-  'java-modern': javaModernLesson,
-  'java-spring-scopes': javaSpringScopesLesson,
-  'java-spring-mvc': javaSpringMvcLesson,
-  'java-spring-tx': javaSpringTxLesson,
-  'java-spring-boot-autoconfig': javaSpringBootAutoconfigLesson,
-  'java-spring-testing': javaSpringTestingLesson,
-  'java-spring-messaging': javaSpringMessagingLesson,
-  'java-spring-config': javaSpringConfigLesson,
-  'java': javaConcurrencyLesson,
   'docker-internals': dockerInternalsLesson,
   'docker-images-storage': dockerImagesStorageLesson,
   'k8s-control-plane': k8sControlPlaneLesson,

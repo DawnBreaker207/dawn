@@ -1,126 +1,227 @@
-// @ts-nocheck
 /* eslint-disable */
 import {
   makeBlock as d,
   makeLink as h,
   makePanel as S,
-  makeDevice as y,
+  makeDb as b,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const javaSpringAopLesson = {
+export const javaSpringAopLesson: Lesson = {
   id: 'java-spring-aop',
-  title: 'Spring AOP, Dynamic Proxies & Interceptor Chains',
-  summary: 'Visualize how Spring AOP weaves cross-cutting concerns (logging, security, @Transactional) via JDK Dynamic Proxies and CGLIB bytecode subclassing, and learn to avoid self-invocation pitfalls.',
-  minutes: 10,
+  title: 'Spring AOP, Dynamic Proxies & @Transactional',
+  summary:
+    'Trace how Spring AOP wraps beans in JDK/CGLIB proxies, executes @Around interceptor chains, manages @Transactional JDBC commits/rollbacks, and fails on self-invocation.',
+  minutes: 12,
   level: 'intermediate',
-  metrics: ['proxyType', 'interceptorChain', 'weavingTiming', 'targetState'],
+  metrics: ['proxy_layer', 'tx_status', 'jdbc_conn', 'pitfall'],
+  legend: ['flow', ['req', 'intercept / begin'], ['res', 'commit / return'], ['fail', 'rollback / bypass']],
   goals: [
-    { text: 'CGLIB subclass vs JDK dynamic proxy selection', step: 0 },
-    { text: 'MethodInvocation interceptor chain & @Around advice', step: 1 },
-    { text: 'Self-invocation bypass & AopContext proxy exposure', step: 2 },
+    { text: 'Contrast direct call vs cross-cutting Proxy wrap', step: 1 },
+    { text: 'Choose JDK Dynamic Proxy vs CGLIB Subclass', step: 2 },
+    { text: 'Execute @Around Advice & ProceedingJoinPoint', step: 3 },
+    { text: 'Open JDBC Tx (autoCommit=false) in TxInterceptor', step: 4 },
+    { text: 'Commit or Rollback on RuntimeException', step: 5 },
+    { text: 'Diagnose Self-Invocation (this.method) Proxy Bypass', step: 6 },
   ],
   steps: [
     {
-      short: 'Proxy Selection',
-      chapter: 'technique',
-      title: 'Proxy Creation: JDK Dynamic Proxy vs CGLIB Subclassing',
+      short: 'Direct Call',
+      chapter: 'aop',
+      title: '1. Direct Method Call (No Cross-Cutting Proxy)',
       body: [
-        'Spring creates proxies using either <b>JDK Dynamic Proxies</b> (for classes implementing interfaces) or <b>CGLIB</b> (which generates a dynamic subclass overriding methods).',
-        'Spring Boot 2+ defaults to CGLIB for consistent bean injection without requiring interface casting.',
+        'Calling a plain target object executes business logic directly with no place to hook logging, metrics, security, or database transactions without polluting business code.',
+        'Spring AOP keeps business classes clean by wrapping them in an invisible <strong>Proxy</strong> during bean initialization.',
       ],
-      callout: { kind: 'tip', text: 'Final classes or final methods cannot be proxied by CGLIB because bytecode subclasses cannot override final members.' },
-      metrics: { proxyType: 'CGLIB Subclass', interceptorChain: '3 Interceptors', weavingTiming: 'Runtime Initialization', targetState: 'Wrapped Target' },
+      callout: {
+        kind: 'insight',
+        text: 'Spring AOP is proxy-based (method interception), unlike AspectJ bytecode weaving.',
+      },
+      metrics: { proxy_layer: 'None', tx_status: 'AutoCommit', jdbc_conn: 'Direct', pitfall: 'Boilerplate' },
       scene: {
         entities: {
-          card: S({ x: -4, y: 14 }, 'CGLIB Subclass vs JDK Dynamic Proxy', [
-            '# Spring Boot 2.x+ defaults to CGLIB (spring.aop.proxy-target-class=true):',
-            '= @EnableAspectJAutoProxy(proxyTargetClass = true)',
-            '// CGLIB generates UserService$$SpringCGLIB$$0 subclass',
-            '= UserService proxy = (UserService) context.getBean(UserService.class);',
-            '# Allows autowiring concrete classes directly without requiring interfaces',
-          ]),
-          client: y(-12, -4, { label: 'Client Caller', tags: [{ text: 'service.doWork()', icon: 'zap' }] }),
-          proxy:  d(-2, -4,  { color: 'orange', glyph: 'shield', label: ['AOP Proxy'], sub: 'CGLIB Subclass' }),
-          target: d(10, -4,  { color: 'blue', glyph: 'code', label: ['Target Bean'], sub: 'Original Code' }),
+          caller: d(-12, -8, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Controller'], sub: 'calls service' }),
+          target: d(4, -8, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'raw target' }),
+          card: S({ x: -12, y: 12 }, '1. Without AOP Proxy', [
+            '// Without AOP: transaction boilerplate everywhere',
+            'conn.setAutoCommit(false);',
+            'try { saveOrder(); conn.commit(); }',
+            'catch (Exception e) { conn.rollback(); }',
+          ], { icon: 'terminal' }),
         },
         links: {
-          cp: h('client', 'proxy', ['client', 'proxy'], { label: 'method call', heads: 'end' }),
-          pt: h('proxy', 'target', ['proxy', 'target'], { label: 'super.doWork()', heads: 'end' }),
+          c_t: h('caller', 'target', ['caller', 'target'], { heads: 'end', label: 'direct()' }),
         },
-        flows: [
-          { route: ['cp', 'pt'], bounce: false, rate: 1.2 },
-        ],
+        flows: [{ route: ['c_t'], kind: 'req', rate: 1.7 }],
       },
     },
     {
-      short: 'Advice Chain',
-      chapter: 'technique',
-      title: 'Interceptor Chain: Ordered Execution of Around Advices',
+      short: 'AOP Proxy',
+      chapter: 'aop',
+      title: '2. Wrapping Target with JDK / CGLIB Proxy',
       body: [
-        'When a proxied method is called, the proxy fetches matching <code>MethodInterceptor</code> objects from the Advisor registry.',
-        'They form an execution chain using the Chain of Responsibility pattern: each interceptor calls <code>invocation.proceed()</code> to pass control to the next advice or target.',
+        'In <code>postProcessAfterInitialization()</code>, Spring detects <code>@Aspect</code> / <code>@Transactional</code> pointcuts and returns a <strong>Proxy</strong> instead of the raw bean.',
+        'Spring Boot defaults to <strong>CGLIB</strong> (subclassing <code>OrderService$$SpringCGLIB</code>), so <code>final</code> classes or methods cannot be proxied.',
       ],
-      callout: { kind: 'insight', text: '@Transactional uses TransactionInterceptor to start a DB transaction before proceed() and commit or rollback after return or exception.' },
-      metrics: { proxyType: 'Advisor Chain', interceptorChain: 'Security -> Tx -> Logging', weavingTiming: 'Invocation Time', targetState: 'Active Execution' },
+      callout: {
+        kind: 'tip',
+        text: 'Injected beans in other services hold a reference to the Proxy, not the raw target instance.',
+      },
+      changes: ['+ CGLIB Proxy wraps OrderService bean', '+ Caller now invokes Proxy first'],
+      metrics: { proxy_layer: 'CGLIB Proxy', tx_status: 'Intercepted', jdbc_conn: 'Managed', pitfall: 'No final' },
       scene: {
         entities: {
-          card: S({ x: -4, y: 14 }, '@Around Advice & ProceedingJoinPoint', [
-            '@Aspect @Component',
-            'public class MetricsAspect {',
-            '= @Around("@annotation(LogExecutionTime)")',
-            '= public Object measure(ProceedingJoinPoint joinPoint) throws Throwable {',
-            '=   long start = System.currentTimeMillis();',
-            '=   Object proceed = joinPoint.proceed(); // Invokes next in chain',
-            '=   return proceed;',
-            '= }',
-            '}',
-          ]),
-          sec:    d(-12, -4, { color: 'rose', glyph: 'lock', label: ['Security'], sub: 'Check Auth' }),
-          tx:     d(-2, -4,  { color: 'green', glyph: 'database', label: ['Tx Advisor'], sub: 'begin / commit' }),
-          target: d(10, -4,  { color: 'blue', glyph: 'code', label: ['Target Method'], sub: 'Business Logic' }),
+          caller: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Controller'], sub: 'holds proxy' }),
+          proxy: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CGLIB Proxy'], sub: '$$SpringCGLIB' }),
+          target: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Target Bean'], sub: 'real method' }),
+          card: S({ x: -12, y: 12 }, '2. Spring Boot Proxy Generation', [
+            '// Default in Spring Boot: proxyTargetClass = true',
+            'OrderService$$SpringCGLIB extends OrderService',
+            '// Requirements: non-final class, non-final method',
+          ], { icon: 'terminal' }),
         },
         links: {
-          st: h('sec', 'tx', ['sec', 'tx'], { label: 'proceed()', heads: 'end' }),
-          tt: h('tx', 'target', ['tx', 'target'], { label: 'proceed()', heads: 'end' }),
+          c_px: h('caller', 'proxy', ['caller', 'proxy'], { heads: 'end', label: 'placeOrder' }),
+          px_tg: h('proxy', 'target', ['proxy', 'target'], { heads: 'end', label: 'delegate' }),
         },
-        flows: [
-          { route: ['st', 'tt'], bounce: false, rate: 1.4 },
-        ],
+        flows: [{ route: ['c_px', 'px_tg'], kind: 'req', rate: 1.8 }],
+      },
+    },
+    {
+      short: '@Around Chain',
+      chapter: 'aop',
+      title: '3. @Around Advice & Interceptor Chain',
+      body: [
+        'The proxy dispatches calls through an ordered <code>MethodInterceptor</code> chain (e.g., Metrics → Security → Transaction).',
+        'An <code>@Around</code> advice wraps <code>pjp.proceed()</code>, running code both before and after the target method.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'Forgetting to call pjp.proceed() inside @Around blocks the real method from ever running.',
+      },
+      changes: ['+ MethodInterceptor chain executes', '+ pjp.proceed() invokes target'],
+      metrics: { proxy_layer: 'Advice Chain', tx_status: 'Wrapped', jdbc_conn: 'Managed', pitfall: 'Order matters' },
+      scene: {
+        entities: {
+          px: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AOP Proxy'], sub: 'entry' }),
+          adv: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['@Around Advice'], sub: 'pjp.proceed()' }),
+          target: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Target Bean'], sub: 'executes' }),
+          card: S({ x: -12, y: 12 }, '3. @Around Aspect Execution', [
+            '@Around("@annotation(Timed)")',
+            'Object measure(ProceedingJoinPoint pjp) throws Throwable {',
+            '  long t0 = System.nanoTime();',
+            '  try { return pjp.proceed(); } finally { log(t0); }',
+            '}',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          px_ad: h('px', 'adv', ['px', 'adv'], { heads: 'end', label: 'before' }),
+          ad_tg: h('adv', 'target', ['adv', 'target'], { heads: 'end', label: 'proceed()' }),
+        },
+        flows: [{ route: ['px_ad', 'ad_tg'], kind: 'req', rate: 1.9 }],
+      },
+    },
+    {
+      short: '@Transactional',
+      chapter: 'tx',
+      title: '4. @Transactional & TransactionSynchronizationManager',
+      body: [
+        '<code>TransactionInterceptor</code> borrows a JDBC Connection from HikariCP, sets <code>autoCommit = false</code>, and binds it to the current thread via <code>ThreadLocal</code> in <code>TransactionSynchronizationManager</code>.',
+        'All repositories called on that thread share the exact same uncommitted Connection.',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Keep external HTTP calls OUT of @Transactional — holding a HikariCP connection during slow API calls starves the pool.',
+      },
+      changes: ['+ TxInterceptor sets autoCommit=false', '+ Connection bound to ThreadLocal'],
+      metrics: { proxy_layer: 'TxInterceptor', tx_status: 'ACTIVE', jdbc_conn: 'ThreadLocal', pitfall: 'Hold conn long' },
+      scene: {
+        entities: {
+          tx: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TxInterceptor'], sub: 'autoCommit=0' }),
+          target: d(0, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'shared conn' }),
+          db: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['Postgres DB'], sub: 'BEGIN TX' }),
+          card: S({ x: -12, y: 12 }, '4. Opening Declarative Transaction', [
+            '@Transactional(propagation = Propagation.REQUIRED)',
+            'public void placeOrder(OrderReq req) {',
+            '  orderRepo.save(req.toOrder()); // uses ThreadLocal conn',
+            '  ledgerRepo.debit(req.userId()); // same JDBC TX!',
+            '}',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          tx_tg: h('tx', 'target', ['tx', 'target'], { heads: 'end', label: 'bind conn' }),
+          tg_db: h('target', 'db', ['target', 'db'], { heads: 'end', label: 'SQL writes' }),
+        },
+        flows: [{ route: ['tx_tg', 'tg_db'], kind: 'req', rate: 2.0 }],
+      },
+    },
+    {
+      short: 'Commit/Rollback',
+      chapter: 'tx',
+      title: '5. Commit vs RuntimeException Rollback Rules',
+      body: [
+        'If the target returns normally, <code>TxInterceptor</code> issues <code>COMMIT</code>. If an unchecked <code>RuntimeException</code> or <code>Error</code> escapes, it issues <code>ROLLBACK</code>.',
+        'By default, <strong>checked exceptions</strong> (like <code>IOException</code>) do NOT roll back unless <code>rollbackFor = Exception.class</code> is set!',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Catching an exception inside @Transactional without rethrowing hides it from TxInterceptor — Spring will COMMIT partial writes!',
+      },
+      changes: ['+ Normal return -> COMMIT', '+ RuntimeException -> ROLLBACK'],
+      metrics: { proxy_layer: 'TxInterceptor', tx_status: 'COMMIT / RLBK', jdbc_conn: 'Released', pitfall: 'Checked ex' },
+      scene: {
+        entities: {
+          tx: d(-12, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TxInterceptor'], sub: 'try / catch' }),
+          commit: b(2, -14, { r: 2.2, h: 48, color: 'green', label: ['COMMIT'], sub: 'normal return' }),
+          rlbk: b(2, -2, { r: 2.2, h: 48, color: 'red', label: ['ROLLBACK'], sub: 'RuntimeEx' }),
+          card: S({ x: -12, y: 12 }, '5. Spring Rollback Semantics', [
+            '// Default: rolls back ONLY on RuntimeException / Error',
+            '@Transactional(rollbackFor = Exception.class)',
+            'public void pay() throws PaymentCheckedException {',
+            '  // now checked exceptions also trigger ROLLBACK',
+            '}',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          tx_cm: h('tx', 'commit', ['tx', 'commit'], { heads: 'end', label: 'commit' }),
+          tx_rb: h('tx', 'rlbk', ['tx', 'rlbk'], { heads: 'end', label: 'ex -> rollback' }),
+        },
+        flows: [{ route: ['tx_cm'], kind: 'res', rate: 1.8 }, { route: ['tx_rb'], kind: 'fail', rate: 1.4 }],
       },
     },
     {
       short: 'Self-Invocation',
-      chapter: 'tradeoff',
-      title: 'The Self-Invocation Trap: Why this.innerMethod() Bypasses AOP',
+      chapter: 'tx',
+      title: '6. Self-Invocation Pitfall (this.method() Bypass)',
       body: [
-        'If <code>methodA()</code> calls <code>this.methodB()</code> internally, the call happens on the raw <code>this</code> reference, completely bypassing the outer proxy.',
-        'Consequently, annotations like <code>@Transactional</code> or <code>@Async</code> on <code>methodB()</code> will NEVER take effect when invoked from inside the same class.',
+        'When <code>methodA()</code> on the target calls <code>this.methodB()</code>, <code>this</code> refers to the <strong>raw target</strong>, NOT the Spring Proxy!',
+        'Annotations on <code>methodB()</code> (<code>@Transactional</code>, <code>@Async</code>, <code>@Cacheable</code>) are silently ignored. Fix by extracting <code>methodB()</code> into a separate Spring bean.',
       ],
-      callout: { kind: 'warn', text: 'To fix self-invocation, either extract the internal method into a separate collaborator bean, or inject the bean into itself via self-injection.' },
-      metrics: { proxyType: 'Bypassed Proxy', interceptorChain: '0 Interceptors Fired', weavingTiming: 'Direct JVM Call', targetState: 'Unprotected Method' },
+      callout: {
+        kind: 'warn',
+        text: 'Self-invocation (this.methodB()) is the #1 Spring AOP / @Transactional bug in production.',
+      },
+      changes: ['+ this.methodB() bypasses AOP Proxy', '+ Extract separate bean to restore Proxy'],
+      metrics: { proxy_layer: 'BYPASSED!', tx_status: 'No TX started', jdbc_conn: 'AutoCommit', pitfall: 'Self-call' },
       scene: {
         entities: {
-          card: S({ x: -4, y: 14 }, 'Self-Invocation Bypasses Interceptor Chain', [
-            'public void caller() {',
-            '! this.targetWithAroundAdvice(); // DIRECT CALL: No Aspect executed!',
+          px: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AOP Proxy'], sub: 'bypassed!' }),
+          mA: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['this.methodA'], sub: 'raw target' }),
+          mB: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['this.methodB'], sub: '@Tx ignored!' }),
+          card: S({ x: -12, y: 12 }, '6. Self-Invocation Bypasses the Proxy', [
+            'public void methodA() {',
+            '  this.methodB(); // "this" is raw target, NOT proxy!',
             '}',
-            '= // Workaround using AopContext (exposeProxy = true):',
-            '= ((UserService) AopContext.currentProxy()).targetWithAroundAdvice();',
-            '# Best practice: Refactor helper method to dedicated component',
-          ]),
-          proxy:  d(-12, -4, { color: 'sand', glyph: 'shield', label: ['Outer Proxy'], sub: 'Ignored' }),
-          outer:  d(-2, -4,  { color: 'blue', glyph: 'code', label: ['methodA()'], sub: 'Runs on Target' }),
-          inner:  d(10, -4,  { color: 'rose', glyph: 'alertTriangle', label: ['this.methodB()'], sub: 'No Tx Opened!' }),
+            '@Transactional public void methodB() { /* NO TX! */ }',
+            '// Fix: inject HelperBean and call helper.methodB()',
+          ], { icon: 'terminal' }),
         },
         links: {
-          oi: h('outer', 'inner', ['outer', 'inner'], { label: 'direct this.call()', heads: 'end' }),
+          px_a: h('px', 'mA', ['px', 'mA'], { heads: 'end', label: 'enter' }),
+          a_b: h('mA', 'mB', ['mA', 'mB'], { heads: 'end', label: 'this.call()' }),
         },
-        flows: [
-          { route: ['oi'], bounce: false, rate: 1.0 },
-        ],
+        flows: [{ route: ['px_a'], kind: 'req', rate: 1.6 }, { route: ['a_b'], kind: 'fail', rate: 1.8 }],
       },
     },
   ],
 };
-
-export default javaSpringAopLesson;

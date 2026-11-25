@@ -1,132 +1,223 @@
-// @ts-nocheck
 /* eslint-disable */
 import {
   makeBlock as d,
   makeLink as h,
-  makeDevice as y,
   makePanel as S,
+  makeDb as b,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const javaVirtualThreadsLesson = {
+export const javaVirtualThreadsLesson: Lesson = {
   id: 'java-virtual-threads',
-  title: 'Java Virtual Threads & Project Loom',
-  summary: 'Explore JDK 21 Virtual Threads architecture: carrier OS thread scheduling, continuation unmounting on blocking IO, and million-concurrency scaling.',
-  minutes: 10,
-  level: 'intermediate',
-  metrics: ['virtualThreads', 'carrierThreads', 'memoryPerThread', 'schedulingMode'],
+  title: 'Executors, CompletableFuture & Virtual Threads (Loom)',
+  summary:
+    'Trace Java concurrency from blocking 1:1 OS threads through ThreadPools, CompletableFuture async DAGs, NIO epoll multiplexing, and JDK 21 Virtual Threads.',
+  minutes: 13,
+  level: 'advanced',
+  metrics: ['thread_model', 'ram_per_task', 'io_behavior', 'scalability'],
+  legend: ['flow', ['req', 'submit / mount'], ['res', 'complete / park'], ['fail', 'blocked / pinned']],
   goals: [
-    { text: 'Compare 1MB Platform Thread OS', step: 1 },
-    { text: 'Visualize Loom continuation unmounting', step: 2 },
-    { text: 'Avoid thread pinning caused by', step: 3 },
+    { text: 'Diagnose 1:1 Platform Thread blocking & 1MB stack cost', step: 1 },
+    { text: 'Bound concurrency with ExecutorService & WorkStealingPool', step: 2 },
+    { text: 'Compose non-blocking DAGs via CompletableFuture', step: 3 },
+    { text: 'Multiplex sockets with NIO Selector & epoll', step: 4 },
+    { text: 'Mount/unmount JDK 21 Virtual Threads on Carrier pool', step: 5 },
+    { text: 'Avoid Carrier Pinning (synchronized vs ReentrantLock)', step: 6 },
   ],
   steps: [
     {
-      short: 'Platform vs Virtual',
-      chapter: 'technique',
-      title: 'M:N Threading: Lightweight JVM Continuations',
+      short: '1:1 OS Thread',
+      chapter: 'executors',
+      title: '1. Blocking 1:1 Platform Threads (The Bottleneck)',
       body: [
-        'Platform threads map 1:1 to OS kernel threads, consuming ~1MB stack memory and costly kernel context switches.',
-        'Virtual threads (JDK 21) are managed directly by the JVM. Millions run concurrently, allocating only ~1KB on the heap:',
-        '<code>// Lightweight virtual thread creation:<br>Thread.startVirtualThread(() -> processOrder());<br>// Or via structured concurrency:<br>try (var scope = new StructuredTaskScope.ShutdownOnFailure()) { ... }</code>',
+        'Classic Java maps 1 <code>java.lang.Thread</code> directly to 1 OS kernel thread (~1 MB native stack).',
+        'When a thread blocks on JDBC or HTTP I/O, the expensive OS kernel thread sits idle — spawning 10,000 threads exhausts RAM and triggers heavy context switching.',
       ],
-      callout: { kind: 'insight', text: 'Do not pool virtual threads! They are ephemeral: create a new one per task via Executors.newVirtualThreadPerTaskExecutor().' },
-      metrics: { virtualThreads: '1,000,000 active', carrierThreads: '8 OS cores', memoryPerThread: '~1 KB', schedulingMode: 'M:N Loom' },
+      callout: {
+        kind: 'warn',
+        text: 'Thread-per-request on OS threads caps out around a few thousand concurrent connections.',
+      },
+      metrics: { thread_model: '1:1 OS Thread', ram_per_task: '~1 MB stack', io_behavior: 'Blocks OS thread', scalability: 'Low (~2k)' },
       scene: {
         entities: {
-          c1:  d(-12, -8, { color: 'orange', glyph: 'cpu', label: ['Carrier OS-1', 'CPU Core 1'], cpu: 0.9 }),
-          c2:  d(-12, 4,  { color: 'orange', glyph: 'cpu', label: ['Carrier OS-2', 'CPU Core 2'], cpu: 0.8 }),
-          vt1: d(0, -12,  { color: 'green', glyph: 'code', label: ['VirtualThread-1', 'RUNNING'] }),
-          vt2: d(0, -4,   { color: 'blue', glyph: 'code', label: ['VirtualThread-2', 'Parked (Socket)'] }),
-          vt3: d(0, 4,    { color: 'green', glyph: 'code', label: ['VirtualThread-3', 'RUNNING'] }),
-          vt4: d(0, 12,   { color: 'blue', glyph: 'code', label: ['VirtualThread-4', 'Parked (DB)'] }),
-          hp:  d(12, 0,   { color: 'purple', glyph: 'layers', label: ['JVM Heap', 'Cont. Stack'] }),
-          card: S({ x: -2, y: 16 }, 'Platform vs Virtual Thread Stack', [
-            'Platform Thread: 1MB OS stack, kernel context switch',
-            'Virtual Thread:  ~1KB heap continuation, 0 kernel switch',
-            'Carrier Threads: ForkJoinPool sizing = availableProcessors()',
-            'Concurrency:     1,000,000 tasks run in sub-second memory',
-          ], { icon: 'cpu' }),
+          os: d(-12, -8, { s: 4.8, h: 54, color: 'red', glyph: 'cpu', label: ['OS Thread #1'], sub: '1 MB stack' }),
+          io: b(4, -8, { r: 2.2, h: 48, color: 'amber', label: ['Blocking I/O'], sub: '200ms wait' }),
+          card: S({ x: -12, y: 12 }, '1. Classic Thread-per-Request Bottleneck', [
+            '// 1 Java Thread = 1 OS Kernel Thread (~1MB stack)',
+            'new Thread(() -> {',
+            '  String res = httpClient.blockingGet(url); // OS idle!',
+            '}).start();',
+          ], { icon: 'terminal' }),
         },
         links: {
-          c1v1: h('c1', 'vt1', ['c1', 'vt1'], { label: 'mounted', heads: 'both' }),
-          c1v2: h('c1', 'vt2', ['c1', 'vt2'], { label: 'unmounted', heads: 'end', style: 'dashed' }),
-          c2v3: h('c2', 'vt3', ['c2', 'vt3'], { label: 'mounted', heads: 'both' }),
-          c2v4: h('c2', 'vt4', ['c2', 'vt4'], { label: 'unmounted', heads: 'end', style: 'dashed' }),
-          vhp:  h('vt2', 'hp', ['vt2', 'hp'], { label: 'park continuation', heads: 'end' }),
+          os_io: h('os', 'io', ['os', 'io'], { heads: 'end', label: 'blocks 200ms' }),
         },
-        flows: [
-          { route: ['c1v1'], bounce: true, rate: 1.2 },
-          { route: ['c2v3'], bounce: true, rate: 1.0 },
-        ],
+        flows: [{ route: ['os_io'], kind: 'fail', rate: 1.4 }],
       },
     },
     {
-      short: 'Unmount on IO',
-      chapter: 'technique',
-      title: 'Non-Blocking Park on Network & Disk IO',
+      short: 'Thread Pools',
+      chapter: 'executors',
+      title: '2. ExecutorService & ForkJoin Work-Stealing',
       body: [
-        'When a virtual thread executes blocking IO (e.g. InputStream.read()), the JVM unmounts it from the carrier thread.',
-        'The carrier thread immediately picks up another ready virtual thread from its work queue without blocking the OS thread:',
-        '<code>// Blocking IO yields continuation seamlessly:<br>byte[] data = remoteSocket.getInputStream().readAllBytes();<br>// JVM calls Continuation.yield() under the hood!</code>',
+        '<code>ExecutorService</code> caps OS threads via a bounded pool + <code>BlockingQueue</code>, preventing OOM.',
+        '<code>ForkJoinPool</code> (used by parallel streams & <code>CompletableFuture</code>) adds <strong>work-stealing</strong>: idle workers steal tasks from the tail of busy workers’ deques.',
       ],
-      callout: { kind: 'tip', text: 'Synchronous blocking code executes with the high throughput of asynchronous reactive code, with standard clean stack traces.' },
-      metrics: { virtualThreads: '100,000 IO-bound', carrierThreads: '8 OS (0% blocked)', memoryPerThread: '~1.2 KB', schedulingMode: 'Carrier Switch' },
+      callout: {
+        kind: 'tip',
+        text: 'CPU-bound pool size ≈ Runtime.availableProcessors(); I/O-bound pools still hit Little’s Law limits.',
+      },
+      changes: ['+ Bounded BlockingQueue protects RAM', '+ Work-stealing balances CPU cores'],
+      metrics: { thread_model: 'Pooled OS', ram_per_task: 'Queue node', io_behavior: 'Still blocks pool', scalability: 'Bounded' },
       scene: {
         entities: {
-          carrier: d(-11, -1, { color: 'orange', glyph: 'cpu', label: ['Carrier Thread', 'Switches Task'], cpu: 1.0 }),
-          vtOld:   d(-2, -10, { color: 'yellow', glyph: 'code', label: ['VT (Waiting IO)', 'Yielded Cont.'] }),
-          vtNew:   d(-2, 8,   { color: 'green', glyph: 'code', label: ['VT (Compute Ready)', 'Mounted Next'] }),
-          network: d(9, -10,  { color: 'violet', glyph: 'network', label: ['Remote Socket', 'Awaiting Response'] }),
-          card: S({ x: 2, y: 14 }, 'Continuation Yield on Blocking IO', [
-            'Continuation.yield(): JVM parks call-stack to Heap',
-            'Carrier Worker:       Carrier OS thread picks next ready VT',
-            'OS Network Wait:      epoll/kqueue polls remote socket',
-            'Wakeup Event:         VT unparks and re-mounts on free carrier',
-          ], { icon: 'zap' }),
+          sub: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['submit(task)'], sub: 'caller' }),
+          q: b(0, -10, { r: 2.2, h: 48, color: 'amber', label: ['Task Queue'], sub: 'FIFO / deque' }),
+          pool: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Worker Pool'], sub: 'N OS threads' }),
+          card: S({ x: -12, y: 12 }, '2. ThreadPoolExecutor & ForkJoinPool', [
+            'var pool = Executors.newFixedThreadPool(8);',
+            '// Never use unbounded newCachedThreadPool() under load!',
+            'var fj = Executors.newWorkStealingPool(); // ForkJoin',
+          ], { icon: 'terminal' }),
         },
         links: {
-          cOld: h('carrier', 'vtOld', ['carrier', 'vtOld'], { label: 'unmount', heads: 'end', style: 'dashed' }),
-          cNew: h('carrier', 'vtNew', ['carrier', 'vtNew'], { label: 'mount & run', heads: 'end' }),
-          nio:  h('vtOld', 'network', ['vtOld', 'network'], { label: 'epoll wait', heads: 'end' }),
+          sub_q: h('sub', 'q', ['sub', 'q'], { heads: 'end', label: 'enqueue' }),
+          q_pl: h('q', 'pool', ['q', 'pool'], { heads: 'end', label: 'take / steal' }),
         },
-        flows: [
-          { route: ['cNew'], bounce: true, rate: 1.4 },
-        ],
+        flows: [{ route: ['sub_q', 'q_pl'], kind: 'req', rate: 1.9 }],
       },
     },
     {
-      short: 'Thread Pinning',
-      chapter: 'tradeoff',
-      title: 'Thread Pinning: Synchronized Blocks & Native Frames',
+      short: 'CompletableFuture',
+      chapter: 'async',
+      title: '3. CompletableFuture Async Pipelines',
       body: [
-        'A virtual thread becomes <b>pinned</b> to its carrier OS thread when executing inside a <code>synchronized</code> block/method or native JNI call.',
-        'While pinned, blocking IO freezes the underlying OS thread, degrading Loom throughput. Replace <code>synchronized</code> with <code>ReentrantLock</code> to allow unmounting:',
-        '<code>// Pinning hazard vs Solution:<br>synchronized(lock) { io(); } // PINNED!<br>reentrantLock.lock(); try { io(); } finally { reentrantLock.unlock(); } // OK!</code>',
+        '<code>CompletableFuture</code> chains non-blocking callbacks (<code>thenApply</code>, <code>thenCompose</code>, <code>allOf</code>) so OS threads are not held idle waiting for I/O.',
+        'Trade-off: callback chains split stack traces and complicate debugging and structured error handling.',
       ],
-      callout: { kind: 'warn', text: 'Run with -Djdk.tracePinnedThreads=full in JDK 21 to log stack traces of any virtual thread that pins its carrier thread.' },
-      metrics: { virtualThreads: 'Pinned VT Detected', carrierThreads: 'OS Thread Stalled!', memoryPerThread: 'Pinned Carrier', schedulingMode: 'ReentrantLock Required' },
+      callout: {
+        kind: 'insight',
+        text: 'Always pass a dedicated Executor to supplyAsync(..., ioPool) so blocking work does not starve ForkJoinPool.commonPool().',
+      },
+      changes: ['+ Async DAG chains callbacks', '+ allOf() fans out parallel calls'],
+      metrics: { thread_model: 'Async Callbacks', ram_per_task: 'Future heap', io_behavior: 'Non-blocking', scalability: 'High (complex)' },
       scene: {
         entities: {
-          carrier: d(-12, -4, { color: 'rose', glyph: 'cpu', label: ['Carrier Thread'], sub: 'Locked', cpu: 1.0 }),
-          pinVT:   d(-2, -4,  { color: 'yellow', glyph: 'lock', label: ['Virtual Thread'], sub: 'In sync()' }),
-          fixLock: d(10, -4,  { color: 'green', glyph: 'check', label: ['ReentrantLock'], sub: 'Unpin Solution' }),
-          card: S({ x: -2, y: 14 }, 'Thread Pinning Hazard & Mitigation', [
-            'HAZARD: synchronized block prevents Continuation.yield()',
-            'CONSEQUENCE: Carrier OS thread freezes while VT blocks',
-            'FIX: Replace synchronized with java.util.concurrent.ReentrantLock',
-            'DIAGNOSTIC: -Djdk.tracePinnedThreads=full dumps pinned traces',
-          ], { icon: 'alert' }),
+          f1: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['supplyAsync()'], sub: 'fetch user' }),
+          f2: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['thenCompose()'], sub: 'fetch orders' }),
+          join: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['allOf().join()'], sub: 'merge DAG' }),
+          card: S({ x: -12, y: 12 }, '3. Composing Async Pipelines', [
+            'CompletableFuture.supplyAsync(() -> getUser(id), ioPool)',
+            '  .thenCompose(u -> getOrdersAsync(u))',
+            '  .exceptionally(ex -> fallbackOrders())',
+            '  .thenAccept(this::render);',
+          ], { icon: 'terminal' }),
         },
         links: {
-          cp: h('carrier', 'pinVT', ['carrier', 'pinVT'], { label: 'pinned (cannot yield)', heads: 'both' }),
-          pf: h('pinVT', 'fixLock', ['pinVT', 'fixLock'], { label: 'refactor to ReentrantLock', heads: 'end' }),
+          f1_f2: h('f1', 'f2', ['f1', 'f2'], { heads: 'end', label: 'flatMap' }),
+          f2_jn: h('f2', 'join', ['f2', 'join'], { heads: 'end', label: 'combine' }),
         },
-        flows: [
-          { route: ['cp'], bounce: true, rate: 0.8 },
-        ],
+        flows: [{ route: ['f1_f2', 'f2_jn'], kind: 'res', rate: 2.0 }],
+      },
+    },
+    {
+      short: 'NIO epoll',
+      chapter: 'nio',
+      title: '4. Java NIO Selector & OS epoll Multiplexing',
+      body: [
+        'Underneath Netty, WebFlux, and Project Loom, <code>java.nio.channels.Selector</code> registers thousands of <code>SocketChannel</code> descriptors onto a single OS <code>epoll</code>/<code>kqueue</code> loop.',
+        'The kernel wakes the event loop only when bytes actually arrive on a socket.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'Selector + epoll turns 10,000 idle sockets into 1 waiting kernel call instead of 10,000 blocked threads.',
+      },
+      changes: ['+ Selector watches N SocketChannels', '+ OS epoll notifies ready FDs only'],
+      metrics: { thread_model: '1 Event Loop', ram_per_task: 'FD buffer', io_behavior: 'Multiplexed', scalability: '100k+ sockets' },
+      scene: {
+        entities: {
+          socks: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['10k Sockets'], sub: 'SocketChannel' }),
+          sel: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['NIO Selector'], sub: 'epoll_wait()' }),
+          buf: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['ByteBuffer'], sub: 'OP_READ ready' }),
+          card: S({ x: -12, y: 12 }, '4. Non-Blocking NIO Event Loop', [
+            'channel.configureBlocking(false);',
+            'channel.register(selector, SelectionKey.OP_READ);',
+            'selector.select(); // OS epoll_wait returns ready keys',
+            '// Foundation used by Netty AND Loom Poller!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          sk_sel: h('socks', 'sel', ['socks', 'sel'], { heads: 'end', label: 'register FD' }),
+          sel_bf: h('sel', 'buf', ['sel', 'buf'], { heads: 'end', label: 'read ready' }),
+        },
+        flows: [{ route: ['sk_sel', 'sel_bf'], kind: 'req', rate: 2.0 }],
+      },
+    },
+    {
+      short: 'Virtual Threads',
+      chapter: 'loom',
+      title: '5. JDK 21 Virtual Threads: Mount & Unmount',
+      body: [
+        '<strong>Virtual Threads</strong> (<code>Thread.ofVirtual()</code>) are cheap M:N user-mode continuations (~few KB on Heap) scheduled onto a small <code>ForkJoinPool</code> of OS <strong>Carrier Threads</strong>.',
+        'When a virtual thread hits blocking I/O, the JVM automatically <strong>unmounts</strong> its stack to the Heap and registers an NIO epoll callback — freeing the Carrier for other virtual threads!',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'You write simple synchronous blocking code AND get async NIO scalability without CompletableFuture callback hell.',
+      },
+      changes: ['+ M:N Virtual Threads on Carrier FJP', '+ Blocking I/O unmounts continuation to Heap'],
+      metrics: { thread_model: 'M:N Loom', ram_per_task: '~2 KB Heap', io_behavior: 'Auto-unmount', scalability: '1M+ virtual' },
+      scene: {
+        entities: {
+          vt: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Virtual Threads'], sub: '1M+ cheap' }),
+          car: d(0, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Carrier Pool'], sub: 'CPU-core OS' }),
+          heap: b(14, -10, { r: 2.2, h: 48, color: 'purple', label: ['Parked Stack'], sub: 'Heap chunk' }),
+          card: S({ x: -12, y: 12 }, '5. Project Loom Virtual Threads (JDK 21+)', [
+            'try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {',
+            '  exec.submit(() -> httpClient.get(url));',
+            '} // On I/O wait: unmount -> park on Heap -> free Carrier',
+            '// Spring Boot 3.2+: spring.threads.virtual.enabled=true',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          vt_car: h('vt', 'car', ['vt', 'car'], { heads: 'end', label: 'mount' }),
+          car_hp: h('car', 'heap', ['car', 'heap'], { heads: 'end', label: 'park on I/O' }),
+        },
+        flows: [{ route: ['vt_car', 'car_hp'], kind: 'res', rate: 2.2 }],
+      },
+    },
+    {
+      short: 'Pinning Fix',
+      chapter: 'loom',
+      title: '6. Avoiding Carrier Pinning (synchronized -> Lock)',
+      body: [
+        'In JDK 21, performing blocking I/O inside a <code>synchronized</code> block or native JNI frame <strong>pins</strong> the virtual thread to its OS Carrier Thread, preventing unmount.',
+        'Replace long I/O-wrapping <code>synchronized</code> blocks with <code>ReentrantLock</code> (which parks cleanly), or upgrade to JDK 24+ (JEP 491) which unpins <code>synchronized</code>.',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Never pool Virtual Threads — create a fresh virtual thread per task; pooling them defeats their lightweight design.',
+      },
+      changes: ['+ synchronized + I/O pins Carrier OS thread', '+ ReentrantLock.lock() unmounts cleanly'],
+      metrics: { thread_model: 'Loom Safe', ram_per_task: '~2 KB Heap', io_behavior: 'Unpinned Lock', scalability: 'Full Loom' },
+      scene: {
+        entities: {
+          vt: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['synchronized'], sub: 'pins Carrier!' }),
+          lock: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['ReentrantLock'], sub: 'unmounts I/O' }),
+          car: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Carrier Free'], sub: 'runs next VT' }),
+          card: S({ x: -12, y: 12 }, '6. Eliminating Virtual Thread Pinning', [
+            '// BAD (JDK 21): synchronized(mu) { db.query(); } // PINS!',
+            '// GOOD: ReentrantLock allows clean unmount:',
+            'lock.lock(); try { db.query(); } finally { lock.unlock(); }',
+            '// Debug flag: -Djdk.tracePinnedThreads=short',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          vt_lk: h('vt', 'lock', ['vt', 'lock'], { heads: 'end', label: 'refactor' }),
+          lk_cr: h('lock', 'car', ['lock', 'car'], { heads: 'end', label: 'free carrier' }),
+        },
+        flows: [{ route: ['vt_lk', 'lk_cr'], kind: 'res', rate: 1.9 }],
       },
     },
   ],
 };
-
-export default javaVirtualThreadsLesson;

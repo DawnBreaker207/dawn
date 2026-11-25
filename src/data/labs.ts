@@ -50,7 +50,7 @@ export const LABS: LabEntry[] = [
     title: 'Java & Spring Framework',
     tag: 'Runtime Engine',
     tagClass: 'border-amber-500 text-amber-500',
-    intro: '26 chapters: JVM Heap, Virtual Threads, StringTable, JIT, Spring IoC, AOP, Transactions & Security.',
+    intro: '29 chapters: JVM Heap, ClassLoader, JMM/CAS/AQS, Virtual Threads, Optional/java.time, Spring IoC, AOP, Transactions & Security.',
     desc: 'Interactive 2.5D visual simulation with real in-canvas Java code: TLAB allocation, Loom continuations, CGLIB proxies, dirty checking, and WebFlux.',
     cta: 'Open Java & Spring Lab',
   },
