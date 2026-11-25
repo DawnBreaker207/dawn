@@ -1,0 +1,68 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="Boids Flock Toy"
+  description="Interactive 2D flocking simulation — move your cursor to attract or repel a flock of glowing boids."
+>
+  <header class="mb-7 space-y-4 border-b border-(--border) pt-1 pb-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-sm text-(--fg-faint)">
+      <div class="flex items-center gap-2">
+        <span class="inline-block size-2 rounded-full bg-(--accent)"></span>
+        <span class="text-(--fg)">~/dawn/lab/boids</span>
+      </div>
+      <a href="/lab" class="text-(--fg-dim) no-underline hover:text-(--accent)">
+        All labs →
+      </a>
+    </div>
+    <div class="space-y-2.5">
+      <h1 class="m-0 bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl font-extrabold leading-[1.15] pb-1 tracking-tight dark:from-rose-400 dark:via-pink-400 dark:to-amber-300">
+        Boids Flock Toy
+      </h1>
+      <p class="m-0 max-w-2xl border-l-2 border-(--accent) pl-3.5 text-base sm:text-lg leading-relaxed text-(--fg-dim)">
+        Move your cursor across the canvas to guide or scatter the flock — no code needed.
+      </p>
+    </div>
+  </header>
+
+  <div class="space-y-4 pb-10">
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--bg-alt) px-4 py-3 font-mono text-xs sm:text-sm">
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          id="boids-mode"
+          data-umami-event="boids-toggle-mode"
+          class="cursor-pointer rounded-lg border border-(--accent) bg-(--accent) px-3 py-1.5 font-semibold text-white transition-colors hover:bg-(--accent-hover)"
+        >
+          Mode: Attract
+        </button>
+        <button
+          type="button"
+          id="boids-scatter"
+          data-umami-event="boids-scatter"
+          class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-(--fg) transition-colors hover:border-(--accent) hover:text-(--accent)"
+        >
+          Scatter
+        </button>
+        <button
+          type="button"
+          id="boids-pause"
+          data-umami-event="boids-pause"
+          class="cursor-pointer rounded-lg border border-(--border) bg-(--bg) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent) hover:text-(--fg)"
+        >
+          ⏸ Pause
+        </button>
+      </div>
+      <span class="text-(--fg-faint)">110 autonomous boids · mouse &amp; touch</span>
+    </div>
+
+    <section class="overflow-hidden rounded-xl border border-(--border) bg-(--bg)" style="height: 60vh; min-height: 360px;">
+      <canvas id="boids-canvas" data-umami-event="boids-interact" class="block h-full w-full cursor-crosshair"></canvas>
+    </section>
+  </div>
+
+  <script>import '@/scripts/lab/boids/boids.ts';</script>
+</BaseLayout>
