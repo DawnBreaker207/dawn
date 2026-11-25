@@ -23,6 +23,7 @@ export const javaLambdaLesson: Lesson = {
     { text: 'Fuse intermediate filter() and map() stages', step: 4 },
     { text: 'Trigger vertical item-by-item pull on collect()', step: 5 },
     { text: 'Short-circuit early with findFirst() / limit()', step: 6 },
+    { text: 'Avoid Collectors.toMap() duplicate key crash & use groupingBy', step: 7 },
   ],
   steps: [
     {
@@ -221,6 +222,40 @@ export const javaLambdaLesson: Lesson = {
           m_t: h('mp', 'term', ['mp', 'term'], { heads: 'end', label: 'halt!' }),
         },
         flows: [{ route: ['hd_f2', 'f2_m2', 'm_t'], kind: 'res', rate: 1.6 }],
+      },
+    },
+    {
+      short: 'Collectors Trap',
+      chapter: 'streams',
+      title: '7. Collectors.toMap() Duplicate Trap & groupingBy',
+      body: [
+        '<code>Collectors.toMap(User::id, u -> u)</code> throws <code>IllegalStateException: Duplicate key</code> the moment two items share a key! Always pass a 3rd merge function: <code>(oldV, newV) -> newV</code>.',
+        'For grouping, use <code>Collectors.groupingBy(Order::status, Collectors.counting())</code> or <code>partitioningBy(predicate)</code> for fast boolean splits.',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Collectors.toMap() also throws NullPointerException if a mapped value is null (it calls Map.merge internally).',
+      },
+      changes: ['+ Added merge function (a, b) -> b to Collectors.toMap', '+ Added groupingBy + downstream counting()'],
+      metrics: { bytecode_op: 'Collector', evaluation: 'Terminal', allocations: 'Map result', execution: 'Safe merge' },
+      scene: {
+        entities: {
+          dup: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Duplicate Key'], sub: 'toMap 2-arg' }),
+          mrg: d(1, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Merge (a,b)->b'], sub: 'safe 3-arg' }),
+          grp: b(15, -10, { r: 2.2, h: 48, color: 'purple', label: ['groupingBy'], sub: 'Map<K, List>' }),
+          card: S({ x: -12, y: 12 }, '7. Safe Collectors.toMap & groupingBy', [
+            '// BUG: explodes with IllegalStateException on duplicate id!',
+            'users.stream().collect(Collectors.toMap(User::id, u -> u));',
+            '// FIX: provide merge function (a, b) -> b:',
+            'users.stream().collect(Collectors.toMap(User::id, u -> u, (a, b) -> b));',
+            'orders.stream().collect(groupingBy(Order::status, counting()));',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          dp_mg: h('dup', 'mrg', ['dup', 'mrg'], { heads: 'end', label: 'add merge' }),
+          mg_gp: h('mrg', 'grp', ['mrg', 'grp'], { heads: 'end', label: 'group/count' }),
+        },
+        flows: [{ route: ['dp_mg', 'mg_gp'], kind: 'res', rate: 1.8 }],
       },
     },
   ],

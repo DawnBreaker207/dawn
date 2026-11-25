@@ -125,9 +125,9 @@ export const gitRerereEngineLesson = {
         },
         links: {
           cr: h('conflictHunk', 'rrEngine', ['conflictHunk', 'rrEngine'], { label: 'fingerprint hunk' }),
-          rc: h('rrEngine', 'rrCache', ['rrEngine', 'rrCache'], { label: 'store preimage' }),
+          eng_cache: h('rrEngine', 'rrCache', ['rrEngine', 'rrCache'], { label: 'store preimage' }),
         },
-        flows: [{ route: ['cr', 'rc'], kind: 'record', rate: 1.6 }],
+        flows: [{ route: ['cr', 'eng_cache'], kind: 'record', rate: 1.6 }],
       },
     },
     {
@@ -160,9 +160,9 @@ export const gitRerereEngineLesson = {
         },
         links: {
           cr: h('conflictHunk', 'rrEngine', ['conflictHunk', 'rrEngine'], { label: 'inspect fix' }),
-          rc: h('rrEngine', 'rrCache', ['rrEngine', 'rrCache'], { label: 'store postimage' }),
+          eng_cache: h('rrEngine', 'rrCache', ['rrEngine', 'rrCache'], { label: 'store postimage' }),
         },
-        flows: [{ route: ['cr', 'rc'], kind: 'record', rate: 1.6 }],
+        flows: [{ route: ['cr', 'eng_cache'], kind: 'record', rate: 1.6 }],
       },
     },
     {
@@ -194,11 +194,11 @@ export const gitRerereEngineLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          rc: h('rebaseRunner', 'rrEngine', ['rebaseRunner', 'rrEngine'], { label: 'replay commit' }),
-          cr: h('rrCache', 'rrEngine', ['rrCache', 'rrEngine'], { label: 'read postimage' }),
+          rb_eng: h('rebaseRunner', 'rrEngine', ['rebaseRunner', 'rrEngine'], { label: 'replay commit' }),
+          cache_eng: h('rrCache', 'rrEngine', ['rrCache', 'rrEngine'], { label: 'read postimage' }),
           ra: h('rrEngine', 'autoReplay', ['rrEngine', 'autoReplay'], { label: 'apply resolution' }),
         },
-        flows: [{ route: ['rc', 'cr', 'ra'], kind: 'replay', rate: 1.8 }],
+        flows: [{ route: ['rb_eng', 'cache_eng', 'ra'], kind: 'replay', rate: 1.8 }],
       },
     },
     {
@@ -232,11 +232,11 @@ export const gitRerereEngineLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          rc: h('rebaseRunner', 'rrEngine', ['rebaseRunner', 'rrEngine'], { label: 'finish rebase' }),
+          rb_eng: h('rebaseRunner', 'rrEngine', ['rebaseRunner', 'rrEngine'], { label: 'finish rebase' }),
           ra: h('rrEngine', 'autoReplay', ['rrEngine', 'autoReplay'], { label: 'auto-resolve' }),
           au: h('autoReplay', 'autoUpdate', ['autoReplay', 'autoUpdate'], { label: 'auto-stage index' }),
         },
-        flows: [{ route: ['rc', 'ra', 'au'], kind: 'replay', rate: 1.8 }],
+        flows: [{ route: ['rb_eng', 'ra', 'au'], kind: 'replay', rate: 1.8 }],
       },
     },
   ],

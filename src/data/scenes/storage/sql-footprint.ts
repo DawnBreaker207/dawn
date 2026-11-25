@@ -38,6 +38,7 @@ export const sqlFootprintLesson = {
     { text: 'Fillfactor: Leaving free space', step: 3 },
     { text: 'How UPDATE & DELETE create', step: 4 },
     { text: 'VACUUM, Free Space Map (FSM)', step: 5 },
+    { text: 'HOT Updates & TOAST Out-of-Line Storage', step: 6 },
   ],
   steps: [
     {
@@ -157,7 +158,7 @@ export const sqlFootprintLesson = {
       metrics: { page_size: `8192 B`, free_space: `4200 B Reclaimed`, live_tuples: `40 rows`, dead_tuples: `0`, bloat_pct: `Clean` },
       scene: {
         entities: {
-          vacuum: d(-11, -4, { s: 3.8, h: 42, color: `blue`, glyph: `workflow`, label: [`Autovacuum`], sub: `Worker` }),
+          vacuum: d(-11, -4, { s: 4.4, h: 48, color: `blue`, glyph: `workflow`, label: [`Autovacuum`], sub: `Worker` }),
           clean_page: d(0, -4, { s: 3.8, h: 42, color: `green`, glyph: `server`, label: [`Clean Page`], sub: `Dead Purged` }),
           fsm: b(11, -4, { r: 2.2, h: 36, label: `Free Space Map`, color: `teal` }),
         },
@@ -168,6 +169,34 @@ export const sqlFootprintLesson = {
         flows: [
           { route: [`vc`, `cf`], bounce: false, rate: 1.6 },
         ],
+      },
+    },
+    {
+      short: `HOT & TOAST`,
+      chapter: `deep`,
+      title: `HOT Updates & TOAST Large-Value Storage`,
+      body: [
+        `If an <code>UPDATE</code> modifies only non-indexed columns and the same 8KB page has free space (thanks to <code>fillfactor=80</code>), PostgreSQL performs a <strong>HOT (Heap-Only Tuple)</strong> update — skipping all B-Tree index updates!`,
+        `Values larger than ~2KB (long JSONB/TEXT) are compressed and moved out-of-line into a separate <strong>TOAST</strong> table, keeping main heap pages compact.`,
+      ],
+      callout: { kind: `insight`, text: `Set fillfactor = 80 on update-heavy tables so HOT updates stay on the same 8KB page without index bloat.` },
+      metrics: { page_size: `8192 B`, free_space: `fillfactor=80`, live_tuples: `HOT Chain`, dead_tuples: `0 idx writes`, bloat_pct: `TOAST >2KB` },
+      scene: {
+        entities: {
+          upd: d(-14, -10, { s: 4.6, h: 52, color: `green`, glyph: `zap`, label: [`HOT UPDATE`], sub: `same 8KB page` }),
+          page: d(0, -10, { s: 4.6, h: 52, color: `blue`, glyph: `layers`, label: [`8KB Heap Page`], sub: `0 index write` }),
+          toast: b(15, -10, { r: 2.2, h: 48, color: `purple`, label: [`TOAST Table`], sub: `>2KB off-page` }),
+          card: S({ x: -12, y: 12 }, `6. HOT Updates & TOAST Threshold`, [
+            `ALTER TABLE orders SET (fillfactor = 80);`,
+            `-- HOT update: non-indexed col + free space on page = 0 index writes!`,
+            `-- TOAST: values > 2KB compressed (LZ4/pglz) & stored out-of-line`,
+          ], { icon: `terminal` }),
+        },
+        links: {
+          up_pg: h(`upd`, `page`, [`upd`, `page`], { heads: `end`, label: `same page` }),
+          pg_ts: h(`page`, `toast`, [`page`, `toast`], { heads: `end`, label: `>2KB JSONB` }),
+        },
+        flows: [{ route: [`up_pg`, `pg_ts`], bounce: false, rate: 1.8 }],
       },
     },
   ],

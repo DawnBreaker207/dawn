@@ -204,7 +204,7 @@ export const javaSpringActuatorTestingLesson: Lesson = {
       metrics: { ops_endpoint: 'Docker PG16', probe_state: 'Real SQL', test_speed: 'Static reuse', context_cache: 'Prod parity' },
       scene: {
         entities: {
-          tc: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Testcontainer'], sub: '@ServiceConn' }),
+          tc: d(-14, -14, { s: 5.2, h: 54, color: 'blue', glyph: 'cpu', label: ['Testcontainer'], sub: '@ServiceConn' }),
           pg: b(0, -14, { r: 2.2, h: 48, color: 'green', label: ['Postgres 16'], sub: 'Docker port' }),
           app: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['@SpringBootTest'], sub: 'real SQL pass' }),
           card: S({ x: -12, y: 12 }, '6. Zero-Boilerplate Testcontainers (Boot 3.1+)', [

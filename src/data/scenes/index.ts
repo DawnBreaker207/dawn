@@ -78,14 +78,11 @@ import { javaJdbcLesson } from './specialized/java-jdbc';
 import { javaLambdaLesson } from './specialized/java-lambda';
 import { javaMetaprogrammingLesson } from './specialized/java-metaprogramming';
 import { javaJmmCasAqsLesson } from './specialized/java-jmm-cas-aqs';
-import { javaJitCompilerLesson } from './specialized/java-jit-compiler';
 import { javaClassloaderLesson } from './specialized/java-classloader';
 import { javaCoreApisLesson } from './specialized/java-core-apis';
 
 // Spring Enterprise concepts
 import { javaSpringMvcLesson } from './specialized/java-spring-mvc';
-import { javaSpringBootAutoconfigLesson } from './specialized/java-spring-boot-autoconfig';
-import { javaSpringAsyncEventsLesson } from './specialized/java-spring-async-events';
 import { javaSpringActuatorTestingLesson } from './specialized/java-spring-actuator-testing';
 
 // Containers & Kubernetes (k8s.sim)
@@ -227,15 +224,12 @@ export {
   javaMetaprogrammingLesson,
   javaClassloaderLesson,
   javaJvmMemoryLesson,
-  javaJitCompilerLesson,
   javaJmmCasAqsLesson,
   javaVirtualThreadsLesson,
   javaSpringIocLesson,
   javaSpringAopLesson,
-  javaSpringBootAutoconfigLesson,
   javaSpringMvcLesson,
   javaSpringJpaLesson,
-  javaSpringAsyncEventsLesson,
   javaSpringSecurityLesson,
   javaSpringActuatorTestingLesson,
   sqlExplainLesson,
@@ -374,15 +368,12 @@ export const ALL_SCENES: Record<string, any> = {
   'java-metaprogramming': javaMetaprogrammingLesson,
   'java-classloader': javaClassloaderLesson,
   'java-jvm-memory': javaJvmMemoryLesson,
-  'java-jit-compiler': javaJitCompilerLesson,
   'java-jmm-cas-aqs': javaJmmCasAqsLesson,
   'java-virtual-threads': javaVirtualThreadsLesson,
   'java-spring-ioc': javaSpringIocLesson,
   'java-spring-aop': javaSpringAopLesson,
-  'java-spring-boot-autoconfig': javaSpringBootAutoconfigLesson,
   'java-spring-mvc': javaSpringMvcLesson,
   'java-spring-jpa': javaSpringJpaLesson,
-  'java-spring-async-events': javaSpringAsyncEventsLesson,
   'java-spring-security': javaSpringSecurityLesson,
   'java-spring-actuator-testing': javaSpringActuatorTestingLesson,
   'java': javaTypesBoxingLesson,

@@ -38,6 +38,7 @@ export const sqlExplainLesson = {
     { text: `Bitmap Index Scan & Lossy Bitmap Heap Scan`, step: 3 },
     { text: 'Hash Join vs Nested Loop', step: 4 },
     { text: 'EXPLAIN (ANALYZE, BUFFERS)', step: 5 },
+    { text: 'Index Only Scan & Visibility Map', step: 6 },
   ],
   steps: [
     {
@@ -171,6 +172,35 @@ export const sqlExplainLesson = {
           { route: [`eb`], bounce: true, rate: 2.5 },
           { route: [`bd`], bounce: true, rate: 0.8 },
         ],
+      },
+    },
+    {
+      short: `Index Only`,
+      chapter: `deep`,
+      title: `Index Only Scan & Visibility Map`,
+      body: [
+        `If all selected columns exist inside the B-Tree index (covering index via <code>INCLUDE</code>), PostgreSQL can attempt an <strong>Index Only Scan</strong>.`,
+        `Because MVCC visibility lives on the heap, PostgreSQL checks the <strong>Visibility Map (VM)</strong>: if the page is marked all-visible (updated by <code>VACUUM</code>), it skips the heap fetch completely (<code>Heap Fetches: 0</code>)!`,
+      ],
+      callout: { kind: `tip`, text: `Use CREATE INDEX ... ON orders(user_id) INCLUDE (total) to enable zero-heap-fetch Index Only Scans.` },
+      metrics: { cost: `0.42..4.44`, rows: `1`, loops: `1`, buffers_hit: `Heap Fetches: 0`, execution_time: `0.02ms` },
+      scene: {
+        entities: {
+          idx: d(-14, -10, { s: 4.6, h: 52, color: `green`, glyph: `layers`, label: [`Covering Index`], sub: `INCLUDE (col)` }),
+          vm: d(0, -10, { s: 4.6, h: 52, color: `cyan`, glyph: `shield`, label: [`Visibility Map`], sub: `all-visible` }),
+          heap: b(15, -10, { r: 2.2, h: 48, color: `blue`, label: [`Heap Table`], sub: `0 fetches!` }),
+          card: S({ x: -12, y: 12 }, `6. EXPLAIN (ANALYZE, BUFFERS) Index Only`, [
+            `EXPLAIN (ANALYZE, BUFFERS)`,
+            `SELECT total FROM orders WHERE user_id = 42;`,
+            `-> Index Only Scan using idx_orders_uid_inc`,
+            `   Heap Fetches: 0  |  Buffers: shared hit=3`,
+          ], { icon: `terminal` }),
+        },
+        links: {
+          ix_vm: h(`idx`, `vm`, [`idx`, `vm`], { heads: `end`, label: `check VM` }),
+          vm_hp: h(`vm`, `heap`, [`vm`, `heap`], { heads: `end`, label: `skip heap`, style: `dashed` }),
+        },
+        flows: [{ route: [`ix_vm`], bounce: false, rate: 1.9 }],
       },
     },
   ],

@@ -9,9 +9,9 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaCollectionsLesson: Lesson = {
   id: 'java-collections',
-  title: 'HashMap & ConcurrentHashMap',
+  title: 'Collections, Maps, Queues & Concurrent Traps',
   summary:
-    'Understand WHY ArrayList beats LinkedList, how HashMap resizes without rehashing, why mutating a key loses it, and how ConcurrentHashMap locks buckets.',
+    'Master ArrayList vs LinkedList, HashMap/TreeMap/LinkedHashMap LRU, ArrayDeque/PriorityQueue, EnumSet/EnumMap, Fail-Fast vs CopyOnWrite, ConcurrentHashMap & SkipListMap.',
   minutes: 14,
   level: 'core',
   metrics: ['backing_store', 'collision_op', 'concurrency', 'tricky_trap'],
@@ -24,6 +24,11 @@ export const javaCollectionsLesson: Lesson = {
     { text: 'Compare List.of() / Map.of() unmodifiable collections', step: 5 },
     { text: 'Lock only bucket head in ConcurrentHashMap (CAS + sync)', step: 6 },
     { text: 'Avoid recursive computeIfAbsent deadlock in CHM', step: 7 },
+    { text: 'Choose HashSet, LinkedHashMap (LRU) & TreeMap', step: 8 },
+    { text: 'Use ArrayDeque (ring) & PriorityQueue (Min-Heap)', step: 9 },
+    { text: 'Optimize Enum keys with EnumSet & EnumMap', step: 10 },
+    { text: 'Fix Fail-Fast CME & use CopyOnWriteArrayList', step: 11 },
+    { text: 'Apply ConcurrentSkipListMap, IdentityHashMap & Comparator', step: 12 },
   ],
   steps: [
     {
@@ -254,6 +259,171 @@ export const javaCollectionsLesson: Lesson = {
           rs_hg: h('resv', 'hang', ['resv', 'hang'], { heads: 'end', label: 'waits self' }),
         },
         flows: [{ route: ['fn_rs', 'rs_hg'], kind: 'fail', rate: 1.7 }],
+      },
+    },
+    {
+      short: 'Set/LRU/Tree',
+      chapter: 'map',
+      title: '8. HashSet, LinkedHashMap (LRU) & TreeMap',
+      body: [
+        '<code>HashSet</code> is literally a wrapper around <code>HashMap&lt;E, PRESENT&gt;</code>. <code>LinkedHashMap</code> adds a doubly-linked list to preserve insertion order — or set <code>accessOrder = true</code> + <code>removeEldestEntry</code> for an instant <strong>LRU Cache</strong>.',
+        '<code>TreeMap</code> / <code>TreeSet</code> use a <strong>Red-Black Tree</strong> ($O(\\log n)$) for sorted range queries (<code>subMap</code>, <code>ceilingKey</code>). Watch out for <code>BigDecimal</code>: <code>1.0</code> vs <code>1.00</code> are distinct in <code>HashSet</code> (<code>equals</code>) but equal in <code>TreeSet</code> (<code>compareTo</code>)!',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'Need O(1) lookup + insertion order? LinkedHashMap. Need sorted keys + range queries? TreeMap.',
+      },
+      changes: ['+ LinkedHashMap(cap, 0.75f, true) builds LRU Cache', '+ TreeMap sorts keys in Red-Black Tree O(log n)'],
+      metrics: { backing_store: 'List+Map / RB', collision_op: 'compareTo()', concurrency: 'Not sync', tricky_trap: 'BigDecimal eq' },
+      scene: {
+        entities: {
+          lhm: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['LinkedHashMap'], sub: 'LRU linked' }),
+          hset: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['HashSet<E>'], sub: 'wraps HashMap' }),
+          tmap: b(15, -10, { r: 2.2, h: 48, color: 'purple', label: ['TreeMap<K,V>'], sub: 'RB-Tree' }),
+          card: S({ x: -12, y: 12 }, '8. LinkedHashMap LRU & TreeMap Ordering', [
+            '// Instant O(1) LRU Cache with LinkedHashMap:',
+            'new LinkedHashMap<>(16, 0.75f, true) {',
+            '  protected boolean removeEldestEntry(Entry e) { return size() > 100; }',
+            '}; // TreeMap uses Comparator/Comparable (BigDecimal 1.0 == 1.00!)',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          lh_hs: h('lhm', 'hset', ['lhm', 'hset'], { heads: 'end', label: 'O(1) order' }),
+          hs_tm: h('hset', 'tmap', ['hset', 'tmap'], { heads: 'end', label: 'O(log n)' }),
+        },
+        flows: [{ route: ['lh_hs', 'hs_tm'], kind: 'res', rate: 1.8 }],
+      },
+    },
+    {
+      short: 'Deque & Heap',
+      chapter: 'queue',
+      title: '9. ArrayDeque (Ring Buffer) & PriorityQueue (Min-Heap)',
+      body: [
+        '<code>ArrayDeque</code> uses a circular <code>Object[]</code> ring buffer with <code>head</code> and <code>tail</code> indices — faster than legacy <code>Stack</code> (synchronized) and <code>LinkedList</code> (zero node allocations, rejects <code>null</code>).',
+        '<code>PriorityQueue</code> stores a binary <strong>Min-Heap</strong> in an array ($O(\\log n)$ <code>offer/poll</code>, $O(1)$ <code>peek</code>). Note: iterating a <code>PriorityQueue</code> is <strong>NOT</strong> sorted — only repeated <code>poll()</code> yields sorted order!',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Prefer ArrayDeque over Stack and LinkedList for stacks/queues; use PriorityQueue for Top-K & scheduling.',
+      },
+      changes: ['+ ArrayDeque ring buffer replaces Stack/LinkedList', '+ PriorityQueue maintains binary Min-Heap'],
+      metrics: { backing_store: 'Ring / Heap[]', collision_op: 'siftUp / Down', concurrency: 'Unsafe!', tricky_trap: 'Iter unsorted' },
+      scene: {
+        entities: {
+          deq: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['ArrayDeque'], sub: 'ring head/tail' }),
+          pq: d(1, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['PriorityQueue'], sub: 'Min-Heap' }),
+          top: b(15, -10, { r: 2.2, h: 48, color: 'blue', label: ['poll() Min'], sub: 'O(log n) sift' }),
+          card: S({ x: -12, y: 12 }, '9. ArrayDeque & PriorityQueue Usage', [
+            'Deque<String> stack = new ArrayDeque<>(); // push() / pop()',
+            'PriorityQueue<Task> pq = new PriorityQueue<>(',
+            '  Comparator.comparingInt(Task::priority)); // Min-Heap',
+            '// pq.forEach() is NOT sorted! Use while (!pq.isEmpty()) pq.poll()',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          dq_pq: h('deq', 'pq', ['deq', 'pq'], { heads: 'end', label: 'vs heap' }),
+          pq_tp: h('pq', 'top', ['pq', 'top'], { heads: 'end', label: 'poll()' }),
+        },
+        flows: [{ route: ['dq_pq', 'pq_tp'], kind: 'req', rate: 1.8 }],
+      },
+    },
+    {
+      short: 'EnumSet & Map',
+      chapter: 'enum',
+      title: '10. Bit-Vector EnumSet & Array-Backed EnumMap',
+      body: [
+        '<code>EnumSet</code> packs all enum flags into a single <strong>64-bit <code>long</code> bitmask</strong> (<code>RegularEnumSet</code>) — <code>contains()</code>, <code>union</code>, and <code>intersection</code> execute in 1 CPU bitwise instruction with zero Heap nodes.',
+        '<code>EnumMap</code> stores values in a plain <code>Object[]</code> indexed directly by <code>key.ordinal()</code> — faster than <code>HashMap</code> with zero hash collisions.',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Whenever your Set or Map key is an Enum, always choose EnumSet / EnumMap over HashSet / HashMap.',
+      },
+      changes: ['+ EnumSet packs flags into 1 long bit-vector', '+ EnumMap indexes Object[] by enum.ordinal()'],
+      metrics: { backing_store: 'long / Object[]', collision_op: '0 collisions', concurrency: 'Not sync', tricky_trap: 'Enum keys only' },
+      scene: {
+        entities: {
+          enm: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'code', label: ['Enum.ordinal()'], sub: '0, 1, 2, ...' }),
+          eset: d(1, -16, { s: 4.6, h: 52, color: 'green', glyph: 'zap', label: ['EnumSet'], sub: 'long bitmask' }),
+          emap: b(1, -2, { r: 2.2, h: 48, color: 'blue', label: ['EnumMap'], sub: 'arr[ordinal]' }),
+          card: S({ x: -12, y: 12 }, '10. Zero-Overhead EnumSet & EnumMap', [
+            'EnumSet<Role> roles = EnumSet.of(Role.ADMIN, Role.EDITOR);',
+            '// Stored as a single 64-bit long bitmask (O(1) bitwise!)',
+            'Map<Status, Handler> map = new EnumMap<>(Status.class);',
+            '// Direct array lookup: vals[status.ordinal()] — 0 hashing!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          en_es: h('enm', 'eset', ['enm', 'eset'], { heads: 'end', label: '1L << ord' }),
+          en_em: h('enm', 'emap', ['enm', 'emap'], { heads: 'end', label: 'arr[ord]' }),
+        },
+        flows: [{ route: ['en_es'], kind: 'res', rate: 2.0 }, { route: ['en_em'], kind: 'res', rate: 2.0 }],
+      },
+    },
+    {
+      short: 'Fail-Fast COW',
+      chapter: 'concurrent',
+      title: '11. Fail-Fast CME Trap vs CopyOnWriteArrayList',
+      body: [
+        'Calling <code>list.remove(x)</code> inside a <code>for-each</code> loop increments <code>modCount</code> while the iterator checks <code>modCount != expectedModCount</code>, throwing <code>ConcurrentModificationException</code> (Fail-Fast). Fix it with <code>list.removeIf(...)</code> or <code>Iterator.remove()</code>.',
+        'For read-heavy, rarely-modified listener lists across threads, <code>CopyOnWriteArrayList</code> creates a fresh array snapshot on every write so readers iterate lock-free.',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Never use CopyOnWriteArrayList for write-heavy workloads — every add/set copies the entire backing array!',
+      },
+      changes: ['+ modCount mismatch triggers Fail-Fast CME', '+ CopyOnWriteArrayList snapshots array on writes'],
+      metrics: { backing_store: 'modCount / COW', collision_op: 'Arrays.copyOf', concurrency: 'Lock-free read', tricky_trap: 'for-each remove' },
+      scene: {
+        entities: {
+          loop: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['for-each remove'], sub: 'modCount err' }),
+          fix: d(1, -16, { s: 4.6, h: 52, color: 'green', glyph: 'shield', label: ['list.removeIf()'], sub: 'safe mutate' }),
+          cow: b(1, -2, { r: 2.2, h: 48, color: 'blue', label: ['CopyOnWrite'], sub: 'write snapshot' }),
+          card: S({ x: -12, y: 12 }, '11. Fixing CME & CopyOnWriteArrayList', [
+            '// BUG: throws ConcurrentModificationException:',
+            'for (var s : list) if (s.isEmpty()) list.remove(s);',
+            '// FIX: list.removeIf(String::isEmpty);',
+            '// Thread-safe listeners: new CopyOnWriteArrayList<>()',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          lp_fx: h('loop', 'fix', ['loop', 'fix'], { heads: 'end', label: 'removeIf()' }),
+          lp_cw: h('loop', 'cow', ['loop', 'cow'], { heads: 'end', label: 'snapshot' }),
+        },
+        flows: [{ route: ['lp_fx'], kind: 'res', rate: 1.8 }, { route: ['lp_cw'], kind: 'req', rate: 1.5 }],
+      },
+    },
+    {
+      short: 'SkipList & Sort',
+      chapter: 'advanced',
+      title: '12. ConcurrentSkipListMap, IdentityHashMap & Comparator',
+      body: [
+        'Need both <strong>concurrency AND sorted keys</strong>? Use <code>ConcurrentSkipListMap</code> (lock-free SkipList) since <code>ConcurrentHashMap</code> is unsorted. For object-graph traversal using <code>==</code> instead of <code>equals()</code>, use <code>IdentityHashMap</code>.',
+        'Daily sorting & factories: chain <code>Comparator.comparing(...).thenComparing(..., nullsLast(...))</code>; use <code>Map.ofEntries(...)</code> when >10 entries; remember Java 16+ <code>stream.toList()</code> returns an <strong>unmodifiable</strong> list!',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'stream.toList() (Java 16+) is unmodifiable and allows nulls, whereas List.of() rejects nulls and Collectors.toList() is mutable.',
+      },
+      changes: ['+ ConcurrentSkipListMap provides sorted concurrent map', '+ Comparator fluent API + Stream.toList()'],
+      metrics: { backing_store: 'SkipList / ==', collision_op: 'CAS / Identity', concurrency: 'Lock-free sort', tricky_trap: 'Map.of max 10' },
+      scene: {
+        entities: {
+          skip: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['SkipListMap'], sub: 'sorted + CAS' }),
+          idmap: d(1, -10, { s: 4.8, h: 54, color: 'cyan', glyph: 'shield', label: ['IdentityMap'], sub: 'uses == ref' }),
+          comp: d(15, -10, { s: 4.6, h: 52, color: 'green', glyph: 'code', label: ['Comparator'], sub: 'fluent sort' }),
+          card: S({ x: -12, y: 12 }, '12. SkipListMap, IdentityMap & Daily Helpers', [
+            'ConcurrentNavigableMap<Long, Order> sorted = new ConcurrentSkipListMap<>();',
+            'Map<Object, Object> graph = new IdentityHashMap<>(); // compares ==',
+            'var cmp = Comparator.comparing(User::age).thenComparing(User::name);',
+            'var imm = stream.toList(); // unmodifiable! Map.ofEntries() for >10',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          sk_id: h('skip', 'idmap', ['skip', 'idmap'], { heads: 'end', label: 'special maps' }),
+          id_cm: h('idmap', 'comp', ['idmap', 'comp'], { heads: 'end', label: 'sort & list' }),
+        },
+        flows: [{ route: ['sk_id', 'id_cm'], kind: 'res', rate: 1.8 }],
       },
     },
   ],

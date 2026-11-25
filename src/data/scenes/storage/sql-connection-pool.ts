@@ -38,6 +38,7 @@ export const sqlConnectionPoolLesson = {
     { text: 'Client-side pool sizing with HikariCP', step: 3 },
     { text: 'PgBouncer: Multiplexing 10,000 client', step: 4 },
     { text: 'Pooling Modes', step: 5 },
+    { text: 'Prepared Statements & Pool Sizing Formula', step: 6 },
   ],
   steps: [
     {
@@ -53,7 +54,7 @@ export const sqlConnectionPoolLesson = {
       scene: {
         entities: {
           clients: y(-11, -4, { label: `Web Apps`, tags: [{ text: `50 Sockets`, icon: `server` }] }),
-          postmaster: d(0, -4, { s: 3.8, h: 42, color: `blue`, glyph: `shield`, label: [`Postmaster`], sub: `Fork Manager` }),
+          postmaster: d(0, -4, { s: 4.4, h: 48, color: `blue`, glyph: `shield`, label: [`Postmaster`], sub: `Fork Manager` }),
           backends: d(11, -4, { s: 3.8, h: 42, color: `purple`, glyph: `cpu`, label: [`50 Backends`], sub: `OS Processes` }),
         },
         links: {
@@ -168,6 +169,36 @@ export const sqlConnectionPoolLesson = {
         flows: [
           { route: [`cp`, `ps`], bounce: true, rate: 2.0 },
         ],
+      },
+    },
+    {
+      short: `Pool Sizing`,
+      chapter: `deep`,
+      title: `HikariCP Sizing Formula & Prepared Statements`,
+      body: [
+        `More connections ≠ higher throughput! PostgreSQL saturates once active queries exceed CPU cores. The HikariCP formula is <code>connections = (core_count * 2) + effective_spindle_count</code>.`,
+        `In PgBouncer Transaction Pooling, prepared statements used to break across backend swaps — enable <code>max_prepared_statements > 0</code> (PgBouncer 1.21+) or set <code>prepareThreshold=0</code> in JDBC.`,
+      ],
+      callout: { kind: `tip`, text: `For a 4-vCPU RDS Postgres instance on NVMe, a pool size of ~10–20 often beats 200 connections on P99 latency.` },
+      metrics: { client_conns: `2,000`, db_backends: `16 (Optimal)`, pool_size: `2*cores + 1`, context_switches: `Minimal`, p99_latency: `0.9ms` },
+      scene: {
+        entities: {
+          app: d(-14, -10, { s: 4.6, h: 52, color: `blue`, glyph: `server`, label: [`App Fleet`], sub: `2000 reqs` }),
+          pgb: d(0, -10, { s: 4.6, h: 52, color: `green`, glyph: `balancer`, label: [`PgBouncer`], sub: `max_prep=100` }),
+          pg: b(15, -10, { r: 2.2, h: 48, color: `purple`, label: [`Postgres 4c`], sub: `16 backends` }),
+          card: S({ x: -12, y: 12 }, `6. HikariCP & PgBouncer Config`, [
+            `// Optimal DB pool size: (2 * CPU_cores) + disk_spindles`,
+            `// pgbouncer.ini (v1.21+ supports prepared statements):`,
+            `pool_mode = transaction`,
+            `default_pool_size = 16`,
+            `max_prepared_statements = 100`,
+          ], { icon: `terminal` }),
+        },
+        links: {
+          ap_pg: h(`app`, `pgb`, [`app`, `pgb`], { heads: `end`, label: `multiplex` }),
+          pg_db: h(`pgb`, `pg`, [`pgb`, `pg`], { heads: `end`, label: `16 conns` }),
+        },
+        flows: [{ route: [`ap_pg`, `pg_db`], bounce: false, rate: 2.0 }],
       },
     },
   ],

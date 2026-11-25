@@ -23,6 +23,7 @@ export const javaStringInternalsLesson: Lesson = {
     { text: 'Halve RAM with JDK 9+ Compact Strings (byte[] + coder)', step: 4 },
     { text: 'Contrast + in loops vs StringConcatFactory invokedynamic', step: 5 },
     { text: 'Share backing byte[] via G1GC String Deduplication', step: 6 },
+    { text: 'Write clean SQL/JSON with Text Blocks (""") & formatted()', step: 7 },
   ],
   steps: [
     {
@@ -217,6 +218,39 @@ export const javaStringInternalsLesson: Lesson = {
           s2_ar: h('s2', 'arr', ['s2', 'arr'], { heads: 'end', label: 'dedup ptr' }),
         },
         flows: [{ route: ['s1_ar'], kind: 'res', rate: 1.8 }, { route: ['s2_ar'], kind: 'res', rate: 1.8 }],
+      },
+    },
+    {
+      short: 'Text Blocks',
+      chapter: 'string',
+      title: '7. Text Blocks (""") & String.formatted() (Java 15–21)',
+      body: [
+        '<strong>Text Blocks</strong> (<code>""" ... """</code>) eliminate noisy <code>+</code> concatenation and escaped quotes (<code>\\"</code>) for multiline SQL, JSON, and HTML.',
+        'At compile time, <code>javac</code> strips common leading indentation automatically; pair with <code>.formatted(args...)</code> as a clean replacement for <code>String.format(...)</code>.',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'The position of the closing """ controls how much leading whitespace is stripped from every line!',
+      },
+      changes: ['+ Text Blocks strip common leading indentation', '+ .formatted() binds arguments cleanly'],
+      metrics: { backing_array: 'Compile strip', pool_region: 'Heap StringTbl', concat_op: '.formatted()', heap_cost: 'Zero + noise' },
+      scene: {
+        entities: {
+          raw: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Text Block """'], sub: 'SQL / JSON' }),
+          javac: d(1, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['javac Strip'], sub: 'incidental WS' }),
+          fmt: b(15, -10, { r: 2.2, h: 48, color: 'green', label: ['.formatted()'], sub: 'clean String' }),
+          card: S({ x: -12, y: 12 }, '7. Multiline SQL/JSON with Text Blocks', [
+            'String sql = """',
+            '    SELECT id, total FROM orders',
+            '    WHERE status = \'%s\'',
+            '    """.formatted("PAID");',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          rw_jc: h('raw', 'javac', ['raw', 'javac'], { heads: 'end', label: 'strip indent' }),
+          jc_fm: h('javac', 'fmt', ['javac', 'fmt'], { heads: 'end', label: 'formatted()' }),
+        },
+        flows: [{ route: ['rw_jc', 'jc_fm'], kind: 'res', rate: 1.8 }],
       },
     },
   ],

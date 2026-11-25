@@ -37,6 +37,7 @@ export const sqlEngineLesson = {
     { text: 'How the planner chooses Seq', step: 3 },
     { text: 'Buffer pool, WAL write, and', step: 4 },
     { text: 'WAL flush, fsync, and lock', step: 5 },
+    { text: 'Checkpoint & crash recovery via WAL replay', step: 6 },
   ],
   steps: [
     {
@@ -159,6 +160,34 @@ export const sqlEngineLesson = {
           ret: h(`executor`, `done`, [`executor`, `done`], { label: `COMMIT OK`,         heads: `end` }),
         },
         flows: [{ route: [`ew`, `ret`], bounce: false, rate: 1.3 }],
+      },
+    },
+    {
+      short: `Checkpoint`,
+      chapter: `deep`,
+      title: `Checkpoint & Crash Recovery (WAL Replay)`,
+      body: [
+        `During normal commits, dirty pages stay in <code>shared_buffers</code> while only the sequential <strong>WAL</strong> is fsynced.`,
+        `Periodically, a <strong>Checkpoint</strong> flushes all dirty pages up to a <code>REDO LSN</code> to heap data files. On crash recovery, PostgreSQL only replays WAL records <em>after</em> the last checkpoint.`,
+      ],
+      callout: { kind: `tip`, text: `Larger checkpoint_timeout & max_wal_size reduce checkpoint I/O spikes, at the cost of slightly longer crash recovery.` },
+      metrics: { stage: `Checkpoint`, buffers: `Flushed`, wal: `REDO LSN`, locks: `none` },
+      scene: {
+        entities: {
+          wal: b(-14, -10, { r: 2.2, h: 48, color: `purple`, label: [`pg_wal`], sub: `REDO LSN` }),
+          ckpt: d(0, -10, { s: 4.6, h: 52, color: `blue`, glyph: `workflow`, label: [`Checkpointer`], sub: `flush dirty` }),
+          heap: b(15, -10, { r: 2.2, h: 48, color: `green`, label: [`Heap Files`], sub: `synced disk` }),
+          card: S({ x: -12, y: 12 }, `6. WAL Checkpoint & Crash Recovery`, [
+            `-- On crash: replay WAL from last Checkpoint REDO LSN`,
+            `SHOW max_wal_size;      -- default 1GB`,
+            `SHOW checkpoint_timeout; -- default 5min`,
+          ], { icon: `terminal` }),
+        },
+        links: {
+          wl_ck: h(`wal`, `ckpt`, [`wal`, `ckpt`], { heads: `end`, label: `redo LSN` }),
+          ck_hp: h(`ckpt`, `heap`, [`ckpt`, `heap`], { heads: `end`, label: `flush pages` }),
+        },
+        flows: [{ route: [`wl_ck`, `ck_hp`], bounce: false, rate: 1.7 }],
       },
     },
   ],
