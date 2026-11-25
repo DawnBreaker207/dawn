@@ -1,6 +1,12 @@
 import { GITHUB_USERNAME } from '@/lib/site';
 import { env } from '@/lib/env';
+import { ttlCache } from '@/lib/ttl-cache';
 import type { GithubRepository } from '@/types/server';
+
+const REPO_CACHE_TTL_MS = 30 * 60 * 1000;
+const GITHUB_TIMEOUT_MS = 3000;
+const repoCache = ttlCache<GithubRepository | null>(REPO_CACHE_TTL_MS);
+const inflightRepos = new Map<string, Promise<GithubRepository | null>>();
 
 export type { GithubRepository };
 
@@ -37,10 +43,31 @@ function normalizeGithubSlug(repo: string): string {
 export async function fetchRepoData(repo: string): Promise<GithubRepository | null> {
   const normalized = normalizeGithubSlug(repo);
   if (!normalized) return null;
-  const token = env('GITHUB_API_TOKEN');
-  if (!token) {
-    return fetchRepoDataRest(normalized);
-  }
+
+  const hit = repoCache.get(normalized);
+  if (hit !== undefined) return hit;
+
+  const inflight = inflightRepos.get(normalized);
+  if (inflight) return inflight;
+
+  const promise = (async () => {
+    const token = env('GITHUB_API_TOKEN');
+    const result = token
+      ? await fetchRepoDataGraphql(normalized, token)
+      : await fetchRepoDataRest(normalized);
+    if (result !== null) {
+      repoCache.set(normalized, result);
+    }
+    return result;
+  })().finally(() => {
+    inflightRepos.delete(normalized);
+  });
+
+  inflightRepos.set(normalized, promise);
+  return promise;
+}
+
+async function fetchRepoDataGraphql(normalized: string, token: string): Promise<GithubRepository | null> {
   const [owner, name] = normalized.split('/');
   if (!owner || !name) return null;
   try {
@@ -68,6 +95,7 @@ export async function fetchRepoData(repo: string): Promise<GithubRepository | nu
         'content-type': 'application/json',
       },
       body: JSON.stringify({ query, variables: { owner, repo: name } }),
+      signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
     });
     if (!res.ok) { console.error('GitHub GraphQL', res.status); return null; }
     const body = (await res.json()) as {
@@ -109,10 +137,12 @@ async function fetchRepoDataRest(repo: string): Promise<GithubRepository | null>
   try {
     const base = `https://api.github.com/repos/${owner}/${name}`;
     const headers = { accept: 'application/vnd.github+json', 'user-agent': 'dawn-blog' };
-    const res = await fetch(base, { headers });
+    const [res, langsRes] = await Promise.all([
+      fetch(base, { headers, signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS) }),
+      fetch(`${base}/languages`, { headers, signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS) }),
+    ]);
     if (!res.ok) { console.error('GitHub REST', res.status); return null; }
     const data = (await res.json()) as { stargazers_count?: number; description?: string | null; homepage?: string | null; name?: string; full_name?: string; html_url?: string; forks_count?: number; topics?: string[] };
-    const langsRes = await fetch(`${base}/languages`, { headers });
     const languages = langsRes.ok
       ? Object.entries((await langsRes.json()) as Record<string, number>).map(([lang]) => ({ name: lang, color: LANGUAGE_COLORS[lang] ?? '#8b949e' }))
       : [];
