@@ -120,7 +120,7 @@ export const awsCloudLesson = {
               color: `yellow`,
               glyph: `globe`,
               label: [`Route 53`],
-              sub: `Latency Routing`,
+              sub: `Latency Route`,
             }),
             cf: d(-2, 8, {
               color: `purple`,

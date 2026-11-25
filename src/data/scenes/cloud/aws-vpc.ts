@@ -41,6 +41,7 @@ export const awsVpcLesson = {
     { text: 'NAT Gateway for secure outbound', step: 3 },
     { text: 'Stateful Security Groups vs Stateless', step: 4 },
     { text: 'VPC Endpoints & AWS PrivateLink', step: 5 },
+    { text: 'VPC Flow Logs & CIDR Design', step: 6 },
   ],
   steps: [
     {
@@ -69,9 +70,9 @@ export const awsVpcLesson = {
       },
       scene: {
         entities: {
-          client: y(-14, -4, { label: `External Internet`, tags: [{ text: `Public`, icon: `globe` }] }),
-          pub_sub: d(-4, -4, { color: `orange`, glyph: `globe`, label: [`Public Subnet`, `AZ-1a /24`] }),
-          priv_app: d(6, -4, { color: `blue`, glyph: `server`, label: [`Private App`, `AZ-1a /24`] }),
+          client: y(-16, -4, { label: `External Internet`, tags: [{ text: `Public`, icon: `globe` }] }),
+          pub_sub: d(0, -4, { color: `orange`, glyph: `globe`, label: [`Public Subnet`, `AZ-1a /24`] }),
+          priv_app: d(9, -4, { color: `blue`, glyph: `server`, label: [`Private App`, `AZ-1a /24`] }),
           priv_db: b(16, -4, { label: `Private DB (AZ-1a)`, color: `purple` }),
         },
         links: {
@@ -135,7 +136,7 @@ export const awsVpcLesson = {
       title: `NAT Gateway for Private Outbound Access`,
       body: [
         `App instances in private subnets must never accept incoming connections from the Internet, but they still need to download OS updates, NPM packages, and external SaaS APIs.`,
-        `A <strong>Managed NAT Gateway</strong> is placed in the Public Subnet with an Elastic IP (EIP). Private route tables point <code>0.0.0.0/0 → nat-xxxx</code>.`,
+        `A <strong>Managed NAT Gateway</strong> is placed in the Public Subnet with an Elastic IP (EIP). Private route tables point <code>0.0.0.0/0 → nat-xxxx</code>. Unlike legacy NAT Instances, NAT Gateway requires <strong>no Security Group</strong> and scales automatically up to 100 Gbps.`,
       ],
       callout: {
         kind: `warn`,
@@ -155,13 +156,19 @@ export const awsVpcLesson = {
       },
       scene: {
         entities: {
-          app_priv: d(-14, -4, { color: `blue`, glyph: `cpu`, label: [`Backend Compute`, `Private 10.0.10.x`] }),
-          nat: d(-4, -4, { color: `yellow`, glyph: `shield`, label: [`NAT Gateway`, `Elastic IP`] }),
-          igw: d(6, -4, { color: `orange`, glyph: `globe`, label: [`Internet Gateway`] }),
-          repos: y(16, -4, { label: `External Yum/GitHub` }),
+          app_priv: d(-16, -8, { s: 4.4, h: 50, color: `blue`, glyph: `cpu`, label: [`Backend App`, `10.0.10.x`] }),
+          nat: d(-2, -8, { s: 4.4, h: 50, color: `yellow`, glyph: `shield`, label: [`NAT Gateway`, `Elastic IP`] }),
+          igw: d(10, -8, { s: 4.4, h: 50, color: `orange`, glyph: `globe`, label: [`Internet GW`] }),
+          repos: y(15, 4, { label: `External Yum/GitHub` }),
+          card: S({ x: -12, y: 12 }, `3. Private vs Public Route Table`, [
+            `// Private Subnet Route Table (outbound via NAT GW):`,
+            `10.0.0.0/16 -> local | 0.0.0.0/0 -> nat-0abc123`,
+            `// Public Subnet Route Table (NAT GW -> Internet):`,
+            `10.0.0.0/16 -> local | 0.0.0.0/0 -> igw-0def456`,
+          ], { icon: `terminal` }),
         },
         links: {
-          app_nat: h(`app_priv`, `nat`, [`app_priv`, `nat`], { heads: `end`, label: `Outbound Only` }),
+          app_nat: h(`app_priv`, `nat`, [`app_priv`, `nat`], { heads: `end`, label: `Outbound` }),
           nat_igw: h(`nat`, `igw`, [`nat`, `igw`], { heads: `end`, label: `SNAT` }),
           igw_ext: h(`igw`, `repos`, [`igw`, `repos`], { heads: `both` }),
         },
@@ -237,9 +244,9 @@ export const awsVpcLesson = {
       },
       scene: {
         entities: {
-          app: d(-10, -4, { color: `teal`, glyph: `server`, label: [`Private App Node`] }),
+          app: d(-14, -4, { color: `teal`, glyph: `server`, label: [`Private App Node`] }),
           vpce: d(0, 0, { color: `green`, glyph: `shield`, label: [`S3 Gateway Endpoint`, `Route Table Entry`] }),
-          s3: b(10, 4, { label: `Amazon S3 Storage`, color: `green` }),
+          s3: b(14, 4, { label: `Amazon S3 Storage`, color: `green` }),
         },
         links: {
           app_vpce: h(`app`, `vpce`, [`app`, `vpce`], { heads: `both`, label: `AWS Backbone` }),
@@ -247,6 +254,48 @@ export const awsVpcLesson = {
         },
         flows: [
           { route: [`app_vpce`, `vpce_s3`], bounce: true, rate: 2.2 },
+        ],
+      },
+    },
+    {
+      short: `Flow Logs`,
+      chapter: `deep`,
+      title: `VPC Flow Logs & CIDR Diagnostics`,
+      body: [
+        `<strong>VPC Flow Logs</strong> capture IP traffic metadata (<code>ACCEPT</code> / <code>REJECT</code>) at the VPC, Subnet, or ENI level and publish to CloudWatch Logs or Amazon S3.`,
+        `They are essential in SAA-C03 for diagnosing dropped packets caused by Security Groups or Network ACLs without touching packet payloads.`,
+      ],
+      callout: {
+        kind: `insight`,
+        text: `VPC Flow Logs do NOT log traffic to Amazon DNS (169.254.169.253), Instance Metadata (169.254.169.254), or DHCP.`,
+      },
+      changes: [
+        `+ VPC Flow Logs enabled on Prod VPC`,
+        `+ Streaming ACCEPT/REJECT records to CloudWatch & S3`,
+      ],
+      metrics: {
+        cidr_block: `10.0.0.0/16`,
+        igw_state: `Attached`,
+        subnets: `4 Subnets`,
+        nat_gw: `Multi-AZ`,
+        sec_groups: `Flow Audited`,
+      },
+      scene: {
+        entities: {
+          eni: d(-14, -8, { s: 4.4, h: 50, color: `blue`, glyph: `server`, label: [`VPC ENI`], sub: `10.0.10.25` }),
+          flow: d(0, -8, { s: 4.4, h: 50, color: `purple`, glyph: `cpu`, label: [`VPC Flow Logs`], sub: `ACCEPT/REJECT` }),
+          s3: b(15, -8, { r: 2.2, h: 48, color: `orange`, label: [`S3 / CloudWatch`], sub: `Athena Query` }),
+          card: S({ x: -12, y: 12 }, `6. VPC Flow Log Record Format`, [
+            `2 111122223333 eni-0a1b 198.51.100.2 10.0.10.25 443 51200 6 12 4200 ACCEPT OK`,
+            `2 111122223333 eni-0a1b 203.0.113.99 10.0.10.25 22  49152 6 1  40   REJECT OK`,
+          ], { icon: `terminal` }),
+        },
+        links: {
+          eni_fl: h(`eni`, `flow`, [`eni`, `flow`], { heads: `end`, label: `capture meta` }),
+          fl_s3: h(`flow`, `s3`, [`flow`, `s3`], { heads: `end`, label: `archive` }),
+        },
+        flows: [
+          { route: [`eni_fl`, `fl_s3`], bounce: false, rate: 1.8 },
         ],
       },
     },

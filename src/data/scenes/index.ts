@@ -31,6 +31,10 @@ import { awsVpcLesson } from './cloud/aws-vpc';
 import { awsHaLesson } from './cloud/aws-ha';
 import { awsStorageDbLesson } from './cloud/aws-storage-db';
 import { awsServerlessLesson } from './cloud/aws-serverless';
+import { awsIamKmsLesson } from './cloud/aws-iam-kms';
+import { awsHybridNetworkLesson } from './cloud/aws-hybrid-network';
+import { awsEdgeSecurityLesson } from './cloud/aws-edge-security';
+import { awsComputeMigrationLesson } from './cloud/aws-compute-migration';
 import { systemDesignLesson } from './cloud/system-design';
 import { consistentHashingLesson } from './storage/consistent-hashing';
 import { uniqueIdsLesson } from './storage/unique-ids';
@@ -207,6 +211,10 @@ export {
   awsHaLesson,
   awsStorageDbLesson,
   awsServerlessLesson,
+  awsIamKmsLesson,
+  awsHybridNetworkLesson,
+  awsEdgeSecurityLesson,
+  awsComputeMigrationLesson,
   systemDesignLesson,
   sqlEngineLesson,
   javaTypesBoxingLesson,
@@ -348,6 +356,10 @@ export const ALL_SCENES: Record<string, any> = {
   'aws-ha': awsHaLesson,
   'aws-storage-db': awsStorageDbLesson,
   'aws-serverless': awsServerlessLesson,
+  'aws-iam-kms': awsIamKmsLesson,
+  'aws-hybrid-network': awsHybridNetworkLesson,
+  'aws-edge-security': awsEdgeSecurityLesson,
+  'aws-compute-migration': awsComputeMigrationLesson,
   'system-design': systemDesignLesson,
   'architecture': systemDesignLesson,
   'sql-engine': sqlEngineLesson,

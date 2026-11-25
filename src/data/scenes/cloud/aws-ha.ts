@@ -41,6 +41,7 @@ export const awsHaLesson = {
     { text: 'Auto Scaling Groups (ASG)', step: 3 },
     { text: 'Simulated AZ Failure', step: 4 },
     { text: 'Disaster Recovery (DR) Tiers', step: 5 },
+    { text: 'Aurora Global DB Active Failover', step: 6 },
   ],
   steps: [
     {
@@ -72,14 +73,14 @@ export const awsHaLesson = {
       },
       scene: {
         entities: {
-          users: y(-14, -4, { label: `Global Users`, tags: [{ text: `DNS Query`, icon: `globe` }] }),
-          r53: d(-2, -4, { color: `yellow`, glyph: `globe`, label: [`Route 53`, `Failover + Health`] }),
+          users: y(-15, -4, { label: `Global Users`, tags: [{ text: `DNS Query`, icon: `globe` }] }),
+          r53: d(-4, -4, { color: `yellow`, glyph: `globe`, label: [`Route 53`, `Failover + Health`] }),
           reg_pri: d(12, -10, { color: `green`, glyph: `server`, label: [`Primary (us-east-1)`, `Healthy`] }),
           reg_sec: d(12, 2, { color: `orange`, glyph: `server`, label: [`DR (us-west-2)`, `Standby`] }),
         },
         links: {
           u_dns: h(`users`, `r53`, [`users`, `r53`], { heads: `both` }),
-          dns_pri: h(`r53`, `reg_pri`, [`r53`, `reg_pri`], { heads: `both`, label: `Primary Route` }),
+          dns_pri: h(`r53`, `reg_pri`, [`r53`, `reg_pri`], { heads: `both`, label: `Primary` }),
           dns_sec: h(`r53`, `reg_sec`, [`r53`, `reg_sec`], { heads: `none`, label: `Standby` }),
         },
         flows: [
@@ -252,6 +253,49 @@ export const awsHaLesson = {
         },
         flows: [
           { route: [`rep`], bounce: false, rate: 2.0 },
+        ],
+      },
+    },
+    {
+      short: `Global Failover`,
+      chapter: `deep`,
+      title: `Aurora Global Database & Sub-Minute Failover`,
+      body: [
+        `For multi-region Active-Active reads and <1-minute regional DR promotion, <strong>Aurora Global Database</strong> uses storage-level replication across Regions with <strong>&lt; 1 second</strong> typical lag.`,
+        `With <strong>Write Forwarding</strong> enabled, secondary region apps can send writes back to the primary without cross-region connection complexity.`,
+      ],
+      callout: {
+        kind: `insight`,
+        text: 'Managed Planned Failover preserves data (RPO = 0); Unplanned Failover promotes a secondary cluster in under 1 minute.',
+      },
+      changes: [
+        `+ Aurora Secondary Region promoted to Writer`,
+        `+ Route 53 Alias switches global DNS to us-west-2`,
+      ],
+      metrics: {
+        r53_routing: `DR Promoted`,
+        alb_health: `us-west-2 OK`,
+        az_active: `3 AZs (DR)`,
+        asg_capacity: `Scaled Out`,
+        failover_sec: `< 60s Global`,
+      },
+      scene: {
+        entities: {
+          r53: d(-14, -8, { s: 4.4, h: 50, color: `yellow`, glyph: `globe`, label: [`Route 53`], sub: `Failover` }),
+          drAlb: f(0, -8, { color: `orange`, glyph: `balancer`, label: [`DR Region ALB`], sub: `us-west-2` }),
+          auroraDr: b(15, -8, { r: 2.2, h: 48, color: `green`, label: [`Aurora Promoted`], sub: `New Writer` }),
+          card: S({ x: -12, y: 12 }, `6. Aurora Global DB Failover`, [
+            `aws rds failover-global-cluster \\`,
+            `  --global-cluster-identifier prod-global \\`,
+            `  --target-db-cluster-identifier arn:aws:rds:us-west-2:...`,
+          ], { icon: `terminal` }),
+        },
+        links: {
+          r53_alb: h(`r53`, `drAlb`, [`r53`, `drAlb`], { heads: `end`, label: `DNS switch` }),
+          alb_au: h(`drAlb`, `auroraDr`, [`drAlb`, `auroraDr`], { heads: `end`, label: `read/write` }),
+        },
+        flows: [
+          { route: [`r53_alb`, `alb_au`], bounce: false, rate: 2.0 },
         ],
       },
     },

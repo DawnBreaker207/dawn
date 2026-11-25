@@ -41,6 +41,7 @@ export const awsStorageDbLesson = {
     { text: 'Amazon Aurora Multi-AZ', step: 3 },
     { text: 'Amazon DynamoDB', step: 4 },
     { text: 'Amazon ElastiCache', step: 5 },
+    { text: 'S3 Versioning & Object Lock', step: 6 },
   ],
   steps: [
     {
@@ -158,20 +159,24 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          writer: b(-8, -4, { r: 2.2, h: 36, label: `Aurora Primary (Writer)`, color: `purple` }),
-          reader1: b(8, -8, { r: 1.8, h: 28, label: `Read Replica 1`, color: `blue` }),
-          reader2: b(8, 2, { r: 1.8, h: 28, label: `Read Replica 2`, color: `blue` }),
-          storage: x({ x0: -11, x1: 11, y0: 5, y1: 11 }, `Aurora Shared Storage (6 Copies / 3 AZs)`),
+          writer: b(-15, -8, { r: 2.2, h: 48, label: ['Aurora Writer'], sub: 'Primary AZ-1a', color: `purple` }),
+          storageVol: b(0, -8, { r: 2.3, h: 50, label: ['Shared Storage'], sub: '6x / 3 AZs', color: `cyan` }),
+          reader1: b(15, -16, { r: 2.1, h: 46, label: ['Read Replica 1'], sub: 'AZ-1b (<10ms)', color: `blue` }),
+          reader2: b(15, 0, { r: 2.1, h: 46, label: ['Read Replica 2'], sub: 'AZ-1c (<10ms)', color: `blue` }),
+          card: S({ x: -12, y: 12 }, `3. Aurora Cluster Endpoints & Quorum`, [
+            `// Writer Endpoint -> always routes to Primary (4/6 write quorum)`,
+            `// Reader Endpoint -> load-balances across up to 15 Read Replicas`,
+            `// Shared 6-way storage across 3 AZs -> <30s failover, zero data loss`,
+          ], { icon: `terminal` }),
         },
         links: {
-          w_s: h(`writer`, `storage`, [`writer`, `storage`], { heads: `both` }),
-          r1_s: h(`reader1`, `storage`, [`reader1`, `storage`], { heads: `both` }),
-          r2_s: h(`reader2`, `storage`, [`reader2`, `storage`], { heads: `both` }),
+          w_s: h(`writer`, `storageVol`, [`writer`, `storageVol`], { heads: `end`, label: `4/6 write` }),
+          s_r1: h(`storageVol`, `reader1`, [`storageVol`, `reader1`], { heads: `end`, label: `read` }),
+          s_r2: h(`storageVol`, `reader2`, [`storageVol`, `reader2`], { heads: `end`, label: `read` }),
         },
         flows: [
-          { route: [`w_s`], bounce: true, rate: 2.0 },
-          { route: [`r1_s`], bounce: true, rate: 1.0 },
-          { route: [`r2_s`], bounce: true, rate: 1.0 },
+          { route: [`w_s`, `s_r1`], bounce: false, rate: 2.0 },
+          { route: [`w_s`, `s_r2`], bounce: false, rate: 1.8 },
         ],
       },
     },
@@ -203,9 +208,9 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          app: d(-10, -4, { s: 4.2, h: 44, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
+          app: d(-14, -4, { s: 4.8, h: 52, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
           dax: d(0, 0, { s: 4.4, h: 48, color: `orange`, glyph: `zap`, label: [`DAX Cache`], sub: `In-Memory` }),
-          dynamo: b(10, 4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
+          dynamo: b(14, 4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
         },
         links: {
           a_dax: h(`app`, `dax`, [`app`, `dax`], { heads: `both`, label: `Cache Hit (<1ms)` }),
@@ -243,9 +248,9 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          app: d(-10, -4, { s: 4.2, h: 44, color: `teal`, glyph: `server`, label: [`API Cluster`] }),
+          app: d(-14, -4, { s: 4.4, h: 48, color: `teal`, glyph: `server`, label: [`API Cluster`] }),
           redis: d(0, 0, { s: 4.4, h: 48, color: `rose`, glyph: `zap`, label: [`ElastiCache`], sub: `Redis Cluster` }),
-          db: b(10, 4, { r: 2.2, h: 36, label: `Primary Aurora DB`, color: `purple` }),
+          db: b(14, 4, { r: 2.2, h: 36, label: `Primary Aurora DB`, color: `purple` }),
         },
         links: {
           ar: h(`app`, `redis`, [`app`, `redis`], { heads: `both`, label: `Cache-Aside (0.8ms)` }),
@@ -253,6 +258,49 @@ export const awsStorageDbLesson = {
         },
         flows: [
           { route: [`ar`], bounce: true, rate: 2.5 },
+        ],
+      },
+    },
+    {
+      short: `S3 Object Lock`,
+      chapter: `deep`,
+      title: `S3 Versioning, Object Lock (WORM) & Replication`,
+      body: [
+        `Protect critical S3 objects from accidental deletion or ransomware using <strong>S3 Versioning</strong> + <strong>MFA Delete</strong> + <strong>S3 Object Lock (WORM)</strong>.`,
+        `Use <strong>Compliance Mode</strong> when not even the AWS root user may overwrite or delete an object before its retention date, and pair with <strong>CRR (Cross-Region Replication)</strong>.`,
+      ],
+      callout: {
+        kind: `insight`,
+        text: 'S3 Replication (CRR/SRR) requires S3 Versioning to be enabled on BOTH source and destination buckets.',
+      },
+      changes: [
+        `+ S3 Versioning + Object Lock (Compliance) enabled`,
+        `+ Cross-Region Replication (CRR) syncs to DR bucket`,
+      ],
+      metrics: {
+        storage_class: `S3 WORM + CRR`,
+        ebs_iops: `11 9s`,
+        aurora_replicas: `DR Bucket`,
+        dynamo_lat: `Async CRR`,
+        cost_opt: `Compliant`,
+      },
+      scene: {
+        entities: {
+          srcS3: b(-14, -8, { r: 2.2, h: 48, color: `orange`, label: [`Source S3`], sub: `Versioning ON` }),
+          lock: d(0, -8, { s: 4.4, h: 50, color: `purple`, glyph: `shield`, label: [`Object Lock`], sub: `WORM Lock` }),
+          drS3: b(15, -8, { r: 2.2, h: 48, color: `green`, label: [`DR Bucket`], sub: `CRR Replica` }),
+          card: S({ x: -12, y: 12 }, `6. S3 Object Lock (Governance vs Compliance)`, [
+            `// Governance Mode: special IAM permission can override/delete`,
+            `// Compliance Mode: NOBODY (even root) can delete until retain-until`,
+            `// Prerequisite: Versioning MUST be enabled on source & target`,
+          ], { icon: `terminal` }),
+        },
+        links: {
+          s_lk: h(`srcS3`, `lock`, [`srcS3`, `lock`], { heads: `end`, label: `WORM seal` }),
+          lk_dr: h(`lock`, `drS3`, [`lock`, `drS3`], { heads: `end`, label: `CRR copy` }),
+        },
+        flows: [
+          { route: [`s_lk`, `lk_dr`], bounce: false, rate: 1.8 },
         ],
       },
     },

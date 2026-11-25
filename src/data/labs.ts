@@ -95,7 +95,7 @@ export const LABS: LabEntry[] = [
     title: 'AWS Cloud Architecture',
     tag: 'Cloud (SAA-C03)',
     tagClass: 'border-sky-500 text-sky-400',
-    intro: 'VPC topology, Route 53, Multi-AZ Aurora failover, SQS queue decoupling & Lambda serverless.',
+    intro: '10 SAA-C03 chapters: VPC, Transit GW/PrivateLink, IAM/STS/KMS, WAF/OAC/GuardDuty, Multi-AZ Aurora, Spot/ALB/NLB, DR, DMS & Serverless.',
     desc: 'Follow cloud requests through public/private subnets, NAT Gateways, ALB traffic routing, ECS Fargate auto-scaling, and S3 Glacier lifecycle.',
     cta: 'Explore AWS Cloud',
   },

@@ -804,7 +804,7 @@ A floating panel provides high pedagogical value when it presents a **concrete t
 #### 10. Single Canvas Architecture & Code-Driven Presentation Standard
 - **Single Canvas 3D Workbench:** All lessons (including Java and SQL) render exclusively on the Single Canvas 3D Isometric Workbench. 2D switch toggles (`[ 3D Simulator | 2D Deep-Dive ]`) are removed.
 - **Code-Driven Floating Cards (`card: makePanel`):** Modeled after `sql-nosql`, code-centric topics (Java, SQL, Frameworks) MUST pair 3D visual transitions with a floating code panel card (`card: makePanel`) showing the exact code or queries driving that step.
-- **Key Milestones Standard (6 to 8 Steps):** Reject artificial 4-step templates and avoid 33 micro-step debugger traces. Every lesson must have exactly **6 to 8 milestone steps**.
+- **Key Milestones Standard (Minimum 6 Steps):** Reject artificial 4-step templates and avoid 33 micro-step debugger traces. Every lesson must have **at least 6 milestone steps** (`>= 6`, with no upper cap when a topic genuinely needs deeper breakdown).
 
 #### 11. Mandatory Automated Verification & Pre-Commit Validation
 - **Zero Tolerance for Guesswork Editing:** No lesson modification or creation is considered done without automated verification against real browser rendering.
@@ -835,10 +835,10 @@ All interactive simulations are strictly partitioned into 11 mutually exclusive 
 | **`distributed.sim`** | Distributed Systems Core | Streaming replication, sharding & partitioning, consistent hashing ring, Snowflake IDs, CAP theorem, Raft consensus | **6** |
 | **`microservices.sim`** | Microservices, Kafka & Queues | Monolith vs microservices, service discovery, sagas, REST/gRPC.<br>**Apache Kafka (4 lessons):** Partition log, Consumer groups, ISR, Exactly-once.<br>**RabbitMQ (3 lessons):** AMQP Exchanges, DLQ & Retries, Quorum Queues | **14** |
 | **`k8s.sim`** | Containers & Kubernetes Orchestration | Docker namespaces & cgroups, multi-stage builds, K8s Pods & ReplicaSets, Services, Ingress Controller, ConfigMaps/Secrets, StatefulSets & Storage, HPA & Autoscaling | **8** |
-| **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6–8 steps, Why & Core Mechanics):** Types/Boxing/Generics, String Pool & Compact Strings, HashMap & ConcurrentHashMap, Lambda & Lazy Streams, Modern Java & Core APIs, I/O/NIO.2/Selector, JDBC Pool/TX/Batch, Exceptions/Reflection/Proxy, ClassLoader, JVM Memory/GC/Refs, HotSpot JIT & Escape Analysis, Monitors/JMM/CAS/AQS, Pools/ThreadLocal/Loom, Spring IoC, AOP/@Transactional, Boot Auto-Config, MVC/Loom/WebFlux, JPA/N+1/Locking, @Async/Cache/Events, Security/OAuth2, Actuator/Test Cache (21 lessons total) | **21** |
+| **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6+ steps, Why & Core Mechanics):** Types/Boxing/Generics, String Pool & Compact Strings, HashMap & ConcurrentHashMap, Lambda & Lazy Streams, Modern Java & Core APIs, I/O/NIO.2/Selector, JDBC Pool/TX/Batch, Exceptions/Reflection/Proxy, ClassLoader, JVM Memory/GC/Refs, HotSpot JIT & Escape Analysis, Monitors/JMM/CAS/AQS, Pools/ThreadLocal/Loom, Spring IoC, AOP/@Transactional, Boot Auto-Config, MVC/Loom/WebFlux, JPA/N+1/Locking, @Async/Cache/Events, Security/OAuth2, Actuator/Test Cache (21 lessons total) | **21** |
 | **`system-design.sim`** | System Design & AI Agents | HLD vs LLD, TinyURL, News Feed, Chat app, redundancy, rate limiting, timeouts/retries, observability.<br>**Flagship Lesson:** `ai-agent-architecture` (8-step Onion Model: LLM, RAG, MCP, Loop, Harness, Superpowers, LangChain, BMAD Swarms) | **10** |
 | **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking, IAM & KMS Encryption, Edge Security, HA & DR Tiers, Compute, Storage, Databases, Serverless, Migration | **10** |
-| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **140 Lessons** |
+| **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **136 Lessons** |
 
 ### Unified Single Canvas 3D Architecture & Code-Driven Presentation Standard
 

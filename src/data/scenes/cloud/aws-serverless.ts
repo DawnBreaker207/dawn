@@ -41,6 +41,7 @@ export const awsServerlessLesson = {
     { text: 'Amazon SNS Fanout Pattern', step: 3 },
     { text: 'Amazon EventBridge Event Bus', step: 4 },
     { text: 'Full Serverless Web Stack', step: 5 },
+    { text: 'Step Functions & Lambda Concurrency', step: 6 },
   ],
   steps: [
     {
@@ -71,9 +72,9 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          producer: d(-11, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`Order API`, `Producer`] }),
+          producer: d(-14, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`Order API`, `Producer`] }),
           sqs: d(0, 0, { s: 3.8, h: 42, color: `purple`, glyph: `inbox`, label: [`Amazon SQS`, `Standard Queue`] }),
-          consumer: d(11, 4, { s: 3.8, h: 42, color: `orange`, glyph: `cpu`, label: [`Payment Worker`, `Consumer`] }),
+          consumer: d(14, 4, { s: 3.8, h: 42, color: `orange`, glyph: `cpu`, label: [`Payment Worker`, `Consumer`] }),
         },
         links: {
           send: h(`producer`, `sqs`, [`producer`, `sqs`], { heads: `end`, label: `SendMessage` }),
@@ -111,9 +112,9 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          queue: d(-10, -4, { s: 3.8, h: 44, color: `purple`, glyph: `inbox`, label: [`Primary SQS`], sub: `maxReceive: 3` }),
+          queue: d(-14, -4, { s: 3.8, h: 44, color: `purple`, glyph: `inbox`, label: [`Primary SQS`], sub: `maxReceive: 3` }),
           worker: d(0, -4, { s: 3.8, h: 44, color: `rose`, glyph: `alertTriangle`, label: [`Worker`], sub: `Crash 3x` }),
-          dlq: d(10, 4, { s: 3.8, h: 46, color: `red`, glyph: `skull`, label: [`Dead Letter SQS`], sub: `Poison Msg` }),
+          dlq: d(14, 4, { s: 3.8, h: 46, color: `red`, glyph: `skull`, label: [`Dead Letter SQS`], sub: `Poison Msg` }),
         },
         links: {
           qw: h(`queue`, `worker`, [`queue`, `worker`], { heads: `both`, label: `poll & crash` }),
@@ -154,11 +155,11 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          order_svc: d(-12, -4, { s: 3.6, h: 40, color: `teal`, glyph: `cart`, label: [`Order Service`] }),
+          order_svc: d(-15, -4, { s: 3.6, h: 40, color: `teal`, glyph: `cart`, label: [`Order Service`] }),
           sns: d(-2, -4, { s: 3.8, h: 42, color: `rose`, glyph: `signpost`, label: [`SNS Topic`], sub: `OrderPlaced` }),
-          q_bill: d(8, -12, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Billing SQS`] }),
-          q_ship: d(8, -4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Shipping SQS`] }),
-          q_notif: d(8, 4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Email SQS`] }),
+          q_bill: d(10, -12, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Billing SQS`] }),
+          q_ship: d(10, -4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Shipping SQS`] }),
+          q_notif: d(10, 4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Email SQS`] }),
         },
         links: {
           pub: h(`order_svc`, `sns`, [`order_svc`, `sns`], { heads: `end`, label: `Publish` }),
@@ -198,10 +199,10 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          saas: y(-12, -4, { label: `Stripe Webhook`, tags: [{ text: 'Payment.Success', icon: 'zap' }] }),
-          bus: d(-2, -4, { s: 3.8, h: 44, color: `purple`, glyph: `workflow`, label: [`EventBridge`], sub: `Event Bus` }),
-          l_refund: d(9, -10, { s: 4.2, h: 48, color: `yellow`, glyph: `zap`, label: [`Lambda Target`], sub: `Refund Handler` }),
-          step_fn: d(9, 2, { s: 4.2, h: 48, color: `blue`, glyph: `workflow`, label: [`Step Functions`], sub: `Order Saga` }),
+          saas: y(-15, -4, { label: `Stripe Webhook`, tags: [{ text: 'Payment.Success', icon: 'zap' }] }),
+          bus: d(1, -4, { s: 3.8, h: 44, color: `purple`, glyph: `workflow`, label: [`EventBridge`], sub: `Event Bus` }),
+          l_refund: d(13, -10, { s: 4.2, h: 48, color: `yellow`, glyph: `zap`, label: [`Lambda Target`], sub: `Refund Handler` }),
+          step_fn: d(13, 2, { s: 4.2, h: 48, color: `blue`, glyph: `workflow`, label: [`Step Functions`], sub: `Order Saga` }),
         },
         links: {
           sb: h(`saas`, `bus`, [`saas`, `bus`], { heads: `end`, label: `putEvents` }),
@@ -254,6 +255,49 @@ export const awsServerlessLesson = {
         },
         flows: [
           { route: [`c_gw`, `gw_l`, `l_db`], bounce: true, rate: 2.5 },
+        ],
+      },
+    },
+    {
+      short: `Step Functions`,
+      chapter: `deep`,
+      title: `Step Functions Orchestration & Lambda Concurrency`,
+      body: [
+        `<strong>AWS Step Functions</strong> orchestrates multi-step workflows (Standard up to 1 year, Express for high-rate <5m) with built-in retries, parallel branches, and Saga compensations.`,
+        `On <strong>Lambda</strong>, use <strong>Reserved Concurrency</strong> to cap a function so it never overwhelms downstream RDS, and <strong>Provisioned Concurrency</strong> to eliminate cold starts.`,
+      ],
+      callout: {
+        kind: `tip`,
+        text: 'Lambda max execution timeout is 15 minutes. For longer or stateful multi-step workflows, use Step Functions or ECS/Batch.',
+      },
+      changes: [
+        `+ Step Functions State Machine orchestrates Saga`,
+        `+ Lambda Reserved & Provisioned Concurrency tuned`,
+      ],
+      metrics: {
+        queue_depth: `Saga State`,
+        fanout_topics: `Parallel`,
+        lambda_concurrency: `Reserved 100`,
+        dlq_messages: `0`,
+        serverless_uptime: `99.99%`,
+      },
+      scene: {
+        entities: {
+          sfn: d(-14, -8, { s: 4.4, h: 50, color: `purple`, glyph: `workflow`, label: [`Step Functions`], sub: `Standard Saga` }),
+          lam: d(0, -8, { s: 4.4, h: 50, color: `yellow`, glyph: `zap`, label: [`Lambda (Prov)`], sub: `0ms Cold Start` }),
+          rds: b(15, -8, { r: 2.2, h: 48, color: `blue`, label: [`RDS Proxy`], sub: `Pooled Conns` }),
+          card: S({ x: -12, y: 12 }, `6. Lambda Concurrency & RDS Proxy`, [
+            `// Reserved Concurrency: caps max instances (protects RDS)`,
+            `// Provisioned Concurrency: keeps warm microVMs (0ms cold start)`,
+            `// RDS Proxy: pools thousands of Lambda connections to Postgres`,
+          ], { icon: `terminal` }),
+        },
+        links: {
+          sfn_lam: h(`sfn`, `lam`, [`sfn`, `lam`], { heads: `end`, label: `invoke` }),
+          lam_rds: h(`lam`, `rds`, [`lam`, `rds`], { heads: `end`, label: `pooled SQL` }),
+        },
+        flows: [
+          { route: [`sfn_lam`, `lam_rds`], bounce: false, rate: 2.0 },
         ],
       },
     },
