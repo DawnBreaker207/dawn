@@ -153,4 +153,22 @@ export const LABS: LabEntry[] = [
     desc: 'Interactive web drawing — two spiders follow your cursor with physical leg constraint physics.',
     cta: 'Open spider',
   },
+  {
+    href: '/lab/2048',
+    title: '2048 Studio Edition',
+    tag: 'Playable',
+    tagClass: 'border-(--accent) text-(--accent)',
+    intro: 'Classic 4x4 sliding tile puzzle — keyboard, WASD & swipe.',
+    desc: 'Slide and merge matching tiles to reach 2048 with Undo support and local high-score tracking.',
+    cta: 'Play 2048',
+  },
+  {
+    href: '/lab/boids',
+    title: 'Boids Flock Toy',
+    tag: 'Playable',
+    tagClass: 'border-(--accent) text-(--accent)',
+    intro: '110 autonomous boids steering around your cursor in real time.',
+    desc: 'Interactive 2D flocking simulation — toggle Attract or Repel mode to guide or scatter the swarm.',
+    cta: 'Play with flock',
+  },
 ];

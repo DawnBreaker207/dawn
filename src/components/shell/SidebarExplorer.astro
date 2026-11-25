@@ -402,7 +402,7 @@ const CURRICULUM_TRACK_ITEMS = [
       </details>
 
       <!-- Simulators & Extras (Folder) -->
-      <details class="tree-sec" data-sec="simulators" open={activePath.startsWith('/lab/terminal') || activePath.startsWith('/lab/pathfinding') || activePath.startsWith('/lab/spider')}>
+      <details class="tree-sec" data-sec="simulators" open={activePath.startsWith('/lab/terminal') || activePath.startsWith('/lab/pathfinding') || activePath.startsWith('/lab/spider') || activePath.startsWith('/lab/2048') || activePath.startsWith('/lab/boids')}>
         <summary class="explorer-row" data-umami-event="sidebar-folder-simulators">
           <span class="explorer-caret">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -425,6 +425,8 @@ const CURRICULUM_TRACK_ITEMS = [
             ['/lab/terminal', 'terminal.astro', 'astro'],
             ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
             ['/lab/spider', 'spider.astro', 'astro'],
+            ['/lab/2048', '2048.astro', 'astro'],
+            ['/lab/boids', 'boids.astro', 'astro'],
           ].map(([href, label, icon]) => (
             <a
               href={href}
