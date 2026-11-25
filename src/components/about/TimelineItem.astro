@@ -10,47 +10,125 @@ interface Props {
     event?: string;
     details: string[];
   };
+  first?: boolean;
   last?: boolean;
+  latest?: boolean;
+  defaultOpen?: boolean;
 }
 
-const { exp, last = false } = Astro.props;
+const { exp, first = false, last = false, latest = false, defaultOpen = false } = Astro.props;
+
+// Extract 4-digit start year for chronological left rail (2022 -> 2024 -> 2026)
+const yearMatch = exp.start.match(/\d{4}/);
+const yearLabel = yearMatch ? yearMatch[0] : '';
+const hasDetails = Array.isArray(exp.details) && exp.details.length > 0;
 ---
 
-<li class="relative flex gap-4 pb-8 last:pb-0">
-  {!last && <span class="absolute top-12 bottom-0 left-[23px] w-px bg-(--border)" aria-hidden="true"></span>}
-  <div class="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-(--border) bg-white p-1.5 shadow-xs">
-    <img
-      src={exp.logo}
-      alt={exp.org}
-      width="88"
-      height="88"
-      loading="lazy"
-      decoding="async"
-      class="h-full w-full object-contain"
-    />
+<li class="group/item relative flex items-stretch gap-3 sm:gap-4 pb-4 last:pb-0">
+  <!-- 1. Left Year Rail (vertically centered with summary row) -->
+  <div class="hidden sm:flex w-11 shrink-0 justify-end pt-[21px]">
+    <span class={`font-mono text-sm leading-none tabular-nums ${latest ? 'font-bold text-(--accent)' : 'text-(--fg-faint)'}`}>
+      {yearLabel}
+    </span>
   </div>
-  <div class="min-w-0 flex-1 pt-0.5">
-    <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-      <h3 class="m-0 text-[17px] leading-snug font-semibold tracking-[-0.02em] text-(--fg)!">
-        <a
-          href={exp.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-umami-event={exp.event}
-          class="text-(--fg)! hover:text-(--accent)! hover:no-underline"
-        >
-          {exp.org}
-        </a>
-      </h3>
-      <span class="rounded-md border border-(--border) bg-(--bg-alt) px-2 py-0.5 font-mono text-[11px] whitespace-nowrap text-(--fg-dim)">
-        {exp.start} – {exp.end}
-      </span>
-    </div>
-    <p class="mt-0.5 text-[14px] text-(--fg-dim)!">{exp.title}</p>
-    <ul class="mt-2 mb-0 list-disc space-y-1 pl-5 text-[15px] text-(--fg-dim) marker:text-(--border)">
-      {exp.details.map((d) => (
-        <li set:html={d} />
-      ))}
-    </ul>
+
+  <!-- 2. Git Commit Graph Node + Line (dot centered at y=27px matching logo center) -->
+  <div class="relative flex w-5 shrink-0 flex-col items-center">
+    {!first && (
+      <span class="absolute top-0 h-[22px] w-px bg-(--border)" aria-hidden="true" />
+    )}
+    {!last && (
+      <span
+        class={`absolute top-[32px] bottom-0 w-px ${latest ? 'bg-(--border)' : 'bg-gradient-to-b from-(--border) to-(--border)'}`}
+        aria-hidden="true"
+      />
+    )}
+    <span
+      class={`relative z-10 mt-[21px] flex size-3 items-center justify-center rounded-full border-2 ${
+        latest
+          ? 'border-(--accent) bg-(--accent) ring-4 ring-rose-500/15'
+          : 'border-(--border-hover) bg-(--bg) group-hover/item:border-(--accent)'
+      }`}
+      aria-hidden="true"
+    >
+      {latest && <span class="size-1 rounded-full bg-white" />}
+    </span>
+  </div>
+
+  <!-- 3. Expandable Changelog Card -->
+  <div class="min-w-0 flex-1">
+    <details
+      open={defaultOpen}
+      class="group/det rounded-lg border border-(--border) bg-(--bg-alt) transition-colors hover:border-(--border-hover) open:border-(--border-hover)"
+    >
+      <summary class={`flex list-none items-start justify-between gap-2.5 px-3.5 py-3 select-none [&::-webkit-details-marker]:hidden ${hasDetails ? 'cursor-pointer' : 'cursor-default'}`}>
+        <div class="flex min-w-0 items-start gap-3">
+          <div class="flex size-8 shrink-0 items-center justify-center rounded-md border border-(--border) bg-white p-1">
+            <img
+              src={exp.logo}
+              alt={exp.org}
+              width="64"
+              height="64"
+              loading="lazy"
+              decoding="async"
+              class="h-full w-full object-contain"
+            />
+          </div>
+          <div class="min-w-0 space-y-0.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <a
+                href={exp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-umami-event={exp.event}
+                class="text-base sm:text-lg font-semibold text-(--fg) no-underline hover:text-(--accent)"
+                onclick="event.stopPropagation()"
+              >
+                {exp.org}
+              </a>
+              {latest && (
+                <span class="rounded bg-(--accent-subtle) px-1.5 py-0.5 font-mono text-xs font-semibold text-(--accent)">
+                  HEAD
+                </span>
+              )}
+            </div>
+            <p class="m-0 font-mono text-sm sm:text-base text-(--fg-dim)">{exp.title}</p>
+            <span class="inline-block font-mono text-xs sm:text-sm text-(--fg-faint)">
+              {exp.start} – {exp.end}
+            </span>
+          </div>
+        </div>
+
+        <div class="flex shrink-0 items-center pt-1">
+          {hasDetails && (
+            <svg
+              class="size-4 text-(--fg-faint) transition-transform duration-200 group-open/det:rotate-90 group-hover/det:text-(--accent)"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          )}
+        </div>
+      </summary>
+
+      {hasDetails && (
+        <div class="border-t border-(--border) px-4 py-3.5">
+          <ul class="m-0 list-none space-y-2 p-0 text-sm sm:text-base leading-relaxed text-(--fg-dim)">
+            {exp.details.map((d) => (
+              <li class="flex items-start gap-2">
+                <span class="mt-0.5 font-mono text-(--accent) shrink-0">›</span>
+                <span set:html={d} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </details>
   </div>
 </li>

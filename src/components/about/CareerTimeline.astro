@@ -39,6 +39,12 @@ const last = items.length - 1;
 
 <ul class="not-prose m-0 list-none p-0">
   {items.map((exp, idx) => (
-    <TimelineItem exp={exp} last={idx === last} />
+    <TimelineItem
+      exp={exp}
+      first={idx === 0}
+      last={idx === last}
+      latest={idx === 0}
+      defaultOpen={false}
+    />
   ))}
 </ul>
