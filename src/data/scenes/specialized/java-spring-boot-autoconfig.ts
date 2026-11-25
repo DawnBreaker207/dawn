@@ -40,8 +40,8 @@ export const javaSpringBootAutoconfigLesson: Lesson = {
       metrics: { boot_phase: 'Bootstrap', conditions: 'Pending', config_source: 'Main class', bean_status: 'Starting' },
       scene: {
         entities: {
-          main: d(-12, -8, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['SpringApp.run'], sub: '@SpringBootApp' }),
-          enable: d(4, -8, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['EnableAutoCfg'], sub: 'ImportSelector' }),
+          main: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['SpringApp.run'], sub: '@SpringBootApp' }),
+          enable: d(2, -6, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['EnableAutoCfg'], sub: 'ImportSelector' }),
           card: S({ x: -12, y: 12 }, '1. @SpringBootApplication Composition', [
             '@SpringBootApplication // = 3 annotations:',
             '// 1. @SpringBootConfiguration',
@@ -71,9 +71,9 @@ export const javaSpringBootAutoconfigLesson: Lesson = {
       metrics: { boot_phase: 'Discovery', conditions: '140 candidates', config_source: 'Starter JARs', bean_status: 'Queued' },
       scene: {
         entities: {
-          enable: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['ImportSelector'], sub: 'Boot 3.x' }),
-          jars: b(0, -10, { r: 2.2, h: 48, color: 'purple', label: ['Starter JARs'], sub: '.imports file' }),
-          cands: d(14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Candidates'], sub: '140 configs' }),
+          enable: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['ImportSelector'], sub: 'Boot 3.x' }),
+          jars: b(0, -14, { r: 2.2, h: 48, color: 'purple', label: ['Starter JARs'], sub: '.imports file' }),
+          cands: d(0, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Candidates'], sub: '140 configs' }),
           card: S({ x: -12, y: 12 }, '2. Spring Boot 3 AutoConfiguration.imports', [
             '// META-INF/spring/...AutoConfiguration.imports',
             'org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration',
@@ -103,9 +103,9 @@ export const javaSpringBootAutoconfigLesson: Lesson = {
       metrics: { boot_phase: 'Filter Match', conditions: 'Matched / Skip', config_source: 'Classpath', bean_status: 'Filtered' },
       scene: {
         entities: {
-          cands: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Candidates'], sub: '140 configs' }),
-          cond: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'shield', label: ['@Conditional'], sub: 'Class + Bean' }),
-          skip: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Back-Off'], sub: 'user bean wins' }),
+          cands: d(-14, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Candidates'], sub: '140 configs' }),
+          cond: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'shield', label: ['@Conditional'], sub: 'Class + Bean' }),
+          skip: d(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Back-Off'], sub: 'user bean wins' }),
           card: S({ x: -12, y: 12 }, '3. Conditional Evaluation & Back-Off', [
             '@AutoConfiguration',
             '@ConditionalOnClass({ DataSource.class, HikariDataSource.class })',
@@ -170,9 +170,9 @@ export const javaSpringBootAutoconfigLesson: Lesson = {
       metrics: { boot_phase: 'Bind Props', conditions: 'Validated', config_source: 'Typed Record', bean_status: 'Immutable' },
       scene: {
         entities: {
-          reg: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Environment'], sub: 'app.payment.*' }),
-          binder: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Binder'], sub: 'validate types' }),
-          rec: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['PaymentProps'], sub: 'Java record' }),
+          reg: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Environment'], sub: 'app.payment.*' }),
+          binder: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Binder'], sub: 'validate types' }),
+          rec: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['PaymentProps'], sub: 'Java record' }),
           card: S({ x: -12, y: 12 }, '5. Immutable @ConfigurationProperties Record', [
             '@Validated',
             '@ConfigurationProperties(prefix = "app.payment")',
@@ -204,9 +204,9 @@ export const javaSpringBootAutoconfigLesson: Lesson = {
       metrics: { boot_phase: 'Ready', conditions: 'All Passed', config_source: 'Bound', bean_status: 'Live HikariCP' },
       scene: {
         entities: {
-          cond: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AutoConfig'], sub: 'matched' }),
-          ds: b(0, -10, { r: 2.3, h: 50, color: 'green', label: ['HikariPool'], sub: 'live bean' }),
-          app: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'ready to serve' }),
+          cond: d(-14, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AutoConfig'], sub: 'matched' }),
+          ds: b(-14, -14, { r: 2.3, h: 50, color: 'green', label: ['HikariPool'], sub: 'live bean' }),
+          app: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'ready to serve' }),
           card: S({ x: -12, y: 12 }, '6. Final Result: Live Auto-Configured Stack', [
             '// Same JAR, zero code changes across environments:',
             '// 1. HikariDataSource auto-configured from Env Vars',

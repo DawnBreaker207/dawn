@@ -10,7 +10,7 @@ import {
 
 export const angularFlowLesson = {
   id: 'angular-flow',
-  title: 'Angular Flow: End-to-End Request to Render',
+  title: 'Angular End-to-End Flow',
   summary: 'Master the complete end-to-end Angular lifecycle: Bootstrap & SSR Event Replay, Router & Guards (canMatch/canActivate/Resolver), Hierarchical DI & Lifecycle, HTTP Interceptors, Backend API, Signals Push-Pull DAG, Zoneless Scheduler & OnPush, and Ivy Incremental DOM.',
   minutes: 30,
   level: 'beginner',

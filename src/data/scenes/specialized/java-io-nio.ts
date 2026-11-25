@@ -40,9 +40,9 @@ export const javaIoNioLesson: Lesson = {
       metrics: { io_layer: 'Stream vs Rdr', encoding: 'UTF-8 explicit', syscall_cost: 'Unbuffered', security_risk: 'Mojibake' },
       scene: {
         entities: {
-          file: b(-14, -10, { r: 2.2, h: 48, color: 'blue', label: ['Raw Bytes'], sub: '0xE2 0x82 0xAC' }),
-          is: d(0, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['InputStream'], sub: '8-bit bytes' }),
-          rdr: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['Reader UTF-8'], sub: 'char decode' }),
+          file: b(-14, -14, { r: 2.2, h: 48, color: 'blue', label: ['Raw Bytes'], sub: '0xE2 0x82 0xAC' }),
+          is: d(0, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['InputStream'], sub: '8-bit bytes' }),
+          rdr: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['Reader UTF-8'], sub: 'char decode' }),
           card: S({ x: -12, y: 12 }, '1. Bridge Bytes to Characters Safely', [
             'try (var r = new BufferedReader(',
             '       new InputStreamReader(in, StandardCharsets.UTF_8))) {',
@@ -73,9 +73,9 @@ export const javaIoNioLesson: Lesson = {
       metrics: { io_layer: 'Decorator 8KB', encoding: 'Any', syscall_cost: '1 / 8192B', security_risk: 'None' },
       scene: {
         entities: {
-          disk: b(-14, -10, { r: 2.2, h: 48, color: 'blue', label: ['OS Kernel'], sub: '1 syscall/8KB' }),
-          buf: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BufferedIn'], sub: 'byte[8192] RAM' }),
-          app: d(14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['App read()'], sub: 'fast RAM hit' }),
+          file: b(-14, -14, { r: 2.2, h: 48, color: 'blue', label: ['OS Kernel'], sub: '1 syscall/8KB' }),
+          buf: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BufferedIn'], sub: 'byte[8192] RAM' }),
+          app: d(0, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['App read()'], sub: 'fast RAM hit' }),
           card: S({ x: -12, y: 12 }, '2. Buffered Decorator Eliminates Syscalls', [
             '// Unbuffered: 1MB file = 1,000,000 OS syscalls!',
             '// Buffered:   1MB file = ~128 OS syscalls',
@@ -84,7 +84,7 @@ export const javaIoNioLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dk_bf: h('disk', 'buf', ['disk', 'buf'], { heads: 'end', label: '8KB read' }),
+          dk_bf: h('file', 'buf', ['file', 'buf'], { heads: 'end', label: '8KB read' }),
           bf_ap: h('buf', 'app', ['buf', 'app'], { heads: 'end', label: 'RAM byte' }),
         },
         flows: [{ route: ['dk_bf', 'bf_ap'], kind: 'res', rate: 2.0 }],
@@ -106,9 +106,9 @@ export const javaIoNioLesson: Lesson = {
       metrics: { io_layer: 'NIO.2 Path', encoding: 'UTF-8 default', syscall_cost: 'Lazy Stream', security_risk: 'FD leak if open' },
       scene: {
         entities: {
-          fd: b(-14, -10, { r: 2.2, h: 48, color: 'amber', label: ['OS File FD'], sub: 'held open!' }),
-          stm: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['Files.lines()'], sub: 'Stream<String>' }),
-          twr: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['try-with-res'], sub: 'auto close()' }),
+          fd: b(-14, -14, { r: 2.2, h: 48, color: 'amber', label: ['OS File FD'], sub: 'held open!' }),
+          stm: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['Files.lines()'], sub: 'Stream<String>' }),
+          twr: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['try-with-res'], sub: 'auto close()' }),
           card: S({ x: -12, y: 12 }, '3. Closing Lazy NIO.2 Streams Safely', [
             '// Small files (Java 11+):',
             'String text = Files.readString(Path.of("cfg.json"));',
@@ -141,9 +141,9 @@ export const javaIoNioLesson: Lesson = {
       metrics: { io_layer: 'ByteBuffer', encoding: 'Raw bytes', syscall_cost: 'Direct DMA', security_risk: 'Read garbage' },
       scene: {
         entities: {
-          wr: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Write Mode'], sub: 'pos=5, lim=16' }),
-          flp: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['buf.flip()'], sub: 'lim=5, pos=0' }),
-          rd: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Read Mode'], sub: 'reads 0..5' }),
+          wr: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Write Mode'], sub: 'pos=5, lim=16' }),
+          flp: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['buf.flip()'], sub: 'lim=5, pos=0' }),
+          rd: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Read Mode'], sub: 'reads 0..5' }),
           card: S({ x: -12, y: 12 }, '4. ByteBuffer Write -> Flip -> Read Cycle', [
             'ByteBuffer buf = ByteBuffer.allocate(1024);',
             'while (channel.read(buf) > 0) {',
@@ -178,7 +178,8 @@ export const javaIoNioLesson: Lesson = {
         entities: {
           socks: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['10k Sockets'], sub: 'non-blocking' }),
           sel: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['NIO Selector'], sub: 'epoll_wait()' }),
-          ready: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['Ready Keys'], sub: 'OP_READ' }),
+          ready: d(14, -16, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['Ready Keys'], sub: 'OP_READ' }),
+          rd: b(14, -2, { r: 2.2, h: 48, color: 'blue', label: ['ByteBuffer'], sub: 'reads ready' }),
           card: S({ x: -12, y: 12 }, '5. Multiplexing 10k Connections on 1 Thread', [
             'channel.configureBlocking(false);',
             'channel.register(selector, SelectionKey.OP_READ);',
@@ -187,9 +188,10 @@ export const javaIoNioLesson: Lesson = {
         },
         links: {
           sk_sl: h('socks', 'sel', ['socks', 'sel'], { heads: 'end', label: 'register' }),
-          sl_rd: h('sel', 'ready', ['sel', 'ready'], { heads: 'end', label: 'OP_READ' }),
+          sl_rd: h('sel', 'ready', ['sel', 'ready'], { heads: 'end', label: 'read' }),
+          sl_bf: h('sel', 'rd', ['sel', 'rd'], { heads: 'end', label: 'fill buf' }),
         },
-        flows: [{ route: ['sk_sl', 'sl_rd'], kind: 'res', rate: 2.0 }],
+        flows: [{ route: ['sk_sl', 'sl_rd'], kind: 'res', rate: 2.0 }, { route: ['sl_bf'], kind: 'req', rate: 1.6 }],
       },
     },
     {
@@ -208,9 +210,9 @@ export const javaIoNioLesson: Lesson = {
       metrics: { io_layer: 'JSON / Proto', encoding: 'UTF-8 / Bin', syscall_cost: 'Safe parse', security_risk: 'No RCE' },
       scene: {
         entities: {
-          ois: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['ObjectInput'], sub: 'gadget RCE!' }),
-          flt: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'shield', label: ['InputFilter'], sub: 'JEP 290 filter' }),
-          json: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['JSON / Proto'], sub: 'data-only safe' }),
+          ois: d(-12, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['ObjectInput'], sub: 'gadget RCE!' }),
+          flt: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'shield', label: ['InputFilter'], sub: 'JEP 290 filter' }),
+          json: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['JSON / Proto'], sub: 'data-only safe' }),
           card: S({ x: -12, y: 12 }, '6. Effective Java Item 85: Prefer Alternatives', [
             '// DANGEROUS on untrusted bytes:',
             'Object obj = new ObjectInputStream(in).readObject();',

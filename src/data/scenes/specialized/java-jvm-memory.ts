@@ -41,8 +41,8 @@ export const javaJvmMemoryLesson: Lesson = {
       metrics: { heap_region: 'Stack + Heap', gc_phase: 'None (alloc)', allocation: 'Ref -> Obj', oom_risk: 'StackOverflow' },
       scene: {
         entities: {
-          stack: d(-12, -8, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Thread Stack'], sub: 'local ref' }),
-          heap: b(4, -8, { r: 2.3, h: 50, color: 'blue', label: ['JVM Heap'], sub: 'new Order()' }),
+          stack: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Thread Stack'], sub: 'local ref' }),
+          eden: b(2, -6, { r: 2.3, h: 50, color: 'blue', label: ['JVM Heap'], sub: 'new Order()' }),
           card: S({ x: -12, y: 12 }, '1. Stack References & Heap Objects', [
             'void process() {',
             '  int qty = 5;              // Stack primitive',
@@ -51,7 +51,7 @@ export const javaJvmMemoryLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          st_hp: h('stack', 'heap', ['stack', 'heap'], { heads: 'end', label: 'points to' }),
+          st_hp: h('stack', 'eden', ['stack', 'eden'], { heads: 'end', label: 'points to' }),
         },
         flows: [{ route: ['st_hp'], kind: 'req', rate: 1.7 }],
       },
@@ -72,9 +72,9 @@ export const javaJvmMemoryLesson: Lesson = {
       metrics: { heap_region: 'Heap StringTbl', gc_phase: 'GC-eligible', allocation: 'Deduplicated', oom_risk: 'Pool bloat' },
       scene: {
         entities: {
-          lit: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['"hello" Literal'], sub: 'LDC bytecode' }),
-          pool: b(0, -10, { r: 2.2, h: 48, color: 'purple', label: ['String Pool'], sub: 'Heap table' }),
-          dup: d(14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['new String()'], sub: 'extra Heap obj' }),
+          stack: d(-12, -16, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['"hello" Ref'], sub: 'Stack ref' }),
+          dup: d(-14, 0, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['new String()'], sub: 'extra Heap obj' }),
+          pool: b(4, -9, { r: 2.2, h: 48, color: 'purple', label: ['String Pool'], sub: 'Heap table' }),
           card: S({ x: -12, y: 12 }, '2. String Pool & Compact byte[] Backing', [
             'String a = "hello";              // pooled instance',
             'String b = "hello";              // a == b is true!',
@@ -83,7 +83,7 @@ export const javaJvmMemoryLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          lit_p: h('lit', 'pool', ['lit', 'pool'], { heads: 'end', label: 'reuse ref' }),
+          lit_p: h('stack', 'pool', ['stack', 'pool'], { heads: 'end', label: 'reuse ref' }),
           dup_p: h('dup', 'pool', ['dup', 'pool'], { heads: 'end', label: 'intern()' }),
         },
         flows: [{ route: ['lit_p'], kind: 'res', rate: 1.8 }],
@@ -105,8 +105,8 @@ export const javaJvmMemoryLesson: Lesson = {
       metrics: { heap_region: 'Young: Eden', gc_phase: 'TLAB Alloc', allocation: 'Bump pointer', oom_risk: 'Low' },
       scene: {
         entities: {
-          t1: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'cpu', label: ['Thread T1'], sub: 'new DTO()' }),
-          eden: b(0, -10, { r: 2.3, h: 50, color: 'green', label: ['Eden (TLAB)'], sub: 'bump ptr' }),
+          stack: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'cpu', label: ['Thread T1'], sub: 'new DTO()' }),
+          eden: b(2, -6, { r: 2.3, h: 50, color: 'green', label: ['Eden (TLAB)'], sub: 'bump ptr' }),
           card: S({ x: -12, y: 12 }, '3. Lock-Free TLAB Allocation in Eden', [
             '// Thread-Local Allocation Buffer (TLAB):',
             'ptr = tlab.top;',
@@ -115,7 +115,7 @@ export const javaJvmMemoryLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          t_eden: h('t1', 'eden', ['t1', 'eden'], { heads: 'end', label: 'alloc TLAB' }),
+          t_eden: h('stack', 'eden', ['stack', 'eden'], { heads: 'end', label: 'alloc TLAB' }),
         },
         flows: [{ route: ['t_eden'], kind: 'req', rate: 2.2 }],
       },
@@ -136,9 +136,9 @@ export const javaJvmMemoryLesson: Lesson = {
       metrics: { heap_region: 'Survivor S0/S1', gc_phase: 'Minor GC', allocation: 'Copy live', oom_risk: 'Premature promo' },
       scene: {
         entities: {
-          eden: b(-14, -10, { r: 2.2, h: 48, color: 'green', label: ['Eden Space'], sub: '90% dead' }),
-          gc: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Minor GC'], sub: 'mark & copy' }),
-          surv: b(14, -10, { r: 2.2, h: 48, color: 'blue', label: ['Survivor S0'], sub: 'age++ <= 15' }),
+          eden: b(-12, -14, { r: 2.2, h: 48, color: 'green', label: ['Eden Space'], sub: '90% dead' }),
+          gc: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Minor GC'], sub: 'mark & copy' }),
+          surv: b(0, 0, { r: 2.2, h: 48, color: 'blue', label: ['Survivor S0'], sub: 'age++ <= 15' }),
           card: S({ x: -12, y: 12 }, '4. Copying Collector: Eden -> Survivor', [
             '// GC Roots: Thread stacks, static fields, JNI',
             '// Live objects copied Eden -> S0 (age = 1)',
@@ -147,7 +147,7 @@ export const javaJvmMemoryLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ed_gc: h('eden', 'gc', ['eden', 'gc'], { heads: 'end', label: 'eden full' }),
+          ed_gc: h('eden', 'gc', ['eden', 'gc'], { heads: 'end', label: 'full' }),
           gc_sv: h('gc', 'surv', ['gc', 'surv'], { heads: 'end', label: 'copy live' }),
         },
         flows: [{ route: ['ed_gc', 'gc_sv'], kind: 'res', rate: 1.9 }],
@@ -169,9 +169,9 @@ export const javaJvmMemoryLesson: Lesson = {
       metrics: { heap_region: 'Old Gen (G1)', gc_phase: 'Mixed GC', allocation: 'Region-based', oom_risk: 'Memory leak' },
       scene: {
         entities: {
-          surv: b(-14, -10, { r: 2.2, h: 48, color: 'blue', label: ['Survivor'], sub: 'age == 15' }),
-          old: b(0, -10, { r: 2.3, h: 50, color: 'purple', label: ['Old Gen (G1)'], sub: '2048 regions' }),
-          g1: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['G1 Mixed GC'], sub: 'pause <= 200ms' }),
+          surv: b(-14, -14, { r: 2.2, h: 48, color: 'blue', label: ['Survivor'], sub: 'age == 15' }),
+          old: b(0, -14, { r: 2.3, h: 50, color: 'purple', label: ['Old Gen (G1)'], sub: '2048 regions' }),
+          g1: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['G1 Mixed GC'], sub: 'pause <= 200ms' }),
           card: S({ x: -12, y: 12 }, '5. Old Gen & G1GC Tuning', [
             '-XX:+UseG1GC -XX:MaxGCPauseMillis=200',
             '// JDK 21 ultra-low-latency option:',
@@ -202,9 +202,9 @@ export const javaJvmMemoryLesson: Lesson = {
       metrics: { heap_region: '4 Ref Levels', gc_phase: 'Reachability', allocation: 'RefQueue', oom_risk: 'finalize() bad' },
       scene: {
         entities: {
-          soft: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['SoftRef'], sub: 'GC near OOM' }),
-          weak: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['WeakRef'], sub: 'GC next cycle' }),
-          phnt: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['PhantomRef'], sub: 'Cleaner hook' }),
+          soft: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['SoftRef'], sub: 'GC near OOM' }),
+          weak: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['WeakRef'], sub: 'GC next cycle' }),
+          phnt: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['PhantomRef'], sub: 'Cleaner hook' }),
           card: S({ x: -12, y: 12 }, '6. Java Reference Strength Hierarchy', [
             '// Strong -> SoftReference (OOM-sensitive cache)',
             '//        -> WeakReference (next GC if unreferenced)',
@@ -235,10 +235,10 @@ export const javaJvmMemoryLesson: Lesson = {
       metrics: { heap_region: 'Native Off-Heap', gc_phase: 'Class unload', allocation: 'ClassLoader', oom_risk: 'Metaspace OOM' },
       scene: {
         entities: {
-          cl: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['ClassLoader'], sub: 'loads .class' }),
-          meta: b(0, -10, { r: 2.3, h: 50, color: 'purple', label: ['Metaspace'], sub: 'native RAM' }),
-          oom: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['OOM Guard'], sub: 'MaxMetaspace' }),
-          card: S({ x: -12, y: 12 }, '6. Metaspace & Container Memory Flags', [
+          cl: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['ClassLoader'], sub: 'loads .class' }),
+          meta: b(0, -14, { r: 2.3, h: 50, color: 'purple', label: ['Metaspace'], sub: 'native RAM' }),
+          oom: d(0, 0, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['OOM Guard'], sub: 'MaxMetaspace' }),
+          card: S({ x: -12, y: 12 }, '7. Metaspace & Container Memory Flags', [
             '-XX:MaxRAMPercentage=75.0   // container-aware heap',
             '-XX:MaxMetaspaceSize=256m   // cap native metadata',
             '-XX:+HeapDumpOnOutOfMemoryError',

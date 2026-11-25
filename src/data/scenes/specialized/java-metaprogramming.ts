@@ -40,9 +40,9 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'PC Table Jump', metadata: 'Bytecode PCs', overhead: '0 on happy path', proxy_type: 'None' },
       scene: {
         entities: {
-          call: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['try { pc 0..12 }'], sub: '0 overhead' }),
-          tbl: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Exception Tbl'], sub: 'pc -> handler' }),
-          catchBlk: b(14, -10, { r: 2.2, h: 48, color: 'red', label: ['catch Handler'], sub: 'stack unwind' }),
+          call: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['try { pc 0..12 }'], sub: '0 overhead' }),
+          tbl: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Exception Tbl'], sub: 'pc -> handler' }),
+          catchBlk: b(0, 0, { r: 2.2, h: 48, color: 'red', label: ['catch Handler'], sub: 'stack unwind' }),
           card: S({ x: -12, y: 12 }, '1. JVM Exception Table in Bytecode', [
             '// Happy path: 0 extra CPU instructions',
             '// On throw: JVM searches Exception Table:',
@@ -73,9 +73,9 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'AutoCloseable', metadata: 'Suppressed[]', overhead: 'Guaranteed close', proxy_type: 'None' },
       scene: {
         entities: {
-          body: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['try Resource'], sub: 'AutoCloseable' }),
-          fin: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['finally close()'], sub: 'reverse order' }),
-          supp: b(14, -10, { r: 2.2, h: 48, color: 'amber', label: ['Primary Ex'], sub: '+ suppressed' }),
+          call: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['try Resource'], sub: 'AutoCloseable' }),
+          fin: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['finally close()'], sub: 'reverse order' }),
+          catchBlk: b(0, 0, { r: 2.2, h: 48, color: 'amber', label: ['Primary Ex'], sub: '+ suppressed' }),
           card: S({ x: -12, y: 12 }, '2. Safe Resource Cleanup', [
             'try (var conn = ds.getConnection();',
             '     var stmt = conn.prepareStatement(sql)) {',
@@ -84,8 +84,8 @@ export const javaMetaprogrammingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          b_fin: h('body', 'fin', ['body', 'fin'], { heads: 'end', label: 'always run' }),
-          fin_sup: h('fin', 'supp', ['fin', 'supp'], { heads: 'end', label: 'addSuppressed' }),
+          b_fin: h('call', 'fin', ['call', 'fin'], { heads: 'end', label: 'always run' }),
+          fin_sup: h('fin', 'catchBlk', ['fin', 'catchBlk'], { heads: 'end', label: 'addSuppressed' }),
         },
         flows: [{ route: ['b_fin', 'fin_sup'], kind: 'req', rate: 1.7 }],
       },
@@ -106,9 +106,9 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'Metadata Read', metadata: 'RUNTIME tag', overhead: 'Startup scan', proxy_type: 'None' },
       scene: {
         entities: {
-          src: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['@Audited Tag'], sub: 'RUNTIME policy' }),
-          meta: b(0, -10, { r: 2.2, h: 48, color: 'purple', label: ['Metaspace'], sub: 'Class<?> attrs' }),
-          scan: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Framework'], sub: 'getAnnotation' }),
+          src: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['@Audited Tag'], sub: 'RUNTIME policy' }),
+          meta: b(0, -14, { r: 2.2, h: 48, color: 'purple', label: ['Metaspace'], sub: 'Class<?> attrs' }),
+          target: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Framework'], sub: 'getAnnotation' }),
           card: S({ x: -12, y: 12 }, '3. Annotation Retention Policies', [
             '@Retention(RetentionPolicy.RUNTIME)',
             '@Target(ElementType.METHOD)',
@@ -118,7 +118,7 @@ export const javaMetaprogrammingLesson: Lesson = {
         },
         links: {
           src_m: h('src', 'meta', ['src', 'meta'], { heads: 'end', label: 'emit attr' }),
-          m_scn: h('meta', 'scan', ['meta', 'scan'], { heads: 'end', label: 'inspect' }),
+          m_scn: h('meta', 'target', ['meta', 'target'], { heads: 'end', label: 'inspect' }),
         },
         flows: [{ route: ['src_m', 'm_scn'], kind: 'req', rate: 1.8 }],
       },
@@ -139,9 +139,9 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'Method.invoke', metadata: 'Method[]', overhead: 'Box + check', proxy_type: 'Direct target' },
       scene: {
         entities: {
-          caller: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'Method.invoke' }),
-          refl: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Reflection API'], sub: 'check + box' }),
-          bean: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Target Bean'], sub: 'exec method' }),
+          caller: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'Method.invoke' }),
+          refl: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Reflection API'], sub: 'check + box' }),
+          target: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Target Bean'], sub: 'exec method' }),
           card: S({ x: -12, y: 12 }, '4. Dynamic Invocation via Reflection', [
             'Method m = OrderService.class',
             '  .getDeclaredMethod("placeOrder", Long.class);',
@@ -151,7 +151,7 @@ export const javaMetaprogrammingLesson: Lesson = {
         },
         links: {
           c_ref: h('caller', 'refl', ['caller', 'refl'], { heads: 'end', label: 'invoke()' }),
-          ref_b: h('refl', 'bean', ['refl', 'bean'], { heads: 'end', label: 'dispatch' }),
+          ref_b: h('refl', 'target', ['refl', 'target'], { heads: 'end', label: 'dispatch' }),
         },
         flows: [{ route: ['c_ref', 'ref_b'], kind: 'req', rate: 1.8 }],
       },
@@ -172,9 +172,9 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'InvocationHdlr', metadata: 'Interface[]', overhead: '1 hop wrap', proxy_type: 'JDK $Proxy0' },
       scene: {
         entities: {
-          caller: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'PaymentApi' }),
-          proxy: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['JDK $Proxy0'], sub: 'InvocationHdlr' }),
-          target: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Real Impl'], sub: 'target bean' }),
+          caller: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'PaymentApi' }),
+          proxy: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['JDK $Proxy0'], sub: 'InvocationHdlr' }),
+          target: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Real Impl'], sub: 'target bean' }),
           card: S({ x: -12, y: 12 }, '5. JDK Dynamic Proxy Pattern', [
             'PaymentApi proxy = (PaymentApi) Proxy.newProxyInstance(',
             '  loader, new Class[]{ PaymentApi.class },',
@@ -207,9 +207,9 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'MethodIntrcpt', metadata: 'Subclass ASM', overhead: 'FastClass', proxy_type: 'CGLIB Subclass' },
       scene: {
         entities: {
-          caller: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'OrderService' }),
-          cglib: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CGLIB Sub'], sub: 'extends Target' }),
-          target: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['super.save()'], sub: 'real logic' }),
+          caller: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'OrderService' }),
+          cglib: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CGLIB Sub'], sub: 'extends Target' }),
+          target: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['super.save()'], sub: 'real logic' }),
           card: S({ x: -12, y: 12 }, '6. CGLIB Subclass Proxy (Spring Boot)', [
             '// Generated at runtime via ASM bytecode:',
             'class OrderService$$SpringCGLIB extends OrderService {',

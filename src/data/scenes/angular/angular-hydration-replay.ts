@@ -11,7 +11,7 @@ import {
 
 export const angularHydrationReplayLesson = {
   id: 'angular-hydration-replay',
-  title: 'Non-Destructive Hydration & Event Replay',
+  title: 'SSR Hydration & Event Replay',
   summary: 'Discover Angular modern SSR hydration architecture. Trace how provideClientHydration(withEventReplay()) matches server-rendered HTML nodes without DOM destruction and replays early user interactions.',
   minutes: 25,
   level: 'advanced',

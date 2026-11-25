@@ -10,7 +10,7 @@ import {
 
 export const angularZonejsDirtyCheckingLesson = {
   id: 'angular-zonejs-dirty-checking',
-  title: 'Change Detection Evolution: Zone.js -> OnPush -> Zoneless',
+  title: 'Zone.js, OnPush & Zoneless',
   summary: 'Trace Angular’s complete change detection evolution: Zone.js monkey-patching & top-down dirty checking, escaping via runOutsideAngular & zone-flags, OnPush subtree pruning & markForCheck/detach, and modern Zoneless ChangeDetectionScheduler.',
   minutes: 30,
   level: 'intermediate',

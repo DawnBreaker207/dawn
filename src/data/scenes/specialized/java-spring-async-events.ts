@@ -40,9 +40,9 @@ export const javaSpringAsyncEventsLesson: Lesson = {
       metrics: { async_exec: 'Bounded Pool', context_prop: 'Not copied!', cache_guard: 'N/A', event_phase: 'Immediate' },
       scene: {
         entities: {
-          bad: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['SimpleAsync'], sub: 'unbounded OS!' }),
-          good: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['TaskExecutor'], sub: 'bounded pool' }),
-          px: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['@Async Proxy'], sub: 'no self-call' }),
+          bad: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['SimpleAsync'], sub: 'unbounded OS!' }),
+          good: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['TaskExecutor'], sub: 'bounded pool' }),
+          px: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['@Async Proxy'], sub: 'no self-call' }),
           card: S({ x: -12, y: 12 }, '1. Configuring a Safe Bounded @Async Pool', [
             '@Bean Executor taskExecutor() {',
             '  var ex = new ThreadPoolTaskExecutor();',
@@ -74,9 +74,9 @@ export const javaSpringAsyncEventsLesson: Lesson = {
       metrics: { async_exec: 'Bounded Pool', context_prop: 'TaskDecorator', cache_guard: 'N/A', event_phase: 'Trace intact' },
       scene: {
         entities: {
-          http: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['HTTP Thread'], sub: 'MDC + SecCtx' }),
-          dec: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TaskDecorator'], sub: 'copy -> clear' }),
-          wrk: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['Worker Thread'], sub: 'traceId intact' }),
+          http: d(-14, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['HTTP Thread'], sub: 'MDC + SecCtx' }),
+          dec: d(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TaskDecorator'], sub: 'copy -> clear' }),
+          wrk: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['Worker Thread'], sub: 'traceId intact' }),
           card: S({ x: -12, y: 12 }, '2. Copying ThreadLocals via TaskDecorator', [
             'ex.setTaskDecorator(runnable -> {',
             '  var mdc = MDC.getCopyOfContextMap();',
@@ -109,9 +109,9 @@ export const javaSpringAsyncEventsLesson: Lesson = {
       metrics: { async_exec: 'Bounded Pool', context_prop: 'TaskDecorator', cache_guard: 'sync=true', event_phase: '1 DB query' },
       scene: {
         entities: {
-          reqs: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['1000 Misses'], sub: 'same key #42' }),
-          sync: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['@Cacheable'], sub: 'sync = true' }),
-          db: b(14, -10, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: '1 query only!' }),
+          reqs: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['1000 Misses'], sub: 'same key #42' }),
+          sync: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['@Cacheable'], sub: 'sync = true' }),
+          db: b(0, 0, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: '1 query only!' }),
           card: S({ x: -12, y: 12 }, '3. Preventing Cache Stampedes in Spring', [
             '@Cacheable(cacheNames = "catalog", key = "#id", sync = true)',
             'public ProductDto findById(Long id) {',
@@ -176,9 +176,9 @@ export const javaSpringAsyncEventsLesson: Lesson = {
       metrics: { async_exec: '@Async + Event', context_prop: 'TaskDecorator', cache_guard: 'N/A', event_phase: 'AFTER_COMMIT' },
       scene: {
         entities: {
-          pub: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['EventPublisher'], sub: 'publishEvent()' }),
-          cmt: b(0, -10, { r: 2.2, h: 48, color: 'green', label: ['DB COMMIT'], sub: 'TX succeeded' }),
-          lst: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['EventListener'], sub: 'AFTER_COMMIT' }),
+          pub: d(-14, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['EventPublisher'], sub: 'publishEvent()' }),
+          cmt: b(-14, -14, { r: 2.2, h: 48, color: 'green', label: ['DB COMMIT'], sub: 'TX succeeded' }),
+          lst: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['EventListener'], sub: 'AFTER_COMMIT' }),
           card: S({ x: -12, y: 12 }, '5. Commit-Synchronized Domain Events', [
             '// In @Transactional service:',
             'publisher.publishEvent(new OrderPlacedEvent(order.getId()));',
@@ -210,9 +210,9 @@ export const javaSpringAsyncEventsLesson: Lesson = {
       metrics: { async_exec: 'Outbox Relay', context_prop: 'Atomic DB', cache_guard: 'N/A', event_phase: 'Crash-safe' },
       scene: {
         entities: {
-          tx: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['1 Atomic TX'], sub: 'Order + Outbox' }),
-          db: b(0, -10, { r: 2.2, h: 48, color: 'green', label: ['Outbox Table'], sub: 'committed' }),
-          mq: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Kafka Relay'], sub: 'at-least-once' }),
+          tx: d(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['1 Atomic TX'], sub: 'Order + Outbox' }),
+          db: b(0, -14, { r: 2.2, h: 48, color: 'green', label: ['Outbox Table'], sub: 'committed' }),
+          mq: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Kafka Relay'], sub: 'at-least-once' }),
           card: S({ x: -12, y: 12 }, '6. Atomic DB + Outbox Guarantees Delivery', [
             '@Transactional public void placeOrder(Req r) {',
             '  orderRepo.save(order);',

@@ -11,7 +11,7 @@ import {
 
 export const angularRouterPipelineLesson = {
   id: 'angular-router-pipeline',
-  title: 'Router Navigation Lifecycle & Guard Pipeline',
+  title: 'Router, Guards & Resolvers',
   summary: 'Follow the 10-phase Angular Router navigation pipeline from URL serialization, Route Matching, canMatch/canActivate guards, Resolvers, to RouterOutlet activation.',
   minutes: 25,
   level: 'intermediate',

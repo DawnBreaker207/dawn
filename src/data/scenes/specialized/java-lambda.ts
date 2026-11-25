@@ -40,8 +40,8 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'new $1.class', evaluation: 'Eager alloc', allocations: '1 obj / call', execution: 'Disk bloat' },
       scene: {
         entities: {
-          caller: d(-12, -8, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Caller Method'], sub: 'new Runnable()' }),
-          anon: b(4, -8, { r: 2.2, h: 48, color: 'red', label: ['Outer$1.class'], sub: 'extra .class' }),
+          caller: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Caller Method'], sub: 'new Runnable()' }),
+          anon: b(2, -6, { r: 2.2, h: 48, color: 'red', label: ['Outer$1.class'], sub: 'extra .class' }),
           card: S({ x: -12, y: 12 }, '1. Anonymous Class Cost vs Lambda', [
             '// Old: compiles to Outer$1.class on disk',
             'list.forEach(new Consumer<String>() {',
@@ -71,9 +71,9 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'invokedynamic', evaluation: 'Link once', allocations: '0 (stateless)', execution: 'Direct call' },
       scene: {
         entities: {
-          caller: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['invoke dyn'], sub: 'CallSite' }),
-          lmf: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Metafactory'], sub: 'links once' }),
-          target: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['lambda$0()'], sub: 'static method' }),
+          caller: d(-12, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['invoke dyn'], sub: 'CallSite' }),
+          lmf: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Metafactory'], sub: 'links once' }),
+          target: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['lambda$0()'], sub: 'static method' }),
           card: S({ x: -12, y: 12 }, '2. Bytecode Linkage via LambdaMetafactory', [
             '// 1. First hit invokes Bootstrap Method (BSM):',
             'CallSite cs = LambdaMetafactory.metafactory(...);',
@@ -104,8 +104,8 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'Head Stage', evaluation: 'Lazy (0 work)', allocations: '1 pipeline node', execution: 'Idle' },
       scene: {
         entities: {
-          list: b(-12, -8, { r: 2.2, h: 48, color: 'sky', label: ['List<Order>'], sub: 'source data' }),
-          head: d(4, -8, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'Spliterator' }),
+          list: b(-14, -14, { r: 2.2, h: 48, color: 'sky', label: ['List<Order>'], sub: 'source data' }),
+          head: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'Spliterator' }),
           card: S({ x: -12, y: 12 }, '3. Creating a Stream Pipeline', [
             'Stream<Order> s = orders.stream();',
             '// Allocates Head(Spliterator) only',
@@ -134,9 +134,10 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'StatelessOp', evaluation: 'Lazy (0 work)', allocations: 'No temp lists', execution: 'Pipeline built' },
       scene: {
         entities: {
-          head: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'Spliterator' }),
-          flt: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: 'lazy stage' }),
-          mp: d(14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'lazy stage' }),
+          list: b(-14, -14, { r: 2.2, h: 48, color: 'sky', label: ['List<Order>'], sub: 'source data' }),
+          head: d(-2, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'Spliterator' }),
+          flt: d(12, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: 'lazy stage' }),
+          mp: d(12, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'lazy stage' }),
           card: S({ x: -12, y: 12 }, '4. Intermediate Stages Only Wire Sinks', [
             'var pipe = orders.stream()',
             '  .filter(o -> o.amount() > 100) // Sink 1',
@@ -145,10 +146,11 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          h_f: h('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'wire sink' }),
-          f_m: h('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'wire sink' }),
+          ls_hd: h('list', 'head', ['list', 'head'], { heads: 'end', label: 'wrap' }),
+          h_f: h('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'sink' }),
+          f_m: h('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'sink' }),
         },
-        flows: [{ route: ['h_f', 'f_m'], kind: 'res', rate: 1.4 }],
+        flows: [{ route: ['ls_hd', 'h_f', 'f_m'], kind: 'res', rate: 1.4 }],
       },
     },
     {
@@ -167,9 +169,10 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'Terminal Op', evaluation: 'Fused 1-pass', allocations: 'Result only', execution: 'Active pull' },
       scene: {
         entities: {
-          flt: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: 'item #1 pass' }),
-          mp: d(0, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'transform #1' }),
-          col: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['toList()'], sub: 'terminal sink' }),
+          head: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'item #1' }),
+          flt: d(-2, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: 'item #1 pass' }),
+          mp: d(-2, -2, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'transform #1' }),
+          col: b(12, -2, { r: 2.2, h: 48, color: 'green', label: ['toList()'], sub: 'terminal sink' }),
           card: S({ x: -12, y: 12 }, '5. Vertical Loop Fusion on Terminal Op', [
             'List<Long> ids = orders.stream()',
             '  .filter(o -> o.amount() > 100)',
@@ -178,10 +181,11 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          f_m_run: h('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'push item' }),
+          hd_fl: h('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'pull #1' }),
+          f_m_run: h('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'push' }),
           m_col: h('mp', 'col', ['mp', 'col'], { heads: 'end', label: 'collect' }),
         },
-        flows: [{ route: ['f_m_run', 'm_col'], kind: 'res', rate: 2.2 }],
+        flows: [{ route: ['hd_fl', 'f_m_run', 'm_col'], kind: 'res', rate: 2.2 }],
       },
     },
     {
@@ -200,9 +204,10 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'Short-Circuit', evaluation: 'Early halt', allocations: 'Minimal', execution: 'Stopped early' },
       scene: {
         entities: {
-          src: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Spliterator'], sub: 'stops early' }),
-          mp: d(0, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['filter + map'], sub: '1 match' }),
-          term: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['findFirst()'], sub: 'cancel flag' }),
+          head: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Spliterator'], sub: 'stops early' }),
+          flt: d(-2, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: '1 match' }),
+          mp: d(-2, -2, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'transform #1' }),
+          term: d(12, -2, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['findFirst()'], sub: 'cancel flag' }),
           card: S({ x: -12, y: 12 }, '6. Short-Circuiting Halts Upstream', [
             'Optional<Long> hit = orders.stream()',
             '  .filter(o -> o.amount() > 100)',
@@ -211,10 +216,11 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          s_m: h('src', 'mp', ['src', 'mp'], { heads: 'end', label: 'item #1' }),
-          m_t: h('mp', 'term', ['mp', 'term'], { heads: 'end', label: 'matched!' }),
+          hd_f2: h('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'item #1' }),
+          f2_m2: h('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'match' }),
+          m_t: h('mp', 'term', ['mp', 'term'], { heads: 'end', label: 'halt!' }),
         },
-        flows: [{ route: ['s_m', 'm_t'], kind: 'res', rate: 1.6 }],
+        flows: [{ route: ['hd_f2', 'f2_m2', 'm_t'], kind: 'res', rate: 1.6 }],
       },
     },
   ],

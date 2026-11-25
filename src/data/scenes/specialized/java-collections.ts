@@ -41,8 +41,8 @@ export const javaCollectionsLesson: Lesson = {
       metrics: { backing_store: 'Object[] 1.5x', collision_op: 'N/A', concurrency: 'Not sync', tricky_trap: 'LinkedList RAM' },
       scene: {
         entities: {
-          arr: b(-12, -8, { r: 2.3, h: 50, color: 'green', label: ['ArrayList'], sub: 'contiguous L1' }),
-          lnk: d(4, -8, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['LinkedList'], sub: 'cache misses' }),
+          arr: b(-14, -14, { r: 2.3, h: 50, color: 'green', label: ['ArrayList'], sub: 'contiguous L1' }),
+          lnk: d(2, -6, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['LinkedList'], sub: 'cache misses' }),
           card: S({ x: -12, y: 12 }, '1. Contiguous Array vs Pointer Chasing', [
             '// ArrayList: O(1) get(i), 1.5x grow = old + (old >> 1)',
             '// LinkedList: 24B+ Node overhead per item + cache miss',
@@ -71,9 +71,9 @@ export const javaCollectionsLesson: Lesson = {
       metrics: { backing_store: 'Node[16]', collision_op: 'Linked chain', concurrency: 'Unsafe!', tricky_trap: 'Infinite loop' },
       scene: {
         entities: {
-          key: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Key.hashCode'], sub: 'h^(h>>>16)' }),
-          tbl: d(0, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Node[] Table'], sub: '(n-1) & hash' }),
-          bkt: b(14, -10, { r: 2.2, h: 48, color: 'amber', label: ['Bucket Chain'], sub: 'Node.next' }),
+          key: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Key.hashCode'], sub: 'h^(h>>>16)' }),
+          tbl: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Node[] Table'], sub: '(n-1) & hash' }),
+          bkt: b(0, 0, { r: 2.2, h: 48, color: 'amber', label: ['Bucket Chain'], sub: 'Node.next' }),
           card: S({ x: -12, y: 12 }, '2. How HashMap Picks a Bucket', [
             'int h = key.hashCode();',
             'int hash = h ^ (h >>> 16); // mix upper bits!',
@@ -82,7 +82,7 @@ export const javaCollectionsLesson: Lesson = {
         },
         links: {
           k_tb: h('key', 'tbl', ['key', 'tbl'], { heads: 'end', label: 'mask bits' }),
-          tb_bk: h('tbl', 'bkt', ['tbl', 'bkt'], { heads: 'end', label: 'collision' }),
+          tb_bk: h('tbl', 'bkt', ['tbl', 'bkt'], { heads: 'end', label: 'clash' }),
         },
         flows: [{ route: ['k_tb', 'tb_bk'], kind: 'req', rate: 1.8 }],
       },
@@ -103,9 +103,10 @@ export const javaCollectionsLesson: Lesson = {
       metrics: { backing_store: 'TreeNode RB', collision_op: 'O(log n)', concurrency: 'Unsafe!', tricky_trap: '0 rehash' },
       scene: {
         entities: {
-          chn: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Chain >= 8'], sub: 'cap >= 64' }),
-          tree: b(0, -10, { r: 2.2, h: 48, color: 'green', label: ['RB TreeNode'], sub: 'O(log n) bin' }),
-          resz: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['2x Resize'], sub: 'hash & oldCap' }),
+          key: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Key (bin>=8)'], sub: 'cap >= 64' }),
+          tbl: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Node[] Table'], sub: 'resize 2x' }),
+          tree: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['RB TreeNode'], sub: 'O(log n) bin' }),
+          resz: d(12, -2, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['2x Resize'], sub: 'hash & oldCap' }),
           card: S({ x: -12, y: 12 }, '3. Treeification & Zero-Rehash 2x Resize', [
             '// Treeify when bin >= 8 && table.length >= 64',
             '// On 2x resize, no hashCode() call needed:',
@@ -114,10 +115,11 @@ export const javaCollectionsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ch_tr: h('chn', 'tree', ['chn', 'tree'], { heads: 'end', label: 'treeify' }),
-          tr_rs: h('tree', 'resz', ['tree', 'resz'], { heads: 'end', label: 'bit split' }),
+          k_tb2: h('key', 'tbl', ['key', 'tbl'], { heads: 'end', label: 'bin >= 8' }),
+          tb_tr: h('tbl', 'tree', ['tbl', 'tree'], { heads: 'end', label: 'RB-Tree' }),
+          tb_rs: h('tbl', 'resz', ['tbl', 'resz'], { heads: 'end', label: 'bit split' }),
         },
-        flows: [{ route: ['ch_tr', 'tr_rs'], kind: 'res', rate: 1.9 }],
+        flows: [{ route: ['k_tb2', 'tb_tr'], kind: 'res', rate: 1.9 }, { route: ['tb_rs'], kind: 'req', rate: 1.5 }],
       },
     },
     {
@@ -136,9 +138,9 @@ export const javaCollectionsLesson: Lesson = {
       metrics: { backing_store: 'Orphaned Node', collision_op: 'hash + equals', concurrency: 'Broken lookup', tricky_trap: 'Mutated key' },
       scene: {
         entities: {
-          mut: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Mutate Key'], sub: 'hash: 3 -> 9' }),
-          b9: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Bucket #9'], sub: 'get() -> null!' }),
-          b3: b(14, -10, { r: 2.2, h: 48, color: 'purple', label: ['Bucket #3'], sub: 'leaked entry' }),
+          mut: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Mutate Key'], sub: 'hash: 3 -> 9' }),
+          tbl: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Bucket #9'], sub: 'get() -> null!' }),
+          bkt: b(0, 0, { r: 2.2, h: 48, color: 'purple', label: ['Bucket #3'], sub: 'leaked entry' }),
           card: S({ x: -12, y: 12 }, '4. Why HashMap Keys Must Be Immutable', [
             'User u = new User("Alice");',
             'map.put(u, "admin"); // stored in bucket #3',
@@ -147,10 +149,10 @@ export const javaCollectionsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          mt_b9: h('mut', 'b9', ['mut', 'b9'], { heads: 'end', label: 'probes #9' }),
-          b9_b3: h('b9', 'b3', ['b9', 'b3'], { heads: 'end', label: 'stuck in #3' }),
+          mt_tb: h('mut', 'tbl', ['mut', 'tbl'], { heads: 'end', label: 'probes #9' }),
+          tb_b3: h('tbl', 'bkt', ['tbl', 'bkt'], { heads: 'end', label: 'in #3' }),
         },
-        flows: [{ route: ['mt_b9'], kind: 'fail', rate: 1.8 }],
+        flows: [{ route: ['mt_tb'], kind: 'fail', rate: 1.8 }],
       },
     },
     {
@@ -169,10 +171,10 @@ export const javaCollectionsLesson: Lesson = {
       metrics: { backing_store: 'Compact Imm', collision_op: 'Open-address', concurrency: 'Thread-safe', tricky_trap: 'Nulls throw NPE' },
       scene: {
         entities: {
-          src: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Mutable Src'], sub: 'Arrays.asList' }),
-          view: d(0, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['unmodView'], sub: 'leaks edits' }),
-          imm: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['List.copyOf'], sub: 'true immutable' }),
-          card: S({ x: -12, y: 12 }, '4. Shallow View vs True Immutability', [
+          src: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Mutable Src'], sub: 'Arrays.asList' }),
+          view: d(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['unmodView'], sub: 'leaks edits' }),
+          imm: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['List.copyOf'], sub: 'true immutable' }),
+          card: S({ x: -12, y: 12 }, '5. Shallow View vs True Immutability', [
             '// View trap: mutating src still changes view!',
             'var view = Collections.unmodifiableList(src);',
             '// Truly immutable (Java 10+), rejects null:',
@@ -181,7 +183,7 @@ export const javaCollectionsLesson: Lesson = {
         },
         links: {
           sr_vw: h('src', 'view', ['src', 'view'], { heads: 'end', label: 'mutates!' }),
-          vw_im: h('view', 'imm', ['view', 'imm'], { heads: 'end', label: 'use copyOf' }),
+          vw_im: h('view', 'imm', ['view', 'imm'], { heads: 'end', label: 'copyOf' }),
         },
         flows: [{ route: ['sr_vw'], kind: 'fail', rate: 1.5 }, { route: ['vw_im'], kind: 'res', rate: 1.8 }],
       },
@@ -202,10 +204,11 @@ export const javaCollectionsLesson: Lesson = {
       metrics: { backing_store: 'volatile Node[]', collision_op: 'sync(headNode)', concurrency: 'Per-bucket', tricky_trap: 'No null keys' },
       scene: {
         entities: {
-          t1: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'cpu', label: ['Writer T1'], sub: 'bucket #2' }),
-          cas: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['CAS Empty'], sub: 'lock-free put' }),
-          head: b(14, -10, { r: 2.2, h: 48, color: 'purple', label: ['sync(head)'], sub: 'bucket lock' }),
-          card: S({ x: -12, y: 12 }, '5. ConcurrentHashMap Java 8+ Locking', [
+          t1: d(-12, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'cpu', label: ['Writer T1'], sub: 'bucket #2' }),
+          tbl: d(0, -8, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['volatile Node[]'], sub: 'lock-free get' }),
+          cas: d(12, -16, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['CAS Empty'], sub: 'lock-free put' }),
+          head: b(12, -2, { r: 2.2, h: 48, color: 'purple', label: ['sync(head)'], sub: 'bucket lock' }),
+          card: S({ x: -12, y: 12 }, '6. ConcurrentHashMap Java 8+ Locking', [
             '// get(k): 100% lock-free volatile read!',
             '// put(k, v):',
             '//   if (tab[i] == null) -> CAS insert (no lock!)',
@@ -213,10 +216,11 @@ export const javaCollectionsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          t_cs: h('t1', 'cas', ['t1', 'cas'], { heads: 'end', label: 'empty slot' }),
-          cs_hd: h('cas', 'head', ['cas', 'head'], { heads: 'end', label: 'if collision' }),
+          t_tb: h('t1', 'tbl', ['t1', 'tbl'], { heads: 'end', label: 'put(k, v)' }),
+          tb_cs: h('tbl', 'cas', ['tbl', 'cas'], { heads: 'end', label: 'CAS' }),
+          tb_hd: h('tbl', 'head', ['tbl', 'head'], { heads: 'end', label: 'clash' }),
         },
-        flows: [{ route: ['t_cs', 'cs_hd'], kind: 'res', rate: 2.0 }],
+        flows: [{ route: ['t_tb', 'tb_cs'], kind: 'res', rate: 2.0 }, { route: ['tb_hd'], kind: 'req', rate: 1.6 }],
       },
     },
     {
@@ -235,10 +239,10 @@ export const javaCollectionsLesson: Lesson = {
       metrics: { backing_store: 'ReservationNode', collision_op: 'Locked bucket', concurrency: 'Self-deadlock!', tricky_trap: 'Nested compute' },
       scene: {
         entities: {
-          fn: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['computeIfAbs'], sub: 'holds bin lock' }),
-          resv: d(0, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Nested Call'], sub: 'same bin hash' }),
-          hang: b(14, -10, { r: 2.2, h: 48, color: 'red', label: ['Blocked!'], sub: 'self-deadlock' }),
-          card: S({ x: -12, y: 12 }, '6. ConcurrentHashMap Recursive Deadlock', [
+          t1: d(-12, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['computeIfAbs'], sub: 'holds bin lock' }),
+          resv: d(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Nested Call'], sub: 'same bin hash' }),
+          hang: b(0, 0, { r: 2.2, h: 48, color: 'red', label: ['Blocked!'], sub: 'self-deadlock' }),
+          card: S({ x: -12, y: 12 }, '7. ConcurrentHashMap Recursive Deadlock', [
             '// BUG: Fibonacci memoization with CHM:',
             'chm.computeIfAbsent(n, k ->',
             '  chm.computeIfAbsent(k - 1, ...) // DEADLOCK if same bin!',
@@ -246,7 +250,7 @@ export const javaCollectionsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          fn_rs: h('fn', 'resv', ['fn', 'resv'], { heads: 'end', label: 're-enter' }),
+          fn_rs: h('t1', 'resv', ['t1', 'resv'], { heads: 'end', label: 're-enter' }),
           rs_hg: h('resv', 'hang', ['resv', 'hang'], { heads: 'end', label: 'waits self' }),
         },
         flows: [{ route: ['fn_rs', 'rs_hg'], kind: 'fail', rate: 1.7 }],

@@ -40,8 +40,8 @@ export const javaStringInternalsLesson: Lesson = {
       metrics: { backing_array: 'final byte[]', pool_region: 'Immutable', concat_op: 'N/A', heap_cost: 'Cached hash' },
       scene: {
         entities: {
-          str: d(-12, -8, { s: 4.8, h: 54, color: 'blue', glyph: 'shield', label: ['String Obj'], sub: 'cached hash' }),
-          arr: b(4, -8, { r: 2.2, h: 48, color: 'green', label: ['final byte[]'], sub: 'read-only' }),
+          str: d(-12, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'shield', label: ['String Obj'], sub: 'cached hash' }),
+          arr: b(2, -6, { r: 2.2, h: 48, color: 'green', label: ['final byte[]'], sub: 'read-only' }),
           card: S({ x: -12, y: 12 }, '1. Immutability & Lazy Hash Caching', [
             'public final class String {',
             '  private final byte[] value; // no setters!',
@@ -71,9 +71,9 @@ export const javaStringInternalsLesson: Lesson = {
       metrics: { backing_array: 'Shared byte[]', pool_region: 'Heap StringTbl', concat_op: 'ldc lookup', heap_cost: '1 vs 2 objs' },
       scene: {
         entities: {
-          ldc: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['"ok" Literal'], sub: 'ldc bytecode' }),
-          tbl: b(0, -10, { r: 2.2, h: 48, color: 'purple', label: ['StringTable'], sub: 'Heap C++ map' }),
-          nw: d(14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['new String()'], sub: 'extra wrapper' }),
+          ldc: d(-12, -16, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['"ok" Literal'], sub: 'ldc bytecode' }),
+          nw: d(-12, -2, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['new String()'], sub: 'extra wrapper' }),
+          tbl: b(4, -9, { r: 2.2, h: 48, color: 'purple', label: ['StringTable'], sub: 'Heap C++ map' }),
           card: S({ x: -12, y: 12 }, '2. Why "ok" == "ok" But "ok" != new String("ok")', [
             'String a = "ok";             // ldc -> StringTable ref',
             'String b = "ok";             // a == b is TRUE',
@@ -104,9 +104,9 @@ export const javaStringInternalsLesson: Lesson = {
       metrics: { backing_array: 'Canonical', pool_region: 'Heap StringTbl', concat_op: 'JNI probe', heap_cost: 'GC-eligible' },
       scene: {
         entities: {
-          dyn: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Heap String'], sub: 'runtime built' }),
-          intrn: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['s.intern()'], sub: 'probe table' }),
-          tbl: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['StringTable'], sub: 'canonical ref' }),
+          dyn: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Heap String'], sub: 'runtime built' }),
+          intrn: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['s.intern()'], sub: 'probe table' }),
+          tbl: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['StringTable'], sub: 'canonical ref' }),
           card: S({ x: -12, y: 12 }, '3. Canonicalizing Strings with intern()', [
             'String s = new StringBuilder("o").append("k").toString();',
             's == "ok";          // false (on Heap)',
@@ -115,7 +115,7 @@ export const javaStringInternalsLesson: Lesson = {
         },
         links: {
           dy_in: h('dyn', 'intrn', ['dyn', 'intrn'], { heads: 'end', label: 'intern()' }),
-          in_tb: h('intrn', 'tbl', ['intrn', 'tbl'], { heads: 'end', label: 'canonical' }),
+          in_tb: h('intrn', 'tbl', ['intrn', 'tbl'], { heads: 'end', label: 'intern' }),
         },
         flows: [{ route: ['dy_in', 'in_tb'], kind: 'res', rate: 1.8 }],
       },
@@ -136,9 +136,9 @@ export const javaStringInternalsLesson: Lesson = {
       metrics: { backing_array: 'byte[] + coder', pool_region: 'Heap (-50%)', concat_op: 'Coder check', heap_cost: '1B / ASCII' },
       scene: {
         entities: {
-          ascii: d(-2, -16, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['"order_42"'], sub: 'coder=0 (1B)' }),
-          cjk: d(-2, -2, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['"Xin chào"'], sub: 'coder=1 (2B)' }),
-          heap: b(12, -9, { r: 2.2, h: 48, color: 'blue', label: ['byte[] Array'], sub: 'Compact Str' }),
+          ascii: d(-12, -16, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['"order_42"'], sub: 'coder=0 (1B)' }),
+          cjk: d(-12, -2, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['"Xin chào"'], sub: 'coder=1 (2B)' }),
+          arr: b(4, -9, { r: 2.2, h: 48, color: 'blue', label: ['byte[] Array'], sub: 'Compact Str' }),
           card: S({ x: -12, y: 12 }, '4. Why JDK 9+ Strings Use Half the Memory', [
             '// Java 8:  private final char[] value; (always 2B/char)',
             '// Java 9+: private final byte[] value; private final byte coder;',
@@ -147,8 +147,8 @@ export const javaStringInternalsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          as_hp: h('ascii', 'heap', ['ascii', 'heap'], { heads: 'end', label: '1B/char' }),
-          cj_hp: h('cjk', 'heap', ['cjk', 'heap'], { heads: 'end', label: '2B/char' }),
+          as_hp: h('ascii', 'arr', ['ascii', 'arr'], { heads: 'end', label: '1B/char' }),
+          cj_hp: h('cjk', 'arr', ['cjk', 'arr'], { heads: 'end', label: '2B/char' }),
         },
         flows: [{ route: ['as_hp'], kind: 'res', rate: 1.9 }, { route: ['cj_hp'], kind: 'req', rate: 1.5 }],
       },
@@ -169,9 +169,9 @@ export const javaStringInternalsLesson: Lesson = {
       metrics: { backing_array: 'Presized byte[]', pool_region: 'Eden TLAB', concat_op: 'invokedynamic', heap_cost: 'O(n) vs O(n^2)' },
       scene: {
         entities: {
-          loop: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['for (s += x)'], sub: 'O(n^2) copies' }),
-          sb: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['StringBuilder'], sub: 'O(n) buffer' }),
-          scf: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['ConcatFactory'], sub: 'invokedynamic' }),
+          loop: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['for (s += x)'], sub: 'O(n^2) copies' }),
+          sb: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['StringBuilder'], sub: 'O(n) buffer' }),
+          scf: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['ConcatFactory'], sub: 'invokedynamic' }),
           card: S({ x: -12, y: 12 }, '5. Loop Concatenation vs StringConcatFactory', [
             '// BAD O(n^2): allocates new StringBuilder every iter!',
             'for (var x : items) out += x;',
@@ -181,7 +181,7 @@ export const javaStringInternalsLesson: Lesson = {
         },
         links: {
           lp_sb: h('loop', 'sb', ['loop', 'sb'], { heads: 'end', label: 'fix -> O(n)' }),
-          sb_sc: h('sb', 'scf', ['sb', 'scf'], { heads: 'end', label: '1-shot indy' }),
+          sb_sc: h('sb', 'scf', ['sb', 'scf'], { heads: 'end', label: 'indy' }),
         },
         flows: [{ route: ['lp_sb', 'sb_sc'], kind: 'res', rate: 1.9 }],
       },
@@ -202,9 +202,9 @@ export const javaStringInternalsLesson: Lesson = {
       metrics: { backing_array: 'Shared byte[]', pool_region: 'G1GC Dedup', concat_op: 'Background GC', heap_cost: 'Zero dup bytes' },
       scene: {
         entities: {
-          s1: d(-12, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['String #1'], sub: 'JSON parse 1' }),
+          s1: d(-12, -16, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['String #1'], sub: 'JSON parse 1' }),
           s2: d(-12, -2, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['String #2'], sub: 'JSON parse 2' }),
-          arr: b(4, -8, { r: 2.3, h: 50, color: 'green', label: ['1 Shared byte[]'], sub: 'G1 Dedup' }),
+          arr: b(4, -9, { r: 2.3, h: 50, color: 'green', label: ['1 Shared byte[]'], sub: 'G1 Dedup' }),
           card: S({ x: -12, y: 12 }, '6. G1GC Automatic String Deduplication', [
             '-XX:+UseG1GC -XX:+UseStringDeduplication',
             '// s1 != s2 (distinct String wrappers)',

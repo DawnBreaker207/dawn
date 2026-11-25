@@ -11,7 +11,7 @@ import {
 
 export const angularSignalsDagLesson = {
   id: 'angular-signals-dag',
-  title: 'Signals Reactive Graph: Push-Pull & Glitch-Free DAG',
+  title: 'Signals & Push-Pull DAG',
   summary: 'Understand the Angular Signals reactive algorithm. Trace how signal producers notify consumers via push notifications, and how computed values pull dependencies lazily with glitch-free dynamic DAG tracking.',
   minutes: 25,
   level: 'advanced',

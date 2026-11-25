@@ -10,7 +10,7 @@ import {
 
 export const angularReactiveFormsLesson = {
   id: 'angular-reactive-forms',
-  title: 'Typed Reactive Forms, Validators & ControlValueAccessor',
+  title: 'Reactive Forms & CVA',
   summary: 'Master enterprise Angular forms: strictly Typed Reactive Forms (NonNullableFormBuilder, FormGroup, FormArray), Sync & Async Validators with RxJS debouncing, valueChanges/statusChanges streams, and ControlValueAccessor (CVA) for reusable custom form controls.',
   minutes: 30,
   level: 'intermediate',

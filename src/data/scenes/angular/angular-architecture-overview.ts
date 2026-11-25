@@ -10,7 +10,7 @@ import {
 
 export const angularArchitectureOverviewLesson = {
   id: 'angular-architecture-overview',
-  title: 'Bootstrap, Standalone & Component Tree',
+  title: 'Bootstrap & Component Tree',
   summary: 'Trace modern Angular from legacy NgModule bloat vs Standalone tree-shaking, through main.ts bootstrapApplication, Platform & Environment Injectors, ApplicationRef, to the Hierarchical Component Tree & isStable.',
   minutes: 30,
   level: 'beginner',

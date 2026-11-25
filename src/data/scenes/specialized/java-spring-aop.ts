@@ -42,8 +42,8 @@ export const javaSpringAopLesson: Lesson = {
       metrics: { proxy_layer: 'None', tx_status: 'AutoCommit', jdbc_conn: 'Direct', pitfall: 'Boilerplate' },
       scene: {
         entities: {
-          caller: d(-12, -8, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Controller'], sub: 'calls service' }),
-          target: d(4, -8, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'raw target' }),
+          caller: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Controller'], sub: 'calls service' }),
+          target: d(2, -6, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'raw target' }),
           card: S({ x: -12, y: 12 }, '1. Without AOP Proxy', [
             '// Without AOP: transaction boilerplate everywhere',
             'conn.setAutoCommit(false);',
@@ -73,9 +73,9 @@ export const javaSpringAopLesson: Lesson = {
       metrics: { proxy_layer: 'CGLIB Proxy', tx_status: 'Intercepted', jdbc_conn: 'Managed', pitfall: 'No final' },
       scene: {
         entities: {
-          caller: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Controller'], sub: 'holds proxy' }),
-          proxy: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CGLIB Proxy'], sub: '$$SpringCGLIB' }),
-          target: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Target Bean'], sub: 'real method' }),
+          caller: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Controller'], sub: 'holds proxy' }),
+          proxy: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CGLIB Proxy'], sub: '$$SpringCGLIB' }),
+          target: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Target Bean'], sub: 'real method' }),
           card: S({ x: -12, y: 12 }, '2. Spring Boot Proxy Generation', [
             '// Default in Spring Boot: proxyTargetClass = true',
             'OrderService$$SpringCGLIB extends OrderService',
@@ -105,9 +105,9 @@ export const javaSpringAopLesson: Lesson = {
       metrics: { proxy_layer: 'Advice Chain', tx_status: 'Wrapped', jdbc_conn: 'Managed', pitfall: 'Order matters' },
       scene: {
         entities: {
-          px: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AOP Proxy'], sub: 'entry' }),
-          adv: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['@Around Advice'], sub: 'pjp.proceed()' }),
-          target: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Target Bean'], sub: 'executes' }),
+          px: d(-14, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AOP Proxy'], sub: 'entry' }),
+          adv: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['@Around Advice'], sub: 'pjp.proceed()' }),
+          target: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Target Bean'], sub: 'executes' }),
           card: S({ x: -12, y: 12 }, '3. @Around Aspect Execution', [
             '@Around("@annotation(Timed)")',
             'Object measure(ProceedingJoinPoint pjp) throws Throwable {',
@@ -139,9 +139,9 @@ export const javaSpringAopLesson: Lesson = {
       metrics: { proxy_layer: 'TxInterceptor', tx_status: 'ACTIVE', jdbc_conn: 'ThreadLocal', pitfall: 'Hold conn long' },
       scene: {
         entities: {
-          tx: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TxInterceptor'], sub: 'autoCommit=0' }),
-          target: d(0, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'shared conn' }),
-          db: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['Postgres DB'], sub: 'BEGIN TX' }),
+          tx: d(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TxInterceptor'], sub: 'autoCommit=0' }),
+          target: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'shared conn' }),
+          db: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['Postgres DB'], sub: 'BEGIN TX' }),
           card: S({ x: -12, y: 12 }, '4. Opening Declarative Transaction', [
             '@Transactional(propagation = Propagation.REQUIRED)',
             'public void placeOrder(OrderReq req) {',
@@ -207,9 +207,9 @@ export const javaSpringAopLesson: Lesson = {
       metrics: { proxy_layer: 'BYPASSED!', tx_status: 'No TX started', jdbc_conn: 'AutoCommit', pitfall: 'Self-call' },
       scene: {
         entities: {
-          px: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AOP Proxy'], sub: 'bypassed!' }),
-          mA: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['this.methodA'], sub: 'raw target' }),
-          mB: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['this.methodB'], sub: '@Tx ignored!' }),
+          px: d(-14, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AOP Proxy'], sub: 'bypassed!' }),
+          mA: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['this.methodA'], sub: 'raw target' }),
+          mB: d(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['this.methodB'], sub: '@Tx ignored!' }),
           card: S({ x: -12, y: 12 }, '6. Self-Invocation Bypasses the Proxy', [
             'public void methodA() {',
             '  this.methodB(); // "this" is raw target, NOT proxy!',
@@ -241,9 +241,9 @@ export const javaSpringAopLesson: Lesson = {
       metrics: { proxy_layer: 'TxInterceptor', tx_status: 'rollbackOnly!', jdbc_conn: '1 Shared', pitfall: 'UnexpectedRlbk' },
       scene: {
         entities: {
-          outer: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Outer @Tx'], sub: 'catches ex' }),
-          inner: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Inner @Tx'], sub: 'throws Runtime' }),
-          db: b(14, -10, { r: 2.2, h: 48, color: 'red', label: ['RollbackOnly'], sub: 'UnexpectedEx' }),
+          outer: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Outer @Tx'], sub: 'catches ex' }),
+          inner: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Inner @Tx'], sub: 'throws Runtime' }),
+          db: b(0, 0, { r: 2.2, h: 48, color: 'red', label: ['RollbackOnly'], sub: 'UnexpectedEx' }),
           card: S({ x: -12, y: 12 }, '7. Propagation.REQUIRED Shared Rollback', [
             '// Outer REQUIRED + Inner REQUIRED = 1 shared TX!',
             'try { innerService.riskyOp(); } catch (Exception ignored) {}',
@@ -274,9 +274,9 @@ export const javaSpringAopLesson: Lesson = {
       metrics: { proxy_layer: 'REQUIRES_NEW', tx_status: '2 TX / thread', jdbc_conn: 'Pool Starve!', pitfall: '30s timeout' },
       scene: {
         entities: {
-          th: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['10 Callers'], sub: 'hold 10 conns' }),
-          pool: b(0, -10, { r: 2.2, h: 48, color: 'red', label: ['HikariCP (10)'], sub: '0 free conns!' }),
-          wait: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['30s Timeout'], sub: 'pool deadlock' }),
+          th: d(-14, 0, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['10 Callers'], sub: 'hold 10 conns' }),
+          pool: b(-14, -14, { r: 2.2, h: 48, color: 'red', label: ['HikariCP (10)'], sub: '0 free conns!' }),
+          wait: d(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['30s Timeout'], sub: 'pool deadlock' }),
           card: S({ x: -12, y: 12 }, '8. Why REQUIRES_NEW Deadlocks Small Pools', [
             '@Transactional(propagation = Propagation.REQUIRES_NEW)',
             '// Suspends conn #1 -> needs conn #2 from HikariCP!',

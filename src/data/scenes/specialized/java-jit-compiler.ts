@@ -40,8 +40,8 @@ export const javaJitCompilerLesson: Lesson = {
       metrics: { exec_tier: 'Tier 0 Interp', call_profile: 'Counting hits', allocation: 'Heap normal', tricky_effect: 'Slow warmup' },
       scene: {
         entities: {
-          bc: d(-12, -8, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['.class Op'], sub: 'cold bytecode' }),
-          intp: d(4, -8, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Interpreter'], sub: 'count++ loops' }),
+          bc: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['.class Op'], sub: 'cold bytecode' }),
+          intp: d(2, -6, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Interpreter'], sub: 'count++ loops' }),
           card: S({ x: -12, y: 12 }, '1. Why First-Run Benchmarks Lie', [
             '// First 100 calls run in Tier 0 Bytecode Interpreter:',
             'for (int i = 0; i < 100; i++) sum(a, b); // ~10x slower!',
@@ -70,9 +70,9 @@ export const javaJitCompilerLesson: Lesson = {
       metrics: { exec_tier: 'Tier 3/4 C1->C2', call_profile: 'Hot >10k', allocation: 'CodeCache', tricky_effect: 'OSR mid-loop' },
       scene: {
         entities: {
-          intp: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Interpreter'], sub: '10k+ hits' }),
-          c1: d(0, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['C1 Compiler'], sub: 'fast + profile' }),
-          c2: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['C2 CodeCache'], sub: 'peak x86/ARM' }),
+          intp: d(-12, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Interpreter'], sub: '10k+ hits' }),
+          c1: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['C1 Compiler'], sub: 'fast + profile' }),
+          c2: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['C2 CodeCache'], sub: 'peak x86/ARM' }),
           card: S({ x: -12, y: 12 }, '2. HotSpot Tiered Compilation Pipeline', [
             '// Tier 0: Interpreter -> Tier 3: C1 (profiling)',
             '// Tier 4: C2 (aggressive inlining, loop unrolling)',
@@ -102,9 +102,9 @@ export const javaJitCompilerLesson: Lesson = {
       metrics: { exec_tier: 'C2 Inlined', call_profile: '<=325B byte', allocation: 'Zero frame', tricky_effect: 'Giant method' },
       scene: {
         entities: {
-          caller: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Hot Caller'], sub: 'totalPrice()' }),
-          get: d(0, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['getPrice()'], sub: '8B bytecode' }),
-          inl: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['Inlined Body'], sub: '0 call hops' }),
+          caller: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Hot Caller'], sub: 'totalPrice()' }),
+          get: d(0, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['getPrice()'], sub: '8B bytecode' }),
+          c2: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['Inlined Body'], sub: '0 call hops' }),
           card: S({ x: -12, y: 12 }, '3. Why Small Methods Run Faster in Java', [
             '// Before C2: caller -> CALL getPrice() -> RET',
             '// After C2 Inlining: direct CPU register load!',
@@ -113,7 +113,7 @@ export const javaJitCompilerLesson: Lesson = {
         },
         links: {
           cl_gt: h('caller', 'get', ['caller', 'get'], { heads: 'end', label: 'hot <=325B' }),
-          gt_in: h('get', 'inl', ['get', 'inl'], { heads: 'end', label: 'paste inline' }),
+          gt_in: h('get', 'c2', ['get', 'c2'], { heads: 'end', label: 'paste inline' }),
         },
         flows: [{ route: ['cl_gt', 'gt_in'], kind: 'res', rate: 2.1 }],
       },
@@ -134,9 +134,9 @@ export const javaJitCompilerLesson: Lesson = {
       metrics: { exec_tier: 'C2 Scalar', call_profile: 'NoEscape', allocation: '0B Heap / 0 GC', tricky_effect: 'Lock elision' },
       scene: {
         entities: {
-          nw: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['new Point(x,y)'], sub: 'local only' }),
-          ea: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['EscapeCheck'], sub: 'NoEscape!' }),
-          reg: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['CPU Registers'], sub: '0B Heap alloc' }),
+          nw: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['new Point(x,y)'], sub: 'local only' }),
+          c2: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['EscapeCheck'], sub: 'NoEscape!' }),
+          reg: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['CPU Registers'], sub: '0B Heap alloc' }),
           card: S({ x: -12, y: 12 }, '4. Scalar Replacement Eliminates Heap Alloc', [
             'int distSq(int x, int y) {',
             '  Point p = new Point(x, y); // NoEscape!',
@@ -145,8 +145,8 @@ export const javaJitCompilerLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          nw_ea: h('nw', 'ea', ['nw', 'ea'], { heads: 'end', label: 'analyze' }),
-          ea_rg: h('ea', 'reg', ['ea', 'reg'], { heads: 'end', label: 'scalarize' }),
+          nw_ea: h('nw', 'c2', ['nw', 'c2'], { heads: 'end', label: 'analyze' }),
+          ea_rg: h('c2', 'reg', ['c2', 'reg'], { heads: 'end', label: 'scalarize' }),
         },
         flows: [{ route: ['nw_ea', 'ea_rg'], kind: 'res', rate: 2.1 }],
       },
@@ -167,9 +167,9 @@ export const javaJitCompilerLesson: Lesson = {
       metrics: { exec_tier: 'C2 Dispatch', call_profile: '3+ Impls', allocation: 'No inline', tricky_effect: 'Megamorphic' },
       scene: {
         entities: {
-          mono: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['1-2 Impls'], sub: 'Mono/Bimorphic' }),
-          mega: d(0, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['3+ Impls'], sub: 'Megamorphic!' }),
-          vt: b(14, -10, { r: 2.2, h: 48, color: 'amber', label: ['itable Jump'], sub: 'cannot inline' }),
+          c2: d(-12, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['1-2 Impls'], sub: 'Mono/Bimorphic' }),
+          mega: d(2, -16, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['3+ Impls'], sub: 'Megamorphic!' }),
+          vt: b(2, -2, { r: 2.2, h: 48, color: 'amber', label: ['itable Jump'], sub: 'cannot inline' }),
           card: S({ x: -12, y: 12 }, '5. Virtual Callsite Inline Cache States', [
             '// 1 impl (Monomorphic):  inlined + 1-cycle guard',
             '// 2 impls (Bimorphic):   inlined if/else',
@@ -177,8 +177,8 @@ export const javaJitCompilerLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          mn_mg: h('mono', 'mega', ['mono', 'mega'], { heads: 'end', label: 'add 3rd impl' }),
-          mg_vt: h('mega', 'vt', ['mega', 'vt'], { heads: 'end', label: 'vtable miss' }),
+          mn_mg: h('c2', 'mega', ['c2', 'mega'], { heads: 'end', label: 'add 3rd' }),
+          mg_vt: h('mega', 'vt', ['mega', 'vt'], { heads: 'end', label: 'vtable' }),
         },
         flows: [{ route: ['mn_mg', 'mg_vt'], kind: 'fail', rate: 1.7 }],
       },
@@ -199,9 +199,9 @@ export const javaJitCompilerLesson: Lesson = {
       metrics: { exec_tier: 'Deopt -> Tier 0', call_profile: 'Re-profiled', allocation: 'Safe frame', tricky_effect: 'Uncommon trap' },
       scene: {
         entities: {
-          c2: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['C2 Speculative'], sub: 'guard != null' }),
-          trap: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['Uncommon Trap'], sub: 'null arrived!' }),
-          intp: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Interpreter'], sub: 'safe fallback' }),
+          c2: d(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['C2 Speculative'], sub: 'guard != null' }),
+          trap: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['Uncommon Trap'], sub: 'null arrived!' }),
+          intp: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Interpreter'], sub: 'safe fallback' }),
           card: S({ x: -12, y: 12 }, '6. Speculative Guard & Safe Deoptimization', [
             '// C2 bets: branch "if (rareFlag)" was never taken',
             '// When rareFlag becomes true -> Uncommon Trap!',

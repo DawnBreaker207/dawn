@@ -42,8 +42,8 @@ export const javaSpringMvcLesson: Lesson = {
       metrics: { stage: 'Servlet Socket', container: 'Tomcat NIO', validation: 'None', response: 'Pending' },
       scene: {
         entities: {
-          client: d(-12, -8, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['HTTP Client'], sub: 'POST /orders' }),
-          tomcat: d(4, -8, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Req' }),
+          client: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['HTTP Client'], sub: 'POST /orders' }),
+          tomcat: d(2, -6, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Req' }),
           card: S({ x: -12, y: 12 }, '1. Incoming HTTP Request at Tomcat', [
             'POST /api/orders HTTP/1.1',
             'Content-Type: application/json',
@@ -73,9 +73,9 @@ export const javaSpringMvcLesson: Lesson = {
       metrics: { stage: 'FilterChain', container: 'Servlet Spec', validation: 'CORS / Auth', response: 'Pass-through' },
       scene: {
         entities: {
-          tomcat: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Req' }),
-          flt: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['FilterChain'], sub: 'CORS / Auth' }),
-          disp: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'Front Ctrl' }),
+          tomcat: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Req' }),
+          flt: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['FilterChain'], sub: 'CORS / Auth' }),
+          disp: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'Front Ctrl' }),
           card: S({ x: -12, y: 12 }, '2. Servlet Filter Wrapping', [
             'public void doFilter(ServletRequest req,',
             '                     ServletResponse res, FilterChain ch) {',
@@ -107,9 +107,9 @@ export const javaSpringMvcLesson: Lesson = {
       metrics: { stage: 'HandlerMapping', container: 'Spring MVC', validation: 'Route match', response: '404 if miss' },
       scene: {
         entities: {
-          disp: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'Front Ctrl' }),
-          map: b(0, -10, { r: 2.2, h: 48, color: 'sky', label: ['HandlerMap'], sub: 'POST /orders' }),
-          chain: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['ExecChain'], sub: 'Ctrl + Intrcpt' }),
+          disp: d(-14, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'Front Ctrl' }),
+          map: b(-14, -14, { r: 2.2, h: 48, color: 'sky', label: ['HandlerMap'], sub: 'POST /orders' }),
+          chain: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['ExecChain'], sub: 'Ctrl + Intrcpt' }),
           card: S({ x: -12, y: 12 }, '3. Matching Route to HandlerMethod', [
             '@RestController @RequestMapping("/api/orders")',
             'class OrderController {',
@@ -141,9 +141,9 @@ export const javaSpringMvcLesson: Lesson = {
       metrics: { stage: 'Interceptor', container: 'Spring MVC', validation: 'Policy check', response: 'Continue' },
       scene: {
         entities: {
-          disp: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'exec chain' }),
-          intr: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Interceptor'], sub: 'preHandle()' }),
-          adp: d(14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['HandlerAdapter'], sub: 'ready invoke' }),
+          disp: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'exec chain' }),
+          intr: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Interceptor'], sub: 'preHandle()' }),
+          adp: d(0, 0, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['HandlerAdapter'], sub: 'ready invoke' }),
           card: S({ x: -12, y: 12 }, '4. Spring HandlerInterceptor', [
             'boolean preHandle(HttpServletRequest req,',
             '                  HttpServletResponse res, Object handler) {',
@@ -175,9 +175,9 @@ export const javaSpringMvcLesson: Lesson = {
       metrics: { stage: 'ArgResolver', container: 'Jackson + JSR', validation: '@Valid DTO', response: 'Invoke Ctrl' },
       scene: {
         entities: {
-          adp: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['ArgResolver'], sub: 'Jackson JSON' }),
-          val: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['@Valid Check'], sub: '@NotNull @Min' }),
-          ctrl: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Controller'], sub: 'create(dto)' }),
+          adp: d(-14, 0, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['ArgResolver'], sub: 'Jackson JSON' }),
+          val: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['@Valid Check'], sub: '@NotNull @Min' }),
+          ctrl: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Controller'], sub: 'create(dto)' }),
           card: S({ x: -12, y: 12 }, '5. Deserialization & @Valid Enforcement', [
             'record OrderReq(@NotNull Long itemId, @Min(1) int qty) {}',
             '// 1. MappingJackson2HttpMessageConverter reads JSON',
@@ -275,9 +275,9 @@ export const javaSpringMvcLesson: Lesson = {
       metrics: { stage: 'Backpressure', container: 'Netty Reactive', validation: 'limitRate(64)', response: 'SSE / Gateway' },
       scene: {
         entities: {
-          cons: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Slow Consumer'], sub: 'request(64)' }),
-          sub: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['Subscription'], sub: 'demand = 64' }),
-          prod: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Fast Producer'], sub: 'emits <= 64' }),
+          cons: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Slow Consumer'], sub: 'request(64)' }),
+          sub: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['Subscription'], sub: 'demand = 64' }),
+          prod: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Fast Producer'], sub: 'emits <= 64' }),
           card: S({ x: -12, y: 12 }, '8. Reactive Streams Demand & Backpressure', [
             'eventFlux.limitRate(64)',
             '  .flatMap(ev -> webClient.post().bodyValue(ev)...);',

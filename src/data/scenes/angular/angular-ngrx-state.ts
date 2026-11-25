@@ -10,7 +10,7 @@ import {
 
 export const angularNgrxStateLesson = {
   id: 'angular-ngrx-state',
-  title: 'NgRx State Architecture: Store/Effects vs SignalStore',
+  title: 'NgRx Store vs SignalStore',
   summary: 'Master enterprise Angular state management with NgRx: unidirectional Redux data flow (Action -> Reducer -> Store -> Memoized Selector), RxJS Effects for async side-effects, and modern @ngrx/signals SignalStore with rxMethod.',
   minutes: 30,
   level: 'advanced',

@@ -11,7 +11,7 @@ import {
 
 export const angularServicesDiLesson = {
   id: 'angular-services-di',
-  title: 'Services, Hierarchical DI & Functional inject()',
+  title: 'Hierarchical DI & inject()',
   summary: 'Master Angular’s Dual-Tree Hierarchical Injector (EnvironmentInjector vs NodeInjector), resolution flags (@Self, @SkipSelf, @Optional, @Host), and modern functional inject().',
   minutes: 25,
   level: 'advanced',

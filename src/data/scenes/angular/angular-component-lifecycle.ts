@@ -11,7 +11,7 @@ import {
 
 export const angularComponentLifecycleLesson = {
   id: 'angular-component-lifecycle',
-  title: 'Component & Directive Lifecycle Pipeline',
+  title: 'Component Lifecycle Hooks',
   summary: 'Follow the execution order of all 8 Angular lifecycle hooks: constructor, ngOnChanges, ngOnInit, ngAfterContentInit, ngAfterViewInit, down to ngOnDestroy.',
   minutes: 25,
   level: 'intermediate',

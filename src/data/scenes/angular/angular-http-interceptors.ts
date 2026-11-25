@@ -11,7 +11,7 @@ import {
 
 export const angularHttpInterceptorsLesson = {
   id: 'angular-http-interceptors',
-  title: 'HTTP Interceptors Pipeline & Request Cloning',
+  title: 'HTTP Interceptors & Cloning',
   summary: 'Trace the Middleware Chain of Responsibility: immutable request cloning (req.clone()), injecting JWT Bearer tokens, exponential backoff retries, and functional withInterceptors().',
   minutes: 25,
   level: 'advanced',

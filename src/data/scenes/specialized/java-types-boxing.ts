@@ -42,8 +42,8 @@ export const javaTypesBoxingLesson: Lesson = {
       metrics: { memory_slot: '4B vs 16B Heap', equality_rule: 'Value vs Ref', precision: 'Exact int', tricky_bug: 'Memory bloat' },
       scene: {
         entities: {
-          prim: d(-12, -8, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['int x = 42'], sub: '4B on Stack' }),
-          wrap: b(4, -8, { r: 2.2, h: 48, color: 'amber', label: ['Integer'], sub: '16B Heap obj' }),
+          prim: d(-12, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['int x = 42'], sub: '4B on Stack' }),
+          wrap: b(2, -6, { r: 2.2, h: 48, color: 'amber', label: ['Integer'], sub: '16B Heap obj' }),
           card: S({ x: -12, y: 12 }, '1. Primitive vs Boxed Wrapper Layout', [
             'int a = 42;            // 4 bytes raw value on Stack',
             'Integer b = 42;        // Heap Object: 12B Header + 4B int',
@@ -72,9 +72,10 @@ export const javaTypesBoxingLesson: Lesson = {
       metrics: { memory_slot: 'IntegerCache', equality_rule: '== checks ref!', precision: 'Exact int', tricky_bug: '128 == 128 false' },
       scene: {
         entities: {
-          cache: b(-14, -10, { r: 2.2, h: 48, color: 'green', label: ['IntegerCache'], sub: '-128 .. 127' }),
-          a127: d(0, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['127 == 127'], sub: 'same ref: true' }),
-          a128: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['128 == 128'], sub: 'diff ref' }),
+          prim: d(-12, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['valueOf(int)'], sub: 'autoboxing' }),
+          cache: b(-12, -2, { r: 2.2, h: 48, color: 'green', label: ['IntegerCache'], sub: '-128 .. 127' }),
+          a127: d(4, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['127 == 127'], sub: 'same ref: true' }),
+          a128: d(4, -2, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['128 == 128'], sub: 'diff ref' }),
           card: S({ x: -12, y: 12 }, '2. Why Integer.valueOf() Caches -128..127', [
             'Integer a = 127, b = 127; // valueOf(127) -> cached!',
             'a == b;      // true  (same object in IntegerCache)',
@@ -83,10 +84,11 @@ export const javaTypesBoxingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ch_127: h('cache', 'a127', ['cache', 'a127'], { heads: 'end', label: 'cached ref' }),
-          a127_128: h('a127', 'a128', ['a127', 'a128'], { heads: 'end', label: 'bypass >127' }),
+          pr_ch: h('prim', 'cache', ['prim', 'cache'], { heads: 'end', label: 'cache' }),
+          ch_127: h('cache', 'a127', ['cache', 'a127'], { heads: 'end', label: 'hit' }),
+          ch_128: h('cache', 'a128', ['cache', 'a128'], { heads: 'end', label: 'miss -> new' }),
         },
-        flows: [{ route: ['ch_127'], kind: 'res', rate: 1.9 }, { route: ['a127_128'], kind: 'fail', rate: 1.4 }],
+        flows: [{ route: ['pr_ch', 'ch_127'], kind: 'res', rate: 1.9 }, { route: ['ch_128'], kind: 'fail', rate: 1.4 }],
       },
     },
     {
@@ -105,9 +107,9 @@ export const javaTypesBoxingLesson: Lesson = {
       metrics: { memory_slot: '1M Heap objs', equality_rule: '.intValue()', precision: 'N/A', tricky_bug: 'Silent NPE' },
       scene: {
         entities: {
-          loop: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Long sum += i'], sub: 'boxes / iter' }),
-          unbox: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['intValue()'], sub: 'hidden unbox' }),
-          npe: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Throw NPE'], sub: 'if null -> NPE' }),
+          loop: d(-12, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Long sum += i'], sub: 'boxes / iter' }),
+          wrap: b(2, -16, { r: 2.2, h: 48, color: 'amber', label: ['1M Heap Longs'], sub: 'GC churn' }),
+          npe: d(2, -2, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Throw NPE'], sub: 'if null -> NPE' }),
           card: S({ x: -12, y: 12 }, '3. Two Classic Autoboxing Traps', [
             'Long sum = 0L; // BUG: use primitive long sum = 0L!',
             'for (long i = 0; i < 1_000_000; i++) sum += i;',
@@ -116,10 +118,10 @@ export const javaTypesBoxingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          lp_ub: h('loop', 'unbox', ['loop', 'unbox'], { heads: 'end', label: 'unbox/box' }),
-          ub_np: h('unbox', 'npe', ['unbox', 'npe'], { heads: 'end', label: 'null -> NPE' }),
+          lp_wr: h('loop', 'wrap', ['loop', 'wrap'], { heads: 'end', label: 'box 1M' }),
+          lp_np: h('loop', 'npe', ['loop', 'npe'], { heads: 'end', label: 'null unbox' }),
         },
-        flows: [{ route: ['lp_ub', 'ub_np'], kind: 'fail', rate: 1.8 }],
+        flows: [{ route: ['lp_wr'], kind: 'fail', rate: 1.8 }, { route: ['lp_np'], kind: 'fail', rate: 1.5 }],
       },
     },
     {
@@ -138,9 +140,9 @@ export const javaTypesBoxingLesson: Lesson = {
       metrics: { memory_slot: 'BigDecimal', equality_rule: 'compareTo()==0', precision: 'Exact base-10', tricky_bug: 'new BD(0.1)' },
       scene: {
         entities: {
-          dbl: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['double 0.1'], sub: 'binary drift' }),
-          bd: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BigDecimal'], sub: 'String ctor' }),
-          scale: b(14, -10, { r: 2.2, h: 48, color: 'blue', label: ['int + scale'], sub: '10 * 10^-2' }),
+          dbl: d(-12, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['double 0.1'], sub: 'binary drift' }),
+          bd: d(-12, -2, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BigDecimal'], sub: 'String ctor' }),
+          scale: b(4, -8, { r: 2.2, h: 48, color: 'blue', label: ['int + scale'], sub: '10 * 10^-2' }),
           card: S({ x: -12, y: 12 }, '4. Exact Financial Math with BigDecimal', [
             '0.1 + 0.2; // 0.30000000000000004 (IEEE-754 binary)',
             'new BigDecimal(0.1);    // BAD: 0.10000000000000000555...',
@@ -149,8 +151,8 @@ export const javaTypesBoxingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          db_bd: h('dbl', 'bd', ['dbl', 'bd'], { heads: 'end', label: 'fix drift' }),
-          bd_sc: h('bd', 'scale', ['bd', 'scale'], { heads: 'end', label: 'unscaled' }),
+          db_bd: h('dbl', 'bd', ['dbl', 'bd'], { heads: 'end', label: 'fix' }),
+          bd_sc: h('bd', 'scale', ['bd', 'scale'], { heads: 'end', label: 'exact' }),
         },
         flows: [{ route: ['db_bd', 'bd_sc'], kind: 'res', rate: 1.8 }],
       },
@@ -171,9 +173,9 @@ export const javaTypesBoxingLesson: Lesson = {
       metrics: { memory_slot: 'Erased Object', equality_rule: 'Same .class', precision: 'Compile check', tricky_bug: 'No new T()' },
       scene: {
         entities: {
-          src: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['List<String>'], sub: 'source code' }),
-          jvc: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['javac Eraser'], sub: 'check + erase' }),
-          bc: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['.class Bytecode'], sub: 'Object + cast' }),
+          src: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['List<String>'], sub: 'source code' }),
+          jvc: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['javac Eraser'], sub: 'check + erase' }),
+          bc: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['.class Bytecode'], sub: 'Object + cast' }),
           card: S({ x: -12, y: 12 }, '5. Compile-Time Type Erasure', [
             '// Source:   String s = list.get(0);',
             '// Bytecode: String s = (String) list.get(0); // checkcast',
@@ -182,7 +184,7 @@ export const javaTypesBoxingLesson: Lesson = {
         },
         links: {
           sr_jv: h('src', 'jvc', ['src', 'jvc'], { heads: 'end', label: 'verify <T>' }),
-          jv_bc: h('jvc', 'bc', ['jvc', 'bc'], { heads: 'end', label: 'erase to Obj' }),
+          jv_bc: h('jvc', 'bc', ['jvc', 'bc'], { heads: 'end', label: 'erase' }),
         },
         flows: [{ route: ['sr_jv', 'jv_bc'], kind: 'req', rate: 1.8 }],
       },
@@ -203,9 +205,9 @@ export const javaTypesBoxingLesson: Lesson = {
       metrics: { memory_slot: 'Bridge Method', equality_rule: 'Polymorphic', precision: 'Runtime cast', tricky_bug: 'Reflection dup' },
       scene: {
         entities: {
-          par: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Node<Object>'], sub: 'setData(Obj)' }),
-          brg: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Bridge Method'], sub: 'javac synth' }),
-          cld: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['StrNode'], sub: 'setData(Str)' }),
+          par: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Node<Object>'], sub: 'setData(Obj)' }),
+          jvc: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Bridge Method'], sub: 'javac synth' }),
+          cld: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['StrNode'], sub: 'setData(Str)' }),
           card: S({ x: -12, y: 12 }, '6. Hidden Synthetic Bridge Method', [
             'class StrNode extends Node<String> {',
             '  // Emitted by javac so Node.setData(Object) overrides:',
@@ -216,8 +218,8 @@ export const javaTypesBoxingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pr_br: h('par', 'brg', ['par', 'brg'], { heads: 'end', label: 'override' }),
-          br_cl: h('brg', 'cld', ['brg', 'cld'], { heads: 'end', label: 'cast + call' }),
+          pr_br: h('par', 'jvc', ['par', 'jvc'], { heads: 'end', label: 'override' }),
+          br_cl: h('jvc', 'cld', ['jvc', 'cld'], { heads: 'end', label: 'cast()' }),
         },
         flows: [{ route: ['pr_br', 'br_cl'], kind: 'res', rate: 1.8 }],
       },
@@ -238,9 +240,9 @@ export const javaTypesBoxingLesson: Lesson = {
       metrics: { memory_slot: 'PECS Bounds', equality_rule: 'Invariant', precision: 'Compile-safe', tricky_bug: 'Cant add ext' },
       scene: {
         entities: {
-          prod: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Producer'], sub: '? extends T' }),
-          copier: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Copy Engine'], sub: 'PECS safe' }),
-          cons: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Consumer'], sub: '? super T' }),
+          prod: d(-12, -16, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Producer'], sub: '? extends T' }),
+          cons: d(-12, -2, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Consumer'], sub: '? super T' }),
+          copier: d(4, -9, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Copy Engine'], sub: 'PECS safe' }),
           card: S({ x: -12, y: 12 }, '7. PECS: Producer Extends, Consumer Super', [
             'void copy(List<? super Number> dst,',
             '          List<? extends Number> src) {',
@@ -271,9 +273,9 @@ export const javaTypesBoxingLesson: Lesson = {
       metrics: { memory_slot: 'Type-Safe', equality_rule: 'No raw types', precision: 'Zero cast err', tricky_bug: 'Heap polluted' },
       scene: {
         entities: {
-          raw: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Raw List / T...'], sub: 'pollutes Heap' }),
-          safe: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['List<?> / Safe'], sub: 'compile guard' }),
-          ok: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['Clean Heap'], sub: 'no cast crash' }),
+          raw: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Raw List / T...'], sub: 'pollutes Heap' }),
+          safe: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['List<?> / Safe'], sub: 'compile guard' }),
+          bc: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['Clean Heap'], sub: 'no cast crash' }),
           card: S({ x: -12, y: 12 }, '8. Eliminating Heap Pollution', [
             '// BAD: raw List allows Integer into List<String>!',
             '// GOOD: List<?> rejects unsafe writes at compile time',
@@ -283,7 +285,7 @@ export const javaTypesBoxingLesson: Lesson = {
         },
         links: {
           rw_sf: h('raw', 'safe', ['raw', 'safe'], { heads: 'end', label: 'ban raw' }),
-          sf_ok: h('safe', 'ok', ['safe', 'ok'], { heads: 'end', label: 'type safe' }),
+          sf_ok: h('safe', 'bc', ['safe', 'bc'], { heads: 'end', label: 'safe' }),
         },
         flows: [{ route: ['rw_sf', 'sf_ok'], kind: 'res', rate: 1.9 }],
       },

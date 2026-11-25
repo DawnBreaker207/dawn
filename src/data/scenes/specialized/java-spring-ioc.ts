@@ -40,8 +40,8 @@ export const javaSpringIocLesson: Lesson = {
       metrics: { coupling: 'Tight (new)', lifecycle_phase: 'Manual', bean_scope: 'Unmanaged', proxy_mode: 'None' },
       scene: {
         entities: {
-          svc: d(-12, -8, { s: 4.8, h: 54, color: 'red', glyph: 'code', label: ['OrderService'], sub: 'new Stripe()' }),
-          dep: d(4, -8, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['StripeGateway'], sub: 'hard-wired' }),
+          svc: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'code', label: ['OrderService'], sub: 'new Stripe()' }),
+          dep: d(2, -6, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['StripeGateway'], sub: 'hard-wired' }),
           card: S({ x: -12, y: 12 }, '1. Problem: Tight Coupling via new()', [
             'class OrderService {',
             '  // Hard-wired! Cannot swap or mock cleanly',
@@ -71,9 +71,9 @@ export const javaSpringIocLesson: Lesson = {
       metrics: { coupling: 'Decoupled', lifecycle_phase: 'Scan Metadata', bean_scope: 'Blueprint', proxy_mode: 'None' },
       scene: {
         entities: {
-          scan: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['ComponentScan'], sub: '@Service scan' }),
-          reg: b(0, -10, { r: 2.2, h: 48, color: 'purple', label: ['BeanDef Map'], sub: 'metadata' }),
-          ctx: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['AppContext'], sub: 'IoC container' }),
+          scan: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['ComponentScan'], sub: '@Service scan' }),
+          reg: b(0, -14, { r: 2.2, h: 48, color: 'purple', label: ['BeanDef Map'], sub: 'metadata' }),
+          ctx: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['AppContext'], sub: 'IoC container' }),
           card: S({ x: -12, y: 12 }, '2. Startup: Metadata Before Instantiation', [
             '1. Scan @Component / @Configuration classes',
             '2. Register BeanDefinition (class, scope, deps)',
@@ -103,9 +103,9 @@ export const javaSpringIocLesson: Lesson = {
       metrics: { coupling: 'Interface DI', lifecycle_phase: 'Instantiate', bean_scope: 'Singleton', proxy_mode: 'None' },
       scene: {
         entities: {
-          ctx: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['AppContext'], sub: 'resolves DAG' }),
-          gw: d(0, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['PaymentBean'], sub: 'created 1st' }),
-          svc: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['OrderService'], sub: 'final gw' }),
+          ctx: d(-14, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['AppContext'], sub: 'resolves DAG' }),
+          gw: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['PaymentBean'], sub: 'created 1st' }),
+          svc: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['OrderService'], sub: 'final gw' }),
           card: S({ x: -12, y: 12 }, '3. Constructor Dependency Injection', [
             '@Service',
             'class OrderService {',
@@ -137,9 +137,9 @@ export const javaSpringIocLesson: Lesson = {
       metrics: { coupling: 'Interface DI', lifecycle_phase: 'PostProcess', bean_scope: 'Singleton', proxy_mode: 'AOP hook' },
       scene: {
         entities: {
-          raw: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Raw Bean'], sub: 'deps wired' }),
-          init: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['@PostConstruct'], sub: 'init hook' }),
-          bpp: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['BPP AfterInit'], sub: 'wrap proxy' }),
+          raw: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Raw Bean'], sub: 'deps wired' }),
+          init: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['@PostConstruct'], sub: 'init hook' }),
+          bpp: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['BPP AfterInit'], sub: 'wrap proxy' }),
           card: S({ x: -12, y: 12 }, '4. Bean Initialization Pipeline', [
             '1. Instantiate & inject constructor args',
             '2. BPP.postProcessBeforeInitialization()',
@@ -170,9 +170,9 @@ export const javaSpringIocLesson: Lesson = {
       metrics: { coupling: 'Stateless', lifecycle_phase: 'Cached / New', bean_scope: 'Singleton/Proto', proxy_mode: 'Direct' },
       scene: {
         entities: {
-          ctx: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Singleton Map'], sub: '1 shared bean' }),
-          c1: d(0, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Caller A & B'], sub: 'same ref' }),
-          proto: d(14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Prototype'], sub: 'new each call' }),
+          ctx: d(-14, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Singleton Map'], sub: '1 shared bean' }),
+          c1: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Caller A & B'], sub: 'same ref' }),
+          proto: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Prototype'], sub: 'new each call' }),
           card: S({ x: -12, y: 12 }, '5. Singleton vs Prototype Semantics', [
             '// Default: @Scope("singleton") -> 1 per AppContext',
             '// Must be thread-safe & stateless!',
@@ -203,9 +203,9 @@ export const javaSpringIocLesson: Lesson = {
       metrics: { coupling: 'Scope-Safe', lifecycle_phase: 'Runtime Lookup', bean_scope: 'RequestScope', proxy_mode: 'Scoped CGLIB' },
       scene: {
         entities: {
-          sing: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Singleton Svc'], sub: 'lives forever' }),
-          px: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Scoped Proxy'], sub: 'TARGET_CLASS' }),
-          req: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['RequestCtx'], sub: 'per HTTP req' }),
+          sing: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Singleton Svc'], sub: 'lives forever' }),
+          px: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Scoped Proxy'], sub: 'TARGET_CLASS' }),
+          req: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['RequestCtx'], sub: 'per HTTP req' }),
           card: S({ x: -12, y: 12 }, '6. Bridging Singleton -> Request Scope', [
             '@Component',
             '@RequestScope // proxyMode = ScopedProxyMode.TARGET_CLASS',

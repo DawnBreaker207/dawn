@@ -42,9 +42,9 @@ export const javaSpringJpaLesson: Lesson = {
       metrics: { l1_context: 'Identity Map', sql_queries: '1 SELECT', entity_state: 'Managed', performance: 'L1 hit = 0 SQL' },
       scene: {
         entities: {
-          repo: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['OrderRepo'], sub: 'findById(42)' }),
-          em: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['EntityManager'], sub: 'L1 Cache' }),
-          db: b(14, -10, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: 'SELECT ...' }),
+          repo: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['OrderRepo'], sub: 'findById(42)' }),
+          em: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['EntityManager'], sub: 'L1 Cache' }),
+          db: b(0, 0, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: 'SELECT ...' }),
           card: S({ x: -12, y: 12 }, '1. EntityManager L1 Persistence Context', [
             'Order a = orderRepo.findById(42L).orElseThrow();',
             'Order b = orderRepo.findById(42L).orElseThrow();',
@@ -74,9 +74,9 @@ export const javaSpringJpaLesson: Lesson = {
       metrics: { l1_context: 'Snapshot Diff', sql_queries: 'Deferred', entity_state: 'Dirty', performance: 'RAM snapshot' },
       scene: {
         entities: {
-          em: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['L1 Snapshot'], sub: 'status=NEW' }),
-          ent: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Order Entity'], sub: 'status=PAID' }),
-          diff: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['Dirty Checker'], sub: 'diff detected' }),
+          em: d(-14, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['L1 Snapshot'], sub: 'status=NEW' }),
+          ent: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Order Entity'], sub: 'status=PAID' }),
+          diff: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['Dirty Checker'], sub: 'diff detected' }),
           card: S({ x: -12, y: 12 }, '2. Dirty Checking Without Explicit save()', [
             '@Transactional',
             'public void markPaid(Long id) {',
@@ -108,9 +108,9 @@ export const javaSpringJpaLesson: Lesson = {
       metrics: { l1_context: 'Flushed', sql_queries: 'Batched DML', entity_state: 'Synced', performance: 'Short DB lock' },
       scene: {
         entities: {
-          diff: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['ActionQueue'], sub: 'batched SQL' }),
-          flush: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TX Flush'], sub: 'before commit' }),
-          db: b(14, -10, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: 'UPDATE + CMT' }),
+          diff: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['ActionQueue'], sub: 'batched SQL' }),
+          flush: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TX Flush'], sub: 'before commit' }),
+          db: b(0, 0, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: 'UPDATE + CMT' }),
           card: S({ x: -12, y: 12 }, '3. Write-Behind Flush Order', [
             '// Hibernate flushes ActionQueue in strict order:',
             '// 1. Inserts  2. Updates  3. Collection deletes',
@@ -141,9 +141,9 @@ export const javaSpringJpaLesson: Lesson = {
       metrics: { l1_context: 'Lazy Proxies', sql_queries: '1 + N (101!)', entity_state: 'Proxy hit', performance: 'Slow N+1' },
       scene: {
         entities: {
-          loop: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['for (Order o)'], sub: 'o.getItems()' }),
-          px: d(0, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Lazy Proxy'], sub: '100x triggers' }),
-          db: b(14, -10, { r: 2.2, h: 48, color: 'red', label: ['Postgres DB'], sub: '101 queries!' }),
+          loop: d(-14, 0, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['for (Order o)'], sub: 'o.getItems()' }),
+          px: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Lazy Proxy'], sub: '100x triggers' }),
+          db: b(0, -14, { r: 2.2, h: 48, color: 'red', label: ['Postgres DB'], sub: '101 queries!' }),
           card: S({ x: -12, y: 12 }, '4. The N+1 Query Explosion', [
             'List<Order> orders = repo.findAll(); // 1 SQL query',
             'for (Order o : orders) {',
@@ -174,9 +174,9 @@ export const javaSpringJpaLesson: Lesson = {
       metrics: { l1_context: 'Hydrated', sql_queries: '1 JOIN SQL', entity_state: 'Eager graph', performance: '100x faster' },
       scene: {
         entities: {
-          repo: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['@EntityGraph'], sub: 'JOIN FETCH' }),
-          em: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['EntityManager'], sub: 'hydrate all' }),
-          db: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['Postgres DB'], sub: '1 JOIN query' }),
+          repo: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['@EntityGraph'], sub: 'JOIN FETCH' }),
+          em: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['EntityManager'], sub: 'hydrate all' }),
+          db: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['Postgres DB'], sub: '1 JOIN query' }),
           card: S({ x: -12, y: 12 }, '5. Collapsing N+1 into 1 Query', [
             '@EntityGraph(attributePaths = "items")',
             '@Query("SELECT o FROM Order o WHERE o.status = :st")',
@@ -207,9 +207,9 @@ export const javaSpringJpaLesson: Lesson = {
       metrics: { l1_context: 'Bypassed', sql_queries: 'Slim SELECT', entity_state: 'Read-only DTO', performance: 'Optimal RAM' },
       scene: {
         entities: {
-          repo: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Query DTO'], sub: 'new OrderView' }),
-          db: b(0, -10, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: '2 cols only' }),
-          dto: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['OrderView'], sub: 'no L1 snapshot' }),
+          repo: d(-14, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Query DTO'], sub: 'new OrderView' }),
+          db: b(-14, -14, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: '2 cols only' }),
+          dto: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['OrderView'], sub: 'no L1 snapshot' }),
           card: S({ x: -12, y: 12 }, '6. Fast Read-Only Record Projection', [
             'public record OrderView(Long id, BigDecimal total) {}',
             '@Query("SELECT new com.app.OrderView(o.id, o.total) FROM Order o")',
@@ -240,9 +240,9 @@ export const javaSpringJpaLesson: Lesson = {
       metrics: { l1_context: 'Safe @Entity', sql_queries: 'No Cartesian', entity_state: 'Proxy safe', performance: 'Zero StackOvf' },
       scene: {
         entities: {
-          data: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Lombok @Data'], sub: 'id null -> 1L' }),
-          set: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['HashSet Lost'], sub: 'hash changed!' }),
-          fix: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Safe @Entity'], sub: 'const hashCode' }),
+          data: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Lombok @Data'], sub: 'id null -> 1L' }),
+          set: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['HashSet Lost'], sub: 'hash changed!' }),
+          fix: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Safe @Entity'], sub: 'const hashCode' }),
           card: S({ x: -12, y: 12 }, '7. Safe JPA @Entity Equals & HashCode', [
             '// NEVER @Data on @Entity! Use @Getter @Setter instead:',
             '@Override public boolean equals(Object o) {',

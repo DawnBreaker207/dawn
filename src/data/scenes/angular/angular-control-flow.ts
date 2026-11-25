@@ -10,7 +10,7 @@ import {
 
 export const angularControlFlowLesson = {
   id: 'angular-control-flow',
-  title: 'Modern Template Engine: Control Flow, @defer & Pipes',
+  title: 'Control Flow, @defer & Pipes',
   summary: 'Master modern Angular templates: built-in @if type narrowing, @for mandatory track & @empty, @switch jump tables, Pure vs Impure Pipe === memoization & AsyncPipe, and @defer code-splitting with viewport/hover/idle triggers & prefetching.',
   minutes: 35,
   level: 'intermediate',

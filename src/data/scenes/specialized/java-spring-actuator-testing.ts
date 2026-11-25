@@ -73,9 +73,9 @@ export const javaSpringActuatorTestingLesson: Lesson = {
       metrics: { ops_endpoint: '/prometheus', probe_state: 'Exporting', test_speed: 'N/A', context_cache: 'Observability' },
       scene: {
         entities: {
-          app: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Spring App'], sub: '@Observed HTTP' }),
-          mic: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Micrometer'], sub: 'MeterRegistry' }),
-          prom: b(14, -10, { r: 2.2, h: 48, color: 'green', label: ['Prometheus'], sub: 'scrape /metric' }),
+          app: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Spring App'], sub: '@Observed HTTP' }),
+          mic: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Micrometer'], sub: 'MeterRegistry' }),
+          prom: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['Prometheus'], sub: 'scrape /metric' }),
           card: S({ x: -12, y: 12 }, '2. Vendor-Neutral Metrics with Micrometer', [
             '// Auto-recorded: http.server.requests, hikaricp.connections',
             'meterRegistry.counter("orders.created", "tier", "pro")',
@@ -105,9 +105,9 @@ export const javaSpringActuatorTestingLesson: Lesson = {
       metrics: { ops_endpoint: 'TestRunner', probe_state: 'Cache Hit', test_speed: '~10ms reuse', context_cache: 'Shared BeanCtx' },
       scene: {
         entities: {
-          t1: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Test A & B'], sub: 'same @BootTest' }),
-          cache: b(0, -10, { r: 2.2, h: 48, color: 'green', label: ['ContextCache'], sub: 'MergedCfgKey' }),
-          ctx: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['1 AppContext'], sub: '0ms reboot!' }),
+          t1: d(-14, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Test A & B'], sub: 'same @BootTest' }),
+          cache: b(-14, -14, { r: 2.2, h: 48, color: 'green', label: ['ContextCache'], sub: 'MergedCfgKey' }),
+          ctx: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['1 AppContext'], sub: '0ms reboot!' }),
           card: S({ x: -12, y: 12 }, '3. Spring TestContext Caching', [
             '@SpringBootTest // TestA & TestB share 1 context!',
             '// Cache key = classes + profiles + properties + mocks',
@@ -137,9 +137,9 @@ export const javaSpringActuatorTestingLesson: Lesson = {
       metrics: { ops_endpoint: 'TestRunner', probe_state: 'Cache Miss!', test_speed: '+3.5s reboot', context_cache: 'Duplicated' },
       scene: {
         entities: {
-          mock: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['@MockitoBean'], sub: 'unique key!' }),
-          miss: d(0, -10, { s: 4.8, h: 54, color: 'red', glyph: 'cpu', label: ['Cache Miss'], sub: 'new Context' }),
-          boot: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'layers', label: ['Reboot +3.5s'], sub: 'extra HikariCP' }),
+          mock: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['@MockitoBean'], sub: 'unique key!' }),
+          miss: d(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'cpu', label: ['Cache Miss'], sub: 'new Context' }),
+          boot: d(0, 0, { s: 4.8, h: 54, color: 'red', glyph: 'layers', label: ['Reboot +3.5s'], sub: 'extra HikariCP' }),
           card: S({ x: -12, y: 12 }, '4. Avoiding Context Cache Thrashing', [
             '// BAD: different @MockitoBean in 20 test classes = 20 boots!',
             '// GOOD: centralize mocks in BaseIntegrationTest',
@@ -169,9 +169,9 @@ export const javaSpringActuatorTestingLesson: Lesson = {
       metrics: { ops_endpoint: 'MockMvc', probe_state: 'Web Slice', test_speed: '~200ms fast', context_cache: 'Minimal' },
       scene: {
         entities: {
-          slice: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['@WebMvcTest'], sub: 'web slice only' }),
-          mvc: d(0, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['MockMvc'], sub: 'in-mem HTTP' }),
-          ctrl: d(14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['OrderCtrl'], sub: '@Valid + JSON' }),
+          slice: d(-14, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['@WebMvcTest'], sub: 'web slice only' }),
+          mvc: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['MockMvc'], sub: 'in-mem HTTP' }),
+          ctrl: d(0, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['OrderCtrl'], sub: '@Valid + JSON' }),
           card: S({ x: -12, y: 12 }, '5. Fast Controller Testing Without DB', [
             '@WebMvcTest(OrderController.class)',
             'class OrderControllerTest {',
@@ -204,9 +204,9 @@ export const javaSpringActuatorTestingLesson: Lesson = {
       metrics: { ops_endpoint: 'Docker PG16', probe_state: 'Real SQL', test_speed: 'Static reuse', context_cache: 'Prod parity' },
       scene: {
         entities: {
-          tc: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Testcontainer'], sub: '@ServiceConn' }),
-          pg: b(0, -10, { r: 2.2, h: 48, color: 'green', label: ['Postgres 16'], sub: 'Docker port' }),
-          app: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['@SpringBootTest'], sub: 'real SQL pass' }),
+          tc: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Testcontainer'], sub: '@ServiceConn' }),
+          pg: b(0, -14, { r: 2.2, h: 48, color: 'green', label: ['Postgres 16'], sub: 'Docker port' }),
+          app: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['@SpringBootTest'], sub: 'real SQL pass' }),
           card: S({ x: -12, y: 12 }, '6. Zero-Boilerplate Testcontainers (Boot 3.1+)', [
             '@Testcontainers @SpringBootTest',
             'class OrderIntegrationTest {',

@@ -391,13 +391,13 @@ export const CURRICULUM_MODULES: Module[] = [
     trackId: 'angular',
     color: 'red',
     lessons: [
-      { id: 'angular-flow', title: 'Angular Flow: End-to-End Request to Render', section: 'Core Building Blocks' },
-      { id: 'angular-architecture-overview', title: 'Bootstrap, Standalone & Component Tree', section: 'Core Building Blocks' },
-      { id: 'angular-component-lifecycle', title: 'Component & Directive Lifecycle Pipeline', section: 'Core Building Blocks' },
-      { id: 'angular-services-di', title: 'Services, Hierarchical DI & Functional inject()', section: 'HTTP & Routing Infrastructure' },
-      { id: 'angular-router-pipeline', title: 'Router Navigation Lifecycle, Guards & Resolvers', section: 'HTTP & Routing Infrastructure' },
-      { id: 'angular-http-interceptors', title: 'HTTP Interceptors Pipeline & Request Cloning', section: 'HTTP & Routing Infrastructure' },
-      { id: 'angular-reactive-forms', title: 'Typed Reactive Forms, Validators & ControlValueAccessor', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-flow', title: 'Angular End-to-End Flow', section: 'Core Building Blocks' },
+      { id: 'angular-architecture-overview', title: 'Bootstrap & Component Tree', section: 'Core Building Blocks' },
+      { id: 'angular-component-lifecycle', title: 'Component Lifecycle Hooks', section: 'Core Building Blocks' },
+      { id: 'angular-services-di', title: 'Hierarchical DI & inject()', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-router-pipeline', title: 'Router, Guards & Resolvers', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-http-interceptors', title: 'HTTP Interceptors & Cloning', section: 'HTTP & Routing Infrastructure' },
+      { id: 'angular-reactive-forms', title: 'Reactive Forms & CVA', section: 'HTTP & Routing Infrastructure' },
     ],
   },
   {
@@ -407,11 +407,11 @@ export const CURRICULUM_MODULES: Module[] = [
     trackId: 'angular',
     color: 'pink',
     lessons: [
-      { id: 'angular-ivy-incremental-dom', title: 'Ivy Incremental DOM vs React Virtual DOM', section: 'Compilation & Change Detection' },
-      { id: 'angular-zonejs-dirty-checking', title: 'Change Detection Evolution: Zone.js -> OnPush -> Zoneless', section: 'Compilation & Change Detection' },
-      { id: 'angular-rxjs-reactivity', title: 'Pure RxJS: .pipe(), Operators & Flattening Maps', section: 'Fine-Grained Reactivity' },
-      { id: 'angular-signals-dag', title: 'Signals Reactivity & Glitch-Free Push-Pull DAG', section: 'Fine-Grained Reactivity' },
-      { id: 'angular-ngrx-state', title: 'NgRx State Architecture: Store/Effects vs SignalStore', section: 'Fine-Grained Reactivity' },
+      { id: 'angular-ivy-incremental-dom', title: 'Ivy Incremental DOM vs VDOM', section: 'Compilation & Change Detection' },
+      { id: 'angular-zonejs-dirty-checking', title: 'Zone.js, OnPush & Zoneless', section: 'Compilation & Change Detection' },
+      { id: 'angular-rxjs-reactivity', title: 'RxJS Pipes & Flattening Maps', section: 'Fine-Grained Reactivity' },
+      { id: 'angular-signals-dag', title: 'Signals & Push-Pull DAG', section: 'Fine-Grained Reactivity' },
+      { id: 'angular-ngrx-state', title: 'NgRx Store vs SignalStore', section: 'Fine-Grained Reactivity' },
     ],
   },
   {
@@ -421,8 +421,8 @@ export const CURRICULUM_MODULES: Module[] = [
     trackId: 'angular',
     color: 'amber',
     lessons: [
-      { id: 'angular-control-flow', title: 'Modern Template Engine: Control Flow, @defer & Pipes', section: 'Modern Templates & SSR' },
-      { id: 'angular-hydration-replay', title: 'Non-Destructive Hydration & Event Replay in SSR', section: 'Modern Templates & SSR' },
+      { id: 'angular-control-flow', title: 'Control Flow, @defer & Pipes', section: 'Modern Templates & SSR' },
+      { id: 'angular-hydration-replay', title: 'SSR Hydration & Event Replay', section: 'Modern Templates & SSR' },
     ],
   },
   {

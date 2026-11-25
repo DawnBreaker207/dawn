@@ -42,8 +42,8 @@ export const javaSpringSecurityLesson: Lesson = {
       metrics: { security_gate: 'None', auth_state: 'Anonymous', principal: 'Unknown', http_status: '200 (Exposed!)' },
       scene: {
         entities: {
-          client: d(-12, -8, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Unauth Client'], sub: 'no token' }),
-          ctrl: d(4, -8, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['AdminCtrl'], sub: 'exposed!' }),
+          client: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Unauth Client'], sub: 'no token' }),
+          ctrl: d(2, -6, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['AdminCtrl'], sub: 'exposed!' }),
           card: S({ x: -12, y: 12 }, '1. Problem: No Outer Security Gate', [
             '// Without SecurityFilterChain:',
             'GET /api/admin/users -> hits AdminController directly!',
@@ -72,9 +72,9 @@ export const javaSpringSecurityLesson: Lesson = {
       metrics: { security_gate: 'FilterProxy', auth_state: 'Entering', principal: 'Pending', http_status: 'Inspecting' },
       scene: {
         entities: {
-          tomcat: d(-14, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Filter' }),
-          dfp: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['DelegatingPx'], sub: 'Servlet bridge' }),
-          fcp: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['FilterChainPx'], sub: 'Spring Bean' }),
+          tomcat: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Filter' }),
+          dfp: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['DelegatingPx'], sub: 'Servlet bridge' }),
+          fcp: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['FilterChainPx'], sub: 'Spring Bean' }),
           card: S({ x: -12, y: 12 }, '2. Bridging Servlet Container to Spring', [
             '// Tomcat invokes Jakarta Servlet Filter:',
             'DelegatingFilterProxy',
@@ -105,9 +105,9 @@ export const javaSpringSecurityLesson: Lesson = {
       metrics: { security_gate: 'FilterChain', auth_state: 'Stateless', principal: 'Pending', http_status: 'Pipeline' },
       scene: {
         entities: {
-          fcp: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['FilterChainPx'], sub: 'match /api/**' }),
-          chain: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['SecFilterChain'], sub: 'STATELESS' }),
-          rules: b(14, -10, { r: 2.2, h: 48, color: 'sky', label: ['Auth Rules'], sub: 'deny default' }),
+          fcp: d(-14, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['FilterChainPx'], sub: 'match /api/**' }),
+          chain: d(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['SecFilterChain'], sub: 'STATELESS' }),
+          rules: b(0, -14, { r: 2.2, h: 48, color: 'sky', label: ['Auth Rules'], sub: 'deny default' }),
           card: S({ x: -12, y: 12 }, '3. Spring Security 6 Lambda DSL', [
             '@Bean SecurityFilterChain apiChain(HttpSecurity http) {',
             '  return http.csrf(c -> c.disable())',
@@ -140,9 +140,9 @@ export const javaSpringSecurityLesson: Lesson = {
       metrics: { security_gate: 'DaoProvider', auth_state: 'BCrypt 2^12', principal: 'UserDetails', http_status: '401 if bad' },
       scene: {
         entities: {
-          mgr: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['AuthManager'], sub: 'DaoProvider' }),
-          bc: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BCrypt 2^12'], sub: '~100ms hash' }),
-          db: b(14, -10, { r: 2.2, h: 48, color: 'purple', label: ['Users DB'], sub: '$2a$12$...' }),
+          mgr: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['AuthManager'], sub: 'DaoProvider' }),
+          bc: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BCrypt 2^12'], sub: '~100ms hash' }),
+          db: b(0, 0, { r: 2.2, h: 48, color: 'purple', label: ['Users DB'], sub: '$2a$12$...' }),
           card: S({ x: -12, y: 12 }, '4. Salted Adaptive Hashing with BCrypt', [
             '@Bean PasswordEncoder passwordEncoder() {',
             '  return new BCryptPasswordEncoder(12); // 2^12 rounds',
@@ -172,9 +172,9 @@ export const javaSpringSecurityLesson: Lesson = {
       metrics: { security_gate: 'Cors + Csrf', auth_state: 'Origin Guard', principal: 'Stateless', http_status: '403 if forged' },
       scene: {
         entities: {
-          evil: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Forged POST'], sub: 'auto Cookie' }),
-          csrf: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CsrfFilter'], sub: 'checks token' }),
-          api: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Bearer API'], sub: 'no cookies!' }),
+          evil: d(-14, 0, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Forged POST'], sub: 'auto Cookie' }),
+          csrf: d(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CsrfFilter'], sub: 'checks token' }),
+          api: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Bearer API'], sub: 'no cookies!' }),
           card: S({ x: -12, y: 12 }, '5. CORS vs CSRF Protection Rules', [
             '// Safe to disable CSRF ONLY if auth uses Bearer header:',
             'http.cors(Customizer.withDefaults())',
@@ -205,9 +205,9 @@ export const javaSpringSecurityLesson: Lesson = {
       metrics: { security_gate: 'JwtDecoder', auth_state: 'Verified JWT', principal: 'kid + claims', http_status: '401 if bad' },
       scene: {
         entities: {
-          req: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Bearer JWT'], sub: 'eyJhbGci...' }),
-          jwt: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['JwtDecoder'], sub: 'cached JWK' }),
-          bad: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['401 Unauth'], sub: 'bad/expired' }),
+          req: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Bearer JWT'], sub: 'eyJhbGci...' }),
+          jwt: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['JwtDecoder'], sub: 'cached JWK' }),
+          bad: d(0, 0, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['401 Unauth'], sub: 'bad/expired' }),
           card: S({ x: -12, y: 12 }, '6. Local OAuth2 JWT Verification via JWK', [
             'http.oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));',
             '// Verifies RS256 signature against cached jwks.json',
@@ -237,9 +237,9 @@ export const javaSpringSecurityLesson: Lesson = {
       metrics: { security_gate: 'ContextHolder', auth_state: 'Authenticated', principal: 'ROLE_ADMIN', http_status: 'Proceed' },
       scene: {
         entities: {
-          jwt: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['JwtAuthFilter'], sub: 'valid token' }),
-          ctx: b(0, -10, { r: 2.2, h: 48, color: 'purple', label: ['SecContext'], sub: 'ThreadLocal' }),
-          authz: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['AuthzFilter'], sub: 'reads roles' }),
+          jwt: d(-14, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['JwtAuthFilter'], sub: 'valid token' }),
+          ctx: b(-14, -14, { r: 2.2, h: 48, color: 'purple', label: ['SecContext'], sub: 'ThreadLocal' }),
+          authz: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['AuthzFilter'], sub: 'reads roles' }),
           card: S({ x: -12, y: 12 }, '5. Setting SecurityContextHolder', [
             'SecurityContext ctx = SecurityContextHolder.createEmptyContext();',
             'ctx.setAuthentication(authToken);',

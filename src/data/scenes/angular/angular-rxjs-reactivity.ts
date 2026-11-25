@@ -10,7 +10,7 @@ import {
 
 export const angularRxjsReactivityLesson = {
   id: 'angular-rxjs-reactivity',
-  title: 'Pure RxJS: .pipe(), Operators & Flattening Maps',
+  title: 'RxJS Pipes & Flattening Maps',
   summary: 'Master pure RxJS reactive pipelines: composable .pipe() chains, map/filter/scan/tap, debounceTime/throttleTime/takeUntil, combineLatest/forkJoin/withLatestFrom, all 4 flattening maps (switchMap, exhaustMap, concatMap, mergeMap), Subject multicasting & catchError/retry/finalize.',
   minutes: 35,
   level: 'advanced',

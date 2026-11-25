@@ -11,7 +11,7 @@ import {
 
 export const angularIvyIncrementalDomLesson = {
   id: 'angular-ivy-incremental-dom',
-  title: 'Ivy Compilation & Incremental DOM Architecture',
+  title: 'Ivy Incremental DOM vs VDOM',
   summary: 'Explore why Angular chose Incremental DOM over Virtual DOM. Trace how Ivy compiles component templates into executable instructions that mutate the real DOM with zero memory allocations.',
   minutes: 25,
   level: 'advanced',
