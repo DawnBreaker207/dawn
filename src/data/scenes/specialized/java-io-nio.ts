@@ -9,7 +9,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaIoNioLesson: Lesson = {
   id: 'java-io-nio',
-  title: 'I/O Streams, NIO.2 Files, Selector & Serialization Risk',
+  title: 'I/O, NIO.2 & Selector',
   summary:
     'Understand WHY Java separates byte streams from Charset Readers, why Buffered wrappers matter, how Files.lines() leaks FDs, how ByteBuffer flip() works, and Java Serialization RCE.',
   minutes: 12,

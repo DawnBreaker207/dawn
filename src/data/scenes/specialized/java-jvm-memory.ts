@@ -9,20 +9,21 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaJvmMemoryLesson: Lesson = {
   id: 'java-jvm-memory',
-  title: 'JVM Memory Model, GC, Metaspace & String Pool',
+  title: 'JVM Memory, GC & Refs',
   summary:
-    'Follow an object and string literal from thread-local Eden allocation and String Pool interning through Survivor age promotion, G1GC Old Gen collection, and Metaspace.',
-  minutes: 12,
+    'Follow objects from Eden TLAB and Survivor age promotion through G1GC, Strong/Soft/Weak/Phantom References, and Metaspace OOM boundaries.',
+  minutes: 13,
   level: 'intermediate',
   metrics: ['heap_region', 'gc_phase', 'allocation', 'oom_risk'],
-  legend: ['flow', ['req', 'allocate / intern'], ['res', 'promote / collect'], ['fail', 'OOM boundary']],
+  legend: ['flow', ['req', 'allocate / ref'], ['res', 'promote / collect'], ['fail', 'OOM boundary']],
   goals: [
     { text: 'Distinguish Thread Stack frames from Heap objects', step: 1 },
     { text: 'Intern String literals in Heap String Pool', step: 2 },
     { text: 'Allocate fast via TLAB bump-pointer in Eden', step: 3 },
     { text: 'Survive Minor GC & promote S0/S1 by age', step: 4 },
     { text: 'Reclaim Old Gen via G1GC Mixed Collection', step: 5 },
-    { text: 'Separate off-heap Metaspace & diagnose OOM', step: 6 },
+    { text: 'Contrast Strong, Soft, Weak & Phantom References', step: 6 },
+    { text: 'Separate off-heap Metaspace & diagnose OOM', step: 7 },
   ],
   steps: [
     {
@@ -186,9 +187,42 @@ export const javaJvmMemoryLesson: Lesson = {
       },
     },
     {
+      short: 'Ref Types',
+      chapter: 'gc',
+      title: '6. Strong, Soft, Weak & Phantom References (Cleaner)',
+      body: [
+        '<strong>Strong</strong> refs never GC. <strong>SoftReference</strong> clears only near OOM (caches). <strong>WeakReference</strong> clears on the very next GC cycle (<code>WeakHashMap</code>, <code>ThreadLocal</code> keys).',
+        '<strong>PhantomReference</strong> + <code>Cleaner</code> runs post-mortem native cleanup, replacing deprecated <code>Object.finalize()</code>.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'Effective Java Item 8: Avoid finalizers (slow, unpredictable); use AutoCloseable + Cleaner as a safety net.',
+      },
+      changes: ['+ Soft: GC near OOM; Weak: next GC cycle', '+ Phantom + Cleaner replaces finalize()'],
+      metrics: { heap_region: '4 Ref Levels', gc_phase: 'Reachability', allocation: 'RefQueue', oom_risk: 'finalize() bad' },
+      scene: {
+        entities: {
+          soft: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['SoftRef'], sub: 'GC near OOM' }),
+          weak: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['WeakRef'], sub: 'GC next cycle' }),
+          phnt: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['PhantomRef'], sub: 'Cleaner hook' }),
+          card: S({ x: -12, y: 12 }, '6. Java Reference Strength Hierarchy', [
+            '// Strong -> SoftReference (OOM-sensitive cache)',
+            '//        -> WeakReference (next GC if unreferenced)',
+            '//        -> PhantomReference + java.lang.ref.Cleaner',
+            '//           (replaces deprecated Object.finalize())',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          sf_wk: h('soft', 'weak', ['soft', 'weak'], { heads: 'end', label: 'weaker' }),
+          wk_ph: h('weak', 'phnt', ['weak', 'phnt'], { heads: 'end', label: 'post-GC' }),
+        },
+        flows: [{ route: ['sf_wk', 'wk_ph'], kind: 'req', rate: 1.7 }],
+      },
+    },
+    {
       short: 'Metaspace',
       chapter: 'oom',
-      title: '6. Off-Heap Metaspace & OOM Boundaries',
+      title: '7. Off-Heap Metaspace & OOM Boundaries',
       body: [
         'Since Java 8, class metadata, bytecode methods, and constant pools live in native off-heap <strong>Metaspace</strong> (replacing PermGen).',
         'Unbounded dynamic proxy/classloader generation fills Metaspace (<code>OOM: Metaspace</code>), whereas leaking static caches fills Heap (<code>OOM: Java heap space</code>).',

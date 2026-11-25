@@ -9,20 +9,22 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaVirtualThreadsLesson: Lesson = {
   id: 'java-virtual-threads',
-  title: 'Executors, CompletableFuture & Virtual Threads (Loom)',
+  title: 'Pools, ThreadLocal & Loom',
   summary:
-    'Trace Java concurrency from blocking 1:1 OS threads through ThreadPools, CompletableFuture async DAGs, NIO epoll multiplexing, and JDK 21 Virtual Threads.',
-  minutes: 13,
+    'Understand WHY ThreadPoolExecutor fills the queue before maxPoolSize, why ThreadLocal leaks on Tomcat, and how Virtual Threads + ScopedValue solve blocking I/O.',
+  minutes: 14,
   level: 'advanced',
   metrics: ['thread_model', 'ram_per_task', 'io_behavior', 'scalability'],
-  legend: ['flow', ['req', 'submit / mount'], ['res', 'complete / park'], ['fail', 'blocked / pinned']],
+  legend: ['flow', ['req', 'submit / mount'], ['res', 'complete / clean'], ['fail', 'leak / pinned']],
   goals: [
     { text: 'Diagnose 1:1 Platform Thread blocking & 1MB stack cost', step: 1 },
-    { text: 'Bound concurrency with ExecutorService & WorkStealingPool', step: 2 },
-    { text: 'Compose non-blocking DAGs via CompletableFuture', step: 3 },
-    { text: 'Multiplex sockets with NIO Selector & epoll', step: 4 },
-    { text: 'Mount/unmount JDK 21 Virtual Threads on Carrier pool', step: 5 },
-    { text: 'Avoid Carrier Pinning (synchronized vs ReentrantLock)', step: 6 },
+    { text: 'Trace ThreadPoolExecutor order: core -> queue -> max', step: 2 },
+    { text: 'Prevent Tomcat ThreadLocalMap (WeakKey+StrongVal) leaks', step: 3 },
+    { text: 'Compose non-blocking DAGs via CompletableFuture', step: 4 },
+    { text: 'Multiplex sockets with NIO Selector & epoll', step: 5 },
+    { text: 'Mount/unmount JDK 21 Virtual Threads on Carrier pool', step: 6 },
+    { text: 'Avoid Carrier Pinning (synchronized vs ReentrantLock)', step: 7 },
+    { text: 'Replace ThreadLocal with JDK 21+ ScopedValue for Loom', step: 8 },
   ],
   steps: [
     {
@@ -56,41 +58,73 @@ export const javaVirtualThreadsLesson: Lesson = {
       },
     },
     {
-      short: 'Thread Pools',
+      short: 'Core->Q->Max',
       chapter: 'executors',
-      title: '2. ExecutorService & ForkJoin Work-Stealing',
+      title: '2. Why ThreadPoolExecutor Fills Queue Before maxPoolSize',
       body: [
-        '<code>ExecutorService</code> caps OS threads via a bounded pool + <code>BlockingQueue</code>, preventing OOM.',
-        '<code>ForkJoinPool</code> (used by parallel streams & <code>CompletableFuture</code>) adds <strong>work-stealing</strong>: idle workers steal tasks from the tail of busy workers’ deques.',
+        'Given <code>core=4, max=16, queue=100</code>: 50 tasks fill the 4 core threads and push 46 into the <code>BlockingQueue</code> — <strong>thread #5 only spawns when the queue is 100% full!</strong>',
+        'Use <code>CallerRunsPolicy</code> for backpressure; unbounded queues make <code>maximumPoolSize</code> dead config.',
       ],
       callout: {
-        kind: 'tip',
-        text: 'CPU-bound pool size ≈ Runtime.availableProcessors(); I/O-bound pools still hit Little’s Law limits.',
+        kind: 'warn',
+        text: 'Interview classic: core=4, max=16, unbounded queue -> active threads NEVER exceed 4!',
       },
-      changes: ['+ Bounded BlockingQueue protects RAM', '+ Work-stealing balances CPU cores'],
-      metrics: { thread_model: 'Pooled OS', ram_per_task: 'Queue node', io_behavior: 'Still blocks pool', scalability: 'Bounded' },
+      changes: ['+ Order: core -> workQueue -> maxPoolSize', '+ CallerRunsPolicy slows caller if full'],
+      metrics: { thread_model: 'Pooled OS', ram_per_task: 'Queue node', io_behavior: 'Still blocks', scalability: 'Bounded' },
       scene: {
         entities: {
-          sub: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['submit(task)'], sub: 'caller' }),
-          q: b(0, -10, { r: 2.2, h: 48, color: 'amber', label: ['Task Queue'], sub: 'FIFO / deque' }),
-          pool: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Worker Pool'], sub: 'N OS threads' }),
-          card: S({ x: -12, y: 12 }, '2. ThreadPoolExecutor & ForkJoinPool', [
-            'var pool = Executors.newFixedThreadPool(8);',
-            '// Never use unbounded newCachedThreadPool() under load!',
-            'var fj = Executors.newWorkStealingPool(); // ForkJoin',
+          core: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['1. Core (4)'], sub: 'fill 1st' }),
+          q: b(0, -10, { r: 2.2, h: 48, color: 'amber', label: ['2. Queue (100)'], sub: 'fill 2nd!' }),
+          max: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['3. Max (16)'], sub: 'only if Q full' }),
+          card: S({ x: -12, y: 12 }, '2. ThreadPoolExecutor Submission Order', [
+            'new ThreadPoolExecutor(4, 16, 60L, SECONDS,',
+            '  new ArrayBlockingQueue<>(100), new CallerRunsPolicy());',
+            '// Order: 1) corePoolSize -> 2) workQueue -> 3) maxPoolSize',
           ], { icon: 'terminal' }),
         },
         links: {
-          sub_q: h('sub', 'q', ['sub', 'q'], { heads: 'end', label: 'enqueue' }),
-          q_pl: h('q', 'pool', ['q', 'pool'], { heads: 'end', label: 'take / steal' }),
+          cr_q: h('core', 'q', ['core', 'q'], { heads: 'end', label: 'core busy' }),
+          q_mx: h('q', 'max', ['q', 'max'], { heads: 'end', label: 'queue full' }),
         },
-        flows: [{ route: ['sub_q', 'q_pl'], kind: 'req', rate: 1.9 }],
+        flows: [{ route: ['cr_q', 'q_mx'], kind: 'req', rate: 1.9 }],
+      },
+    },
+    {
+      short: 'TL Leak',
+      chapter: 'executors',
+      title: '3. Why Tomcat ThreadPools Leak ThreadLocal',
+      body: [
+        '<code>ThreadLocal.set(val)</code> stores an <code>Entry</code> inside the Thread’s <code>ThreadLocalMap</code>: the <strong>key</strong> is a <code>WeakReference</code>, but the <strong>value is a STRONG ref</strong>!',
+        'Since Tomcat worker threads never die, forgetting <code>tl.remove()</code> in <code>finally</code> leaks Heap RAM and bleeds user data into future requests.',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'ALWAYS call tl.remove() in a finally block on pooled threads!',
+      },
+      changes: ['+ Weak key + Strong value pins RAM', '+ finally { tl.remove(); } prevents leak'],
+      metrics: { thread_model: 'ThreadLocMap', ram_per_task: 'Strong Value', io_behavior: 'Cross-req bug', scalability: 'Leak risk' },
+      scene: {
+        entities: {
+          th: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Pool Thread'], sub: 'lives forever' }),
+          map: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['ThreadLocMap'], sub: 'WeakKey+Val' }),
+          fin: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['finally remove'], sub: 'tl.remove()' }),
+          card: S({ x: -12, y: 12 }, '3. ThreadLocalMap Leak & Mandatory Cleanup', [
+            '// Entry extends WeakReference<ThreadLocal<?>> { Object value; }',
+            'try { CTX.set(user); handle(); }',
+            'finally { CTX.remove(); } // prevents OOM + data bleed!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          th_mp: h('th', 'map', ['th', 'map'], { heads: 'end', label: 'owns map' }),
+          mp_fn: h('map', 'fin', ['map', 'fin'], { heads: 'end', label: 'clean entry' }),
+        },
+        flows: [{ route: ['th_mp', 'mp_fn'], kind: 'res', rate: 1.8 }],
       },
     },
     {
       short: 'CompletableFuture',
       chapter: 'async',
-      title: '3. CompletableFuture Async Pipelines',
+      title: '4. CompletableFuture Async Pipelines',
       body: [
         '<code>CompletableFuture</code> chains non-blocking callbacks (<code>thenApply</code>, <code>thenCompose</code>, <code>allOf</code>) so OS threads are not held idle waiting for I/O.',
         'Trade-off: callback chains split stack traces and complicate debugging and structured error handling.',
@@ -123,7 +157,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'NIO epoll',
       chapter: 'nio',
-      title: '4. Java NIO Selector & OS epoll Multiplexing',
+      title: '5. Java NIO Selector & OS epoll Multiplexing',
       body: [
         'Underneath Netty, WebFlux, and Project Loom, <code>java.nio.channels.Selector</code> registers thousands of <code>SocketChannel</code> descriptors onto a single OS <code>epoll</code>/<code>kqueue</code> loop.',
         'The kernel wakes the event loop only when bytes actually arrive on a socket.',
@@ -156,7 +190,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'Virtual Threads',
       chapter: 'loom',
-      title: '5. JDK 21 Virtual Threads: Mount & Unmount',
+      title: '6. JDK 21 Virtual Threads: Mount & Unmount',
       body: [
         '<strong>Virtual Threads</strong> (<code>Thread.ofVirtual()</code>) are cheap M:N user-mode continuations (~few KB on Heap) scheduled onto a small <code>ForkJoinPool</code> of OS <strong>Carrier Threads</strong>.',
         'When a virtual thread hits blocking I/O, the JVM automatically <strong>unmounts</strong> its stack to the Heap and registers an NIO epoll callback — freeing the Carrier for other virtual threads!',
@@ -189,7 +223,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'Pinning Fix',
       chapter: 'loom',
-      title: '6. Avoiding Carrier Pinning (synchronized -> Lock)',
+      title: '7. Avoiding Carrier Pinning (synchronized -> Lock)',
       body: [
         'In JDK 21, performing blocking I/O inside a <code>synchronized</code> block or native JNI frame <strong>pins</strong> the virtual thread to its OS Carrier Thread, preventing unmount.',
         'Replace long I/O-wrapping <code>synchronized</code> blocks with <code>ReentrantLock</code> (which parks cleanly), or upgrade to JDK 24+ (JEP 491) which unpins <code>synchronized</code>.',
@@ -217,6 +251,39 @@ export const javaVirtualThreadsLesson: Lesson = {
           lk_cr: h('lock', 'car', ['lock', 'car'], { heads: 'end', label: 'free carrier' }),
         },
         flows: [{ route: ['vt_lk', 'lk_cr'], kind: 'res', rate: 1.9 }],
+      },
+    },
+    {
+      short: 'ScopedValue',
+      chapter: 'loom',
+      title: '8. Modern Fix: ScopedValue for Virtual Threads',
+      body: [
+        'With 1M Virtual Threads, mutable <code>ThreadLocal</code> maps waste Heap RAM and risk forgetting <code>remove()</code>.',
+        '<strong><code>ScopedValue</code></strong> binds an <strong>immutable</strong> value strictly for the dynamic scope of <code>ScopedValue.where(KEY, val).run(...)</code> — auto-freed on exit with zero leaks!',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Prefer ScopedValue over ThreadLocal in JDK 21+ Virtual Thread services: immutable, auto-scoped, and zero remove() bugs.',
+      },
+      changes: ['+ ScopedValue binds immutable ref to scope', '+ Auto-unbound on exit -> 0 leaks'],
+      metrics: { thread_model: '1M Virtual', ram_per_task: 'Immutable', io_behavior: 'Auto-freed', scalability: 'Zero leaks' },
+      scene: {
+        entities: {
+          bind: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Scoped.where'], sub: 'immutable bind' }),
+          vt: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Virtual Task'], sub: 'KEY.get()' }),
+          exit: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Auto Unbind'], sub: '0 remove() bug' }),
+          card: S({ x: -12, y: 12 }, '8. ScopedValue Replaces ThreadLocal', [
+            'static final ScopedValue<User> USER = ScopedValue.newInstance();',
+            'ScopedValue.where(USER, currentUser).run(() -> {',
+            '  handleOrder(); // reads USER.get() safely',
+            '}); // Automatically unbound here — zero leaks!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          bd_vt: h('bind', 'vt', ['bind', 'vt'], { heads: 'end', label: 'enter scope' }),
+          vt_ex: h('vt', 'exit', ['vt', 'exit'], { heads: 'end', label: 'auto clean' }),
+        },
+        flows: [{ route: ['bd_vt', 'vt_ex'], kind: 'res', rate: 2.0 }],
       },
     },
   ],

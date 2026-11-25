@@ -9,20 +9,21 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaCollectionsLesson: Lesson = {
   id: 'java-collections',
-  title: 'Collections Internals, HashMap Treeify & ConcurrentHashMap',
+  title: 'HashMap & ConcurrentHashMap',
   summary:
-    'Understand WHY ArrayList beats LinkedList, how HashMap resizes via bit-mask without rehashing, when bins treeify, and why ConcurrentHashMap locks buckets instead of the whole map.',
-  minutes: 13,
+    'Understand WHY ArrayList beats LinkedList, how HashMap resizes without rehashing, why mutating a key loses it, and how ConcurrentHashMap locks buckets.',
+  minutes: 14,
   level: 'core',
   metrics: ['backing_store', 'collision_op', 'concurrency', 'tricky_trap'],
-  legend: ['flow', ['req', 'put / resize'], ['res', 'treeify / CAS'], ['fail', 'deadlock / O(n)']],
+  legend: ['flow', ['req', 'put / resize'], ['res', 'treeify / CAS'], ['fail', 'lost key / lock']],
   goals: [
     { text: 'Contrast ArrayList CPU-cache locality vs LinkedList', step: 1 },
     { text: 'Trace HashMap perturbation hash & collision chain', step: 2 },
     { text: 'Treeify long buckets into RB-Tree & resize by bit-mask', step: 3 },
-    { text: 'Compare List.of() / Map.of() unmodifiable collections', step: 4 },
-    { text: 'Lock only bucket head in ConcurrentHashMap (CAS + sync)', step: 5 },
-    { text: 'Avoid recursive computeIfAbsent deadlock in CHM', step: 6 },
+    { text: 'Enforce equals/hashCode & avoid Mutated Key Leaks', step: 4 },
+    { text: 'Compare List.of() / Map.of() unmodifiable collections', step: 5 },
+    { text: 'Lock only bucket head in ConcurrentHashMap (CAS + sync)', step: 6 },
+    { text: 'Avoid recursive computeIfAbsent deadlock in CHM', step: 7 },
   ],
   steps: [
     {
@@ -120,9 +121,42 @@ export const javaCollectionsLesson: Lesson = {
       },
     },
     {
+      short: 'Mutated Key',
+      chapter: 'map',
+      title: '4. equals/hashCode & Why Mutating a Key Loses It',
+      body: [
+        '<code>HashMap</code> puts <code>user</code> into bucket <code>#3</code> from its initial <code>hashCode()</code>. If you later mutate <code>user.setName("Bob")</code>, its hash changes to bucket <code>#9</code>.',
+        'Calling <code>map.get(user)</code> probes bucket <code>#9</code> and returns <code>null</code> — leaking the entry in bucket <code>#3</code>! Always use immutable keys.',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Effective Java Item 11: Always override hashCode() with equals(), and never mutate fields used in hashCode() after put().',
+      },
+      changes: ['+ Key stored in bucket #3 on put()', '+ Mutation shifts lookup to #9 -> null'],
+      metrics: { backing_store: 'Orphaned Node', collision_op: 'hash + equals', concurrency: 'Broken lookup', tricky_trap: 'Mutated key' },
+      scene: {
+        entities: {
+          mut: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Mutate Key'], sub: 'hash: 3 -> 9' }),
+          b9: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Bucket #9'], sub: 'get() -> null!' }),
+          b3: b(14, -10, { r: 2.2, h: 48, color: 'purple', label: ['Bucket #3'], sub: 'leaked entry' }),
+          card: S({ x: -12, y: 12 }, '4. Why HashMap Keys Must Be Immutable', [
+            'User u = new User("Alice");',
+            'map.put(u, "admin"); // stored in bucket #3',
+            'u.setName("Bob");    // hashCode changes to #9!',
+            'map.get(u);          // probes #9 -> null (leaked in #3)!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          mt_b9: h('mut', 'b9', ['mut', 'b9'], { heads: 'end', label: 'probes #9' }),
+          b9_b3: h('b9', 'b3', ['b9', 'b3'], { heads: 'end', label: 'stuck in #3' }),
+        },
+        flows: [{ route: ['mt_b9'], kind: 'fail', rate: 1.8 }],
+      },
+    },
+    {
       short: 'Immutable',
       chapter: 'immutable',
-      title: '4. List.of() / Map.of() vs Collections.unmodifiableList',
+      title: '5. List.of() / Map.of() vs Collections.unmodifiableList',
       body: [
         '<code>Collections.unmodifiableList(src)</code> is only a read-only <strong>view</strong> — mutating <code>src</code> still mutates the view!',
         'Java 9+ <code>List.of()</code> / <code>Map.of()</code> and <code>List.copyOf()</code> create truly immutable compact structures that reject <code>null</code> elements/keys and throw <code>UnsupportedOperationException</code> on writes.',
@@ -155,7 +189,7 @@ export const javaCollectionsLesson: Lesson = {
     {
       short: 'CHM CAS+Sync',
       chapter: 'concurrent',
-      title: '5. How ConcurrentHashMap Scales (CAS + Bucket Lock)',
+      title: '6. How ConcurrentHashMap Scales (CAS + Bucket Lock)',
       body: [
         '<code>Collections.synchronizedMap()</code> locks the entire map on every read and write. In Java 8+, <code>ConcurrentHashMap</code> uses <code>volatile</code> reads (lock-free <code>get()</code>)!',
         'On <code>put()</code>, if the bucket is empty it uses lock-free <strong>CAS</strong>; if a collision exists, it <code>synchronized</code>s ONLY on that single bucket’s head <code>Node</code>.',
@@ -188,7 +222,7 @@ export const javaCollectionsLesson: Lesson = {
     {
       short: 'CHM Deadlock',
       chapter: 'concurrent',
-      title: '6. Tricky Trap: Recursive computeIfAbsent Deadlock',
+      title: '7. Tricky Trap: Recursive computeIfAbsent Deadlock',
       body: [
         '<code>chm.computeIfAbsent(k, fn)</code> holds the <code>synchronized(reservationNode)</code> lock on bucket <code>k</code> while running your lambda <code>fn</code>.',
         'If <code>fn</code> calls <code>chm.computeIfAbsent(otherKey, ...)</code> on the same map and hashes to the same bucket (e.g. Fibonacci memoization), the thread deadlocks on itself!',

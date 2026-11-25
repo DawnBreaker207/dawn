@@ -9,7 +9,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaSpringIocLesson: Lesson = {
   id: 'java-spring-ioc',
-  title: 'Spring IoC Container, Bean Lifecycle & Scopes',
+  title: 'Spring IoC & Bean Lifecycle',
   summary:
     'Trace Spring IoC from tight new() coupling through BeanDefinition scanning, Constructor DI, BeanPostProcessor lifecycle hooks, Singleton vs Prototype, and Scoped Proxies.',
   minutes: 12,

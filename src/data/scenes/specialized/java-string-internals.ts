@@ -9,7 +9,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaStringInternalsLesson: Lesson = {
   id: 'java-string-internals',
-  title: 'String Immutability, StringTable, Compact byte[] & Concat',
+  title: 'String Pool & Compact Strings',
   summary:
     'Understand WHY Strings are immutable, how ldc + StringTable + intern() work, how JDK 9+ Compact Strings halve RAM, why + in loops hurts, and G1GC String Deduplication.',
   minutes: 12,

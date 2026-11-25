@@ -10,7 +10,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaCoreApisLesson: Lesson = {
   id: 'java-core-apis',
-  title: 'Daily Core APIs: Optional, java.time & HttpClient',
+  title: 'Modern Java & Core APIs',
   summary:
     'Master Java’s most-used daily APIs: Optional lazy vs eager traps, java.time Instant/ZonedDateTime/Clock, built-in HTTP/2 HttpClient, Java 21 SequencedCollection, and ScopedValue.',
   minutes: 12,

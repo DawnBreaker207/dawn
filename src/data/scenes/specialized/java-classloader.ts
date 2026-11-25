@@ -10,7 +10,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaClassloaderLesson: Lesson = {
   id: 'java-classloader',
-  title: 'ClassLoader Subsystem & Bytecode Lifecycle',
+  title: 'ClassLoader & Bytecode',
   summary:
     'Trace how the JVM loads .class bytecode via Bootstrap/Platform/App ClassLoaders, enforces Parent Delegation, runs Linking (Verify/Prepare/Resolve) & <clinit>, and isolates plugins.',
   minutes: 12,

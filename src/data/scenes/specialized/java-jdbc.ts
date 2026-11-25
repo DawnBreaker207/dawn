@@ -9,7 +9,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaJdbcLesson: Lesson = {
   id: 'java-jdbc',
-  title: 'JDBC DataSource, PreparedStatement, TX & Batching',
+  title: 'JDBC Pool, TX & Batching',
   summary:
     'Understand what Spring & Hibernate do underneath: HikariCP DataSource pooling, PreparedStatement SQL injection defense, ResultSet streaming, TX rollback, and JDBC batching.',
   minutes: 12,

@@ -9,7 +9,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaSpringActuatorTestingLesson: Lesson = {
   id: 'java-spring-actuator-testing',
-  title: 'Actuator Probes, Micrometer & @SpringBootTest Context Cache',
+  title: 'Actuator & Test Context Cache',
   summary:
     'Understand Spring Boot In Action production ops & testing: K8s liveness vs readiness probes, Micrometer metrics, @SpringBootTest Context Caching, @MockitoBean cache miss, and Testcontainers.',
   minutes: 12,
@@ -204,7 +204,7 @@ export const javaSpringActuatorTestingLesson: Lesson = {
       metrics: { ops_endpoint: 'Docker PG16', probe_state: 'Real SQL', test_speed: 'Static reuse', context_cache: 'Prod parity' },
       scene: {
         entities: {
-          tc: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Testcontainers'], sub: '@ServiceConn' }),
+          tc: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Testcontainer'], sub: '@ServiceConn' }),
           pg: b(0, -10, { r: 2.2, h: 48, color: 'green', label: ['Postgres 16'], sub: 'Docker port' }),
           app: d(14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['@SpringBootTest'], sub: 'real SQL pass' }),
           card: S({ x: -12, y: 12 }, '6. Zero-Boilerplate Testcontainers (Boot 3.1+)', [

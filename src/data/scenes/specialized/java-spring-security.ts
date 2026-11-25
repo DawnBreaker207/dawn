@@ -9,20 +9,22 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaSpringSecurityLesson: Lesson = {
   id: 'java-spring-security',
-  title: 'Spring Security & Filter Chain Architecture',
+  title: 'Spring Security & OAuth2',
   summary:
-    'Trace how Spring Security bridges Tomcat via DelegatingFilterProxy, runs SecurityFilterChain, validates JWTs, populates SecurityContextHolder, and enforces RBAC.',
-  minutes: 12,
+    'Trace DelegatingFilterProxy, SecurityFilterChain, DaoAuthenticationProvider + BCrypt, CORS vs CSRF rules, OAuth2 JWK verification, SecurityContextHolder, and 401/403 RBAC.',
+  minutes: 14,
   level: 'intermediate',
   metrics: ['security_gate', 'auth_state', 'principal', 'http_status'],
-  legend: ['flow', ['req', 'inspect / verify'], ['res', 'authenticated'], ['fail', '401 / 403 deny']],
+  legend: ['flow', ['req', 'inspect / verify'], ['res', 'authenticated'], ['fail', '401 / 403 / CSRF']],
   goals: [
     { text: 'Expose unprotected endpoint risk before Security', step: 1 },
     { text: 'Bridge Tomcat to Spring via DelegatingFilterProxy', step: 2 },
     { text: 'Route through ordered SecurityFilterChain', step: 3 },
-    { text: 'Verify JWT signature & claims in custom Filter', step: 4 },
-    { text: 'Populate thread-scoped SecurityContextHolder', step: 5 },
-    { text: 'Enforce RBAC (401 vs 403) in AuthorizationFilter', step: 6 },
+    { text: 'Verify passwords via DaoProvider + BCrypt work factor', step: 4 },
+    { text: 'Distinguish CORS vs CSRF & when disabling CSRF is safe', step: 5 },
+    { text: 'Verify OAuth2 JWTs via Resource Server JWK Set', step: 6 },
+    { text: 'Populate thread-scoped SecurityContextHolder', step: 7 },
+    { text: 'Enforce RBAC (401 vs 403, hasRole vs hasAuthority)', step: 8 },
   ],
   steps: [
     {
@@ -123,28 +125,92 @@ export const javaSpringSecurityLesson: Lesson = {
       },
     },
     {
-      short: 'JWT Filter',
+      short: 'BCrypt Auth',
       chapter: 'auth',
-      title: '4. JWT Verification Filter (Signature & Expiry)',
+      title: '4. DaoAuthenticationProvider & BCrypt PasswordEncoder',
       body: [
-        '<code>BearerTokenAuthenticationFilter</code> (or a custom <code>OncePerRequestFilter</code>) extracts the <code>Authorization: Bearer &lt;jwt&gt;</code> header.',
-        'It verifies the cryptographic signature (RS256/HS256) and <code>exp</code> timestamp without hitting the database on every request.',
+        'For login requests, <code>AuthenticationManager</code> delegates to <code>DaoAuthenticationProvider</code>, which loads the user via <code>UserDetailsService</code> and verifies the hash.',
+        'Use <strong>BCrypt</strong> (never SHA-256!): it embeds a random 128-bit salt and uses a deliberately slow cost factor ($2^{10}$–$2^{12}$ rounds) to defeat GPU brute-force.',
       ],
       callout: {
         kind: 'warn',
-        text: 'Invalid or expired tokens return HTTP 401 Unauthorized immediately from AuthenticationEntryPoint.',
+        text: 'Never hash passwords with fast SHA-256 — always use BCryptPasswordEncoder or Argon2PasswordEncoder.',
       },
-      changes: ['+ OncePerRequestFilter extracts Bearer JWT', '+ Verifies signature + exp locally'],
-      metrics: { security_gate: 'JwtAuthFilter', auth_state: 'Verified JWT', principal: 'userId + roles', http_status: '401 if bad' },
+      changes: ['+ DaoProvider calls UserDetailsService', '+ BCrypt adds 128-bit salt + slow rounds'],
+      metrics: { security_gate: 'DaoProvider', auth_state: 'BCrypt 2^12', principal: 'UserDetails', http_status: '401 if bad' },
       scene: {
         entities: {
-          req: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Bearer Header'], sub: 'eyJhbGci...' }),
-          jwt: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['JwtAuthFilter'], sub: 'verify RS256' }),
+          mgr: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['AuthManager'], sub: 'DaoProvider' }),
+          bc: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BCrypt 2^12'], sub: '~100ms hash' }),
+          db: b(14, -10, { r: 2.2, h: 48, color: 'purple', label: ['Users DB'], sub: '$2a$12$...' }),
+          card: S({ x: -12, y: 12 }, '4. Salted Adaptive Hashing with BCrypt', [
+            '@Bean PasswordEncoder passwordEncoder() {',
+            '  return new BCryptPasswordEncoder(12); // 2^12 rounds',
+            '} // Stored: $2a$12$<22-char salt><31-char hash>',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          mg_bc: h('mgr', 'bc', ['mgr', 'bc'], { heads: 'end', label: 'matches()' }),
+          bc_db: h('bc', 'db', ['bc', 'db'], { heads: 'end', label: 'verify salt' }),
+        },
+        flows: [{ route: ['mg_bc', 'bc_db'], kind: 'res', rate: 1.8 }],
+      },
+    },
+    {
+      short: 'CORS vs CSRF',
+      chapter: 'browser',
+      title: '5. Why CORS != CSRF & When Disabling CSRF Is Safe',
+      body: [
+        '<strong>CORS</strong> only restricts browsers reading cross-origin responses (<code>curl</code> ignores it). <strong>CSRF</strong> exploits browsers auto-attaching <code>JSESSIONID</code> cookies on forged cross-site forms.',
+        'Disabling CSRF is safe <strong>ONLY</strong> for stateless APIs reading <code>Authorization: Bearer</code> headers (never cookies!).',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'If you store JWT inside an HttpOnly cookie, browsers STILL auto-send it — you MUST keep CSRF protection enabled!',
+      },
+      changes: ['+ Cookies auto-send -> require CSRF token', '+ Pure Bearer header -> CSRF disable safe'],
+      metrics: { security_gate: 'Cors + Csrf', auth_state: 'Origin Guard', principal: 'Stateless', http_status: '403 if forged' },
+      scene: {
+        entities: {
+          evil: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Forged POST'], sub: 'auto Cookie' }),
+          csrf: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CsrfFilter'], sub: 'checks token' }),
+          api: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Bearer API'], sub: 'no cookies!' }),
+          card: S({ x: -12, y: 12 }, '5. CORS vs CSRF Protection Rules', [
+            '// Safe to disable CSRF ONLY if auth uses Bearer header:',
+            'http.cors(Customizer.withDefaults())',
+            '    .csrf(csrf -> csrf.disable()) // NO cookies!',
+            '    .sessionManagement(s -> s.sessionCreationPolicy(STATELESS));',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          ev_cs: h('evil', 'csrf', ['evil', 'csrf'], { heads: 'end', label: 'blocks 403' }),
+          cs_ap: h('csrf', 'api', ['csrf', 'api'], { heads: 'end', label: 'Bearer ok' }),
+        },
+        flows: [{ route: ['ev_cs'], kind: 'fail', rate: 1.5 }, { route: ['cs_ap'], kind: 'res', rate: 1.8 }],
+      },
+    },
+    {
+      short: 'OAuth2 JWK',
+      chapter: 'auth',
+      title: '6. OAuth2 Resource Server & JWK Verification',
+      body: [
+        'In OAuth2/OIDC (Keycloak, Auth0), the Auth Server signs JWTs with its Private Key. Spring’s <code>oauth2ResourceServer()</code> caches public keys from <code>/.well-known/jwks.json</code>.',
+        'Every incoming Bearer JWT signature and <code>exp</code> is verified locally in microseconds with zero DB/IdP round-trips.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'Invalid or expired JWTs fail immediately with 401 Unauthorized before reaching Controllers.',
+      },
+      changes: ['+ Fetches & caches JWKs by key ID (kid)', '+ Verifies RS256 signature + exp locally'],
+      metrics: { security_gate: 'JwtDecoder', auth_state: 'Verified JWT', principal: 'kid + claims', http_status: '401 if bad' },
+      scene: {
+        entities: {
+          req: d(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Bearer JWT'], sub: 'eyJhbGci...' }),
+          jwt: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['JwtDecoder'], sub: 'cached JWK' }),
           bad: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['401 Unauth'], sub: 'bad/expired' }),
-          card: S({ x: -12, y: 12 }, '4. Stateless JWT Verification', [
-            '// OncePerRequestFilter runs once per HTTP request:',
-            'Jwt jwt = jwtDecoder.decode(bearerToken); // sig + exp',
-            'var auth = new JwtAuthenticationToken(jwt, authorities);',
+          card: S({ x: -12, y: 12 }, '6. Local OAuth2 JWT Verification via JWK', [
+            'http.oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));',
+            '// Verifies RS256 signature against cached jwks.json',
             '// Bad signature or expired -> 401 Unauthorized',
           ], { icon: 'terminal' }),
         },
@@ -158,7 +224,7 @@ export const javaSpringSecurityLesson: Lesson = {
     {
       short: 'SecurityContext',
       chapter: 'auth',
-      title: '5. Populating Thread-Scoped SecurityContextHolder',
+      title: '7. Populating Thread-Scoped SecurityContextHolder',
       body: [
         'Once verified, the filter stores the <code>Authentication</code> object in <code>SecurityContextHolder.getContext()</code> (backed by a <code>ThreadLocal</code>).',
         'Controllers and Services can now read <code>@AuthenticationPrincipal</code> anywhere downstream, and Spring clears the context in a <code>finally</code> block after the request.',
@@ -191,7 +257,7 @@ export const javaSpringSecurityLesson: Lesson = {
     {
       short: 'RBAC 401/403',
       chapter: 'authz',
-      title: '6. AuthorizationFilter & @PreAuthorize (401 vs 403)',
+      title: '8. AuthorizationFilter & @PreAuthorize (401 vs 403)',
       body: [
         'At the end of the chain, <code>AuthorizationFilter</code> checks URL rules and <code>@EnableMethodSecurity</code> checks <code>@PreAuthorize("hasRole(\'ADMIN\')")</code>.',
         '<strong>401 Unauthorized</strong> means "who are you?" (not authenticated); <strong>403 Forbidden</strong> means "I know you, but you lack permission".',

@@ -9,13 +9,13 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaSpringJpaLesson: Lesson = {
   id: 'java-spring-jpa',
-  title: 'Spring Data JPA, Hibernate Persistence Context & N+1',
+  title: 'JPA Context, N+1 & Locking',
   summary:
-    'Trace JPA/Hibernate from JpaRepository queries into the L1 Persistence Context, Dirty Checking write-behind flush, LAZY Proxy N+1 explosions, and JOIN FETCH / DTO fixes.',
-  minutes: 12,
+    'Trace Hibernate L1 Persistence Context, Dirty Checking, N+1 explosions, Entity equals/Data traps, and @Version Optimistic vs Pessimistic FOR UPDATE locking.',
+  minutes: 14,
   level: 'intermediate',
   metrics: ['l1_context', 'sql_queries', 'entity_state', 'performance'],
-  legend: ['flow', ['req', 'query / load'], ['res', 'flush / 1-query'], ['fail', 'N+1 explosion']],
+  legend: ['flow', ['req', 'query / load'], ['res', 'flush / lock'], ['fail', 'N+1 / race']],
   goals: [
     { text: 'Route JpaRepository call into EntityManager L1 Cache', step: 1 },
     { text: 'Track Managed Entity snapshots in Persistence Context', step: 2 },
@@ -23,6 +23,8 @@ export const javaSpringJpaLesson: Lesson = {
     { text: 'Diagnose LAZY Proxy N+1 query explosion', step: 4 },
     { text: 'Collapse N+1 to 1 query via JOIN FETCH / EntityGraph', step: 5 },
     { text: 'Use Read-Only DTO Projections for zero dirty-check cost', step: 6 },
+    { text: 'Avoid Lombok @Data & MultipleBagFetchException on Entities', step: 7 },
+    { text: 'Prevent Lost Updates via @Version vs FOR UPDATE', step: 8 },
   ],
   steps: [
     {
@@ -220,6 +222,73 @@ export const javaSpringJpaLesson: Lesson = {
           db_dt: h('db', 'dto', ['db', 'dto'], { heads: 'end', label: 'record' }),
         },
         flows: [{ route: ['rp_db', 'db_dt'], kind: 'res', rate: 2.1 }],
+      },
+    },
+    {
+      short: 'Entity Traps',
+      chapter: 'jpa',
+      title: '7. Why Lombok @Data & Multi-Bag JOIN FETCH Break Entities',
+      body: [
+        'Using Lombok <code>@Data</code> on a JPA <code>@Entity</code> breaks <code>HashSet</code> after <code>persist()</code> (because <code>id</code> changes from <code>null</code> to <code>1L</code>) and triggers <code>StackOverflowError</code> or lazy-load storms on bidirectional <code>toString()/equals()</code>.',
+        'Also, <code>JOIN FETCH</code> on 2 <code>List</code> collections in one query throws <code>MultipleBagFetchException</code> (Cartesian product) — use <code>Set</code> or split into 2 queries!',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'On @Entity: use @Getter/@Setter + constant class hashCode() (or natural business key), and NEVER @Data or @EqualsAndHashCode!',
+      },
+      changes: ['+ @Data breaks HashSet & lazy toString()', '+ Constant hashCode() + split multi-bag'],
+      metrics: { l1_context: 'Safe @Entity', sql_queries: 'No Cartesian', entity_state: 'Proxy safe', performance: 'Zero StackOvf' },
+      scene: {
+        entities: {
+          data: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Lombok @Data'], sub: 'id null -> 1L' }),
+          set: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['HashSet Lost'], sub: 'hash changed!' }),
+          fix: d(14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Safe @Entity'], sub: 'const hashCode' }),
+          card: S({ x: -12, y: 12 }, '7. Safe JPA @Entity Equals & HashCode', [
+            '// NEVER @Data on @Entity! Use @Getter @Setter instead:',
+            '@Override public boolean equals(Object o) {',
+            '  return this == o || (o instanceof Order x && id != null && id.equals(x.id));',
+            '}',
+            '@Override public int hashCode() { return getClass().hashCode(); }',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          dt_st: h('data', 'set', ['data', 'set'], { heads: 'end', label: 'persist()' }),
+          st_fx: h('set', 'fix', ['set', 'fix'], { heads: 'end', label: 'fix contract' }),
+        },
+        flows: [{ route: ['dt_st'], kind: 'fail', rate: 1.6 }, { route: ['st_fx'], kind: 'res', rate: 1.9 }],
+      },
+    },
+    {
+      short: '@Version Lock',
+      chapter: 'locking',
+      title: '8. Lost Updates: @Version Optimistic vs FOR UPDATE',
+      body: [
+        'Concurrent read-modify-write under <code>READ_COMMITTED</code> causes silent Lost Updates. Add <code>@Version</code> for <strong>Optimistic Locking</strong>: Hibernate emits <code>UPDATE ... WHERE id=? AND version=?</code> and throws <code>OptimisticLockException</code> on conflict.',
+        'For high-contention hot rows, use <code>@Lock(LockModeType.PESSIMISTIC_WRITE)</code> (<code>SELECT ... FOR UPDATE</code>) so Tx B waits at the DB row lock.',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'Default to @Version (zero DB row locks); use PESSIMISTIC_WRITE only on hot inventory/wallet rows with consistent lock ordering.',
+      },
+      changes: ['+ @Version appends WHERE version = ?', '+ PESSIMISTIC_WRITE emits FOR UPDATE'],
+      metrics: { l1_context: 'Lock Safe', sql_queries: 'CAS / FOR UPD', entity_state: 'Versioned', performance: 'No lost write' },
+      scene: {
+        entities: {
+          tx: d(-12, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Tx A (v=1)'], sub: 'stock -= 1' }),
+          opt: b(2, -14, { r: 2.2, h: 48, color: 'green', label: ['@Version CAS'], sub: 'WHERE ver = 1' }),
+          pes: b(2, -2, { r: 2.2, h: 48, color: 'blue', label: ['FOR UPDATE'], sub: 'DB row lock' }),
+          card: S({ x: -12, y: 12 }, '8. Preventing Lost Updates in Spring Data JPA', [
+            '// Optimistic: @Version long ver; -> WHERE id=? AND ver=?',
+            '// Pessimistic (hot rows):',
+            '@Lock(LockModeType.PESSIMISTIC_WRITE)',
+            'Optional<Product> findForUpdate(Long id); // FOR UPDATE',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          tx_op: h('tx', 'opt', ['tx', 'opt'], { heads: 'end', label: 'version' }),
+          tx_ps: h('tx', 'pes', ['tx', 'pes'], { heads: 'end', label: 'hot row' }),
+        },
+        flows: [{ route: ['tx_op'], kind: 'res', rate: 1.9 }, { route: ['tx_ps'], kind: 'req', rate: 1.7 }],
       },
     },
   ],

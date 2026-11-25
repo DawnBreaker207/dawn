@@ -72,17 +72,16 @@ import { javaCollectionsLesson } from './specialized/java-collections';
 import { javaIoNioLesson } from './specialized/java-io-nio';
 import { javaJdbcLesson } from './specialized/java-jdbc';
 import { javaLambdaLesson } from './specialized/java-lambda';
-import { javaGenericsLesson } from './specialized/java-generics';
 import { javaMetaprogrammingLesson } from './specialized/java-metaprogramming';
 import { javaJmmCasAqsLesson } from './specialized/java-jmm-cas-aqs';
+import { javaJitCompilerLesson } from './specialized/java-jit-compiler';
 import { javaClassloaderLesson } from './specialized/java-classloader';
 import { javaCoreApisLesson } from './specialized/java-core-apis';
 
 // Spring Enterprise concepts
 import { javaSpringMvcLesson } from './specialized/java-spring-mvc';
 import { javaSpringBootAutoconfigLesson } from './specialized/java-spring-boot-autoconfig';
-import { javaSpringLockingTxLesson } from './specialized/java-spring-locking-tx';
-import { javaSpringOauth2AuthLesson } from './specialized/java-spring-oauth2-auth';
+import { javaSpringAsyncEventsLesson } from './specialized/java-spring-async-events';
 import { javaSpringActuatorTestingLesson } from './specialized/java-spring-actuator-testing';
 
 // Containers & Kubernetes (k8s.sim)
@@ -212,7 +211,6 @@ export {
   sqlEngineLesson,
   javaTypesBoxingLesson,
   javaStringInternalsLesson,
-  javaGenericsLesson,
   javaCollectionsLesson,
   javaLambdaLesson,
   javaCoreApisLesson,
@@ -221,6 +219,7 @@ export {
   javaMetaprogrammingLesson,
   javaClassloaderLesson,
   javaJvmMemoryLesson,
+  javaJitCompilerLesson,
   javaJmmCasAqsLesson,
   javaVirtualThreadsLesson,
   javaSpringIocLesson,
@@ -228,9 +227,8 @@ export {
   javaSpringBootAutoconfigLesson,
   javaSpringMvcLesson,
   javaSpringJpaLesson,
-  javaSpringLockingTxLesson,
+  javaSpringAsyncEventsLesson,
   javaSpringSecurityLesson,
-  javaSpringOauth2AuthLesson,
   javaSpringActuatorTestingLesson,
   sqlExplainLesson,
   sqlFootprintLesson,
@@ -356,7 +354,6 @@ export const ALL_SCENES: Record<string, any> = {
   'sql': sqlEngineLesson,
   'java-types-boxing': javaTypesBoxingLesson,
   'java-string-internals': javaStringInternalsLesson,
-  'java-generics': javaGenericsLesson,
   'java-collections': javaCollectionsLesson,
   'java-lambda': javaLambdaLesson,
   'java-core-apis': javaCoreApisLesson,
@@ -365,6 +362,7 @@ export const ALL_SCENES: Record<string, any> = {
   'java-metaprogramming': javaMetaprogrammingLesson,
   'java-classloader': javaClassloaderLesson,
   'java-jvm-memory': javaJvmMemoryLesson,
+  'java-jit-compiler': javaJitCompilerLesson,
   'java-jmm-cas-aqs': javaJmmCasAqsLesson,
   'java-virtual-threads': javaVirtualThreadsLesson,
   'java-spring-ioc': javaSpringIocLesson,
@@ -372,9 +370,8 @@ export const ALL_SCENES: Record<string, any> = {
   'java-spring-boot-autoconfig': javaSpringBootAutoconfigLesson,
   'java-spring-mvc': javaSpringMvcLesson,
   'java-spring-jpa': javaSpringJpaLesson,
-  'java-spring-locking-tx': javaSpringLockingTxLesson,
+  'java-spring-async-events': javaSpringAsyncEventsLesson,
   'java-spring-security': javaSpringSecurityLesson,
-  'java-spring-oauth2-auth': javaSpringOauth2AuthLesson,
   'java-spring-actuator-testing': javaSpringActuatorTestingLesson,
   'java': javaTypesBoxingLesson,
   'sql-explain': sqlExplainLesson,

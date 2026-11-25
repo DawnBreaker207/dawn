@@ -9,7 +9,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaSpringBootAutoconfigLesson: Lesson = {
   id: 'java-spring-boot-autoconfig',
-  title: 'Spring Boot Auto-Configuration, Profiles & Config Hierarchy',
+  title: 'Spring Boot Auto-Config',
   summary:
     'Trace Spring Boot startup from @SpringBootApplication through AutoConfiguration.imports, @Conditional filtering, PropertySources precedence, and @ConfigurationProperties binding.',
   minutes: 12,

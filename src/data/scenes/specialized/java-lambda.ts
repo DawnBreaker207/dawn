@@ -9,7 +9,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaLambdaLesson: Lesson = {
   id: 'java-lambda',
-  title: 'Lambda (invokedynamic) & Lazy Stream Pipelines',
+  title: 'Lambda & Lazy Streams',
   summary:
     'Follow lambdas from anonymous inner class bloat to invokedynamic LambdaMetafactory, then trace how Java Streams fuse lazy stages and short-circuit on terminal ops.',
   minutes: 12,

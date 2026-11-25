@@ -9,13 +9,13 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaSpringMvcLesson: Lesson = {
   id: 'java-spring-mvc',
-  title: 'Spring MVC & Request Pipeline (DispatcherServlet)',
+  title: 'Spring MVC, Loom & WebFlux',
   summary:
-    'Trace an HTTP request from Tomcat through Servlet Filters, DispatcherServlet, HandlerMapping, HandlerInterceptor, ArgumentResolver/@Valid, and JSON serialization.',
-  minutes: 12,
+    'Trace Tomcat -> Filters -> DispatcherServlet -> @Valid -> Advice, then compare Spring MVC + Virtual Threads (RestClient) against WebFlux Netty EventLoop & Backpressure.',
+  minutes: 14,
   level: 'intermediate',
   metrics: ['stage', 'container', 'validation', 'response'],
-  legend: ['flow', ['req', 'HTTP request'], ['res', 'JSON response'], ['fail', '400 / 500 error']],
+  legend: ['flow', ['req', 'HTTP request'], ['res', 'JSON / Loom'], ['fail', '400 / loop stall']],
   goals: [
     { text: 'Accept HTTP connection in Embedded Tomcat', step: 1 },
     { text: 'Pass through Servlet Filter chain (outside MVC)', step: 2 },
@@ -23,6 +23,8 @@ export const javaSpringMvcLesson: Lesson = {
     { text: 'Run HandlerInterceptor.preHandle() auth/trace', step: 4 },
     { text: 'Bind JSON & @Valid via ArgumentResolver', step: 5 },
     { text: 'Serialize DTO or handle errors via @RestControllerAdvice', step: 6 },
+    { text: 'Compare MVC + Loom (RestClient) vs WebFlux Loop Stall', step: 7 },
+    { text: 'Control stream overload via Reactor Backpressure', step: 8 },
   ],
   steps: [
     {
@@ -222,6 +224,71 @@ export const javaSpringMvcLesson: Lesson = {
           ct_ad: h('ctrl', 'adv', ['ctrl', 'adv'], { heads: 'end', label: 'throw -> 400' }),
         },
         flows: [{ route: ['ct_cv'], kind: 'res', rate: 2.0 }, { route: ['ct_ad'], kind: 'fail', rate: 1.3 }],
+      },
+    },
+    {
+      short: 'Loom vs Flux',
+      chapter: 'reactive',
+      title: '7. MVC + Loom (RestClient) vs WebFlux EventLoop Stall',
+      body: [
+        '<strong>WebFlux</strong> runs on Netty with only ~8 Event Loop threads: calling blocking JDBC or <code>RestTemplate</code> stalls an Event Loop and freezes ALL 50k connections!',
+        'In Boot 3.2+, <strong>Spring MVC + Virtual Threads + <code>RestClient</code></strong> matches WebFlux I/O concurrency while keeping standard JDBC & clean stack traces.',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Never call blocking JDBC inside Netty WebFlux EventLoop! Use MVC + Virtual Threads for JDBC/CRUD apps.',
+      },
+      changes: ['+ Blocking JDBC freezes 8 Netty loops', '+ MVC + Loom + RestClient scales sync I/O'],
+      metrics: { stage: 'Runtime Choice', container: 'Tomcat vs Netty', validation: 'BlockHound', response: 'Loom or R2DBC' },
+      scene: {
+        entities: {
+          arch: d(-12, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['App Stack'], sub: 'CRUD vs Stream' }),
+          loom: d(2, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['MVC + Loom'], sub: 'JDBC + RestCli' }),
+          flux: d(2, -2, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['WebFlux Loop'], sub: 'blocks JDBC' }),
+          card: S({ x: -12, y: 12 }, '7. Choosing MVC + Loom vs WebFlux', [
+            '// Boot 3.2+ CRUD/JDBC -> MVC + Virtual Threads + RestClient:',
+            'OrderDto dto = restClient.get().uri("/orders/{id}", id)',
+            '  .retrieve().body(OrderDto.class);',
+            '// WebFlux: only 8 Netty loops -> MUST use R2DBC + WebClient!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          ar_lm: h('arch', 'loom', ['arch', 'loom'], { heads: 'end', label: 'CRUD' }),
+          ar_fx: h('arch', 'flux', ['arch', 'flux'], { heads: 'end', label: 'no block!' }),
+        },
+        flows: [{ route: ['ar_lm'], kind: 'res', rate: 1.9 }, { route: ['ar_fx'], kind: 'fail', rate: 1.4 }],
+      },
+    },
+    {
+      short: 'Backpressure',
+      chapter: 'reactive',
+      title: '8. WebFlux Lazy subscribe() & Reactor Backpressure',
+      body: [
+        'In WebFlux, <code>webClient.get().bodyToFlux(...)</code> only builds a lazy plan — nothing runs until <code>subscribe()</code>. Never call <code>.block()</code> on an Event Loop!',
+        'Use WebFlux for Gateways or streaming (SSE/Kafka) where <code>request(n)</code> <strong>Backpressure</strong> prevents fast producers from OOMing slow consumers.',
+      ],
+      callout: {
+        kind: 'insight',
+        text: 'Demand-driven backpressure (limitRate(64)) lets consumers pull only what they can process.',
+      },
+      changes: ['+ Lazy Mono/Flux needs subscribe()', '+ request(n) throttles fast producers'],
+      metrics: { stage: 'Backpressure', container: 'Netty Reactive', validation: 'limitRate(64)', response: 'SSE / Gateway' },
+      scene: {
+        entities: {
+          cons: d(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Slow Consumer'], sub: 'request(64)' }),
+          sub: d(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['Subscription'], sub: 'demand = 64' }),
+          prod: d(14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Fast Producer'], sub: 'emits <= 64' }),
+          card: S({ x: -12, y: 12 }, '8. Reactive Streams Demand & Backpressure', [
+            'eventFlux.limitRate(64)',
+            '  .flatMap(ev -> webClient.post().bodyValue(ev)...);',
+            '// Assembly is lazy; Netty subscribe() triggers I/O!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          cn_sb: h('cons', 'sub', ['cons', 'sub'], { heads: 'end', label: 'request(64)' }),
+          sb_pr: h('sub', 'prod', ['sub', 'prod'], { heads: 'end', label: 'throttle' }),
+        },
+        flows: [{ route: ['cn_sb', 'sb_pr'], kind: 'res', rate: 1.9 }],
       },
     },
   ],

@@ -10,7 +10,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaJmmCasAqsLesson: Lesson = {
   id: 'java-jmm-cas-aqs',
-  title: 'Java Memory Model, volatile, CAS & AQS',
+  title: 'Monitors, JMM, CAS & AQS',
   summary:
     'Master CPU cache visibility, volatile memory barriers, Happens-Before edges, lock-free CAS (Atomic/LongAdder), and AQS (ReentrantLock, Semaphore, CountDownLatch).',
   minutes: 14,

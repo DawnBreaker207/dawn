@@ -9,7 +9,7 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaMetaprogrammingLesson: Lesson = {
   id: 'java-metaprogramming',
-  title: 'Exceptions, Reflection, Annotations & Dynamic Proxies',
+  title: 'Exceptions, Reflection & Proxy',
   summary:
     'Trace Java runtime metaprogramming from zero-cost Exception Tables and RUNTIME annotations to Reflection Method.invoke, JDK Dynamic Proxies, and CGLIB subclasses.',
   minutes: 12,

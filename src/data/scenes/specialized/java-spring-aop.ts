@@ -9,13 +9,13 @@ import type { Lesson } from '@/lib/simulator/types';
 
 export const javaSpringAopLesson: Lesson = {
   id: 'java-spring-aop',
-  title: 'Spring AOP, Dynamic Proxies & @Transactional',
+  title: 'Spring AOP & @Transactional',
   summary:
-    'Trace how Spring AOP wraps beans in JDK/CGLIB proxies, executes @Around interceptor chains, manages @Transactional JDBC commits/rollbacks, and fails on self-invocation.',
-  minutes: 12,
+    'Trace how Spring AOP wraps beans in JDK/CGLIB proxies, manages @Transactional JDBC commits, fails on self-invocation, and risks HikariCP deadlock on REQUIRES_NEW.',
+  minutes: 14,
   level: 'intermediate',
   metrics: ['proxy_layer', 'tx_status', 'jdbc_conn', 'pitfall'],
-  legend: ['flow', ['req', 'intercept / begin'], ['res', 'commit / return'], ['fail', 'rollback / bypass']],
+  legend: ['flow', ['req', 'intercept / begin'], ['res', 'commit / return'], ['fail', 'rollback / starve']],
   goals: [
     { text: 'Contrast direct call vs cross-cutting Proxy wrap', step: 1 },
     { text: 'Choose JDK Dynamic Proxy vs CGLIB Subclass', step: 2 },
@@ -23,6 +23,8 @@ export const javaSpringAopLesson: Lesson = {
     { text: 'Open JDBC Tx (autoCommit=false) in TxInterceptor', step: 4 },
     { text: 'Commit or Rollback on RuntimeException', step: 5 },
     { text: 'Diagnose Self-Invocation (this.method) Proxy Bypass', step: 6 },
+    { text: 'Explain REQUIRED rollbackOnly UnexpectedRollbackEx', step: 7 },
+    { text: 'Avoid HikariCP Pool Starvation with REQUIRES_NEW', step: 8 },
   ],
   steps: [
     {
@@ -221,6 +223,71 @@ export const javaSpringAopLesson: Lesson = {
           a_b: h('mA', 'mB', ['mA', 'mB'], { heads: 'end', label: 'this.call()' }),
         },
         flows: [{ route: ['px_a'], kind: 'req', rate: 1.6 }, { route: ['a_b'], kind: 'fail', rate: 1.8 }],
+      },
+    },
+    {
+      short: 'REQUIRED Trap',
+      chapter: 'tx',
+      title: '7. Why Catching Inner Exception Still Rolls Back',
+      body: [
+        'With default <code>Propagation.REQUIRED</code>, Outer and Inner share <strong>one JDBC Connection</strong>. If Inner throws a <code>RuntimeException</code>, Spring marks the shared TX <code>rollbackOnly = true</code>.',
+        'Even if Outer catches the exception and continues, Outer explodes with <code>UnexpectedRollbackException</code> at commit!',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Catching an exception from a REQUIRED inner bean does NOT save the outer TX — use REQUIRES_NEW or noRollbackFor if intentional.',
+      },
+      changes: ['+ Outer & Inner share 1 ThreadLocal TX', '+ Inner RuntimeEx sets rollbackOnly=true'],
+      metrics: { proxy_layer: 'TxInterceptor', tx_status: 'rollbackOnly!', jdbc_conn: '1 Shared', pitfall: 'UnexpectedRlbk' },
+      scene: {
+        entities: {
+          outer: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Outer @Tx'], sub: 'catches ex' }),
+          inner: d(0, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Inner @Tx'], sub: 'throws Runtime' }),
+          db: b(14, -10, { r: 2.2, h: 48, color: 'red', label: ['RollbackOnly'], sub: 'UnexpectedEx' }),
+          card: S({ x: -12, y: 12 }, '7. Propagation.REQUIRED Shared Rollback', [
+            '// Outer REQUIRED + Inner REQUIRED = 1 shared TX!',
+            'try { innerService.riskyOp(); } catch (Exception ignored) {}',
+            '// Inner already marked TX rollbackOnly=true!',
+            '// At Outer exit -> UnexpectedRollbackException!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          ot_in: h('outer', 'inner', ['outer', 'inner'], { heads: 'end', label: 'share conn' }),
+          in_db: h('inner', 'db', ['inner', 'db'], { heads: 'end', label: 'mark rollback' }),
+        },
+        flows: [{ route: ['ot_in', 'in_db'], kind: 'fail', rate: 1.8 }],
+      },
+    },
+    {
+      short: 'REQUIRES_NEW',
+      chapter: 'tx',
+      title: '8. REQUIRES_NEW & HikariCP Starvation Deadlock',
+      body: [
+        '<code>REQUIRES_NEW</code> suspends Outer’s Connection and checks out a <strong>2nd HikariCP Connection</strong> on the same thread.',
+        'If HikariCP pool size is 10 and 10 concurrent threads enter Outer then call <code>REQUIRES_NEW</code>, all 10 hang waiting for an 11th connection until 30s timeout!',
+      ],
+      callout: {
+        kind: 'warn',
+        text: 'Avoid REQUIRES_NEW under high concurrency — prefer @TransactionalEventListener(AFTER_COMMIT) or size pool >= 2 * maxThreads.',
+      },
+      changes: ['+ Suspends conn #1 & borrows conn #2', '+ Pool=10 with 10 callers = deadlock!'],
+      metrics: { proxy_layer: 'REQUIRES_NEW', tx_status: '2 TX / thread', jdbc_conn: 'Pool Starve!', pitfall: '30s timeout' },
+      scene: {
+        entities: {
+          th: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['10 Callers'], sub: 'hold 10 conns' }),
+          pool: b(0, -10, { r: 2.2, h: 48, color: 'red', label: ['HikariCP (10)'], sub: '0 free conns!' }),
+          wait: d(14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['30s Timeout'], sub: 'pool deadlock' }),
+          card: S({ x: -12, y: 12 }, '8. Why REQUIRES_NEW Deadlocks Small Pools', [
+            '@Transactional(propagation = Propagation.REQUIRES_NEW)',
+            '// Suspends conn #1 -> needs conn #2 from HikariCP!',
+            '// If pool=10 & 10 Outer TXs active -> 0 free -> HANG!',
+          ], { icon: 'terminal' }),
+        },
+        links: {
+          th_pl: h('th', 'pool', ['th', 'pool'], { heads: 'end', label: 'ask conn #2' }),
+          pl_wt: h('pool', 'wait', ['pool', 'wait'], { heads: 'end', label: 'hangs 30s' }),
+        },
+        flows: [{ route: ['th_pl', 'pl_wt'], kind: 'fail', rate: 1.8 }],
       },
     },
   ],
