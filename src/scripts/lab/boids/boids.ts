@@ -22,12 +22,15 @@ const SEPARATION_RADIUS = 26;
 const CURSOR_RADIUS = 170;
 
 function initBoidsLab(): void {
-  const canvas = document.getElementById('boids-canvas') as HTMLCanvasElement | null;
-  if (!canvas || canvas.dataset.initialized === '1') return;
-  canvas.dataset.initialized = '1';
+  const canvasEl = document.getElementById('boids-canvas') as HTMLCanvasElement | null;
+  if (!canvasEl || canvasEl.dataset.initialized === '1') return;
+  canvasEl.dataset.initialized = '1';
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  const context = canvasEl.getContext('2d');
+  if (!context) return;
+  // Non-null bindings so the hoisted helper functions below keep the narrowed types.
+  const canvas: HTMLCanvasElement = canvasEl;
+  const ctx: CanvasRenderingContext2D = context;
 
   const modeBtn = document.getElementById('boids-mode') as HTMLButtonElement | null;
   const scatterBtn = document.getElementById('boids-scatter') as HTMLButtonElement | null;

@@ -111,7 +111,10 @@ export default function TokenBurnRail() {
                         <img
                           src={`https://cdn.simpleicons.org/${brand.slug}`}
                           alt=""
+                          width={14}
+                          height={14}
                           loading="lazy"
+                          decoding="async"
                           className="h-3.5 w-3.5 shrink-0"
                           onError={(e) => e.currentTarget.remove()}
                         />

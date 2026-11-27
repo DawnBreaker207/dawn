@@ -2,10 +2,9 @@
 import '@fontsource/outfit/400.css';
 import '@fontsource/outfit/600.css';
 import '@fontsource/outfit/700.css';
-import '../styles/global.css';
-import '../styles/shell.css';
-import '../styles/prism.css';
-import '../styles/twemoji.css';
+import '@/styles/global.css';
+import '@/styles/shell.css';
+import '@/styles/twemoji.css';
 import { ClientRouter } from 'astro:transitions';
 import SidebarExplorer from '@/components/shell/SidebarExplorer.astro';
 import TabBar from '@/components/shell/TabBar.astro';
@@ -27,6 +26,8 @@ interface Props {
   jsonLd?: Record<string, unknown>;
   fullBleed?: boolean;
   noindex?: boolean;
+  /** Canonical path when this URL duplicates another page (defaults to the current path). */
+  canonicalPath?: string;
 }
 
 const {
@@ -38,10 +39,11 @@ const {
   jsonLd,
   fullBleed = false,
   noindex = false,
+  canonicalPath,
 } = Astro.props;
 const ogUrl = ogImage ? `${SITE_URL}/og/${ogImage}.png` : `${SITE_URL}${SITE.socialBanner}`;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
-const canonicalUrl = `${SITE_URL}${Astro.url.pathname}`;
+const canonicalUrl = `${SITE_URL}${canonicalPath ?? Astro.url.pathname}`;
 const jsonLdGraph = [{ '@type': 'WebSite', name: SITE.title, url: SITE_URL }, ...(jsonLd ? [jsonLd] : [])];
 
 const activePath = Astro.url.pathname;

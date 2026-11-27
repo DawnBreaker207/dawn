@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getPosts } from '@/lib/utils/blog';
 import { apiCache } from '@/lib/api-cache';
-import booksData from '../../data/books.json';
+import booksData from '@/data/books.json';
 
 export const prerender = false;
 

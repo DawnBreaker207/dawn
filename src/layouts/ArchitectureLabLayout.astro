@@ -6,6 +6,7 @@ import SimulationWorkbench from '@/components/lab/architecture/SimulationWorkben
 import '@/styles/simulation.css';
 import '@/styles/lab-architecture.css';
 import { ALL_SCENES } from '@/data/scenes';
+import { getLessonHref } from '@/data/curriculum';
 import type { Lesson } from '@/lib/simulator/types';
 
 export const prerender = true;
@@ -21,9 +22,12 @@ interface Props {
 const { title, description, lessonId, trackId, moduleId } = Astro.props;
 
 const labLesson = ALL_SCENES[lessonId] as unknown as Lesson;
+// A lesson can be reachable from several URLs (e.g. /lab/angular and
+// /lab/angular-flow); the canonical one is the URL the site links to.
+const canonicalPath = getLessonHref(lessonId);
 ---
 
-<BaseLayout title={title} description={description} fullBleed={true}>
+<BaseLayout title={title} description={description} fullBleed={true} canonicalPath={canonicalPath}>
   <div slot="topbar-actions" class="topbar-lab-controls">
     <ChapterPicker currentLessonId={lessonId} trackId={trackId} moduleId={moduleId} />
   </div>

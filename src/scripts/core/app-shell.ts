@@ -360,6 +360,30 @@ function bindShell() {
     };
     once(extToggle, 'click', () => setOpen(!extOverlay.hasAttribute('data-open')));
   }
+
+  /* SIDEBAR SECTIONS & FOLDERS: persist open/closed states to localStorage */
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    const detailsList = sidebar.querySelectorAll<HTMLDetailsElement>('details[data-sec]');
+    detailsList.forEach((el) => {
+      const secKey = el.getAttribute('data-sec');
+      if (!secKey) return;
+      const storageKey = `dawn:sec:${secKey}`;
+      const savedState = localStorage.getItem(storageKey);
+
+      // Restore saved state if explicitly recorded by user
+      if (savedState === 'open') {
+        el.open = true;
+      } else if (savedState === 'closed') {
+        el.open = false;
+      }
+
+      // Track future toggles
+      once(el, 'toggle', () => {
+        localStorage.setItem(storageKey, el.open ? 'open' : 'closed');
+      });
+    });
+  }
 }
 
 function boot() {
@@ -408,6 +432,24 @@ document.addEventListener('astro:before-swap', (e) => {
     const newShell = newDoc.getElementById('studio-shell');
     if (newShell) {
       newShell.dataset.mobilePanel = savedMobilePanel;
+    }
+  }
+
+  // Pre-apply saved sidebar section states on the incoming document to prevent flicker
+  if (newDoc) {
+    const newSidebar = newDoc.getElementById('sidebar');
+    if (newSidebar) {
+      const detailsList = newSidebar.querySelectorAll<HTMLDetailsElement>('details[data-sec]');
+      detailsList.forEach((el) => {
+        const secKey = el.getAttribute('data-sec');
+        if (!secKey) return;
+        const savedState = localStorage.getItem(`dawn:sec:${secKey}`);
+        if (savedState === 'open') {
+          el.open = true;
+        } else if (savedState === 'closed') {
+          el.open = false;
+        }
+      });
     }
   }
 

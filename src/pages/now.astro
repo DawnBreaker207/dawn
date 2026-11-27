@@ -108,6 +108,10 @@ const musicItems: MusicItem[] = Array.isArray(nowData.entertainment.music)
                 <img
                   src={book.bookMediumImageUrl}
                   alt={book.title}
+                  width="56"
+                  height="80"
+                  loading="lazy"
+                  decoding="async"
                   class="h-20 w-14 shrink-0 rounded border border-(--border) object-cover shadow-xs"
                 />
               ) : (

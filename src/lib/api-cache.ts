@@ -17,18 +17,23 @@ export function apiCache<V>(options: ApiCacheOptions) {
       if (value == null) return respond(null, false, 502);
       if (value instanceof Object && 'ok' in value && value.ok === false) return respond(value, false);
       store.set(key, value);
-      return respond(value, false);
+      return respond(value, true);
     } catch {
       return respond(null, false, 502);
     }
   };
 
-  function respond(value: V | null, cached: boolean, status = 200) {
+  /**
+   * Successful responses are CDN-cacheable whether they came from the
+   * in-memory cache or a fresh load: serverless instances are short-lived, so
+   * the in-memory cache alone rarely hits. Failures are never cached.
+   */
+  function respond(value: V | null, cacheable: boolean, status = 200) {
     return new Response(JSON.stringify(value), {
       status,
       headers: {
         'content-type': 'application/json; charset=utf-8',
-        'cache-control': cached
+        'cache-control': cacheable
           ? `public, max-age=${options.maxAge}, s-maxage=${options.sMaxAge}, stale-while-revalidate=${options.stale}`
           : 'no-cache',
       },

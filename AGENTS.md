@@ -65,7 +65,7 @@ something, the agent stops and asks rather than improvising.
 
 | Layer | Tech |
 |---|---|
-| Framework | Astro 5 (SSG + SSR via Vercel adapter) |
+| Framework | Astro 7 (SSG + SSR API routes via Vercel adapter) |
 | UI interactivity | React 19 — islands only, not the default |
 | Styling | Tailwind CSS v4 (Vite plugin) + CSS custom properties |
 | Language | TypeScript strict throughout — no `any` without a comment |
@@ -126,8 +126,8 @@ Mixing data with logic, server with client, or build scripts with browser module
 > It renders interactive system design architectures (servers, balancers, databases, queues, animated packet flows, real-time metrics, step timelines, and guide rails).  
 >
 > **CRITICAL ARCHITECTURAL RULE — DATA VS ENGINE:**  
-> - **Engine Logic (`src/lib/simulator/`):** Pure mathematical & SVG rendering algorithms (`runtime-draw.ts`, `stage-engine.ts`, `scene-builders.ts`, `scene-renderer.ts`, `curriculum.ts`). **Zero scene content is allowed here.**
-> - **Scene Data (`src/data/scenes/`):** The 44 architectural simulation scene definitions (`aws-vpc.ts`, `sql-engine.ts`, `consistent-hashing.ts`...). These files define layout coordinates, packet flow paths, step texts, and metric states — **they are DATA, not engine code**, and must reside in `src/data/scenes/`.
+> - **Engine Logic (`src/lib/simulator/`):** Pure TypeScript — `stage/` (StageEngine: step transitions, camera, packets, gestures, label layout) and `draw/` (SVG entity renderers), plus `scene-builders.ts` (entity factories used by scenes). **Zero scene content is allowed here.**
+> - **Scene Data (`src/data/scenes/`):** The 142 simulation scene definitions (registered in `src/data/scenes/index.ts`) (`aws-vpc.ts`, `sql-engine.ts`, `consistent-hashing.ts`...). These files define layout coordinates, packet flow paths, step texts, and metric states — **they are DATA, not engine code**, and must reside in `src/data/scenes/`.
 
 ---
 
@@ -148,7 +148,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 │
 ├── src/
 │   ├── data/                           ← [LAYER 1B: STATIC APPLICATION & SIMULATION DATA]
-│   │   ├── scenes/                     ← 137 Simulator Simulation Scene Graphs across 11 Canonical Tracks
+│   │   ├── scenes/                     ← 142 Simulator scene graphs (index.ts = ALL_SCENES registry)
 │   │   │   ├── angular/                ← 14 Angular architecture & reactive signal DAG scenes
 │   │   │   ├── architecture/           ← batch-stream.ts, microservices.ts, sagas.ts
 │   │   │   ├── cloud/                  ← aws-vpc.ts, aws-ha.ts, k8s-*.ts, docker-*.ts
@@ -171,13 +171,14 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │   └── now.json                    ← Current activity status
 │   │
 │   ├── lib/                            ← [LAYER 2: CORE ENGINES & LOGIC (Pure Code — No Data)]
-│   │   ├── simulator/                  ← Simulator Isometric Simulation Engine (SVG renderers, state loop)
-│   │   │   ├── runtime-draw.ts         ← Isometric SVG canvas entity renderers (blocks, dbs, queues)
-│   │   │   ├── stage-engine.ts         ← Interactive step playback, packet animations & metric state
+│   │   ├── simulator/                  ← Isometric simulation engine (pure TS, fully typed)
+│   │   │   ├── stage/                  ← StageEngine: engine.ts (transitions, frame loop), camera.ts, layout.ts,
+│   │   │   │                              labels.ts, packets.ts, gestures.ts, motion.ts, geometry.ts, text.ts, color.ts
+│   │   │   ├── draw/                   ← SVG drawing: entities/ (block, db, device, zone, queue, panel, ring…),
+│   │   │   │                              prism.ts, pills.ts, paths.ts, iso.ts, defs.ts, palette.ts, icons.ts
 │   │   │   ├── scene-builders.ts       ← Scene entity factory functions (makeBlock, makeDb, makeBalancer)
-│   │   │   ├── scene-renderer.ts       ← Canvas scene serializer
-│   │   │   ├── curriculum.ts           ← Runtime lesson navigation & breadcrumb resolver
-│   │   │   └── types.ts                ← Simulator domain types (Lesson, Step, Scene, Entity)
+│   │   │   ├── chapter-kinds.ts        ← Step chapter badges shown by the workbench
+│   │   │   └── types.ts                ← Lesson / step types
 │   │   ├── runtime/                    ← Server-only code (DB, Prisma, GitHub API, LLM tokens — NEVER import in client)
 │   │   ├── utils/                      ← Pure shared utility functions (blog parsing, slugify, date formatting)
 │   │   ├── site.ts & nav.ts            ← Global site config & navigation links
@@ -187,8 +188,7 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │   ├── shell/                      ← Studio layout chrome (SidebarExplorer, TabBar, Rail, Breadcrumb, TerminalFooter)
 │   │   ├── widget/                     ← Live runtime widgets (BlogStats, TokenBurnRail, GitActivity, CommitGraph)
 │   │   ├── lab/                        ← Interactive lab UI components
-│   │   │   ├── architecture/           ← Simulator Workbench chrome (SimulationWorkbench.astro, SceneRenderer.tsx, ChapterPicker)
-│   │   │   └── sql/                    ← 2D SQL pipeline & B-Tree stage visualizers
+│   │   │   └── architecture/           ← Simulator Workbench chrome (SimulationWorkbench.astro, SceneRenderer.tsx, ChapterPicker)
 │   │   ├── blog/                       ← Blog post layouts, cards, and reading UI
 │   │   ├── home/                       ← Homepage-specific showcase components
 │   │   ├── about/                      ← About page bio, timeline, and tech stack items
@@ -522,7 +522,7 @@ In SVG rendering, the `y` attribute of a `<text>` element defines its **baseline
 - Characters with ascenders (`h`, `t`, `k`, `B`) extend upwards by approximately $0.72 \times \text{fontSize}$ above the baseline.
 - **The Visual Collision Bug:** If a text baseline is placed at $o + 7.5\text{px}$ with $\text{fontSize} = 11.5\text{px}$, the top of the characters reaches $o - 0.78\text{px}$. Meanwhile, a glyph icon centered at $o - 4$ with height $19\text{px}$ has its bottom edge at $o + 5.5\text{px}$. The glyph and the label intersect by over $6\text{px}$, causing severe visual clumping.
 
-##### B. Mathematical Clearance Formula (Standard in `runtime-draw.ts`)
+##### B. Mathematical Clearance Formula (Standard in `draw/entities/block.ts`)
 To guarantee crisp readability and zero overlap:
 $$\begin{cases} \text{iconY} = o - 9 \\ \text{minStartY} \ge o + 16.5\text{px} \\ \text{Physical Clearance} = (o + 16.5 - 0.72 \times \text{fontSize}) - (o - 9 + \text{iconRadius}) \ge 6.5\text{px} \end{cases}$$
 
@@ -553,7 +553,7 @@ In SVG isometric rendering, text elements are centered relative to the block's d
 ##### E. Floor Zone Typography & Clearance Rules
 Floor boundary zones (`makeZone` / `x({ x0, x1, y0, y1 }, 'LABEL')`) render a dashed diamond perimeter with an angled isometric title in the SVG canvas:
 - **Origin & Vector Projection of Floor Text:**
-  - The renderer (`runtime-draw.ts:810`) places the zone text at `(x0 + 0.9, y0 + 0.55)` and projects it along the isometric $+x$ grid axis using SVG `matrix(1 0.5 -1 0.5 sx sy)`.
+  - The renderer (`draw/entities/zone.ts`) places the zone text at `(x0 + 0.9, y0 + 0.55)` and projects it along the isometric $+x$ grid axis using SVG `matrix(1 0.5 -1 0.5 sx sy)`.
   - In screen pixel coordinates, this trajectory runs along vector $[dx, dy] = [1, 0.5]$ (down-right at $+26.57^\circ$, following the top-left to bottom dashed edge from $(x0, y0)$ toward $(x1, y0)$).
   - Each character occupies approximately $9.2\text{px}$ in screen width (font-size 10.5, font-weight 800, letter-spacing 1.6).
 - **Zone Label Length Limit ($\le 14$ characters):**
@@ -684,7 +684,7 @@ When a link features an explanatory text label (`label: '...'`):
 - **FORBIDDEN: Overwritten Link Paths:** If a link is too short ($D < 165\text{px}$), the text label badge ($W_{\text{text}} \approx \text{chars} \times 7.2 + 24\text{px}$) will physically overwrite the arrow line, clip into block corners, and collide with arrowheads.
 
 ##### B. Anti-Detached Label Rule (Preventing Floating Disconnected Labels)
-The engine's collision avoidance algorithm (`Vf` in `stage-engine.ts`) calculates potential bounding box collisions around the link midpoint:
+The engine's collision avoidance algorithm (`placeLabel` in `stage/labels.ts`) calculates potential bounding box collisions around the link midpoint:
 1. **Vertical Projection Trap ($\Delta sx = 0$):** When two nodes are aligned along the vertical screen depth axis ($\Delta x = -\Delta y$), the tangent vector forces the label laterally into the adjacent block or tag bounding box.
 2. **Tag Collision Penalty:** If the source or target node has active tags (`tags: [...]`), the label area overlaps with the tag pill.
 3. **The Detached Bug:** When the engine detects a collision penalty at the link edge, **it triggers an aggressive fallback offset ($+26\text{px} \sim +40\text{px}$)**, causing the label to be shoved far away from the link line, floating disconnected in empty space.
@@ -808,12 +808,13 @@ A floating panel provides high pedagogical value when it presents a **concrete t
 
 #### 11. Mandatory Automated Verification & Pre-Commit Validation
 - **Zero Tolerance for Guesswork Editing:** No lesson modification or creation is considered done without automated verification against real browser rendering.
-- **Automated Verification Command:**
-  For every lesson created or touched, run:
+- **Automated Verification:**
+  For every lesson created or touched, run the scene auditor and compare it with the run before your change — your change must not add findings:
   ```bash
-  node scratch/verify_lesson.cjs <lesson-id>
+  node scripts/audit-all-diagrams.mjs
   ```
-  *Gate:* 0 critical overlaps ($D < 90\text{px}$), 0 crowded pairs ($D < 125\text{px}$), all goals hit with `gap >= 7px`, 0 console errors, full frame visibility.
+  Then open the lesson in the dev server and step through every step (light + dark): 0 console errors, nothing overlapping or clipped, goals light up on the step that teaches them.
+- **Goals:** `goals[].step` is **1-based** (the goal is checked when the learner reaches that step). When inserting or removing steps, re-point every goal at or after the change.
 - **Pre-Commit Validation:**
   ```bash
   node scripts/audit-all-diagrams.mjs
@@ -1214,90 +1215,10 @@ Do not import a lab script into another lab or into a global script.
 
 ## 15. Project Audit — Known Gaps to Fix
 
-This section documents the known structural gaps between the current codebase and the
-rules above. When touching any of these areas, fix them as part of the same change.
-Do not leave them in place and add more code on top.
-
-### A. `src/components/` root — 21 unorganized files
-
-These files exist flat in `src/components/` and must be moved to their correct subfolder.
-Every import that references them must be updated at the same time.
-
-**Move to `src/components/shell/`:**
-```
-Breadcrumb.astro
-CommandPalette.tsx
-ExplorerFileIcon.astro
-Rail.astro
-SidebarExplorer.astro
-TabBar.astro
-TerminalFooter.astro
-```
-
-**Move to `src/components/widget/`:**
-```
-BlogStats.tsx
-CommitGraph.tsx
-GitActivity.tsx
-LabRail.tsx
-LabSimCard.astro
-LiveClock.tsx
-RecentActivity.tsx
-TokenBurnRail.tsx
-```
-
-**Move to `src/components/lab/java/`:**
-```
-JavaConcurrencyTab.astro
-JavaJvmTab.astro
-JavaRegularTab.astro
-```
-
-**Move to `src/components/blog/`:**
-```
-PostList.astro
-TagChips.astro
-```
-
-### B. `Pagination.astro` duplicate — resolve before adding pagination anywhere
-
-Two different components exist for the same purpose:
-- `src/components/Pagination.astro` — prop: `base`, compact mono style
-- `src/components/blog/Pagination.astro` — prop: `basePath`, "Previous/Next" button style
-
-Decide on one, delete the other, update all imports. The `blog/` version is newer.
-
-### C. Data files misplaced in `src/lib/`
-
-These are pure data constants with no utility logic. Move to `src/data/` and update imports:
-
-```
-src/lib/aws-system-design.ts  →  src/data/aws-system-design.ts
-src/lib/system-architecture.ts  →  src/data/system-architecture.ts
-src/lib/labs.ts  →  src/data/labs.ts
-```
-
-### D. `projectsData.json` at project root
-
-Currently imported via relative path from two places:
-- `src/layouts/BaseLayout.astro` → `../../projectsData.json`
-- `src/pages/projects/index.astro` → `../../../projectsData.json`
-
-Move to `src/data/projectsData.json` and update both imports to `@/data/projectsData.json`.
-
-### E. `shell.css` does not exist
-
-All studio shell layout CSS is currently in `global.css` (~800 lines of `.studio-*`,
-`.explorer-*`, `.tab-bar`, `.sidebar-ext*`, `.pal-*`, `.version-*`, `.tip`, `.toc-link`,
-`.copy-btn`). This must be extracted to `src/styles/shell.css` and imported in
-`BaseLayout.astro`.
-
-### F. SQL lab CSS is in `global.css`
-
-~150 lines of SQL lab styles (`.fp-*`, `.pool-*`, `.tb-*`, `.mvcc-*`, `.bt-*`,
-`.infra-tab-active`) live in `global.css`. They must be moved to
-`src/styles/lab-sql.css`, scoped under a `.sql-lab { }` root class, and imported only
-by `src/pages/lab/sql.astro`.
+All structural gaps previously listed here (unorganized `src/components/` root,
+duplicate `Pagination.astro`, data files in `src/lib/`, `projectsData.json` at root,
+missing `shell.css`, SQL lab CSS in `global.css`) are resolved — see §25. Record new
+gaps here when you find them, and fix them in the change that touches the area.
 
 ---
 
@@ -1322,13 +1243,13 @@ scripts/             AGENTS.md        README.md   LICENSE
 ```
 build-books.mjs      build-og.mjs       build-stats.mjs
 sync-notion.mjs      sync-now.mjs       token-burn.mjs
-prisma.mjs           check-db.mjs
+check-db.mjs         audit-all-diagrams.mjs   ← scene auditor, required by §8
 ```
 
 One-off audit/debug scripts should be deleted after use, not committed:
 ```
 audit-pills.cjs         inspect-real-page.cjs    spec-all-labs.cjs
-audit-all-diagrams.mjs  register-aws-lesson.cjs  generate-system-design.mjs
+register-aws-lesson.cjs  generate-system-design.mjs
 ```
 
 ### Root `*.log` and `*.json` artifacts — delete and gitignore
@@ -1385,14 +1306,10 @@ public/static/images/experiences/     ← company logos for about page
 public/static/images/projects/        ← project screenshots
 public/static/resume.pdf
 public/og/                            ← generated OpenGraph images
-public/dts/                           ← pre-built Simulator bundle, served as iframe embed
-                                         at /lab/architecture — referenced by lab pages
 ```
 
-`src/lib/simulator/` (legacy `public/dts/` removed) is a pre-built Vite bundle for the Designed-to-Scale interactive labs.
-It is loaded as an iframe in `aws-cloud.astro`, `microservices.astro`,
-`request-lifecycle.astro`, and `ArchitectureChapterPicker.astro`. Do not delete it.
-To update it, re-run the Simulator build script (`scripts/audit-all-diagrams.mjs`).
+The old pre-built simulator bundle (`public/dts/`) has been removed; every lab renders
+through the TypeScript engine in `src/lib/simulator/`.
 
 ### What to delete
 
@@ -1442,7 +1359,7 @@ the file that uses it.
 
 ## 19. Auto-Generated Files — Do Not Edit Manually
 
-Several files in `src/data/` are written by build scripts and gitignored.
+Several files are written by build scripts (most are gitignored; `src/data/books.json` is committed).
 **Do not edit them directly.** Run the corresponding script instead.
 
 | File | Generated by | When to run |
@@ -1540,36 +1457,12 @@ Everything that can go through Astro's pipeline should.
 | Static media | `images/`, `icons/`, `favicon.ico`, `resume.pdf` | No processing needed |
 | Browser config | `robots.txt`, `static/favicons/site.webmanifest` | Must be at a fixed URL |
 | Generated assets | `og/*.png` | Built by scripts, not Astro |
-| Pre-built sub-apps | `dts/` | See below |
 
-### Pre-built sub-apps (`src/lib/simulator/` (legacy `public/dts/` removed) pattern)
+### Pre-built sub-apps
 
-A sub-app belongs in `public/` only when **all three** conditions are true:
-
-1. **It is built by a separate tool** (Vite, webpack, etc.) outside of Astro
-2. **It runs in an isolated context** — an `<iframe>` with its own origin
-3. **It communicates with the parent only via `postMessage`** or URL hash — not imports
-
-The `src/lib/simulator/` (legacy `public/dts/` removed) bundle is the only current example. It is an isometric simulation
-app (Designed-to-Scale) that runs inside iframes on lab pages. It has its own
-`index.html`, hashed JS/CSS assets, and `simulator-bridge` which syncs the theme with
-the parent page via `postMessage`.
-
-```
-public/dts/
-  index.html          ← the sub-app shell
-  simulator-bridge       ← postMessage theme sync, runs inside the iframe
-  simulator/_theme.css       ← base CSS for the sub-app
-  assets/             ← hashed Vite output (JS, CSS, fonts)
-```
-
-> **Note**: `src/lib/simulator/` (legacy `public/dts/` removed) is actively being migrated to a pure TypeScript renderer
-> (see Section 29). It remains here as a visual reference during migration.
-> Do not add new lessons to the bundle — add them to `src/lib/simulator/lessons.ts`.
-> Once all pages are migrated and verified, `src/lib/simulator/` (legacy `public/dts/` removed) will be deleted.
-
-**Do not** create a second sub-app bundle in `public/` without a clear reason why
-it cannot be an Astro page or component.
+There are none. A sub-app may only live in `public/` when it is built by a separate
+tool, runs in an isolated `<iframe>`, and talks to the page only via `postMessage` —
+and only when it cannot be an Astro page or component. Do not add one without that reason.
 
 ### What must NOT go in `public/`
 
@@ -1637,7 +1530,9 @@ expand the scope.
 |---|---|---|
 | `src/data/labs.ts` | `LABS` array — the registry of all lab pages (title, href, tag, intro) | Lab implementation logic |
 | `src/data/aws-system-design.ts` | Node/step data for the AWS cloud lab visualization | Rendering logic |
-| `src/lib/simulator/lessons.ts` | Lesson + step + scene data for all Simulator arch labs (TS renderer) | Rendering logic |
+| `src/data/scenes/index.ts` | `ALL_SCENES` — registry of every simulator lesson (scene data lives in `src/data/scenes/<domain>/`) | Rendering logic |
+| `src/data/curriculum.ts` | Tracks, modules, lesson ids/titles, `getLessonHref()` | Scene data |
+| `src/data/lab-track-pages.ts` | Lab URLs that are not `/lab/<lessonId>` (track entry pages, custom titles) | Rendering logic |
 | `data/headerNavLinks.ts` | Legacy nav config (root-level, do not move — imported by old data scripts) | — |
 
 ### Utilities
@@ -1673,12 +1568,12 @@ expand the scope.
 
 | File | Owns |
 |---|---|
-| `src/scripts/app-shell.ts` | Tab bar management, keyboard shortcuts (`Ctrl+K` palette, `Ctrl+B` sidebar), mobile panel toggle, `astro:page-load` re-registration |
-| `src/scripts/site.ts` | Theme toggle, tooltips, mobile nav, typed bios, TOC scrollspy, reading progress bar, code copy buttons, language badges, blog grid/list toggle |
-| `src/scripts/extras.ts` | Weather widget, spider canvas — non-critical ambient features |
-| `src/scripts/sound.ts` | Keyboard sound effects |
+| `src/scripts/core/app-shell.ts` | Tab bar management, keyboard shortcuts (`Ctrl+K` palette, `Ctrl+B` sidebar), mobile panel toggle, `astro:page-load` re-registration |
+| `src/scripts/core/dom-interactions.ts` | Theme toggle, tooltips, mobile nav, typed bios, TOC scrollspy, view counter, blog grid/list toggle |
+| `src/scripts/core/extras.ts` | Keymap, help modal, link previews, easter egg detection, weather/sound loaders. Page-specific parts are lazy modules in `core/extras/` (code-block buttons, reading progress, confetti) |
+| `src/scripts/core/weather.ts`, `sound.ts` | Weather canvas and keyboard sounds — loaded on demand by `extras.ts` |
 
-These four scripts are loaded by `BaseLayout.astro` and run on every page navigation.
+The three entry scripts (`app-shell`, `dom-interactions`, `extras`) are loaded by `BaseLayout.astro` and run on every page navigation.
 They must never import from lab scripts. Keep them small — if a feature is page-specific,
 put it in `src/scripts/<page-name>.ts` instead.
 
@@ -1690,7 +1585,6 @@ put it in `src/scripts/<page-name>.ts` instead.
 | `src/styles/global.css` | Tailwind setup, `@theme` tokens, `@keyframes`, `@layer base`, `@layer utilities` |
 | `src/styles/shell.css` | Studio layout: `.studio-*`, `.explorer-*`, `.tab-bar`, `.sidebar-ext*`, command palette, tooltips |
 | `src/styles/simulation.css` | Simulator isometric lab theme, scoped under `.sim-window` |
-| `src/styles/prism.css` | Syntax highlighting |
 | `src/styles/twemoji.css` | Twemoji rendering |
 
 ---
@@ -1810,13 +1704,15 @@ and has not been converted yet. Update this table as work is completed.
 | Data files moved from `src/lib/` | ✅ Done | `aws-system-design.ts`, `system-architecture.ts`, `labs.ts` moved to `src/data/` |
 | `projectsData.json` moved to `src/data/` | ✅ Done | Moved to `src/data/projectsData.json`, imports updated to `@/data/projectsData.json` |
 | `shell.css` extracted from `global.css` | ✅ Done | ~900 lines of shell CSS extracted to `src/styles/shell.css` |
-| SQL lab CSS extracted to `lab-sql.css` | ✅ Done | Extracted to `src/styles/lab-sql.css` scoped under `.sql-lab` |
+| 2D SQL visualizers retired | ✅ Done | 2D components and `lab-sql.css` removed; missing content converted to 3D steps (indexes: page split; transactions: version chain, partition pruning) |
 | Root screenshot PNGs deleted | ✅ Done | Cleaned all root debug screenshots |
 | `faq/` deleted | ✅ Done | Cleaned leftover docs |
 | `public/system-design.html` deleted | ✅ Done | Deleted dev prototype |
-| Unused `public/static/images/` deleted | ❌ Not done | canada/, ocean.jpeg, google.png, etc. |
+| Unused `public/static/images/` deleted | ✅ Done | 12 files (canada/, ocean.jpeg, google.png, github-traffic.png, sparrowhawk-avatar.jpg, both time-machine.jpg, projects/jira-clone.png, experiences/fpoly-logo.png). Kept `404.gif` and the grit PNGs (listed as intentional in §17, now unreferenced) |
 | `.gitignore` gaps added | ✅ Done | Added patterns for screenshots, scratch/, etc. |
-| Simulator iframe pages migrated to TS renderer | 🔄 In progress | `request-lifecycle` verified (Playwright Stage 1+2 passed, 3 rendering fixes applied); `aws-cloud`, `microservices`, `ArchitectureChapterPicker` pending |
+| Simulator iframe pages migrated to TS renderer | ✅ Done | All labs render via `SceneRenderer` + `StageEngine`; `public/dts/` removed |
+| Simulator engine de-minified & typed | ✅ Done | `src/lib/simulator/stage/` + `draw/`, no `@ts-nocheck`; output verified byte-identical on all 142 lessons |
+| Track pages consolidated | ✅ Done | 14 wrapper pages → `src/data/lab-track-pages.ts` + `[lesson].astro`; duplicate URLs get a canonical |
 
 **When doing a migration task:** pick one row, complete it fully (move files + update
 all imports + verify build passes), then mark it done. Do not do partial migrations.
@@ -1882,527 +1778,54 @@ must be set in the Vercel dashboard for the sync steps to succeed.
 
 ## 28. iframe Usage Rules
 
-### Default: do not use iframes for new features
-
-If you own the content, write it as an Astro component or vanilla TS script.
-iframes add complexity (theme sync, postMessage, CSP headers, mobile scroll issues)
-that is only justified when you have no alternative.
-
-### When an iframe is acceptable
-
-| Case | Allowed? | Why |
-|---|---|---|
-| Third-party widget (Giscus comments, YouTube embed) | ✅ Yes | No other way to embed |
-| Pre-built external bundle with its own CSS/JS ecosystem (current Simulator) | ⚠️ Being phased out | Simulator is being migrated to pure TS renderer — do not add new iframe embeds |
-| New animation or simulation you are writing yourself | ❌ No | Write as `.astro` + `<canvas>` / SVG / vanilla TS |
-| A page section you want to isolate from the main layout | ❌ No | Use Astro slots or a scoped component instead |
-
-### The existing Simulator iframe — being migrated away
-
-`/lab/architecture` is a Vite app built separately from Astro. It was embedded in:
-- `src/pages/lab/aws-cloud.astro`
-- `src/pages/lab/microservices.astro`
-- `src/pages/lab/request-lifecycle.astro`
-- `src/components/lab/ArchitectureChapterPicker.astro`
-
-These pages are actively being migrated to the pure TS rendering stack (see **Section 29**).
-Do not add new iframe embeds pointing to `/lab/architecture`.
-
-### If you need to add a new Simulator lesson
-
-Add the lesson data to `src/lib/simulator/lessons.ts` using the factory functions from
-`src/lib/simulator/scene-builders.ts`. Wire it into `LabWorkbench` via
-`src/layouts/ArchitectureLabLayout.astro`. Do **not** rebuild the bundle or add a
-new iframe — that is the old approach being replaced.
+Only third-party embeds (Giscus comments, YouTube) use iframes. Anything you build
+yourself — simulations, animations, isolated page sections — is an Astro component
+or vanilla TS, never an iframe.
 
 ---
 
-## 29. Simulator Isometric Rendering — Rules
+## 29. Isometric Simulator Engine — Structure & Verification
 
-### End goal: eliminate `src/lib/simulator/` (legacy `public/dts/` removed) entirely
-
-The long-term goal is to **remove `src/lib/simulator/` (legacy `public/dts/` removed) from the project** — every lab page
-that currently uses an iframe pointing to the bundle will be replaced by the TS
-rendering stack. When all pages are migrated and verified, `src/lib/simulator/` (legacy `public/dts/` removed) can be
-deleted.
-
-The migration is complete only when:
-1. Every Simulator lab page renders via `LabWorkbench` + `SceneRenderer` (no iframes)
-2. Each migrated page passes the full Playwright comparison against the bundle page
-3. `src/lib/simulator/` (legacy `public/dts/` removed) is no longer referenced anywhere in `src/`
-
-Until a page is migrated and verified, the bundle stays in place as the reference.
-
-### The bundle is a reference, not a dependency
-
-`src/lib/simulator/` (legacy `public/dts/` removed) is a pre-built Vite bundle for the original Simulator (Designed-to-Scale)
-interactive app. It is kept **only as a visual reference during migration**. It must
-never be imported, injected into, or depended on by any TypeScript/Astro code.
-
-> **Rule**: Any lab page or component that renders isometric 3D diagrams must use
-> the pure TypeScript rendering stack described below — never the iframe/bundle.
-
-The bundle files in `public/dts/assets/*.js` are the **reference implementation**.
-When a visual needs to look a certain way, compare against the bundle by running
-the dev server and opening `/lab/architecture` directly. The goal is **1:1 visual
-parity** — the TS page must be indistinguishable from the bundle page so that
-`src/lib/simulator/` (legacy `public/dts/` removed) can eventually be deleted.
-
-### The TS isometric rendering stack
-
-All isometric lab diagrams are built with this fixed stack:
+### Where things live
 
 ```
-src/lib/simulator/runtime-draw.ts   ← entity renderers (Zr=block, li=device, fi=db, …)
-                                 color palette, gradient defs, iso projection math
-                                 ⚠ edit only to fix a rendering gap vs the bundle —
-                                   never to add new abstractions or change behavior
-
-src/lib/simulator/scene-builders.ts ← entity factories: makeBlock, makeDevice, makeDb,
-                                 makeUser, makeDns, makeWebServer, makeDatabase, …
-
-src/lib/simulator/lessons.ts        ← lesson + step + scene data for all 13 arch labs
-
-src/lib/simulator/scene-renderer.ts ← renderScene(scene) → { inner: string, viewBox: string }
-                                 calls ENTITY_RENDERERS[type](entity) for each entity,
-                                 trims link paths against entity polys, computes viewBox
-
-src/components/widget/SceneRenderer.tsx
-                              ← React island that calls renderScene() per step,
-                                 listens for 'wb:step-change' on .wb-root,
-                                 renders <svg dangerouslySetInnerHTML={inner} />
+src/data/scenes/<domain>/<lesson>.ts   lesson data: steps, entities, links, flows, cards
+src/data/scenes/index.ts               ALL_SCENES registry (add new lessons here)
+src/data/curriculum.ts                 track / module / lesson ids and titles
+src/lib/simulator/scene-builders.ts    makeBlock, makeDb, makeLink, makePanel… used by scenes
+src/lib/simulator/stage/               StageEngine (transitions, camera, packets, labels, gestures)
+src/lib/simulator/draw/                SVG renderers per entity type + shared drawing helpers
+src/components/lab/architecture/       SimulationWorkbench (guide, HUD, timeline) + SceneRenderer island
+src/layouts/ArchitectureLabLayout.astro  page shell for every lesson
+src/pages/lab/[lesson].astro           renders /lab/<lessonId> and the track pages
 ```
 
-### How to add a new isometric lab scene
+### Adding a lesson
 
-1. Define lesson data in `src/lib/simulator/lessons.ts` using the factory functions
-   from `scene-builders.ts` (`makeBlock`, `makeDevice`, `makeDb`, `makeLink`, …).
-2. Each step has a `scene: { entities: {}, links: {} }` object.
-3. Wire the lesson into `LabWorkbench` + `SceneRenderer` via
-   `src/layouts/ArchitectureLabLayout.astro` (add to `LESSON_MAP`).
-4. Verify visual output matches bundle by running dev server and comparing side-by-side.
+1. Create `src/data/scenes/<domain>/<lesson>.ts` using the scene builders.
+2. Register it in `src/data/scenes/index.ts` and add it to `src/data/curriculum.ts`.
+3. Follow the diagram rules in §8, then verify (below).
 
-### Entity types and their defaults
+### Changing the engine
 
-| Type | Renderer | Key fields |
-|---|---|---|
-| `block` | `Zr` | `x, y, s=4, h=46, color, glyph, label[]` |
-| `device` | `li` | `x, y, w=6, d=6, label, tags[]` |
-| `db` | `fi` | `x, y, r=1.7, h=38, label` |
-| `zone` | `mi` | `x0, x1, y0, y1, label` |
-| `queue` | `gi` | `x, y, n, dir` |
+The engine's output is pure SVG markup, so refactors can be verified exactly: snapshot
+the stage SVG of every lesson at every step (fake clock + seeded `Math.random`,
+mid-animation frames included) before the change, and require byte-identical output
+after it. Behavior changes are reviewed visually instead (light + dark, desktop + mobile).
 
-Color names: `blue`, `orange`, `green`, `yellow`, `purple`, `slab`, `store`.
-
-### What is strictly forbidden
+### Forbidden
 
 | ❌ Don't | ✅ Do instead |
 |---|---|
-| Import from `public/dts/*.js` | Import from `src/lib/simulator/*.ts` |
-| Modify `public/dts/assets/*.js` | Edit `src/lib/simulator/runtime-draw.ts` source |
-| Embed `/lab/architecture` in a new iframe | Use `SceneRenderer` + `LabWorkbench` |
-| Write a new hand-rolled polygon renderer | Use `ENTITY_RENDERERS` from `runtime-draw.ts` |
-| Add lesson data as inline JSX in a component | Add to `src/lib/simulator/lessons.ts` |
-| Declare 1:1 parity without a Playwright screenshot comparison | Always run the compare script and check the output |
-| Compare only the diagram/canvas area | Compare the **full page** — layout, header, controls, fonts, spacing, everything |
-| Accept any visual difference between bundle page and TS page | Zero tolerance — if it looks different anywhere, it is not done |
-
-### Visual verification with Playwright — mandatory before declaring parity
-
-**The goal**: after migration, the page (e.g. `/lab/request-lifecycle`) must look and
-behave **exactly the same** as it did before migration when it used the bundle iframe.
-A user visiting the page must not notice any difference — same layout, same diagram,
-same controls, same fonts, same spacing, same animations at every step.
-
-The comparison is **the same URL, before vs after** — not bundle URL vs TS URL.
-
-**This is a full page comparison. No exceptions. Everything must be identical:**
-
-| What | Must match |
-|---|---|
-| **Frame / layout** | Page structure, panel proportions, sidebar vs canvas split, padding |
-| **Layout & alignment** | Position of every element — step counter, buttons, title, description |
-| **Colors & palette** | Background, text, buttons, borders, diagram color palette |
-| **Typography** | Font family, size, weight, line height for all visible text |
-| **Controls** | Button shape, size, active/disabled state, hover effect |
-| **Diagram** | Entity shapes, gradients, link arrows, label pills at every step |
-| **Animation** | Step transitions, timing, easing — identical behavior |
-
-If **any** of the above is different after migration, the migration is not complete.
-
-#### How to run the comparison
-
-**Step 1 — Take reference screenshots before migrating** (while the page still uses the bundle):
-
-```ts
-// save-reference.mjs — run BEFORE making any code changes
-import { chromium } from 'playwright';
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-
-await page.goto('http://localhost:4321/lab/request-lifecycle');
-await page.waitForTimeout(3000);
-
-// Screenshot every step
-const stepCount = await page.locator('.wb-step-btn, [data-step]').count(); // adapt selector
-for (let i = 0; i < Math.max(stepCount, 5); i++) {
-  await page.locator('.wb-root').evaluate((el, idx) => {
-    el.dispatchEvent(new CustomEvent('wb:navigate', { detail: { index: idx } }));
-  }, i);
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: `ref-step-${i}.png` });
-}
-await browser.close();
-```
-
-**Step 2 — Perform the migration** (replace iframe with TS renderer).
-
-**Step 3 — Take the same screenshots after migrating and compare:**
-
-```ts
-// compare-after.mjs — run AFTER migration
-import { chromium } from 'playwright';
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-
-await page.goto('http://localhost:4321/lab/request-lifecycle');
-await page.waitForTimeout(3000);
-
-for (let i = 0; i < 5; i++) {
-  await page.locator('.wb-root').evaluate((el, idx) => {
-    el.dispatchEvent(new CustomEvent('wb:navigate', { detail: { index: idx } }));
-  }, i);
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: `after-step-${i}.png` });
-}
-await browser.close();
-// Open ref-step-N.png and after-step-N.png side by side — must be identical
-```
-
-#### Failure criteria — do not declare done if any of these are true
-
-- Any screenshot after migration differs from the reference (any element, any area)
-- Step navigation behaves differently (timing, visual feedback, scene update)
-- Any animation present before is missing after
-- Any UI element is absent, repositioned, or restyled
-- Diagram shows plain rectangles instead of isometric shapes
-- Gradients, shadows, or filters are missing
-- Link arrows missing or wrong direction
-- Entity labels missing or wrong font
-- All steps look identical (scene not updating on navigation)
-
-### Stage 2 — Animation testing (frame-by-frame)
-
-Static screenshots only verify frozen end-states. Every step transition has animation
-frames — entry, mid-transition, exit — and **each one must match the reference** too.
-Every small detail counts: how an entity fades in, how a link draws itself, how the
-step counter updates, button press feedback.
-
-#### What to capture for each step transition
-
-For every transition from step N → step N+1, capture **three moments**:
-
-| Frame | When | What to look for |
-|---|---|---|
-| **Start frame** | Immediately after triggering navigation (t=0) | Old scene still visible, transition begins |
-| **Mid frame** | Halfway through transition (t = duration/2) | Partial fade, partial draw, mid-easing state |
-| **End frame** | After transition completes | New scene fully rendered, all elements settled |
-
-All three frames must match the reference (taken from the bundle version of the same page).
-
-#### How to capture animation frames with Playwright
-
-```ts
-// animation-compare.mjs — run before AND after migration, compare both sets
-import { chromium } from 'playwright';
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-
-await page.goto('http://localhost:4321/lab/request-lifecycle');
-await page.waitForTimeout(3000);
-
-// Install fake clock so we can freeze time at any frame
-await page.clock.install();
-
-for (let i = 0; i < totalSteps - 1; i++) {
-  // Freeze time, trigger transition
-  await page.clock.pauseAt(Date.now());
-  await page.locator('.wb-root').evaluate((el, idx) => {
-    el.dispatchEvent(new CustomEvent('wb:navigate', { detail: { index: idx } }));
-  }, i + 1);
-
-  // Start frame (t=0)
-  await page.screenshot({ path: `anim-${i}-start.png` });
-
-  // Mid frame — advance clock to halfway point of the CSS transition duration
-  await page.clock.tick(150); // adjust to actual transition duration / 2
-  await page.screenshot({ path: `anim-${i}-mid.png` });
-
-  // End frame — advance past the full transition
-  await page.clock.tick(300); // adjust to actual transition duration
-  await page.screenshot({ path: `anim-${i}-end.png` });
-
-  await page.clock.resume();
-  await page.waitForTimeout(100);
-}
-
-await browser.close();
-```
-
-Run this script **before** migration (reference) and **after** migration (actual).
-Every `anim-N-start/mid/end.png` pair must be pixel-identical.
-
-#### What counts as an animation detail
-
-- **Entity entry**: new entity fades/slides in — capture mid-fade opacity, position
-- **Entity exit**: removed entity fades/slides out — capture mid-fade
-- **Link drawing**: link path animates from start to end point — capture mid-draw
-- **Step counter**: number ticks up — capture the moment of change
-- **Button active state**: button press feedback — capture pressed state
-- **Progress indicator**: advances to new position — capture mid-advance
-- **viewBox change**: canvas reframes to fit new entities — capture mid-reframe
-
-#### SVG content assertion — verify structure, not just visuals
-
-Screenshots catch visual differences. Also assert the SVG DOM structure matches:
-
-```ts
-// After navigating to step N, assert expected entities are present
-const labels = await page.locator('.wb-canvas-area svg text').allTextContents();
-// Compare against expected labels for this step — must match reference exactly
-```
-
-#### Animation failure criteria
-
-| Symptom | Diagnosis |
-|---|---|
-| All step screenshots identical | `wb:navigate` not reaching `.wb-root`; renderer not listening |
-| Mid-frame is same as end-frame | CSS transition missing or duration is 0 |
-| Start frame already shows new scene | Transition fires but snapshot taken too late |
-| Entity appears but no entry animation | Fade/slide keyframe missing from CSS |
-| Link appears instantly, no draw animation | SVG `stroke-dashoffset` animation missing |
-| Step counter doesn't update | Event handler not wired to counter element |
-| Reference and actual mid-frames differ | Easing, duration, or keyframe values don't match bundle |
-
-#### Additional testing requirements
-
-**1. Same viewport for reference and actual**
-Both sets of screenshots must use the same viewport size. A different width causes
-layout reflow — every pixel will differ even when the code is correct. Pin the
-viewport explicitly in the script and never change it between runs:
-```ts
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-```
-
-**2. Fonts must finish loading before screenshot**
-If fonts haven't loaded, text renders in a fallback font and screenshots will differ.
-Wait for network idle before taking any screenshot:
-```ts
-await page.waitForLoadState('networkidle');
-```
-
-**3. Pin the theme before shooting**
-If reference is taken in dark mode and actual in light mode, every color will differ.
-Force a specific theme before taking screenshots:
-```ts
-await page.evaluate(() => document.documentElement.classList.add('dark')); // or remove
-```
-
-**4. React island must hydrate before triggering events**
-`SceneRenderer` is a React island — if `wb:navigate` fires before it has mounted,
-the scene will not update. Wait for the canvas element to be present and non-empty:
-```ts
-await page.waitForSelector('.wb-canvas-area svg path', { state: 'attached' });
-```
-
-**5. Force `prefers-reduced-motion: no-preference`**
-If the OS has reduced motion enabled, CSS animations are disabled — mid-frames will
-look identical to end-frames and animation gaps will go undetected. Override it:
-```ts
-await page.emulateMedia({ reducedMotion: 'no-preference' });
-```
-
-**6. Read actual transition duration before hardcoding `clock.tick()`**
-The script skeleton uses `150ms` / `300ms` as placeholders. Before running the test,
-read the real CSS `transition-duration` from the element:
-```ts
-const duration = await page.locator('.wb-canvas-area').evaluate(el =>
-  parseFloat(getComputedStyle(el).transitionDuration) * 1000
-);
-// then use: clock.tick(duration / 2) for mid-frame, clock.tick(duration) for end-frame
-```
-
-**7. Scroll position**
-Lab content may be below the fold. Scroll to the content area before taking any
-screenshot. If reference and actual capture different scroll positions, every pixel
-will differ even when the code is correct.
-
-**8. Check console errors**
-A silent JS error can cause partial SVG rendering that looks "almost right" visually.
-Always listen for errors during the test — if any fire, fail immediately:
-
-```ts
-page.on('pageerror', err => { throw new Error(`JS error: ${err.message}`); });
-page.on('console', msg => { if (msg.type() === 'error') console.error(msg.text()); });
-```
-
-**9. Step 0 also has an entry animation**
-Every step — including step 0 on initial page load — has an entry animation when its
-entities appear. Do not skip step 0 in animation testing. Capture start/mid/end frames
-for step 0 just like every other step.
-
-**10. Race condition between transitions**
-Triggering `wb:navigate` while a previous transition is still running produces an
-undefined mid-state. Always wait for the current transition to fully complete (or use
-`page.clock` to control time) before triggering the next navigation.
-
-**11. SVG `<defs>` ids must match**
-`buildDefs()` generates gradient and filter elements with specific ids (e.g.
-`url(#grad-blue-top)`). If a renderer references a different id, the browser silently
-skips the gradient — the shape still renders but without fill. This looks "almost
-correct" in a screenshot. Verify gradient ids in `buildDefs()` match exactly what each
-renderer function references in its `fill="url(#...)"` attributes.
-
-**12. Hover/focus states must be tested separately**
-Static screenshots never capture hover effects. If the bundle page has hover animations
-on buttons or entities, test them explicitly using `page.hover()` before shooting:
-```ts
-await page.hover('.wb-nav-btn'); // hover the Next button
-await page.screenshot({ path: 'hover-next-btn.png' });
-// compare against reference hover screenshot taken from bundle version
-```
-Test every interactive element that has a visible hover or focus state.
-
-**14. Pin Device Pixel Ratio (DPR)**
-If reference screenshots are taken at DPR=1 and actual at DPR=2 (retina display), every
-pixel will differ even when the code is correct. Always pin `deviceScaleFactor`
-explicitly — both reference and actual runs must use the same value:
-```ts
-const ctx = await browser.newContext({
-  viewport: { width: 1280, height: 800 },
-  deviceScaleFactor: 1, // always pin — never leave as default
-});
-```
-
-**15. JS-driven animation (`requestAnimationFrame`) vs CSS transition**
-`page.clock.tick()` controls `setTimeout`, `setInterval`, and CSS transitions. It does
-**not** freeze `requestAnimationFrame` (rAF) — if the bundle drives any animation via
-rAF directly, `tick()` will not capture a deterministic mid-frame.
-
-Check whether Simulator uses rAF. If it does, use `page.clock.runFor()` instead of `tick()`
-so rAF callbacks are executed in sync with the clock:
-```ts
-// for rAF-driven animations:
-await page.clock.runFor(150); // mid-frame
-await page.screenshot({ path: 'mid.png' });
-await page.clock.runFor(150); // end-frame
-await page.screenshot({ path: 'end.png' });
-```
-
-**13. `buildIconCanvas` icon assets must finish loading**
-`runtime-draw.ts` uses `buildIconCanvas` to render icons inside laptop/device entities.
-If the icon has not loaded when the screenshot is taken, the entity renders without its
-icon — shape is correct but icon is blank. `waitForLoadState('networkidle')` usually
-covers this, but if icons are loaded from an external URL, add an explicit wait:
-```ts
-await page.waitForFunction(() =>
-  document.querySelectorAll('.wb-canvas-area svg image').length === 0 ||
-  [...document.querySelectorAll('.wb-canvas-area svg image')].every(img => img.complete)
-);
-```
-
-### When comparison fails — re-mapping process
-
-If the Playwright screenshots show the TS renderer does **not** match the bundle,
-do **not** guess or patch. Follow this process:
-
-#### Step 1 — Isolate the diff
-
-Identify exactly what is wrong by comparing the two screenshots pixel-by-pixel:
-
-- Which entity type is wrong? (block vs device vs db vs zone vs queue)
-- Is it shape, color, gradient, label, or position?
-- Does it affect all steps or only specific ones?
-- Is it a missing SVG element, or the wrong one rendered?
-
-#### Note: CSS is not part of the comparison
-
-Entity rendering in Simulator is **pure SVG with inline attributes** — fill, stroke,
-gradients, and filters are all SVG `<defs>` and element attributes. The bundle's
-`simulator/_theme.css` only styles the page shell, not the entities themselves.
-
-The only CSS that can affect SVG visual output is:
-- `font-family` on label text (SVG uses `font-family="inherit"` — make sure the
-  lab page loads the same font as the bundle page)
-- Background color of the canvas area (set as inline style on the React container,
-  not CSS — currently `#fffaf2`)
-
-**Conclusion**: comparing against `/lab/architecture` screenshots is the definitive
-reference. If the screenshots match visually, CSS is correct by implication.
-Only audit CSS separately if a discrepancy appears that the SVG markup alone
-cannot explain (e.g. font renders differently, canvas background is wrong color).
-
-#### Step 2 — Read the bundle source for that entity
-
-Open the corresponding renderer in `src/lib/simulator/runtime-draw.ts` and trace the
-function responsible for the mismatching entity:
-
-| Entity | Renderer function | Key variables |
-|---|---|---|
-| `block` | `Zr(e)` | `color → vr[color]`, face polygons, gradient ids |
-| `device` (laptop) | `li(e)` | screen polygon, keyboard polygon, `a()` icon canvas |
-| `db` (cylinder) | `fi(e)` | top ellipse, body rect, gradient |
-| `zone` | `mi(e)` | dashed outline rect |
-| `queue` | `gi(e)` | repeated slot shapes |
-
-Compare what the function actually produces against what shows in the bundle
-screenshot. If they differ, the extraction in `runtime-draw.ts` is incomplete —
-something was lost during the bundle-to-TS conversion.
-
-#### Step 3 — Cross-check the bundle output directly
-
-Run the dev server and open `/lab/architecture` directly in a browser. Use DevTools
-to inspect the rendered SVG:
-
-```
-DevTools → Inspector → select the entity → copy outerHTML
-```
-
-Compare the copied SVG markup against what `Zr()`/`li()`/`fi()` produces by
-calling the renderer in isolation:
-
-```ts
-// Quick debug in browser console on the TS lab page
-import { ENTITY_RENDERERS, ENTITY_DEFAULTS } from '/src/lib/simulator/runtime-draw.ts';
-const ent = { ...ENTITY_DEFAULTS.block, x: 0, y: 0, color: 'blue', label: ['Test'] };
-console.log(ENTITY_RENDERERS.block(ent));
-```
-
-#### Step 4 — Fix the gap, do not patch around it
-
-If a renderer function in `runtime-draw.ts` is missing or incorrect:
-- Fix it directly in `runtime-draw.ts` — do not add compensating logic in `scene-renderer.ts`
-- If a gradient or filter id is wrong, fix `buildDefs()` in `runtime-draw.ts`
-- If an import is missing (e.g. `buildIconCanvas`), add it at the top of `runtime-draw.ts`
-- Do not duplicate rendering logic outside of `runtime-draw.ts`
-
-If `scene-renderer.ts` is calling the renderer incorrectly (wrong entity field
-names, wrong normalization):
-- Fix `normalize()` in `scene-renderer.ts` to match the bundle's `np()` function
-- Fix `resolveIsoPoint()` if link pts are resolving to wrong screen coords
-
-#### Step 5 — Re-run Playwright and confirm
-
-After every fix, re-run the Playwright comparison. Only declare the issue resolved
-when the screenshot diff is visually identical. If a new diff appears after fixing
-one thing, repeat from Step 1 for the new discrepancy.
-
-**Rule: never stop at "close enough".** The bundle is the ground truth.
-If the TS renderer is 90% right, the remaining 10% is still a bug.
+| Embed a simulation in an iframe | Use `SceneRenderer` + `StageEngine` |
+| Write a hand-rolled polygon renderer in a component | Add or extend a renderer in `src/lib/simulator/draw/entities/` |
+| Put scene data in `src/lib/` or in components | `src/data/scenes/` |
+| Add 2D side visualizers next to the 3D stage | Model the concept as 3D steps (+ a code card) |
+| Add `@ts-nocheck` to engine files | Keep `src/lib/simulator/` fully typed |
 
 ---
 
-## 29. Typography & Font Size Scale (Root Reference)
+## 30. Typography & Font Size Scale (Root Reference)
 
 All content pages (`/`, `/about`, `/now`, `/projects`, `/books`, `/blog`, `/topics`, `/heatmap`, `/tokens`) must follow the root typography scale defined by `src/components/home/Hero.astro`, `src/pages/index.astro`, and `src/pages/about/index.astro`. Never shrink readable body or list text below `text-sm sm:text-base`.
 
@@ -2417,7 +1840,7 @@ All content pages (`/`, `/about`, `/now`, `/projects`, `/books`, `/blog`, `/topi
 
 ---
 
-## 30. What Not to Do
+## 31. What Not to Do
 
 | ❌ Don't | ✅ Do instead |
 |---|---|

@@ -10,146 +10,19 @@ interface GlobalHandlers {
 
 const state: GlobalHandlers = { progressWin: null, keydoc: null };
 
+// Lazily loaded features — pages only download the code they actually use.
 function addCopyButtons(): void {
-  for (const pre of document.querySelectorAll<HTMLPreElement>('pre')) {
-    if (!pre.querySelector('code') || pre.querySelector('.copy-btn')) continue;
-
-    const codeEl = pre.querySelector('code');
-    const lang =
-      pre.dataset.language ??
-      codeEl?.getAttribute('data-language') ??
-      codeEl?.className.match(/language-([\w#.+-]+)/)?.[1];
-
-    if (lang) {
-      const badge = document.createElement('span');
-      badge.className = 'code-badge';
-      badge.textContent = lang;
-      pre.append(badge);
-    }
-
-    pre.classList.add('has-copy');
-
-    // Copy Button
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'copy-btn';
-    btn.setAttribute('aria-label', 'Copy code to clipboard');
-    btn.setAttribute('data-track-event', 'code-copy');
-    btn.title = 'Copy';
-    btn.innerHTML =
-      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' +
-      '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-    pre.append(btn);
-
-    btn.addEventListener('click', async () => {
-      const text = pre.innerText.replace(/(?:Copy|Copied|Expand code.*|Collapse code)$/i, '').trim();
-      try {
-        await navigator.clipboard.writeText(text);
-      } catch {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.append(ta);
-        ta.select();
-        document.execCommand('copy');
-        ta.remove();
-      }
-      btn.classList.add('is-copied');
-      btn.innerHTML =
-        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">' +
-        '<polyline points="20 6 9 17 4 12"/></svg>';
-      btn.title = 'Copied!';
-      setTimeout(() => {
-        btn.classList.remove('is-copied');
-        btn.innerHTML =
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' +
-          '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-        btn.title = 'Copy';
-      }, 1500);
-    });
-
-    // Collapsible Code Block for long code (> 28 lines)
-    const lineCount = (codeEl?.textContent || '').split('\n').length;
-    if (lineCount > 28) {
-      pre.classList.add('code-collapsed');
-      const collapseBtn = document.createElement('button');
-      collapseBtn.type = 'button';
-      collapseBtn.className = 'code-collapse-btn';
-      collapseBtn.innerHTML = `<span>Expand code (${lineCount} lines)</span><span aria-hidden="true">↓</span>`;
-      collapseBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isCollapsed = pre.classList.toggle('code-collapsed');
-        if (isCollapsed) {
-          collapseBtn.innerHTML = `<span>Expand code (${lineCount} lines)</span><span aria-hidden="true">↓</span>`;
-          pre.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        } else {
-          collapseBtn.innerHTML = `<span>Collapse code</span><span aria-hidden="true">↑</span>`;
-        }
-      });
-      pre.append(collapseBtn);
-    }
-  }
+  if (document.querySelector('pre')) void import('./extras/code-blocks.ts').then((m) => m.addCopyButtons());
 }
 
+let readingProgressLoaded = false;
 function setupReadingProgress(): void {
-  state.progressWin?.();
-  state.progressWin = null;
-
-  if (!document.querySelector('[data-post-page]')) {
+  if (!readingProgressLoaded && !document.querySelector('[data-post-page]')) {
     document.getElementById('reading-progress')?.remove();
     return;
   }
-
-  const scroller = document.querySelector<HTMLElement>('.studio-content');
-  if (!scroller) return;
-
-  let bar = document.getElementById('reading-progress');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'reading-progress';
-    bar.setAttribute('aria-hidden', 'true');
-    scroller.prepend(bar);
-  }
-
-  let milestone50Fired = false;
-  let milestone100Fired = false;
-
-  let raf = 0;
-  const update = (): void => {
-    const scrollable =
-      scroller.scrollHeight > scroller.clientHeight ? scroller : document.documentElement;
-    const max = scrollable.scrollHeight - scrollable.clientHeight;
-    const ratio = max > 0 ? scrollable.scrollTop / max : 0;
-    bar!.style.transform = `scaleX(${Math.min(1, Math.max(0, ratio)).toFixed(4)})`;
-
-    if (max > 200) {
-      if (!milestone50Fired && ratio >= 0.5) {
-        milestone50Fired = true;
-        try {
-          (window as any).umami?.track('reading-milestone', { depth: '50%', path: window.location.pathname });
-        } catch {}
-      }
-      if (!milestone100Fired && ratio >= 0.9) {
-        milestone100Fired = true;
-        try {
-          (window as any).umami?.track('reading-milestone', { depth: '100%', path: window.location.pathname });
-        } catch {}
-      }
-    }
-  };
-
-  const onScroll = (): void => {
-    if (raf) return;
-    raf = window.requestAnimationFrame(() => {
-      raf = 0;
-      update();
-    });
-  };
-
-  scroller.addEventListener('scroll', onScroll, { passive: true });
-  const onWin = (): void => onScroll();
-  window.addEventListener('scroll', onWin, { passive: true });
-  state.progressWin = onWin;
-  update();
+  readingProgressLoaded = true;
+  void import('./extras/reading-progress.ts').then((m) => m.setupReadingProgress());
 }
 
 // Hover Preview for internal blog links
@@ -244,141 +117,9 @@ function setupLinkPreview(): void {
 // ---------------------------------------------------------------------------
 const keyHistory: string[] = [];
 
-function playVictoryChime(): void {
-  try {
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-    notes.forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
-      gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.1 + 0.35);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + idx * 0.1);
-      osc.stop(ctx.currentTime + idx * 0.1 + 0.38);
-    });
-  } catch {
-    // Audio restricted
-  }
-}
-
+let confettiModule: Promise<typeof import('./extras/confetti.ts')> | null = null;
 export function launchConfetti(): void {
-  try {
-    (window as any).umami?.track('easter-egg-unlocked');
-  } catch {}
-  playVictoryChime();
-
-  // Floating retro toast banner with 100% inline styles (cannot be broken by Tailwind purging)
-  document.getElementById('konami-toast')?.remove();
-  const toast = document.createElement('div');
-  toast.id = 'konami-toast';
-  Object.assign(toast.style, {
-    position: 'fixed',
-    top: '28px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: '999999',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    borderRadius: '12px',
-    border: '2px solid #fbbf24',
-    backgroundColor: 'rgba(15, 17, 23, 0.96)',
-    padding: '12px 24px',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-    fontSize: '12px',
-    color: '#fef08a',
-    boxShadow: '0 0 40px rgba(251, 191, 36, 0.65), 0 20px 25px -5px rgba(0, 0, 0, 0.5)',
-    pointerEvents: 'auto',
-    cursor: 'pointer',
-    userSelect: 'none',
-  });
-  toast.innerHTML = `
-    <span style="font-size: 26px; line-height: 1;">🎮</span>
-    <div>
-      <div style="font-weight: 800; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #fbbf24;">
-        KONAMI CHEAT ACTIVATED!
-      </div>
-      <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
-        +30 Extra Lives Granted · Developer Easter Egg Unlocked
-      </div>
-    </div>
-  `;
-  toast.onclick = () => toast.remove();
-  document.body.append(toast);
-  setTimeout(() => toast.remove(), 5000);
-
-  // Confetti Canvas
-  const canvas = document.createElement('canvas');
-  Object.assign(canvas.style, {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: '100vw',
-    height: '100vh',
-    pointerEvents: 'none',
-    zIndex: '999998',
-  });
-  document.body.append(canvas);
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = window.innerWidth * dpr;
-  canvas.height = window.innerHeight * dpr;
-  ctx.scale(dpr, dpr);
-
-  const colors = ['#82aaff', '#c792ea', '#ecc48d', '#7fdbca', '#ff5370', '#addb67', '#f59e0b', '#ec4899', '#38bdf8'];
-  const particles = Array.from({ length: 180 }).map(() => ({
-    x: window.innerWidth / 2 + (Math.random() - 0.5) * 260,
-    y: window.innerHeight * 0.45,
-    vx: (Math.random() - 0.5) * 24,
-    vy: (Math.random() - 0.8) * 22,
-    size: Math.random() * 8 + 4,
-    color: colors[Math.floor(Math.random() * colors.length)],
-    rot: Math.random() * 360,
-    rotSpeed: (Math.random() - 0.5) * 14,
-    alpha: 1,
-  }));
-
-  const start = performance.now();
-  function render(now: number) {
-    if (!ctx) return;
-    const elapsed = now - start;
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-    let alive = false;
-    particles.forEach((p) => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.42; // gravity
-      p.rot += p.rotSpeed;
-      p.alpha = Math.max(0, 1 - elapsed / 3400);
-
-      if (p.alpha > 0) {
-        alive = true;
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rot * Math.PI) / 180);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-        ctx.restore();
-      }
-    });
-
-    if (alive) {
-      requestAnimationFrame(render);
-    } else {
-      canvas.remove();
-    }
-  }
-  requestAnimationFrame(render);
+  void (confettiModule ??= import('./extras/confetti.ts')).then((m) => m.launchConfetti());
 }
 
 // Global debug helper for dev console
@@ -607,10 +348,11 @@ function setupKeymap(): void {
       // Add intuitive floating exit badge for users who don't know keyboard shortcuts
       let pill = document.getElementById('zen-exit-pill');
       if (!pill) {
-        pill = document.createElement('button');
+        const button = document.createElement('button');
+        button.type = 'button';
+        pill = button;
         pill.id = 'zen-exit-pill';
         pill.className = 'zen-exit-pill';
-        pill.type = 'button';
         pill.setAttribute('aria-label', 'Thoát chế độ Zen Mode');
         pill.innerHTML = `<span>✕</span><span>Thoát Zen Mode</span><kbd class="rounded border border-(--border) bg-(--bg) px-1 text-[10px] text-(--fg-dim)">Esc</kbd>`;
         pill.addEventListener('click', (ev) => {

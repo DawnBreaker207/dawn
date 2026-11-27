@@ -350,7 +350,8 @@ function initViewCounter() {
   fetchStats(slug).then((stats) => {
     const views = stats?.views;
     el.textContent = typeof views === 'number' && views > 0 ? formatNumber(views) : fallback;
-    if (typeof views === 'number') {
+    // The dev server talks to the real database — don't let local browsing inflate view counts.
+    if (typeof views === 'number' && !import.meta.env.DEV) {
       const sessionKey = `dawn_viewed_${slug}`;
       if (!sessionStorage.getItem(sessionKey)) {
         sessionStorage.setItem(sessionKey, '1');
