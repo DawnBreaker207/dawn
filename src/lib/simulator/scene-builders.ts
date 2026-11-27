@@ -1,5 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export const makeBlock = (x: number, y: number, opts: Record<string, any> = {}) => ({
+/**
+ * Factory helpers used by scene definitions (src/data/scenes) to build
+ * entities, links and common presets.
+ */
+import type { EntityProps, LinkSpec, PointRef } from './stage/types';
+
+/** Extra entity props merged over a factory's defaults. */
+type Opts = Partial<EntityProps>;
+/** Floor rect for crowds, zones and panels anchors. */
+type Area = Record<string, number>;
+
+export const makeBlock = (x: number, y: number, opts: Opts = {}) => ({
   type: `block`,
   x,
   y,
@@ -8,7 +18,7 @@ export const makeBlock = (x: number, y: number, opts: Record<string, any> = {}) 
   ...opts,
 });
 
-export const makeBalancer = (x: number, y: number, opts: Record<string, any> = {}) => ({
+export const makeBalancer = (x: number, y: number, opts: Opts = {}) => ({
   type: `block`,
   x,
   y,
@@ -20,13 +30,13 @@ export const makeBalancer = (x: number, y: number, opts: Record<string, any> = {
 });
 
 export const makeCrowd = (
-  pos: Record<string, any>,
+  pos: Area,
   count: number,
   label: string,
-  opts: Record<string, any> = {},
+  opts: Opts = {},
 ) => ({ type: `crowd`, ...pos, count, label, ...opts });
 
-export const makeGhost = (x: number, y: number, s: any, h: any, label: any) => ({
+export const makeGhost = (x: number, y: number, s: number, h: number, label: string) => ({
   type: `ghost`,
   x,
   y,
@@ -35,12 +45,13 @@ export const makeGhost = (x: number, y: number, s: any, h: any, label: any) => (
   label,
 });
 
-export const makeLink = (
-  from: any,
-  to: any,
-  pts: any[],
-  opts: Record<string, any> = {},
-) => ({ from, to, pts, heads: `end`, ...opts });
+export const makeLink = (from: string, to: string, pts: PointRef[], opts: Partial<LinkSpec> = {}): LinkSpec => ({
+  from,
+  to,
+  pts,
+  heads: `end`,
+  ...opts,
+});
 
 export const DEAD_STATE = {
   dead: 1,
@@ -53,21 +64,21 @@ export const makeHot = (cpu = 1) => ({ heat: 1, cpu });
 
 export const makeCool = (cpu: number) => ({ heat: 0, dead: 0, cpu });
 
-export const makeDevice = (x: number, y: number, opts: Record<string, any> = {}) => ({
+export const makeDevice = (x: number, y: number, opts: Opts = {}) => ({
   type: `device`,
   x,
   y,
   ...opts,
 });
 
-export const makeDb = (x: number, y: number, opts: Record<string, any> = {}) => ({
+export const makeDb = (x: number, y: number, opts: Opts = {}) => ({
   type: `db`,
   x,
   y,
   ...opts,
 });
 
-export const makeZone = (pos: Record<string, any>, label: any, opts: Record<string, any> = {}) => ({
+export const makeZone = (pos: Area, label: string, opts: Opts = {}) => ({
   type: `zone`,
   ...pos,
   label,
@@ -77,41 +88,41 @@ export const makeZone = (pos: Record<string, any>, label: any, opts: Record<stri
 export const makeQueue = (
   x: number,
   y: number,
-  n: any,
+  n: number,
   dir: number[] = [0, -1],
-  opts: Record<string, any> = {},
+  opts: Opts = {},
 ) => ({ type: `queue`, x, y, n, dir, ...opts });
 
 export const makePanel = (
-  pos: Record<string, any>,
-  title: any,
-  lines: any[],
-  opts: Record<string, any> = {},
+  pos: Area,
+  title: string,
+  lines: string[],
+  opts: Opts = {},
 ) => ({ type: `panel`, ...pos, title, lines, ...opts });
 
-export const makeUser = (tags: any) => makeDevice(0, -12, { label: `you`, tags });
+export const makeUser = (tags: unknown[]) => makeDevice(0, -12, { label: `you`, tags });
 
-export const makeDns = (opts: Record<string, any> = {}) =>
+export const makeDns = (opts: Opts = {}) =>
   makeBlock(0, 1, { color: `yellow`, glyph: `globe`, label: [`DNS`], sub: `resolver`, ...opts });
 
-export const makeWebServer = (opts: Record<string, any> = {}) =>
+export const makeWebServer = (opts: Opts = {}) =>
   makeBlock(10, -1, { label: [`Web`, `Server`], ...opts });
 
-export const makeDatabase = (opts: Record<string, any> = {}) =>
+export const makeDatabase = (opts: Opts = {}) =>
   makeDb(10, 12, { label: `database`, ...opts });
 
 export const URL_TAG = { text: `https://shop.example`, icon: `globe` };
 
 export const LINK_TEMPLATES = {
-  dns: (opts: Record<string, any> = {}) =>
+  dns: (opts: Partial<LinkSpec> = {}) =>
     makeLink(`dev`, `dns`, [`dev`, `dns`], {
       heads: `both`,
       label: `where is shop.example?`,
       ...opts,
     }),
-  web: (opts: Record<string, any> = {}) =>
+  web: (opts: Partial<LinkSpec> = {}) =>
     makeLink(`dev`, `web`, [`dev`, [`web`, `dev`], `web`], { heads: `both`, ...opts }),
-  db: (opts: Record<string, any> = {}) =>
+  db: (opts: Partial<LinkSpec> = {}) =>
     makeLink(`web`, `db`, [`web`, `db`], {
       heads: `both`,
       label: `SELECT … FROM products`,

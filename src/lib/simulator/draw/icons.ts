@@ -1,5 +1,7 @@
-// @ts-nocheck
-/* eslint-disable */
+/**
+ * Icon geometry (Lucide-style, 24×24 viewBox) as [tag, attributes] pairs.
+ * Pure data consumed by ./icon.ts.
+ */
 export const ICON_PATHS: Record<string, [string, Record<string, string>][]> = {
 
   book: [

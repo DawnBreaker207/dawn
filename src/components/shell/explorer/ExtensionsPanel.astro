@@ -1,0 +1,51 @@
+---
+// Sidebar extensions overlay panel.
+---
+
+  <div class="sidebar-ext" data-ext-overlay>
+    <button
+      type="button"
+      class="sidebar-ext-toggle"
+      data-ext-toggle
+      data-track-event="toggle-extensions"
+      aria-expanded="false"
+      aria-controls="sidebar-ext-list"
+    >
+      <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-(--fg-faint)">extensions</span>
+      <svg class="sidebar-ext-caret ml-auto" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m9 18 6-6-6-6" />
+      </svg>
+    </button>
+    <ul id="sidebar-ext-list" class="sidebar-ext-list" hidden>
+      {[
+        { icon: 'java', name: 'Java', ver: '21', href: '/lab/java' },
+        { icon: 'typescript', name: 'TypeScript', ver: '5', href: '/lab/angular' },
+        { icon: 'spring', name: 'Spring Boot', ver: '3.4', href: '/lab/java' },
+        { icon: 'angular', name: 'Angular', ver: '20', href: '/lab/angular' },
+        { icon: 'react', name: 'React', ver: '19', href: '/about' },
+        { icon: 'postgres', name: 'PostgreSQL', ver: '17', href: '/lab/sql' },
+        { icon: 'mysql', name: 'MySQL', ver: '8', href: '/lab/mysql-innodb' },
+        { icon: 'redis', name: 'Redis', ver: '7', href: '/lab/redis-event-loop' },
+      ].map((ext) => (
+        <li class="sidebar-ext-item">
+          <a
+            href={ext.href}
+            data-track-event="explorer-extension"
+            class="flex w-full items-center gap-2 text-inherit no-underline hover:text-(--accent)"
+          >
+            <img
+              src={`/static/icons/${ext.icon}.svg`}
+              alt=""
+              height="16"
+              loading="lazy"
+              decoding="async"
+              class="h-4 w-auto shrink-0 rounded-sm bg-(--bg-alt) p-0.5"
+            />
+            <span>{ext.name}</span>
+            <span class="text-(--fg-faint)">{ext.ver}</span>
+            <span class="ext-check ml-auto" aria-hidden="true">☑</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Lesson } from '@/lib/simulator/types';
-import { StageEngine } from '@/lib/simulator/stage-engine';
+import { StageEngine } from '@/lib/simulator/stage';
 
 interface Props {
   lesson: Lesson;

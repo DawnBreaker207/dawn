@@ -1,0 +1,157 @@
+---
+// Sidebar "Architecture Labs" section: curriculum tracks and standalone simulators.
+import ExplorerFileIcon from '@/components/shell/ExplorerFileIcon.astro';
+import { TRACK_SLUG_MAP } from '@/data/lab-track-slugs';
+
+interface Props {
+  activePath: string;
+}
+
+const { activePath } = Astro.props;
+
+const labSlug = activePath.startsWith('/lab/') ? activePath.replace('/lab/', '') : '';
+const isSpecializedRoute = ['architecture', '', 'terminal', 'pathfinding', 'spider'].includes(labSlug);
+
+const CURRICULUM_TRACK_ITEMS = [
+  { href: '/lab/git', label: 'git.sim', iconType: 'git', title: 'Git Deep Internals & Practical Case Resolver (14 labs)' },
+  { href: '/lab/foundations', label: 'network.sim', iconType: 'network', title: 'Networking & Web Scale (8 labs)' },
+  { href: '/lab/sql', label: 'storage.sim', iconType: 'storage', title: 'Database & Storage Tier (8 labs)' },
+  { href: '/lab/angular', label: 'angular.sim', iconType: 'angular', title: 'Angular Core Architecture & Modern Mechanics (15 labs)' },
+  { href: '/lab/java', label: 'java.sim', iconType: 'java', title: 'Java Runtime & Concurrency Engine (27 labs)' },
+  { href: '/lab/devops', label: 'devops.sim', iconType: 'devops', title: 'DevOps Engineering & Progressive Delivery (5 labs)' },
+  { href: '/lab/k8s', label: 'k8s.sim', iconType: 'k8s', title: 'Containers & Kubernetes Orchestration (8 labs)' },
+  { href: '/lab/distributed', label: 'distributed.sim', iconType: 'distributed', title: 'Distributed Systems Core (6 labs)' },
+  { href: '/lab/microservices', label: 'microservices.sim', iconType: 'microservices', title: 'Microservices & Event-Driven (7 labs)' },
+  { href: '/lab/aws-cloud', label: 'aws-cloud.sim', iconType: 'cloud', title: 'AWS Cloud Architecture SAA-C03 (6 labs)' },
+  { href: '/lab/system-design', label: 'system-design.sim', iconType: 'system', title: 'System Design & AI Agents (10 labs)' },
+].map((item) => ({
+  ...item,
+  isActive: activePath === item.href || (!isSpecializedRoute && !!TRACK_SLUG_MAP[item.href]?.includes(labSlug)),
+}));
+---
+
+  <details class="sidebar-sec" data-sec="lab" open>
+    <summary class="sidebar-section-header" data-track-event="sidebar-sec-labs">
+      <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-(--fg-faint) uppercase">architecture labs</span>
+      <span class="section-toggle" aria-hidden="true">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </span>
+    </summary>
+
+    <nav class="tree-children space-y-0.5 py-1">
+      <a
+        href="/lab"
+        class:list={['explorer-row no-underline font-medium', activePath === '/lab' && 'is-active']}
+        aria-current={activePath === '/lab' ? 'page' : undefined}
+        title="Lab Overview & Directory"
+        data-track-event="explorer-lab-readme"
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="markdown" />
+        </span>
+        <span class="row-label truncate">README.md</span>
+      </a>
+
+      <div class="px-3 pt-1.5 pb-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-(--fg-faint) opacity-80 flex items-center justify-between">
+        <span>Blog Architecture</span>
+        <span class="text-[9px] px-1 py-0.2 rounded bg-(--bg-alt) text-(--accent)">Edge-First</span>
+      </div>
+      <a
+        href="/lab/architecture"
+        class:list={['explorer-row no-underline font-medium', activePath === '/lab/architecture' && 'is-active']}
+        aria-current={activePath === '/lab/architecture' ? 'page' : undefined}
+        title="Dawn Blog actual deployment architecture"
+        data-track-event="explorer-lab-arch"
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="architecture" />
+        </span>
+        <span class="row-label truncate">dawn-blog.arch</span>
+      </a>
+
+      <!-- Curriculum Tracks (Folder) -->
+      <details class="tree-sec" data-sec="curriculum">
+        <summary class="explorer-row" data-track-event="sidebar-folder-curriculum">
+          <span class="explorer-caret">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </span>
+          <span class="explorer-icon">
+            <svg class="folder-closed" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <svg class="folder-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <path d="M6 11.5h12" />
+            </svg>
+          </span>
+          <span class="row-label truncate">curriculum/</span>
+        </summary>
+        <div class="tree-children">
+          {CURRICULUM_TRACK_ITEMS.map((item) => (
+            <a
+              href={item.href}
+              class:list={['explorer-row explorer-row--child no-underline font-medium', item.isActive && 'is-active']}
+              aria-current={item.isActive ? 'page' : undefined}
+              title={item.title}
+              data-track-event="explorer-curriculum-track"
+            >
+              <span class="explorer-caret" aria-hidden="true"></span>
+              <span class="explorer-icon">
+                <ExplorerFileIcon type={item.iconType as any} />
+              </span>
+              <span class="row-label truncate">{item.label}</span>
+            </a>
+          ))}
+        </div>
+      </details>
+
+      <!-- Simulators & Extras (Folder) -->
+      <details class="tree-sec" data-sec="simulators" open={activePath.startsWith('/lab/terminal') || activePath.startsWith('/lab/pathfinding') || activePath.startsWith('/lab/spider') || activePath.startsWith('/lab/2048') || activePath.startsWith('/lab/boids')}>
+        <summary class="explorer-row" data-track-event="sidebar-folder-simulators">
+          <span class="explorer-caret">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </span>
+          <span class="explorer-icon">
+            <svg class="folder-closed" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <svg class="folder-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <path d="M6 11.5h12" />
+            </svg>
+          </span>
+          <span class="row-label truncate">simulators/</span>
+        </summary>
+        <div class="tree-children">
+          {[
+            ['/lab/terminal', 'terminal.astro', 'astro'],
+            ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
+            ['/lab/spider', 'spider.astro', 'astro'],
+            ['/lab/2048', '2048.astro', 'astro'],
+            ['/lab/boids', 'boids.astro', 'astro'],
+          ].map(([href, label, icon]) => (
+            <a
+              href={href}
+              class:list={['explorer-row explorer-row--child no-underline', activePath === href && 'is-active']}
+              aria-current={activePath === href ? 'page' : undefined}
+              data-track-event="explorer-simulator"
+            >
+              <span class="explorer-caret" aria-hidden="true"></span>
+              <span class="explorer-icon">
+                <ExplorerFileIcon type={icon as 'markdown' | 'astro' | 'umami'} />
+              </span>
+              <span class="row-label truncate">{label}</span>
+            </a>
+          ))}
+        </div>
+      </details>
+    </nav>
+  </details>

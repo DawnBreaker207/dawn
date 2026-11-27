@@ -1,0 +1,92 @@
+---
+// Sidebar "Metrics & Telemetry" section.
+import { SITE } from '@/lib/site';
+import ExplorerFileIcon from '@/components/shell/ExplorerFileIcon.astro';
+
+interface Props {
+  activePath: string;
+}
+
+const { activePath } = Astro.props;
+---
+
+  <details class="sidebar-sec" data-sec="metrics" open>
+    <summary class="sidebar-section-header" data-track-event="sidebar-sec-metrics">
+      <span class="tree-title px-1 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-(--fg-faint) uppercase">metrics & telemetry</span>
+      <span class="section-toggle" aria-hidden="true">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </span>
+    </summary>
+
+    <nav class="tree-children space-y-0.5 py-1">
+      <a
+        href="/heatmap"
+        class:list={['explorer-row no-underline', activePath === '/heatmap' && 'is-active']}
+        aria-current={activePath === '/heatmap' ? 'page' : undefined}
+        data-track-event="explorer-heatmap"
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="astro" />
+        </span>
+        <span class="row-label truncate">heatmap.astro</span>
+      </a>
+
+      <a
+        href="/tokens"
+        class:list={['explorer-row no-underline', activePath === '/tokens' && 'is-active']}
+        aria-current={activePath === '/tokens' ? 'page' : undefined}
+        data-track-event="explorer-tokens"
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="astro" />
+        </span>
+        <span class="row-label truncate">tokens.astro</span>
+      </a>
+
+      <a
+        href="/books"
+        class:list={['explorer-row no-underline', activePath === '/books' && 'is-active']}
+        aria-current={activePath === '/books' ? 'page' : undefined}
+        data-track-event="explorer-books"
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="astro" />
+        </span>
+        <span class="row-label truncate">books.astro</span>
+      </a>
+
+      <a
+        href={SITE.analytics.umamiSharedUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="explorer-row group no-underline"
+        data-track-event="explorer-stats"
+      >
+        <span class="explorer-caret" aria-hidden="true"></span>
+        <span class="explorer-icon">
+          <ExplorerFileIcon type="umami" />
+        </span>
+        <span class="row-label flex min-w-0 items-center gap-1">
+          <span class="truncate">stats.umami</span>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="flex-none opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <path d="M15 3h6v6" />
+            <path d="M10 14L21 3" />
+          </svg>
+        </span>
+      </a>
+    </nav>
+  </details>

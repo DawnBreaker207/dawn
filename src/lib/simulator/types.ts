@@ -1,3 +1,5 @@
+import type { StageScene } from './stage/types';
+
 export interface BlockEntity {
   type: 'block';
   x: number;
@@ -54,11 +56,7 @@ export interface LessonStep {
   callout?: LessonCallout;
   metrics?: Record<string, unknown>;
   changes?: string[];
-  scene?: {
-    entities?: Record<string, unknown>;
-    links?: Record<string, unknown>;
-    flows?: unknown[];
-  };
+  scene: StageScene;
 }
 
 export interface Lesson {
