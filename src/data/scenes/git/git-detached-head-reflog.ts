@@ -74,7 +74,7 @@ export const gitDetachedHeadReflogLesson = {
         entities: {
           mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
           detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
-          headPointer: makeDevice(-10, 14, { label: 'HEAD Ref', tags: [{ text: 'e8a1b2 (HEAD)', tone: 'amber', icon: 'terminal' }] }),
+          headPointer: makeDevice(-11, 15, { label: 'HEAD Ref', tags: [{ text: 'e8a1b2 (HEAD)', tone: 'amber', icon: 'terminal' }] }),
           newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'amber', glyph: 'package', label: ['Commit e8a1b2'], sub: 'unanchored fix' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Unanchored Commit Creation', [
             `$ git commit -m "fix: memory leak"`,
@@ -156,7 +156,7 @@ export const gitDetachedHeadReflogLesson = {
         },
         links: {
           hm: makeLink('headPointer', 'mainBranch', ['headPointer', 'mainBranch'], { label: 'attached' }),
-          nr: makeLink('newCommit', 'reflogLedger', ['newCommit', 'reflogLedger'], { label: 'trace hash in log' }),
+          nr: makeLink('newCommit', 'reflogLedger', ['newCommit', 'reflogLedger'], { label: 'trace in log' }),
         },
         flows: [{ route: ['nr'], kind: 'rescue', rate: 1.5 }],
       },
@@ -192,7 +192,7 @@ export const gitDetachedHeadReflogLesson = {
         },
         links: {
           dn: makeLink('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { label: 'parent' }),
-          rn: makeLink('rescueBranch', 'newCommit', ['rescueBranch', 'newCommit'], { label: 'anchors commit' }),
+          rn: makeLink('rescueBranch', 'newCommit', ['rescueBranch', 'newCommit'], { label: 'anchors' }),
         },
         flows: [{ route: ['rn'], kind: 'rescue', rate: 1.5 }],
       },

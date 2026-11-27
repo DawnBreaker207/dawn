@@ -9,8 +9,8 @@ import { makeBlock, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-
 type Tag = { text: string; tone?: string; icon?: string };
 
 const RAIL = -2;
-const GOOD_Y = -20;
-const BAD_Y = 18;
+const GOOD_Y = -21;
+const BAD_Y = 19;
 /** Commit number (0…1024 after v2.3.0) → position on the rail. */
 const yOf = (n: number) => +(GOOD_Y + ((BAD_Y - GOOD_Y) * n) / 1024).toFixed(2);
 
@@ -21,7 +21,7 @@ const bad = (tags: Tag[] = [{ text: `HEAD · bad`, tone: `red`, icon: `alert` }]
 const probe = (n: number, sha: string, tags: Tag[]) => commit(yOf(n), sha, `#${n}`, tags);
 const runner = () => makeBlock(12, -6, { s: 4.2, h: 50, color: `slab`, glyph: `flask`, label: [`test.sh`], sub: `exit 0 / 1` });
 const revert = () =>
-  makeBlock(12, 8, { s: 4.2, h: 50, color: `purple`, glyph: `undo`, label: [`0f1e2d`], sub: `revert`, tags: [{ text: `main · HEAD`, tone: `amber`, icon: `gitBranch` }] });
+  makeBlock(15, 6, { s: 4.2, h: 50, color: `purple`, glyph: `undo`, label: [`0f1e2d`], sub: `revert`, tags: [{ text: `main · HEAD`, tone: `amber`, icon: `gitBranch` }] });
 /** Range still in doubt, hugging the rail. */
 const range = (from: number, to: number) => makeZone({ x0: RAIL - 3, x1: RAIL + 3, y0: yOf(from) - 1.5, y1: yOf(to) + 1.5 }, ``);
 
@@ -156,7 +156,7 @@ export const gitBisectAutomationLesson = {
           bad: bad(),
           probe: probe(701, `d4e5f6`, [{ text: `first bad commit`, tone: `red`, icon: `bug` }]),
           runner: runner(),
-          card: card(`terminal`, [`! d4e5f6a is the first bad commit`, `    fix: round discounts per line`, ` src/cart/total.ts | 4 ++--`, `bisect found first bad commit`]),
+          card: card(`terminal`, [`$ git bisect log`, `! d4e5f6a is the first bad commit`, `    fix: round discounts per line`, `src/cart/total.ts | 4 ++--`]),
         },
         links: { upper: L.upper, lower: L.lower, test: L.test },
         flows: [],

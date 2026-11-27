@@ -24,8 +24,8 @@ const A1 = (t: Tag[] = [], o: Opts = {}) => commit(SIDE, -18, `a1b2c3`, `A1`, t,
 const A2 = (t: Tag[] = [ref(`feat-A`)], o: Opts = {}) => commit(SIDE, -6, `a4d5e6`, `A2`, t, o);
 const B1 = (t: Tag[] = [], o: Opts = {}) => commit(SIDE, 6, `b17f20`, `B1`, t, o);
 const B2 = (t: Tag[] = [ref(`feat-B`)], o: Opts = {}) => commit(SIDE, 18, `b29c31`, `B2`, t, o);
-const B1n = (t: Tag[] = []) => commit(TRUNK, 2, `c5e6f7`, `B1'`, t);
-const B2n = (t: Tag[] = [ref(`feat-B`)]) => commit(TRUNK, 14, `c8a9b0`, `B2'`, t);
+const B1n = (t: Tag[] = []) => commit(TRUNK, 4, `c5e6f7`, `B1'`, t);
+const B2n = (t: Tag[] = [ref(`feat-B`)]) => commit(TRUNK, 16, `c8a9b0`, `B2'`, t);
 
 const L = {
   m2: makeLink(`M2`, `M1`, [`M2`, `M1`]),

@@ -12,7 +12,7 @@ type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen position (px) → world grid coordinates. */
 const at = (sx: number, sy: number) => ({ x: +((sx / 14 + sy / 7) / 2).toFixed(2), y: +((sx / 14 - sy / 7) / 2).toFixed(2) });
-const P = { win: at(-280, -50), index: at(-40, 40), store: at(180, -110), linux: at(240, 100), hook: at(-120, 220) };
+const P = { win: at(-280, -50), index: at(-40, 40), store: at(180, -110), linux: at(240, 100), hook: at(-130, 240) };
 
 const tree = (p: { x: number; y: number }, os: string, tags: Tag[]) =>
   makeBlock(p.x, p.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [os], sub: `working tree`, tags });
@@ -114,7 +114,7 @@ export const gitCrlfLineEndingsLesson = {
           index: index([{ text: `* text=auto eol=lf`, tone: `violet` }]),
           store: store([{ text: `214 CRLF blobs`, tone: `red`, icon: `alert` }]),
           linux: linux([{ text: `gets LF`, tone: `green` }]),
-          card: card(`.gitattributes`, [`* text=auto eol=lf`, `*.bat  text eol=crlf`, `*.png  binary`, `*.jar  binary`], `file`),
+          card: card(`.gitattributes`, [`$ cat .gitattributes`, `* text=auto eol=lf`, `*.bat  text eol=crlf`, `*.png  binary`], `file`),
         },
         links: { add: L.add, commit: L.commitQuiet, checkout: L.checkoutQuiet },
         flows: [{ route: [`add`], kind: `write`, rate: 1.2 }],

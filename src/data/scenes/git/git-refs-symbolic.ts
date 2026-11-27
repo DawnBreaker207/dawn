@@ -15,7 +15,7 @@ const at = (sx: number, sy: number): [number, number] => [
   Math.round((sx / 28 - sy / 14) * 100) / 100,
 ];
 
-const head = () => makeBlock(...at(310, -100), { s: 4.4, h: 50, color: `yellow`, glyph: `target`, label: [`HEAD`], sub: `.git/HEAD` });
+const head = () => makeBlock(...at(315, -105), { s: 4.4, h: 50, color: `yellow`, glyph: `target`, label: [`HEAD`], sub: `.git/HEAD` });
 const main = (tags: Tag[] = []) =>
   makeBlock(...at(110, -40), { s: 4.4, h: 50, color: `yellow`, glyph: `gitBranch`, label: [`main`], sub: `refs/heads`, tags });
 const origin = () =>

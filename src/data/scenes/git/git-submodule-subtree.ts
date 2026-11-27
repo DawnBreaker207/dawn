@@ -51,7 +51,7 @@ export const gitSubmoduleSubtreeLesson = {
         },
         links: {
           pg: makeLink('parentRepo', 'gitlinkNode', ['parentRepo', 'gitlinkNode'], { label: 'declares gitlink' }),
-          ge: makeLink('gitlinkNode', 'externalRepo', ['gitlinkNode', 'externalRepo'], { label: 'remote pointer' }),
+          ge: makeLink('gitlinkNode', 'externalRepo', ['gitlinkNode', 'externalRepo'], { label: 'pointer' }),
         },
         flows: [{ route: ['pg', 'ge'], kind: 'submodule', rate: 1.5 }],
       },
@@ -120,7 +120,7 @@ export const gitSubmoduleSubtreeLesson = {
         },
         links: {
           pg: makeLink('parentRepo', 'gitlinkNode', ['parentRepo', 'gitlinkNode'], { label: 'active gitlink' }),
-          ge: makeLink('gitlinkNode', 'externalRepo', ['gitlinkNode', 'externalRepo'], { label: 'cloned remote' }),
+          ge: makeLink('gitlinkNode', 'externalRepo', ['gitlinkNode', 'externalRepo'], { label: 'cloned' }),
           cg: makeLink('ciInitRunner', 'gitlinkNode', ['ciInitRunner', 'gitlinkNode'], { label: 'populate files' }),
         },
         flows: [{ route: ['cg', 'ge'], kind: 'submodule', rate: 1.6 }],
@@ -155,7 +155,7 @@ export const gitSubmoduleSubtreeLesson = {
         },
         links: {
           ps: makeLink('parentRepo', 'subtreeInlined', ['parentRepo', 'subtreeInlined'], { label: 'contains files' }),
-          es: makeLink('externalRepo', 'subtreeInlined', ['externalRepo', 'subtreeInlined'], { label: 'squashed history' }),
+          es: makeLink('externalRepo', 'subtreeInlined', ['externalRepo', 'subtreeInlined'], { label: 'squashed' }),
         },
         flows: [{ route: ['es', 'ps'], kind: 'subtree', rate: 1.6 }],
       },
@@ -191,7 +191,7 @@ export const gitSubmoduleSubtreeLesson = {
         links: {
           ps: makeLink('parentRepo', 'subtreeInlined', ['parentRepo', 'subtreeInlined'], { label: 'local edit' }),
           sb: makeLink('subtreeInlined', 'bidirectionalSync', ['subtreeInlined', 'bidirectionalSync'], { label: 'filter prefix' }),
-          be: makeLink('bidirectionalSync', 'externalRepo', ['bidirectionalSync', 'externalRepo'], { label: 'push upstream' }),
+          be: makeLink('bidirectionalSync', 'externalRepo', ['bidirectionalSync', 'externalRepo'], { label: 'push' }),
         },
         flows: [{ route: ['ps', 'sb', 'be'], kind: 'sync', rate: 1.8 }],
       },
@@ -227,8 +227,8 @@ export const gitSubmoduleSubtreeLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ps: makeLink('parentRepo', 'subtreeInlined', ['parentRepo', 'subtreeInlined'], { label: 'clean integration' }),
-          es: makeLink('externalRepo', 'subtreeInlined', ['externalRepo', 'subtreeInlined'], { label: 'tracked source' }),
+          ps: makeLink('parentRepo', 'subtreeInlined', ['parentRepo', 'subtreeInlined'], { label: 'inlined' }),
+          es: makeLink('externalRepo', 'subtreeInlined', ['externalRepo', 'subtreeInlined'], { label: 'tracked' }),
         },
         flows: [{ route: ['es', 'ps'], kind: 'subtree', rate: 1.5 }],
       },
