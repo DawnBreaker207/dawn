@@ -62,6 +62,9 @@ import { hldLldLesson } from './design/hld-lld';
 import { designUrlShortenerLesson } from './design/design-url-shortener';
 import { designNewsFeedLesson } from './design/design-news-feed';
 import { designChatLesson } from './design/design-chat';
+import { designNotificationSystemLesson } from './design/design-notification-system';
+import { designPaymentSystemLesson } from './design/design-payment-system';
+import { designSearchAutocompleteLesson } from './design/design-search-autocomplete';
 
 
 // SQL deep-dive concepts
@@ -349,6 +352,9 @@ export const ALL_SCENES: Record<string, any> = {
   'design-url-shortener': designUrlShortenerLesson,
   'design-news-feed': designNewsFeedLesson,
   'design-chat': designChatLesson,
+  'design-notification-system': designNotificationSystemLesson,
+  'design-payment-system': designPaymentSystemLesson,
+  'design-search-autocomplete': designSearchAutocompleteLesson,
   'aws-cloud': awsCloudLesson,
   'aws-vpc': awsVpcLesson,
   'aws-ha': awsHaLesson,

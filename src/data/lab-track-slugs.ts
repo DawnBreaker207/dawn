@@ -36,7 +36,7 @@ export const TRACK_SLUG_MAP: Record<string, string[]> = {
   ],
   '/lab/system-design': [
     'system-design', 'ai-agent-architecture', 'hld-lld', 'design-url-shortener', 'design-news-feed',
-    'design-chat', 'design-notification-system', 'design-payment-system', 'batch-stream', 'redundancy', 'rate-limiting', 'timeouts-retries', 'observability',
+    'design-chat', 'design-notification-system', 'design-payment-system', 'design-search-autocomplete', 'batch-stream', 'redundancy', 'rate-limiting', 'timeouts-retries', 'observability',
   ],
   '/lab/aws-cloud': [
     'aws-cloud', 'aws-vpc', 'aws-ha', 'aws-storage-db', 'files', 'aws-serverless',
