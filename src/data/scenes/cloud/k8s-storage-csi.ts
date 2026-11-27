@@ -146,7 +146,7 @@ export const k8sStorageCsiLesson = {
       scene: {
         entities: {
           developerSpec: makeBlock(-10, -14, { s: 4, h: 42, color: 'blue', label: ['App Developer', 'Writes PVC spec'] }),
-          storageClassHub: makeBlock(6, -14, { s: 4, h: 42, color: 'orange', label: ['StorageClass Hub', 'Dynamic Orchestrator'] }),
+          storageClassHub: makeBlock(6, -14, { s: 4.8, h: 44, color: 'orange', label: ['StorageClass Hub', 'Dynamic Orch'] }),
           csiBridge: makeBlock(-10, 4, { s: 4, h: 42, color: 'purple', label: ['CSI Standards', 'gRPC Driver API'] }),
           cloudArray: makeDb(6, 4, { r: 2.2, h: 36, color: 'store', label: 'Storage Arrays (NVMe/EBS)' }),
           card: makePanel({ x: -2, y: 14 }, 'Storage Architecture', [

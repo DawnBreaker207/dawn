@@ -127,7 +127,7 @@ export const networkSecurityDdosLesson = {
       scene: {
         entities: {
           attacker: makeDevice(-12, -8, { form: 'phone', label: 'Attacker', tags: [{ text: 'Spoofed Query (60B)', icon: 'zap' }] }),
-          reflector: makeBlock(0, -8, { s: 4.6, h: 52, color: 'purple', glyph: 'server', label: ['Open DNS Reflector', 'Amplification x50'], sub: 'Echoes to Spoofed IP' }),
+          reflector: makeBlock(0, -8, { s: 4.6, h: 52, color: 'purple', glyph: 'server', label: ['Open Reflector', 'Amp Factor 50x'], sub: 'Echoes to Spoofed IP' }),
           victim: makeBlock(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Victim Origin', 'Fiber Pipe Crushed'], sub: '1.2 Tbps Flood' }),
           card: makePanel({ x: -2, y: 14 }, 'Amplification Multiplication', [
             '1. Attacker sends 60-byte UDP query: "dig ANY ripe.net"',

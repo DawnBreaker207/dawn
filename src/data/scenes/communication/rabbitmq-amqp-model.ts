@@ -158,7 +158,7 @@ export const rabbitmqAmqpModelLesson = {
       metrics: { amqp_protocol: 'Manual Acks', tcp_conns: '1 TCP', multiplexed_channels: 'basic.ack Active', broker_model: 'At-Least-Once' },
       scene: {
         entities: {
-          queue: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'teal', glyph: 'inbox', label: ['Queue: orders_q', 'Unacknowledged: 1'], sub: 'Awaiting Consumer ACK' }),
+          queue: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'teal', glyph: 'inbox', label: ['Queue: orders_q', 'Unacked: 1 msg'], sub: 'Awaiting Consumer ACK' }),
           worker: makeBlock(8, 4, { s: 4.6, h: 52, color: 'green', glyph: 'server', label: ['Worker Thread', 'Processing Job'], sub: 'Sends basic.ack(tag)' }),
           card: makePanel({ x: 0, y: 14 }, 'Consumer Acknowledgment Flow', [
             '1. Broker delivers message with delivery_tag = 104',

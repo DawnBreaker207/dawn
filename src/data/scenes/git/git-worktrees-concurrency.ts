@@ -38,7 +38,7 @@ export const gitWorktreesConcurrencyLesson = {
       scene: {
         entities: {
           mainWorktree: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Main Worktree'], sub: '/repo (main)' }),
-          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'shared storage' }),
+          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', label: ['.git/objects'], sub: 'shared storage' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Concurrency Deadlock', [
             `Agent A: $ git checkout feature-auth`,
             `Agent B: $ git commit -m "update UI"`,
@@ -70,7 +70,7 @@ export const gitWorktreesConcurrencyLesson = {
       scene: {
         entities: {
           mainWorktree: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Main Worktree'], sub: '/repo (main)' }),
-          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'shared storage' }),
+          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', label: ['.git/objects'], sub: 'shared storage' }),
           authWorktree: makeBlock(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'terminal', label: ['Auth Worktree'], sub: '/wt-auth' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Worktree Creation CLI', [
             `$ git worktree add ../wt-auth feature-auth`,
@@ -105,7 +105,7 @@ export const gitWorktreesConcurrencyLesson = {
       scene: {
         entities: {
           mainWorktree: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Main Worktree'], sub: 'HEAD: main' }),
-          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'shared storage' }),
+          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', label: ['.git/objects'], sub: 'shared storage' }),
           authWorktree: makeBlock(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'terminal', label: ['Auth Worktree'], sub: 'feat-auth HEAD' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Per-Worktree State Layout', [
             `/repo/.git/worktrees/wt-auth/`,
@@ -140,7 +140,7 @@ export const gitWorktreesConcurrencyLesson = {
       scene: {
         entities: {
           mainWorktree: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Main Worktree'], sub: 'locked branch' }),
-          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'shared storage' }),
+          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', label: ['.git/objects'], sub: 'shared storage' }),
           authWorktree: makeBlock(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'terminal', label: ['Auth Worktree'], sub: 'owns feat-auth' }),
           lockedBranch: makeBlock(18, 4, { s: 4.4, h: 54, color: 'rose', glyph: 'shield', label: ['Branch Mutex'], sub: 'no duplicate' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Duplicate Checkout Defense', [
@@ -176,7 +176,7 @@ export const gitWorktreesConcurrencyLesson = {
       scene: {
         entities: {
           mainWorktree: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Main Worktree'], sub: '/repo (main)' }),
-          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'shared storage' }),
+          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', label: ['.git/objects'], sub: 'shared storage' }),
           authWorktree: makeBlock(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'terminal', label: ['Auth Worktree'], sub: 'building test' }),
           uiWorktree: makeBlock(-4, 16, { s: 4.4, h: 56, color: 'cyan', glyph: 'terminal', label: ['UI Worktree'], sub: 'bundle build' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Active Worktrees List', [
@@ -215,7 +215,7 @@ export const gitWorktreesConcurrencyLesson = {
       scene: {
         entities: {
           mainWorktree: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'green', glyph: 'boxes', label: ['Main Worktree'], sub: '/repo (merged)' }),
-          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/objects'], sub: 'clean storage' }),
+          sharedObjects: makeDb(-6, -2, { r: 2.2, h: 52, color: 'purple', label: ['.git/objects'], sub: 'clean storage' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Worktree Cleanup Flow', [
             `$ git worktree remove ../wt-auth`,
             `$ git worktree prune`,

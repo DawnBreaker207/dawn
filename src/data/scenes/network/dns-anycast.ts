@@ -69,7 +69,7 @@ export const dnsAnycastLesson = {
           resolver: makeBlock(-10, -6, { s: 4.6, h: 52, color: 'yellow', glyph: 'globe', label: ['Recursive Resolver'], sub: '1.1.1.1' }),
           root: makeBlock(0, -6, { s: 4.2, h: 52, color: 'purple', glyph: 'server', label: ['Root Server', 'Zone: "."'], sub: 'Refers to .com' }),
           tld: makeBlock(10, -6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['TLD Server', 'Zone: ".com"'], sub: 'Refers to NS' }),
-          auth: makeBlock(10, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Authoritative NS', 'shop.example'], sub: 'Returns A Record' }),
+          auth: makeBlock(10, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Auth Nameserver', 'shop.example'], sub: 'Returns A Record' }),
           card: makePanel({ x: -2, y: 14 }, 'Iterative Query Path', [
             'Resolver -> Root ("."): "Where is .com?" -> NS a.gtld-servers.net',
             'Resolver -> TLD (".com"): "Where is shop.example?" -> NS ns1.cloudflare.com',
@@ -105,7 +105,7 @@ export const dnsAnycastLesson = {
       scene: {
         entities: {
           client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'IPv4 + IPv6 Dual', icon: 'zap' }] }),
-          auth: makeBlock(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Authoritative NS', 'Zone Records'], sub: 'Zone apex: @' }),
+          auth: makeBlock(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Auth Nameserver', 'Zone Records'], sub: 'Zone apex: @' }),
         },
         links: {
           ca: makeLink('client', 'auth', ['client', 'auth'], { heads: 'both', label: 'Query Type: A + AAAA' })

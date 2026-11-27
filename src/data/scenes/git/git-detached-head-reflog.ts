@@ -145,7 +145,7 @@ export const gitDetachedHeadReflogLesson = {
           detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
           headPointer: makeDevice(-22, -18, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
           newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'amber', glyph: 'package', label: ['Commit e8a1b2'], sub: 'recovered SHA' }),
-          reflogLedger: makeDb(0, 18, { r: 2.2, h: 52, color: 'cyan', glyph: 'database', label: ['.git/logs/HEAD'], sub: 'reflog ledger' }),
+          reflogLedger: makeDb(0, 18, { r: 2.2, h: 52, color: 'cyan', label: ['.git/logs/HEAD'], sub: 'reflog ledger' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Reflog Ledger Query', [
             `$ git reflog`,
             `7d9e44a (HEAD -> main) HEAD@{0}: checkout: moving to main`,

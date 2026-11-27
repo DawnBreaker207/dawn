@@ -19,7 +19,7 @@ const Gc = Object.keys(Wc);
 const Kc = (e = []) => makeDevice(0, -20, { label: `traveller`, tags: e });
 
 const qc = (e = {}) =>
-    makeBlock(0, -9, { color: `orange`, glyph: `route`, label: [`Trip`, `Service`], pills: `below`, ...e });
+    makeBlock(0, -9, { s: 5.2, color: `orange`, glyph: `route`, label: [`Trip`, `Service`], pills: `below`, ...e });
 
 const Jc = (e = {}) =>
     Object.fromEntries(Gc.map((t) => [t, makeBlock(Wc[t].x, 2, { ...Wc[t], ...(e[t] || {}) })]));

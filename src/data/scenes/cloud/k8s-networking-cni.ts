@@ -71,7 +71,7 @@ export const k8sNetworkingCniLesson = {
         entities: {
           srcPodNode1: makeBlock(-12, -16, { s: 4, h: 42, color: 'blue', label: ['Pod A (Node 1)', 'Payload: GET /api'] }),
           vxlanTunnel: makeBlock(-2, -2, { s: 5, h: 46, color: 'purple', label: ['VXLAN Tunnel (UDP 4789)', 'Outer UDP Frame'] }),
-          dstPodNode2: makeBlock(8, 12, { s: 4, h: 42, color: 'green', label: ['Pod B (Node 2)', 'Decapsulated Payload'] }),
+          dstPodNode2: makeBlock(8, 12, { s: 4.8, h: 44, color: 'green', label: ['Pod B (Node 2)', 'Decap Payload'] }),
           card: makePanel({ x: -12, y: 12 }, 'VXLAN Tunnel', [
             'Inner: 10.244.1.15 -> 10.244.2.28',
             'Outer: Host 1 IP -> Host 2 IP',
