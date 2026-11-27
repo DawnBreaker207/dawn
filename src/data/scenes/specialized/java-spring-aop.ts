@@ -13,7 +13,7 @@ type Tag = { text: string; tone?: string; icon?: string };
 const HUB = { x: -1.5, y: 1.5 };
 
 const caller = (tags: Tag[] = []) =>
-  makeBlock(-15.5, 3, { s: 4.4, h: 50, color: `blue`, glyph: `user`, label: [`Controller`], sub: `HTTP thread`, tags });
+  makeBlock(-16, 3, { s: 4.4, h: 50, color: `blue`, glyph: `user`, label: [`Controller`], sub: `HTTP thread`, tags });
 const proxy = (tags: Tag[] = []) =>
   makeBlock(HUB.x, HUB.y, { s: 5.2, h: 56, color: `orange`, glyph: `shield`, label: [`Proxy`], sub: `CGLIB subclass`, tags });
 const target = (tags: Tag[] = [], at = { x: 10, y: 10 }) =>
@@ -23,9 +23,9 @@ const pool = (tags: Tag[] = []) =>
 const db = (tags: Tag[] = []) => makeDb(15.5, -7.5, { r: 2.2, h: 46, glyph: `database`, label: `Postgres`, tags });
 const exec = (tags: Tag[] = []) =>
   makeBlock(-4.5, -13, { s: 4.4, h: 50, color: `purple`, glyph: `cpu`, label: [`Executor`], sub: `@Async pool`, tags });
-const cache = (tags: Tag[] = []) => makeDb(-5, 18, { r: 2.2, h: 46, color: `purple`, glyph: `zap`, label: `Redis`, tags });
+const cache = (tags: Tag[] = []) => makeDb(-7, 21, { r: 2.2, h: 46, color: `purple`, glyph: `zap`, label: `Redis`, tags });
 const kafka = (tags: Tag[] = []) =>
-  makeBlock(-5, 18, { s: 4.4, h: 50, color: `yellow`, glyph: `send`, label: [`Kafka`], sub: `order-events`, tags });
+  makeBlock(-7, 21, { s: 4.4, h: 50, color: `yellow`, glyph: `send`, label: [`Kafka`], sub: `order-events`, tags });
 
 const L = {
   direct: makeLink(`caller`, `target`, [`caller`, `target`], { heads: `both`, label: `place()` }),

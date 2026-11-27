@@ -18,10 +18,10 @@ const at = (sx: number, sy: number) => ({
 });
 const P = {
   stack: at(-220, 60),
-  javac: at(-120, -150),
+  javac: at(-140, -165),
   heap: at(0, 0),
   cache: at(180, -140),
-  low: at(60, 190),
+  low: at(70, 205),
 };
 
 const block = (p: { x: number; y: number }, o: Opts) => makeBlock(p.x, p.y, { s: 4.4, h: 52, ...o });

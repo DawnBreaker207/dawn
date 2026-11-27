@@ -210,7 +210,7 @@ export const javaCollectionsLesson: Lesson = {
         entities: {
           t1: makeBlock(-12, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'cpu', label: ['Writer T1'], sub: 'bucket #2' }),
           tbl: makeBlock(0, -8, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['volatile Node[]'], sub: 'lock-free get' }),
-          cas: makeBlock(12, -16, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['CAS Empty'], sub: 'lock-free put' }),
+          cas: makeBlock(14, -18, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['CAS Empty'], sub: 'lock-free put' }),
           head: makeDb(12, -2, { r: 2.2, h: 48, color: 'purple', label: ['sync(head)'], sub: 'bucket lock' }),
           card: makePanel({ x: -12, y: 12 }, 'ConcurrentHashMap Java 8+ Locking', [
             '// get(k): 100% lock-free volatile read!',

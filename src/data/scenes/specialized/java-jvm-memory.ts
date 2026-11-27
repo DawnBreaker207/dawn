@@ -18,13 +18,13 @@ const at = (sx: number, sy: number) => ({
 type Tag = { text: string; tone?: string; icon?: string };
 
 const P = {
-  stack: at(40, -170),
-  pool: at(-290, -40),
+  stack: at(30, -185),
+  pool: at(-310, -30),
   inEden: at(-130, 50),
   inSurv: at(80, 20),
   inOld: at(250, -40),
   // off-heap: deliberately outside every heap region
-  meta: at(-150, -110),
+  meta: at(-160, -90),
 };
 
 const stack = (tags: Tag[] = []) =>
@@ -282,9 +282,9 @@ export const javaJvmMemoryLesson: Lesson = {
           pool: pool(),
           meta: meta([{ text: `OOM: Metaspace`, tone: `red`, icon: `alert` }]),
           card: card(`container JVM flags`, [
-            `-XX:MaxRAMPercentage=75`,
-            `-XX:MaxMetaspaceSize=256m`,
-            `-XX:+HeapDumpOnOutOfMemoryError`,
+            `$ java -XX:MaxRAMPercentage=75 \\`,
+            `    -XX:MaxMetaspaceSize=256m \\`,
+            `    -XX:+HeapDumpOnOutOfMemoryError`,
             `! java.lang.OutOfMemoryError: Metaspace`,
           ]),
         },

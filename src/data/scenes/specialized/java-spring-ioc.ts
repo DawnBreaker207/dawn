@@ -15,11 +15,11 @@ type Opts = Record<string, unknown>;
 
 const ctx = (o: Opts = {}) =>
   makeBlock(-1.5, 1.5, { s: 5.2, h: 56, color: `orange`, glyph: `layers`, label: [`Application`, `Context`], ...o });
-const reg = (o: Opts = {}) => makeDb(-15.5, 3, { r: 2.2, h: 46, color: `purple`, glyph: `listOrdered`, label: `BeanDefinitions`, ...o });
+const reg = (o: Opts = {}) => makeDb(-16, 3, { r: 2.2, h: 46, color: `purple`, glyph: `listOrdered`, label: `BeanDefinitions`, ...o });
 const gw = (tags: Tag[] = [], o: Opts = {}) =>
   makeBlock(-5.5, -13, { s: 4.4, h: 50, color: `green`, glyph: `creditCard`, label: [`Stripe`, `Gateway`], tags, ...o });
 const svc = (tags: Tag[] = [], o: Opts = {}) =>
-  makeBlock(9, -17, { s: 4.4, h: 50, color: `green`, glyph: `code`, label: [`Order`, `Service`], tags, ...o });
+  makeBlock(10.5, -18.5, { s: 4.4, h: 50, color: `green`, glyph: `code`, label: [`Order`, `Service`], tags, ...o });
 const proxy = (tags: Tag[] = []) =>
   makeBlock(15.5, -7.5, { s: 4.4, h: 50, color: `orange`, glyph: `shield`, label: [`Scoped`, `proxy`], sub: `CGLIB`, tags });
 const req = (tags: Tag[] = []) =>
@@ -28,7 +28,7 @@ const auto = (tags: Tag[] = []) =>
   makeBlock(10, 10, { s: 4.4, h: 50, color: `orange`, glyph: `sparkles`, label: [`AutoConfig`], sub: `140 candidates`, tags });
 const env = (tags: Tag[] = []) =>
   makeDb(15.5, -7.5, { r: 2.2, h: 46, color: `purple`, glyph: `settings`, label: `Environment`, tags });
-const ds = (tags: Tag[] = []) => makeDb(-5, 18, { r: 2.2, h: 46, glyph: `database`, label: `DataSource`, tags });
+const ds = (tags: Tag[] = []) => makeDb(-7, 21, { r: 2.2, h: 46, glyph: `database`, label: `DataSource`, tags });
 
 const L = {
   newCall: makeLink(`svc`, `gw`, [`svc`, `gw`], { label: `new()` }),
@@ -363,11 +363,11 @@ export const javaSpringIocLesson: Lesson = {
           ...core(),
           auto: auto([{ text: 'DataSource ✓', tone: 'green' }]),
           env: env([{ text: 'env var wins', tone: 'green' }]),
-          card: card('precedence (high → low)', [
-            '--spring.datasource.url=…    # CLI',
-            'SPRING_DATASOURCE_URL=…      # env',
-            'application-prod.yml         # profile',
-            'application.yml              # default',
+          card: card('CLI / Env precedence', [
+            '$ java -jar app.jar --spring.datasource.url=...  # CLI',
+            '$ export SPRING_DATASOURCE_URL="jdbc:postgresql://..."  # env',
+            '# application-prod.yml (profile)',
+            '# application.yml (default)',
           ]),
         },
         links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.bootQuiet, props: L.props },

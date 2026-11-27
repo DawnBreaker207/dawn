@@ -111,10 +111,10 @@ export const javaSpringJpaLesson: Lesson = {
           flush: makeBlock(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['TX Flush'], sub: 'before commit' }),
           db: makeDb(0, 0, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: 'UPDATE + CMT' }),
           card: makePanel({ x: -12, y: 12 }, 'Write-Behind Flush Order', [
-            '// Hibernate flushes ActionQueue in strict order:',
-            '// 1. Inserts  2. Updates  3. Collection deletes',
-            '// Sent right before JDBC COMMIT',
-            '// Use @SequenceGenerator for JDBC batch_size!',
+            'actionQueue.executeActions(); // strict flush order:',
+            '// 1. EntityInserts -> 2. EntityUpdates -> 3. Deletes',
+            'em.flush(); // triggers DML before commit',
+            'tx.commit(); // commits single JDBC transaction',
           ], { icon: 'terminal' }),
         },
         links: {

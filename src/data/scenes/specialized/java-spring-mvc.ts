@@ -21,9 +21,9 @@ const disp = (tags: Tag[] = []) =>
 const ctrl = (tags: Tag[] = []) =>
   makeBlock(9.5, -10.5, { s: 4.4, h: 50, color: `green`, glyph: `code`, label: [`Order`, `Controller`], tags });
 const advice = (tags: Tag[] = []) =>
-  makeBlock(11.5, 17, { s: 4.4, h: 50, color: `orange`, glyph: `alertTriangle`, label: [`Controller`, `Advice`], tags });
+  makeBlock(12, 17.5, { s: 4.4, h: 50, color: `orange`, glyph: `alertTriangle`, label: [`Controller`, `Advice`], tags });
 const stream = (tags: Tag[] = []) =>
-  makeBlock(11.5, 17, { s: 4.4, h: 50, color: `yellow`, glyph: `waves`, label: [`Kafka`], sub: `price ticks`, tags });
+  makeBlock(12, 17.5, { s: 4.4, h: 50, color: `yellow`, glyph: `waves`, label: [`Kafka`], sub: `price ticks`, tags });
 const db = (tags: Tag[] = []) => makeDb(4, -22, { r: 2.2, h: 46, glyph: `database`, label: `Postgres`, tags });
 
 const L = {

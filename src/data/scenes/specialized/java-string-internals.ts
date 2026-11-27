@@ -20,9 +20,9 @@ const P = {
   javac: at(-120, -150),
   lit: at(0, 0),
   table: at(180, -140),
-  dup: at(60, 190),
+  dup: at(70, 205),
   bytes: at(200, 110),
-  gc: at(330, -20),
+  gc: at(350, -40),
 };
 
 const stack = (tags: Tag[] = []) =>
@@ -93,7 +93,7 @@ export const javaStringInternalsLesson: Lesson = {
           stack: stack(),
           lit: lit([{ text: 'hash cached', tone: 'green' }]),
           bytes: bytes(`2 B`),
-          card: card('String.java (JDK 21)', ['private final byte[] value;', 'private final byte coder;  // LATIN1 / UTF16', 'private int hash;          // computed once', '= no setter for value — ever']),
+          card: card('String.java (JDK 21)', ['public final class String {', '  private final byte[] value;', '  private final byte coder; // 0=LATIN1', '  private int hash = 0; // cached']),
         },
         links: { refA: L.refA, value: L.value },
         flows: [{ route: ['refA', 'value'], rate: 1 }],
