@@ -1,235 +1,193 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+
+// One fixed stage: the four places a change lives, left to right.
+//
+//   working tree ─┐            ┌─ .git/objects ─┐
+//                 └── index ───┘                └── origin
+//
+// Git colours (shared by every git lesson): working tree = blue, index = orange,
+// commit = purple, ref/branch = yellow (amber tags), object store = db, remote = slab.
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+/** Screen-space placement (px from stage centre) → world (x, y). */
+const at = (sx: number, sy: number): [number, number] => [
+  Math.round((sx / 28 + sy / 14) * 100) / 100,
+  Math.round((sx / 28 - sy / 14) * 100) / 100,
+];
+
+const wt = (tags: Tag[] = []) =>
+  makeBlock(...at(-300, -20), { s: 4.4, h: 50, color: `blue`, glyph: `file`, label: [`Working tree`], sub: `src/app.ts`, tags });
+const idx = (tags: Tag[] = []) =>
+  makeBlock(...at(-100, 60), { s: 4.4, h: 50, color: `orange`, glyph: `listChecks`, label: [`Index`], sub: `.git/index`, tags });
+const repo = (tags: Tag[] = []) => makeDb(...at(100, -20), { r: 2.2, h: 46, glyph: `database`, label: `.git/objects`, tags });
+const origin = (tags: Tag[] = []) =>
+  makeBlock(...at(300, 60), { s: 4.4, h: 50, color: `slab`, glyph: `globe`, label: [`origin`], sub: `github.com`, tags });
+
+const L = {
+  add: makeLink(`wt`, `idx`, [`wt`, `idx`], { label: `git add` }),
+  addQuiet: makeLink(`wt`, `idx`, [`wt`, `idx`], { heads: `both`, style: `off` }),
+  blob: makeLink(`idx`, `repo`, [`idx`, `repo`], { label: `blob` }),
+  commit: makeLink(`idx`, `repo`, [`idx`, `repo`], { label: `commit` }),
+  commitQuiet: makeLink(`idx`, `repo`, [`idx`, `repo`], { heads: `both`, style: `off` }),
+  push: makeLink(`repo`, `origin`, [`repo`, `origin`], { label: `push` }),
+  fetch: makeLink(`origin`, `repo`, [`origin`, `repo`], { label: `fetch` }),
+  sync: makeLink(`origin`, `repo`, [`origin`, `repo`], { heads: `both` }),
+};
+
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: 0, y: 0, z: 0, dx: -440, dy: 120 }, title, lines, { icon: `keyboard` });
+
+const ref = (text: string, tone = `amber`): Tag => ({ text, tone, icon: `gitBranch` });
 
 export const gitEnvironmentsLifecycleLesson = {
-  id: 'git-environments-lifecycle',
-  title: 'Git Environments: Working Directory, Index & Object Store',
-  summary: 'Trace the lifecycle of a byte from local disk edits through the staging index, sealed commit objects, and remote packfile synchronization.',
-  minutes: 25,
-  level: 'beginner',
-  metrics: ['workingTree', 'stagingIndex', 'localCommits', 'remoteSynced'],
-  legend: ['flow', ['change', 'working tree edit'], ['stage', 'staged into index'], ['commit', 'sealed commit'], ['sync', 'remote sync']],
+  id: `git-environments-lifecycle`,
+  title: `Git Environments: Working Directory, Index & Object Store`,
+  summary: `Follow one edit from your disk through the index and a commit, then out to a remote and back.`,
+  minutes: 14,
+  level: `beginner`,
+  metrics: [`untracked`, `staged`, `commits`, `vsOrigin`],
+  legend: [`req`, `res`, [`write`, `object write`], [`heavy`, `packfile`]],
   goals: [
-    { text: 'The Working Directory: Untracked and dirty disk states', step: 1 },
-    { text: 'The Staging Area: Crafting atomic commits via .git/index', step: 2 },
-    { text: 'The Local Repository: Sealing immutable commit snapshots', step: 3 },
-    { text: 'Remote Push: Negotiating packfiles and updating remote refs', step: 4 },
-    { text: 'Remote Fetch: Updating tracking branches without touching disk', step: 5 },
-    { text: 'Fast-forward vs 3-way merge integration (git pull)', step: 6 },
+    { text: `The working directory: untracked and modified files`, step: 1 },
+    { text: `The index: choosing what goes into the next commit`, step: 2 },
+    { text: `The local repository: sealing a commit`, step: 3 },
+    { text: `git push: sending objects and moving the remote branch`, step: 4 },
+    { text: `git fetch: updating origin/main without touching your files`, step: 5 },
+    { text: `git pull: fetch, then fast-forward or merge`, step: 6 },
   ],
   steps: [
     {
-      short: 'Working Dir',
-      chapter: 'setup',
-      title: 'The Working Directory (OS Filesystem)',
+      short: `Working tree`,
+      chapter: `setup`,
+      title: `It starts as a file on disk`,
       body: [
-        'The <b>Working Directory</b> is the local directory on your filesystem where you edit files, run compilers, and write code.',
-        'Files here can be in two states: <b>Untracked</b> (Git does not monitor them) or <b>Tracked</b> (Modified vs Unmodified against the last commit).',
+        `The <span class="term">working tree</span> is just your project folder. You create <code>src/app.ts</code> and Git notices it — but only as <b>untracked</b>.`,
+        `Nothing has been copied into <code>.git/</code> yet. Git stores nothing until you ask it to.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'The working directory is a local sandbox. Git ignores disk edits until you explicitly tell it to notice them via git add.',
-      },
-      metrics: { workingTree: '1 dirty file', stagingIndex: '0 staged', localCommits: '0 commits', remoteSynced: 'Not connected' },
+      metrics: { untracked: 1, staged: 0, commits: 0, vsOrigin: `—` },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Developer', tags: [{ text: 'touch app.ts', tone: 'blue', icon: 'terminal' }] }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Local Filesystem Status', [
-            `$ git status -s`,
-            `?? src/app.ts (Untracked file)`,
-            `$ echo "export const app = 1" > src/app.ts`,
-            `File exists on disk: size = 32 bytes`,
-            `= Git repository (.git/) remains untouched`,
-          ], { icon: 'terminal' }),
+          wt: wt([{ text: `?? untracked`, tone: `red` }]),
+          card: card(`terminal`, [`$ echo "export const app = 1" > src/app.ts`, `$ git status -s`, `?? src/app.ts`]),
         },
         links: {},
         flows: [],
       },
     },
     {
-      short: 'Staging Area',
-      chapter: 'execution',
-      title: 'The Staging Area: Building the Index (.git/index)',
+      short: `git add`,
+      chapter: `technique`,
+      title: `git add copies the content into Git`,
       body: [
-        'Running <code>git add src/app.ts</code> moves file content into the <b>Staging Area</b> (the <b>Index</b>).',
-        'Under the hood, Git compresses the file with zlib, generates its SHA-1 hash, writes a Blob object to <code>.git/objects/</code>, and records the file path, mode (<code>100644</code>), and SHA pointer in <code>.git/index</code>.',
+        `<code>git add</code> hashes the file, writes its bytes as a <span class="term">blob</span> into <code>.git/objects</code>, and records “path → blob hash” in the <span class="term">index</span>.`,
+        `The index is the draft of your next commit. Edit the file again and the index still holds the version you added.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'The Index allows you to craft granular, atomic commits by staging only specific files or hunks while keeping other edits on disk.',
-      },
-      changes: ['+ git add src/app.ts executed', '+ Staged entry recorded in .git/index', '+ SHA-1 blob 4b825d written to .git/objects'],
-      metrics: { workingTree: 'Clean', stagingIndex: '1 staged file', localCommits: '0 commits', remoteSynced: 'None' },
+      changes: [`+ index`, `+ .git/objects (blob 4b825d)`],
+      metrics: { untracked: 0, staged: 1, commits: 0, vsOrigin: `—` },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Working Tree', tags: [{ text: 'git add', tone: 'blue', icon: 'terminal' }] }),
-          stagingIndex: b(-6, -2, { r: 2.2, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/index'], sub: 'staged cache' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Index Inspection', [
-            `$ git add src/app.ts`,
-            `$ git ls-files --stage`,
-            `100644 4b825dc642... 0 src/app.ts`,
-            `Blob written: .git/objects/4b/825dc6...`,
-            `= Staged and ready for snapshot commit`,
-          ], { icon: 'terminal' }),
+          wt: wt(),
+          idx: idx([{ text: `staged: app.ts`, tone: `green` }]),
+          repo: repo([{ text: `blob 4b825d`, tone: `violet` }]),
+          card: card(`git add`, [`$ git add src/app.ts`, `$ git ls-files --stage`, `100644 4b825dc6… 0  src/app.ts`]),
         },
-        links: {
-          ws: h('devWorkspace', 'stagingIndex', ['devWorkspace', 'stagingIndex'], { label: 'git add' }),
-        },
-        flows: [{ route: ['ws'], kind: 'stage', rate: 1.5 }],
+        links: { add: L.add, blob: L.blob },
+        flows: [
+          { route: [`add`], rate: 1.2 },
+          { route: [`blob`], kind: `write`, rate: 1 },
+        ],
       },
     },
     {
-      short: 'Local Commit',
-      chapter: 'execution',
-      title: 'Local Repository: Sealing the Commit Snapshot',
+      short: `Commit`,
+      chapter: `solution`,
+      title: `git commit seals a snapshot`,
       body: [
-        'Running <code>git commit -m "feat: add app"</code> creates an immutable <b>Commit object</b>.',
-        'Git writes a Tree object for the folder structure, creates the Commit object pointing to the tree, author, timestamp, and parent commit, and fast-forwards <code>refs/heads/main</code>.',
+        `<code>git commit</code> turns the index into a tree, writes a <span class="term">commit</span> object that points to it (plus author, time and parent), and moves <code>main</code> to the new commit.`,
+        `All of this is local. You can commit a hundred times on a plane with no network.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Commits are completely local. You can commit hundreds of times while offline on a plane with zero network requests.',
-      },
-      changes: ['+ Commit c4f1a2 sealed in local repository', '+ HEAD -> refs/heads/main advanced', '~ Local is ahead of remote by 1 commit'],
-      metrics: { workingTree: 'Clean', stagingIndex: 'Clean', localCommits: '1 commit (c4f1a2)', remoteSynced: 'Behind (+1 unpushed)' },
+      changes: [`+ commit c4f1a2`, `~ main → c4f1a2`],
+      metrics: { untracked: 0, staged: 0, commits: 1, vsOrigin: `—` },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Working Tree', tags: [{ text: 'commit clean', tone: 'blue', icon: 'terminal' }] }),
-          stagingIndex: b(-6, -2, { r: 2.2, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/index'], sub: 'index clean' }),
-          localRepo: d(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'HEAD -> main' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Commit Object Inspection', [
-            `$ git cat-file -p c4f1a2`,
-            `tree 8a3f91b2c4...`,
-            `parent e8d9c2...`,
-            `author Developer <dev@org.com> 1700000000 +0000`,
-            `feat: add app`,
-            `= Local branch pointer advanced`,
-          ], { icon: 'terminal' }),
+          wt: wt(),
+          idx: idx([{ text: `clean`, tone: `gray` }]),
+          repo: repo([ref(`main → c4f1a2`)]),
+          card: card(`git commit`, [`$ git commit -m "feat: add app"`, `[main c4f1a2] feat: add app`, ` 1 file changed, 1 insertion(+)`]),
         },
-        links: {
-          ws: h('devWorkspace', 'stagingIndex', ['devWorkspace', 'stagingIndex'], { label: 'staged' }),
-          sl: h('stagingIndex', 'localRepo', ['stagingIndex', 'localRepo'], { label: 'git commit' }),
-        },
-        flows: [{ route: ['sl'], kind: 'commit', rate: 1.6 }],
+        links: { add: L.addQuiet, commit: L.commit },
+        flows: [{ route: [`commit`], kind: `write`, rate: 1.2 }],
       },
     },
     {
-      short: 'Remote Push',
-      chapter: 'execution',
-      title: 'Remote Push: Synchronizing Packfiles to GitHub',
+      short: `Push`,
+      chapter: `technique`,
+      title: `git push sends the missing objects`,
       body: [
-        'Running <code>git push origin main</code> connects to the remote server over SSH or HTTPS.',
-        'Git negotiates missing objects via the Smart Transfer Protocol, packs all new commits, trees, and blobs into a compressed <b>packfile</b>, streams it, and updates <code>refs/remotes/origin/main</code>.',
+        `<code>git push origin main</code> asks the remote which objects it already has, packs only the missing ones into a <span class="term">packfile</span>, and sends it.`,
+        `Then the remote moves its own <code>main</code> to <code>c4f1a2</code>, and your <code>origin/main</code> bookmark follows.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Until you push, your commit history exists only on your local machine. Pushing distributes the immutable graph to the rest of the team.',
-      },
-      changes: ['+ Packfile streamed to remote GitHub', '+ Remote branch origin/main updated to c4f1a2', '~ Local and remote are 100% synchronized'],
-      metrics: { workingTree: 'Clean', stagingIndex: 'Clean', localCommits: '1 commit', remoteSynced: '100% Synced' },
+      changes: [`+ origin`, `~ origin main → c4f1a2`],
+      metrics: { untracked: 0, staged: 0, commits: 1, vsOrigin: `in sync` },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Working Tree', tags: [{ text: 'git push', tone: 'blue', icon: 'terminal' }] }),
-          stagingIndex: b(-6, -2, { r: 2.2, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/index'], sub: 'index clean' }),
-          localRepo: d(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'main (c4f1a2)' }),
-          remoteServer: d(14, 6, { s: 4.4, h: 56, color: 'purple', glyph: 'cloud', label: ['GitHub Remote'], sub: 'origin/main' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Smart Transfer Protocol', [
-            `$ git push origin main`,
-            `Counting objects: 4, done.`,
-            `Delta compression using up to 8 threads`,
-            `Compressing objects: 100% (2/2), done.`,
-            `Writing objects: 100% (4/4), 382 bytes, done.`,
-            `To github.com:org/repo.git`,
-            `   e8d9c2..c4f1a2  main -> main`,
-          ], { icon: 'terminal' }),
+          wt: wt(),
+          idx: idx(),
+          repo: repo([ref(`main → c4f1a2`)]),
+          origin: origin([ref(`main → c4f1a2`)]),
+          card: card(`git push`, [`$ git push origin main`, `Writing objects: 100% (3/3), 382 bytes`, `   e8d9c2..c4f1a2  main -> main`]),
         },
-        links: {
-          ws: h('devWorkspace', 'stagingIndex', ['devWorkspace', 'stagingIndex'], { label: 'staged' }),
-          sl: h('stagingIndex', 'localRepo', ['stagingIndex', 'localRepo'], { label: 'committed' }),
-          lr: h('localRepo', 'remoteServer', ['localRepo', 'remoteServer'], { label: 'git push' }),
-        },
-        flows: [{ route: ['lr'], kind: 'sync', rate: 1.8 }],
+        links: { add: L.addQuiet, commit: L.commitQuiet, push: L.push },
+        flows: [{ route: [`push`], kind: `heavy`, rate: 0.9 }],
       },
     },
     {
-      short: 'Remote Fetch',
-      chapter: 'execution',
-      title: 'Remote Fetch: Updating Tracking Refs Safely',
+      short: `Fetch`,
+      chapter: `insight`,
+      title: `git fetch only updates the bookmark`,
       body: [
-        'When teammates push commits, running <code>git fetch origin</code> downloads their new objects into your <code>.git/objects/</code>.',
-        'Crucially, <code>git fetch</code> updates <b>only</b> your remote tracking branch (<code>origin/main</code>). It does NOT modify your local <code>main</code> branch or your working directory.',
+        `Teammates pushed 3 commits. <code>git fetch</code> downloads their objects and moves <code>origin/main</code> to <code>9f8a7b</code>.`,
+        `Your own <code>main</code>, your index and your files are untouched. That is why fetch is always safe to run.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'git fetch is 100% safe to run at any time — it never causes merge conflicts or overwrites uncommitted local work.',
-      },
-      changes: ['+ Downloaded 3 new remote commits into .git/objects', '+ Updated tracking ref refs/remotes/origin/main to 9f8a7b', '~ Working directory and local main remain untouched'],
-      metrics: { workingTree: 'Clean', stagingIndex: 'Clean', localCommits: '1 behind', remoteSynced: 'Remote Ahead (+3)' },
+      changes: [`~ origin/main → 9f8a7b`, `= main still c4f1a2`],
+      metrics: { untracked: 0, staged: 0, commits: 1, vsOrigin: `behind 3` },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Working Tree', tags: [{ text: 'git fetch', tone: 'blue', icon: 'terminal' }] }),
-          stagingIndex: b(-6, -2, { r: 2.2, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/index'], sub: 'index clean' }),
-          localRepo: d(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'main (c4f1a2)' }),
-          remoteServer: d(14, 6, { s: 4.4, h: 56, color: 'purple', glyph: 'cloud', label: ['GitHub Remote'], sub: 'HEAD: 9f8a7b' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Fetch Log', [
-            `$ git fetch origin`,
-            `From github.com:org/repo`,
-            `   c4f1a2..9f8a7b  main -> origin/main`,
-            `$ git status`,
-            `Your branch is behind 'origin/main' by 3 commits.`,
-            `= Working tree safely unmodified`,
-          ], { icon: 'terminal' }),
+          wt: wt(),
+          idx: idx(),
+          repo: repo([ref(`main → c4f1a2`), ref(`origin/main → 9f8a7b`, `violet`)]),
+          origin: origin([ref(`main → 9f8a7b`)]),
+          card: card(`git fetch`, [`$ git fetch origin`, `   c4f1a2..9f8a7b  main -> origin/main`, `$ git status -sb`, `## main...origin/main [behind 3]`]),
         },
-        links: {
-          ws: h('devWorkspace', 'stagingIndex', ['devWorkspace', 'stagingIndex'], { label: 'staged' }),
-          sl: h('stagingIndex', 'localRepo', ['stagingIndex', 'localRepo'], { label: 'committed' }),
-          rl: h('remoteServer', 'localRepo', ['remoteServer', 'localRepo'], { label: 'git fetch' }),
-        },
-        flows: [{ route: ['rl'], kind: 'sync', rate: 1.6 }],
+        links: { add: L.addQuiet, commit: L.commitQuiet, fetch: L.fetch },
+        flows: [{ route: [`fetch`], kind: `heavy`, rate: 0.9 }],
       },
     },
     {
-      short: 'Merge & Pull',
-      chapter: 'solution',
-      title: 'Fast-Forward vs Three-Way Merge (git pull)',
+      short: `Pull`,
+      chapter: `solution`,
+      title: `git pull = fetch + merge`,
       body: [
-        '<code>git pull</code> is a convenience shorthand combining <code>git fetch</code> followed immediately by <code>git merge origin/main</code>.',
-        'If local history has not diverged, Git performs a <b>Fast-Forward</b> (moving the branch pointer forward). If both local and remote have new commits, Git creates a 3-way Merge Commit.',
+        `<code>git pull</code> runs a fetch, then merges <code>origin/main</code> into <code>main</code>. You have no new commits of your own, so Git just <span class="term">fast-forwards</span>: it slides <code>main</code> up to <code>9f8a7b</code> and checks the new files out.`,
+        `If both sides had new commits, Git would create a merge commit instead. <code>git pull --ff-only</code> refuses that and keeps history linear.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Best practice: use git pull --ff-only or git pull --rebase to keep linear commit histories without accidental merge bubbles.',
-      },
-      changes: ['+ Fast-forwarded local main to 9f8a7b', '+ Refreshed working directory files to latest upstream state', '= All 4 Git environments fully in sync'],
-      metrics: { workingTree: 'Synced & Clean', stagingIndex: 'Clean', localCommits: 'Synced with Remote', remoteSynced: '100% Up to Date' },
+      changes: [`~ main → 9f8a7b (fast-forward)`, `~ working tree updated`],
+      metrics: { untracked: 0, staged: 0, commits: 4, vsOrigin: `in sync` },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Working Tree', tags: [{ text: 'synced 9f8a7b', tone: 'green', icon: 'terminal' }] }),
-          stagingIndex: b(-6, -2, { r: 2.2, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/index'], sub: 'index clean' }),
-          localRepo: d(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Local Repo'], sub: 'main (9f8a7b)' }),
-          remoteServer: d(14, 6, { s: 4.4, h: 56, color: 'green', glyph: 'cloud', label: ['GitHub Remote'], sub: 'origin/main' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Fast-Forward Merge', [
-            `$ git merge origin/main --ff-only`,
-            `Updating c4f1a2..9f8a7b`,
-            `Fast-forward`,
-            ` src/app.ts    | 42 ++++++++++++++++++`,
-            ` 1 file changed, 42 insertions(+)`,
-            `= Local branch and working directory fully updated`,
-          ], { icon: 'terminal' }),
+          wt: wt([{ text: `updated`, tone: `green` }]),
+          idx: idx(),
+          repo: repo([ref(`main → 9f8a7b`)]),
+          origin: origin([ref(`main → 9f8a7b`)]),
+          card: card(`git pull`, [`$ git pull --ff-only`, `Updating c4f1a2..9f8a7b`, `Fast-forward`, ` src/app.ts | 42 +++++++++`]),
         },
-        links: {
-          ws: h('devWorkspace', 'stagingIndex', ['devWorkspace', 'stagingIndex'], { label: 'synced' }),
-          sl: h('stagingIndex', 'localRepo', ['stagingIndex', 'localRepo'], { label: 'synced' }),
-          lr: h('localRepo', 'remoteServer', ['localRepo', 'remoteServer'], { label: 'synced' }),
-        },
-        flows: [{ route: ['lr', 'sl', 'ws'], kind: 'commit', rate: 1.6 }],
+        links: { add: L.addQuiet, commit: L.commitQuiet, sync: L.sync },
+        flows: [
+          { route: [`sync`], kind: `heavy`, rate: 0.7 },
+          { route: [`commit`], rate: 0.8, bounce: true },
+          { route: [`add`], rate: 0.8, bounce: true },
+        ],
       },
     },
   ],

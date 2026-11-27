@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const cicdToolsEvolutionLesson = {
@@ -40,10 +38,10 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 1 (2001)', isolationLevel: 'None (Bare Host)', pipelineDefinition: 'XML (build.xml)', securityModel: 'Host Root' },
       scene: {
         entities: {
-          vcsRepo: y(-18, -6, { label: 'vcs-server', tags: [{ text: 'SVN Repository', icon: 'gitBranch' }] }),
-          ciMaster: d(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'clock', label: ['CruiseControl'], sub: 'poll every 60s' }),
-          buildHost: b(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'terminal', label: ['Ant Runner'], sub: 'build.xml exec' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'cruisecontrol.xml Config', [
+          vcsRepo: makeDevice(-18, -6, { label: 'vcs-server', tags: [{ text: 'SVN Repository', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'clock', label: ['CruiseControl'], sub: 'poll every 60s' }),
+          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'terminal', label: ['Ant Runner'], sub: 'build.xml exec' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'cruisecontrol.xml Config', [
             `<cruisecontrol>`,
             `  <project name="payment-app">`,
             `    <modificationset quietperiod="60">`,
@@ -55,8 +53,8 @@ export const cicdToolsEvolutionLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vc: h('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'poll changes' }),
-          cb: h('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'ant compile' }),
+          vc: makeLink('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'poll changes' }),
+          cb: makeLink('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'ant compile' }),
         },
         flows: [{ route: ['vc', 'cb'], kind: 'poll', rate: 1.2 }],
       },
@@ -77,10 +75,10 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 1.5 (Jenkins)', isolationLevel: 'Dirty Host (/tmp)', pipelineDefinition: 'Freestyle UI / XML', securityModel: 'Shared Agent' },
       scene: {
         entities: {
-          vcsRepo: y(-18, -6, { label: 'vcs-server', tags: [{ text: 'Git Central', tone: 'blue', icon: 'gitBranch' }] }),
-          ciMaster: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Jenkins Master'], sub: 'shared /tmp' }),
-          buildHost: b(6, 0, { s: 4.6, h: 48, color: 'red', glyph: 'alert', label: ['Pet Agent-01'], sub: 'version clash' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Jenkins Agent Error Log', [
+          vcsRepo: makeDevice(-18, -6, { label: 'vcs-server', tags: [{ text: 'Git Central', tone: 'blue', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Jenkins Master'], sub: 'shared /tmp' }),
+          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'red', glyph: 'alert', label: ['Pet Agent-01'], sub: 'version clash' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Jenkins Agent Error Log', [
             `[Agent-01] Executing /usr/bin/node index.js`,
             `Error: Node version v16.14.0 incompatible`,
             `Requires: >=20.0.0 (Found installed v16)`,
@@ -90,8 +88,8 @@ export const cicdToolsEvolutionLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vc: h('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'git trigger' }),
-          cb: h('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'run on agent' }),
+          vc: makeLink('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'git trigger' }),
+          cb: makeLink('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'run on agent' }),
         },
         flows: [{ route: ['vc', 'cb'], kind: 'exec', rate: 1.5 }],
       },
@@ -112,10 +110,10 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 2 (YAML)', isolationLevel: 'Matrix Matrix', pipelineDefinition: 'YAML Spec', securityModel: 'Git Protected' },
       scene: {
         entities: {
-          vcsRepo: y(-18, -6, { label: 'vcs-server', tags: [{ text: 'repo/.github', tone: 'green', icon: 'gitBranch' }] }),
-          ciMaster: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['GitHub Actions'], sub: 'parse yaml' }),
-          buildHost: b(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'boxes', label: ['Matrix Runners'], sub: 'matrix runner' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '.github/workflows/ci.yml', [
+          vcsRepo: makeDevice(-18, -6, { label: 'vcs-server', tags: [{ text: 'repo/.github', tone: 'green', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['GitHub Actions'], sub: 'parse yaml' }),
+          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'boxes', label: ['Matrix Runners'], sub: 'matrix runner' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, '.github/workflows/ci.yml', [
             `name: CI`,
             `on: [push, pull_request]`,
             `jobs:`,
@@ -127,8 +125,8 @@ export const cicdToolsEvolutionLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vc: h('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'push event' }),
-          cb: h('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'schedule matrix' }),
+          vc: makeLink('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'push event' }),
+          cb: makeLink('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'schedule matrix' }),
         },
         flows: [{ route: ['vc', 'cb'], kind: 'exec', rate: 1.6 }],
       },
@@ -149,10 +147,10 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 2.5 (Ephemeral)', isolationLevel: 'MicroVM (38ms)', pipelineDefinition: 'Declarative YAML', securityModel: 'Zero Persistence' },
       scene: {
         entities: {
-          vcsRepo: y(-18, -6, { label: 'vcs-server', tags: [{ text: 'repo/.github', tone: 'green', icon: 'gitBranch' }] }),
-          ciMaster: d(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Runner Pool'], sub: 'boot 38ms' }),
-          buildHost: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['Ephemeral VM'], sub: 'wiped on exit' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Ephemeral Runner Lifecycle', [
+          vcsRepo: makeDevice(-18, -6, { label: 'vcs-server', tags: [{ text: 'repo/.github', tone: 'green', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Runner Pool'], sub: 'boot 38ms' }),
+          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['Ephemeral VM'], sub: 'wiped on exit' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Ephemeral Runner Lifecycle', [
             `event: runner_job_assigned`,
             `action: qemu-kvm spawn ephemeral-worker-89`,
             `isolation: namespaces + seccomp + cgroups`,
@@ -162,8 +160,8 @@ export const cicdToolsEvolutionLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vc: h('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'trigger' }),
-          cb: h('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'ephemeral run' }),
+          vc: makeLink('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'trigger' }),
+          cb: makeLink('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'ephemeral run' }),
         },
         flows: [{ route: ['vc', 'cb'], kind: 'exec', rate: 1.8 }],
       },
@@ -184,11 +182,11 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Push CD (Vulnerable)', isolationLevel: 'External Access', pipelineDefinition: 'kubectl apply', securityModel: 'Vulnerable Secret' },
       scene: {
         entities: {
-          vcsRepo: y(-18, -6, { label: 'vcs-server', tags: [{ text: 'External CI', tone: 'red', icon: 'alert' }] }),
-          ciMaster: d(-6, -2, { s: 4.8, h: 50, color: 'red', glyph: 'shield', label: ['Push CI Runner'], sub: 'secret leak' }),
-          buildHost: b(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'server', label: ['K8s Cluster'], sub: 'port 6443' }),
-          exposedApi: d(-4, 16, { s: 4.4, h: 48, color: 'red', glyph: 'alert', label: ['Exposed API'], sub: 'secret leak' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Security Vulnerability Report', [
+          vcsRepo: makeDevice(-18, -6, { label: 'vcs-server', tags: [{ text: 'External CI', tone: 'red', icon: 'alert' }] }),
+          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'red', glyph: 'shield', label: ['Push CI Runner'], sub: 'secret leak' }),
+          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'server', label: ['K8s Cluster'], sub: 'port 6443' }),
+          exposedApi: makeBlock(-4, 16, { s: 4.4, h: 48, color: 'red', glyph: 'alert', label: ['Exposed API'], sub: 'secret leak' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Security Vulnerability Report', [
             `Vulnerability: KUBECONFIG secret stored in CI`,
             `Target: https://api.prod.k8s:6443 (Port open)`,
             `Threat: Malicious PR can dump $KUBECONFIG`,
@@ -197,9 +195,9 @@ export const cicdToolsEvolutionLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vc: h('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'build push' }),
-          cb: h('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'kubectl apply' }),
-          ce: h('ciMaster', 'exposedApi', ['ciMaster', 'exposedApi'], { label: 'leak token' }),
+          vc: makeLink('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'build push' }),
+          cb: makeLink('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'kubectl apply' }),
+          ce: makeLink('ciMaster', 'exposedApi', ['ciMaster', 'exposedApi'], { label: 'leak token' }),
         },
         flows: [{ route: ['vc', 'cb', 'ce'], kind: 'exec', rate: 1.8 }],
       },
@@ -220,11 +218,11 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 3 (GitOps)', isolationLevel: 'In-Cluster Agent', pipelineDefinition: 'Git Single Truth', securityModel: 'Zero Inbound' },
       scene: {
         entities: {
-          vcsRepo: y(-18, -6, { label: 'vcs-server', tags: [{ text: 'Git Truth', tone: 'green', icon: 'gitBranch' }] }),
-          ciMaster: d(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['ArgoCD Agent'], sub: 'cluster pull' }),
-          buildHost: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: 'state in etcd' }),
-          prodWorkload: b(14, 6, { s: 4.6, h: 48, color: 'blue', glyph: 'network', label: ['Live App Fleet'], sub: 'state in etcd' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'ArgoCD Reconciliation Loop', [
+          vcsRepo: makeDevice(-18, -6, { label: 'vcs-server', tags: [{ text: 'Git Truth', tone: 'green', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['ArgoCD Agent'], sub: 'cluster pull' }),
+          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: 'state in etcd' }),
+          prodWorkload: makeDb(14, 6, { s: 4.6, h: 48, color: 'blue', glyph: 'network', label: ['Live App Fleet'], sub: 'state in etcd' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ArgoCD Reconciliation Loop', [
             `Model: Pull-based continuous reconciliation`,
             `Credentials: Stored securely inside cluster etcd`,
             `External firewall: Inbound port 6443 CLOSED`,
@@ -233,9 +231,9 @@ export const cicdToolsEvolutionLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vc: h('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'pull state' }),
-          cb: h('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'reconcile' }),
-          bp: h('buildHost', 'prodWorkload', ['buildHost', 'prodWorkload'], { label: 'live sync' }),
+          vc: makeLink('vcsRepo', 'ciMaster', ['vcsRepo', 'ciMaster'], { label: 'pull state' }),
+          cb: makeLink('ciMaster', 'buildHost', ['ciMaster', 'buildHost'], { label: 'reconcile' }),
+          bp: makeLink('buildHost', 'prodWorkload', ['buildHost', 'prodWorkload'], { label: 'live sync' }),
         },
         flows: [{ route: ['vc', 'cb', 'bp'], kind: 'sync', rate: 1.5 }],
       },

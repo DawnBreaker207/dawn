@@ -1,27 +1,10 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const Bt = { x0: -11.8, x1: 11.8, y0: 6.6, y1: 9.4 };
@@ -32,22 +15,22 @@ const Ht = Array.from({ length: 12 }, (e, t) => -10.45 + t * 1.9);
 
 const Ut = 5.2;
 
-const Wt = () => ({ app: d(-13, -14, { label: [`App`] }) });
+const Wt = () => ({ app: makeBlock(-13, -14, { label: [`App`] }) });
 
 const Gt = (e = `USERS TABLE · 50M ROWS`) => {
-    let t = { tbl: x(Bt, e) };
+    let t = { tbl: makeZone(Bt, e) };
     return (
       Ht.forEach((e, n) => {
-        t[`p${n}`] = d(e, 8, { s: 1.55, h: 10, radius: 3, color: `purple`, glyph: ``, label: [] });
+        t[`p${n}`] = makeBlock(e, 8, { s: 1.55, h: 10, radius: 3, color: `purple`, glyph: ``, label: [] });
       }),
       t
     );
   };
 
-const Kt = (e, t, n) => d(e, t, { s: 3, h: 30, color: `yellow`, glyph: ``, label: [n] });
+const Kt = (e, t, n) => makeBlock(e, t, { s: 3, h: 30, color: `yellow`, glyph: ``, label: [n] });
 
 const qt = (e = [`A–Z`, `A–H`, `I–Q`, `R–Z`], t = `INDEX ON email · B-TREE`) => ({
-    idx: x(Vt, t),
+    idx: makeZone(Vt, t),
     root: Kt(0, -8, e[0]),
     b1: Kt(-7, -2, e[1]),
     b2: Kt(0, -2, e[2]),
@@ -55,7 +38,7 @@ const qt = (e = [`A–Z`, `A–H`, `I–Q`, `R–Z`], t = `INDEX ON email · B-T
   });
 
 const Jt = {
-    scan: h(`app`, null, [`app`, [-13, Ut], [11.6, Ut]], {
+    scan: makeLink(`app`, null, [`app`, [-13, Ut], [11.6, Ut]], {
       heads: `none`,
       label: `reads every page`,
       labelAt: 0.62,
@@ -63,13 +46,13 @@ const Jt = {
   };
 
 const Yt = {
-    ar: h(`app`, `root`, [`app`, [`root`, `app`], `root`], { heads: `both` }),
-    rb1: h(`root`, `b1`, [`root`, [`b1`, `root`], `b1`], { heads: `both` }),
-    rb2: h(`root`, `b2`, [`root`, `b2`], { heads: `both` }),
-    rb3: h(`root`, `b3`, [`root`, [`b3`, `root`], `b3`], { heads: `both` }),
-    b1p: h(`b1`, `p2`, [`b1`, [`p2`, `b1`], `p2`], { heads: `both` }),
-    b2p: h(`b2`, `p6`, [`b2`, [`p6`, `b2`], `p6`], { heads: `both` }),
-    b3p: h(`b3`, `p9`, [`b3`, [`p9`, `b3`], `p9`], { heads: `both` }),
+    ar: makeLink(`app`, `root`, [`app`, [`root`, `app`], `root`], { heads: `both` }),
+    rb1: makeLink(`root`, `b1`, [`root`, [`b1`, `root`], `b1`], { heads: `both` }),
+    rb2: makeLink(`root`, `b2`, [`root`, `b2`], { heads: `both` }),
+    rb3: makeLink(`root`, `b3`, [`root`, [`b3`, `root`], `b3`], { heads: `both` }),
+    b1p: makeLink(`b1`, `p2`, [`b1`, [`p2`, `b1`], `p2`], { heads: `both` }),
+    b2p: makeLink(`b2`, `p6`, [`b2`, [`p6`, `b2`], `p6`], { heads: `both` }),
+    b3p: makeLink(`b3`, `p9`, [`b3`, [`p9`, `b3`], `p9`], { heads: `both` }),
   };
 
 const Xt = (e = 2.2) => [
@@ -86,7 +69,7 @@ const Xt = (e = 2.2) => [
 
 const Zt = { route: [`scan`], kind: `slow`, rate: 0.45, speed: 0.42 };
 
-const Qt = (e, t, n) => S({ x: 11.8, y: 6.6, z: 0, dx: 34, dy: -215 }, e, t, { icon: n });
+const Qt = (e, t, n) => makePanel({ x: 11.8, y: 6.6, z: 0, dx: 34, dy: -215 }, e, t, { icon: n });
 
 const $t = Qt(
     `The query`,
@@ -103,12 +86,13 @@ export const indexesLesson = {
     metrics: [`p95`, `rows`, `writeCost`, `indexes`],
     legend: [[`slow`, `full table scan`], `req`, `res`, `write`],
     goals: [
-      { text: `What a full table scan costs`, step: 0 },
+      { text: `What a full table scan costs`, step: 1 },
       { text: `How a B-tree index finds a row`, step: 3 },
-      { text: `What indexes cost on every write`, step: 4 },
-      { text: `Composite indexes and column order`, step: 5 },
-      { text: 'When an index can’t help', step: 6 },
-      { text: 'Choose GIN (JSONB), BRIN (Time-Series) & Partial Index', step: 6 },],
+      { text: `What indexes cost on every write`, step: 5 },
+      { text: `How page splits keep the tree balanced`, step: 6 },
+      { text: `Composite indexes and column order`, step: 7 },
+      { text: 'When an index can’t help', step: 8 },
+      { text: 'Choose GIN (JSONB), BRIN (Time-Series) & Partial Index', step: 13 },],
     steps: [
       {
         short: `Slow query`,
@@ -227,7 +211,7 @@ export const indexesLesson = {
           entities: { ...Wt(), ...Gt(), ...qt() },
           links: {
             ...Yt,
-            ins: h(`app`, `p11`, [`app`, [-13, Ut], [`p11`, Ut], `p11`], {
+            ins: makeLink(`app`, `p11`, [`app`, [-13, Ut], [`p11`, Ut], `p11`], {
               label: `INSERT row`,
               labelAt: 0.7,
             }),
@@ -240,6 +224,66 @@ export const indexesLesson = {
               kind: `write`,
               rate: 0.6,
             },
+          ],
+        },
+      },
+      {
+        short: `Page split`,
+        chapter: `technique`,
+        title: `When a page is full, it splits`,
+        body: [
+          `Index pages have a fixed size. Insert a key into a page that is already full and the database <span class="term">splits</span> it: half the keys move to a brand-new page, and the parent gets a pointer to it.`,
+          `If the parent is full too, it splits the same way — up to the root, which is the only time the tree grows a level. That is why every leaf stays the same number of hops from the root.`,
+        ],
+        callout: {
+          kind: `insight`,
+          text: `Random keys (like UUIDv4) land on random pages and keep splitting them. Sequential keys only ever fill the last page.`,
+        },
+        changes: [`+ New page T–Z split off from R–Z`, `~ Root now points to 4 pages`],
+        metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
+        scene: {
+          entities: {
+            ...Wt(),
+            ...Gt(),
+            idx: makeZone({ x0: -12.6, x1: 12.6, y0: -10.6, y1: 0.4 }, `INDEX ON email · B-TREE`),
+            root: Kt(0, -8, `A–Z`),
+            b1: Kt(-10.5, -2, `A–H`),
+            b2: Kt(-3.5, -2, `I–Q`),
+            b3: Kt(3.5, -2, `R–S`),
+            b4: Kt(10.5, -2, `T–Z`),
+            q: Qt(
+              `Page split`,
+              [
+                `INSERT INTO users (email) VALUES ('tom@example.com');`,
+                `! page R–Z is full: no room for one more key`,
+                `split: R–S stays, T–Z moves to a new page`,
+                `= parent gains a pointer, every leaf stays 3 hops away`,
+              ],
+              `split`,
+            ),
+          },
+          links: {
+            ar: makeLink(`app`, `root`, [`app`, [`root`, `app`], `root`], { heads: `both` }),
+            rb1: makeLink(`root`, `b1`, [`root`, [`b1`, `root`], `b1`], { heads: `both` }),
+            rb2: makeLink(`root`, `b2`, [`root`, [`b2`, `root`], `b2`], { heads: `both` }),
+            rb3: makeLink(`root`, `b3`, [`root`, [`b3`, `root`], `b3`], { heads: `both` }),
+            rb4: makeLink(`root`, `b4`, [`root`, [`b4`, `root`], `b4`], { heads: `both` }),
+            split_b1p: makeLink(`b1`, `p0`, [`b1`, [`p0`, `b1`], `p0`], { heads: `both` }),
+            split_b2p: makeLink(`b2`, `p4`, [`b2`, [`p4`, `b2`], `p4`], { heads: `both` }),
+            split_b3p: makeLink(`b3`, `p7`, [`b3`, [`p7`, `b3`], `p7`], { heads: `both` }),
+            split_b4p: makeLink(`b4`, `p11`, [`b4`, [`p11`, `b4`], `p11`], { heads: `both` }),
+          },
+          flows: [
+            {
+              routes: [
+                { path: [`ar`, `rb1`, `split_b1p`] },
+                { path: [`ar`, `rb2`, `split_b2p`] },
+                { path: [`ar`, `rb3`, `split_b3p`] },
+              ],
+              rate: 1.4,
+              bounce: !0,
+            },
+            { route: [`ar`, `rb4`, `split_b4p`], kind: `write`, rate: 0.6 },
           ],
         },
       },
@@ -439,7 +483,7 @@ export const indexesLesson = {
       {
       short: 'GIN/BRIN/Part',
       chapter: 'indexes',
-      title: '6. Specialized Indexes: GIN (JSONB), BRIN & Partial',
+      title: 'Specialized Indexes: GIN (JSONB), BRIN & Partial',
       body: [
         'B-Tree isn’t always optimal:<br>• <strong>GIN</strong> (Inverted Index): indexes keys/elements inside <code>JSONB</code> (<code>@&gt;</code>), arrays, and Full-Text Search (<code>tsvector</code>).<br>• <strong>BRIN</strong>: stores only <code>min/max</code> per 128-page block — <strong>1000x smaller</strong> than B-Tree for append-only time-series!<br>• <strong>Partial Index</strong>: indexes only hot rows (<code>WHERE status = \'PENDING\'</code>).',
       ],
@@ -451,18 +495,18 @@ export const indexesLesson = {
       metrics: { mvcc_state: 'Index Family', lock_mode: 'Fastupdate', index_type: 'GIN / BRIN', scale_feature: '1000x smaller' },
       scene: {
         entities: {
-          gin: d(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'code', label: ['GIN Index'], sub: 'JSONB @> / FTS' }),
-          brin: d(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['BRIN Index'], sub: 'min/max block' }),
-          part: b(15, -10, { r: 2.2, h: 48, color: 'blue', label: ['Partial Index'], sub: 'WHERE active' }),
-          card: S({ x: -12, y: 12 }, '6. Choosing GIN vs BRIN vs Partial Index', [
+          gin: makeBlock(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'code', label: ['GIN Index'], sub: 'JSONB @> / FTS' }),
+          brin: makeBlock(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['BRIN Index'], sub: 'min/max block' }),
+          part: makeDb(15, -10, { r: 2.2, h: 48, color: 'blue', label: ['Partial Index'], sub: 'WHERE active' }),
+          card: makePanel({ x: -12, y: 12 }, 'Choosing GIN vs BRIN vs Partial Index', [
             'CREATE INDEX idx_meta ON events USING GIN (payload jsonb_path_ops);',
             'CREATE INDEX idx_ts   ON logs   USING BRIN (created_at); -- tiny!',
             'CREATE INDEX idx_pend ON jobs (id) WHERE status = \'PENDING\';',
           ], { icon: 'terminal' }),
         },
         links: {
-          gn_br: h('gin', 'brin', ['gin', 'brin'], { heads: 'end', label: 'time-series' }),
-          br_pt: h('brin', 'part', ['brin', 'part'], { heads: 'end', label: 'hot subset' }),
+          gn_br: makeLink('gin', 'brin', ['gin', 'brin'], { heads: 'end', label: 'time-series' }),
+          br_pt: makeLink('brin', 'part', ['brin', 'part'], { heads: 'end', label: 'hot subset' }),
         },
         flows: [{ route: ['gn_br', 'br_pt'], kind: 'res', rate: 1.8 }],
       },

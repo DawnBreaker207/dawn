@@ -1,33 +1,16 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const ka = { a: [0, -5], b: [-10, 7], c: [10, 7] };
 
 const M = (e, t = [], n = {}) =>
-    b(ka[e][0], ka[e][1], {
+    makeDb(ka[e][0], ka[e][1], {
       r: 1.9,
       glyph: `database`,
       label: `node ${e.toUpperCase()}`,
@@ -35,9 +18,9 @@ const M = (e, t = [], n = {}) =>
       ...n,
     });
 
-const Aa = (e = {}) => d(0, -17, { label: [`App`, `Server 1`], ...e });
+const Aa = (e = {}) => makeBlock(0, -17, { label: [`App`, `Server 1`], ...e });
 
-const ja = (e = {}) => d(-16, 1, { label: [`App`, `Server 2`], ...e });
+const ja = (e = {}) => makeBlock(-16, 1, { label: [`App`, `Server 2`], ...e });
 
 const Ma = (e) => ({ text: `leader · term ${e}`, tone: `green`, icon: `flag` });
 
@@ -46,16 +29,16 @@ const Na = { text: `follower`, icon: `check` };
 const Pa = { heads: `none`, style: `cut` };
 
 const N = {
-    w1a: (e = {}) => h(`app1`, `a`, [`app1`, `a`], { heads: `both`, ...e }),
-    w2b: (e = {}) => h(`app2`, `b`, [`app2`, `b`], { heads: `both`, ...e }),
-    w1b: (e = {}) => h(`app1`, `b`, [`app1`, [`b-1`, `app1`], `b-1`], { heads: `both`, ...e }),
-    w1c: (e = {}) => h(`app1`, `c`, [`app1`, [`c+1`, `app1`], `c+1`], { heads: `both`, ...e }),
-    ab: (e = {}) => h(`a`, `b`, [`a`, [`b`, `a`], `b`], e),
-    ac: (e = {}) => h(`a`, `c`, [`a`, [`c`, `a`], `c`], e),
-    ba: (e = {}) => h(`b`, `a`, [`b`, [`b`, `a`], `a`], e),
-    bc: (e = {}) => h(`b`, `c`, [`b`, `c`], e),
-    ca: (e = {}) => h(`c`, `a`, [`c`, [`c`, `a`], `a`], e),
-    cb: (e = {}) => h(`c`, `b`, [`c`, `b`], e),
+    w1a: (e = {}) => makeLink(`app1`, `a`, [`app1`, `a`], { heads: `both`, ...e }),
+    w2b: (e = {}) => makeLink(`app2`, `b`, [`app2`, `b`], { heads: `both`, ...e }),
+    w1b: (e = {}) => makeLink(`app1`, `b`, [`app1`, [`b-1`, `app1`], `b-1`], { heads: `both`, ...e }),
+    w1c: (e = {}) => makeLink(`app1`, `c`, [`app1`, [`c+1`, `app1`], `c+1`], { heads: `both`, ...e }),
+    ab: (e = {}) => makeLink(`a`, `b`, [`a`, [`b`, `a`], `b`], e),
+    ac: (e = {}) => makeLink(`a`, `c`, [`a`, [`c`, `a`], `c`], e),
+    ba: (e = {}) => makeLink(`b`, `a`, [`b`, [`b`, `a`], `a`], e),
+    bc: (e = {}) => makeLink(`b`, `c`, [`b`, `c`], e),
+    ca: (e = {}) => makeLink(`c`, `a`, [`c`, [`c`, `a`], `a`], e),
+    cb: (e = {}) => makeLink(`c`, `b`, [`c`, `b`], e),
   };
 
 const Fa = () => ({
@@ -73,7 +56,7 @@ const La = (e, t = `write`, n = 0.8, r = {}) => ({
     ...r,
   });
 
-const Ra = (e, t, n, r = {}) => S({ x: -10, y: 7, z: 0, dx: 190, dy: -125, ...r }, e, t, { icon: n });
+const Ra = (e, t, n, r = {}) => makePanel({ x: -10, y: 7, z: 0, dx: 190, dy: -125, ...r }, e, t, { icon: n });
 
 const za = (e = {}) => ({ a: M(`a`, e.a || [Na]), b: M(`b`, e.b || [Ma(2)]), c: M(`c`, e.c || [Na]) });
 
@@ -375,7 +358,7 @@ const Ua = {
               heat: 0.5,
             }),
             c: M(`c`, [Ma(3)]),
-            store: b(0, 19, {
+            store: makeDb(0, 19, {
               r: 1.8,
               glyph: `file`,
               color: `store`,
@@ -385,12 +368,12 @@ const Ua = {
           },
           links: {
             ...Ha(),
-            sb: h(`b`, `store`, [`b`, [`b`, `store`], `store`], {
+            sb: makeLink(`b`, `store`, [`b`, [`b`, `store`], `store`], {
               label: `write (stale)`,
               labelTone: `red`,
               labelAt: 0.62,
             }),
-            sc: h(`c`, `store`, [`c`, [`c`, `store`], `store`]),
+            sc: makeLink(`c`, `store`, [`c`, [`c`, `store`], `store`]),
           },
           flows: [
             Ia([`w1c`], 0.6),
@@ -424,7 +407,7 @@ const Ua = {
             a: M(`a`, [Na]),
             b: M(`b`, [{ text: `refused → steps down`, tone: `amber`, icon: `undo` }]),
             c: M(`c`, [Ma(3)]),
-            store: b(0, 19, {
+            store: makeDb(0, 19, {
               r: 1.8,
               glyph: `file`,
               color: `store`,
@@ -434,13 +417,13 @@ const Ua = {
           },
           links: {
             ...Ha(),
-            sb: h(`b`, `store`, [`b`, [`b`, `store`], `store`], {
+            sb: makeLink(`b`, `store`, [`b`, [`b`, `store`], `store`], {
               label: `token 2 ✕`,
               labelTone: `red`,
               labelAt: 0.62,
               fail: 1,
             }),
-            sc: h(`c`, `store`, [`c`, [`c`, `store`], `store`], {
+            sc: makeLink(`c`, `store`, [`c`, [`c`, `store`], `store`], {
               label: `token 3 ✓`,
               labelAt: 0.4,
             }),
@@ -507,23 +490,23 @@ const Ua = {
         metrics: { leaders: 1, term: 3, writes: `ok`, canLose: `1 of 3` },
         scene: {
           entities: {
-            cz: x({ x0: -13.5, x1: 13.5, y0: -8.5, y1: 10.5 }, `CONSENSUS CLUSTER · etcd`),
+            cz: makeZone({ x0: -13.5, x1: 13.5, y0: -8.5, y1: 10.5 }, `CONSENSUS CLUSTER · etcd`),
             a: M(`a`, [Na]),
             b: M(`b`, [Na]),
             c: M(`c`, [Ma(3)]),
-            k8s: d(-11, -18, {
+            k8s: makeBlock(-11, -18, {
               color: `purple`,
               glyph: `box`,
               label: [`Kubernetes`],
               sub: `cluster state`,
             }),
-            dbf: d(0, -18, {
+            dbf: makeBlock(0, -18, {
               color: `orange`,
               glyph: `database`,
               label: [`Database`],
               sub: `who is primary?`,
             }),
-            job: d(11, -18, {
+            job: makeBlock(11, -18, {
               color: `green`,
               glyph: `clock`,
               label: [`Scheduler`],
@@ -533,9 +516,9 @@ const Ua = {
           links: {
             ca: N.ca(),
             cb: N.cb(),
-            u1: h(`k8s`, `b`, [`k8s`, `b-1`], { heads: `both` }),
-            u2: h(`dbf`, `a`, [`dbf`, `a`], { heads: `both` }),
-            u3: h(`job`, `c`, [`job`, `c+1`], { heads: `both` }),
+            u1: makeLink(`k8s`, `b`, [`k8s`, `b-1`], { heads: `both` }),
+            u2: makeLink(`dbf`, `a`, [`dbf`, `a`], { heads: `both` }),
+            u3: makeLink(`job`, `c`, [`job`, `c+1`], { heads: `both` }),
           },
           flows: [
             {

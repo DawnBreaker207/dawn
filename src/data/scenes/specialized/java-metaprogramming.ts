@@ -1,9 +1,8 @@
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
@@ -28,7 +27,7 @@ export const javaMetaprogrammingLesson: Lesson = {
     {
       short: 'Exception Table',
       chapter: 'exceptions',
-      title: '1. Zero-Cost Try Block & JVM Exception Table',
+      title: 'Zero-Cost Try Block & JVM Exception Table',
       body: [
         'A <code>try</code> block adds <strong>zero runtime instructions</strong> on the happy path. The <code>.class</code> file stores a static <code>Exception table</code> mapping bytecode PC ranges to <code>catch</code> handlers.',
         'Cost is only paid when an exception is thrown: the JVM captures the full stack trace (<code>fillInStackTrace()</code>) and unwinds frames.',
@@ -40,10 +39,10 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'PC Table Jump', metadata: 'Bytecode PCs', overhead: '0 on happy path', proxy_type: 'None' },
       scene: {
         entities: {
-          call: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['try { pc 0..12 }'], sub: '0 overhead' }),
-          tbl: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Exception Tbl'], sub: 'pc -> handler' }),
-          catchBlk: b(0, 0, { r: 2.2, h: 48, color: 'red', label: ['catch Handler'], sub: 'stack unwind' }),
-          card: S({ x: -12, y: 12 }, '1. JVM Exception Table in Bytecode', [
+          call: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['try { pc 0..12 }'], sub: '0 overhead' }),
+          tbl: makeBlock(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Exception Tbl'], sub: 'pc -> handler' }),
+          catchBlk: makeDb(0, 0, { r: 2.2, h: 48, color: 'red', label: ['catch Handler'], sub: 'stack unwind' }),
+          card: makePanel({ x: -12, y: 12 }, 'JVM Exception Table in Bytecode', [
             '// Happy path: 0 extra CPU instructions',
             '// On throw: JVM searches Exception Table:',
             '// from=0 to=12 target=15 type=IOException',
@@ -51,8 +50,8 @@ export const javaMetaprogrammingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          try_tbl: h('call', 'tbl', ['call', 'tbl'], { heads: 'end', label: 'throw ex' }),
-          tbl_cat: h('tbl', 'catchBlk', ['tbl', 'catchBlk'], { heads: 'end', label: 'jump pc=15' }),
+          try_tbl: makeLink('call', 'tbl', ['call', 'tbl'], { heads: 'end', label: 'throw ex' }),
+          tbl_cat: makeLink('tbl', 'catchBlk', ['tbl', 'catchBlk'], { heads: 'end', label: 'jump pc=15' }),
         },
         flows: [{ route: ['try_tbl', 'tbl_cat'], kind: 'fail', rate: 1.7 }],
       },
@@ -60,7 +59,7 @@ export const javaMetaprogrammingLesson: Lesson = {
     {
       short: 'AutoCloseable',
       chapter: 'exceptions',
-      title: '2. try-with-resources & Suppressed Exceptions',
+      title: 'try-with-resources & Suppressed Exceptions',
       body: [
         '<code>try (var conn = ds.getConnection())</code> compiles into nested <code>finally</code> blocks that guarantee <code>close()</code> in reverse declaration order.',
         'If both the <code>try</code> body and <code>close()</code> throw, the primary exception is preserved and the close error is attached via <code>addSuppressed()</code>.',
@@ -73,10 +72,10 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'AutoCloseable', metadata: 'Suppressed[]', overhead: 'Guaranteed close', proxy_type: 'None' },
       scene: {
         entities: {
-          call: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['try Resource'], sub: 'AutoCloseable' }),
-          fin: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['finally close()'], sub: 'reverse order' }),
-          catchBlk: b(0, 0, { r: 2.2, h: 48, color: 'amber', label: ['Primary Ex'], sub: '+ suppressed' }),
-          card: S({ x: -12, y: 12 }, '2. Safe Resource Cleanup', [
+          call: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['try Resource'], sub: 'AutoCloseable' }),
+          fin: makeBlock(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['finally close()'], sub: 'reverse order' }),
+          catchBlk: makeDb(0, 0, { r: 2.2, h: 48, color: 'amber', label: ['Primary Ex'], sub: '+ suppressed' }),
+          card: makePanel({ x: -12, y: 12 }, 'Safe Resource Cleanup', [
             'try (var conn = ds.getConnection();',
             '     var stmt = conn.prepareStatement(sql)) {',
             '  return stmt.executeQuery();',
@@ -84,8 +83,8 @@ export const javaMetaprogrammingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          b_fin: h('call', 'fin', ['call', 'fin'], { heads: 'end', label: 'always run' }),
-          fin_sup: h('fin', 'catchBlk', ['fin', 'catchBlk'], { heads: 'end', label: 'addSuppressed' }),
+          b_fin: makeLink('call', 'fin', ['call', 'fin'], { heads: 'end', label: 'always run' }),
+          fin_sup: makeLink('fin', 'catchBlk', ['fin', 'catchBlk'], { heads: 'end', label: 'addSuppressed' }),
         },
         flows: [{ route: ['b_fin', 'fin_sup'], kind: 'req', rate: 1.7 }],
       },
@@ -93,7 +92,7 @@ export const javaMetaprogrammingLesson: Lesson = {
     {
       short: 'Annotations',
       chapter: 'reflection',
-      title: '3. @Annotation Retention & Metaspace Metadata',
+      title: '@Annotation Retention & Metaspace Metadata',
       body: [
         'Annotations are passive metadata tags. Only annotations marked <code>@Retention(RetentionPolicy.RUNTIME)</code> survive into Metaspace for frameworks to read.',
         '<code>SOURCE</code> (like <code>@Override</code>) is discarded by <code>javac</code>; <code>CLASS</code> is kept in bytecode but hidden from reflection.',
@@ -106,10 +105,10 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'Metadata Read', metadata: 'RUNTIME tag', overhead: 'Startup scan', proxy_type: 'None' },
       scene: {
         entities: {
-          src: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['@Audited Tag'], sub: 'RUNTIME policy' }),
-          meta: b(0, -14, { r: 2.2, h: 48, color: 'purple', label: ['Metaspace'], sub: 'Class<?> attrs' }),
-          target: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Framework'], sub: 'getAnnotation' }),
-          card: S({ x: -12, y: 12 }, '3. Annotation Retention Policies', [
+          src: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['@Audited Tag'], sub: 'RUNTIME policy' }),
+          meta: makeDb(0, -14, { r: 2.2, h: 48, color: 'purple', label: ['Metaspace'], sub: 'Class<?> attrs' }),
+          target: makeBlock(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Framework'], sub: 'getAnnotation' }),
+          card: makePanel({ x: -12, y: 12 }, 'Annotation Retention Policies', [
             '@Retention(RetentionPolicy.RUNTIME)',
             '@Target(ElementType.METHOD)',
             'public @interface Audited { String role(); }',
@@ -117,8 +116,8 @@ export const javaMetaprogrammingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          src_m: h('src', 'meta', ['src', 'meta'], { heads: 'end', label: 'emit attr' }),
-          m_scn: h('meta', 'target', ['meta', 'target'], { heads: 'end', label: 'inspect' }),
+          src_m: makeLink('src', 'meta', ['src', 'meta'], { heads: 'end', label: 'emit attr' }),
+          m_scn: makeLink('meta', 'target', ['meta', 'target'], { heads: 'end', label: 'inspect' }),
         },
         flows: [{ route: ['src_m', 'm_scn'], kind: 'req', rate: 1.8 }],
       },
@@ -126,7 +125,7 @@ export const javaMetaprogrammingLesson: Lesson = {
     {
       short: 'Reflection',
       chapter: 'reflection',
-      title: '4. Reflection Introspection & Method.invoke()',
+      title: 'Reflection Introspection & Method.invoke()',
       body: [
         '<code>Class&lt;?&gt;</code> exposes fields, constructors, and methods dynamically at runtime via <code>Method.invoke(target, args)</code>.',
         'Reflection bypasses compile-time type checks, boxes primitives, and inhibits some JIT inlining — cache <code>Method</code> or use <code>MethodHandles</code> in hot paths.',
@@ -139,10 +138,10 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'Method.invoke', metadata: 'Method[]', overhead: 'Box + check', proxy_type: 'Direct target' },
       scene: {
         entities: {
-          caller: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'Method.invoke' }),
-          refl: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Reflection API'], sub: 'check + box' }),
-          target: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Target Bean'], sub: 'exec method' }),
-          card: S({ x: -12, y: 12 }, '4. Dynamic Invocation via Reflection', [
+          caller: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'Method.invoke' }),
+          refl: makeBlock(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Reflection API'], sub: 'check + box' }),
+          target: makeBlock(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Target Bean'], sub: 'exec method' }),
+          card: makePanel({ x: -12, y: 12 }, 'Dynamic Invocation via Reflection', [
             'Method m = OrderService.class',
             '  .getDeclaredMethod("placeOrder", Long.class);',
             'm.invoke(serviceInstance, 42L);',
@@ -150,8 +149,8 @@ export const javaMetaprogrammingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          c_ref: h('caller', 'refl', ['caller', 'refl'], { heads: 'end', label: 'invoke()' }),
-          ref_b: h('refl', 'target', ['refl', 'target'], { heads: 'end', label: 'dispatch' }),
+          c_ref: makeLink('caller', 'refl', ['caller', 'refl'], { heads: 'end', label: 'invoke()' }),
+          ref_b: makeLink('refl', 'target', ['refl', 'target'], { heads: 'end', label: 'dispatch' }),
         },
         flows: [{ route: ['c_ref', 'ref_b'], kind: 'req', rate: 1.8 }],
       },
@@ -159,7 +158,7 @@ export const javaMetaprogrammingLesson: Lesson = {
     {
       short: 'JDK Proxy',
       chapter: 'proxies',
-      title: '5. JDK Dynamic Proxy (Interface-Based)',
+      title: 'JDK Dynamic Proxy (Interface-Based)',
       body: [
         '<code>Proxy.newProxyInstance()</code> generates an in-memory <code>$Proxy0</code> class implementing one or more <strong>interfaces</strong>.',
         'Every method call routes through <code>InvocationHandler.invoke()</code>, letting you run cross-cutting logic (logging, metrics, transactions) before delegating to the real target.',
@@ -172,10 +171,10 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'InvocationHdlr', metadata: 'Interface[]', overhead: '1 hop wrap', proxy_type: 'JDK $Proxy0' },
       scene: {
         entities: {
-          caller: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'PaymentApi' }),
-          proxy: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['JDK $Proxy0'], sub: 'InvocationHdlr' }),
-          target: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Real Impl'], sub: 'target bean' }),
-          card: S({ x: -12, y: 12 }, '5. JDK Dynamic Proxy Pattern', [
+          caller: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'PaymentApi' }),
+          proxy: makeBlock(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['JDK $Proxy0'], sub: 'InvocationHdlr' }),
+          target: makeBlock(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Real Impl'], sub: 'target bean' }),
+          card: makePanel({ x: -12, y: 12 }, 'JDK Dynamic Proxy Pattern', [
             'PaymentApi proxy = (PaymentApi) Proxy.newProxyInstance(',
             '  loader, new Class[]{ PaymentApi.class },',
             '  (p, method, args) -> {',
@@ -185,8 +184,8 @@ export const javaMetaprogrammingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          c_px: h('caller', 'proxy', ['caller', 'proxy'], { heads: 'end', label: 'pay()' }),
-          px_tg: h('proxy', 'target', ['proxy', 'target'], { heads: 'end', label: 'delegate' }),
+          c_px: makeLink('caller', 'proxy', ['caller', 'proxy'], { heads: 'end', label: 'pay()' }),
+          px_tg: makeLink('proxy', 'target', ['proxy', 'target'], { heads: 'end', label: 'delegate' }),
         },
         flows: [{ route: ['c_px', 'px_tg'], kind: 'res', rate: 1.9 }],
       },
@@ -194,7 +193,7 @@ export const javaMetaprogrammingLesson: Lesson = {
     {
       short: 'CGLIB Proxy',
       chapter: 'proxies',
-      title: '6. CGLIB Subclass Proxy (Spring Default)',
+      title: 'CGLIB Subclass Proxy (Spring Default)',
       body: [
         'When a class has no interface, <strong>CGLIB</strong> (used by default in Spring Boot) generates a dynamic <strong>subclass</strong> at runtime via ASM bytecode manipulation.',
         'Because CGLIB works by overriding methods in a subclass, <code>final</code> classes and <code>final</code> methods cannot be intercepted.',
@@ -207,10 +206,10 @@ export const javaMetaprogrammingLesson: Lesson = {
       metrics: { dispatch_path: 'MethodIntrcpt', metadata: 'Subclass ASM', overhead: 'FastClass', proxy_type: 'CGLIB Subclass' },
       scene: {
         entities: {
-          caller: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'OrderService' }),
-          cglib: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CGLIB Sub'], sub: 'extends Target' }),
-          target: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['super.save()'], sub: 'real logic' }),
-          card: S({ x: -12, y: 12 }, '6. CGLIB Subclass Proxy (Spring Boot)', [
+          caller: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Caller'], sub: 'OrderService' }),
+          cglib: makeBlock(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CGLIB Sub'], sub: 'extends Target' }),
+          target: makeBlock(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['super.save()'], sub: 'real logic' }),
+          card: makePanel({ x: -12, y: 12 }, 'CGLIB Subclass Proxy (Spring Boot)', [
             '// Generated at runtime via ASM bytecode:',
             'class OrderService$$SpringCGLIB extends OrderService {',
             '  @Override public void save() {',
@@ -220,8 +219,8 @@ export const javaMetaprogrammingLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          c_cg: h('caller', 'cglib', ['caller', 'cglib'], { heads: 'end', label: 'save()' }),
-          cg_sup: h('cglib', 'target', ['cglib', 'target'], { heads: 'end', label: 'super.save' }),
+          c_cg: makeLink('caller', 'cglib', ['caller', 'cglib'], { heads: 'end', label: 'save()' }),
+          cg_sup: makeLink('cglib', 'target', ['cglib', 'target'], { heads: 'end', label: 'super.save' }),
         },
         flows: [{ route: ['c_cg', 'cg_sup'], kind: 'res', rate: 2.0 }],
       },

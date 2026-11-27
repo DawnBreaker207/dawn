@@ -1,45 +1,28 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
-const dl = (e = []) => y(0, -19, { label: `Alice`, tags: e });
+const dl = (e = []) => makeDevice(0, -19, { label: `Alice`, tags: e });
 
 const fl = (e = {}) =>
-    d(0, -7, { color: `orange`, glyph: `keyhole`, label: [`Login`, `Service`], ...e });
+    makeBlock(0, -7, { color: `orange`, glyph: `keyhole`, label: [`Login`, `Service`], ...e });
 
 const pl = (e = [], t = {}) =>
-    b(0, 5, { r: 2, h: 42, glyph: `user`, label: `users table`, tags: e, ...t });
+    makeDb(0, 5, { r: 2, h: 42, glyph: `user`, label: `users table`, tags: e, ...t });
 
-const ml = (e = `attacker`, t = []) => y(13, 5, { label: e, tags: t });
+const ml = (e = `attacker`, t = []) => makeDevice(13, 5, { label: e, tags: t });
 
-const hl = (e = []) => y(13, -19, { label: `bot`, tags: e });
+const hl = (e = []) => makeDevice(13, -19, { label: `bot`, tags: e });
 
-const gl = () => y(-12, -19, { form: `phone`, w: 5, d: 5, label: `Alice’s phone` });
+const gl = () => makeDevice(-12, -19, { form: `phone`, w: 5, d: 5, label: `Alice’s phone` });
 
 const _l = (e = {}) =>
-    d(13, -7, {
+    makeBlock(13, -7, {
       s: 5,
       h: 52,
       color: `orange`,
@@ -50,7 +33,7 @@ const _l = (e = {}) =>
     });
 
 const vl = () =>
-    d(-12, -7, {
+    makeBlock(-12, -7, {
       s: 5,
       h: 52,
       color: `blue`,
@@ -61,13 +44,13 @@ const vl = () =>
 
 const V = {
     base: {
-      al: h(`alice`, `login`, [`alice`, `login`], { heads: `both` }),
-      lu: h(`login`, `users`, [`login`, `users`], { heads: `both` }),
+      al: makeLink(`alice`, `login`, [`alice`, `login`], { heads: `both` }),
+      lu: makeLink(`login`, `users`, [`login`, `users`], { heads: `both` }),
     },
     steal: (e = `stolen backup`) => ({
-      st: h(`users`, `thief`, [`users`, `thief`], { style: `dashed`, label: e, labelTone: `red` }),
+      st: makeLink(`users`, `thief`, [`users`, `thief`], { style: `dashed`, label: e, labelTone: `red` }),
     }),
-    bot: (e = {}) => ({ bl: h(`bot`, `login`, [`bot`, [`bot`, `login`], `login`], e) }),
+    bot: (e = {}) => ({ bl: makeLink(`bot`, `login`, [`bot`, [`bot`, `login`], `login`], e) }),
   };
 
 const yl = {
@@ -76,7 +59,7 @@ const yl = {
     bot: (e = 4) => ({ route: [`bl`], kind: `poison`, rate: e }),
   };
 
-const bl = (e, t, n) => S({ x: 0, y: 5, z: 0, dx: 100, dy: -235 }, e, t, { icon: n });
+const bl = (e, t, n) => makePanel({ x: 0, y: 5, z: 0, dx: 100, dy: -235 }, e, t, { icon: n });
 
 // --- security ---
 const xl = {
@@ -193,7 +176,7 @@ const xl = {
             alice: dl([{ text: `reset link · expires 15 min`, tone: `green`, icon: `clock` }]),
             login: fl({ tags: [{ text: `same reply for every email`, icon: `info` }] }),
             users: pl([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
-            mail: d(-12, -7, { color: `blue`, glyph: `mail`, label: [`Email`] }),
+            mail: makeBlock(-12, -7, { color: `blue`, glyph: `mail`, label: [`Email`] }),
             card: bl(
               `A safe reset`,
               [
@@ -207,8 +190,8 @@ const xl = {
           },
           links: {
             ...V.base,
-            lm: h(`login`, `mail`, [`login`, `mail`], { label: `one-time token` }),
-            ma: h(`mail`, `alice`, [`mail`, [`mail`, `alice`], `alice`], {
+            lm: makeLink(`login`, `mail`, [`login`, `mail`], { label: `one-time token` }),
+            ma: makeLink(`mail`, `alice`, [`mail`, [`mail`, `alice`], `alice`], {
               label: `reset link`,
               labelAt: 0.65,
             }),
@@ -301,7 +284,7 @@ const xl = {
           links: {
             ...V.base,
             ...V.bot({ fail: 1 }),
-            lp: h(`login`, `phone`, [`login`, [`phone`, `login`], `phone`], {
+            lp: makeLink(`login`, `phone`, [`login`, [`phone`, `login`], `phone`], {
               heads: `both`,
               label: `approve sign-in?`,
               labelAt: 0.4,
@@ -340,17 +323,17 @@ const xl = {
           },
           links: {
             lu: V.base.lu,
-            af: h(`alice`, `fake`, [`alice`, [`fake`, `alice`], `fake`], {
+            af: makeLink(`alice`, `fake`, [`alice`, [`fake`, `alice`], `fake`], {
               heads: `both`,
               label: `shop-example.co`,
               labelTone: `red`,
               labelAt: 0.35,
             }),
-            fl: h(`fake`, `login`, [`fake`, `login`], {
+            fl: makeLink(`fake`, `login`, [`fake`, `login`], {
               label: `password + code`,
               labelTone: `red`,
             }),
-            lp: h(`login`, `phone`, [`login`, [`phone`, `login`], `phone`], { heads: `both` }),
+            lp: makeLink(`login`, `phone`, [`login`, [`phone`, `login`], `phone`], { heads: `both` }),
           },
           flows: [
             { route: [`af`, `fl`, `lu`], kind: `poison`, rate: 0.7, bounce: !0 },
@@ -392,14 +375,14 @@ const xl = {
           },
           links: {
             ...V.base,
-            af: h(`alice`, `fake`, [`alice`, [`fake`, `alice`], `fake`], {
+            af: makeLink(`alice`, `fake`, [`alice`, [`fake`, `alice`], `fake`], {
               heads: `both`,
               fail: 1,
               label: `shop-example.co`,
               labelTone: `red`,
               labelAt: 0.35,
             }),
-            lp: h(`login`, `phone`, [`login`, [`phone`, `login`], `phone`], {
+            lp: makeLink(`login`, `phone`, [`login`, [`phone`, `login`], `phone`], {
               heads: `both`,
               label: `sign challenge`,
               labelAt: 0.4,
@@ -436,12 +419,12 @@ const xl = {
             ]),
           },
           links: {
-            ai: h(`alice`, `idp`, [`alice`, [-12, `alice`], `idp`], {
+            ai: makeLink(`alice`, `idp`, [`alice`, [-12, `alice`], `idp`], {
               heads: `both`,
               label: `sign in at provider`,
               labelAt: 0.72,
             }),
-            il: h(`idp`, `login`, [`idp`, `login`], { label: `signed ID token` }),
+            il: makeLink(`idp`, `login`, [`idp`, `login`], { label: `signed ID token` }),
             lu: V.base.lu,
             al: V.base.al,
           },
@@ -480,8 +463,8 @@ const xl = {
             bot: hl([{ text: `token from leaked logs`, tone: `red`, icon: `key` }]),
           },
           links: {
-            ai: h(`alice`, `idp`, [`alice`, [-12, `alice`], `idp`], { heads: `both` }),
-            il: h(`idp`, `login`, [`idp`, `login`]),
+            ai: makeLink(`alice`, `idp`, [`alice`, [-12, `alice`], `idp`], { heads: `both` }),
+            il: makeLink(`idp`, `login`, [`idp`, `login`]),
             lu: V.base.lu,
             al: V.base.al,
             ...V.bot({ fail: 1, label: `expired token`, labelTone: `amber` }),
@@ -510,8 +493,8 @@ const xl = {
         scene: {
           entities: { alice: dl(), idp: vl(), login: fl(), users: pl() },
           links: {
-            ai: h(`alice`, `idp`, [`alice`, [-12, `alice`], `idp`], { heads: `both` }),
-            il: h(`idp`, `login`, [`idp`, `login`]),
+            ai: makeLink(`alice`, `idp`, [`alice`, [-12, `alice`], `idp`], { heads: `both` }),
+            il: makeLink(`idp`, `login`, [`idp`, `login`]),
             lu: V.base.lu,
             al: V.base.al,
           },

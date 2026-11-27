@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const redisClusterShardingLesson = {
@@ -38,16 +36,16 @@ export const redisClusterShardingLesson = {
       metrics: { cluster_nodes: '1 Master', hash_slots: 'None (Monolith)', failover_mode: 'Manual', sharding_algo: 'None' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'App Clients', tags: [{ text: '500 GB Dataset', tone: 'amber', icon: 'database' }] }),
-          master: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Single Redis Master', 'Memory Saturated'], sub: '128 GB Max RAM' }),
-          card: S({ x: -2, y: 14 }, 'Horizontal Scaling Strategies', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'App Clients', tags: [{ text: '500 GB Dataset', tone: 'amber', icon: 'database' }] }),
+          master: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Single Redis Master', 'Memory Saturated'], sub: '128 GB Max RAM' }),
+          card: makePanel({ x: -2, y: 14 }, 'Horizontal Scaling Strategies', [
             '1. Redis Sentinel: 1 Master + Multiple Replicas (HA, not sharded)',
             '2. Client-Side Sharding: App hashes key -> picks server (Rigid)',
             '3. Redis Cluster: Native peer-to-peer 16,384 hash slots (Industry Standard)'
           ], { icon: 'layers' })
         },
         links: {
-          cm: h('client', 'master', ['client', 'master'], { heads: 'both', label: 'Overloaded Master' })
+          cm: makeLink('client', 'master', ['client', 'master'], { heads: 'both', label: 'Overloaded Master' })
         },
         flows: [{ route: ['cm'], bounce: true, rate: 2.5 }]
       }
@@ -67,10 +65,10 @@ export const redisClusterShardingLesson = {
       metrics: { cluster_nodes: '1 Master + 2 Replicas', hash_slots: 'Replication Stream', failover_mode: 'Sentinel Auto (Quorum 2/3)', sharding_algo: 'None' },
       scene: {
         entities: {
-          sentinel: d(-8, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'shield', label: ['Sentinel Pool (3x)', 'Quorum: 2/3'], sub: 'Heartbeat Ping (1s)' }),
-          oldMaster: d(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'database', label: ['Old Master (DOWN)', 'Failed Health Check'], sub: 'sdown -> odown' }),
-          newMaster: d(8, 2, { s: 4.4, h: 52, color: 'green', glyph: 'database', label: ['Promoted Replica', 'NEW MASTER'], sub: 'slaveof no one' }),
-          card: S({ x: -2, y: 14 }, 'Sentinel Failover Steps', [
+          sentinel: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'shield', label: ['Sentinel Pool (3x)', 'Quorum: 2/3'], sub: 'Heartbeat Ping (1s)' }),
+          oldMaster: makeBlock(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'database', label: ['Old Master (DOWN)', 'Failed Health Check'], sub: 'sdown -> odown' }),
+          newMaster: makeBlock(8, 2, { s: 4.4, h: 52, color: 'green', glyph: 'database', label: ['Promoted Replica', 'NEW MASTER'], sub: 'slaveof no one' }),
+          card: makePanel({ x: -2, y: 14 }, 'Sentinel Failover Steps', [
             '1. Subjectively Down (sdown): 1 Sentinel misses ping',
             '2. Objectively Down (odown): 2 Sentinels confirm master death',
             '3. Raft-like election: Leader Sentinel chosen',
@@ -79,8 +77,8 @@ export const redisClusterShardingLesson = {
           ], { icon: 'shield' })
         },
         links: {
-          so: h('sentinel', 'oldMaster', ['sentinel', 'oldMaster'], { heads: 'end', label: 'Failed Ping' }),
-          sn: h('sentinel', 'newMaster', ['sentinel', 'newMaster'], { heads: 'end', label: 'Promote to Master' })
+          so: makeLink('sentinel', 'oldMaster', ['sentinel', 'oldMaster'], { heads: 'end', label: 'Failed Ping' }),
+          sn: makeLink('sentinel', 'newMaster', ['sentinel', 'newMaster'], { heads: 'end', label: 'Promote to Master' })
         },
         flows: [{ route: ['sn'], bounce: false, rate: 2.0 }]
       }
@@ -100,11 +98,11 @@ export const redisClusterShardingLesson = {
       metrics: { cluster_nodes: '3 Masters', hash_slots: '16,384 Slots', failover_mode: 'Cluster Native', sharding_algo: 'CRC16(key) % 16384' },
       scene: {
         entities: {
-          client: y(-12, -4, { form: 'phone', label: 'Smart Client', tags: [{ text: 'CRC16("user:42") % 16384 = 8219', icon: 'zap' }] }),
-          nodeA: d(6, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'database', label: ['Node A (Master)', 'Slots: 0..5460'], sub: 'Port 7000' }),
-          nodeB: d(6, -2, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Node B (Master)', 'Slots: 5461..10922'], sub: 'Holds slot 8219!' }),
-          nodeC: d(6, 6, { s: 4.4, h: 52, color: 'purple', glyph: 'database', label: ['Node C (Master)', 'Slots: 10923..16383'], sub: 'Port 7002' }),
-          card: S({ x: -2, y: 16 }, 'Hash Slot Calculation', [
+          client: makeDevice(-12, -4, { form: 'phone', label: 'Smart Client', tags: [{ text: 'CRC16("user:42") % 16384 = 8219', icon: 'zap' }] }),
+          nodeA: makeBlock(6, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'database', label: ['Node A (Master)', 'Slots: 0..5460'], sub: 'Port 7000' }),
+          nodeB: makeBlock(6, -2, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Node B (Master)', 'Slots: 5461..10922'], sub: 'Holds slot 8219!' }),
+          nodeC: makeBlock(6, 6, { s: 4.4, h: 52, color: 'purple', glyph: 'database', label: ['Node C (Master)', 'Slots: 10923..16383'], sub: 'Port 7002' }),
+          card: makePanel({ x: -2, y: 16 }, 'Hash Slot Calculation', [
             'Key: "user:42"',
             'CRC16("user:42") = 0x603B = 24635',
             'Slot = 24635 % 16384 = 8251',
@@ -113,7 +111,7 @@ export const redisClusterShardingLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          cb: h('client', 'nodeB', ['client', 'nodeB'], { heads: 'both', label: 'Direct to Slot Owner' })
+          cb: makeLink('client', 'nodeB', ['client', 'nodeB'], { heads: 'both', label: 'Direct to Slot Owner' })
         },
         flows: [{ route: ['cb'], bounce: true, rate: 3.2 }]
       }
@@ -133,9 +131,9 @@ export const redisClusterShardingLesson = {
       metrics: { cluster_nodes: '3 Masters', hash_slots: 'Co-located Slots', failover_mode: 'Cluster Native', sharding_algo: 'CRC16({tag}) % 16384' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'MGET {u100}.a {u100}.b', icon: 'zap' }] }),
-          nodeA: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Node A', 'Holds Slot for {u100}'], sub: 'Both keys co-located' }),
-          card: S({ x: -2, y: 14 }, 'Hash Tag Rules', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'MGET {u100}.a {u100}.b', icon: 'zap' }] }),
+          nodeA: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Node A', 'Holds Slot for {u100}'], sub: 'Both keys co-located' }),
+          card: makePanel({ x: -2, y: 14 }, 'Hash Tag Rules', [
             'Key 1: "{user:100}:profile" -> Hashes "user:100" -> Slot 5812',
             'Key 2: "{user:100}:orders"  -> Hashes "user:100" -> Slot 5812',
             'Both keys reside on Node A: Atomic multi-key MGET/EVAL allowed!',
@@ -143,7 +141,7 @@ export const redisClusterShardingLesson = {
           ], { icon: 'check' })
         },
         links: {
-          ca: h('client', 'nodeA', ['client', 'nodeA'], { heads: 'both', label: 'Co-located Multi-Key' })
+          ca: makeLink('client', 'nodeA', ['client', 'nodeA'], { heads: 'both', label: 'Co-located Multi-Key' })
         },
         flows: [{ route: ['ca'], bounce: true, rate: 2.8 }]
       }
@@ -163,10 +161,10 @@ export const redisClusterShardingLesson = {
       metrics: { cluster_nodes: '3 Masters', hash_slots: 'Dynamic Routing', failover_mode: 'Cluster Native', sharding_algo: 'Client Cache' },
       scene: {
         entities: {
-          client: y(-12, -4, { form: 'phone', label: 'Client', tags: [{ text: 'Outdated Cache', tone: 'amber', icon: 'refresh' }] }),
-          nodeA: d(-2, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'database', label: ['Node A', 'Does NOT hold slot'], sub: '-MOVED 8251 10.0.1.2' }),
-          nodeB: d(8, 4, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Node B', 'True Slot 8251 Owner'], sub: 'Answers GET user:42' }),
-          card: S({ x: -2, y: 14 }, 'MOVED Redirection Sequence', [
+          client: makeDevice(-12, -4, { form: 'phone', label: 'Client', tags: [{ text: 'Outdated Cache', tone: 'amber', icon: 'refresh' }] }),
+          nodeA: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'database', label: ['Node A', 'Does NOT hold slot'], sub: '-MOVED 8251 10.0.1.2' }),
+          nodeB: makeBlock(8, 4, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Node B', 'True Slot 8251 Owner'], sub: 'Answers GET user:42' }),
+          card: makePanel({ x: -2, y: 14 }, 'MOVED Redirection Sequence', [
             '1. Client -> Node A: GET user:42',
             '2. Node A -> Client: -MOVED 8251 10.0.1.2:7001',
             '3. Client updates internal slot routing table: Slot 8251 = Node B',
@@ -175,8 +173,8 @@ export const redisClusterShardingLesson = {
           ], { icon: 'route' })
         },
         links: {
-          ca: h('client', 'nodeA', ['client', 'nodeA'], { heads: 'both', label: '1. Misdirected' }),
-          cb: h('client', 'nodeB', ['client', 'nodeB'], { heads: 'both', label: '2. Retry' })
+          ca: makeLink('client', 'nodeA', ['client', 'nodeA'], { heads: 'both', label: '1. Misdirected' }),
+          cb: makeLink('client', 'nodeB', ['client', 'nodeB'], { heads: 'both', label: '2. Retry' })
         },
         flows: [
           { route: ['ca'], bounce: true, rate: 1.5 },
@@ -199,11 +197,11 @@ export const redisClusterShardingLesson = {
       metrics: { cluster_nodes: '4 Masters (Scaling Up)', hash_slots: 'Migrating 4,096', failover_mode: 'Online Reshard', sharding_algo: 'Zero Downtime' },
       scene: {
         entities: {
-          nodeA: d(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'database', label: ['Node A (Source)', 'MIGRATING Slot 1000'], sub: 'Streaming keys' }),
-          nodeD: d(8, 4, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['New Node D (Target)', 'IMPORTING Slot 1000'], sub: 'Receiving slot data' }),
+          nodeA: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'database', label: ['Node A (Source)', 'MIGRATING Slot 1000'], sub: 'Streaming keys' }),
+          nodeD: makeBlock(8, 4, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['New Node D (Target)', 'IMPORTING Slot 1000'], sub: 'Receiving slot data' }),
         },
         links: {
-          ad: h('nodeA', 'nodeD', ['nodeA', 'nodeD'], { heads: 'end', label: 'Live MIGRATE Stream' })
+          ad: makeLink('nodeA', 'nodeD', ['nodeA', 'nodeD'], { heads: 'end', label: 'Live MIGRATE Stream' })
         },
         flows: [{ route: ['ad'], bounce: false, rate: 2.2 }]
       }
@@ -223,11 +221,11 @@ export const redisClusterShardingLesson = {
       metrics: { cluster_nodes: '6 Nodes (3M + 3R)', hash_slots: '16,384 Full', failover_mode: 'Gossip Bus (Port 17000)', sharding_algo: 'Auto Failover' },
       scene: {
         entities: {
-          nodeB: d(-10, -6, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Master B', 'Voted FAIL for A'], sub: 'Port 17001' }),
-          nodeC: d(-10, 4, { s: 4.4, h: 52, color: 'purple', glyph: 'database', label: ['Master C', 'Voted FAIL for A'], sub: 'Port 17002' }),
-          deadA: d(4, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'database', label: ['Master A (FAIL)', 'Crashed / Unreachable'], sub: 'Majority vote' }),
-          replicaA: d(8, 2, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Replica A1', 'ELECTED NEW MASTER!'], sub: 'Takes over Slots 0..5460' }),
-          card: S({ x: -2, y: 16 }, 'Gossip Election Sequence', [
+          nodeB: makeBlock(-10, -6, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Master B', 'Voted FAIL for A'], sub: 'Port 17001' }),
+          nodeC: makeBlock(-10, 4, { s: 4.4, h: 52, color: 'purple', glyph: 'database', label: ['Master C', 'Voted FAIL for A'], sub: 'Port 17002' }),
+          deadA: makeBlock(4, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'database', label: ['Master A (FAIL)', 'Crashed / Unreachable'], sub: 'Majority vote' }),
+          replicaA: makeBlock(8, 2, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Replica A1', 'ELECTED NEW MASTER!'], sub: 'Takes over Slots 0..5460' }),
+          card: makePanel({ x: -2, y: 16 }, 'Gossip Election Sequence', [
             '1. Master B & C detect Node A ping timeout (cluster-node-timeout)',
             '2. Majority of masters broadcast FAIL message over Cluster Bus',
             '3. Replica A1 increments currentEpoch and asks masters for votes',
@@ -236,8 +234,8 @@ export const redisClusterShardingLesson = {
           ], { icon: 'check' })
         },
         links: {
-          bc: h('nodeB', 'replicaA', ['nodeB', 'replicaA'], { heads: 'end', label: 'Vote OK' }),
-          cc: h('nodeC', 'replicaA', ['nodeC', 'replicaA'], { heads: 'end', label: 'Vote OK' })
+          bc: makeLink('nodeB', 'replicaA', ['nodeB', 'replicaA'], { heads: 'end', label: 'Vote OK' }),
+          cc: makeLink('nodeC', 'replicaA', ['nodeC', 'replicaA'], { heads: 'end', label: 'Vote OK' })
         },
         flows: [
           { route: ['bc'], bounce: false, rate: 1.8 },

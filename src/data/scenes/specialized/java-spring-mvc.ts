@@ -1,21 +1,66 @@
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
+
+// One stage: a single POST /api/orders travels a fixed pipeline —
+// client → Tomcat → servlet filters → DispatcherServlet → controller — and the
+// same pipeline is then reused to compare Loom and WebFlux.
+//
+//   client ── Tomcat ── Filters
+//                          │
+//      Postgres ── Controller ── DispatcherServlet ── Advice / Kafka
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+const client = (tags: Tag[] = []) => makeDevice(-14.5, -10, { label: `client`, tags });
+const tomcat = (tags: Tag[] = []) =>
+  makeBlock(-13, 3, { s: 4.4, h: 50, color: `blue`, glyph: `server`, label: [`Tomcat`], sub: `worker thread`, tags });
+const filters = (tags: Tag[] = []) =>
+  makeBlock(-8.5, 14.5, { s: 4.4, h: 50, color: `orange`, glyph: `filter`, label: [`Servlet`, `filters`], tags });
+const disp = (tags: Tag[] = []) =>
+  makeBlock(9.5, 5, { s: 5.2, h: 56, color: `orange`, glyph: `route`, label: [`Dispatcher`, `Servlet`], tags });
+const ctrl = (tags: Tag[] = []) =>
+  makeBlock(9.5, -10.5, { s: 4.4, h: 50, color: `green`, glyph: `code`, label: [`Order`, `Controller`], tags });
+const advice = (tags: Tag[] = []) =>
+  makeBlock(11.5, 17, { s: 4.4, h: 50, color: `orange`, glyph: `alertTriangle`, label: [`Controller`, `Advice`], tags });
+const stream = (tags: Tag[] = []) =>
+  makeBlock(11.5, 17, { s: 4.4, h: 50, color: `yellow`, glyph: `waves`, label: [`Kafka`], sub: `price ticks`, tags });
+const db = (tags: Tag[] = []) => makeDb(4, -22, { r: 2.2, h: 46, glyph: `database`, label: `Postgres`, tags });
+
+const L = {
+  http: makeLink(`client`, `tomcat`, [`client`, `tomcat`], { heads: `both`, label: `POST` }),
+  httpQuiet: makeLink(`client`, `tomcat`, [`client`, `tomcat`], { heads: `both` }),
+  chain: makeLink(`tomcat`, `filters`, [`tomcat`, `filters`], { heads: `both`, label: `doFilter` }),
+  chainQuiet: makeLink(`tomcat`, `filters`, [`tomcat`, `filters`], { heads: `both` }),
+  service: makeLink(`filters`, `disp`, [`filters`, `disp`], { heads: `both`, label: `service()` }),
+  serviceQuiet: makeLink(`filters`, `disp`, [`filters`, `disp`], { heads: `both` }),
+  invoke: makeLink(`disp`, `ctrl`, [`disp`, `ctrl`], { heads: `both`, label: `invoke` }),
+  invokeQuiet: makeLink(`disp`, `ctrl`, [`disp`, `ctrl`], { heads: `both` }),
+  handle: makeLink(`disp`, `advice`, [`disp`, `advice`], { heads: `both`, label: `exception` }),
+  jdbc: makeLink(`ctrl`, `db`, [`ctrl`, `db`], { heads: `both`, label: `JDBC` }),
+  pull: makeLink(`stream`, `disp`, [`stream`, `disp`], { label: `request(64)` }),
+};
+
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: 9.5, y: 5, z: 0, dx: -60, dy: -300 }, title, lines, { icon: `code` });
+
+const pipeline = (t: { tomcat?: Tag[]; filters?: Tag[]; disp?: Tag[]; ctrl?: Tag[] } = {}) => ({
+  client: client(),
+  tomcat: tomcat(t.tomcat),
+  filters: filters(t.filters),
+  disp: disp(t.disp),
+  ctrl: ctrl(t.ctrl),
+});
+const quiet = { http: L.httpQuiet, chain: L.chainQuiet, service: L.serviceQuiet, invoke: L.invokeQuiet };
 
 export const javaSpringMvcLesson: Lesson = {
   id: 'java-spring-mvc',
   title: 'Spring MVC, Loom & WebFlux',
   summary:
-    'Trace Tomcat -> Filters -> DispatcherServlet -> @Valid -> Advice, then compare Spring MVC + Virtual Threads (RestClient) against WebFlux Netty EventLoop & Backpressure.',
+    'Follow one POST /api/orders through Tomcat, servlet filters, DispatcherServlet, argument binding and error handling — then compare MVC on virtual threads with WebFlux.',
   minutes: 14,
   level: 'intermediate',
-  metrics: ['stage', 'container', 'validation', 'response'],
-  legend: ['flow', ['req', 'HTTP request'], ['res', 'JSON / Loom'], ['fail', '400 / loop stall']],
+  metrics: ['stage', 'thread', 'status', 'checks'],
+  legend: [['req', 'HTTP request'], ['res', 'response / JSON'], ['write', 'JDBC'], ['fail', '400 / stall']],
   goals: [
     { text: 'Accept HTTP connection in Embedded Tomcat', step: 1 },
     { text: 'Pass through Servlet Filter chain (outside MVC)', step: 2 },
@@ -29,266 +74,229 @@ export const javaSpringMvcLesson: Lesson = {
   steps: [
     {
       short: 'Tomcat',
-      chapter: 'mvc',
-      title: '1. Embedded Tomcat Accepts HTTP Request',
+      chapter: 'setup',
+      title: 'Embedded Tomcat accepts the request',
       body: [
-        'An incoming HTTP request (<code>POST /api/orders</code>) arrives at Embedded Tomcat’s NIO connector and is assigned a worker thread (or Virtual Thread in Boot 3.2+).',
-        'Tomcat parses raw HTTP bytes into <code>HttpServletRequest</code> and <code>HttpServletResponse</code> objects.',
+        '<code>POST /api/orders</code> arrives at Tomcat’s NIO connector and is handed to a worker thread (or a virtual thread with <code>spring.threads.virtual.enabled=true</code> on Boot 3.2+).',
+        'Tomcat parses the bytes into <code>HttpServletRequest</code> / <code>HttpServletResponse</code>. Spring has not run yet.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Spring MVC builds on top of the Jakarta Servlet API — Tomcat handles TCP/HTTP parsing before Spring runs.',
-      },
-      metrics: { stage: 'Servlet Socket', container: 'Tomcat NIO', validation: 'None', response: 'Pending' },
+      callout: { kind: 'insight', text: 'Spring MVC sits on the Jakarta Servlet API — Tomcat does TCP and HTTP parsing before Spring runs.' },
+      metrics: { stage: 'connector', thread: 'exec-7', status: '—', checks: 'none' },
       scene: {
         entities: {
-          client: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['HTTP Client'], sub: 'POST /orders' }),
-          tomcat: d(2, -6, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Req' }),
-          card: S({ x: -12, y: 12 }, '1. Incoming HTTP Request at Tomcat', [
+          client: client([{ text: 'POST /api/orders', tone: 'violet' }]),
+          tomcat: tomcat([{ text: 'http-nio-8080-exec-7', tone: 'violet' }]),
+          card: card('request', [
             'POST /api/orders HTTP/1.1',
             'Content-Type: application/json',
-            'Authorization: Bearer eyJ...',
-            '{"itemId": 42, "qty": 2}',
-          ], { icon: 'terminal' }),
+            '',
+            '{ "sku": "A-12", "qty": 2 }',
+          ]),
         },
-        links: {
-          cl_tm: h('client', 'tomcat', ['client', 'tomcat'], { heads: 'end', label: 'TCP HTTP' }),
-        },
-        flows: [{ route: ['cl_tm'], kind: 'req', rate: 1.8 }],
+        links: { http: L.http },
+        flows: [{ route: ['http'], kind: 'req', rate: 1.2 }],
       },
     },
     {
-      short: 'Servlet Filter',
-      chapter: 'mvc',
-      title: '2. Servlet Filter Chain (Before Spring MVC)',
+      short: 'Filters',
+      chapter: 'technique',
+      title: 'Servlet filters run before Spring MVC',
       body: [
-        'Before touching any Spring controller, the request passes through <strong>Servlet Filters</strong> (CORS, Compression, Spring Security’s <code>DelegatingFilterProxy</code>).',
-        'Filters wrap the raw <code>ServletRequest</code> / <code>ServletResponse</code> and do NOT know which Spring <code>@RestController</code> method will handle the route.',
+        'The request first passes <strong>servlet filters</strong>: CORS, compression, a correlation-id filter and Spring Security’s <code>DelegatingFilterProxy</code>.',
+        'Filters only see the raw request — they do not know which <code>@RestController</code> method will handle it.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Use Servlet Filters for security, CORS, and correlation IDs; use HandlerInterceptors when you need Spring HandlerMethod metadata.',
-      },
-      changes: ['+ FilterChain runs before DispatcherServlet', '+ Can reject early (CORS / Auth)'],
-      metrics: { stage: 'FilterChain', container: 'Servlet Spec', validation: 'CORS / Auth', response: 'Pass-through' },
+      callout: { kind: 'tip', text: 'Use filters for security, CORS and correlation ids; use interceptors when you need handler metadata.' },
+      changes: ['+ Servlet filter chain'],
+      metrics: { stage: 'filters', thread: 'exec-7', status: '—', checks: 'CORS · auth' },
       scene: {
         entities: {
-          tomcat: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Req' }),
-          flt: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['FilterChain'], sub: 'CORS / Auth' }),
-          disp: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'Front Ctrl' }),
-          card: S({ x: -12, y: 12 }, '2. Servlet Filter Wrapping', [
-            'public void doFilter(ServletRequest req,',
-            '                     ServletResponse res, FilterChain ch) {',
-            '  MDC.put("traceId", uuid());',
-            '  try { ch.doFilter(req, res); } finally { MDC.clear(); }',
-            '}',
-          ], { icon: 'terminal' }),
+          client: client(),
+          tomcat: tomcat(),
+          filters: filters([{ text: 'cors → security → trace', tone: 'amber', icon: 'listOrdered' }]),
+          card: card('TraceIdFilter.java', [
+            '@Component',
+            'class TraceIdFilter extends OncePerRequestFilter {',
+            '  protected void doFilterInternal(req, res, chain) {',
+            '    MDC.put("traceId", newId());',
+            '    chain.doFilter(req, res); } }',
+          ]),
         },
-        links: {
-          tm_fl: h('tomcat', 'flt', ['tomcat', 'flt'], { heads: 'end', label: 'doFilter' }),
-          fl_dp: h('flt', 'disp', ['flt', 'disp'], { heads: 'end', label: 'next' }),
-        },
-        flows: [{ route: ['tm_fl', 'fl_dp'], kind: 'req', rate: 1.9 }],
+        links: { http: L.httpQuiet, chain: L.chain },
+        flows: [{ route: ['http', 'chain'], kind: 'req', rate: 1.2 }],
       },
     },
     {
-      short: 'Dispatcher',
-      chapter: 'mvc',
-      title: '3. DispatcherServlet & HandlerMapping Lookup',
+      short: 'Dispatch',
+      chapter: 'technique',
+      title: 'DispatcherServlet finds the handler',
       body: [
-        '<code>DispatcherServlet</code> is Spring MVC’s single Front Controller. It queries <code>RequestMappingHandlerMapping</code> to match URL + HTTP method to a <code>HandlerExecutionChain</code>.',
-        'The chain contains the target <code>HandlerMethod</code> plus all matching <code>HandlerInterceptor</code>s.',
+        '<code>DispatcherServlet</code> is MVC’s single front controller. It asks <code>RequestMappingHandlerMapping</code> to match URL + method to a <code>HandlerExecutionChain</code>.',
+        'The chain holds the target <code>HandlerMethod</code> plus every matching <code>HandlerInterceptor</code>.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'HandlerMapping builds a lookup trie/map at startup from all @GetMapping / @PostMapping annotations.',
-      },
-      changes: ['+ RequestMappingHandlerMapping resolves route', '+ Builds HandlerExecutionChain'],
-      metrics: { stage: 'HandlerMapping', container: 'Spring MVC', validation: 'Route match', response: '404 if miss' },
+      callout: { kind: 'insight', text: 'The mapping table is built once at startup from all @GetMapping / @PostMapping annotations.' },
+      changes: ['+ DispatcherServlet', '~ matched POST /api/orders → OrderController.create'],
+      metrics: { stage: 'handler mapping', thread: 'exec-7', status: '—', checks: 'route ✓' },
       scene: {
         entities: {
-          disp: d(-14, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'Front Ctrl' }),
-          map: b(-14, -14, { r: 2.2, h: 48, color: 'sky', label: ['HandlerMap'], sub: 'POST /orders' }),
-          chain: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['ExecChain'], sub: 'Ctrl + Intrcpt' }),
-          card: S({ x: -12, y: 12 }, '3. Matching Route to HandlerMethod', [
-            '@RestController @RequestMapping("/api/orders")',
-            'class OrderController {',
-            '  @PostMapping',
-            '  OrderRes create(@Valid @RequestBody OrderReq req)',
-            '}',
-          ], { icon: 'terminal' }),
+          client: client(),
+          tomcat: tomcat(),
+          filters: filters(),
+          disp: disp([{ text: 'POST /api/orders ✓', tone: 'green' }]),
+          card: card('mapping (startup log)', [
+            'Mapped "{POST [/api/orders]}"',
+            '  onto OrderController#create(OrderReq)',
+            'Mapped "{GET [/api/orders/{id}]}"',
+            '  onto OrderController#get(long)',
+          ]),
         },
-        links: {
-          dp_mp: h('disp', 'map', ['disp', 'map'], { heads: 'end', label: 'lookup' }),
-          mp_ch: h('map', 'chain', ['map', 'chain'], { heads: 'end', label: 'HandlerMethod' }),
-        },
-        flows: [{ route: ['dp_mp', 'mp_ch'], kind: 'req', rate: 1.9 }],
+        links: { http: L.httpQuiet, chain: L.chainQuiet, service: L.service },
+        flows: [{ route: ['http', 'chain', 'service'], kind: 'req', rate: 1.2 }],
       },
     },
     {
       short: 'Interceptor',
-      chapter: 'mvc',
-      title: '4. HandlerInterceptor.preHandle() Hook',
+      chapter: 'technique',
+      title: 'HandlerInterceptor.preHandle()',
       body: [
-        'Before invoking the controller, Spring runs <code>HandlerInterceptor.preHandle(req, res, handler)</code>.',
-        'Unlike Servlet Filters, interceptors receive the exact <code>HandlerMethod</code> object so you can inspect custom annotations (like <code>@RateLimited</code> or <code>@Audit</code>).',
+        'Before the controller, Spring runs <code>preHandle(req, res, handler)</code> on each interceptor.',
+        'Unlike filters, interceptors receive the <code>HandlerMethod</code>, so they can read annotations like <code>@RateLimited</code> or <code>@Audit</code> on the target method.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Returning false from preHandle() short-circuits the request before ArgumentResolver or Controller runs.',
-      },
-      changes: ['+ preHandle() inspects HandlerMethod', '+ Can short-circuit before body parse'],
-      metrics: { stage: 'Interceptor', container: 'Spring MVC', validation: 'Policy check', response: 'Continue' },
+      callout: { kind: 'tip', text: 'Returning false from preHandle() ends the request before binding or the controller runs.' },
+      changes: ['~ RateLimitInterceptor: allowed'],
+      metrics: { stage: 'preHandle', thread: 'exec-7', status: '—', checks: 'rate ✓' },
       scene: {
         entities: {
-          disp: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Dispatcher'], sub: 'exec chain' }),
-          intr: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Interceptor'], sub: 'preHandle()' }),
-          adp: d(0, 0, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['HandlerAdapter'], sub: 'ready invoke' }),
-          card: S({ x: -12, y: 12 }, '4. Spring HandlerInterceptor', [
-            'boolean preHandle(HttpServletRequest req,',
-            '                  HttpServletResponse res, Object handler) {',
-            '  // "handler" is HandlerMethod -> inspect annotations!',
-            '  return true;',
-            '}',
-          ], { icon: 'terminal' }),
+          ...pipeline({ disp: [{ text: 'preHandle → true', tone: 'green' }] }),
+          card: card('RateLimitInterceptor.java', [
+            'public boolean preHandle(HttpServletRequest req,',
+            '    HttpServletResponse res, Object handler) {',
+            '  var hm = (HandlerMethod) handler;',
+            '  if (!hm.hasMethodAnnotation(RateLimited.class)) return true;',
+            '  return bucket.tryConsume(1); }',
+          ]),
         },
-        links: {
-          dp_in: h('disp', 'intr', ['disp', 'intr'], { heads: 'end', label: 'preHandle' }),
-          in_ad: h('intr', 'adp', ['intr', 'adp'], { heads: 'end', label: 'true -> next' }),
-        },
-        flows: [{ route: ['dp_in', 'in_ad'], kind: 'req', rate: 1.9 }],
+        links: { http: L.httpQuiet, chain: L.chainQuiet, service: L.serviceQuiet },
+        flows: [{ route: ['service'], kind: 'req', rate: 1.4, bounce: true }],
       },
     },
     {
-      short: 'ArgResolver',
-      chapter: 'mvc',
-      title: '5. ArgumentResolver, Jackson & @Valid',
+      short: '@Valid',
+      chapter: 'technique',
+      title: 'Argument resolvers bind and validate',
       body: [
-        '<code>HandlerAdapter</code> runs <code>HandlerMethodArgumentResolver</code>s: Jackson deserializes JSON into <code>OrderReq</code> (<code>@RequestBody</code>), and Bean Validation (<code>@Valid</code>) checks constraints.',
-        'If validation fails, Spring throws <code>MethodArgumentNotValidException</code> before entering your controller body!',
+        'The <code>HandlerAdapter</code> runs argument resolvers: Jackson turns the JSON body into <code>OrderReq</code> (<code>@RequestBody</code>) and Bean Validation checks <code>@Valid</code>.',
+        'If validation fails, <code>MethodArgumentNotValidException</code> is thrown before your controller body runs.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Your controller method stays clean because JSON parsing, @PathVariable, @RequestHeader, and @Valid all happen before it runs.',
-      },
-      changes: ['+ Jackson converts JSON -> Java DTO', '+ @Valid enforces Bean Validation'],
-      metrics: { stage: 'ArgResolver', container: 'Jackson + JSR', validation: '@Valid DTO', response: 'Invoke Ctrl' },
+      callout: { kind: 'insight', text: 'The controller stays clean: JSON parsing, @PathVariable, headers and @Valid all happen before it runs.' },
+      changes: ['+ OrderController', '~ OrderReq bound, @Valid ✓'],
+      metrics: { stage: 'invoke', thread: 'exec-7', status: '—', checks: '@Valid ✓' },
       scene: {
         entities: {
-          adp: d(-14, 0, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['ArgResolver'], sub: 'Jackson JSON' }),
-          val: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['@Valid Check'], sub: '@NotNull @Min' }),
-          ctrl: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Controller'], sub: 'create(dto)' }),
-          card: S({ x: -12, y: 12 }, '5. Deserialization & @Valid Enforcement', [
-            'record OrderReq(@NotNull Long itemId, @Min(1) int qty) {}',
-            '// 1. MappingJackson2HttpMessageConverter reads JSON',
-            '// 2. Hibernate Validator checks @NotNull / @Min',
-            '// 3. Controller receives valid immutable OrderReq',
-          ], { icon: 'terminal' }),
+          ...pipeline({ ctrl: [{ text: 'OrderReq ✓ valid', tone: 'green' }] }),
+          card: card('OrderController.java', [
+            '@PostMapping("/api/orders")',
+            'ResponseEntity<OrderDto> create(',
+            '    @Valid @RequestBody OrderReq req) { … }',
+            '',
+            'record OrderReq(@NotBlank String sku, @Positive int qty) { }',
+          ]),
         },
-        links: {
-          ad_vl: h('adp', 'val', ['adp', 'val'], { heads: 'end', label: 'parse DTO' }),
-          vl_ct: h('val', 'ctrl', ['val', 'ctrl'], { heads: 'end', label: 'valid -> run' }),
-        },
-        flows: [{ route: ['ad_vl', 'vl_ct'], kind: 'res', rate: 2.0 }],
+        links: { ...quiet, invoke: L.invoke },
+        flows: [{ route: ['invoke'], kind: 'req', rate: 1.4 }],
       },
     },
     {
-      short: 'JSON / Advice',
-      chapter: 'mvc',
-      title: '6. Return Serialization & @RestControllerAdvice',
+      short: 'Errors',
+      chapter: 'solution',
+      title: 'JSON out, or one global error format',
       body: [
-        'On success, <code>HttpMessageConverter</code> (Jackson) serializes the returned DTO into HTTP <code>200/201</code> JSON.',
-        'If an exception is thrown anywhere in the pipeline, <code>@RestControllerAdvice</code> intercepts it globally and returns a standardized RFC 7807 <code>ProblemDetail</code> JSON error.',
+        'On success an <code>HttpMessageConverter</code> (Jackson) writes the returned DTO as <code>201</code> JSON.',
+        'If anything in the pipeline throws, <code>@RestControllerAdvice</code> turns it into a standard RFC 7807 <code>ProblemDetail</code> response.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Spring Boot 3 supports ProblemDetail (RFC 7807) out of the box for consistent API error responses.',
-      },
-      changes: ['+ Jackson serializes DTO -> JSON 201', '+ @RestControllerAdvice handles errors'],
-      metrics: { stage: 'MessageConv', container: 'Spring MVC', validation: 'Global Advice', response: '201 / Problem' },
+      callout: { kind: 'tip', text: 'Spring Boot 3 supports ProblemDetail (RFC 7807) out of the box for consistent API errors.' },
+      changes: ['+ ControllerAdvice', '~ qty = 0 → 400 ProblemDetail'],
+      metrics: { stage: 'response', thread: 'exec-7', status: 400, checks: 'qty must be > 0' },
       scene: {
         entities: {
-          ctrl: d(-12, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Controller'], sub: 'returns DTO' }),
-          conv: d(2, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Jackson Conv'], sub: 'JSON 201 OK' }),
-          adv: d(2, -2, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['CtrlAdvice'], sub: '400 Problem' }),
-          card: S({ x: -12, y: 12 }, '6. Response & Global Exception Handling', [
-            '@RestControllerAdvice',
-            'class GlobalErrors {',
+          ...pipeline({ ctrl: [{ text: 'qty = 0 ✗', tone: 'red' }] }),
+          advice: advice([{ text: '400 ProblemDetail', tone: 'amber' }]),
+          card: card('ApiErrors.java', [
+            '@RestControllerAdvice class ApiErrors {',
             '  @ExceptionHandler(MethodArgumentNotValidException.class)',
-            '  ProblemDetail handle(Exception ex) { ... } // 400 JSON',
-            '}',
-          ], { icon: 'terminal' }),
+            '  ProblemDetail bad(MethodArgumentNotValidException e) {',
+            '    return ProblemDetail.forStatusAndDetail(',
+            '        BAD_REQUEST, "qty must be > 0"); } }',
+          ]),
         },
-        links: {
-          ct_cv: h('ctrl', 'conv', ['ctrl', 'conv'], { heads: 'end', label: '201 JSON' }),
-          ct_ad: h('ctrl', 'adv', ['ctrl', 'adv'], { heads: 'end', label: 'throw -> 400' }),
-        },
-        flows: [{ route: ['ct_cv'], kind: 'res', rate: 2.0 }, { route: ['ct_ad'], kind: 'fail', rate: 1.3 }],
+        links: { ...quiet, handle: L.handle },
+        flows: [
+          { route: ['handle'], kind: 'fail', rate: 1 },
+          { route: ['service', 'chain', 'http'], kind: 'res', rate: 0.8 },
+        ],
       },
     },
     {
-      short: 'Loom vs Flux',
-      chapter: 'reactive',
-      title: '7. MVC + Loom (RestClient) vs WebFlux EventLoop Stall',
+      short: 'Loom',
+      chapter: 'tradeoff',
+      title: 'MVC + virtual threads vs a stalled event loop',
       body: [
-        '<strong>WebFlux</strong> runs on Netty with only ~8 Event Loop threads: calling blocking JDBC or <code>RestTemplate</code> stalls an Event Loop and freezes ALL 50k connections!',
-        'In Boot 3.2+, <strong>Spring MVC + Virtual Threads + <code>RestClient</code></strong> matches WebFlux I/O concurrency while keeping standard JDBC & clean stack traces.',
+        '<strong>WebFlux</strong> runs on Netty with a handful of event-loop threads. One blocking JDBC call stalls a loop and every connection on it.',
+        'On Boot 3.2+, <strong>MVC + virtual threads + <code>RestClient</code></strong> blocks cheaply: the virtual thread parks during JDBC and the carrier thread serves others — same concurrency, plain JDBC and readable stack traces.',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Never call blocking JDBC inside Netty WebFlux EventLoop! Use MVC + Virtual Threads for JDBC/CRUD apps.',
-      },
-      changes: ['+ Blocking JDBC freezes 8 Netty loops', '+ MVC + Loom + RestClient scales sync I/O'],
-      metrics: { stage: 'Runtime Choice', container: 'Tomcat vs Netty', validation: 'BlockHound', response: 'Loom or R2DBC' },
+      callout: { kind: 'warn', text: 'Never call blocking JDBC on a WebFlux event loop. For JDBC/CRUD apps prefer MVC on virtual threads.' },
+      changes: ['− ControllerAdvice', '+ Postgres', '~ Tomcat on virtual threads'],
+      metrics: { stage: 'JDBC call', thread: 'virtual #48213', status: 201, checks: 'blocking OK' },
       scene: {
         entities: {
-          arch: d(-12, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['App Stack'], sub: 'CRUD vs Stream' }),
-          loom: d(2, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['MVC + Loom'], sub: 'JDBC + RestCli' }),
-          flux: d(2, -2, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['WebFlux Loop'], sub: 'blocks JDBC' }),
-          card: S({ x: -12, y: 12 }, '7. Choosing MVC + Loom vs WebFlux', [
-            '// Boot 3.2+ CRUD/JDBC -> MVC + Virtual Threads + RestClient:',
-            'OrderDto dto = restClient.get().uri("/orders/{id}", id)',
-            '  .retrieve().body(OrderDto.class);',
-            '// WebFlux: only 8 Netty loops -> MUST use R2DBC + WebClient!',
-          ], { icon: 'terminal' }),
+          ...pipeline({
+            tomcat: [{ text: 'virtual thread / request', tone: 'green' }],
+            ctrl: [{ text: 'parks on JDBC', tone: 'violet' }],
+          }),
+          db: db(),
+          card: card('application.yml', [
+            'spring.threads.virtual.enabled: true',
+            '',
+            '// controller code stays blocking & simple',
+            'var stock = restClient.get().uri("/stock/{sku}", sku)',
+            '    .retrieve().body(Stock.class);',
+          ]),
         },
-        links: {
-          ar_lm: h('arch', 'loom', ['arch', 'loom'], { heads: 'end', label: 'CRUD' }),
-          ar_fx: h('arch', 'flux', ['arch', 'flux'], { heads: 'end', label: 'no block!' }),
-        },
-        flows: [{ route: ['ar_lm'], kind: 'res', rate: 1.9 }, { route: ['ar_fx'], kind: 'fail', rate: 1.4 }],
+        links: { ...quiet, jdbc: L.jdbc },
+        flows: [
+          { route: ['jdbc'], kind: 'write', rate: 1.4, bounce: true },
+          { route: ['http'], kind: 'req', rate: 2.5 },
+        ],
       },
     },
     {
       short: 'Backpressure',
-      chapter: 'reactive',
-      title: '8. WebFlux Lazy subscribe() & Reactor Backpressure',
+      chapter: 'tradeoff',
+      title: 'Where WebFlux wins: streams with backpressure',
       body: [
-        'In WebFlux, <code>webClient.get().bodyToFlux(...)</code> only builds a lazy plan — nothing runs until <code>subscribe()</code>. Never call <code>.block()</code> on an Event Loop!',
-        'Use WebFlux for Gateways or streaming (SSE/Kafka) where <code>request(n)</code> <strong>Backpressure</strong> prevents fast producers from OOMing slow consumers.',
+        'In WebFlux, <code>bodyToFlux(...)</code> only builds a lazy plan — nothing runs until something subscribes. Never call <code>.block()</code> on an event loop.',
+        'For gateways and streams (SSE, Kafka), <code>request(n)</code> <strong>backpressure</strong> lets a slow consumer pull only what it can handle, so a fast producer cannot flood it into OOM.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Demand-driven backpressure (limitRate(64)) lets consumers pull only what they can process.',
-      },
-      changes: ['+ Lazy Mono/Flux needs subscribe()', '+ request(n) throttles fast producers'],
-      metrics: { stage: 'Backpressure', container: 'Netty Reactive', validation: 'limitRate(64)', response: 'SSE / Gateway' },
+      callout: { kind: 'insight', text: 'Demand-driven backpressure (limitRate(64)) makes the consumer set the pace.' },
+      changes: ['+ Kafka price stream', '~ pulled 64 at a time'],
+      metrics: { stage: 'SSE stream', thread: 'event loop', status: 200, checks: 'limitRate 64' },
       scene: {
         entities: {
-          cons: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Slow Consumer'], sub: 'request(64)' }),
-          sub: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['Subscription'], sub: 'demand = 64' }),
-          prod: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Fast Producer'], sub: 'emits <= 64' }),
-          card: S({ x: -12, y: 12 }, '8. Reactive Streams Demand & Backpressure', [
-            'eventFlux.limitRate(64)',
-            '  .flatMap(ev -> webClient.post().bodyValue(ev)...);',
-            '// Assembly is lazy; Netty subscribe() triggers I/O!',
-          ], { icon: 'terminal' }),
+          ...pipeline({ disp: [{ text: 'Flux · demand 64', tone: 'violet' }] }),
+          db: db(),
+          stream: stream([{ text: '10k ticks/s', tone: 'amber' }]),
+          card: card('PriceStream.java', [
+            '@GetMapping(value = "/prices", produces = TEXT_EVENT_STREAM_VALUE)',
+            'Flux<Price> prices() {',
+            '  return receiver.receive()',
+            '      .map(this::toPrice)',
+            '      .limitRate(64); }',
+          ]),
         },
-        links: {
-          cn_sb: h('cons', 'sub', ['cons', 'sub'], { heads: 'end', label: 'request(64)' }),
-          sb_pr: h('sub', 'prod', ['sub', 'prod'], { heads: 'end', label: 'throttle' }),
-        },
-        flows: [{ route: ['cn_sb', 'sb_pr'], kind: 'res', rate: 1.9 }],
+        links: { ...quiet, jdbc: L.jdbc, pull: L.pull },
+        flows: [
+          { route: ['pull'], kind: 'req', rate: 2 },
+          { route: ['service', 'chain', 'http'], kind: 'res', rate: 1.6 },
+        ],
       },
     },
   ],

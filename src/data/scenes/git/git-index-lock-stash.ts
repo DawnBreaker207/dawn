@@ -1,236 +1,188 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDevice, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+
+// One repository on one laptop. First half: a crashed git process left `.git/index.lock`
+// behind. Second half: the same working tree and index, now with a stash — which is
+// really a commit whose parents are HEAD and a snapshot of the index.
+//
+//   IDE git ──▶ index (.git/index)            HEAD 4c2a91
+//                 │                              ▲ parent
+//             working tree ──stash / pop──▶ stash@{0}
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+/** Screen position (px) → world grid coordinates. */
+const at = (sx: number, sy: number) => ({ x: +((sx / 14 + sy / 7) / 2).toFixed(2), y: +((sx / 14 - sy / 7) / 2).toFixed(2) });
+const P = { ide: at(-290, -40), index: at(-40, -110), tree: at(-20, 110), head: at(230, -120), stash: at(230, 90) };
+
+const ide = (tags: Tag[] = [], o: Opts = {}) => makeDevice(P.ide.x, P.ide.y, { label: `IDE git`, tags, ...o });
+const index = (tags: Tag[] = []) =>
+  makeBlock(P.index.x, P.index.y, { s: 4.4, h: 52, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `.git/index`, tags });
+const tree = (tags: Tag[] = []) =>
+  makeBlock(P.tree.x, P.tree.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`working`, `tree`], tags });
+const head = () =>
+  makeBlock(P.head.x, P.head.y, { s: 4.2, h: 50, color: `purple`, glyph: `gitCommit`, label: [`4c2a91`], sub: `HEAD · main`, tags: [{ text: `main`, tone: `amber`, icon: `gitBranch` }] });
+const stash = (tags: Tag[] = [], o: Opts = {}) =>
+  makeBlock(P.stash.x, P.stash.y, { s: 4.4, h: 52, color: `purple`, glyph: `layers`, label: [`stash@{0}`], sub: `WIP commit`, tags, ...o });
+
+const L = {
+  lock: makeLink(`ide`, `index`, [`ide`, `index`], { label: `index.lock` }),
+  lockQuiet: makeLink(`ide`, `index`, [`ide`, `index`]),
+  add: makeLink(`tree`, `index`, [`tree`, `index`]),
+  save: makeLink(`tree`, `stash`, [`tree`, `stash`], { label: `stash` }),
+  pop: makeLink(`stash`, `tree`, [`stash`, `tree`], { label: `pop` }),
+  parent: makeLink(`stash`, `head`, [`stash`, `head`]),
+};
+
+const card = (title: string, lines: string[], icon = `keyboard`) =>
+  makePanel({ x: P.ide.x, y: P.ide.y, z: 0, dx: -40, dy: -250 }, title, lines, { icon });
 
 export const gitIndexLockStashLesson = {
-  id: 'git-index-lock-stash',
-  title: 'Git Index Lock, Stash & Working Tree Rescue',
-  summary: 'Resolve fatal: Unable to create \'.git/index.lock\' without corrupting the index, manage Git stash stack architectures, and recover unmerged files.',
-  minutes: 25,
-  level: 'intermediate',
-  metrics: ['indexLockFile', 'stashConflict', 'stashState', 'unmergedFiles'],
-  legend: ['flow', ['crash', 'orphaned lockfile'], ['clean', 'unlocked index'], ['stash', 'stash stack LIFO']],
+  id: `git-index-lock-stash`,
+  title: `Git Index Lock, Stash & Working Tree Rescue`,
+  summary: `Clear a stale .git/index.lock safely, see what a stash really is, and get your changes back with pop or apply — even when it conflicts.`,
+  minutes: 14,
+  level: `intermediate`,
+  metrics: [`lock`, `stashes`, `tree`, `unmerged`],
+  legend: [`req`, [`write`, `save / restore`], [`fail`, `blocked`]],
   goals: [
-    { text: 'Diagnosing the ghost index.lock blocker: Why Git creates lockfiles', step: 1 },
-    { text: 'Auditing active processes: Distinguishing live processes from dead ghosts', step: 2 },
-    { text: 'Safe surgical removal: Clearing stale lockfiles without corruption', step: 3 },
-    { text: 'Git stash internals: The dual-commit stash stack architecture', step: 4 },
-    { text: 'Restoring dirty working state: git stash pop vs git stash apply', step: 5 },
-    { text: 'Resolving stash apply conflicts and untracked file preservation', step: 6 },
+    { text: `Why Git creates index.lock`, step: 1 },
+    { text: `Check no git process is still running`, step: 2 },
+    { text: `Remove a stale lock safely`, step: 3 },
+    { text: `A stash is a commit with two parents`, step: 4 },
+    { text: `git stash pop vs git stash apply`, step: 5 },
+    { text: `Stash conflicts and untracked files`, step: 6 },
   ],
   steps: [
     {
-      short: 'Ghost index.lock',
-      chapter: 'problem',
-      title: 'fatal: Unable to create \'.git/index.lock\': File exists',
+      short: `index.lock`,
+      chapter: `problem`,
+      title: `fatal: Unable to create index.lock`,
       body: [
-        'An IDE indexing plugin or background AI agent process crashes midway through a commit or rebase, leaving behind <code>.git/index.lock</code>.',
-        'Now every subsequent Git command immediately aborts: <em>fatal: Unable to create \'.git/index.lock\': File exists. Another git process seems to be running.</em>',
+        `Any command that changes the index first creates <code>.git/index.lock</code>, writes the new index into it, then renames it over <code>.git/index</code>. The lock stops two commands writing at once.`,
+        `If a git process is killed mid-way — an IDE crash, a closed terminal — the lock file stays. Every later command refuses to run.`,
       ],
-      callout: {
-        kind: 'warning',
-        text: 'The lockfile exists to guarantee atomic index updates. But if the owning process dies unexpectedly, the lockfile becomes a permanent ghost blocker.',
-      },
-      metrics: { indexLockFile: 'Ghost lockfile present', stashConflict: 'None', stashState: 'Clean', unmergedFiles: '0' },
+      metrics: { lock: `present`, stashes: 0, tree: `3 changed`, unmerged: 0 },
       scene: {
         entities: {
-          crashedAgent: y(-18, -6, { label: 'Crashed Agent', tags: [{ text: 'killed PID 4821', tone: 'rose', icon: 'terminal' }] }),
-          ghostLock: d(-6, -2, { s: 4.4, h: 56, color: 'rose', glyph: 'shield', label: ['index.lock'], sub: 'ghost mutex' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Index Lock Collision Error', [
-            `$ git commit -m "update config"`,
-            `fatal: Unable to create '/repo/.git/index.lock': File exists.`,
-            `Another git process seems to be running in this repository,`,
-            `e.g. an editor or background task. If that process crashed,`,
-            `you may remove the lock file manually.`,
-          ], { icon: 'terminal' }),
+          ide: ide([{ text: `git commit`, tone: `gray` }]),
+          index: index([{ text: `index.lock`, tone: `red`, icon: `lock` }]),
+          tree: tree([{ text: `3 changed`, tone: `amber` }]),
+          card: card(`terminal`, [`$ git commit -am "wip"`, `! fatal: Unable to create '.git/index.lock': File exists.`, `# Another git process seems to be running…`]),
         },
-        links: {
-          cg: h('crashedAgent', 'ghostLock', ['crashedAgent', 'ghostLock'], { label: 'orphaned lock' }),
-        },
-        flows: [{ route: ['cg'], kind: 'crash', rate: 1.5 }],
+        links: { lock: L.lock, add: L.add },
+        flows: [{ route: [`lock`], kind: `fail`, rate: 1.2 }],
       },
     },
     {
-      short: 'Process Audit',
-      chapter: 'technique',
-      title: 'Auditing Active Processes Before Deleting Lockfiles',
+      short: `Check`,
+      chapter: `technique`,
+      title: `Is anything still running?`,
       body: [
-        'Never blindly run <code>rm .git/index.lock</code> without checking whether a real Git process is still writing to disk!',
-        'Run <code>ps aux | grep git</code> or <code>lsof .git/index.lock</code>. If a legitimate process (like a large repack) is still running, deleting the lock will corrupt the index.',
+        `The lock might be real: a background fetch, an IDE refresh or a long rebase may still be working. Deleting a live lock can corrupt the index.`,
+        `Look for git processes first. If none are running, the lock is a leftover from a crash.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Check file creation timestamp. If the lock was created 3 hours ago and no git PID is in ps aux, it is safely verified as a dead ghost.',
-      },
-      changes: ['+ Process audit confirms owning PID 4821 is dead'],
-      metrics: { indexLockFile: 'Dead ghost verified', stashConflict: 'None', stashState: 'Clean', unmergedFiles: '0' },
+      changes: [`~ IDE git process: gone`],
+      metrics: { lock: `stale`, stashes: 0, tree: `3 changed`, unmerged: 0 },
       scene: {
         entities: {
-          crashedAgent: y(-18, -6, { label: 'PID Checker', tags: [{ text: 'ps aux | grep git', tone: 'cyan', icon: 'terminal' }] }),
-          ghostLock: d(-6, -2, { s: 4.4, h: 56, color: 'amber', glyph: 'shield', label: ['Stale Lockfile'], sub: 'dead PID 4821' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Process Audit Inspection', [
-            `$ ps aux | grep git`,
-            `# Output: No active git processes found running`,
-            `$ lsof .git/index.lock`,
-            `# Output: 0 open file descriptors`,
-            `= Safe to delete without risk of repo corruption!`,
-          ], { icon: 'terminal' }),
+          ide: ide([{ text: `PID 4821 gone`, tone: `red` }], { dead: 1 }),
+          index: index([{ text: `index.lock`, tone: `red`, icon: `lock` }]),
+          tree: tree([{ text: `3 changed`, tone: `amber` }]),
+          card: card(`terminal`, [`$ ps aux | grep "[g]it "`, `# (no output)`, `PS> Get-Process git -ErrorAction SilentlyContinue`, `# (no output) → the lock is stale`]),
         },
-        links: {
-          cg: h('crashedAgent', 'ghostLock', ['crashedAgent', 'ghostLock'], { label: 'audited dead' }),
-        },
-        flows: [{ route: ['cg'], kind: 'crash', rate: 1.5 }],
+        links: { lock: L.lockQuiet, add: L.add },
+        flows: [],
       },
     },
     {
-      short: 'Surgical Removal',
-      chapter: 'technique',
-      title: 'Safe Surgical Removal of Orphaned Lockfile',
+      short: `Remove`,
+      chapter: `solution`,
+      title: `Delete the stale lock`,
       body: [
-        'With the process verified dead, remove the lockfile: <code>rm -f .git/index.lock</code>.',
-        'The staging area <code>.git/index</code> is immediately unlocked and operational again.',
+        `With no git process alive, removing the file is safe: the real index was never replaced, so it is still the last good version.`,
+        `Run <code>git status</code> right after to confirm the index reads cleanly.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Git index itself was untouched because index.lock had not completed its atomic rename step before crashing.',
-      },
-      changes: ['+ .git/index.lock safely deleted', '+ .git/index restored to full read/write state'],
-      metrics: { indexLockFile: 'Removed (clean)', stashConflict: 'None', stashState: 'Clean', unmergedFiles: '0' },
+      changes: [`− .git/index.lock`],
+      metrics: { lock: `none`, stashes: 0, tree: `3 changed`, unmerged: 0 },
       scene: {
         entities: {
-          crashedAgent: y(-18, -6, { label: 'Dev Laptop', tags: [{ text: 'rm index.lock', tone: 'green', icon: 'terminal' }] }),
-          stagedIndex: b(-6, -2, { r: 2.2, h: 52, color: 'blue', glyph: 'database', label: ['.git/index'], sub: 'staging cache' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Lock Cleared & Status Clean', [
-            `$ rm -f .git/index.lock`,
-            `$ git status`,
-            `On branch main`,
-            `Changes to be committed:`,
-            `  modified:   src/server.ts`,
-            `= Lock successfully cleared, index healthy!`,
-          ], { icon: 'terminal' }),
+          ide: ide([{ text: `git works again`, tone: `green` }]),
+          index: index([{ text: `unlocked`, tone: `green`, icon: `check` }]),
+          tree: tree([{ text: `3 changed`, tone: `amber` }]),
+          card: card(`terminal`, [`$ rm -f .git/index.lock`, `$ git status --short`, ` M src/app.ts`, ` M src/api.ts`, `?? notes.md`]),
         },
-        links: {
-          cs: h('crashedAgent', 'stagedIndex', ['crashedAgent', 'stagedIndex'], { label: 'unlock staging' }),
-        },
-        flows: [{ route: ['cs'], kind: 'clean', rate: 1.5 }],
+        links: { lock: L.lockQuiet, add: L.add },
+        flows: [{ route: [`lock`], rate: 1 }],
       },
     },
     {
-      short: 'Stash Internals',
-      chapter: 'technique',
-      title: 'Git Stash Internals: The Dual-Commit Stack',
+      short: `Stash`,
+      chapter: `technique`,
+      title: `A stash is a commit in disguise`,
       body: [
-        'Need to switch branches urgently while working tree is dirty? Run <code>git stash push -m "wip auth"</code>.',
-        'Under the hood, Git does not save a flat patch file! It creates <b>two distinct commit objects</b>: one for the staged index, and one for the unstaged working tree.',
+        `<code>git stash push</code> saves your work as a real commit (<b>w</b>) whose first parent is HEAD and whose second parent is another commit (<b>i</b>) holding the index. Then it resets the tree to HEAD.`,
+        `<code>refs/stash</code> points at it, and older stashes form a stack (<code>stash@{0}</code>, <code>stash@{1}</code>…) through the reflog.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Run git log --graph --oneline stash@{0} to see the dual-parent stash DAG structure with your own eyes.',
-      },
-      changes: ['+ Dirty working state captured in dual-commit stash object', '+ Stash ref pushed onto LIFO stack ref: refs/stash'],
-      metrics: { indexLockFile: 'Clean', stashConflict: 'None', stashState: '1 stash entry', unmergedFiles: '0' },
+      changes: [`+ HEAD 4c2a91`, `+ stash@{0}`, `~ working tree clean`],
+      metrics: { lock: `none`, stashes: 1, tree: `clean`, unmerged: 0 },
       scene: {
         entities: {
-          crashedAgent: y(-18, -6, { label: 'Dev Laptop', tags: [{ text: 'git stash push', tone: 'cyan', icon: 'terminal' }] }),
-          stagedIndex: b(-6, -2, { r: 2.2, h: 52, color: 'blue', glyph: 'database', label: ['.git/index'], sub: 'staging cache' }),
-          stashStack: d(6, 0, { s: 4.4, h: 56, color: 'amber', glyph: 'boxes', label: ['Stash Stack'], sub: 'stash@{0} LIFO' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Stash Dual-Commit Architecture', [
-            `$ git stash push -m "wip payment logic"`,
-            `Saved working directory and index state WIP on main: e8a1b2c`,
-            `$ git cat-file -p stash@{0}`,
-            `tree a1b2c3d...`,
-            `parent 7d9e44 (HEAD)`,
-            `parent 4d5e6f (index commit)`,
-            `= Dual commits preserve index vs working tree separation`,
-          ], { icon: 'terminal' }),
+          ide: ide(),
+          index: index(),
+          tree: tree([{ text: `clean`, tone: `green` }]),
+          head: head(),
+          stash: stash([{ text: `parents: HEAD + i`, tone: `violet` }]),
+          card: card(`terminal`, [`$ git stash push -m "wip"`, `$ git cat-file -p stash@{0}`, `tree   7e21c4`, `parent 4c2a91   # HEAD`, `parent 9b3e70   # i: the index`, `On main: wip`]),
         },
-        links: {
-          cs: h('crashedAgent', 'stagedIndex', ['crashedAgent', 'stagedIndex'], { label: 'stage snapshot' }),
-          ss: h('stagedIndex', 'stashStack', ['stagedIndex', 'stashStack'], { label: 'push to stash@{0}' }),
-        },
-        flows: [{ route: ['cs', 'ss'], kind: 'stash', rate: 1.6 }],
+        links: { lock: L.lockQuiet, add: L.add, save: L.save, parent: L.parent },
+        flows: [{ route: [`save`], kind: `write`, rate: 1.2 }],
       },
     },
     {
-      short: 'Clean Working Tree',
-      chapter: 'execution',
-      title: 'Clean Working Tree: Zero Collision Risk',
+      short: `pop / apply`,
+      chapter: `technique`,
+      title: `Getting the work back`,
       body: [
-        'With working files stashed, the working tree is pristine. <code>git status</code> reports <em>working tree clean</em>.',
-        'You can now run <code>git pull --rebase</code>, checkout release branches, or run emergency hotfixes without file conflict.',
+        `<code>git stash apply</code> replays the stash onto the current tree and <b>keeps</b> the entry. <code>git stash pop</code> does the same and then drops it — but only if applying succeeded.`,
+        `Prefer <code>apply</code> when you want to try the changes on another branch first.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'A clean working tree eliminates 100% of "error: Your local changes would be overwritten by checkout".',
-      },
-      changes: ['+ Working tree completely cleaned', '+ Ready for branch switching or rebase'],
-      metrics: { indexLockFile: 'Clean', stashConflict: 'None', stashState: 'Stored in LIFO', unmergedFiles: '0' },
+      changes: [`~ 3 files restored`, `− stash@{0} dropped (pop)`],
+      metrics: { lock: `none`, stashes: 0, tree: `3 changed`, unmerged: 0 },
       scene: {
         entities: {
-          crashedAgent: y(-18, -6, { label: 'Dev Laptop', tags: [{ text: 'working clean', tone: 'green', icon: 'terminal' }] }),
-          stagedIndex: b(-6, -2, { r: 2.2, h: 52, color: 'blue', glyph: 'database', label: ['.git/index'], sub: 'clean staging' }),
-          stashStack: d(6, 0, { s: 4.4, h: 56, color: 'amber', glyph: 'boxes', label: ['Stash Stack'], sub: 'stash@{0} LIFO' }),
-          cleanWorkingTree: d(18, 4, { s: 4.4, h: 56, color: 'green', glyph: 'shield', label: ['Working Tree'], sub: 'clean tree' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Pristine Working State', [
-            `$ git status`,
-            `On branch main`,
-            `nothing to commit, working tree clean`,
-            `$ git pull --rebase origin main`,
-            `Current branch main is up to date.`,
-            `= Zero collision risk during branch operations`,
-          ], { icon: 'terminal' }),
+          ide: ide(),
+          index: index(),
+          tree: tree([{ text: `3 files back`, tone: `green`, icon: `check` }]),
+          head: head(),
+          stash: stash([{ text: `dropped`, tone: `gray` }], { dim: 0.7 }),
+          card: card(`terminal`, [`$ git stash pop`, `On branch main`, `  modified: src/app.ts`, `= Dropped refs/stash@{0} (b51f0e…)`]),
         },
-        links: {
-          cs: h('crashedAgent', 'stagedIndex', ['crashedAgent', 'stagedIndex'], { label: 'status clean' }),
-          ss: h('stagedIndex', 'stashStack', ['stagedIndex', 'stashStack'], { label: 'preserve stash' }),
-          sc: h('stashStack', 'cleanWorkingTree', ['stashStack', 'cleanWorkingTree'], { label: 'clean disk' }),
-        },
-        flows: [{ route: ['cs', 'ss', 'sc'], kind: 'clean', rate: 1.5 }],
+        links: { lock: L.lockQuiet, add: L.add, pop: L.pop, parent: L.parent },
+        flows: [{ route: [`pop`], kind: `write`, rate: 1.2 }],
       },
     },
     {
-      short: 'Stash Pop',
-      chapter: 'scaling',
-      title: 'Restoring State: git stash pop vs apply',
+      short: `Conflicts`,
+      chapter: `recap`,
+      title: `When pop conflicts — and untracked files`,
       body: [
-        'When your urgent task is complete, restore your in-progress work: <code>git stash pop</code> applies the changes and removes the entry from the stash stack.',
-        'Use <code>git stash pop --index</code> to restore your staged index state exactly as it was before stashing.',
+        `If HEAD changed the same lines since you stashed, <code>pop</code> stops with a conflict like a merge. Git <b>keeps</b> the stash so nothing is lost: fix the file, <code>git add</code> it, then <code>git stash drop</code> yourself.`,
+        `By default a stash skips untracked files. Use <code>git stash -u</code> to include them, or they stay behind in the tree.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'git stash apply keeps the stash in the stack; git stash pop deletes it if the merge succeeded cleanly.',
-      },
-      changes: ['+ Stash state reapplied cleanly to working files', '+ Stash entry popped from stack'],
-      metrics: { indexLockFile: 'Clean', stashConflict: '0 conflicts', stashState: 'Popped (empty)', unmergedFiles: '0' },
+      changes: [`− CONFLICT in app.ts`, `~ stash@{0} kept`],
+      metrics: { lock: `none`, stashes: 1, tree: `conflict`, unmerged: 1 },
       scene: {
         entities: {
-          crashedAgent: y(-18, -6, { label: 'Dev Laptop', tags: [{ text: 'git stash pop', tone: 'green', icon: 'terminal' }] }),
-          stagedIndex: b(-6, -2, { r: 2.2, h: 52, color: 'blue', glyph: 'database', label: ['.git/index'], sub: 'clean staging' }),
-          stashStack: d(6, 0, { s: 4.4, h: 56, color: 'amber', glyph: 'boxes', label: ['Stash Stack'], sub: 'stash@{0} LIFO' }),
-          cleanWorkingTree: d(18, 4, { s: 4.4, h: 56, color: 'green', glyph: 'shield', label: ['Working Tree'], sub: 'restored work' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Stash Pop Output', [
-            `$ git stash pop --index`,
-            `On branch main`,
-            `Changes to be committed:`,
-            `  modified:   src/server.ts`,
-            `Changes not staged for commit:`,
-            `  modified:   src/auth.ts`,
-            `Dropped refs/stash@{0} (a1b2c3d...)`,
-            `= All staged and unstaged work restored flawlessly!`,
-          ], { icon: 'terminal' }),
+          ide: ide(),
+          index: index([{ text: `1 unmerged`, tone: `red` }]),
+          tree: tree([{ text: `CONFLICT app.ts`, tone: `red`, icon: `alert` }]),
+          head: head(),
+          stash: stash([{ text: `kept`, tone: `amber` }]),
+          card: card(`terminal`, [`$ git stash pop`, `! CONFLICT (content): Merge conflict in src/app.ts`, `The stash entry is kept in case you need it again.`, `$ git add src/app.ts && git stash drop`, `$ git stash -u   # also stash untracked files`]),
         },
-        links: {
-          cs: h('crashedAgent', 'stagedIndex', ['crashedAgent', 'stagedIndex'], { label: 'pop command' }),
-          ss: h('stagedIndex', 'stashStack', ['stagedIndex', 'stashStack'], { label: 'pop entry' }),
-          sc: h('stashStack', 'cleanWorkingTree', ['stashStack', 'cleanWorkingTree'], { label: 'restore diffs' }),
-        },
-        flows: [{ route: ['cs', 'ss', 'sc'], kind: 'clean', rate: 1.6 }],
+        links: { lock: L.lockQuiet, add: L.add, pop: L.pop, parent: L.parent },
+        flows: [{ route: [`pop`], kind: `fail`, rate: 1 }],
       },
     },
   ],

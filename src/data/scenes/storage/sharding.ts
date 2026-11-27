@@ -1,27 +1,10 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeDb,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const Hn = [-10.5, -3.5, 3.5, 10.5];
@@ -30,21 +13,21 @@ const Un = [`sa`, `sb`, `sc`, `sd`];
 
 const Wn = [`A`, `B`, `C`, `D`];
 
-const Gn = (e = []) => d(0, -12, { label: [`App`], tags: e });
+const Gn = (e = []) => makeBlock(0, -12, { label: [`App`], tags: e });
 
-const Kn = (e, t = {}) => b(Hn[e], 0, { r: 1.6, h: 36, glyph: `database`, ...t });
+const Kn = (e, t = {}) => makeDb(Hn[e], 0, { r: 1.6, h: 36, glyph: `database`, ...t });
 
 const qn = (e = () => null, t = {}) =>
     Object.fromEntries(
       Un.map((n, r) => {
         let i = e(r);
-        return [n, Kn(r, { ...v(0.5), tags: i ? [i] : [], ...(t[n] || {}) })];
+        return [n, Kn(r, { ...makeCool(0.5), tags: i ? [i] : [], ...(t[n] || {}) })];
       }),
     );
 
 const Jn = (e = Un) =>
     Object.fromEntries(
-      e.map((e) => [`w${e}`, h(`app`, e, [`app`, [e, `app`], e], { heads: `both` })]),
+      e.map((e) => [`w${e}`, makeLink(`app`, e, [`app`, [e, `app`], e], { heads: `both` })]),
     );
 
 const Yn = (e = [1, 1, 1, 1], t = 4.4) => [
@@ -56,7 +39,7 @@ const Yn = (e = [1, 1, 1, 1], t = 4.4) => [
     },
   ];
 
-const Xn = (e, t, n) => S({ x: 10.5, y: 0, z: 0, dx: 50, dy: -240 }, e, t, { icon: n });
+const Xn = (e, t, n) => makePanel({ x: 10.5, y: 0, z: 0, dx: 50, dy: -240 }, e, t, { icon: n });
 
 const Zn = (e) => ({ text: `${Wn[e]} · ids ${[`1–25M`, `25–50M`, `50–75M`, `75M+`][e]}` });
 
@@ -94,7 +77,7 @@ export const shardingLesson = {
         scene: {
           entities: {
             app: Gn(),
-            sa: b(0, 0, {
+            sa: makeDb(0, 0, {
               r: 2.8,
               h: 66,
               heat: 0.85,
@@ -102,7 +85,7 @@ export const shardingLesson = {
               tags: [{ text: `20 TB · 40,000 writes/s`, tone: `red`, icon: `alert` }],
             }),
           },
-          links: { wsa: h(`app`, `sa`, [`app`, `sa`], { heads: `both` }) },
+          links: { wsa: makeLink(`app`, `sa`, [`app`, `sa`], { heads: `both` }) },
           flows: [{ route: [`wsa`], rate: 6, kind: `write` }],
         },
       },
@@ -146,9 +129,9 @@ export const shardingLesson = {
           entities: {
             app: Gn([{ text: `route by user_id`, icon: `network` }]),
             ...qn(Zn, {
-              sa: v(0.12),
-              sb: v(0.14),
-              sc: v(0.2),
+              sa: makeCool(0.12),
+              sb: makeCool(0.14),
+              sc: makeCool(0.2),
               sd: {
                 heat: 0.85,
                 cpu: 0.97,
@@ -216,9 +199,9 @@ export const shardingLesson = {
                 cpu: 0.98,
                 tags: [{ text: `user 42 · pop star · 70%`, tone: `red`, icon: `alert` }],
               },
-              sa: v(0.2),
-              sb: v(0.2),
-              sd: v(0.2),
+              sa: makeCool(0.2),
+              sb: makeCool(0.2),
+              sd: makeCool(0.2),
             }),
           },
           links: Jn(),
@@ -304,10 +287,10 @@ export const shardingLesson = {
           entities: {
             app: Gn([{ text: `hash(user_id) % 5`, icon: `network` }]),
             ...qn((e) => ({ text: `${Wn[e]} · moving`, tone: `amber`, icon: `replay` })),
-            se: b(14, 6, {
+            se: makeDb(14, 6, {
               r: 1.6,
               h: 36,
-              ...v(0.5),
+              ...makeCool(0.5),
               tags: [{ text: `E · new`, tone: `green` }],
             }),
             card: Xn(
@@ -325,7 +308,7 @@ export const shardingLesson = {
             ...Object.fromEntries(
               Un.map((e) => [
                 `m${e}`,
-                h(e, `se`, [e, [e, -3.2], [`se`, -3.2], `se`], { style: `dashed` }),
+                makeLink(e, `se`, [e, [e, -3.2], [`se`, -3.2], `se`], { style: `dashed` }),
               ]),
             ),
           },

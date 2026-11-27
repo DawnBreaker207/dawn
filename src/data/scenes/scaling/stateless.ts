@@ -1,58 +1,42 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBalancer,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink
 } from '@/lib/simulator/scene-builders';
 
 const Qe = { text: `session: Alice · cart 2`, tone: `violet`, icon: `user` };
 
 const $e = { text: `no session for Alice`, tone: `red`, icon: `alert` };
 
-const et = (e = [{ text: `cart: 2 items`, icon: `check` }]) => y(0, -19, { label: `Alice`, tags: e });
+const et = (e = [{ text: `cart: 2 items`, icon: `check` }]) => makeDevice(0, -19, { label: `Alice`, tags: e });
 
-const tt = (e = []) => f(0, -9, { tags: e });
+const tt = (e = []) => makeBalancer(0, -9, { tags: e });
 
 const nt = (e = {}) => ({
-    a: d(-7, 0, { label: [`Server A`], ...(e.a || {}) }),
-    b: d(0, 0, { label: [`Server B`], ...(e.b || {}) }),
-    c: d(7, 0, { label: [`Server C`], ...(e.c || {}) }),
+    a: makeBlock(-7, 0, { label: [`Server A`], ...(e.a || {}) }),
+    b: makeBlock(0, 0, { label: [`Server B`], ...(e.b || {}) }),
+    c: makeBlock(7, 0, { label: [`Server C`], ...(e.c || {}) }),
   });
 
 const rt = (e = [{ text: `Alice · cart 2`, tone: `violet`, icon: `user` }]) =>
-    b(0, 10, { glyph: `zap`, label: `session store`, tags: e });
+    makeDb(0, 10, { glyph: `zap`, label: `session store`, tags: e });
 
-const it = { ul: h(`alice`, `lb`, [`alice`, `lb`], { heads: `both` }) };
+const it = { ul: makeLink(`alice`, `lb`, [`alice`, `lb`], { heads: `both` }) };
 
 const at = (e = {}) => ({
-    la: h(`lb`, `a`, [`lb`, [`a`, `lb`], `a`], e.a),
-    lbb: h(`lb`, `b`, [`lb`, `b`], e.b),
-    lc: h(`lb`, `c`, [`lb`, [`c`, `lb`], `c`], e.c),
+    la: makeLink(`lb`, `a`, [`lb`, [`a`, `lb`], `a`], e.a),
+    lbb: makeLink(`lb`, `b`, [`lb`, `b`], e.b),
+    lc: makeLink(`lb`, `c`, [`lb`, [`c`, `lb`], `c`], e.c),
   });
 
 const ot = {
-    as: h(`a`, `st`, [`a`, [`a`, `st`], `st`], { heads: `both` }),
-    bs: h(`b`, `st`, [`b`, `st`], { heads: `both` }),
-    cs: h(`c`, `st`, [`c`, [`c`, `st`], `st`], { heads: `both` }),
+    as: makeLink(`a`, `st`, [`a`, [`a`, `st`], `st`], { heads: `both` }),
+    bs: makeLink(`b`, `st`, [`b`, `st`], { heads: `both` }),
+    cs: makeLink(`c`, `st`, [`c`, [`c`, `st`], `st`], { heads: `both` }),
   };
 
 const st = (e, t = 1.5) => [{ routes: e.map((e) => ({ path: e })), rate: t, bounce: !0, kind: `mine` }];
@@ -162,7 +146,7 @@ export const statelessLesson = {
           entities: {
             alice: et([{ text: `signed out · cart empty`, tone: `red`, icon: `alert` }]),
             lb: tt([{ text: `sticky: Alice → B`, icon: `user` }]),
-            ...nt({ a: g, b: { tags: [$e] } }),
+            ...nt({ a: DEAD_STATE, b: { tags: [$e] } }),
           },
           links: { ...it, ...at({ a: { style: `off` }, b: { fail: 1 } }) },
           flows: st([[`ul`, `lbb`]]),
@@ -220,7 +204,7 @@ export const statelessLesson = {
             alice: et(),
             lb: tt([{ text: `round robin`, icon: `replay` }]),
             ...nt({
-              a: g,
+              a: DEAD_STATE,
               b: { tags: [{ text: `stateless` }] },
               c: { tags: [{ text: `stateless` }] },
             }),
@@ -324,7 +308,7 @@ export const statelessLesson = {
               b: { tags: [{ text: `stateless` }] },
               c: { tags: [{ text: `stateless` }] },
             }),
-            os: b(0, 10, {
+            os: makeDb(0, 10, {
               glyph: `box`,
               label: `object storage`,
               tags: [{ text: `avatar.png`, tone: `violet`, icon: `file` }],
@@ -333,9 +317,9 @@ export const statelessLesson = {
           links: {
             ...it,
             ...at(),
-            ao: h(`a`, `os`, [`a`, [`a`, `os`], `os`], { heads: `both` }),
-            bo: h(`b`, `os`, [`b`, `os`], { heads: `both` }),
-            co: h(`c`, `os`, [`c`, [`c`, `os`], `os`], { heads: `both` }),
+            ao: makeLink(`a`, `os`, [`a`, [`a`, `os`], `os`], { heads: `both` }),
+            bo: makeLink(`b`, `os`, [`b`, `os`], { heads: `both` }),
+            co: makeLink(`c`, `os`, [`c`, [`c`, `os`], `os`], { heads: `both` }),
           },
           flows: [
             ...st([

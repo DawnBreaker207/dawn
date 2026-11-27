@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const devopsDoraMetricsLesson = {
@@ -40,10 +38,10 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite Target', deployFrequency: 'Daily (On-demand)', leadTime: '< 1 Hour', cfrMttr: 'CFR < 5%' },
       scene: {
         entities: {
-          devStream: y(-18, -6, { label: 'dev-stream', tags: [{ text: 'Throughput Flow', tone: 'blue', icon: 'zap' }] }),
-          doraEngine: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['DORA Engine'], sub: 'speed/safety' }),
-          prodFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'The 4 DORA Metrics', [
+          devStream: makeDevice(-18, -6, { label: 'dev-stream', tags: [{ text: 'Throughput Flow', tone: 'blue', icon: 'zap' }] }),
+          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['DORA Engine'], sub: 'speed/safety' }),
+          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'The 4 DORA Metrics', [
             `1. Deployment Frequency:    Multiple per day`,
             `2. Lead Time for Changes:   < 1 hour (commit -> prod)`,
             `3. Change Failure Rate:     0% - 5% (canary catch)`,
@@ -52,8 +50,8 @@ export const devopsDoraMetricsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dd: h('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'commits' }),
-          dp: h('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: 'rollouts' }),
+          dd: makeLink('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'commits' }),
+          dp: makeLink('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: 'rollouts' }),
         },
         flows: [{ route: ['dd', 'dp'], kind: 'speed', rate: 1.5 }],
       },
@@ -74,10 +72,10 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite (DF)', deployFrequency: '14 Deploys/day', leadTime: '38 Minutes', cfrMttr: '0% Outages' },
       scene: {
         entities: {
-          devStream: y(-18, -6, { label: 'dev-stream', tags: [{ text: '14 Rollouts Today', tone: 'green', icon: 'zap' }] }),
-          doraEngine: d(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['CD Pipeline'], sub: '14 rollouts' }),
-          prodFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Deployment Frequency Telemetry', [
+          devStream: makeDevice(-18, -6, { label: 'dev-stream', tags: [{ text: '14 Rollouts Today', tone: 'green', icon: 'zap' }] }),
+          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['CD Pipeline'], sub: '14 rollouts' }),
+          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Deployment Frequency Telemetry', [
             `Window: Rolling 24 Hours`,
             `Total Deploys: 14 successful rollouts`,
             `Batch Size: Average 1 commit per deploy`,
@@ -86,8 +84,8 @@ export const devopsDoraMetricsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dd: h('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'atomic batch' }),
-          dp: h('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: 'auto deploy' }),
+          dd: makeLink('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'atomic batch' }),
+          dp: makeLink('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: 'auto deploy' }),
         },
         flows: [{ route: ['dd', 'dp'], kind: 'speed', rate: 2.0 }],
       },
@@ -108,10 +106,10 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite (LTFC)', deployFrequency: 'Continuous', leadTime: '38m (Fast Path)', cfrMttr: 'CFR < 5%' },
       scene: {
         entities: {
-          devStream: y(-18, -6, { label: 'dev-stream', tags: [{ text: 'T=00:00 Commit', tone: 'blue', icon: 'gitBranch' }] }),
-          doraEngine: d(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'clock', label: ['Lead Time Engine'], sub: 'sharded tests' }),
-          prodFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'T=38s in prod' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Lead Time Breakdown', [
+          devStream: makeDevice(-18, -6, { label: 'dev-stream', tags: [{ text: 'T=00:00 Commit', tone: 'blue', icon: 'gitBranch' }] }),
+          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'clock', label: ['Lead Time Engine'], sub: 'sharded tests' }),
+          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'T=38s in prod' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Lead Time Breakdown', [
             `T=00:00 - Git commit pushed to trunk`,
             `T=00:02 - Automated CI/CD pipeline triggered`,
             `T=00:15 - Security & unit test gates passed`,
@@ -120,8 +118,8 @@ export const devopsDoraMetricsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dd: h('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'push commit' }),
-          dp: h('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: 'live in 38m' }),
+          dd: makeLink('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'push commit' }),
+          dp: makeLink('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: 'live in 38m' }),
         },
         flows: [{ route: ['dd', 'dp'], kind: 'speed', rate: 1.8 }],
       },
@@ -142,11 +140,11 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite (CFR)', deployFrequency: 'Continuous', leadTime: '38m', cfrMttr: 'CFR 1.8% (Target < 5%)' },
       scene: {
         entities: {
-          devStream: y(-18, -6, { label: 'dev-stream', tags: [{ text: 'Live Traffic', icon: 'globe' }] }),
-          doraEngine: d(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['Canary Router'], sub: 'auto rollback' }),
-          prodFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Stable Fleet v1.8'], sub: '95% traffic' }),
-          canaryPod: d(-4, 16, { s: 4.4, h: 48, color: 'red', glyph: 'alert', label: ['Canary Pod v1.9'], sub: 'blast radius' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Canary Health Evaluation', [
+          devStream: makeDevice(-18, -6, { label: 'dev-stream', tags: [{ text: 'Live Traffic', icon: 'globe' }] }),
+          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['Canary Router'], sub: 'auto rollback' }),
+          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Stable Fleet v1.8'], sub: '95% traffic' }),
+          canaryPod: makeBlock(-4, 16, { s: 4.4, h: 48, color: 'red', glyph: 'alert', label: ['Canary Pod v1.9'], sub: 'blast radius' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Canary Health Evaluation', [
             `Stable Fleet (95%): http_5xx = 0.00% (Clean)`,
             `Canary Pod   (5%):  http_5xx = 3.82% (SPIKE)`,
             `Automated Decision: HALT ROLLOUT`,
@@ -155,9 +153,9 @@ export const devopsDoraMetricsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dd: h('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'incoming load' }),
-          dp: h('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: '95% safe' }),
-          dc: h('doraEngine', 'canaryPod', ['doraEngine', 'canaryPod'], { label: '5% alert' }),
+          dd: makeLink('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'incoming load' }),
+          dp: makeLink('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: '95% safe' }),
+          dc: makeLink('doraEngine', 'canaryPod', ['doraEngine', 'canaryPod'], { label: '5% alert' }),
         },
         flows: [
           { route: ['dd', 'dp'], kind: 'speed', rate: 1.8 },
@@ -181,11 +179,11 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite (MTTR)', deployFrequency: 'Continuous', leadTime: '38m', cfrMttr: 'MTTR 6m 20s' },
       scene: {
         entities: {
-          devStream: y(-18, -6, { label: 'dev-stream', tags: [{ text: 'Incident Alarm', tone: 'red', icon: 'alert' }] }),
-          doraEngine: d(-6, -2, { s: 4.8, h: 50, color: 'purple', glyph: 'shield', label: ['Rollback Gate'], sub: 'rollback SHA' }),
-          prodFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Restored Fleet'], sub: 'MTTR 6m 20s' }),
-          rollbackHook: d(-4, 16, { s: 4.4, h: 48, color: 'green', glyph: 'zap', label: ['Fast Recovery'], sub: 'auto rollback' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Incident MTTR Timeline', [
+          devStream: makeDevice(-18, -6, { label: 'dev-stream', tags: [{ text: 'Incident Alarm', tone: 'red', icon: 'alert' }] }),
+          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'purple', glyph: 'shield', label: ['Rollback Gate'], sub: 'rollback SHA' }),
+          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Restored Fleet'], sub: 'MTTR 6m 20s' }),
+          rollbackHook: makeBlock(-4, 16, { s: 4.4, h: 48, color: 'green', glyph: 'zap', label: ['Fast Recovery'], sub: 'auto rollback' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Incident MTTR Timeline', [
             `14:02:10 - Metric breach: p99 latency > 120ms`,
             `14:02:35 - Auto-rollback triggered via webhook`,
             `14:04:12 - Git revert commit built and verified`,
@@ -194,9 +192,9 @@ export const devopsDoraMetricsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dd: h('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'trigger revert' }),
-          dr: h('doraEngine', 'rollbackHook', ['doraEngine', 'rollbackHook'], { label: 'rollback SHA' }),
-          rp: h('rollbackHook', 'prodFleet', ['rollbackHook', 'prodFleet'], { label: 'restore fleet' }),
+          dd: makeLink('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'trigger revert' }),
+          dr: makeLink('doraEngine', 'rollbackHook', ['doraEngine', 'rollbackHook'], { label: 'rollback SHA' }),
+          rp: makeLink('rollbackHook', 'prodFleet', ['rollbackHook', 'prodFleet'], { label: 'restore fleet' }),
         },
         flows: [{ route: ['dd', 'dr', 'rp'], kind: 'safe', rate: 1.6 }],
       },
@@ -217,11 +215,11 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite Continuous', deployFrequency: '14/day', leadTime: '38m', cfrMttr: 'CFR 1.8% | MTTR 6m' },
       scene: {
         entities: {
-          devStream: y(-18, -6, { label: 'dev-stream', tags: [{ text: 'High Velocity Flow', tone: 'green', icon: 'zap' }] }),
-          doraEngine: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Policy Engine'], sub: '82% budget' }),
-          prodFleet: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
-          errorBudget: b(14, 6, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['Error Budget'], sub: '82% budget' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'SRE Error Budget Policy', [
+          devStream: makeDevice(-18, -6, { label: 'dev-stream', tags: [{ text: 'High Velocity Flow', tone: 'green', icon: 'zap' }] }),
+          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Policy Engine'], sub: '82% budget' }),
+          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
+          errorBudget: makeDb(14, 6, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['Error Budget'], sub: '82% budget' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'SRE Error Budget Policy', [
             `Monthly SLO Target:     99.95% Availability`,
             `Actual Rolling SLI:     99.98% Healthy`,
             `Allowed Downtime:       21.6 minutes`,
@@ -230,9 +228,9 @@ export const devopsDoraMetricsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dd: h('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'feature push' }),
-          dp: h('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: 'authorized' }),
-          pe: h('prodFleet', 'errorBudget', ['prodFleet', 'errorBudget'], { label: 'record SLI' }),
+          dd: makeLink('devStream', 'doraEngine', ['devStream', 'doraEngine'], { label: 'feature push' }),
+          dp: makeLink('doraEngine', 'prodFleet', ['doraEngine', 'prodFleet'], { label: 'authorized' }),
+          pe: makeLink('prodFleet', 'errorBudget', ['prodFleet', 'errorBudget'], { label: 'record SLI' }),
         },
         flows: [{ route: ['dd', 'dp', 'pe'], kind: 'budget', rate: 1.8 }],
       },

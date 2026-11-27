@@ -1,56 +1,41 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const At = { x0: -4.5, x1: 4.5, y0: -16, y1: -10 };
 
 const jt = { x0: -16, x1: -8, y0: -4, y1: 4 };
 
-const Mt = () => p(At, 11, `1M users`);
+const Mt = () => makeCrowd(At, 11, `1M users`);
 
-const Nt = () => d(0, 0, { label: [`App`, `Server`] });
+const Nt = () => makeBlock(0, 0, { label: [`App`, `Server`] });
 
-const Pt = (e = {}) => b(11, 0, { glyph: `listOrdered`, label: `SQL database`, ...e });
+const Pt = (e = {}) => makeDb(11, 0, { glyph: `listOrdered`, label: `SQL database`, ...e });
 
-const Ft = (e = {}) => b(0, 11, { glyph: `file`, label: `document store`, ...e });
+const Ft = (e = {}) => makeDb(0, 11, { glyph: `file`, label: `document store`, ...e });
 
 const It = () => ({
-    kvz: x(jt, `KEY–VALUE · 3 NODES`),
-    kv1: b(-12, -2.2, { r: 1.3, h: 28, glyph: `zap` }),
-    kv2: b(-12, 2.2, { r: 1.3, h: 28, glyph: `zap` }),
-    kv3: b(-14.6, 0, { r: 1.3, h: 28, glyph: `zap` }),
+    kvz: makeZone(jt, `KEY–VALUE · 3 NODES`),
+    kv1: makeDb(-12, -2.2, { r: 1.3, h: 28, glyph: `zap` }),
+    kv2: makeDb(-12, 2.2, { r: 1.3, h: 28, glyph: `zap` }),
+    kv3: makeDb(-14.6, 0, { r: 1.3, h: 28, glyph: `zap` }),
   });
 
 const w = {
-    ua: h(`users`, `app`, [`users`, `app`], { heads: `both` }),
-    as: (e = {}) => ({ as: h(`app`, `sql`, [`app`, `sql`], { heads: `both`, ...e }) }),
-    ad: (e = {}) => ({ ad: h(`app`, `doc`, [`app`, `doc`], { heads: `both`, ...e }) }),
-    ak: (e = {}) => ({ ak: h(`app`, `kvz`, [`app`, `kvz`], { heads: `both`, ...e }) }),
+    ua: makeLink(`users`, `app`, [`users`, `app`], { heads: `both` }),
+    as: (e = {}) => ({ as: makeLink(`app`, `sql`, [`app`, `sql`], { heads: `both`, ...e }) }),
+    ad: (e = {}) => ({ ad: makeLink(`app`, `doc`, [`app`, `doc`], { heads: `both`, ...e }) }),
+    ak: (e = {}) => ({ ak: makeLink(`app`, `kvz`, [`app`, `kvz`], { heads: `both`, ...e }) }),
   };
 
-const Lt = (e, t, n, r = { x: 11, y: 0, dx: 40, dy: -230 }) => S({ z: 0, ...r }, e, t, { icon: n });
+const Lt = (e, t, n, r = { x: 11, y: 0, dx: 40, dy: -230 }) => makePanel({ z: 0, ...r }, e, t, { icon: n });
 
 const Rt = (e, t = 2.4, n = {}) => ({ route: [`ua`, ...e], rate: t, bounce: !0, ...n });
 
@@ -186,7 +171,7 @@ export const sqlNosqlLesson = {
           entities: {
             users: Mt(),
             app: Nt(),
-            sql: Pt(v(0.45)),
+            sql: Pt(makeCool(0.45)),
             doc: Ft(),
             card: Lt(
               `Two documents`,
@@ -225,7 +210,7 @@ export const sqlNosqlLesson = {
           entities: {
             users: Mt(),
             app: Nt(),
-            sql: Pt(v(0.4)),
+            sql: Pt(makeCool(0.4)),
             doc: Ft(),
             ...It(),
             card: Lt(
@@ -277,7 +262,7 @@ export const sqlNosqlLesson = {
         },
         metrics: { joins: `limited`, tx: `limited`, schema: `flexible`, scaleOut: `easy` },
         scene: {
-          entities: { users: Mt(), app: Nt(), sql: Pt(v(0.4)), doc: Ft(), ...It() },
+          entities: { users: Mt(), app: Nt(), sql: Pt(makeCool(0.4)), doc: Ft(), ...It() },
           links: { ua: w.ua, ...w.as(), ...w.ad(), ...w.ak() },
           flows: [
             {
@@ -308,7 +293,7 @@ export const sqlNosqlLesson = {
         changes: [`~ Orders & payments → SQL`, `~ Catalog → documents`, `~ Sessions → key–value`],
         metrics: { joins: `yes`, tx: `yes`, schema: `flexible`, scaleOut: `easy` },
         scene: {
-          entities: { users: Mt(), app: Nt(), sql: Pt(v(0.4)), doc: Ft(), ...It() },
+          entities: { users: Mt(), app: Nt(), sql: Pt(makeCool(0.4)), doc: Ft(), ...It() },
           links: {
             ua: w.ua,
             ...w.as({ label: `orders · payments` }),
@@ -347,10 +332,10 @@ export const sqlNosqlLesson = {
           entities: {
             users: Mt(),
             app: Nt(),
-            sql: Pt(v(0.4)),
+            sql: Pt(makeCool(0.4)),
             doc: Ft(),
             ...It(),
-            search: d(11, 11, {
+            search: makeBlock(11, 11, {
               color: `yellow`,
               glyph: `search`,
               label: [`Search`],
@@ -362,12 +347,12 @@ export const sqlNosqlLesson = {
             ...w.as(),
             ...w.ad(),
             ...w.ak(),
-            sx: h(`app`, `search`, [`app`, [5.5, 0], [5.5, 11], `search`], {
+            sx: makeLink(`app`, `search`, [`app`, [5.5, 0], [5.5, 11], `search`], {
               heads: `both`,
               label: `“red running shoes”`,
               labelAt: 0.75,
             }),
-            cs: h(`sql`, `search`, [`sql`, `search`], { style: `dashed`, label: `change stream` }),
+            cs: makeLink(`sql`, `search`, [`sql`, `search`], { style: `dashed`, label: `change stream` }),
           },
           flows: [
             {
@@ -401,10 +386,10 @@ export const sqlNosqlLesson = {
           entities: {
             users: Mt(),
             app: Nt(),
-            sql: Pt(v(0.4)),
+            sql: Pt(makeCool(0.4)),
             doc: Ft(),
             ...It(),
-            search: d(11, 11, {
+            search: makeBlock(11, 11, {
               color: `yellow`,
               glyph: `search`,
               label: [`Search`],
@@ -416,8 +401,8 @@ export const sqlNosqlLesson = {
             ...w.as(),
             ...w.ad(),
             ...w.ak(),
-            sx: h(`app`, `search`, [`app`, [5.5, 0], [5.5, 11], `search`], { heads: `both` }),
-            cs: h(`sql`, `search`, [`sql`, `search`], { style: `dashed`, label: `change stream` }),
+            sx: makeLink(`app`, `search`, [`app`, [5.5, 0], [5.5, 11], `search`], { heads: `both` }),
+            cs: makeLink(`sql`, `search`, [`sql`, `search`], { style: `dashed`, label: `change stream` }),
           },
           flows: [
             {
@@ -453,7 +438,7 @@ export const sqlNosqlLesson = {
         },
         metrics: { joins: `yes`, tx: `yes`, schema: `flexible`, scaleOut: `easy` },
         scene: {
-          entities: { users: Mt(), app: Nt(), sql: Pt(v(0.4)), doc: Ft(), ...It() },
+          entities: { users: Mt(), app: Nt(), sql: Pt(makeCool(0.4)), doc: Ft(), ...It() },
           links: { ua: w.ua, ...w.as(), ...w.ad(), ...w.ak() },
           flows: [
             {

@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const rabbitmqExchangesRoutingLesson = {
@@ -38,9 +36,9 @@ export const rabbitmqExchangesRoutingLesson = {
       metrics: { exchange_type: '4 AMQP Types', routing_pattern: 'Direct/Fanout/Topic', fanout_factor: '1 to N', binding_count: 'Configurable' },
       scene: {
         entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Event Publisher', tags: [{ text: 'Publish with RoutingKey', icon: 'zap' }] }),
-          exchange: d(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'route', label: ['AMQP Exchange', 'Routing Table'], sub: 'Inspects key & bindings' }),
-          card: S({ x: -2, y: 14 }, 'Exchange Comparison Matrix', [
+          producer: makeDevice(-10, -8, { form: 'phone', label: 'Event Publisher', tags: [{ text: 'Publish with RoutingKey', icon: 'zap' }] }),
+          exchange: makeBlock(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'route', label: ['AMQP Exchange', 'Routing Table'], sub: 'Inspects key & bindings' }),
+          card: makePanel({ x: -2, y: 14 }, 'Exchange Comparison Matrix', [
             'Direct:  routing_key == binding_key (e.g. "email.critical")',
             'Fanout:  Ignores key -> copies to ALL queues (Pub/Sub)',
             'Topic:   Pattern match: "orders.*.eu" or "logs.#"',
@@ -48,7 +46,7 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          pe: h('producer', 'exchange', ['producer', 'exchange'], { heads: 'both', label: 'basic.publish' })
+          pe: makeLink('producer', 'exchange', ['producer', 'exchange'], { heads: 'both', label: 'basic.publish' })
         },
         flows: [{ route: ['pe'], bounce: true, rate: 2.2 }]
       }
@@ -68,11 +66,11 @@ export const rabbitmqExchangesRoutingLesson = {
       metrics: { exchange_type: 'Direct Exchange', routing_pattern: 'Exact Equality', fanout_factor: '1 to 1', binding_count: '2 Queues' },
       scene: {
         entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Logger', tags: [{ text: 'key = "error"', tone: 'red', icon: 'alert' }] }),
-          directEx: d(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'route', label: ['Direct Exchange', 'logs_direct'], sub: 'Exact Match' }),
-          qError: d(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'inbox', label: ['Queue: error_q', 'Binding: "error"'], sub: 'Receives ERROR logs' }),
-          qInfo: d(8, 2, { s: 4.4, h: 52, color: 'blue', glyph: 'inbox', label: ['Queue: all_logs_q', 'Binding: "info"'], sub: 'Ignores ERROR logs' }),
-          card: S({ x: -2, y: 14 }, 'Direct Routing Logic', [
+          producer: makeDevice(-12, -4, { form: 'phone', label: 'Logger', tags: [{ text: 'key = "error"', tone: 'red', icon: 'alert' }] }),
+          directEx: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'route', label: ['Direct Exchange', 'logs_direct'], sub: 'Exact Match' }),
+          qError: makeBlock(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'inbox', label: ['Queue: error_q', 'Binding: "error"'], sub: 'Receives ERROR logs' }),
+          qInfo: makeBlock(8, 2, { s: 4.4, h: 52, color: 'blue', glyph: 'inbox', label: ['Queue: all_logs_q', 'Binding: "info"'], sub: 'Ignores ERROR logs' }),
+          card: makePanel({ x: -2, y: 14 }, 'Direct Routing Logic', [
             'Message published with routing_key = "error"',
             'Exchange checks bindings:',
             '- error_q has binding "error" -> MATCH! (Message delivered)',
@@ -80,9 +78,9 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'check' })
         },
         links: {
-          pe_direct: h('producer', 'directEx', ['producer', 'directEx'], { heads: 'end' }),
-          eqE: h('directEx', 'qError', ['directEx', 'qError'], { heads: 'end', label: 'error' }),
-          eqI: h('directEx', 'qInfo', ['directEx', 'qInfo'], { heads: 'end', label: 'info' })
+          pe_direct: makeLink('producer', 'directEx', ['producer', 'directEx'], { heads: 'end' }),
+          eqE: makeLink('directEx', 'qError', ['directEx', 'qError'], { heads: 'end', label: 'error' }),
+          eqI: makeLink('directEx', 'qInfo', ['directEx', 'qInfo'], { heads: 'end', label: 'info' })
         },
         flows: [
           { route: ['pe_direct', 'eqE'], bounce: false, rate: 2.8 }
@@ -104,12 +102,12 @@ export const rabbitmqExchangesRoutingLesson = {
       metrics: { exchange_type: 'Fanout Exchange', routing_pattern: 'Broadcast (Ignore Key)', fanout_factor: '1 to ALL', binding_count: 'All Bound Queues' },
       scene: {
         entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Order App', tags: [{ text: 'OrderPlaced', icon: 'zap' }] }),
-          fanoutEx: d(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Fanout Exchange', 'events_fanout'], sub: 'Duplicates to ALL' }),
-          qEmail: d(8, -12, { s: 4.2, h: 52, color: 'teal', glyph: 'inbox', label: ['Email Queue'], sub: 'Receives copy' }),
-          qInven: d(8, -4, { s: 4.2, h: 52, color: 'purple', glyph: 'inbox', label: ['Inventory Queue'], sub: 'Receives copy' }),
-          qAudit: d(8, 4, { s: 4.2, h: 52, color: 'green', glyph: 'inbox', label: ['Audit Queue'], sub: 'Receives copy' }),
-          card: S({ x: -2, y: 16 }, 'Fanout Broadcast Mechanism', [
+          producer: makeDevice(-12, -4, { form: 'phone', label: 'Order App', tags: [{ text: 'OrderPlaced', icon: 'zap' }] }),
+          fanoutEx: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Fanout Exchange', 'events_fanout'], sub: 'Duplicates to ALL' }),
+          qEmail: makeBlock(8, -12, { s: 4.2, h: 52, color: 'teal', glyph: 'inbox', label: ['Email Queue'], sub: 'Receives copy' }),
+          qInven: makeBlock(8, -4, { s: 4.2, h: 52, color: 'purple', glyph: 'inbox', label: ['Inventory Queue'], sub: 'Receives copy' }),
+          qAudit: makeBlock(8, 4, { s: 4.2, h: 52, color: 'green', glyph: 'inbox', label: ['Audit Queue'], sub: 'Receives copy' }),
+          card: makePanel({ x: -2, y: 16 }, 'Fanout Broadcast Mechanism', [
             'Producer sends: basic_publish(exchange="events_fanout", routing_key="")',
             'Fanout duplicates payload into:',
             '  -> Email Queue',
@@ -119,10 +117,10 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'workflow' })
         },
         links: {
-          pe_fanout: h('producer', 'fanoutEx', ['producer', 'fanoutEx'], { heads: 'end' }),
-          fe1: h('fanoutEx', 'qEmail', ['fanoutEx', 'qEmail'], { heads: 'end' }),
-          fe2: h('fanoutEx', 'qInven', ['fanoutEx', 'qInven'], { heads: 'end' }),
-          fe3: h('fanoutEx', 'qAudit', ['fanoutEx', 'qAudit'], { heads: 'end' })
+          pe_fanout: makeLink('producer', 'fanoutEx', ['producer', 'fanoutEx'], { heads: 'end' }),
+          fe1: makeLink('fanoutEx', 'qEmail', ['fanoutEx', 'qEmail'], { heads: 'end' }),
+          fe2: makeLink('fanoutEx', 'qInven', ['fanoutEx', 'qInven'], { heads: 'end' }),
+          fe3: makeLink('fanoutEx', 'qAudit', ['fanoutEx', 'qAudit'], { heads: 'end' })
         },
         flows: [
           { route: ['pe_fanout', 'fe1'], bounce: false, rate: 2.0 },
@@ -146,11 +144,11 @@ export const rabbitmqExchangesRoutingLesson = {
       metrics: { exchange_type: 'Topic Exchange', routing_pattern: 'Wildcard * and #', fanout_factor: 'Dynamic Pattern', binding_count: 'Hierarchical' },
       scene: {
         entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Payment Svc', tags: [{ text: 'key="payment.eu.visa"', icon: 'zap' }] }),
-          topicEx: d(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'route', label: ['Topic Exchange', 'payments_topic'], sub: 'Trie Pattern Match' }),
-          qEuAll: d(8, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'inbox', label: ['Queue 1: EU All', 'Binding: "*.eu.*"'], sub: 'Matches payment.eu.visa' }),
-          qPayAll: d(8, 2, { s: 4.4, h: 52, color: 'teal', glyph: 'inbox', label: ['Queue 2: Global Pay', 'Binding: "payment.#"'], sub: 'Matches payment.eu.visa' }),
-          card: S({ x: -2, y: 14 }, 'Topic Wildcard Rules', [
+          producer: makeDevice(-12, -4, { form: 'phone', label: 'Payment Svc', tags: [{ text: 'key="payment.eu.visa"', icon: 'zap' }] }),
+          topicEx: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'route', label: ['Topic Exchange', 'payments_topic'], sub: 'Trie Pattern Match' }),
+          qEuAll: makeBlock(8, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'inbox', label: ['Queue 1: EU All', 'Binding: "*.eu.*"'], sub: 'Matches payment.eu.visa' }),
+          qPayAll: makeBlock(8, 2, { s: 4.4, h: 52, color: 'teal', glyph: 'inbox', label: ['Queue 2: Global Pay', 'Binding: "payment.#"'], sub: 'Matches payment.eu.visa' }),
+          card: makePanel({ x: -2, y: 14 }, 'Topic Wildcard Rules', [
             'Routing key: "payment.eu.visa" (3 words)',
             '- Binding "*.eu.*": MATCHES (word1=payment, word2=eu, word3=visa)',
             '- Binding "payment.#": MATCHES (starts with payment, rest wild)',
@@ -159,9 +157,9 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          pe_topic: h('producer', 'topicEx', ['producer', 'topicEx'], { heads: 'end' }),
-          eq1: h('topicEx', 'qEuAll', ['topicEx', 'qEuAll'], { heads: 'end', label: '*.eu.*' }),
-          eq2: h('topicEx', 'qPayAll', ['topicEx', 'qPayAll'], { heads: 'end', label: 'payment.#' })
+          pe_topic: makeLink('producer', 'topicEx', ['producer', 'topicEx'], { heads: 'end' }),
+          eq1: makeLink('topicEx', 'qEuAll', ['topicEx', 'qEuAll'], { heads: 'end', label: '*.eu.*' }),
+          eq2: makeLink('topicEx', 'qPayAll', ['topicEx', 'qPayAll'], { heads: 'end', label: 'payment.#' })
         },
         flows: [
           { route: ['pe_topic', 'eq1'], bounce: false, rate: 2.2 },
@@ -184,9 +182,9 @@ export const rabbitmqExchangesRoutingLesson = {
       metrics: { exchange_type: 'Headers Exchange', routing_pattern: 'x-match: all / any', fanout_factor: 'Attribute Match', binding_count: 'Header Filtered' },
       scene: {
         entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Report Generator', tags: [{ text: 'format: PDF, prio: 1', icon: 'zap' }] }),
-          hdrEx: d(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'route', label: ['Headers Exchange', 'Header Matcher'], sub: 'x-match: all' }),
-          card: S({ x: -2, y: 14 }, 'Headers Evaluation', [
+          producer: makeDevice(-10, -8, { form: 'phone', label: 'Report Generator', tags: [{ text: 'format: PDF, prio: 1', icon: 'zap' }] }),
+          hdrEx: makeBlock(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'route', label: ['Headers Exchange', 'Header Matcher'], sub: 'x-match: all' }),
+          card: makePanel({ x: -2, y: 14 }, 'Headers Evaluation', [
             'Headers: { "format": "pdf", "priority": "high" }',
             'Binding on pdf_queue:',
             '  x-match: "all", format: "pdf", priority: "high"',
@@ -194,7 +192,7 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'check' })
         },
         links: {
-          ph: h('producer', 'hdrEx', ['producer', 'hdrEx'], { heads: 'end', label: 'Headers Dict' })
+          ph: makeLink('producer', 'hdrEx', ['producer', 'hdrEx'], { heads: 'end', label: 'Headers Dict' })
         },
         flows: [{ route: ['ph'], bounce: false, rate: 2.0 }]
       }
@@ -214,9 +212,9 @@ export const rabbitmqExchangesRoutingLesson = {
       metrics: { exchange_type: 'Default (Nameless)', routing_pattern: 'routingKey == queueName', fanout_factor: '1 to 1', binding_count: 'Implicit Auto' },
       scene: {
         entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Simple Producer', tags: [{ text: 'routingKey="task_queue"', icon: 'zap' }] }),
-          defEx: d(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['Default Exchange ""', 'Implicit Direct Router'], sub: 'Routes to queue: task_queue' }),
-          card: S({ x: -2, y: 14 }, 'Default Exchange Routing', [
+          producer: makeDevice(-10, -8, { form: 'phone', label: 'Simple Producer', tags: [{ text: 'routingKey="task_queue"', icon: 'zap' }] }),
+          defEx: makeBlock(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['Default Exchange ""', 'Implicit Direct Router'], sub: 'Routes to queue: task_queue' }),
+          card: makePanel({ x: -2, y: 14 }, 'Default Exchange Routing', [
             'channel.basic_publish(',
             '  exchange="",',
             '  routing_key="task_queue",',
@@ -226,7 +224,7 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'inbox' })
         },
         links: {
-          pd: h('producer', 'defEx', ['producer', 'defEx'], { heads: 'end', label: 'Direct to Queue Name' })
+          pd: makeLink('producer', 'defEx', ['producer', 'defEx'], { heads: 'end', label: 'Direct to Queue Name' })
         },
         flows: [{ route: ['pd'], bounce: false, rate: 2.4 }]
       }
@@ -246,11 +244,11 @@ export const rabbitmqExchangesRoutingLesson = {
       metrics: { exchange_type: 'E2E Chained Topology', routing_pattern: 'Hierarchical Tree', fanout_factor: 'Multi-Tier', binding_count: 'Modular' },
       scene: {
         entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Core Gateway', tags: [{ text: 'Publish Raw Event', icon: 'zap' }] }),
-          topEx: d(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Top Fanout Exchange', 'events_root'], sub: 'Binds to sub-exchanges' }),
-          topicSub1: d(8, -10, { s: 4.4, h: 52, color: 'purple', glyph: 'route', label: ['Sub Topic: orders', 'order.*'], sub: 'Routes to orders_q' }),
-          topicSub2: d(8, 2, { s: 4.4, h: 52, color: 'purple', glyph: 'route', label: ['Sub Topic: audit', 'audit.*'], sub: 'Routes to audit_q' }),
-          card: S({ x: -2, y: 14 }, 'Exchange-to-Exchange Hierarchy', [
+          producer: makeDevice(-12, -4, { form: 'phone', label: 'Core Gateway', tags: [{ text: 'Publish Raw Event', icon: 'zap' }] }),
+          topEx: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Top Fanout Exchange', 'events_root'], sub: 'Binds to sub-exchanges' }),
+          topicSub1: makeBlock(8, -10, { s: 4.4, h: 52, color: 'purple', glyph: 'route', label: ['Sub Topic: orders', 'order.*'], sub: 'Routes to orders_q' }),
+          topicSub2: makeBlock(8, 2, { s: 4.4, h: 52, color: 'purple', glyph: 'route', label: ['Sub Topic: audit', 'audit.*'], sub: 'Routes to audit_q' }),
+          card: makePanel({ x: -2, y: 14 }, 'Exchange-to-Exchange Hierarchy', [
             'exchange_bind(destination="orders_topic", source="events_root")',
             'exchange_bind(destination="audit_topic", source="events_root")',
             '1. Producer publishes once to events_root',
@@ -259,9 +257,9 @@ export const rabbitmqExchangesRoutingLesson = {
           ], { icon: 'workflow' })
         },
         links: {
-          pe: h('producer', 'topEx', ['producer', 'topEx'], { heads: 'end' }),
-          et1: h('topEx', 'topicSub1', ['topEx', 'topicSub1'], { heads: 'end', label: 'E2E Bind' }),
-          et2: h('topEx', 'topicSub2', ['topEx', 'topicSub2'], { heads: 'end', label: 'E2E Bind' })
+          pe: makeLink('producer', 'topEx', ['producer', 'topEx'], { heads: 'end' }),
+          et1: makeLink('topEx', 'topicSub1', ['topEx', 'topicSub1'], { heads: 'end', label: 'E2E Bind' }),
+          et2: makeLink('topEx', 'topicSub2', ['topEx', 'topicSub2'], { heads: 'end', label: 'E2E Bind' })
         },
         flows: [
           { route: ['pe', 'et1'], bounce: false, rate: 2.2 },

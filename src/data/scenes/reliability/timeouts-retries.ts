@@ -1,39 +1,24 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeHot,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const qs = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
 
-const Js = (e = `shoppers`) => p(qs, 11, e);
+const Js = (e = `shoppers`) => makeCrowd(qs, 11, e);
 
-const Ys = (e = {}) => d(0, -10, { color: `orange`, glyph: `cart`, label: [`Order`, `Service`], ...e });
+const Ys = (e = {}) => makeBlock(0, -10, { color: `orange`, glyph: `cart`, label: [`Order`, `Service`], ...e });
 
-const Xs = (e = {}) => d(0, 4, { color: `purple`, glyph: `creditCard`, label: [`Payments`], ...e });
+const Xs = (e = {}) => makeBlock(0, 4, { color: `purple`, glyph: `creditCard`, label: [`Payments`], ...e });
 
 const Zs = (e) =>
-    d(0, -3, {
+    makeBlock(0, -3, {
       s: 3.2,
       h: 34,
       color: `yellow`,
@@ -45,11 +30,11 @@ const Zs = (e) =>
 
 const Qs = {
     uo: (e = {}) => ({
-      uo: h(`shoppers`, `order`, [`shoppers`, `order`], { heads: `both`, ...e }),
+      uo: makeLink(`shoppers`, `order`, [`shoppers`, `order`], { heads: `both`, ...e }),
     }),
-    op: (e = {}) => ({ op: h(`order`, `pay`, [`order`, `pay`], { heads: `both`, ...e }) }),
+    op: (e = {}) => ({ op: makeLink(`order`, `pay`, [`order`, `pay`], { heads: `both`, ...e }) }),
     viaBreaker: (e = {}, t = {}) => ({
-      ob: h(
+      ob: makeLink(
         `order`,
         `br`,
         [
@@ -58,7 +43,7 @@ const Qs = {
         ],
         { heads: `both`, ...e },
       ),
-      bp: h(
+      bp: makeLink(
         `br`,
         `pay`,
         [
@@ -72,7 +57,7 @@ const Qs = {
 
 const $s = { text: `200 / 200 threads waiting`, tone: `red`, icon: `hourglass` };
 
-const ec = (e, t, n, r = {}) => S({ x: 0, y: 4, z: 0, dx: 95, dy: -175 }, e, t, { icon: n, ...r });
+const ec = (e, t, n, r = {}) => makePanel({ x: 0, y: 4, z: 0, dx: 95, dy: -175 }, e, t, { icon: n, ...r });
 
 const tc = {
     id: `timeouts-retries`,
@@ -106,7 +91,7 @@ const tc = {
         scene: {
           entities: {
             shoppers: Js(),
-            order: Ys({ ..._(0.98), tags: [$s] }),
+            order: Ys({ ...makeHot(0.98), tags: [$s] }),
             pay: Xs({
               heat: 0.4,
               tags: [{ text: `answering in 30 s`, tone: `amber`, icon: `hourglass` }],
@@ -141,7 +126,7 @@ const tc = {
           entities: {
             shoppers: Js(),
             order: Ys({
-              ...v(0.4),
+              ...makeCool(0.4),
               tags: [{ text: `fallback: payment pending`, tone: `amber`, icon: `clock` }],
             }),
             pay: Xs({
@@ -171,7 +156,7 @@ const tc = {
         changes: [`+ One retry on timeouts and 503s`, `~ Checkouts OK 72% → 97%`],
         metrics: { success: 97, p99: 950, payLoad: `1.1×`, threads: `38 / 200 busy` },
         scene: {
-          entities: { shoppers: Js(), order: Ys(v(0.4)), pay: Xs(v(0.5)) },
+          entities: { shoppers: Js(), order: Ys(makeCool(0.4)), pay: Xs(makeCool(0.5)) },
           links: { ...Qs.uo(), ...Qs.op({ label: `timeout 800 ms · 1 retry`, fail: 0.08 }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
@@ -200,8 +185,8 @@ const tc = {
         scene: {
           entities: {
             shoppers: Js(),
-            order: Ys({ ..._(0.95), tags: [$s] }),
-            pay: Xs({ ..._(1), tags: [{ text: `4× normal load`, tone: `red`, icon: `alert` }] }),
+            order: Ys({ ...makeHot(0.95), tags: [$s] }),
+            pay: Xs({ ...makeHot(1), tags: [{ text: `4× normal load`, tone: `red`, icon: `alert` }] }),
           },
           links: {
             ...Qs.uo({ fail: 0.6 }),
@@ -234,9 +219,9 @@ const tc = {
         scene: {
           entities: {
             shoppers: Js(),
-            order: Ys(v(0.45)),
+            order: Ys(makeCool(0.45)),
             pay: Xs({
-              ...v(0.62),
+              ...makeCool(0.62),
               tags: [{ text: `recovering`, tone: `green`, icon: `heartPulse` }],
             }),
           },
@@ -274,11 +259,11 @@ const tc = {
           entities: {
             shoppers: Js(),
             order: Ys({
-              ...v(0.25),
+              ...makeCool(0.25),
               tags: [{ text: `fallback: payment pending`, tone: `amber`, icon: `clock` }],
             }),
             br: Zs([{ text: `OPEN · fails in 1 ms`, tone: `red`, icon: `unplug` }]),
-            pay: Xs(g),
+            pay: Xs(DEAD_STATE),
           },
           links: Qs.viaBreaker({ fail: 1 }, { style: `off`, fail: 1 }),
           flows: [
@@ -309,9 +294,9 @@ const tc = {
         scene: {
           entities: {
             shoppers: Js(),
-            order: Ys(v(0.35)),
+            order: Ys(makeCool(0.35)),
             br: Zs([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
-            pay: Xs(v(0.5)),
+            pay: Xs(makeCool(0.5)),
           },
           links: Qs.viaBreaker(),
           flows: [
@@ -340,9 +325,9 @@ const tc = {
         scene: {
           entities: {
             shoppers: Js(),
-            order: Ys(v(0.35)),
+            order: Ys(makeCool(0.35)),
             br: Zs([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
-            pay: Xs({ ...v(0.5), tags: [{ text: `charged once`, tone: `green`, icon: `check` }] }),
+            pay: Xs({ ...makeCool(0.5), tags: [{ text: `charged once`, tone: `green`, icon: `check` }] }),
             card: ec(
               `Idempotency-Key: 7f3a`,
               [
@@ -382,11 +367,11 @@ const tc = {
           entities: {
             shoppers: Js(),
             order: Ys({
-              ...v(0.35),
+              ...makeCool(0.35),
               tags: [{ text: `deadline: 2 s · 1.4 s left`, icon: `timer` }],
             }),
             br: Zs([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
-            pay: Xs({ ...v(0.45), tags: [{ text: `budget: 1.4 s`, icon: `timer` }] }),
+            pay: Xs({ ...makeCool(0.45), tags: [{ text: `budget: 1.4 s`, icon: `timer` }] }),
           },
           links: Qs.viaBreaker({}, { label: `deadline: 12:00:02.000`, labelAt: 0.5 }),
           flows: [
@@ -417,7 +402,7 @@ const tc = {
           entities: {
             shoppers: Js(),
             order: Ys({
-              ...v(0.4),
+              ...makeCool(0.4),
               tags: [
                 { text: `payments pool 40 / 40 · others free`, tone: `amber`, icon: `layers` },
               ],
@@ -455,9 +440,9 @@ const tc = {
         scene: {
           entities: {
             shoppers: Js(),
-            order: Ys(v(0.35)),
+            order: Ys(makeCool(0.35)),
             br: Zs([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
-            pay: Xs(v(0.5)),
+            pay: Xs(makeCool(0.5)),
           },
           links: Qs.viaBreaker(),
           flows: [

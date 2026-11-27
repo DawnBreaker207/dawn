@@ -1,27 +1,12 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeCrowd,
+  makeDb,
+  makeLink,
+  makePanel,
+  makeQueue
 } from '@/lib/simulator/scene-builders';
 
 const Bo = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
@@ -35,12 +20,12 @@ const Vo = {
 
 const Ho = Object.keys(Vo);
 
-const Uo = () => p(Bo, 11, `shoppers`);
+const Uo = () => makeCrowd(Bo, 11, `shoppers`);
 
-const Wo = (e = {}) => d(0, -9, { color: `orange`, glyph: `cart`, label: [`Order`, `Service`], ...e });
+const Wo = (e = {}) => makeBlock(0, -9, { color: `orange`, glyph: `cart`, label: [`Order`, `Service`], ...e });
 
 const Go = (e = {}) =>
-    d(0, -0.5, {
+    makeBlock(0, -0.5, {
       s: 5,
       h: 52,
       color: `slab`,
@@ -51,23 +36,23 @@ const Go = (e = {}) =>
     });
 
 const Ko = (e = {}) =>
-    Object.fromEntries(Ho.map((t) => [t, d(Vo[t].x, 8, { ...Vo[t], ...(e[t] || {}) })]));
+    Object.fromEntries(Ho.map((t) => [t, makeBlock(Vo[t].x, 8, { ...Vo[t], ...(e[t] || {}) })]));
 
-const qo = () => ({ fr: d(0, 16, { color: `blue`, glyph: `shield`, label: [`Fraud`, `Check`] }) });
+const qo = () => ({ fr: makeBlock(0, 16, { color: `blue`, glyph: `shield`, label: [`Fraud`, `Check`] }) });
 
-const Jo = (e = {}) => ({ uo: h(`shoppers`, `order`, [`shoppers`, `order`], { heads: `both`, ...e }) });
+const Jo = (e = {}) => ({ uo: makeLink(`shoppers`, `order`, [`shoppers`, `order`], { heads: `both`, ...e }) });
 
 const Yo = (e = {}) =>
     Object.fromEntries(
       Ho.map((t) => [
         `d${t}`,
-        h(`order`, t, [`order`, [t, `order`], t], { heads: `both`, ...(e[t] || {}) }),
+        makeLink(`order`, t, [`order`, [t, `order`], t], { heads: `both`, ...(e[t] || {}) }),
       ]),
     );
 
 const Xo = (e = Ho) => ({
-    ob: h(`order`, `bus`, [`order`, `bus`], { label: `OrderPlaced` }),
-    ...Object.fromEntries(e.map((e) => [`b${e}`, h(`bus`, e, [`bus`, [e, `bus`], e])])),
+    ob: makeLink(`order`, `bus`, [`order`, `bus`], { label: `OrderPlaced` }),
+    ...Object.fromEntries(e.map((e) => [`b${e}`, makeLink(`bus`, e, [`bus`, [e, `bus`], e])])),
   });
 
 const Zo = (e = Ho, t = 0.8) => ({
@@ -77,7 +62,7 @@ const Zo = (e = Ho, t = 0.8) => ({
     rate: t,
   });
 
-const Qo = (e, t, n) => S({ x: 12, y: 8, z: 0, dx: 60, dy: -260 }, e, t, { icon: n });
+const Qo = (e, t, n) => makePanel({ x: 12, y: 8, z: 0, dx: 60, dy: -260 }, e, t, { icon: n });
 
 const $o = {
     id: `pubsub`,
@@ -139,7 +124,7 @@ const $o = {
           entities: {
             shoppers: Uo(),
             order: Wo({ tags: [{ text: `checkout failed`, tone: `red`, icon: `alert` }] }),
-            ...Ko({ em: g }),
+            ...Ko({ em: DEAD_STATE }),
           },
           links: { ...Jo({ fail: 0.3 }), ...Yo({ em: { fail: 1 } }) },
           flows: [
@@ -247,10 +232,10 @@ const $o = {
             order: Wo(),
             bus: Go(),
             ...Ko({
-              em: { ...g, tags: [{ text: `down · 4 events waiting`, tone: `red`, icon: `alert` }] },
+              em: { ...DEAD_STATE, tags: [{ text: `down · 4 events waiting`, tone: `red`, icon: `alert` }] },
             }),
             ...qo(),
-            wait: ee(-12, 4.8, 4, [0, -1]),
+            wait: makeQueue(-12, 4.8, 4, [0, -1]),
           },
           links: { ...Jo(), ...Xo([...Ho, `fr`]) },
           flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, Zo([`inv`, `an`, `loy`, `fr`])],
@@ -313,21 +298,21 @@ const $o = {
           entities: {
             shoppers: Uo(),
             order: Wo(),
-            odb: b(-11, -9, { r: 1.6, h: 34, glyph: `database`, label: `orders + outbox` }),
+            odb: makeDb(-11, -9, { r: 1.6, h: 34, glyph: `database`, label: `orders + outbox` }),
             bus: Go(),
             ...Ko(),
             ...qo(),
           },
           links: {
             ...Jo(),
-            od: h(`order`, `odb`, [`order`, `odb`], {
+            od: makeLink(`order`, `odb`, [`order`, `odb`], {
               heads: `both`,
               label: `one transaction`,
               labelAt: 0.5,
             }),
-            relay_bus: h(`odb`, `bus`, [`odb`, [`odb`, `bus`], `bus`], { label: `relay`, labelAt: 0.75 }),
+            relay_bus: makeLink(`odb`, `bus`, [`odb`, [`odb`, `bus`], `bus`], { label: `relay`, labelAt: 0.75 }),
             ...Object.fromEntries(
-              [...Ho, `fr`].map((e) => [`b${e}`, h(`bus`, e, [`bus`, [e, `bus`], e])]),
+              [...Ho, `fr`].map((e) => [`b${e}`, makeLink(`bus`, e, [`bus`, [e, `bus`], e])]),
             ),
           },
           flows: [

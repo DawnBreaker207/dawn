@@ -1,39 +1,25 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeHot,
+  makeLink,
+  makePanel,
+  makeQueue
 } from '@/lib/simulator/scene-builders';
 
 const le = { x0: -4.5, x1: 4.5, y0: -16, y1: -10 };
 
-const ue = (e, t, n) => p(le, e, t, n);
+const ue = (e, t, n) => makeCrowd(le, e, t, n);
 
-const de = (e = {}) => d(0, 0, { label: [`App`, `Server`], ...e });
+const de = (e = {}) => makeBlock(0, 0, { label: [`App`, `Server`], ...e });
 
-const fe = (e = {}) => ({ u: h(`users`, `srv`, [`users`, `srv`], { heads: `both`, ...e }) });
+const fe = (e = {}) => ({ u: makeLink(`users`, `srv`, [`users`, `srv`], { heads: `both`, ...e }) });
 
 const pe = (e, t = { x: 0, y: 0 }) =>
-    S({ ...t, z: 0, dx: 92, dy: -150 }, `Latency vs. how busy`, [], {
+    makePanel({ ...t, z: 0, dx: 92, dy: -150 }, `Latency vs. how busy`, [], {
       chart: `hockey`,
       marker: e,
       icon: `trendingUp`,
@@ -94,8 +80,8 @@ export const latencyThroughputLesson = {
         scene: {
           entities: {
             users: ue(11, `7,000 users`),
-            srv: de(v(0.7)),
-            q: ee(0, -2.9, 2),
+            srv: de(makeCool(0.7)),
+            q: makeQueue(0, -2.9, 2),
             chart: pe(0.7),
           },
           links: fe(),
@@ -125,8 +111,8 @@ export const latencyThroughputLesson = {
         scene: {
           entities: {
             users: ue(15, `9,600 users`),
-            srv: de({ ..._(0.96), heat: 0.8 }),
-            q: ee(0, -2.9, 6),
+            srv: de({ ...makeHot(0.96), heat: 0.8 }),
+            q: makeQueue(0, -2.9, 6),
             chart: pe(0.96),
           },
           links: fe({ fail: 0.08 }),
@@ -154,9 +140,9 @@ export const latencyThroughputLesson = {
         scene: {
           entities: {
             users: ue(11, `7,000 users`),
-            srv: de(v(0.7)),
-            q: ee(0, -2.9, 2),
-            chart: S(
+            srv: de(makeCool(0.7)),
+            q: makeQueue(0, -2.9, 2),
+            chart: makePanel(
               { x: 0, y: 0, z: 0, dx: 92, dy: -150 },
               `Percentiles`,
               [
@@ -194,8 +180,8 @@ export const latencyThroughputLesson = {
         scene: {
           entities: {
             users: ue(11, `7,000 users`),
-            srv: de({ s: 5, h: 62, ...v(0.35) }),
-            q: ee(0, -3.4, 0),
+            srv: de({ s: 5, h: 62, ...makeCool(0.35) }),
+            q: makeQueue(0, -3.4, 0),
             chart: pe(0.35),
           },
           links: fe(),
@@ -223,7 +209,7 @@ export const latencyThroughputLesson = {
         scene: {
           entities: {
             users: ue(11, `7,000 users`, { label: `users in New York` }),
-            srv: de({ s: 5, h: 62, ...v(0.35), y: 14, tags: [{ text: `London`, icon: `globe` }] }),
+            srv: de({ s: 5, h: 62, ...makeCool(0.35), y: 14, tags: [{ text: `London`, icon: `globe` }] }),
           },
           links: fe({ label: `+ 75 ms each round trip`, labelTone: `amber` }),
           flows: me(3.4),
@@ -249,10 +235,10 @@ export const latencyThroughputLesson = {
             srv: de({
               s: 5,
               h: 62,
-              ...v(0.35),
+              ...makeCool(0.35),
               tags: [{ text: `≈ 42 in flight`, icon: `layers` }],
             }),
-            chart: S(
+            chart: makePanel(
               { x: 0, y: 0, z: 0, dx: 92, dy: -150 },
               `Little’s Law`,
               [
@@ -288,11 +274,11 @@ export const latencyThroughputLesson = {
         scene: {
           entities: {
             users: ue(11, `7,000 searches`),
-            srv: de({ s: 5, h: 62, label: [`Search`], sub: `fan-out`, ...v(0.4) }),
+            srv: de({ s: 5, h: 62, label: [`Search`], sub: `fan-out`, ...makeCool(0.4) }),
             ...Object.fromEntries(
               [-12, -4, 4, 12].map((e, t) => [
                 `ix${t}`,
-                d(e, 12, {
+                makeBlock(e, 12, {
                   s: 3.4,
                   h: 36,
                   label: [],
@@ -305,7 +291,7 @@ export const latencyThroughputLesson = {
                 }),
               ]),
             ),
-            chart: S(
+            chart: makePanel(
               { x: 0, y: 0, z: 0, dx: -360, dy: -160 },
               `Waiting for the slowest`,
               [
@@ -321,7 +307,7 @@ export const latencyThroughputLesson = {
             ...Object.fromEntries(
               [-12, -4, 4, 12].map((e, t) => [
                 `f${t}`,
-                h(`srv`, `ix${t}`, [`srv`, [e, `srv`], `ix${t}`], { heads: `both` }),
+                makeLink(`srv`, `ix${t}`, [`srv`, [e, `srv`], `ix${t}`], { heads: `both` }),
               ]),
             ),
           },
@@ -362,11 +348,11 @@ export const latencyThroughputLesson = {
               s: 5,
               h: 62,
               label: [`Event`, `Writer`],
-              ...v(0.35),
+              ...makeCool(0.35),
               tags: [{ text: `batch: 100 rows / 50 ms`, icon: `layers` }],
             }),
-            db: b(13, 0, { label: `database` }),
-            chart: S(
+            db: makeDb(13, 0, { label: `database` }),
+            chart: makePanel(
               { x: 0, y: 0, z: 0, dx: 92, dy: -150 },
               `Rows per second`,
               [
@@ -377,7 +363,7 @@ export const latencyThroughputLesson = {
               { icon: `layers` },
             ),
           },
-          links: { ...fe(), w: h(`srv`, `db`, [`srv`, `db`], { label: `INSERT 100 rows` }) },
+          links: { ...fe(), w: makeLink(`srv`, `db`, [`srv`, `db`], { label: `INSERT 100 rows` }) },
           flows: [...me(3.4), { route: [`w`], kind: `heavy`, rate: 0.7 }],
         },
       },
@@ -402,7 +388,7 @@ export const latencyThroughputLesson = {
         scene: {
           entities: {
             users: ue(11, `7,000 users`),
-            srv: de({ s: 5, h: 62, ...v(0.35) }),
+            srv: de({ s: 5, h: 62, ...makeCool(0.35) }),
             chart: pe(0.35),
           },
           links: fe(),

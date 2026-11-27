@@ -1,227 +1,295 @@
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
+
+// One fixed path for the whole lesson: a request thread borrows a warm connection
+// from HikariCP and talks to PostgreSQL over it. Each step changes how that one
+// path is used (statements, cursors, transactions, batches), and a second thread
+// arrives only to show what a leaked connection does to everyone else.
+//
+//   Thread 1 ──borrow──► HikariCP ══TCP══► PostgreSQL
+//   Thread 2 ──┘
+
+/** Screen position (px) → world grid point. */
+const at = (sx: number, sy: number) => ({
+  x: +((sx / 14 + sy / 7) / 2).toFixed(2),
+  y: +((sx / 14 - sy / 7) / 2).toFixed(2),
+});
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+const P = {
+  t1: at(-280, -10),
+  t2: at(-190, 170),
+  pool: at(-20, 40),
+  db: at(240, -30),
+};
+
+const t1 = (tags: Tag[] = []) =>
+  makeBlock(P.t1.x, P.t1.y, { s: 4.4, h: 52, color: `blue`, glyph: `cpu`, label: [`Thread 1`], sub: `request`, tags });
+const t2 = (tags: Tag[] = []) =>
+  makeBlock(P.t2.x, P.t2.y, { s: 4.4, h: 52, color: `blue`, glyph: `cpu`, label: [`Thread 2`], sub: `request`, tags });
+const pool = (tags: Tag[] = []) =>
+  makeBlock(P.pool.x, P.pool.y, { s: 4.6, h: 54, color: `purple`, glyph: `layers`, label: [`HikariCP`], sub: `10 conns`, tags });
+const db = (tags: Tag[] = []) => makeDb(P.db.x, P.db.y, { r: 2.2, h: 48, label: `PostgreSQL`, tags });
+
+const L = {
+  borrow: makeLink(`t1`, `pool`, [`t1`, `pool`], { heads: `both`, label: `borrow` }),
+  borrowQuiet: makeLink(`t1`, `pool`, [`t1`, `pool`], { heads: `both` }),
+  wire: makeLink(`pool`, `db`, [`pool`, `db`], { heads: `both`, label: `warm TCP` }),
+  wireQuiet: makeLink(`pool`, `db`, [`pool`, `db`], { heads: `both` }),
+  wait: makeLink(`t2`, `pool`, [`t2`, `pool`], { heads: `both`, label: `getConnection` }),
+  waitQuiet: makeLink(`t2`, `pool`, [`t2`, `pool`], { heads: `both` }),
+};
+
+/** Code card above the path, clear of all three blocks. */
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: P.pool.x, y: P.pool.y, z: 0, dx: -245, dy: -300 }, title, lines, { icon: `code` });
+
+const base = (o: { t1?: Tag[]; pool?: Tag[]; db?: Tag[] } = {}) => ({
+  t1: t1(o.t1),
+  pool: pool(o.pool),
+  db: db(o.db),
+});
 
 export const javaJdbcLesson: Lesson = {
   id: 'java-jdbc',
   title: 'JDBC Pool, TX & Batching',
   summary:
-    'Understand what Spring & Hibernate do underneath: HikariCP DataSource pooling, PreparedStatement SQL injection defense, ResultSet streaming, TX rollback, and JDBC batching.',
+    'What Spring and Hibernate do underneath: HikariCP pooling, PreparedStatement, streaming ResultSets, manual transactions, batching and connection leaks.',
   minutes: 12,
   level: 'intermediate',
-  metrics: ['conn_source', 'statement', 'tx_mode', 'throughput'],
-  legend: ['flow', ['req', 'borrow / exec'], ['res', 'commit / batch'], ['fail', 'leak / inject']],
+  metrics: ['borrow', 'inUse', 'roundTrips', 'heapRows'],
+  legend: ['req', 'res', ['heavy', 'row chunk / batch'], ['fail', 'rollback / timeout']],
   goals: [
     { text: 'Replace slow DriverManager with HikariCP DataSource', step: 1 },
     { text: 'Prevent SQL Injection & cache plans with PreparedStatement', step: 2 },
     { text: 'Stream large ResultSets via cursor & setFetchSize()', step: 3 },
     { text: 'Control atomic TX with setAutoCommit(false) & rollback', step: 4 },
     { text: 'Speed up bulk inserts 20x via addBatch() / executeBatch()', step: 5 },
-    { text: 'Prevent Connection Pool Exhaustion via try-with-resources', step: 6 },
+    { text: 'Prevent Connection Pool Exhaustion via try-with-resources', step: 7 },
   ],
   steps: [
     {
       short: 'DataSource',
-      chapter: 'jdbc',
-      title: '1. Why DriverManager Fails vs HikariCP DataSource',
+      chapter: 'setup',
+      title: 'Borrow a warm connection instead of opening one',
       body: [
-        '<code>DriverManager.getConnection()</code> opens a brand-new TCP socket + TLS + Postgres auth handshake on every call (~30–100 ms!).',
-        'A pooled <code>DataSource</code> (<strong>HikariCP</strong>) keeps warm persistent TCP connections ready in RAM: <code>ds.getConnection()</code> borrows one in microseconds and <code>close()</code> returns it to the pool.',
+        '<code>DriverManager.getConnection()</code> opens a fresh TCP socket, TLS session and Postgres login on every call — 30–100 ms before the first query.',
+        'A pooled <code>DataSource</code> (<strong>HikariCP</strong>) keeps a few connections open. <code>getConnection()</code> borrows one in microseconds and <code>close()</code> hands it back.',
       ],
       callout: {
         kind: 'insight',
-        text: 'Calling conn.close() on a pooled Connection does NOT close the TCP socket — it returns the handle to HikariCP.',
+        text: 'close() on a pooled connection does not close the socket — it returns the handle to the pool.',
       },
-      metrics: { conn_source: 'HikariCP Pool', statement: 'Pending', tx_mode: 'AutoCommit', throughput: '~0.01ms borrow' },
+      metrics: { borrow: '0.02 ms', inUse: '1 / 10', roundTrips: 1, heapRows: 0 },
       scene: {
         entities: {
-          app: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['App Thread'], sub: 'getConn()' }),
-          pool: b(2, -6, { r: 2.3, h: 50, color: 'green', label: ['HikariCP'], sub: '10 warm TCPs' }),
-          card: S({ x: -12, y: 12 }, '1. Connection Pooling vs Raw DriverManager', [
-            '// Slow: opens new TCP + auth (~50ms) every query:',
-            '// DriverManager.getConnection(url, user, pass);',
-            '// Fast: HikariDataSource borrows warm socket (~10us):',
-            'try (Connection conn = dataSource.getConnection()) { ... }',
-          ], { icon: 'terminal' }),
+          ...base({ pool: [{ text: `1 of 10 in use`, tone: `green` }] }),
+          card: card(`DataSource vs DriverManager`, [
+            `// new socket + TLS + login every time (~50 ms)`,
+            `DriverManager.getConnection(url, user, pass);`,
+            `// borrow a warm one from HikariCP (~20 µs)`,
+            `try (Connection c = dataSource.getConnection()) {`,
+            `  ...`,
+            `} // close() = give it back`,
+          ]),
         },
-        links: {
-          ap_pl: h('app', 'pool', ['app', 'pool'], { heads: 'end', label: 'borrow conn' }),
-        },
-        flows: [{ route: ['ap_pl'], kind: 'res', rate: 1.9 }],
+        links: { borrow: L.borrow, wire: L.wire },
+        flows: [{ route: ['borrow'], rate: 1.4, bounce: true }],
       },
     },
     {
-      short: 'PreparedStmt',
-      chapter: 'jdbc',
-      title: '2. Why PreparedStatement Stops SQL Injection & Caches Plans',
+      short: 'Prepared',
+      chapter: 'technique',
+      title: 'PreparedStatement: the SQL and the data travel separately',
       body: [
-        'Concatenating SQL strings in <code>Statement</code> lets user input alter the SQL AST (<code>\' OR \'1\'=\'1</code>) and forces the DB to re-parse every query.',
-        '<code>PreparedStatement</code> sends the SQL template separately from <code>?</code> bind parameters: the DB parses & caches the execution plan once and treats params strictly as literal values.',
+        'Gluing user input into a SQL string lets the input change the query (<code>\' OR \'1\'=\'1</code>) and forces a re-parse every time.',
+        '<code>PreparedStatement</code> sends the template with <code>?</code> placeholders and the values separately. The database can reuse the plan, and a value can never become SQL.',
       ],
       callout: {
         kind: 'warn',
-        text: 'Never concatenate user input into SQL strings — even in Spring @Query or JdbcTemplate, always use ? or :named parameters.',
+        text: 'Never concatenate input into SQL — in JdbcTemplate or @Query too, always bind ? or :named parameters.',
       },
-      changes: ['+ SQL template parsed once by DB', '+ Bind params cannot alter SQL AST'],
-      metrics: { conn_source: 'HikariCP Pool', statement: 'PreparedStmt', tx_mode: 'AutoCommit', throughput: 'Cached plan' },
+      changes: ['~ query sent as template + bound value'],
+      metrics: { borrow: '0.02 ms', inUse: '1 / 10', roundTrips: 1, heapRows: 1 },
       scene: {
         entities: {
-          app: d(-12, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['setLong(1, id)'], sub: 'bind param' }),
-          ps: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['PreparedStmt'], sub: 'WHERE id = ?' }),
-          db: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['Postgres DB'], sub: 'cached plan' }),
-          card: S({ x: -12, y: 12 }, '2. Bind Parameters vs SQL Injection', [
-            'String sql = "SELECT * FROM orders WHERE id = ?";',
-            'try (PreparedStatement ps = conn.prepareStatement(sql)) {',
-            '  ps.setLong(1, orderId); // strictly data, never SQL!',
-            '  try (ResultSet rs = ps.executeQuery()) { ... }',
-            '}',
-          ], { icon: 'terminal' }),
+          ...base({ t1: [{ text: `? = 42`, tone: `violet` }], db: [{ text: `plan cached`, tone: `green` }] }),
+          card: card(`OrderDao.java`, [
+            `String sql = "SELECT * FROM orders WHERE id = ?";`,
+            `try (var ps = conn.prepareStatement(sql)) {`,
+            `  ps.setLong(1, orderId);  // data, never SQL`,
+            `  try (var rs = ps.executeQuery()) { ... }`,
+            `}`,
+          ]),
         },
-        links: {
-          ap_ps: h('app', 'ps', ['app', 'ps'], { heads: 'end', label: 'bind ?' }),
-          ps_db: h('ps', 'db', ['ps', 'db'], { heads: 'end', label: 'exec plan' }),
-        },
-        flows: [{ route: ['ap_ps', 'ps_db'], kind: 'res', rate: 1.9 }],
+        links: { borrow: L.borrowQuiet, wire: L.wireQuiet },
+        flows: [{ route: ['borrow', 'wire'], rate: 1.4, bounce: true }],
       },
     },
     {
-      short: 'ResultSet',
-      chapter: 'jdbc',
-      title: '3. ResultSet Cursor & Streaming Large Queries',
+      short: 'Streaming',
+      chapter: 'technique',
+      title: 'A ResultSet is a cursor — stream it in chunks',
       body: [
-        '<code>ResultSet</code> is a forward-only cursor over database rows. By default, Postgres JDBC driver buffers ALL rows into JVM Heap at once — loading 5M rows triggers <code>OutOfMemoryError</code>!',
-        'Inside <code>setAutoCommit(false)</code>, setting <code>ps.setFetchSize(500)</code> tells the DB to stream 500 rows at a time over the cursor.',
+        'By default the Postgres driver reads the <em>whole</em> result into the heap before <code>next()</code> returns. 5 million rows means an <code>OutOfMemoryError</code>.',
+        'With <code>autoCommit</code> off and <code>setFetchSize(500)</code>, the driver pulls 500 rows per round trip from a server-side cursor; heap use stays flat.',
       ],
       callout: {
         kind: 'tip',
-        text: 'On PostgreSQL, setFetchSize(500) ONLY streams if autoCommit is false — otherwise Postgres ignores it and buffers all rows!',
+        text: 'On PostgreSQL setFetchSize() is ignored while autoCommit is true — the cursor needs a transaction.',
       },
-      changes: ['+ Default fetchSize=0 buffers all in Heap', '+ autoCommit=false + fetchSize=500 streams'],
-      metrics: { conn_source: 'HikariCP Pool', statement: 'fetchSize=500', tx_mode: 'Cursor', throughput: 'Constant RAM' },
+      changes: ['~ rows arrive 500 at a time', '~ heap holds 500 rows, not 5M'],
+      metrics: { borrow: '0.02 ms', inUse: '1 / 10', roundTrips: '10,000', heapRows: 500 },
       scene: {
         entities: {
-          db: b(-14, -14, { r: 2.2, h: 48, color: 'blue', label: ['DB Cursor'], sub: '5M rows' }),
-          rs: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['ResultSet'], sub: 'fetchSize=500' }),
-          app: d(0, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['while(rs.next)'], sub: 'low Heap RAM' }),
-          card: S({ x: -12, y: 12 }, '3. Streaming Millions of Rows Without OOM', [
-            'conn.setAutoCommit(false); // required by Postgres!',
-            'ps.setFetchSize(500);      // stream 500 rows/chunk',
-            'try (ResultSet rs = ps.executeQuery()) {',
-            '  while (rs.next()) { process(rs.getLong("id")); }',
-            '}',
-          ], { icon: 'terminal' }),
+          ...base({ t1: [{ text: `heap: 500 rows`, tone: `green` }], db: [{ text: `cursor · 5M rows`, icon: `layers` }] }),
+          card: card(`ExportJob.java`, [
+            `conn.setAutoCommit(false);  // needed for a cursor`,
+            `ps.setFetchSize(500);       // 500 rows per trip`,
+            `try (var rs = ps.executeQuery()) {`,
+            `  while (rs.next()) write(rs.getLong("id"));`,
+            `}`,
+          ]),
         },
-        links: {
-          db_rs: h('db', 'rs', ['db', 'rs'], { heads: 'end', label: '500/chunk' }),
-          rs_ap: h('rs', 'app', ['rs', 'app'], { heads: 'end', label: 'next()' }),
-        },
-        flows: [{ route: ['db_rs', 'rs_ap'], kind: 'res', rate: 1.9 }],
+        links: { borrow: L.borrowQuiet, wire: L.wireQuiet },
+        flows: [
+          { route: ['wire'], kind: 'heavy', rate: 1.6, bounce: true },
+          { route: ['borrow'], rate: 1.2, bounce: true },
+        ],
       },
     },
     {
-      short: 'TX Commit',
-      chapter: 'tx',
-      title: '4. Atomic Transactions: setAutoCommit(false)',
+      short: 'Transaction',
+      chapter: 'solution',
+      title: 'Two writes, one decision: commit or roll back',
       body: [
-        'By default, JDBC runs with <code>autoCommit = true</code> — every single SQL statement commits immediately, so a crash between debit and credit corrupts balances!',
-        'Calling <code>conn.setAutoCommit(false)</code> groups multiple SQL statements into one atomic unit: either <code>commit()</code> all or <code>rollback()</code> all.',
+        'With the default <code>autoCommit = true</code> every statement commits on its own. Crash between the debit and the credit and the money is simply gone.',
+        '<code>setAutoCommit(false)</code> groups the statements on this connection: <code>commit()</code> keeps both, <code>rollback()</code> undoes both.',
       ],
       callout: {
         kind: 'insight',
-        text: 'Spring @Transactional literally wraps this exact conn.setAutoCommit(false) / commit() / rollback() lifecycle.',
+        text: 'Spring @Transactional runs exactly this setAutoCommit(false) / commit() / rollback() sequence for you.',
       },
-      changes: ['+ setAutoCommit(false) starts JDBC TX', '+ catch -> conn.rollback() restores state'],
-      metrics: { conn_source: 'HikariCP Pool', statement: '2 DML ops', tx_mode: 'Atomic TX', throughput: 'ACID safe' },
+      changes: ['+ BEGIN on the borrowed connection', '! credit fails → rollback undoes debit'],
+      metrics: { borrow: '0.02 ms', inUse: '1 / 10', roundTrips: 4, heapRows: 0 },
       scene: {
         entities: {
-          app: d(-12, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['autoCommit=0'], sub: 'BEGIN TX' }),
-          cmt: b(2, -16, { r: 2.2, h: 48, color: 'green', label: ['conn.commit()'], sub: 'all succeed' }),
-          rbk: b(2, -2, { r: 2.2, h: 48, color: 'red', label: ['conn.rollback'], sub: 'on exception' }),
-          card: S({ x: -12, y: 12 }, '4. Manual JDBC Transaction Boundary', [
-            'conn.setAutoCommit(false);',
-            'try { debit(conn); credit(conn); conn.commit(); }',
-            'catch (Exception e) { conn.rollback(); throw e; }',
-            'finally { conn.setAutoCommit(true); }',
-          ], { icon: 'terminal' }),
+          ...base({
+            t1: [{ text: `autoCommit=false`, tone: `violet` }],
+            db: [
+              { text: `debit ✓`, tone: `green` },
+              { text: `credit ✗ → rollback`, tone: `red`, icon: `undo` },
+            ],
+          }),
+          card: card(`TransferService.java`, [
+            `conn.setAutoCommit(false);`,
+            `try { debit(conn); credit(conn); conn.commit(); }`,
+            `catch (SQLException e) { conn.rollback(); throw e; }`,
+            `finally { conn.setAutoCommit(true); }`,
+          ]),
         },
-        links: {
-          ap_cm: h('app', 'cmt', ['app', 'cmt'], { heads: 'end', label: 'commit' }),
-          ap_rb: h('app', 'rbk', ['app', 'rbk'], { heads: 'end', label: 'err -> rlbk' }),
-        },
-        flows: [{ route: ['ap_cm'], kind: 'res', rate: 1.8 }, { route: ['ap_rb'], kind: 'fail', rate: 1.4 }],
+        links: { borrow: L.borrowQuiet, wire: L.wireQuiet },
+        flows: [
+          { route: ['borrow', 'wire'], rate: 1.2, bounce: true },
+          { route: ['wire'], kind: 'fail', rate: 0.6 },
+        ],
       },
     },
     {
-      short: 'JDBC Batch',
-      chapter: 'batch',
-      title: '5. Bulk Inserts: addBatch() & executeBatch()',
+      short: 'Batching',
+      chapter: 'technique',
+      title: 'Batch 10,000 inserts into 20 round trips',
       body: [
-        'Inserting 10,000 rows with individual <code>executeUpdate()</code> calls pays 10,000 network round-trips.',
-        'Calling <code>ps.addBatch()</code> + <code>ps.executeBatch()</code> every 500–1000 rows (with <code>reWriteBatchedInserts=true</code> on Postgres) collapses 10,000 round-trips into 10!',
+        '10,000 separate <code>executeUpdate()</code> calls pay 10,000 network round trips.',
+        '<code>addBatch()</code> collects parameter sets on the client; <code>executeBatch()</code> every 500 rows sends them together. With <code>reWriteBatchedInserts=true</code> Postgres gets multi-row INSERTs.',
       ],
       callout: {
         kind: 'tip',
-        text: 'Hibernate uses this exact JDBC batching under the hood when hibernate.jdbc.batch_size=50 is configured.',
+        text: 'Hibernate uses the same JDBC batching when hibernate.jdbc.batch_size is set.',
       },
-      changes: ['+ addBatch() buffers params in client', '+ executeBatch() cuts network RTT 20x'],
-      metrics: { conn_source: 'HikariCP Pool', statement: 'Batched 500', tx_mode: 'Atomic TX', throughput: '20x faster' },
+      changes: ['~ 10,000 round trips → 20'],
+      metrics: { borrow: '0.02 ms', inUse: '1 / 10', roundTrips: 20, heapRows: 500 },
       scene: {
         entities: {
-          ps: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['ps.addBatch()'], sub: '500 rows' }),
-          exec: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['executeBatch'], sub: '1 network RTT' }),
-          db: b(0, 0, { r: 2.2, h: 48, color: 'blue', label: ['Postgres DB'], sub: 'bulk INSERT' }),
-          card: S({ x: -12, y: 12 }, '5. High-Throughput JDBC Batching', [
-            '// Add ?reWriteBatchedInserts=true to Postgres JDBC URL',
-            'for (int i = 0; i < items.size(); i++) {',
-            '  ps.setString(1, items.get(i)); ps.addBatch();',
-            '  if (i % 500 == 0) ps.executeBatch();',
-            '} ps.executeBatch();',
-          ], { icon: 'terminal' }),
+          ...base({ t1: [{ text: `addBatch × 500`, tone: `violet` }], db: [{ text: `10,000 rows · 20 trips`, tone: `green` }] }),
+          card: card(`ImportJob.java`, [
+            `// URL: ...?reWriteBatchedInserts=true`,
+            `for (int i = 0; i < items.size(); i++) {`,
+            `  ps.setString(1, items.get(i)); ps.addBatch();`,
+            `  if (i % 500 == 499) ps.executeBatch();`,
+            `}`,
+            `ps.executeBatch();`,
+          ]),
         },
-        links: {
-          ps_ex: h('ps', 'exec', ['ps', 'exec'], { heads: 'end', label: 'flush 500' }),
-          ex_db: h('exec', 'db', ['exec', 'db'], { heads: 'end', label: '1 bulk SQL' }),
-        },
-        flows: [{ route: ['ps_ex', 'ex_db'], kind: 'res', rate: 2.2 }],
+        links: { borrow: L.borrowQuiet, wire: L.wireQuiet },
+        flows: [{ route: ['wire'], kind: 'heavy', rate: 0.7, bounce: true }],
       },
     },
     {
-      short: 'Leak Guard',
-      chapter: 'jdbc',
-      title: '6. Preventing HikariCP Connection Leaks',
+      short: 'Leak',
+      chapter: 'problem',
+      title: 'One leaked connection at a time, the pool runs dry',
       body: [
-        'If an exception happens before manual <code>conn.close()</code>, that Connection never returns to HikariCP. After 10 leaked requests, the entire app hangs with <code>Connection is not available</code>!',
-        'Always open <code>Connection</code>, <code>PreparedStatement</code>, and <code>ResultSet</code> inside <code>try-with-resources</code> and enable <code>leak-detection-threshold</code>.',
+        'An exception thrown before a manual <code>close()</code> leaves the connection borrowed forever. Each leak permanently removes one of the 10.',
+        'When all 10 are gone, every other request waits in <code>getConnection()</code> until <code>connectionTimeout</code> (30 s) — the app looks down while the database is idle.',
       ],
       callout: {
         kind: 'warn',
-        text: 'Pool exhaustion looks like a database outage, but is usually a leaked Connection or slow HTTP call inside @Transactional.',
+        text: 'Pool exhaustion looks like a database outage. It is usually a leak, or slow remote calls inside a transaction.',
       },
-      changes: ['+ try-with-resources returns conn always', '+ leak-detection-threshold alerts in dev'],
-      metrics: { conn_source: 'HikariCP Safe', statement: 'Closed', tx_mode: 'Returned', throughput: 'Zero leaks' },
+      changes: ['+ Thread 2', '! 10 of 10 connections leaked', '! Thread 2 times out after 30 s'],
+      metrics: { borrow: '30,000 ms', inUse: '10 / 10', roundTrips: 0, heapRows: 0 },
       scene: {
         entities: {
-          app: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['try-with-res'], sub: 'conn.close()' }),
-          pool: b(0, -14, { r: 2.2, h: 48, color: 'blue', label: ['HikariCP'], sub: 'conn returned' }),
-          hang: d(0, 0, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Leak Timeout'], sub: '30s hang fixed' }),
-          card: S({ x: -12, y: 12 }, '6. Zero-Leak Resource Management', [
-            '// Close order: ResultSet -> PreparedStatement -> Connection',
-            'try (var conn = ds.getConnection();',
-            '     var ps = conn.prepareStatement(sql);',
-            '     var rs = ps.executeQuery()) { ... }',
-            '// HikariCP: spring.datasource.hikari.leak-detection-threshold=2000',
-          ], { icon: 'terminal' }),
+          ...base({
+            t1: [{ text: `never closed`, tone: `red`, icon: `alert` }],
+            pool: [{ text: `10 of 10 in use`, tone: `red`, icon: `alert` }],
+          }),
+          t2: t2([{ text: `waiting 30 s`, tone: `red`, icon: `hourglass` }]),
+          card: card(`the leak`, [
+            `Connection c = ds.getConnection();`,
+            `var rs = c.prepareStatement(sql).executeQuery();`,
+            `parse(rs);   // throws → c.close() never runs`,
+            `c.close();`,
+            `! SQLTransientConnectionException: timed out`,
+          ]),
         },
-        links: {
-          tw_pl: h('app', 'pool', ['app', 'pool'], { heads: 'end', label: 'return conn' }),
-          pl_hg: h('pool', 'hang', ['pool', 'hang'], { heads: 'end', label: 'prevented' }),
+        links: { borrow: L.borrowQuiet, wire: L.wireQuiet, wait: L.wait },
+        flows: [{ route: ['wait'], kind: 'fail', rate: 1 }],
+      },
+    },
+    {
+      short: 'Fix',
+      chapter: 'solution',
+      title: 'try-with-resources always gives it back',
+      body: [
+        'Open <code>Connection</code>, <code>PreparedStatement</code> and <code>ResultSet</code> in one <code>try (...)</code>. They close in reverse order even when the body throws.',
+        'Turn on <code>leakDetectionThreshold</code> in development: Hikari logs the stack trace of any connection held longer than the limit.',
+      ],
+      callout: {
+        kind: 'tip',
+        text: 'spring.datasource.hikari.leak-detection-threshold=2000 points at the exact line that forgot to close.',
+      },
+      changes: ['~ connections always returned', '~ Thread 2 gets one immediately'],
+      metrics: { borrow: '0.02 ms', inUse: '2 / 10', roundTrips: 2, heapRows: 1 },
+      scene: {
+        entities: {
+          ...base({ t1: [{ text: `try-with-resources`, tone: `green` }], pool: [{ text: `2 of 10 in use`, tone: `green` }] }),
+          t2: t2([{ text: `got conn ✓`, tone: `green` }]),
+          card: card(`OrderDao.java`, [
+            `try (var c = ds.getConnection();`,
+            `     var ps = c.prepareStatement(sql);`,
+            `     var rs = ps.executeQuery()) {`,
+            `  return parse(rs);`,
+            `} // rs → ps → c closed, even on exceptions`,
+          ]),
         },
-        flows: [{ route: ['tw_pl'], kind: 'res', rate: 1.9 }],
+        links: { borrow: L.borrowQuiet, wire: L.wireQuiet, wait: L.waitQuiet },
+        flows: [
+          { route: ['borrow', 'wire'], rate: 1.2, bounce: true },
+          { route: ['wait', 'wire'], rate: 1.2, bounce: true },
+        ],
       },
     },
   ],

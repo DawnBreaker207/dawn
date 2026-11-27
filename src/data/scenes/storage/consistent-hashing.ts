@@ -1,27 +1,10 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const Ei = (e, t) => {
@@ -38,7 +21,7 @@ const Ni = 10,
   Ii = (e, t = Ni) => [t * Math.cos((e * Math.PI) / 180), t * Math.sin((e * Math.PI) / 180)],
   Li = (e, t, n = {}) => {
     let [r, i] = Ii(t);
-    return d(r, i, { s: 3.2, h: 38, color: Pi[e], glyph: '', label: [e], ...n });
+    return makeBlock(r, i, { s: 3.2, h: 38, color: Pi[e], glyph: '', label: [e], ...n });
   },
   Ri = { A: 100, B: 10, C: 280, D: 200 },
   zi = (e, t = {}) => ({
@@ -62,9 +45,9 @@ const Ni = 10,
     let r = n <= e ? n : n - 360,
       i = [];
     for (let t = e; t > r; t -= 5) i.push(Ii(t));
-    return i.push(Ii(r)), h('ring', t, i, { label: `key @ ${e}°`, labelAt: 0.25 });
+    return i.push(Ii(r)), makeLink('ring', t, i, { label: `key @ ${e}°`, labelAt: 0.25 });
   },
-  Wi = (e, t, n) => S({ x: 0, y: 0, z: 0, dx: -470, dy: -250 }, e, t, { icon: n }),
+  Wi = (e, t, n) => makePanel({ x: 0, y: 0, z: 0, dx: -470, dy: -250 }, e, t, { icon: n }),
   Gi = Bi(Ri),
   Ki = Bi({ ...Ri, E: 308 }),
   qi = Bi({ A: 100, B: 10, D: 200 }),
@@ -106,10 +89,10 @@ const Xi = {
         metrics: { nodes: 4, moved: `80%`, maxShare: 25 },
         scene: {
           entities: {
-            a: b(-10.5, -4, { r: 1.6, h: 36, tags: [{ text: `A` }] }),
-            b: b(-3.5, -4, { r: 1.6, h: 36, tags: [{ text: `B` }] }),
-            c: b(3.5, -4, { r: 1.6, h: 36, tags: [{ text: `C` }] }),
-            d: b(10.5, -4, { r: 1.6, h: 36, tags: [{ text: `D` }] }),
+            a: makeDb(-10.5, -4, { r: 1.6, h: 36, tags: [{ text: `A` }] }),
+            b: makeDb(-3.5, -4, { r: 1.6, h: 36, tags: [{ text: `B` }] }),
+            c: makeDb(3.5, -4, { r: 1.6, h: 36, tags: [{ text: `C` }] }),
+            d: makeDb(10.5, -4, { r: 1.6, h: 36, tags: [{ text: `D` }] }),
             card: Wi(
               `% 4 → % 5`,
               [
@@ -218,7 +201,7 @@ const Xi = {
           entities: {
             ring: zi(qi, { moved: Vi(Gi, qi) }),
             ...Yi([`A`, `B`, `D`]),
-            c: Li(`C`, Ri.C, g),
+            c: Li(`C`, Ri.C, DEAD_STATE),
           },
           links: {},
           flows: [],

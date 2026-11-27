@@ -1,21 +1,75 @@
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
+
+// One stage: the ApplicationContext is the hub. Beans appear around it as the
+// container scans, instantiates and wires them; Boot's auto-config then joins on
+// the right and contributes a DataSource. Positions never change between steps.
+//
+//   BeanDef map ─┐            ┌─ HikariPool (DataSource)
+//                └─ Context ──┤
+//   Gateway ─────┘   │        └─ RequestCtx / AutoConfig
+//         OrderService ── ScopedProxy / Environment
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+const ctx = (o: Opts = {}) =>
+  makeBlock(-1.5, 1.5, { s: 5.2, h: 56, color: `orange`, glyph: `layers`, label: [`Application`, `Context`], ...o });
+const reg = (o: Opts = {}) => makeDb(-15.5, 3, { r: 2.2, h: 46, color: `purple`, glyph: `listOrdered`, label: `BeanDefinitions`, ...o });
+const gw = (tags: Tag[] = [], o: Opts = {}) =>
+  makeBlock(-5.5, -13, { s: 4.4, h: 50, color: `green`, glyph: `creditCard`, label: [`Stripe`, `Gateway`], tags, ...o });
+const svc = (tags: Tag[] = [], o: Opts = {}) =>
+  makeBlock(9, -17, { s: 4.4, h: 50, color: `green`, glyph: `code`, label: [`Order`, `Service`], tags, ...o });
+const proxy = (tags: Tag[] = []) =>
+  makeBlock(15.5, -7.5, { s: 4.4, h: 50, color: `orange`, glyph: `shield`, label: [`Scoped`, `proxy`], sub: `CGLIB`, tags });
+const req = (tags: Tag[] = []) =>
+  makeBlock(10, 10, { s: 4.4, h: 50, color: `green`, glyph: `user`, label: [`Request`, `Context`], sub: `@RequestScope`, tags });
+const auto = (tags: Tag[] = []) =>
+  makeBlock(10, 10, { s: 4.4, h: 50, color: `orange`, glyph: `sparkles`, label: [`AutoConfig`], sub: `140 candidates`, tags });
+const env = (tags: Tag[] = []) =>
+  makeDb(15.5, -7.5, { r: 2.2, h: 46, color: `purple`, glyph: `settings`, label: `Environment`, tags });
+const ds = (tags: Tag[] = []) => makeDb(-5, 18, { r: 2.2, h: 46, glyph: `database`, label: `DataSource`, tags });
+
+const L = {
+  newCall: makeLink(`svc`, `gw`, [`svc`, `gw`], { label: `new()` }),
+  scan: makeLink(`ctx`, `reg`, [`ctx`, `reg`], { heads: `both`, label: `register` }),
+  scanQuiet: makeLink(`ctx`, `reg`, [`ctx`, `reg`], { heads: `both`, style: `off` }),
+  makeGw: makeLink(`ctx`, `gw`, [`ctx`, `gw`], { label: `create` }),
+  makeGwQuiet: makeLink(`ctx`, `gw`, [`ctx`, `gw`], { style: `off` }),
+  makeSvc: makeLink(`ctx`, `svc`, [`ctx`, `svc`], { label: `create` }),
+  makeSvcQuiet: makeLink(`ctx`, `svc`, [`ctx`, `svc`], { style: `off` }),
+  inject: makeLink(`gw`, `svc`, [`gw`, `svc`], { label: `inject` }),
+  injectQuiet: makeLink(`gw`, `svc`, [`gw`, `svc`]),
+  callProxy: makeLink(`svc`, `proxy`, [`svc`, `proxy`], { label: `traceId()` }),
+  resolve: makeLink(`proxy`, `req`, [`proxy`, `req`], { label: `this request` }),
+  boot: makeLink(`auto`, `ctx`, [`auto`, `ctx`], { heads: `both`, label: `import` }),
+  bootQuiet: makeLink(`auto`, `ctx`, [`auto`, `ctx`], { heads: `both`, style: `off` }),
+  props: makeLink(`env`, `auto`, [`env`, `auto`], { label: `bind` }),
+  propsQuiet: makeLink(`env`, `auto`, [`env`, `auto`]),
+  createDs: makeLink(`auto`, `ds`, [`auto`, `ds`], { label: `@Bean` }),
+  registerDs: makeLink(`ds`, `ctx`, [`ds`, `ctx`], { label: `bean` }),
+};
+
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: -1.5, y: 1.5, z: 0, dx: -150, dy: -270 }, title, lines, { icon: `code` });
+
+/** Container core that exists from step 2 on. */
+const core = (o: { ctx?: Opts; gw?: Tag[]; svc?: Tag[] } = {}) => ({
+  ctx: ctx(o.ctx),
+  reg: reg(),
+  gw: gw(o.gw),
+  svc: svc(o.svc),
+});
 
 export const javaSpringIocLesson: Lesson = {
   id: 'java-spring-ioc',
   title: 'Spring IoC, Bean Lifecycle & Boot Auto-Config',
   summary:
-    'Trace Spring IoC BeanDefinition scanning, Constructor DI, BeanPostProcessor, Scopes/Proxies, plus @SpringBootApplication, @Conditional evaluation & Starter auto-config.',
-  minutes: 12,
+    'Watch one ApplicationContext scan, create and wire beans, wrap them in proxies, then let Spring Boot auto-configure a DataSource from the classpath and environment.',
+  minutes: 14,
   level: 'intermediate',
-  metrics: ['coupling', 'lifecycle_phase', 'bean_scope', 'proxy_mode'],
-  legend: ['flow', ['req', 'scan / inject'], ['res', 'ready / proxy'], ['fail', 'tight coupling']],
+  metrics: ['definitions', 'beans', 'phase', 'proxies'],
+  legend: [['req', 'scan / create'], ['res', 'inject / call'], ['fail', 'hard-wired new()']],
   goals: [
     { text: 'Contrast manual new() coupling with IoC inversion', step: 1 },
     { text: 'Scan @Component classes into BeanDefinition map', step: 2 },
@@ -23,7 +77,7 @@ export const javaSpringIocLesson: Lesson = {
     { text: 'Run BeanPostProcessor & @PostConstruct hooks', step: 4 },
     { text: 'Compare Singleton cache vs Prototype fresh instances', step: 5 },
     { text: 'Inject short-lived Request beans via Scoped Proxy', step: 6 },
-{ text: 'Trigger @EnableAutoConfiguration from @SpringBootApplication', step: 7 },
+    { text: 'Trigger @EnableAutoConfiguration from @SpringBootApplication', step: 7 },
     { text: 'Load candidates from AutoConfiguration.imports', step: 8 },
     { text: 'Filter beans via @ConditionalOnClass & MissingBean', step: 9 },
     { text: 'Merge PropertySources hierarchy (Env > YAML)', step: 10 },
@@ -32,394 +86,360 @@ export const javaSpringIocLesson: Lesson = {
   ],
   steps: [
     {
-      short: 'Manual new()',
-      chapter: 'ioc',
-      title: '1. Tight Coupling with Manual new()',
+      short: 'new()',
+      chapter: 'problem',
+      title: 'Tight coupling with manual new()',
       body: [
-        'Without IoC, <code>OrderService</code> directly instantiates <code>new StripeGateway()</code>, hard-coding concrete implementations and making unit testing with mocks painful.',
-        'Inversion of Control (IoC) flips ownership: the Spring <code>ApplicationContext</code> creates, wires, and manages objects (<strong>Beans</strong>) for you.',
+        'Without IoC, <code>OrderService</code> directly instantiates <code>new StripeGateway()</code>, hard-coding the concrete class and making unit tests with mocks painful.',
+        'Inversion of Control flips ownership: the Spring <code>ApplicationContext</code> creates, wires and manages objects (<strong>beans</strong>) for you.',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Hard-coding new() inside services locks you to one implementation and scatters lifecycle setup.',
-      },
-      metrics: { coupling: 'Tight (new)', lifecycle_phase: 'Manual', bean_scope: 'Unmanaged', proxy_mode: 'None' },
+      callout: { kind: 'warn', text: 'Hard-coding new() inside services locks you to one implementation and scatters lifecycle setup.' },
+      metrics: { definitions: 0, beans: 0, phase: 'manual', proxies: 0 },
       scene: {
         entities: {
-          svc: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'code', label: ['OrderService'], sub: 'new Stripe()' }),
-          dep: d(2, -6, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['StripeGateway'], sub: 'hard-wired' }),
-          card: S({ x: -12, y: 12 }, '1. Problem: Tight Coupling via new()', [
+          gw: gw([{ text: 'hard-wired', tone: 'red' }]),
+          svc: svc(),
+          card: card('OrderService.java', [
             'class OrderService {',
-            '  // Hard-wired! Cannot swap or mock cleanly',
-            '  private final PaymentGateway gw = new StripeGateway();',
+            '  // can’t swap or mock this',
+            '  private final PaymentGateway gw =',
+            '      new StripeGateway();',
             '}',
-          ], { icon: 'terminal' }),
+          ]),
         },
-        links: {
-          svc_dep: h('svc', 'dep', ['svc', 'dep'], { heads: 'end', label: 'new()' }),
-        },
-        flows: [{ route: ['svc_dep'], kind: 'fail', rate: 1.5 }],
+        links: { newCall: L.newCall },
+        flows: [{ route: ['newCall'], kind: 'fail', rate: 1.4 }],
       },
     },
     {
-      short: 'BeanDefinition',
-      chapter: 'ioc',
-      title: '2. Component Scan & BeanDefinition Registry',
+      short: 'Scan',
+      chapter: 'setup',
+      title: 'Component scan builds BeanDefinitions',
       body: [
-        'At startup, Spring scans packages for <code>@Component</code> / <code>@Service</code> / <code>@Repository</code> and builds a metadata blueprint called <code>BeanDefinition</code> before instantiating anything.',
-        '<code>BeanFactoryPostProcessor</code> can inspect or modify those blueprints before beans are born.',
+        'At startup Spring scans packages for <code>@Component</code> / <code>@Service</code> / <code>@Repository</code> and records a blueprint — a <code>BeanDefinition</code> — for each, before instantiating anything.',
+        '<code>BeanFactoryPostProcessor</code>s can inspect or change those blueprints (e.g. resolve <code>${...}</code> placeholders) before any bean is born.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'BeanDefinition is the recipe; the live Bean instance is created later from that recipe.',
-      },
-      changes: ['+ ComponentScan reads @Service metadata', '+ BeanDefinition stored in Registry'],
-      metrics: { coupling: 'Decoupled', lifecycle_phase: 'Scan Metadata', bean_scope: 'Blueprint', proxy_mode: 'None' },
+      callout: { kind: 'insight', text: 'BeanDefinition is the recipe; the live bean instance is created later from that recipe.' },
+      changes: ['+ ApplicationContext', '+ BeanDefinition registry (2 entries)'],
+      metrics: { definitions: 2, beans: 0, phase: 'scan', proxies: 0 },
       scene: {
         entities: {
-          scan: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['ComponentScan'], sub: '@Service scan' }),
-          reg: b(0, -14, { r: 2.2, h: 48, color: 'purple', label: ['BeanDef Map'], sub: 'metadata' }),
-          ctx: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['AppContext'], sub: 'IoC container' }),
-          card: S({ x: -12, y: 12 }, '2. Startup: Metadata Before Instantiation', [
-            '1. Scan @Component / @Configuration classes',
-            '2. Register BeanDefinition (class, scope, deps)',
-            '3. Run BeanFactoryPostProcessors (resolve ${...})',
-          ], { icon: 'terminal' }),
+          ctx: ctx(),
+          reg: reg({ tags: [{ text: '2 definitions', tone: 'violet' }] }),
+          gw: gw([{ text: 'definition only', tone: 'gray' }], { dim: 1 }),
+          svc: svc([{ text: 'definition only', tone: 'gray' }], { dim: 1 }),
+          card: card('component scan', [
+            '@SpringBootApplication // scans this package',
+            'public class ShopApp { }',
+            '',
+            '@Service class OrderService { … }',
+            '@Component class StripeGateway { … }',
+          ]),
         },
-        links: {
-          sc_reg: h('scan', 'reg', ['scan', 'reg'], { heads: 'end', label: 'register' }),
-          reg_ctx: h('reg', 'ctx', ['reg', 'ctx'], { heads: 'end', label: 'plan graph' }),
-        },
-        flows: [{ route: ['sc_reg', 'reg_ctx'], kind: 'req', rate: 1.8 }],
+        links: { scan: L.scan },
+        flows: [{ route: ['scan'], kind: 'req', rate: 1.6 }],
       },
     },
     {
-      short: 'Constructor DI',
-      chapter: 'ioc',
-      title: '3. Instantiation & Constructor Injection',
+      short: 'Inject',
+      chapter: 'solution',
+      title: 'Instantiate leaves first, inject through constructors',
       body: [
-        'Spring resolves the dependency graph and injects <code>PaymentGateway</code> into <code>OrderService</code> via its constructor.',
-        'Constructor injection guarantees <code>final</code> immutable fields, prevents half-initialized beans, and fails fast at startup on circular dependencies.',
+        'Spring resolves the dependency graph: <code>StripeGateway</code> has no dependencies, so it is created first, then passed into <code>OrderService</code>’s constructor.',
+        'Constructor injection gives <code>final</code> fields, never exposes a half-built bean, and fails fast at startup on a circular dependency.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Prefer Constructor Injection over @Autowired field injection — fields can be final and tested without Spring.',
-      },
-      changes: ['+ BeanFactory instantiates leaves first', '+ Constructor injects final deps'],
-      metrics: { coupling: 'Interface DI', lifecycle_phase: 'Instantiate', bean_scope: 'Singleton', proxy_mode: 'None' },
+      callout: { kind: 'tip', text: 'Prefer constructor injection over @Autowired fields — fields can be final and tested without Spring.' },
+      changes: ['+ StripeGateway created', '+ OrderService(gw) created'],
+      metrics: { definitions: 2, beans: 2, phase: 'instantiate', proxies: 0 },
       scene: {
         entities: {
-          ctx: d(-14, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['AppContext'], sub: 'resolves DAG' }),
-          gw: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['PaymentBean'], sub: 'created 1st' }),
-          svc: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['OrderService'], sub: 'final gw' }),
-          card: S({ x: -12, y: 12 }, '3. Constructor Dependency Injection', [
+          ...core(),
+          card: card('constructor injection', [
             '@Service',
             'class OrderService {',
             '  private final PaymentGateway gw;',
-            '  OrderService(PaymentGateway gw) { this.gw = gw; }',
+            '  OrderService(PaymentGateway gw) {',
+            '    this.gw = gw; }',
             '}',
-          ], { icon: 'terminal' }),
+          ]),
         },
-        links: {
-          ctx_gw: h('ctx', 'gw', ['ctx', 'gw'], { heads: 'end', label: 'create' }),
-          gw_svc: h('gw', 'svc', ['gw', 'svc'], { heads: 'end', label: 'inject arg' }),
-        },
-        flows: [{ route: ['ctx_gw', 'gw_svc'], kind: 'res', rate: 1.9 }],
+        links: { scan: L.scanQuiet, makeGw: L.makeGw, makeSvc: L.makeSvc, inject: L.inject },
+        flows: [
+          { route: ['makeGw'], kind: 'req', rate: 1.2 },
+          { route: ['inject'], kind: 'res', rate: 1.4 },
+        ],
       },
     },
     {
-      short: 'PostProcessor',
-      chapter: 'lifecycle',
-      title: '4. BeanPostProcessor & @PostConstruct Lifecycle',
+      short: 'Lifecycle',
+      chapter: 'technique',
+      title: 'BeanPostProcessors and @PostConstruct',
       body: [
-        'After properties are populated, Spring runs <code>BeanPostProcessor.postProcessBeforeInitialization()</code>, invokes <code>@PostConstruct</code>, and then runs <code>postProcessAfterInitialization()</code>.',
-        'That final <code>AfterInitialization</code> hook is where Spring wraps beans in AOP / <code>@Transactional</code> proxies!',
+        'After injection Spring runs <code>postProcessBeforeInitialization()</code>, then <code>@PostConstruct</code>, then <code>postProcessAfterInitialization()</code>.',
+        'That last hook is where Spring swaps the bean for an AOP proxy (for <code>@Transactional</code>, <code>@Async</code>…). The context stores the proxy, not the raw object.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Because AOP proxies are created in postProcessAfterInitialization(), @PostConstruct runs on the raw bean BEFORE the proxy exists.',
-      },
-      changes: ['+ @PostConstruct runs initialization', '+ postProcessAfterInit wraps proxy'],
-      metrics: { coupling: 'Interface DI', lifecycle_phase: 'PostProcess', bean_scope: 'Singleton', proxy_mode: 'AOP hook' },
+      callout: { kind: 'insight', text: '@PostConstruct runs on the raw bean BEFORE the proxy exists — so @Transactional does not apply inside it.' },
+      changes: ['~ OrderService: @PostConstruct ran', '~ OrderService wrapped in a proxy'],
+      metrics: { definitions: 2, beans: 2, phase: 'post-process', proxies: 1 },
       scene: {
         entities: {
-          raw: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Raw Bean'], sub: 'deps wired' }),
-          init: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['@PostConstruct'], sub: 'init hook' }),
-          bpp: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['BPP AfterInit'], sub: 'wrap proxy' }),
-          card: S({ x: -12, y: 12 }, '4. Bean Initialization Pipeline', [
-            '1. Instantiate & inject constructor args',
-            '2. BPP.postProcessBeforeInitialization()',
-            '3. @PostConstruct / InitializingBean',
-            '4. BPP.postProcessAfterInitialization() -> Proxy!',
-          ], { icon: 'terminal' }),
+          ...core({
+            svc: [
+              { text: '@PostConstruct ✓', tone: 'green' },
+              { text: 'wrapped: proxy', tone: 'amber', icon: 'shield' },
+            ],
+          }),
+          card: card('init order', [
+            '1 constructor(gw)',
+            '2 BPP.postProcessBeforeInitialization',
+            '3 @PostConstruct void warmUp()',
+            '= 4 BPP.postProcessAfterInitialization → proxy',
+          ]),
         },
-        links: {
-          r_in: h('raw', 'init', ['raw', 'init'], { heads: 'end', label: 'init()' }),
-          in_bpp: h('init', 'bpp', ['init', 'bpp'], { heads: 'end', label: 'afterInit' }),
-        },
-        flows: [{ route: ['r_in', 'in_bpp'], kind: 'req', rate: 1.8 }],
+        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvc, inject: L.injectQuiet },
+        flows: [{ route: ['makeSvc'], kind: 'req', rate: 1.4, bounce: true }],
       },
     },
     {
       short: 'Scopes',
-      chapter: 'scopes',
-      title: '5. Singleton Cache vs Prototype Scope',
+      chapter: 'insight',
+      title: 'Singleton cache vs prototype',
       body: [
-        'By default, every Spring bean is a <strong>Singleton</strong> (one shared instance per <code>ApplicationContext</code>, cached in <code>singletonObjects</code>).',
-        'A <code>@Scope("prototype")</code> bean creates a brand-new instance on every <code>getBean()</code> call and Spring does NOT manage its <code>@PreDestroy</code>.',
+        'By default every bean is a <strong>singleton</strong>: one shared instance per context, cached in <code>singletonObjects</code>. Every caller gets the same reference.',
+        'A <code>@Scope("prototype")</code> bean is created fresh on every injection or <code>getBean()</code>, and Spring does not call its <code>@PreDestroy</code>.',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Never store mutable per-user state in a Singleton bean — concurrent HTTP threads will corrupt it!',
-      },
-      changes: ['+ Singleton cached in singletonObjects map', '+ Prototype creates fresh instance per ask'],
-      metrics: { coupling: 'Stateless', lifecycle_phase: 'Cached / New', bean_scope: 'Singleton/Proto', proxy_mode: 'Direct' },
+      callout: { kind: 'warn', text: 'Never keep mutable per-user state in a singleton — concurrent request threads will share and corrupt it.' },
+      changes: ['~ both beans: singleton, 1 instance each'],
+      metrics: { definitions: 2, beans: 2, phase: 'ready', proxies: 1 },
       scene: {
         entities: {
-          ctx: d(-14, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Singleton Map'], sub: '1 shared bean' }),
-          c1: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Caller A & B'], sub: 'same ref' }),
-          proto: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Prototype'], sub: 'new each call' }),
-          card: S({ x: -12, y: 12 }, '5. Singleton vs Prototype Semantics', [
-            '// Default: @Scope("singleton") -> 1 per AppContext',
-            '// Must be thread-safe & stateless!',
-            '@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)',
-            'class JobRunner {} // new instance per injection/getBean',
-          ], { icon: 'terminal' }),
+          ...core({
+            ctx: { tags: [{ text: 'singletonObjects: 2', tone: 'violet' }] },
+            gw: [{ text: 'singleton ×1', tone: 'green' }],
+            svc: [{ text: 'singleton ×1', tone: 'green' }],
+          }),
+          card: card('scopes', [
+            '// default: one instance per context',
+            '@Service class OrderService { }',
+            '',
+            '@Scope(SCOPE_PROTOTYPE) // new each time',
+            '@Component class JobRunner { }',
+          ]),
         },
-        links: {
-          ctx_c: h('ctx', 'c1', ['ctx', 'c1'], { heads: 'end', label: 'shared ref' }),
-          c_pr: h('c1', 'proto', ['c1', 'proto'], { heads: 'end', label: 'fresh copy' }),
-        },
-        flows: [{ route: ['ctx_c'], kind: 'res', rate: 1.9 }, { route: ['c_pr'], kind: 'req', rate: 1.5 }],
+        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet },
+        flows: [{ route: ['inject'], kind: 'res', rate: 1.6 }],
       },
     },
     {
-      short: 'Scoped Proxy',
-      chapter: 'scopes',
-      title: '6. Request Scope Inside Singleton via Scoped Proxy',
+      short: 'Req scope',
+      chapter: 'solution',
+      title: 'Request scope inside a singleton via a scoped proxy',
       body: [
-        'If a Singleton service injects a <code>@RequestScope</code> bean directly, the first request’s bean gets stuck forever!',
-        '<code>@RequestScope</code> sets <code>proxyMode = TARGET_CLASS</code>: Spring injects a CGLIB <strong>Scoped Proxy</strong> that looks up the current HTTP thread’s <code>RequestAttributes</code> on every method call.',
+        'If a singleton injected a <code>@RequestScope</code> bean directly, the first request’s instance would be stuck in it forever.',
+        '<code>@RequestScope</code> uses <code>proxyMode = TARGET_CLASS</code>: Spring injects a CGLIB <strong>scoped proxy</strong> that, on every call, looks up the instance bound to the current request thread.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Scoped Proxy bridges mismatched lifetimes: Singleton parent -> Proxy -> current Request instance.',
-      },
-      changes: ['+ Scoped Proxy injected into Singleton', '+ Delegates per-thread to current Request'],
-      metrics: { coupling: 'Scope-Safe', lifecycle_phase: 'Runtime Lookup', bean_scope: 'RequestScope', proxy_mode: 'Scoped CGLIB' },
+      callout: { kind: 'insight', text: 'Scoped proxy bridges lifetimes: singleton → proxy → the current request’s instance.' },
+      changes: ['+ Scoped proxy', '+ RequestContext (one per request)'],
+      metrics: { definitions: 3, beans: 3, phase: 'ready', proxies: 2 },
       scene: {
         entities: {
-          sing: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Singleton Svc'], sub: 'lives forever' }),
-          px: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Scoped Proxy'], sub: 'TARGET_CLASS' }),
-          req: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['RequestCtx'], sub: 'per HTTP req' }),
-          card: S({ x: -12, y: 12 }, '6. Bridging Singleton -> Request Scope', [
+          ...core(),
+          proxy: proxy([{ text: 'same ref forever', tone: 'gray' }]),
+          req: req([{ text: 'req #8812', tone: 'green' }]),
+          card: card('RequestContext.java', [
             '@Component',
-            '@RequestScope // proxyMode = ScopedProxyMode.TARGET_CLASS',
+            '@RequestScope // proxyMode = TARGET_CLASS',
             'class RequestContext { String traceId; }',
-            '// Singleton holds CGLIB proxy -> resolves per thread',
-          ], { icon: 'terminal' }),
+            '// OrderService holds the proxy',
+          ]),
         },
         links: {
-          s_px: h('sing', 'px', ['sing', 'px'], { heads: 'end', label: 'getTraceId' }),
-          px_rq: h('px', 'req', ['px', 'req'], { heads: 'end', label: 'thread local' }),
+          scan: L.scanQuiet,
+          makeGw: L.makeGwQuiet,
+          makeSvc: L.makeSvcQuiet,
+          inject: L.injectQuiet,
+          callProxy: L.callProxy,
+          resolve: L.resolve,
         },
-        flows: [{ route: ['s_px', 'px_rq'], kind: 'res', rate: 2.0 }],
-      },
-    },
-{
-      short: 'Boot Entry',
-      chapter: 'autoconfig',
-      title: '7. @SpringBootApplication Entry Point',
-      body: [
-        '<code>@SpringBootApplication</code> combines three annotations: <code>@SpringBootConfiguration</code>, <code>@ComponentScan</code>, and <code>@EnableAutoConfiguration</code>.',
-        'Instead of writing hundreds of lines of XML or boilerplate <code>@Bean</code> factories, Spring Boot inspects your classpath and configures sensible defaults automatically.',
-      ],
-      callout: {
-        kind: 'insight',
-        text: 'Spring Boot does NOT generate magic code — it runs standard @Configuration classes gated by @Conditional checks.',
-      },
-      metrics: { boot_phase: 'Bootstrap', conditions: 'Pending', config_source: 'Main class', bean_status: 'Starting' },
-      scene: {
-        entities: {
-          main: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['SpringApp.run'], sub: '@SpringBootApp' }),
-          enable: d(2, -6, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['EnableAutoCfg'], sub: 'ImportSelector' }),
-          card: S({ x: -12, y: 12 }, '1. @SpringBootApplication Composition', [
-            '@SpringBootApplication // = 3 annotations:',
-            '// 1. @SpringBootConfiguration',
-            '// 2. @ComponentScan (your packages)',
-            '// 3. @EnableAutoConfiguration (starter JARs)',
-          ], { icon: 'terminal' }),
-        },
-        links: {
-          m_en: h('main', 'enable', ['main', 'enable'], { heads: 'end', label: 'trigger' }),
-        },
-        flows: [{ route: ['m_en'], kind: 'req', rate: 1.8 }],
+        flows: [{ route: ['callProxy', 'resolve'], kind: 'res', rate: 1.6 }],
       },
     },
     {
-      short: 'imports File',
-      chapter: 'autoconfig',
-      title: '8. Reading AutoConfiguration.imports from Starters',
+      short: 'Boot',
+      chapter: 'setup',
+      title: '@SpringBootApplication turns on auto-config',
       body: [
-        '<code>AutoConfigurationImportSelector</code> scans every JAR on the classpath for <code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code>.',
-        'Over 140 candidate configuration classes (Tomcat, Jackson, DataSource, Security) are discovered, but most will be skipped if their libraries aren’t present.',
+        '<code>@SpringBootApplication</code> = <code>@SpringBootConfiguration</code> + <code>@ComponentScan</code> + <code>@EnableAutoConfiguration</code>.',
+        'The last one imports Boot’s auto-configuration: ordinary <code>@Configuration</code> classes that add beans <em>for</em> you — but only when conditions say they should.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Run with --debug (or /actuator/conditions) to see the exact Conditions Evaluation Report of what matched or skipped.',
-      },
-      changes: ['+ Scans all JARs for AutoConfiguration.imports', '+ ~140 candidate configs queued'],
-      metrics: { boot_phase: 'Discovery', conditions: '140 candidates', config_source: 'Starter JARs', bean_status: 'Queued' },
+      callout: { kind: 'insight', text: 'Spring Boot generates no magic code — it runs standard @Configuration classes gated by @Conditional checks.' },
+      changes: ['− scoped-proxy demo', '+ AutoConfiguration import'],
+      metrics: { definitions: 3, beans: 3, phase: 'boot', proxies: 1 },
       scene: {
         entities: {
-          enable: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['ImportSelector'], sub: 'Boot 3.x' }),
-          jars: b(0, -14, { r: 2.2, h: 48, color: 'purple', label: ['Starter JARs'], sub: '.imports file' }),
-          cands: d(0, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Candidates'], sub: '140 configs' }),
-          card: S({ x: -12, y: 12 }, '2. Spring Boot 3 AutoConfiguration.imports', [
-            '// META-INF/spring/...AutoConfiguration.imports',
-            'org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration',
-            'org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration',
-          ], { icon: 'terminal' }),
+          ...core(),
+          auto: auto([{ text: 'starting', tone: 'gray' }]),
+          card: card('ShopApp.java', [
+            '@SpringBootApplication',
+            'public class ShopApp {',
+            '  public static void main(String[] a) {',
+            '    SpringApplication.run(ShopApp.class, a);',
+            '  } }',
+          ]),
         },
-        links: {
-          en_jr: h('enable', 'jars', ['enable', 'jars'], { heads: 'end', label: 'read META-INF' }),
-          jr_cn: h('jars', 'cands', ['jars', 'cands'], { heads: 'end', label: 'load list' }),
-        },
-        flows: [{ route: ['en_jr', 'jr_cn'], kind: 'req', rate: 1.8 }],
+        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.boot },
+        flows: [{ route: ['boot'], kind: 'req', rate: 1.4 }],
       },
     },
     {
-      short: '@Conditional',
-      chapter: 'autoconfig',
-      title: '9. @ConditionalOnClass & @ConditionalOnMissingBean',
+      short: 'Imports',
+      chapter: 'technique',
+      title: 'Candidates come from AutoConfiguration.imports',
       body: [
-        'Each candidate is filtered by conditions: <code>@ConditionalOnClass(HikariDataSource.class)</code> checks if the driver JAR exists; <code>@ConditionalOnMissingBean</code> backs off if you defined your own custom bean!',
-        'This "opinionated defaults with zero-friction override" is the secret behind Spring Boot.',
+        '<code>AutoConfigurationImportSelector</code> reads <code>META-INF/spring/…AutoConfiguration.imports</code> from every starter JAR on the classpath.',
+        'About 140 candidate classes are found (Tomcat, Jackson, DataSource, Security…). Most will be skipped in the next step.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Spring Boot always backs off politely when you declare your own @Bean DataSource or ObjectMapper.',
-      },
-      changes: ['+ @ConditionalOnClass checks classpath', '+ @ConditionalOnMissingBean yields to user'],
-      metrics: { boot_phase: 'Filter Match', conditions: 'Matched / Skip', config_source: 'Classpath', bean_status: 'Filtered' },
+      callout: { kind: 'tip', text: 'Run with --debug (or GET /actuator/conditions) to see the report of what matched and what was skipped.' },
+      changes: ['~ AutoConfig: 140 candidates queued'],
+      metrics: { definitions: 3, beans: 3, phase: 'discover', proxies: 1 },
       scene: {
         entities: {
-          cands: d(-14, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Candidates'], sub: '140 configs' }),
-          cond: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'shield', label: ['@Conditional'], sub: 'Class + Bean' }),
-          skip: d(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Back-Off'], sub: 'user bean wins' }),
-          card: S({ x: -12, y: 12 }, '3. Conditional Evaluation & Back-Off', [
+          ...core(),
+          auto: auto([{ text: '140 candidates', tone: 'amber' }]),
+          card: card('META-INF/spring/…imports', [
+            'o.s.b.a.jdbc.DataSourceAutoConfiguration',
+            'o.s.b.a.web.servlet.WebMvcAutoConfiguration',
+            'o.s.b.a.jackson.JacksonAutoConfiguration',
+            '# … ~140 lines across starters',
+          ]),
+        },
+        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.boot },
+        flows: [{ route: ['boot'], kind: 'req', rate: 2 }],
+      },
+    },
+    {
+      short: '@Cond',
+      chapter: 'technique',
+      title: '@ConditionalOnClass and @ConditionalOnMissingBean',
+      body: [
+        'Each candidate is gated: <code>@ConditionalOnClass(HikariDataSource.class)</code> needs the driver JAR; <code>@ConditionalOnMissingBean</code> backs off if you already defined that bean yourself.',
+        'Opinionated defaults with a zero-friction override — that is the whole trick behind Spring Boot.',
+      ],
+      callout: { kind: 'insight', text: 'Boot backs off politely when you declare your own @Bean DataSource or ObjectMapper.' },
+      changes: ['~ DataSource ✓ matched', '~ MongoDB ✗ skipped (no driver)'],
+      metrics: { definitions: 3, beans: 3, phase: 'conditions', proxies: 1 },
+      scene: {
+        entities: {
+          ...core(),
+          auto: auto([
+            { text: 'DataSource ✓', tone: 'green' },
+            { text: 'Mongo ✗ no class', tone: 'red' },
+          ]),
+          card: card('DataSourceAutoConfiguration', [
             '@AutoConfiguration',
-            '@ConditionalOnClass({ DataSource.class, HikariDataSource.class })',
-            '@ConditionalOnMissingBean(DataSource.class) // backs off!',
-            'public DataSource hikariDataSource(...) { ... }',
-          ], { icon: 'terminal' }),
+            '@ConditionalOnClass(HikariDataSource.class)',
+            'class DataSourceAutoConfiguration {',
+            '  @Bean @ConditionalOnMissingBean',
+            '  DataSource dataSource(…) { … } }',
+          ]),
         },
-        links: {
-          cn_cd: h('cands', 'cond', ['cands', 'cond'], { heads: 'end', label: 'evaluate' }),
-          cd_sk: h('cond', 'skip', ['cond', 'skip'], { heads: 'end', label: 'user exists' }),
-        },
-        flows: [{ route: ['cn_cd'], kind: 'req', rate: 1.8 }, { route: ['cd_sk'], kind: 'fail', rate: 1.3 }],
+        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.bootQuiet },
+        flows: [{ route: ['boot'], kind: 'req', rate: 1 }],
       },
     },
     {
-      short: 'Config Order',
-      chapter: 'config',
-      title: '10. PropertySources Precedence & Profiles',
+      short: 'Env',
+      chapter: 'technique',
+      title: 'PropertySources: who wins',
       body: [
-        'Spring Environment merges configuration from multiple <code>PropertySource</code> layers in strict priority order: <strong>CLI args &gt; OS Env Vars &gt; <code>application-{profile}.yml</code> &gt; <code>application.yml</code></strong>.',
-        'Relaxed binding automatically maps <code>SPRING_DATASOURCE_URL</code> (env var) to <code>spring.datasource.url</code>.',
+        'The <code>Environment</code> merges <code>PropertySource</code>s in strict order: <strong>CLI args &gt; OS env vars &gt; <code>application-{profile}.yml</code> &gt; <code>application.yml</code></strong>.',
+        'Relaxed binding maps the env var <code>SPRING_DATASOURCE_URL</code> to <code>spring.datasource.url</code>.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Never commit production secrets in application.yml — inject them via Env Vars or Vault/K8s Secrets at higher precedence.',
-      },
-      changes: ['+ Env Vars override profile YAML', '+ Relaxed binding normalizes SNAKE_CASE'],
-      metrics: { boot_phase: 'Env Merge', conditions: 'Active Profile', config_source: 'Env > YAML', bean_status: 'Resolved' },
+      callout: { kind: 'tip', text: 'Never commit production secrets to application.yml — inject them as env vars or from a secret store, which rank higher.' },
+      changes: ['+ Environment (4 property sources)'],
+      metrics: { definitions: 3, beans: 3, phase: 'environment', proxies: 1 },
       scene: {
         entities: {
-          yml: b(-2, -16, { r: 2.2, h: 48, color: 'sky', label: ['app-prod.yml'], sub: 'tier 6 YAML' }),
-          env: d(-2, -2, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['OS Env Vars'], sub: 'tier 3 wins!' }),
-          reg: d(12, -9, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Environment'], sub: 'PropSources' }),
-          card: S({ x: -12, y: 12 }, '4. Spring Boot Property Precedence', [
-            '// Highest -> Lowest priority:',
-            '// 1. CLI args: --server.port=9090',
-            '// 2. OS Env:   SERVER_PORT=9090 (relaxed binding)',
-            '// 3. Profile:  application-prod.yml',
-            '// 4. Default:  application.yml',
-          ], { icon: 'terminal' }),
+          ...core(),
+          auto: auto([{ text: 'DataSource ✓', tone: 'green' }]),
+          env: env([{ text: 'env var wins', tone: 'green' }]),
+          card: card('precedence (high → low)', [
+            '--spring.datasource.url=…    # CLI',
+            'SPRING_DATASOURCE_URL=…      # env',
+            'application-prod.yml         # profile',
+            'application.yml              # default',
+          ]),
         },
-        links: {
-          y_reg: h('yml', 'reg', ['yml', 'reg'], { heads: 'end', label: 'fallback' }),
-          e_reg: h('env', 'reg', ['env', 'reg'], { heads: 'end', label: 'wins' }),
-        },
-        flows: [{ route: ['e_reg'], kind: 'res', rate: 2.0 }, { route: ['y_reg'], kind: 'req', rate: 1.3 }],
+        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.bootQuiet, props: L.props },
+        flows: [{ route: ['props'], kind: 'res', rate: 1.6 }],
       },
     },
     {
-      short: 'ConfigProps',
-      chapter: 'config',
-      title: '11. Type-Safe @ConfigurationProperties Binding',
+      short: 'Props',
+      chapter: 'solution',
+      title: 'Type-safe @ConfigurationProperties records',
       body: [
-        'Instead of scattering fragile <code>@Value("${...}")</code> strings, bind an entire prefix into an immutable Java <code>record</code> with Bean Validation (<code>@Validated</code>).',
-        'Invalid or missing required config fails fast at startup with a clear diagnostics banner.',
+        'Instead of scattered <code>@Value("${…}")</code> strings, bind a whole prefix into an immutable <code>record</code> and validate it with <code>@Validated</code>.',
+        'Missing or invalid config fails fast at startup with a clear error, not at 3 a.m. on the first request.',
       ],
-      callout: {
-        kind: 'insight',
-        text: '@ConfigurationProperties on a Java record gives immutability, IDE autocomplete, and @NotBlank validation at boot.',
-      },
-      changes: ['+ @ConfigurationProperties binds prefix', '+ @Validated fails fast on bad config'],
-      metrics: { boot_phase: 'Bind Props', conditions: 'Validated', config_source: 'Typed Record', bean_status: 'Immutable' },
+      callout: { kind: 'insight', text: 'A @ConfigurationProperties record gives immutability, IDE autocomplete and @NotBlank validation at boot.' },
+      changes: ['~ app.payment.* bound to PaymentProps'],
+      metrics: { definitions: 4, beans: 4, phase: 'bind', proxies: 1 },
       scene: {
         entities: {
-          reg: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Environment'], sub: 'app.payment.*' }),
-          binder: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Binder'], sub: 'validate types' }),
-          rec: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['PaymentProps'], sub: 'Java record' }),
-          card: S({ x: -12, y: 12 }, '5. Immutable @ConfigurationProperties Record', [
+          ...core(),
+          auto: auto([{ text: 'DataSource ✓', tone: 'green' }]),
+          env: env([{ text: 'app.payment.* ✓', tone: 'green' }]),
+          card: card('PaymentProps.java', [
             '@Validated',
-            '@ConfigurationProperties(prefix = "app.payment")',
-            'public record PaymentProps(',
+            '@ConfigurationProperties("app.payment")',
+            'record PaymentProps(',
             '  @NotBlank String apiKey,',
-            '  @Positive Duration timeout) {}',
-          ], { icon: 'terminal' }),
+            '  @Positive Duration timeout) { }',
+          ]),
         },
-        links: {
-          r_bnd: h('reg', 'binder', ['reg', 'binder'], { heads: 'end', label: 'read keys' }),
-          bnd_rc: h('binder', 'rec', ['binder', 'rec'], { heads: 'end', label: 'bind record' }),
-        },
-        flows: [{ route: ['r_bnd', 'bnd_rc'], kind: 'res', rate: 1.9 }],
+        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.bootQuiet, props: L.props },
+        flows: [{ route: ['props'], kind: 'res', rate: 1.6 }],
       },
     },
     {
-      short: 'Live Bean',
-      chapter: 'autoconfig',
-      title: '12. Auto-Configured DataSource Bean Ready',
+      short: 'Recap',
+      chapter: 'recap',
+      title: 'A ready DataSource, zero setup code',
       body: [
-        'Putting it all together: Spring Boot detects Postgres + HikariCP on the classpath, binds <code>spring.datasource.*</code> from Env/YAML, and registers a production-ready <code>HikariDataSource</code> bean.',
-        'Your <code>@Service</code> beans inject it immediately with zero manual setup.',
+        'Boot found Postgres and HikariCP on the classpath, bound <code>spring.datasource.*</code> from the environment and registered a <code>HikariDataSource</code> bean in the same context as your beans.',
+        'The context injects it wherever it is needed. The same JAR runs in dev, staging and prod — only the environment changes.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Auto-configuration + externalized PropertySources lets the exact same JAR run in dev, staging, and prod.',
-      },
-      changes: ['+ HikariDataSource bean instantiated', '+ Ready for @Service & @Repository DI'],
-      metrics: { boot_phase: 'Ready', conditions: 'All Passed', config_source: 'Bound', bean_status: 'Live HikariCP' },
+      callout: { kind: 'insight', text: 'Auto-configuration + externalized config lets one build artifact run everywhere.' },
+      changes: ['+ HikariDataSource bean'],
+      metrics: { definitions: 5, beans: 5, phase: 'running', proxies: 1 },
       scene: {
         entities: {
-          cond: d(-14, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['AutoConfig'], sub: 'matched' }),
-          ds: b(-14, -14, { r: 2.3, h: 50, color: 'green', label: ['HikariPool'], sub: 'live bean' }),
-          app: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['OrderService'], sub: 'ready to serve' }),
-          card: S({ x: -12, y: 12 }, '6. Final Result: Live Auto-Configured Stack', [
-            '// Same JAR, zero code changes across environments:',
-            '// 1. HikariDataSource auto-configured from Env Vars',
-            '// 2. Injected into JdbcTemplate / EntityManager',
-            '// 3. Tomcat listening on :8080 -> Ready!',
-          ], { icon: 'terminal' }),
+          ...core(),
+          auto: auto([{ text: 'DataSource ✓', tone: 'green' }]),
+          env: env(),
+          ds: ds([{ text: 'pool 10 ready', tone: 'green' }]),
+          card: card('startup log', [
+            'HikariPool-1 - Starting...',
+            'HikariPool-1 - Added connection org.postgresql…',
+            'Tomcat started on port 8080 (http)',
+            '= Started ShopApp in 1.84 seconds',
+          ]),
         },
         links: {
-          cd_ds: h('cond', 'ds', ['cond', 'ds'], { heads: 'end', label: 'create @Bean' }),
-          ds_ap: h('ds', 'app', ['ds', 'app'], { heads: 'end', label: 'inject' }),
+          scan: L.scanQuiet,
+          makeGw: L.makeGwQuiet,
+          makeSvc: L.makeSvcQuiet,
+          inject: L.injectQuiet,
+          boot: L.bootQuiet,
+          props: L.propsQuiet,
+          createDs: L.createDs,
+          registerDs: L.registerDs,
         },
-        flows: [{ route: ['cd_ds', 'ds_ap'], kind: 'res', rate: 2.0 }],
+        flows: [
+          { route: ['createDs'], kind: 'req', rate: 1.2 },
+          { route: ['registerDs'], kind: 'res', rate: 1.2 },
+        ],
       },
     },
   ],

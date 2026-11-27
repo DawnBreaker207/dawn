@@ -1,30 +1,14 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
-const Fd = (e, t, n, r = [], i = {}) => y(e, t, { form: `phone`, w: 5, d: 5, label: n, tags: r, ...i });
+const Fd = (e, t, n, r = [], i = {}) => makeDevice(e, t, { form: `phone`, w: 5, d: 5, label: n, tags: r, ...i });
 
 const Id = (e = []) => Fd(-9, -14, `Alice`, e);
 
@@ -32,13 +16,13 @@ const Ld = (e = [], t = {}) => Fd(9, -14, `Bob`, e, t);
 
 const Rd = () => Fd(18, -4, `Cara`);
 
-const zd = (e = [], t = {}) => d(0, -4, { s: 4.8, h: 52, label: [`Chat`, `Service`], tags: e, ...t });
+const zd = (e = [], t = {}) => makeBlock(0, -4, { s: 4.8, h: 52, label: [`Chat`, `Service`], tags: e, ...t });
 
 const Bd = (e = []) =>
-    d(-9, -4, { s: 3.6, h: 38, color: `orange`, glyph: `network`, label: [`Gateway 1`], tags: e });
+    makeBlock(-9, -4, { s: 3.6, h: 38, color: `orange`, glyph: `network`, label: [`Gateway 1`], tags: e });
 
 const Vd = (e = [], t = {}) =>
-    d(9, -4, {
+    makeBlock(9, -4, {
       s: 3.6,
       h: 38,
       color: `orange`,
@@ -49,7 +33,7 @@ const Vd = (e = [], t = {}) =>
     });
 
 const Hd = (e = []) =>
-    d(0, -14, {
+    makeBlock(0, -14, {
       s: 3.4,
       h: 30,
       color: `green`,
@@ -59,21 +43,21 @@ const Hd = (e = []) =>
       tags: e,
     });
 
-const Ud = (e = []) => b(-9, 7, { r: 1.8, glyph: `database`, label: `message store`, tags: e });
+const Ud = (e = []) => makeDb(-9, 7, { r: 1.8, glyph: `database`, label: `message store`, tags: e });
 
 const Wd = () =>
-    d(9, 7, { s: 4.2, h: 46, color: `yellow`, glyph: `bell`, label: [`Push`], sub: `APNs / FCM` });
+    makeBlock(9, 7, { s: 4.2, h: 46, color: `yellow`, glyph: `bell`, label: [`Push`], sub: `APNs / FCM` });
 
 const q = {
-    a1: (e = {}) => h(`alice`, `g1`, [`alice`, `g1`], { heads: `both`, ...e }),
-    gc: (e = {}) => h(`g1`, `chat`, [`g1`, `chat`], { heads: `both`, ...e }),
-    cg: (e = {}) => h(`chat`, `g2`, [`chat`, `g2`], { heads: `both`, ...e }),
-    b2: (e = {}) => h(`g2`, `bob`, [`g2`, `bob`], { heads: `both`, ...e }),
-    cr: (e = {}) => h(`chat`, `reg`, [`chat`, `reg`], { heads: `both`, ...e }),
-    cs: (e = {}) => h(`chat`, `store`, [`chat`, [`chat`, `store`], `store`], e),
-    cp: (e = {}) => h(`chat`, `notifier`, [`chat`, [`chat`, `notifier`], `notifier`], e),
-    pb: (e = {}) => h(`notifier`, `bob`, [`notifier`, [13.5, `notifier`], [13.5, `bob`], `bob`], e),
-    c2: (e = {}) => h(`g2`, `cara`, [`g2`, `cara`], { heads: `both`, ...e }),
+    a1: (e = {}) => makeLink(`alice`, `g1`, [`alice`, `g1`], { heads: `both`, ...e }),
+    gc: (e = {}) => makeLink(`g1`, `chat`, [`g1`, `chat`], { heads: `both`, ...e }),
+    cg: (e = {}) => makeLink(`chat`, `g2`, [`chat`, `g2`], { heads: `both`, ...e }),
+    b2: (e = {}) => makeLink(`g2`, `bob`, [`g2`, `bob`], { heads: `both`, ...e }),
+    cr: (e = {}) => makeLink(`chat`, `reg`, [`chat`, `reg`], { heads: `both`, ...e }),
+    cs: (e = {}) => makeLink(`chat`, `store`, [`chat`, [`chat`, `store`], `store`], e),
+    cp: (e = {}) => makeLink(`chat`, `notifier`, [`chat`, [`chat`, `notifier`], `notifier`], e),
+    pb: (e = {}) => makeLink(`notifier`, `bob`, [`notifier`, [13.5, `notifier`], [13.5, `bob`], `bob`], e),
+    c2: (e = {}) => makeLink(`g2`, `cara`, [`g2`, `cara`], { heads: `both`, ...e }),
   };
 
 const Gd = (e = {}) => ({ a1: q.a1(), gc: q.gc(), cg: q.cg(), b2: q.b2(), ...e });
@@ -92,7 +76,7 @@ const Zd = (e = 0.5) => [{ route: [`a1`], kind: `ping`, rate: e }];
 
 const Qd = { x: -9, y: 7, dx: 120, dy: -120 };
 
-const $d = (e, t, n, r = Qd) => S({ z: 0, ...r }, e, t, { icon: n });
+const $d = (e, t, n, r = Qd) => makePanel({ z: 0, ...r }, e, t, { icon: n });
 
 const ef = { deliverMs: 110, conns: `20 M · 100 gateways`, canLoseMsg: `no`, ordered: `yes` };
 
@@ -200,12 +184,12 @@ const tf = {
             }),
           },
           links: {
-            wa: h(`alice`, `chat`, [`alice`, [`alice`, `chat`], `chat`], {
+            wa: makeLink(`alice`, `chat`, [`alice`, [`alice`, `chat`], `chat`], {
               heads: `both`,
               label: `WebSocket`,
               labelAt: 0.3,
             }),
-            wb: h(`chat`, `bob`, [`chat`, [`bob`, `chat`], `bob`], {
+            wb: makeLink(`chat`, `bob`, [`chat`, [`bob`, `chat`], `bob`], {
               heads: `both`,
               label: `WebSocket`,
               labelAt: 0.7,
@@ -526,7 +510,7 @@ const tf = {
             bob: Ld([], { label: `Bob · reconnected, synced from #43` }),
             chat: zd(),
             g1: Bd(),
-            g2: Vd([], g),
+            g2: Vd([], DEAD_STATE),
             reg: Hd([{ text: `bob → gateway 1`, tone: `green`, icon: `signpost` }]),
             store: Ud(),
             notifier: Wd(),
@@ -540,7 +524,7 @@ const tf = {
             cs: q.cs(),
             cp: q.cp({ style: `off` }),
             pb: q.pb({ style: `off` }),
-            b1: h(`bob`, `g1`, [`bob`, [`bob`, -9], [-7.6, -9], [-7.6, `g1`]], { heads: `both` }),
+            b1: makeLink(`bob`, `g1`, [`bob`, [`bob`, -9], [-7.6, -9], [-7.6, `g1`]], { heads: `both` }),
           },
           flows: [
             { route: [`a1`, `gc`], kind: `msg`, rate: 0.8, bounce: !0 },

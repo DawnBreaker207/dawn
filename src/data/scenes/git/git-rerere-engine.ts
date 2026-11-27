@@ -1,242 +1,188 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+
+// One rebase, one recurring conflict. The commit being replayed sits on the left, the
+// conflicted file in the middle, rerere's cache on the right and the index below.
+// rerere learns the fix once (preimage → postimage) and replays it on every later stop.
+//
+//   pick e41a09 ──apply──▶ auth.ts ──record──▶ .git/rr-cache
+//                            │  ◀───replay────
+//                          index
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+/** Screen position (px) → world grid coordinates. */
+const at = (sx: number, sy: number) => ({ x: +((sx / 14 + sy / 7) / 2).toFixed(2), y: +((sx / 14 - sy / 7) / 2).toFixed(2) });
+const P = { pick: at(-230, -60), file: at(20, 60), cache: at(250, -70), index: at(-200, 170) };
+
+const pick = (sha: string, sub: string, tags: Tag[] = []) =>
+  makeBlock(P.pick.x, P.pick.y, { s: 4.4, h: 52, color: `purple`, glyph: `gitCommit`, label: [sha], sub, tags });
+const file = (tags: Tag[]) =>
+  makeBlock(P.file.x, P.file.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`auth.ts`], sub: `working tree`, tags });
+const cache = (tags: Tag[] = []) => makeDb(P.cache.x, P.cache.y, { r: 2.2, h: 46, glyph: `database`, label: `.git/rr-cache`, tags });
+const index = (tags: Tag[] = []) =>
+  makeBlock(P.index.x, P.index.y, { s: 4.2, h: 48, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `staging`, tags });
+
+const L = {
+  apply: makeLink(`pick`, `file`, [`pick`, `file`], { label: `apply` }),
+  applyQuiet: makeLink(`pick`, `file`, [`pick`, `file`]),
+  record: makeLink(`file`, `cache`, [`file`, `cache`], { label: `record` }),
+  // never on stage together with `record`, so it can share the straight path
+  replay: makeLink(`cache`, `file`, [`cache`, `file`], { label: `replay` }),
+  stage: makeLink(`file`, `index`, [`file`, `index`], { label: `git add` }),
+};
+
+const card = (title: string, lines: string[], icon = `keyboard`) =>
+  makePanel({ x: P.pick.x, y: P.pick.y, z: 0, dx: -60, dy: -250 }, title, lines, { icon });
+const stop = (n: string): Tag => ({ text: n, tone: `amber`, icon: `gitBranch` });
 
 export const gitRerereEngineLesson = {
-  id: 'git-rerere-engine',
-  title: 'Git rerere: Reuse Recorded Resolution Engine',
-  summary: 'Eliminate repetitive conflict resolution during long rebases, cherry-picks, and branch tracking by configuring Git automated rerere cache database.',
-  minutes: 25,
-  level: 'advanced',
-  metrics: ['rerereStatus', 'conflictFingerprint', 'autoResolutions', 'rrCacheSize'],
-  legend: ['flow', ['conflict', 'manual conflict resolution'], ['record', 'recording resolution'], ['replay', 'automated replay']],
+  id: `git-rerere-engine`,
+  title: `Git rerere: Reuse Recorded Resolution Engine`,
+  summary: `Stop solving the same conflict again and again during long rebases: rerere records how you fixed it once and replays the fix.`,
+  minutes: 16,
+  level: `advanced`,
+  metrics: [`rerere`, `recorded`, `replayed`, `stops`],
+  legend: [`req`, [`write`, `record to cache`], [`push`, `replay from cache`], [`fail`, `conflict`]],
   goals: [
-    { text: 'The repetitive rebase pain: Solving the exact same conflict 10 times', step: 1 },
-    { text: 'Enabling rerere globally: git config --global rerere.enabled true', step: 2 },
-    { text: 'Recording the pre-image: How rerere fingerprints conflicting hunks', step: 3 },
-    { text: 'Recording the post-image: Storing clean resolution in .git/rr-cache', step: 4 },
-    { text: 'Automated replay: Git resolves identical conflict in 0.01 seconds', step: 5 },
-    { text: 'Auto-staging resolved hunks with rerere.autoupdate', step: 6 },
+    { text: `The rebase pain: one conflict, many stops`, step: 1 },
+    { text: `Enable it: rerere.enabled true`, step: 2 },
+    { text: `Preimage: fingerprint of the conflict`, step: 3 },
+    { text: `Postimage: your fix, stored in rr-cache`, step: 4 },
+    { text: `Replay: same conflict, solved for you`, step: 5 },
+    { text: `rerere.autoupdate stages the fix`, step: 6 },
   ],
   steps: [
     {
-      short: 'Rebase Hell',
-      chapter: 'problem',
-      title: 'The Rebase Conflict Loop',
+      short: `Same conflict`,
+      chapter: `problem`,
+      title: `The same conflict, again and again`,
       body: [
-        'A long-lived feature branch with 15 commits is being rebased onto an updated <code>main</code>.',
-        'Because the conflict occurred early in the branch, Git stops at commit 3, commit 5, commit 7... forcing you to resolve the <b>EXACT SAME conflict</b> over and over again for each commit in the sequence.',
+        `You rebase a 15-commit feature branch onto a <code>main</code> that rewrote <code>auth.ts</code>. Commit 3 touches the same lines, so Git stops with a conflict.`,
+        `You fix it and continue. Commit 5 touches those lines again — another stop, the <b>same</b> conflict. Then commit 7. Each fix is manual, and each one is a chance to get it wrong.`,
       ],
-      callout: {
-        kind: 'warning',
-        text: 'This manual repetition wastes hours of developer time and introduces subtle fatigue bugs during complex rebases.',
-      },
-      metrics: { rerereStatus: 'Disabled', conflictFingerprint: 'None', autoResolutions: '0', rrCacheSize: 'Empty' },
+      metrics: { rerere: `off`, recorded: 0, replayed: 0, stops: 3 },
       scene: {
         entities: {
-          rebaseRunner: d(-18, -6, { s: 4.4, h: 56, color: 'rose', glyph: 'cpu', label: ['git rebase'], sub: 'aborts at 3/15' }),
-          conflictHunk: d(-6, -2, { s: 4.4, h: 54, color: 'amber', glyph: 'alert', label: ['Conflict Hunk'], sub: 'auth.ts clash' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Rebase Conflict Hell', [
-            `$ git rebase main`,
-            `Applying: feat: auth tokens`,
-            `CONFLICT (content): Merge conflict in src/auth.ts`,
-            `error: Failed to merge in the changes.`,
-            `# Fixed manually, ran git rebase --continue...`,
-            `Applying: feat: refresh route`,
-            `CONFLICT (content): Merge conflict in src/auth.ts (AGAIN!)`,
-          ], { icon: 'terminal' }),
+          pick: pick(`e41a09`, `pick 3 of 15`, [stop(`rebase onto main`)]),
+          file: file([{ text: `CONFLICT`, tone: `red`, icon: `alert` }]),
+          card: card(`terminal`, [`$ git rebase main`, `CONFLICT (content): Merge conflict in src/auth.ts`, `$ git rebase --continue`, `! CONFLICT … src/auth.ts  (again, commit 5)`]),
         },
-        links: {
-          rc: h('rebaseRunner', 'conflictHunk', ['rebaseRunner', 'conflictHunk'], { label: 'aborts rebase' }),
-        },
-        flows: [{ route: ['rc'], kind: 'conflict', rate: 1.5 }],
+        links: { apply: L.apply },
+        flows: [{ route: [`apply`], kind: `fail`, rate: 1.2 }],
       },
     },
     {
-      short: 'Enable rerere',
-      chapter: 'setup',
-      title: 'Enabling git rerere Globally',
+      short: `Enable`,
+      chapter: `setup`,
+      title: `Turn on rerere once`,
       body: [
-        '<b>rerere</b> stands for <em>Reuse Recorded Resolution</em>. It is an internal Git database that remembers how you resolved a conflict hunk.',
-        'Run <code>git config --global rerere.enabled true</code>. From that moment on, Git silently monitors conflict states in every repository on your machine.',
+        `<b>rerere</b> means <em>reuse recorded resolution</em>. It is built into Git but off by default.`,
+        `After <code>rerere.enabled</code> is set, Git keeps a small cache in <code>.git/rr-cache</code> and quietly watches every conflict you hit — merges, rebases and cherry-picks alike.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Also enable git config --global rerere.autoupdate true so resolved files are automatically staged with git add.',
-      },
-      changes: ['+ rerere.enabled set to true in ~/.gitconfig', '+ .git/rr-cache directory created'],
-      metrics: { rerereStatus: 'Enabled (active)', conflictFingerprint: 'Listening', autoResolutions: '0', rrCacheSize: 'Initialized' },
+      changes: [`+ .git/rr-cache`, `~ rerere.enabled = true`],
+      metrics: { rerere: `on`, recorded: 0, replayed: 0, stops: 3 },
       scene: {
         entities: {
-          rebaseRunner: d(-18, -6, { s: 4.4, h: 56, color: 'rose', glyph: 'cpu', label: ['git rebase'], sub: 'aborts at 3/15' }),
-          conflictHunk: d(-6, -2, { s: 4.4, h: 54, color: 'amber', glyph: 'alert', label: ['Conflict Hunk'], sub: 'auth.ts clash' }),
-          rrEngine: d(6, 0, { s: 4.4, h: 56, color: 'cyan', glyph: 'cpu', label: ['rerere Engine'], sub: 'daemon active' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Enabling rerere', [
-            `$ git config --global rerere.enabled true`,
-            `$ git config --global rerere.autoupdate true`,
-            `# Git creates .git/rr-cache/ inside repositories`,
-            `= rerere engine now automatically intercepts conflict hunks`,
-          ], { icon: 'terminal' }),
+          pick: pick(`e41a09`, `pick 3 of 15`, [stop(`rebase onto main`)]),
+          file: file([{ text: `CONFLICT`, tone: `red`, icon: `alert` }]),
+          cache: cache([{ text: `empty`, tone: `gray` }]),
+          card: card(`terminal`, [`$ git config --global rerere.enabled true`, `$ git rebase --abort && git rebase main`]),
         },
-        links: {
-          rc: h('rebaseRunner', 'conflictHunk', ['rebaseRunner', 'conflictHunk'], { label: 'aborts rebase' }),
-          cr: h('conflictHunk', 'rrEngine', ['conflictHunk', 'rrEngine'], { label: 'intercept conflict' }),
-        },
-        flows: [{ route: ['cr'], kind: 'record', rate: 1.5 }],
+        links: { apply: L.applyQuiet },
+        flows: [{ route: [`apply`], kind: `fail`, rate: 0.8 }],
       },
     },
     {
-      short: 'Pre-image',
-      chapter: 'technique',
-      title: 'Recording the Pre-image: Fingerprinting Conflicts',
+      short: `Preimage`,
+      chapter: `technique`,
+      title: `It fingerprints the conflict`,
       body: [
-        'When a conflict occurs, rerere strips file metadata, fingerprints the conflicting text lines, and computes a SHA hash.',
-        'It saves the unresolved conflict in <code>.git/rr-cache/&lt;sha&gt;/preimage</code>.',
+        `At the conflict, rerere takes the conflicted hunk — just the lines between the markers, not the file name or commit — and hashes it. That hash names a folder in the cache.`,
+        `It saves the conflict there as the <span class="term">preimage</span>. Any later conflict with the same lines produces the same hash.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'The preimage hash depends ONLY on the conflicting hunk lines, independent of filename or commit SHA.',
-      },
-      changes: ['+ Conflict fingerprint hash generated', '+ Pre-image recorded in .git/rr-cache/<hash>/preimage'],
-      metrics: { rerereStatus: 'Recording', conflictFingerprint: 'Hash 7d9e44...', autoResolutions: '0', rrCacheSize: '1 preimage' },
+      changes: [`+ rr-cache/7d9e44/preimage`],
+      metrics: { rerere: `on`, recorded: 0, replayed: 0, stops: 3 },
       scene: {
         entities: {
-          rebaseRunner: d(-18, -6, { s: 4.4, h: 56, color: 'rose', glyph: 'cpu', label: ['git rebase'], sub: 'aborts at 3/15' }),
-          conflictHunk: d(-6, -2, { s: 4.4, h: 54, color: 'amber', glyph: 'alert', label: ['Conflict Hunk'], sub: 'fingerprinted' }),
-          rrEngine: d(6, 0, { s: 4.4, h: 56, color: 'cyan', glyph: 'cpu', label: ['rerere Engine'], sub: 'hash preimage' }),
-          rrCache: b(-4, 16, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/rr-cache'], sub: 'preimage saved' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Pre-image Recording Log', [
-            `Recorded preimage for 'src/auth.ts'`,
-            `$ ls .git/rr-cache/`,
-            `7d9e44a1b2c3d4e5f6/`,
-            `$ cat .git/rr-cache/7d9e44.../preimage`,
-            `<<<<<<<`,
-            `const token = req.headers['authorization'];`,
-            `=======`,
-            `const token = req.cookies.jwt;`,
-            `>>>>>>>`,
-          ], { icon: 'terminal' }),
+          pick: pick(`e41a09`, `pick 3 of 15`, [stop(`rebase onto main`)]),
+          file: file([{ text: `CONFLICT`, tone: `red`, icon: `alert` }]),
+          cache: cache([{ text: `7d9e44 · preimage`, tone: `violet` }]),
+          card: card(`terminal`, [`Recorded preimage for 'src/auth.ts'`, `$ ls .git/rr-cache/`, `7d9e44a1b2c3…/`, `$ ls .git/rr-cache/7d9e44a1b2c3…/`, `preimage`]),
         },
-        links: {
-          cr: h('conflictHunk', 'rrEngine', ['conflictHunk', 'rrEngine'], { label: 'fingerprint hunk' }),
-          eng_cache: h('rrEngine', 'rrCache', ['rrEngine', 'rrCache'], { label: 'store preimage' }),
-        },
-        flows: [{ route: ['cr', 'eng_cache'], kind: 'record', rate: 1.6 }],
+        links: { apply: L.applyQuiet, record: L.record },
+        flows: [{ route: [`record`], kind: `write`, rate: 1.2 }],
       },
     },
     {
-      short: 'Post-image',
-      chapter: 'technique',
-      title: 'Recording the Post-image: Storing Resolution',
+      short: `Postimage`,
+      chapter: `technique`,
+      title: `You fix it once — it remembers`,
       body: [
-        'You resolve the conflict manually in your editor and run <code>git add src/auth.ts</code>.',
-        'rerere detects that the conflict has been resolved, takes a snapshot of your final code, and writes it to <code>.git/rr-cache/&lt;sha&gt;/postimage</code>.',
+        `You resolve <code>auth.ts</code> by hand and <code>git add</code> it. At that moment rerere saves the resolved hunk next to the preimage as the <span class="term">postimage</span>.`,
+        `The pair is the lesson learned: “when the conflict looks like <em>this</em>, the answer is <em>that</em>.”`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'This resolution is now permanently stored on your machine. You will never have to solve this specific conflict again.',
-      },
-      changes: ['+ Post-image captured on git add', '+ Solution stored permanently in .git/rr-cache/<hash>/postimage'],
-      metrics: { rerereStatus: 'Recorded', conflictFingerprint: 'Hash 7d9e44...', autoResolutions: '0', rrCacheSize: '1 resolution' },
+      changes: [`+ index`, `+ rr-cache/7d9e44/postimage`],
+      metrics: { rerere: `on`, recorded: 1, replayed: 0, stops: 3 },
       scene: {
         entities: {
-          rebaseRunner: d(-18, -6, { s: 4.4, h: 56, color: 'rose', glyph: 'cpu', label: ['git rebase'], sub: 'aborts at 3/15' }),
-          conflictHunk: d(-6, -2, { s: 4.4, h: 54, color: 'green', glyph: 'shield', label: ['Resolved Hunk'], sub: 'manual fix' }),
-          rrEngine: d(6, 0, { s: 4.4, h: 56, color: 'cyan', glyph: 'cpu', label: ['rerere Engine'], sub: 'hash postimage' }),
-          rrCache: b(-4, 16, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/rr-cache'], sub: 'pre/post pair' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Post-image Recording Log', [
-            `$ git add src/auth.ts`,
-            `Recorded resolution for 'src/auth.ts'.`,
-            `$ cat .git/rr-cache/7d9e44.../postimage`,
-            `const token = req.headers['authorization'] || req.cookies.jwt;`,
-            `= Solution committed into rr-cache memory database`,
-          ], { icon: 'terminal' }),
+          pick: pick(`e41a09`, `pick 3 of 15`, [stop(`rebase onto main`)]),
+          file: file([{ text: `fixed by hand`, tone: `green`, icon: `check` }]),
+          cache: cache([{ text: `pre + post`, tone: `green` }]),
+          index: index(),
+          card: card(`terminal`, [`$ git add src/auth.ts`, `Recorded resolution for 'src/auth.ts'.`, `$ git rebase --continue`]),
         },
-        links: {
-          cr: h('conflictHunk', 'rrEngine', ['conflictHunk', 'rrEngine'], { label: 'inspect fix' }),
-          eng_cache: h('rrEngine', 'rrCache', ['rrEngine', 'rrCache'], { label: 'store postimage' }),
-        },
-        flows: [{ route: ['cr', 'eng_cache'], kind: 'record', rate: 1.6 }],
+        links: { apply: L.applyQuiet, record: L.record, stage: L.stage },
+        flows: [
+          { route: [`stage`], kind: `write`, rate: 1 },
+          { route: [`record`], kind: `write`, rate: 1 },
+        ],
       },
     },
     {
-      short: 'Auto Replay',
-      chapter: 'execution',
-      title: 'Automated Replay: Instantaneous Resolution',
+      short: `Replay`,
+      chapter: `solution`,
+      title: `Next stop: solved before you look`,
       body: [
-        'You run <code>git rebase --continue</code>. At commit 5, the exact same conflict strikes again.',
-        'rerere computes the preimage hash, finds a matching entry in <code>.git/rr-cache</code>, and applies your previous resolution in <b>0.01 seconds</b>!',
+        `Commit 5 hits the same conflict. rerere hashes it, finds <b>7d9e44</b> in the cache and writes the postimage into the file — in milliseconds.`,
+        `Git still stops so you can check the result; the file is already resolved.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Notice the terminal output: "Resolved \'src/auth.ts\' using previous resolution." Zero human typing required!',
-      },
-      changes: ['+ rerere automatically resolves identical conflict at commit 5', '+ Manual conflict toil completely eliminated'],
-      metrics: { rerereStatus: 'Replaying', conflictFingerprint: 'Match found', autoResolutions: '1 automated', rrCacheSize: 'Active match' },
+      changes: [`~ pick 5 of 15`, `~ auth.ts resolved from cache`],
+      metrics: { rerere: `on`, recorded: 1, replayed: 1, stops: 3 },
       scene: {
         entities: {
-          rebaseRunner: d(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'cpu', label: ['git rebase'], sub: 'replaying 5/15' }),
-          rrEngine: d(-6, -2, { s: 4.4, h: 56, color: 'cyan', glyph: 'cpu', label: ['rerere Engine'], sub: 'cache hit' }),
-          autoReplay: d(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'shield', label: ['Auto Replay'], sub: '0.01s replay' }),
-          rrCache: b(-2, 16, { r: 2.2, h: 52, color: 'purple', glyph: 'database', label: ['.git/rr-cache'], sub: 'pre/post pair' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Automated Replay Log', [
-            `Applying: feat: refresh token endpoint`,
-            `Auto-merging src/auth.ts`,
-            `CONFLICT (content): Merge conflict in src/auth.ts`,
-            `Resolved 'src/auth.ts' using previous resolution.`,
-            `= Conflict resolved instantly by cache replay!`,
-          ], { icon: 'terminal' }),
+          pick: pick(`b7c2d1`, `pick 5 of 15`, [stop(`rebase onto main`)]),
+          file: file([{ text: `resolved by rerere`, tone: `green`, icon: `check` }]),
+          cache: cache([{ text: `hit · 7d9e44`, tone: `green` }]),
+          index: index(),
+          card: card(`terminal`, [`CONFLICT (content): Merge conflict in src/auth.ts`, `= Resolved 'src/auth.ts' using previous resolution.`, `$ git add src/auth.ts && git rebase --continue`]),
         },
-        links: {
-          rb_eng: h('rebaseRunner', 'rrEngine', ['rebaseRunner', 'rrEngine'], { label: 'replay commit' }),
-          cache_eng: h('rrCache', 'rrEngine', ['rrCache', 'rrEngine'], { label: 'read postimage' }),
-          ra: h('rrEngine', 'autoReplay', ['rrEngine', 'autoReplay'], { label: 'apply resolution' }),
-        },
-        flows: [{ route: ['rb_eng', 'cache_eng', 'ra'], kind: 'replay', rate: 1.8 }],
+        links: { apply: L.applyQuiet, replay: L.replay, stage: L.stage },
+        flows: [{ route: [`replay`], kind: `push`, rate: 1.4 }],
       },
     },
     {
-      short: 'autoupdate',
-      chapter: 'scaling',
-      title: 'Auto-Staging Resolved Hunks with rerere.autoupdate',
+      short: `autoupdate`,
+      chapter: `recap`,
+      title: `autoupdate: no stops at all`,
       body: [
-        'By default, rerere updates the file on disk but leaves it unstaged so you can inspect it. With <code>rerere.autoupdate = true</code>, Git automatically stages the resolved files with <code>git add</code>.',
-        'Now your 15-commit rebase executes from start to finish without pausing once!',
+        `With <code>rerere.autoupdate</code>, a replayed resolution is also staged for you. Every remaining stop is resolved and added automatically, and the rebase runs straight through.`,
+        `Always skim <code>git diff</code> afterwards: rerere reapplies text, it doesn’t know if the code still makes sense.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'You can also share .git/rr-cache across team members via a shared git branch or script to eliminate duplicate conflict work for entire teams.',
-      },
-      changes: ['+ Resolved files automatically staged into index', '+ Entire 15-commit rebase finishes in seconds'],
-      metrics: { rerereStatus: 'Autonomous', conflictFingerprint: 'Clean', autoResolutions: 'All automated', rrCacheSize: 'Synchronized' },
+      changes: [`~ rerere.autoupdate = true`, `~ 15 of 15 applied`],
+      metrics: { rerere: `auto`, recorded: 1, replayed: 4, stops: 0 },
       scene: {
         entities: {
-          rebaseRunner: d(-18, -6, { s: 4.4, h: 56, color: 'green', glyph: 'cpu', label: ['git rebase'], sub: '15/15 passed' }),
-          rrEngine: d(-6, -2, { s: 4.4, h: 56, color: 'cyan', glyph: 'cpu', label: ['rerere Engine'], sub: 'autonomous' }),
-          autoReplay: d(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'shield', label: ['Auto Replay'], sub: '0.01s replay' }),
-          autoUpdate: d(18, 4, { s: 4.4, h: 54, color: 'green', glyph: 'terminal', label: ['autoupdate'], sub: 'auto-staged' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Flawless Rebase Run', [
-            `$ git rebase main`,
-            `Applying: feat: auth tokens`,
-            `Resolved 'src/auth.ts' using previous resolution.`,
-            `Applying: feat: refresh route`,
-            `Resolved 'src/auth.ts' using previous resolution.`,
-            `Successfully rebased and updated refs/heads/feature.`,
-            `= Rebase completed in 3 seconds with zero manual effort!`,
-          ], { icon: 'terminal' }),
+          pick: pick(`f09a3e`, `pick 15 of 15`, [stop(`feature · done`)]),
+          file: file([{ text: `resolved by rerere`, tone: `green`, icon: `check` }]),
+          cache: cache([{ text: `pre + post`, tone: `green` }]),
+          index: index([{ text: `auto-staged`, tone: `green` }]),
+          card: card(`terminal`, [`$ git config --global rerere.autoupdate true`, `$ git rebase main`, `Resolved 'src/auth.ts' using previous resolution.`, `= Successfully rebased and updated refs/heads/feature.`]),
         },
-        links: {
-          rb_eng: h('rebaseRunner', 'rrEngine', ['rebaseRunner', 'rrEngine'], { label: 'finish rebase' }),
-          ra: h('rrEngine', 'autoReplay', ['rrEngine', 'autoReplay'], { label: 'auto-resolve' }),
-          au: h('autoReplay', 'autoUpdate', ['autoReplay', 'autoUpdate'], { label: 'auto-stage index' }),
-        },
-        flows: [{ route: ['rb_eng', 'ra', 'au'], kind: 'replay', rate: 1.8 }],
+        links: { apply: L.applyQuiet, replay: L.replay, stage: L.stage },
+        flows: [
+          { route: [`replay`], kind: `push`, rate: 1.2 },
+          { route: [`stage`], kind: `write`, rate: 1.2 },
+        ],
       },
     },
   ],

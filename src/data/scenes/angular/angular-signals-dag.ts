@@ -1,12 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makeZone as x,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 export const angularSignalsDagLesson = {
@@ -43,11 +40,11 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'DAG Built', producerVersion: 'v1', consumerState: 'Clean', glitchFree: '100% Guaranteed' },
       scene: {
         entities: {
-          priceSignal: y(-16, -8, { label: 'price = 10', tags: [{ text: 'WritableSignal', tone: 'blue', icon: 'zap' }] }),
-          taxSignal: y(-16, 8, { label: 'taxRate = 0.2', tags: [{ text: 'WritableSignal', tone: 'purple', icon: 'zap' }] }),
-          computedNode: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['tax = computed()'], sub: 'tax: $2.00' }),
-          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['total = computed()'], sub: 'total: $12.00' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Signals Reactive Graph', [
+          priceSignal: makeDevice(-16, -8, { label: 'price = 10', tags: [{ text: 'WritableSignal', tone: 'blue', icon: 'zap' }] }),
+          taxSignal: makeDevice(-16, 8, { label: 'taxRate = 0.2', tags: [{ text: 'WritableSignal', tone: 'purple', icon: 'zap' }] }),
+          computedNode: makeBlock(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['tax = computed()'], sub: 'tax: $2.00' }),
+          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['total = computed()'], sub: 'total: $12.00' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Signals Reactive Graph', [
             `const price = signal(10);`,
             `const taxRate = signal(0.2);`,
             `const tax = computed(() => price() * taxRate());`,
@@ -60,9 +57,9 @@ export const angularSignalsDagLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pt: h('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'track price' }),
-          rt: h('taxSignal', 'computedNode', ['taxSignal', 'computedNode'], { label: 'track rate' }),
-          tc: h('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'track tax' }),
+          pt: makeLink('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'track price' }),
+          rt: makeLink('taxSignal', 'computedNode', ['taxSignal', 'computedNode'], { label: 'track rate' }),
+          tc: makeLink('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'track tax' }),
         },
         flows: [
           { route: ['pt', 'tc'], kind: 'push', rate: 1.5 },
@@ -87,11 +84,11 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Dirty Flagged', producerVersion: 'v2', consumerState: 'DIRTY (Uncomputed)', glitchFree: 'Guaranteed' },
       scene: {
         entities: {
-          priceSignal: y(-16, -8, { label: 'price.set(20)', tags: [{ text: 'version v2', tone: 'green', icon: 'zap' }] }),
-          taxSignal: y(-16, 8, { label: 'taxRate = 0.2', tags: [{ text: 'WritableSignal', tone: 'purple', icon: 'zap' }] }),
-          computedNode: d(0, 0, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['tax = computed()'], sub: 'marked DIRTY' }),
-          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['total = computed()'], sub: 'pulls on read' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Push-Pull Algorithm Execution', [
+          priceSignal: makeDevice(-16, -8, { label: 'price.set(20)', tags: [{ text: 'version v2', tone: 'green', icon: 'zap' }] }),
+          taxSignal: makeDevice(-16, 8, { label: 'taxRate = 0.2', tags: [{ text: 'WritableSignal', tone: 'purple', icon: 'zap' }] }),
+          computedNode: makeBlock(0, 0, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['tax = computed()'], sub: 'marked DIRTY' }),
+          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['total = computed()'], sub: 'pulls on read' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Push-Pull Algorithm Execution', [
             `1. price.set(20) [PUSH PHASE]:`,
             `   - price increments version to v2`,
             `   - pushes "dirty" notification to tax and total`,
@@ -102,8 +99,8 @@ export const angularSignalsDagLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pt: h('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'push dirty flag' }),
-          tc: h('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'lazy value pull' }),
+          pt: makeLink('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'push dirty flag' }),
+          tc: makeLink('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'lazy value pull' }),
         },
         flows: [{ route: ['pt', 'tc'], kind: 'pull', rate: 1.5 }],
       },
@@ -124,11 +121,11 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Dynamic DAG', producerVersion: 'v2', consumerState: 'Clean', glitchFree: 'Pruned' },
       scene: {
         entities: {
-          priceSignal: y(-16, -8, { label: 'showDetails', tags: [{ text: 'false', tone: 'rose', icon: 'zap' }] }),
-          taxSignal: y(-16, 8, { label: 'summary()', tags: [{ text: 'active branch', tone: 'green', icon: 'zap' }] }),
-          computedNode: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['info = computed'], sub: 'dynamic graph' }),
-          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'slab', glyph: 'server', label: ['details()'], sub: 'unlinked edge' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dynamic Dependency Tracking', [
+          priceSignal: makeDevice(-16, -8, { label: 'showDetails', tags: [{ text: 'false', tone: 'rose', icon: 'zap' }] }),
+          taxSignal: makeDevice(-16, 8, { label: 'summary()', tags: [{ text: 'active branch', tone: 'green', icon: 'zap' }] }),
+          computedNode: makeBlock(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['info = computed'], sub: 'dynamic graph' }),
+          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'slab', glyph: 'server', label: ['details()'], sub: 'unlinked edge' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dynamic Dependency Tracking', [
             `const info = computed(() => {`,
             `  if (this.showDetails()) {`,
             `    return this.details(); // Dependency active`,
@@ -139,9 +136,9 @@ export const angularSignalsDagLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pt: h('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'read condition' }),
-          xt: h('taxSignal', 'computedNode', ['taxSignal', 'computedNode'], { label: 'active branch edge' }),
-          cd: h('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'severed branch' }),
+          pt: makeLink('priceSignal', 'computedNode', ['priceSignal', 'computedNode'], { label: 'read condition' }),
+          xt: makeLink('taxSignal', 'computedNode', ['taxSignal', 'computedNode'], { label: 'active branch edge' }),
+          cd: makeLink('computedNode', 'consumerEffect', ['computedNode', 'consumerEffect'], { label: 'severed branch' }),
         },
         flows: [{ route: ['xt'], kind: 'push', rate: 1.5 }],
       },
@@ -162,11 +159,11 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Topological Sort', producerVersion: 'v2', consumerState: 'Glitch-Free', glitchFree: '100% Clean' },
       scene: {
         entities: {
-          priceSignal: y(-16, 0, { label: 'price.set(20)', tags: [{ text: 'Node A Root', tone: 'blue', icon: 'zap' }] }),
-          taxComp: d(0, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['tax (Node B)'], sub: 'recomputed 1st' }),
-          discountComp: d(0, 10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['disc (Node C)'], sub: 'recomputed 2nd' }),
-          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['total (Node D)'], sub: 'evaluates once' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'The Diamond Problem & Fix', [
+          priceSignal: makeDevice(-16, 0, { label: 'price.set(20)', tags: [{ text: 'Node A Root', tone: 'blue', icon: 'zap' }] }),
+          taxComp: makeBlock(0, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['tax (Node B)'], sub: 'recomputed 1st' }),
+          discountComp: makeBlock(0, 10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['disc (Node C)'], sub: 'recomputed 2nd' }),
+          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['total (Node D)'], sub: 'evaluates once' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'The Diamond Problem & Fix', [
             `Diamond Topology:`,
             `       [Price]`,
             `       /     \\`,
@@ -178,10 +175,10 @@ export const angularSignalsDagLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          px: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'mark dirty B' }),
-          pd: h('priceSignal', 'discountComp', ['priceSignal', 'discountComp'], { label: 'mark dirty C' }),
-          tt: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'topological 1' }),
-          dt: h('discountComp', 'consumerEffect', ['discountComp', 'consumerEffect'], { label: 'topological 2' }),
+          px: makeLink('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'mark dirty B' }),
+          pd: makeLink('priceSignal', 'discountComp', ['priceSignal', 'discountComp'], { label: 'mark dirty C' }),
+          tt: makeLink('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'topological 1' }),
+          dt: makeLink('discountComp', 'consumerEffect', ['discountComp', 'consumerEffect'], { label: 'topological 2' }),
         },
         flows: [
           { route: ['px', 'tt'], kind: 'glitch', rate: 1.5 },
@@ -205,10 +202,10 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Effect Armed', producerVersion: 'v2', consumerState: 'Executed', glitchFree: 'Active' },
       scene: {
         entities: {
-          priceSignal: y(-16, 0, { label: 'themeSignal', tags: [{ text: 'dark-theme', tone: 'blue', icon: 'zap' }] }),
-          taxComp: d(0, 0, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['effect() Runner'], sub: 'microtask run' }),
-          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['localStorage'], sub: 'side effect' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'effect() Implementation', [
+          priceSignal: makeDevice(-16, 0, { label: 'themeSignal', tags: [{ text: 'dark-theme', tone: 'blue', icon: 'zap' }] }),
+          taxComp: makeBlock(0, 0, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['effect() Runner'], sub: 'microtask run' }),
+          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['localStorage'], sub: 'side effect' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'effect() Implementation', [
             `effect((onCleanup) => {`,
             `  const currentTheme = this.theme();`,
             `  localStorage.setItem('theme', currentTheme);`,
@@ -221,8 +218,8 @@ export const angularSignalsDagLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'notify scheduler' }),
-          tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'execute side effect' }),
+          pt: makeLink('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'notify scheduler' }),
+          tc: makeLink('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'execute side effect' }),
         },
         flows: [{ route: ['pt', 'tc'], kind: 'effect', rate: 1.5 }],
       },
@@ -244,10 +241,10 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Unified Reactive', producerVersion: 'v2', consumerState: 'Bridged', glitchFree: '100% Interop' },
       scene: {
         entities: {
-          priceSignal: y(-16, 0, { label: 'http.get()', tags: [{ text: 'RxJS Observable', tone: 'purple', icon: 'zap' }] }),
-          taxComp: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['toSignal(obs$)'], sub: 'auto bridge' }),
-          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['usersSignal()'], sub: 'signal in DOM' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'RxJS Interop Code', [
+          priceSignal: makeDevice(-16, 0, { label: 'http.get()', tags: [{ text: 'RxJS Observable', tone: 'purple', icon: 'zap' }] }),
+          taxComp: makeBlock(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['toSignal(obs$)'], sub: 'auto bridge' }),
+          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['usersSignal()'], sub: 'signal in DOM' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'RxJS Interop Code', [
             `import { toSignal, toObservable } from '@angular/core/rxjs-interop';`,
             ``,
             `// Convert Observable to Signal:`,
@@ -258,8 +255,8 @@ export const angularSignalsDagLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'pipe stream' }),
-          tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'expose signal' }),
+          pt: makeLink('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'pipe stream' }),
+          tc: makeLink('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'expose signal' }),
         },
         flows: [{ route: ['pt', 'tc'], kind: 'pull', rate: 1.6 }],
       },
@@ -282,10 +279,10 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Component Signals', producerVersion: 'v3', consumerState: 'Signal APIs', glitchFree: '100% Reactive' },
       scene: {
         entities: {
-          priceSignal: y(-16, 0, { label: 'Parent [(v)]', tags: [{ text: 'model() bind', tone: 'blue', icon: 'zap' }] }),
-          taxComp: d(0, 0, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['input / model'], sub: 'signal props' }),
-          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['viewChild()'], sub: 'reactive DOM' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Signal Component APIs', [
+          priceSignal: makeDevice(-16, 0, { label: 'Parent [(v)]', tags: [{ text: 'model() bind', tone: 'blue', icon: 'zap' }] }),
+          taxComp: makeBlock(0, 0, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['input / model'], sub: 'signal props' }),
+          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['viewChild()'], sub: 'reactive DOM' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Signal Component APIs', [
             `user = input.required<User>();        // Replaces @Input()`,
             `checked = model(false);               // Two-way [(checked)]`,
             `saved = output<void>();               // Replaces @Output()`,
@@ -293,8 +290,8 @@ export const angularSignalsDagLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'two-way model()' }),
-          tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'query viewChild' }),
+          pt: makeLink('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'two-way model()' }),
+          tc: makeLink('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'query viewChild' }),
         },
         flows: [{ route: ['pt', 'tc'], kind: 'push', rate: 1.5 }],
       },
@@ -315,10 +312,10 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Complete Signals', producerVersion: 'v3', consumerState: 'Async Resource', glitchFree: 'Auto-Cancel' },
       scene: {
         entities: {
-          priceSignal: y(-16, 0, { label: 'userId()', tags: [{ text: 'linkedSignal', tone: 'amber', icon: 'zap' }] }),
-          taxComp: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['rxResource()'], sub: 'auto-cancel' }),
-          consumerEffect: b(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['data / loading'], sub: 'signal state' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'linkedSignal & rxResource', [
+          priceSignal: makeDevice(-16, 0, { label: 'userId()', tags: [{ text: 'linkedSignal', tone: 'amber', icon: 'zap' }] }),
+          taxComp: makeBlock(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['rxResource()'], sub: 'auto-cancel' }),
+          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['data / loading'], sub: 'signal state' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'linkedSignal & rxResource', [
             `page = linkedSignal(() => { this.filter(); return 1; });`,
             `users = rxResource({`,
             `  request: () => ({ id: this.userId(), p: this.page() }),`,
@@ -327,8 +324,8 @@ export const angularSignalsDagLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pt: h('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'param changed' }),
-          tc: h('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'emit value()' }),
+          pt: makeLink('priceSignal', 'taxComp', ['priceSignal', 'taxComp'], { label: 'param changed' }),
+          tc: makeLink('taxComp', 'consumerEffect', ['taxComp', 'consumerEffect'], { label: 'emit value()' }),
         },
         flows: [{ route: ['pt', 'tc'], kind: 'pull', rate: 1.6 }],
       },

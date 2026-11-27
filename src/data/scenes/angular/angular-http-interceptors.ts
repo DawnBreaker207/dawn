@@ -1,12 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makeZone as x,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 export const angularHttpInterceptorsLesson = {
@@ -41,10 +38,10 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Traversing Chain', authHeaderInjected: 'No', retryAttempt: '0', responseTransformed: 'Pending' },
       scene: {
         entities: {
-          clientReq: y(-16, -6, { label: 'HttpClient', tags: [{ text: 'GET /profile', tone: 'blue', icon: 'zap' }] }),
-          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'auth token' }),
-          backendXhr: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'fetch wire' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Interceptor Chain Traversals', [
+          clientReq: makeDevice(-16, -6, { label: 'HttpClient', tags: [{ text: 'GET /profile', tone: 'blue', icon: 'zap' }] }),
+          authInter: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'auth token' }),
+          backendXhr: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'fetch wire' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Interceptor Chain Traversals', [
             `Component -> HttpClient.get('/api/profile')`,
             `  -> Interceptor 1: LoggingInterceptor (req in)`,
             `  -> Interceptor 2: AuthInterceptor (inject token)`,
@@ -54,8 +51,8 @@ export const angularHttpInterceptorsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'next(req)' }),
-          ab: h('authInter', 'backendXhr', ['authInter', 'backendXhr'], { label: 'dispatch fetch' }),
+          ca: makeLink('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'next(req)' }),
+          ab: makeLink('authInter', 'backendXhr', ['authInter', 'backendXhr'], { label: 'dispatch fetch' }),
         },
         flows: [{ route: ['ca', 'ab'], kind: 'req', rate: 1.5 }],
       },
@@ -76,11 +73,11 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Cloned with Token', authHeaderInjected: 'Bearer JWT', retryAttempt: '0', responseTransformed: 'Pending' },
       scene: {
         entities: {
-          clientReq: y(-16, -6, { label: 'HttpClient', tags: [{ text: 'GET /profile', tone: 'blue', icon: 'zap' }] }),
-          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'auth token' }),
-          clonedReq: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Cloned Request'], sub: 'Bearer JWT' }),
-          backendXhr: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'fetch wire' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Request Cloning Code', [
+          clientReq: makeDevice(-16, -6, { label: 'HttpClient', tags: [{ text: 'GET /profile', tone: 'blue', icon: 'zap' }] }),
+          authInter: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'auth token' }),
+          clonedReq: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Cloned Request'], sub: 'Bearer JWT' }),
+          backendXhr: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'fetch wire' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Request Cloning Code', [
             `export const authInterceptor: HttpInterceptorFn = (req, next) => {`,
             `  const token = inject(AuthService).getToken();`,
             `  const authReq = req.clone({`,
@@ -91,9 +88,9 @@ export const angularHttpInterceptorsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'pass raw req' }),
-          ac: h('authInter', 'clonedReq', ['authInter', 'clonedReq'], { label: 'req.clone()' }),
-          cb: h('clonedReq', 'backendXhr', ['clonedReq', 'backendXhr'], { label: 'dispatch clone' }),
+          ca: makeLink('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'pass raw req' }),
+          ac: makeLink('authInter', 'clonedReq', ['authInter', 'clonedReq'], { label: 'req.clone()' }),
+          cb: makeLink('clonedReq', 'backendXhr', ['clonedReq', 'backendXhr'], { label: 'dispatch clone' }),
         },
         flows: [{ route: ['ca', 'ac', 'cb'], kind: 'auth', rate: 1.5 }],
       },
@@ -114,10 +111,10 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Response Pipe', authHeaderInjected: 'Bearer JWT', retryAttempt: '0', responseTransformed: 'Unwrapped { data }' },
       scene: {
         entities: {
-          backendXhr: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: '200 OK wire' }),
-          resPipe: d(-4, 8, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['map() Unwrapper'], sub: 'unwraps data' }),
-          consumerApp: y(-16, 8, { label: 'Consumer', tags: [{ text: 'Clean Payload', tone: 'green', icon: 'shield' }] }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Response Transformation Code', [
+          backendXhr: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: '200 OK wire' }),
+          resPipe: makeBlock(-4, 8, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['map() Unwrapper'], sub: 'unwraps data' }),
+          consumerApp: makeDevice(-16, 8, { label: 'Consumer', tags: [{ text: 'Clean Payload', tone: 'green', icon: 'shield' }] }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Response Transformation Code', [
             `return next(req).pipe(`,
             `  map((event: HttpEvent<any>) => {`,
             `    if (event instanceof HttpResponse) {`,
@@ -130,8 +127,8 @@ export const angularHttpInterceptorsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          bp: h('backendXhr', 'resPipe', ['backendXhr', 'resPipe'], { label: 'return event' }),
-          rc: h('resPipe', 'consumerApp', ['resPipe', 'consumerApp'], { label: 'deliver payload' }),
+          bp: makeLink('backendXhr', 'resPipe', ['backendXhr', 'resPipe'], { label: 'return event' }),
+          rc: makeLink('resPipe', 'consumerApp', ['resPipe', 'consumerApp'], { label: 'deliver payload' }),
         },
         flows: [{ route: ['bp', 'rc'], kind: 'res', rate: 1.5 }],
       },
@@ -152,10 +149,10 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Retry Backoff', authHeaderInjected: 'Active', retryAttempt: 'Retry 2 (2000ms delay)', responseTransformed: 'Recovered' },
       scene: {
         entities: {
-          backendXhr: b(8, 8, { s: 4.6, h: 48, color: 'rose', glyph: 'server', label: ['HttpBackend'], sub: '503 throttle' }),
-          retryEngine: d(-4, 8, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Retry Engine'], sub: 'backoff delay' }),
-          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'replay req' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Exponential Backoff Code', [
+          backendXhr: makeDb(8, 8, { s: 4.6, h: 48, color: 'rose', glyph: 'server', label: ['HttpBackend'], sub: '503 throttle' }),
+          retryEngine: makeBlock(-4, 8, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Retry Engine'], sub: 'backoff delay' }),
+          authInter: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Auth Interceptor'], sub: 'replay req' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Exponential Backoff Code', [
             `return next(req).pipe(`,
             `  retry({`,
             `    count: 3,`,
@@ -170,8 +167,8 @@ export const angularHttpInterceptorsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          br: h('backendXhr', 'retryEngine', ['backendXhr', 'retryEngine'], { label: 'catch 503 error' }),
-          ra: h('retryEngine', 'authInter', ['retryEngine', 'authInter'], { label: 'replay clone' }),
+          br: makeLink('backendXhr', 'retryEngine', ['backendXhr', 'retryEngine'], { label: 'catch 503 error' }),
+          ra: makeLink('retryEngine', 'authInter', ['retryEngine', 'authInter'], { label: 'replay clone' }),
         },
         flows: [{ route: ['br', 'ra'], kind: 'retry', rate: 1.5 }],
       },
@@ -192,10 +189,10 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Functional Setup', authHeaderInjected: 'Functional inject()', retryAttempt: '0', responseTransformed: 'Clean' },
       scene: {
         entities: {
-          clientReq: y(-16, -6, { label: 'app.config.ts', tags: [{ text: 'withInterceptors', tone: 'green', icon: 'zap' }] }),
-          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['authInterceptor'], sub: 'pure function' }),
-          backendXhr: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'native fetch' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional HttpClient Setup', [
+          clientReq: makeDevice(-16, -6, { label: 'app.config.ts', tags: [{ text: 'withInterceptors', tone: 'green', icon: 'zap' }] }),
+          authInter: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['authInterceptor'], sub: 'pure function' }),
+          backendXhr: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'native fetch' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional HttpClient Setup', [
             `// src/app/app.config.ts`,
             `export const appConfig: ApplicationConfig = {`,
             `  providers: [`,
@@ -208,8 +205,8 @@ export const angularHttpInterceptorsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'pass req function' }),
-          ab: h('authInter', 'backendXhr', ['authInter', 'backendXhr'], { label: 'next(req)' }),
+          ca: makeLink('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'pass req function' }),
+          ab: makeLink('authInter', 'backendXhr', ['authInter', 'backendXhr'], { label: 'next(req)' }),
         },
         flows: [{ route: ['ca', 'ab'], kind: 'req', rate: 1.5 }],
       },
@@ -230,10 +227,10 @@ export const angularHttpInterceptorsLesson = {
       metrics: { pipelineStage: 'Context Bypass', authHeaderInjected: 'Bypassed (Public)', retryAttempt: '0', responseTransformed: 'Clean' },
       scene: {
         entities: {
-          clientReq: y(-16, -6, { label: 'LoginService', tags: [{ text: 'IS_PUBLIC: true', tone: 'cyan', icon: 'shield' }] }),
-          authInter: d(-4, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Context Filter'], sub: 'IS_PUBLIC flag' }),
-          backendXhr: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'public route' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'HttpContext Token Implementation', [
+          clientReq: makeDevice(-16, -6, { label: 'LoginService', tags: [{ text: 'IS_PUBLIC: true', tone: 'cyan', icon: 'shield' }] }),
+          authInter: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Context Filter'], sub: 'IS_PUBLIC flag' }),
+          backendXhr: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['HttpBackend'], sub: 'public route' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'HttpContext Token Implementation', [
             `export const IS_PUBLIC = new HttpContextToken<boolean>(() => false);`,
             ``,
             `// In authInterceptor:`,
@@ -248,8 +245,8 @@ export const angularHttpInterceptorsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'read context' }),
-          ab: h('authInter', 'backendXhr', ['authInter', 'backendXhr'], { label: 'bypass token' }),
+          ca: makeLink('clientReq', 'authInter', ['clientReq', 'authInter'], { label: 'read context' }),
+          ab: makeLink('authInter', 'backendXhr', ['authInter', 'backendXhr'], { label: 'bypass token' }),
         },
         flows: [{ route: ['ca', 'ab'], kind: 'req', rate: 1.6 }],
       },

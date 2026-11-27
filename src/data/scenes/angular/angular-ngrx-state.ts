@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const angularNgrxStateLesson = {
@@ -28,7 +26,7 @@ export const angularNgrxStateLesson = {
     {
       short: 'Redux Loop',
       chapter: 'concept',
-      title: '1. Unidirectional Data Flow: Action -> Reducer -> Store',
+      title: 'Unidirectional Data Flow: Action -> Reducer -> Store',
       body: [
         'Classic <b>NgRx Store</b> enforces strict unidirectional data flow: Components never mutate state directly—they <code>dispatch(Action)</code>.',
         'A pure <b>Reducer</b> (<code>on(action, (state, payload) =&gt; ({ ...state, ... }))</code>) computes a brand-new immutable state object and saves it into the single source of truth <b>Store</b>.',
@@ -40,10 +38,10 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'Classic Store', stateMutation: 'Immutable Reducer', asyncSideEffect: 'Pending', boilerplate: 'High (4 files)' },
       scene: {
         entities: {
-          componentUi: y(-18, 0, { label: 'Component', tags: [{ text: 'dispatch()', tone: 'blue', icon: 'zap' }] }),
-          actionBus: d(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Action'], sub: 'dispatch()' }),
-          reducerStore: b(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Action & Pure Reducer', [
+          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'dispatch()', tone: 'blue', icon: 'zap' }] }),
+          actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Action'], sub: 'dispatch()' }),
+          reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Action & Pure Reducer', [
             `export const loadOrders = createAction('[Orders] Load');`,
             `export const ordersReducer = createReducer(initialState,`,
             `  on(loadOrders, state => ({ ...state, loading: true }))`,
@@ -51,8 +49,8 @@ export const angularNgrxStateLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'dispatch(action)' }),
-          ar: h('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'pure transition' }),
+          ca: makeLink('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'dispatch(action)' }),
+          ar: makeLink('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'pure transition' }),
         },
         flows: [{ route: ['ca', 'ar'], kind: 'redux', rate: 1.5 }],
       },
@@ -60,7 +58,7 @@ export const angularNgrxStateLesson = {
     {
       short: 'Selectors',
       chapter: 'concept',
-      title: '2. Memoized Selectors (createSelector)',
+      title: 'Memoized Selectors (createSelector)',
       body: [
         'Components read state via <code>store.select(selectActiveOrders)</code> (or <code>selectSignal()</code>).',
         '<code>createSelector</code> memoizes inputs: if the <code>orders</code> slice didn’t change reference (<code>===</code>), the expensive filter/reduce logic is skipped and the cached result is returned in <code>O(1)</code>.',
@@ -73,11 +71,11 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'Classic Store', stateMutation: 'Memoized ===', asyncSideEffect: 'None', boilerplate: 'High' },
       scene: {
         entities: {
-          componentUi: y(-18, 0, { label: 'Component', tags: [{ text: 'selectSignal()', tone: 'green', icon: 'zap' }] }),
-          actionBus: d(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Action'], sub: 'dispatch()' }),
-          reducerStore: b(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
-          selectorOut: d(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['createSelector'], sub: 'createSelector' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Memoized Selector', [
+          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'selectSignal()', tone: 'green', icon: 'zap' }] }),
+          actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Action'], sub: 'dispatch()' }),
+          reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
+          selectorOut: makeBlock(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['createSelector'], sub: 'createSelector' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Memoized Selector', [
             `export const selectActiveOrders = createSelector(`,
             `  selectAllOrders,`,
             `  (orders) => orders.filter(o => o.status === 'active')`,
@@ -85,10 +83,10 @@ export const angularNgrxStateLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'dispatch(action)' }),
-          ar: h('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'new state' }),
-          rs: h('reducerStore', 'selectorOut', ['reducerStore', 'selectorOut'], { label: 'memoize ===' }),
-          sc: h('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: 'emit slice' }),
+          ca: makeLink('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'dispatch(action)' }),
+          ar: makeLink('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'new state' }),
+          rs: makeLink('reducerStore', 'selectorOut', ['reducerStore', 'selectorOut'], { label: 'memoize ===' }),
+          sc: makeLink('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: 'emit slice' }),
         },
         flows: [{ route: ['ca', 'ar', 'rs', 'sc'], kind: 'redux', rate: 1.5 }],
       },
@@ -96,7 +94,7 @@ export const angularNgrxStateLesson = {
     {
       short: 'NgRx Effects',
       chapter: 'execution',
-      title: '3. NgRx Effects: Isolating Async HTTP & RxJS',
+      title: 'NgRx Effects: Isolating Async HTTP & RxJS',
       body: [
         'Reducers must stay 100% pure—no HTTP calls allowed. <b>NgRx Effects</b> listen to <code>actions$</code> via <code>ofType(loadOrders)</code>, run RxJS flattening (<code>switchMap</code> / <code>exhaustMap</code> + <code>catchError</code>), and dispatch <code>loadOrdersSuccess</code> or <code>loadOrdersFailure</code>.',
       ],
@@ -108,12 +106,12 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'Store + Effects', stateMutation: 'Pure + Async', asyncSideEffect: 'createEffect()', boilerplate: 'High' },
       scene: {
         entities: {
-          componentUi: y(-18, 0, { label: 'Component', tags: [{ text: 'selectSignal()', tone: 'green', icon: 'zap' }] }),
-          actionBus: d(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Actions$'], sub: 'ofType()' }),
-          reducerStore: b(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
-          effectsApi: d(10, 10, { s: 4.8, h: 52, color: 'amber', glyph: 'server', label: ['Effects + API'], sub: 'createEffect' }),
-          selectorOut: d(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['createSelector'], sub: 'createSelector' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'NgRx Effect with switchMap', [
+          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'selectSignal()', tone: 'green', icon: 'zap' }] }),
+          actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Actions$'], sub: 'ofType()' }),
+          reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
+          effectsApi: makeBlock(10, 10, { s: 4.8, h: 52, color: 'amber', glyph: 'server', label: ['Effects + API'], sub: 'createEffect' }),
+          selectorOut: makeBlock(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['createSelector'], sub: 'createSelector' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'NgRx Effect with switchMap', [
             `loadOrders$ = createEffect(() => this.actions$.pipe(`,
             `  ofType(loadOrders),`,
             `  switchMap(() => this.api.getOrders().pipe(`,
@@ -124,11 +122,11 @@ export const angularNgrxStateLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'dispatch(load)' }),
-          ar: h('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'loading: true' }),
-          re: h('reducerStore', 'effectsApi', ['reducerStore', 'effectsApi'], { label: 'switchMap API' }),
-          es: h('effectsApi', 'selectorOut', ['effectsApi', 'selectorOut'], { label: 'success -> store' }),
-          sc: h('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: 'update UI' }),
+          ca: makeLink('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'dispatch(load)' }),
+          ar: makeLink('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'loading: true' }),
+          re: makeLink('reducerStore', 'effectsApi', ['reducerStore', 'effectsApi'], { label: 'switchMap API' }),
+          es: makeLink('effectsApi', 'selectorOut', ['effectsApi', 'selectorOut'], { label: 'success -> store' }),
+          sc: makeLink('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: 'update UI' }),
         },
         flows: [
           { route: ['ca', 'ar'], kind: 'redux', rate: 1.4 },
@@ -139,7 +137,7 @@ export const angularNgrxStateLesson = {
     {
       short: 'SignalStore Shift',
       chapter: 'technique',
-      title: '4. Classic Store Boilerplate vs @ngrx/signals SignalStore',
+      title: 'Classic Store Boilerplate vs @ngrx/signals SignalStore',
       body: [
         'Classic NgRx requires 4 separate files per feature (<code>actions</code>, <code>reducer</code>, <code>selectors</code>, <code>effects</code>).',
         'Modern <b>NgRx SignalStore</b> (<code>@ngrx/signals</code>) replaces that ceremony with a single composable <code>signalStore(...)</code> function built natively on Angular Signals and tree-shakable functional features!',
@@ -152,10 +150,10 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'SignalStore', stateMutation: 'patchState()', asyncSideEffect: 'withMethods', boilerplate: 'Minimal (-75%)' },
       scene: {
         entities: {
-          componentUi: y(-18, 0, { label: 'Component', tags: [{ text: 'inject(Store)', tone: 'green', icon: 'zap' }] }),
-          reducerStore: b(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
-          selectorOut: d(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['withComputed'], sub: 'withComputed' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'NgRx SignalStore Definition', [
+          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'inject(Store)', tone: 'green', icon: 'zap' }] }),
+          reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
+          selectorOut: makeBlock(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['withComputed'], sub: 'withComputed' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'NgRx SignalStore Definition', [
             `export const OrdersStore = signalStore(`,
             `  { providedIn: 'root' },`,
             `  withState({ orders: [] as Order[], loading: false }),`,
@@ -166,8 +164,8 @@ export const angularNgrxStateLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          rs: h('reducerStore', 'selectorOut', ['reducerStore', 'selectorOut'], { label: 'signal DAG' }),
-          sc: h('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: 'read store.count()' }),
+          rs: makeLink('reducerStore', 'selectorOut', ['reducerStore', 'selectorOut'], { label: 'signal DAG' }),
+          sc: makeLink('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: 'read store.count()' }),
         },
         flows: [{ route: ['rs', 'sc'], kind: 'signal', rate: 1.5 }],
       },
@@ -175,7 +173,7 @@ export const angularNgrxStateLesson = {
     {
       short: 'withMethods & patch',
       chapter: 'execution',
-      title: '5. withState, withComputed, withMethods & patchState()',
+      title: 'withState, withComputed, withMethods & patchState()',
       body: [
         '<code>withState</code> turns every state property into a fine-grained <code>DeepSignal</code>. <code>withComputed</code> derives glitch-free <code>computed()</code> values.',
         '<code>withMethods</code> defines actions that update state cleanly via immutable <code>patchState(store, { loading: true })</code>—zero action-type strings or switch-case reducers.',
@@ -188,11 +186,11 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'SignalStore', stateMutation: 'patchState()', asyncSideEffect: 'withMethods', boilerplate: '1 File' },
       scene: {
         entities: {
-          componentUi: y(-18, 0, { label: 'Component', tags: [{ text: 'store.add()', tone: 'blue', icon: 'zap' }] }),
-          actionBus: d(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['withMethods'], sub: 'patchState()' }),
-          reducerStore: b(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
-          selectorOut: d(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['withComputed'], sub: 'withComputed' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'withMethods & patchState', [
+          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'store.add()', tone: 'blue', icon: 'zap' }] }),
+          actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['withMethods'], sub: 'patchState()' }),
+          reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
+          selectorOut: makeBlock(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['withComputed'], sub: 'withComputed' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'withMethods & patchState', [
             `withMethods((store, api = inject(OrdersApi)) => ({`,
             `  async loadAll() {`,
             `    patchState(store, { loading: true });`,
@@ -203,10 +201,10 @@ export const angularNgrxStateLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'call method' }),
-          ar: h('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'patchState()' }),
-          rs: h('reducerStore', 'selectorOut', ['reducerStore', 'selectorOut'], { label: 'notify computed' }),
-          sc: h('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: 'Zoneless DOM' }),
+          ca: makeLink('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'call method' }),
+          ar: makeLink('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'patchState()' }),
+          rs: makeLink('reducerStore', 'selectorOut', ['reducerStore', 'selectorOut'], { label: 'notify computed' }),
+          sc: makeLink('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: 'Zoneless DOM' }),
         },
         flows: [{ route: ['ca', 'ar', 'rs', 'sc'], kind: 'signal', rate: 1.5 }],
       },
@@ -214,7 +212,7 @@ export const angularNgrxStateLesson = {
     {
       short: 'rxMethod & DevTools',
       chapter: 'scaling',
-      title: '6. rxMethod() Hybrid Bridge & DevTools Time-Travel',
+      title: 'rxMethod() Hybrid Bridge & DevTools Time-Travel',
       body: [
         'Need RxJS <code>debounceTime</code> + <code>switchMap</code> inside SignalStore? Use <code>rxMethod&lt;string&gt;(pipe(debounceTime(300), switchMap(...), tapResponse(...)))</code>—auto-cleaned on store destroy!',
         '<b>Rule of thumb:</b> Use <b>SignalStore</b> for modern feature/app state; use <b>Classic Store + Effects</b> when global Redux DevTools time-travel & cross-team event sourcing are mandatory.',
@@ -227,12 +225,12 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'Hybrid NgRx', stateMutation: 'patchState()', asyncSideEffect: 'rxMethod()', boilerplate: 'Optimal' },
       scene: {
         entities: {
-          componentUi: y(-18, 0, { label: 'Component', tags: [{ text: 'search(query)', tone: 'purple', icon: 'zap' }] }),
-          actionBus: d(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['rxMethod()'], sub: 'rxMethod()' }),
-          reducerStore: b(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
-          effectsApi: d(10, 10, { s: 4.8, h: 52, color: 'amber', glyph: 'server', label: ['RxJS + API'], sub: 'withMethods' }),
-          selectorOut: d(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['withComputed'], sub: 'withComputed' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'rxMethod() in SignalStore', [
+          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'search(query)', tone: 'purple', icon: 'zap' }] }),
+          actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['rxMethod()'], sub: 'rxMethod()' }),
+          reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
+          effectsApi: makeBlock(10, 10, { s: 4.8, h: 52, color: 'amber', glyph: 'server', label: ['RxJS + API'], sub: 'withMethods' }),
+          selectorOut: makeBlock(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['withComputed'], sub: 'withComputed' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'rxMethod() in SignalStore', [
             `search: rxMethod<string>(pipe(`,
             `  debounceTime(300), distinctUntilChanged(),`,
             `  switchMap(q => api.search(q).pipe(`,
@@ -242,11 +240,11 @@ export const angularNgrxStateLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ca: h('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'pass signal/val' }),
-          ar: h('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'loading: true' }),
-          re: h('reducerStore', 'effectsApi', ['reducerStore', 'effectsApi'], { label: 'switchMap API' }),
-          es: h('effectsApi', 'selectorOut', ['effectsApi', 'selectorOut'], { label: 'patchState()' }),
-          sc: h('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: '60fps Signal' }),
+          ca: makeLink('componentUi', 'actionBus', ['componentUi', 'actionBus'], { label: 'pass signal/val' }),
+          ar: makeLink('actionBus', 'reducerStore', ['actionBus', 'reducerStore'], { label: 'loading: true' }),
+          re: makeLink('reducerStore', 'effectsApi', ['reducerStore', 'effectsApi'], { label: 'switchMap API' }),
+          es: makeLink('effectsApi', 'selectorOut', ['effectsApi', 'selectorOut'], { label: 'patchState()' }),
+          sc: makeLink('selectorOut', 'componentUi', ['selectorOut', 'componentUi'], { label: '60fps Signal' }),
         },
         flows: [
           { route: ['ca', 'ar'], kind: 'signal', rate: 1.5 },

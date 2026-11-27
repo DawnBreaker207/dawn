@@ -1,12 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makeZone as x,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 export const angularComponentLifecycleLesson = {
@@ -42,9 +38,9 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'constructor()', domReady: 'No (Virtual)', inputsBound: 'Pending', subscriptionsCleaned: 'N/A' },
       scene: {
         entities: {
-          ctorInst: d(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
-          diEngine: d(-4, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['DI Injector'], sub: 'DI singletons' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Constructor vs ngOnInit', [
+          ctorInst: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
+          diEngine: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['DI Injector'], sub: 'DI singletons' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Constructor vs ngOnInit', [
             `export class ProfileComponent implements OnInit {`,
             `  constructor(private http: HttpClient) {`,
             `    // Inputs are undefined here!`,
@@ -57,7 +53,7 @@ export const angularComponentLifecycleLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          cd: h('ctorInst', 'diEngine', ['ctorInst', 'diEngine'], { label: 'inject services' }),
+          cd: makeLink('ctorInst', 'diEngine', ['ctorInst', 'diEngine'], { label: 'inject services' }),
         },
         flows: [{ route: ['cd'], kind: 'hook', rate: 1.5 }],
       },
@@ -78,10 +74,10 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'ngOnChanges()', domReady: 'No', inputsBound: 'Bound (1st change)', subscriptionsCleaned: 'N/A' },
       scene: {
         entities: {
-          ctorInst: d(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
-          diEngine: d(-4, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['DI Injector'], sub: 'DI singletons' }),
-          onChanges: d(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'terminal', label: ['ngOnChanges'], sub: 'diff map' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'ngOnChanges Execution Dump', [
+          ctorInst: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
+          diEngine: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['DI Injector'], sub: 'DI singletons' }),
+          onChanges: makeBlock(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'terminal', label: ['ngOnChanges'], sub: 'diff map' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ngOnChanges Execution Dump', [
             `ngOnChanges(changes: SimpleChanges) {`,
             `  if (changes['userId']) {`,
             `    const prev = changes['userId'].previousValue;`,
@@ -93,8 +89,8 @@ export const angularComponentLifecycleLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          cd: h('ctorInst', 'diEngine', ['ctorInst', 'diEngine'], { label: 'inject services' }),
-          do: h('diEngine', 'onChanges', ['diEngine', 'onChanges'], { label: 'bind inputs' }),
+          cd: makeLink('ctorInst', 'diEngine', ['ctorInst', 'diEngine'], { label: 'inject services' }),
+          do: makeLink('diEngine', 'onChanges', ['diEngine', 'onChanges'], { label: 'bind inputs' }),
         },
         flows: [{ route: ['cd', 'do'], kind: 'hook', rate: 1.5 }],
       },
@@ -115,10 +111,10 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'ngOnInit()', domReady: 'Content Pending', inputsBound: 'Bound', subscriptionsCleaned: 'N/A' },
       scene: {
         entities: {
-          ctorInst: d(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
-          onChanges: d(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'terminal', label: ['ngOnChanges'], sub: 'diff map' }),
-          ngInit: d(8, 8, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['ngOnInit'], sub: 'init state' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'ngOnInit Hook', [
+          ctorInst: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
+          onChanges: makeBlock(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'terminal', label: ['ngOnChanges'], sub: 'diff map' }),
+          ngInit: makeBlock(8, 8, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['ngOnInit'], sub: 'init state' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ngOnInit Hook', [
             `ngOnInit() {`,
             `  // All inputs are initialized:`,
             `  this.userService.getUser(this.userId()).subscribe(user => {`,
@@ -128,8 +124,8 @@ export const angularComponentLifecycleLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          co: h('ctorInst', 'onChanges', ['ctorInst', 'onChanges'], { label: 'bind inputs' }),
-          oi: h('onChanges', 'ngInit', ['onChanges', 'ngInit'], { label: 'run init logic' }),
+          co: makeLink('ctorInst', 'onChanges', ['ctorInst', 'onChanges'], { label: 'bind inputs' }),
+          oi: makeLink('onChanges', 'ngInit', ['onChanges', 'ngInit'], { label: 'run init logic' }),
         },
         flows: [{ route: ['co', 'oi'], kind: 'hook', rate: 1.5 }],
       },
@@ -150,10 +146,10 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'ngAfterViewInit()', domReady: '100% Ready', inputsBound: 'Bound', subscriptionsCleaned: 'N/A' },
       scene: {
         entities: {
-          ngInit: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['ngOnInit'], sub: 'init state' }),
-          viewQuery: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ViewChild Query'], sub: 'finds element' }),
-          viewHook: b(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['AfterViewInit'], sub: 'DOM ready' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'ViewChild Query Resolution', [
+          ngInit: makeBlock(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['ngOnInit'], sub: 'init state' }),
+          viewQuery: makeBlock(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ViewChild Query'], sub: 'finds element' }),
+          viewHook: makeDb(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['AfterViewInit'], sub: 'DOM ready' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ViewChild Query Resolution', [
             `@ViewChild('chartCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;`,
             ``,
             `ngAfterViewInit() {`,
@@ -164,8 +160,8 @@ export const angularComponentLifecycleLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          iv: h('ngInit', 'viewQuery', ['ngInit', 'viewQuery'], { label: 'render template' }),
-          vq: h('viewQuery', 'viewHook', ['viewQuery', 'viewHook'], { label: 'attach ElementRef' }),
+          iv: makeLink('ngInit', 'viewQuery', ['ngInit', 'viewQuery'], { label: 'render template' }),
+          vq: makeLink('viewQuery', 'viewHook', ['viewQuery', 'viewHook'], { label: 'attach ElementRef' }),
         },
         flows: [{ route: ['iv', 'vq'], kind: 'view', rate: 1.5 }],
       },
@@ -186,10 +182,10 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'DevMode Verify', domReady: 'Verified', inputsBound: 'Consistent', subscriptionsCleaned: 'N/A' },
       scene: {
         entities: {
-          viewHook: b(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['AfterViewInit'], sub: 'DOM ready' }),
-          verifier: d(8, 8, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Pass 2 Verify'], sub: 'check bindings' }),
-          cleanState: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Stable View'], sub: 'zero drift' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'DevMode Verification Error', [
+          viewHook: makeDb(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['AfterViewInit'], sub: 'DOM ready' }),
+          verifier: makeBlock(8, 8, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Pass 2 Verify'], sub: 'check bindings' }),
+          cleanState: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Stable View'], sub: 'zero drift' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'DevMode Verification Error', [
             `// If you mutate state inside ngAfterViewInit():`,
             `ERROR Error: NG0100: ExpressionChangedAfterItHasBeenCheckedError:`,
             `Expression has changed after it was checked.`,
@@ -198,8 +194,8 @@ export const angularComponentLifecycleLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vv: h('viewHook', 'verifier', ['viewHook', 'verifier'], { label: 're-evaluate view' }),
-          vc: h('verifier', 'cleanState', ['verifier', 'cleanState'], { label: 'assert equality' }),
+          vv: makeLink('viewHook', 'verifier', ['viewHook', 'verifier'], { label: 're-evaluate view' }),
+          vc: makeLink('verifier', 'cleanState', ['verifier', 'cleanState'], { label: 'assert equality' }),
         },
         flows: [{ route: ['vv', 'vc'], kind: 'view', rate: 1.5 }],
       },
@@ -220,10 +216,10 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'ngOnDestroy()', domReady: 'Unmounted', inputsBound: 'Detached', subscriptionsCleaned: '100% Cleared' },
       scene: {
         entities: {
-          viewHook: b(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['AfterViewInit'], sub: 'DOM ready' }),
-          destroyRef: d(-16, 8, { s: 4.8, h: 52, color: 'rose', glyph: 'terminal', label: ['DestroyRef'], sub: 'unmounting' }),
-          freedMemory: d(-16, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Freed Memory'], sub: 'zero leaks' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Modern Teardown with DestroyRef', [
+          viewHook: makeDb(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['AfterViewInit'], sub: 'DOM ready' }),
+          destroyRef: makeBlock(-16, 8, { s: 4.8, h: 52, color: 'rose', glyph: 'terminal', label: ['DestroyRef'], sub: 'unmounting' }),
+          freedMemory: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Freed Memory'], sub: 'zero leaks' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Modern Teardown with DestroyRef', [
             `export class LiveFeedComponent {`,
             `  private destroyRef = inject(DestroyRef);`,
             `  constructor(api: FeedService) {`,
@@ -235,8 +231,8 @@ export const angularComponentLifecycleLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vd: h('viewHook', 'destroyRef', ['viewHook', 'destroyRef'], { label: 'unmount view' }),
-          df: h('destroyRef', 'freedMemory', ['destroyRef', 'freedMemory'], { label: 'release streams' }),
+          vd: makeLink('viewHook', 'destroyRef', ['viewHook', 'destroyRef'], { label: 'unmount view' }),
+          df: makeLink('destroyRef', 'freedMemory', ['destroyRef', 'freedMemory'], { label: 'release streams' }),
         },
         flows: [{ route: ['vd', 'df'], kind: 'destroy', rate: 1.6 }],
       },
@@ -257,10 +253,10 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'hostDirectives', domReady: 'Projected', inputsBound: 'Exposed', subscriptionsCleaned: 'Auto-Managed' },
       scene: {
         entities: {
-          freedMemory: d(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['hostDirectives'], sub: 'composition' }),
-          ctorInst: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['<ng-content>'], sub: 'multi-slot' }),
-          viewHook: b(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Composed Host'], sub: 'headless UI' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'hostDirectives & Multi-Slot Projection', [
+          freedMemory: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['hostDirectives'], sub: 'composition' }),
+          ctorInst: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['<ng-content>'], sub: 'multi-slot' }),
+          viewHook: makeDb(-4, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Composed Host'], sub: 'headless UI' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'hostDirectives & Multi-Slot Projection', [
             `@Component({`,
             `  selector: 'app-card',`,
             `  hostDirectives: [{ directive: FocusRingDirective, inputs: ['color'] }],`,
@@ -269,8 +265,8 @@ export const angularComponentLifecycleLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          fc: h('freedMemory', 'ctorInst', ['freedMemory', 'ctorInst'], { label: 'compose host' }),
-          cv: h('ctorInst', 'viewHook', ['ctorInst', 'viewHook'], { label: 'project slots' }),
+          fc: makeLink('freedMemory', 'ctorInst', ['freedMemory', 'ctorInst'], { label: 'compose host' }),
+          cv: makeLink('ctorInst', 'viewHook', ['ctorInst', 'viewHook'], { label: 'project slots' }),
         },
         flows: [{ route: ['fc', 'cv'], kind: 'view', rate: 1.5 }],
       },

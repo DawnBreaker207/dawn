@@ -1,33 +1,17 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeDevice,
+  makeHot,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
-const ho = (e = []) => y(0, -19, { form: `phone`, w: 5, d: 5, label: `mobile app`, tags: e });
+const ho = (e = []) => makeDevice(0, -19, { form: `phone`, w: 5, d: 5, label: `mobile app`, tags: e });
 
 const go = (e = {}) =>
-    d(0, -7, {
+    makeBlock(0, -7, {
       label: [`REST`, `API`],
       glyph: `globe`,
       tags: [
@@ -39,17 +23,17 @@ const go = (e = {}) =>
     });
 
 const _o = (e = {}) =>
-    d(0, -7, { color: `purple`, label: [`GraphQL`], sub: `one endpoint`, glyph: `braces`, ...e });
+    makeBlock(0, -7, { color: `purple`, label: [`GraphQL`], sub: `one endpoint`, glyph: `braces`, ...e });
 
 const vo = (e = {}) => ({
-    us: d(-7, 4, {
+    us: makeBlock(-7, 4, {
       color: `green`,
       glyph: `user`,
       label: [`Users`],
       sub: `service`,
       ...(e.us || {}),
     }),
-    ps: d(7, 4, {
+    ps: makeBlock(7, 4, {
       color: `yellow`,
       glyph: `file`,
       label: [`Posts`],
@@ -58,11 +42,11 @@ const vo = (e = {}) => ({
     }),
   });
 
-const yo = (e = {}) => ({ pa: h(`phone`, `api`, [`phone`, `api`], { heads: `both`, ...e }) });
+const yo = (e = {}) => ({ pa: makeLink(`phone`, `api`, [`phone`, `api`], { heads: `both`, ...e }) });
 
 const bo = (e = {}) => ({
-    au: h(`api`, `us`, [`api`, [`us`, `api`], `us`], { heads: `both`, ...e }),
-    ap: h(`api`, `ps`, [`api`, [`ps`, `api`], `ps`], { heads: `both`, ...e }),
+    au: makeLink(`api`, `us`, [`api`, [`us`, `api`], `us`], { heads: `both`, ...e }),
+    ap: makeLink(`api`, `ps`, [`api`, [`ps`, `api`], `ps`], { heads: `both`, ...e }),
   });
 
 const xo = (e = 0.7, t) => ({
@@ -73,7 +57,7 @@ const xo = (e = 0.7, t) => ({
     kind: t,
   });
 
-const So = (e, t, n) => S({ x: 7, y: 4, z: 0, dx: 70, dy: -250 }, e, t, { icon: n });
+const So = (e, t, n) => makePanel({ x: 7, y: 4, z: 0, dx: 70, dy: -250 }, e, t, { icon: n });
 
 const Co = { label: `4G · 100 ms per round trip`, labelTone: `amber` };
 
@@ -233,7 +217,7 @@ const wo = {
             phone: ho(),
             api: _o(),
             ...vo({
-              us: { ..._(0.97), tags: [{ text: `41,000 lookups`, tone: `red`, icon: `alert` }] },
+              us: { ...makeHot(0.97), tags: [{ text: `41,000 lookups`, tone: `red`, icon: `alert` }] },
             }),
             card: So(
               `A “small” query`,
@@ -269,7 +253,7 @@ const wo = {
           entities: {
             phone: ho(),
             api: _o(),
-            ...vo({ us: v(0.3), ps: v(0.3) }),
+            ...vo({ us: makeCool(0.3), ps: makeCool(0.3) }),
             card: So(
               `A gRPC contract`,
               [
@@ -304,8 +288,8 @@ const wo = {
             phone: ho([{ text: `followers · page 2,001`, icon: `users` }]),
             api: _o(),
             ...vo({
-              us: { ...v(0.3), tags: [{ text: `2,000,000 followers`, icon: `users` }] },
-              ps: v(0.3),
+              us: { ...makeCool(0.3), tags: [{ text: `2,000,000 followers`, icon: `users` }] },
+              ps: makeCool(0.3),
             }),
             card: So(
               `Paging a long list`,
@@ -343,7 +327,7 @@ const wo = {
           entities: {
             phone: ho([{ text: `app v3.2 · crashed`, tone: `red`, icon: `alert` }]),
             api: _o({ tags: [{ text: `name → display_name`, tone: `amber`, icon: `replay` }] }),
-            ...vo({ us: v(0.3), ps: v(0.3) }),
+            ...vo({ us: makeCool(0.3), ps: makeCool(0.3) }),
             card: So(
               `Evolving safely`,
               [
@@ -380,7 +364,7 @@ const wo = {
         },
         metrics: { trips: 1, payload: `3 KB`, screenMs: 130, unused: 0 },
         scene: {
-          entities: { phone: ho(), api: _o(), ...vo({ us: v(0.3), ps: v(0.3) }) },
+          entities: { phone: ho(), api: _o(), ...vo({ us: makeCool(0.3), ps: makeCool(0.3) }) },
           links: { ...yo({ label: `GraphQL` }), ...bo({ label: `gRPC` }) },
           flows: [xo(0.9)],
         },
@@ -404,7 +388,7 @@ const wo = {
         },
         metrics: { trips: 1, payload: `3 KB`, screenMs: 130, unused: 0 },
         scene: {
-          entities: { phone: ho(), api: _o(), ...vo({ us: v(0.3), ps: v(0.3) }) },
+          entities: { phone: ho(), api: _o(), ...vo({ us: makeCool(0.3), ps: makeCool(0.3) }) },
           links: { ...yo({ label: `GraphQL` }), ...bo({ label: `gRPC` }) },
           flows: [xo(0.9)],
         },

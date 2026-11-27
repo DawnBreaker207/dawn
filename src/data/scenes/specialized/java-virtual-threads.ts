@@ -1,9 +1,8 @@
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
@@ -30,7 +29,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: '1:1 OS Thread',
       chapter: 'executors',
-      title: '1. Blocking 1:1 Platform Threads (The Bottleneck)',
+      title: 'Blocking 1:1 Platform Threads (The Bottleneck)',
       body: [
         'Classic Java maps 1 <code>java.lang.Thread</code> directly to 1 OS kernel thread (~1 MB native stack).',
         'When a thread blocks on JDBC or HTTP I/O, the expensive OS kernel thread sits idle — spawning 10,000 threads exhausts RAM and triggers heavy context switching.',
@@ -42,9 +41,9 @@ export const javaVirtualThreadsLesson: Lesson = {
       metrics: { thread_model: '1:1 OS Thread', ram_per_task: '~1 MB stack', io_behavior: 'Blocks OS thread', scalability: 'Low (~2k)' },
       scene: {
         entities: {
-          os: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'cpu', label: ['OS Thread #1'], sub: '1 MB stack' }),
-          io: b(2, -6, { r: 2.2, h: 48, color: 'amber', label: ['Blocking I/O'], sub: '200ms wait' }),
-          card: S({ x: -12, y: 12 }, '1. Classic Thread-per-Request Bottleneck', [
+          os: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'cpu', label: ['OS Thread #1'], sub: '1 MB stack' }),
+          io: makeDb(2, -6, { r: 2.2, h: 48, color: 'amber', label: ['Blocking I/O'], sub: '200ms wait' }),
+          card: makePanel({ x: -12, y: 12 }, 'Classic Thread-per-Request Bottleneck', [
             '// 1 Java Thread = 1 OS Kernel Thread (~1MB stack)',
             'new Thread(() -> {',
             '  String res = httpClient.blockingGet(url); // OS idle!',
@@ -52,7 +51,7 @@ export const javaVirtualThreadsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          os_io: h('os', 'io', ['os', 'io'], { heads: 'end', label: 'blocks 200ms' }),
+          os_io: makeLink('os', 'io', ['os', 'io'], { heads: 'end', label: 'blocks 200ms' }),
         },
         flows: [{ route: ['os_io'], kind: 'fail', rate: 1.4 }],
       },
@@ -60,7 +59,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'Core->Q->Max',
       chapter: 'executors',
-      title: '2. Why ThreadPoolExecutor Fills Queue Before maxPoolSize',
+      title: 'Why ThreadPoolExecutor Fills Queue Before maxPoolSize',
       body: [
         'Given <code>core=4, max=16, queue=100</code>: 50 tasks fill the 4 core threads and push 46 into the <code>BlockingQueue</code> — <strong>thread #5 only spawns when the queue is 100% full!</strong>',
         'Use <code>CallerRunsPolicy</code> for backpressure; unbounded queues make <code>maximumPoolSize</code> dead config.',
@@ -73,18 +72,18 @@ export const javaVirtualThreadsLesson: Lesson = {
       metrics: { thread_model: 'Pooled OS', ram_per_task: 'Queue node', io_behavior: 'Still blocks', scalability: 'Bounded' },
       scene: {
         entities: {
-          os: d(-12, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['1. Core (4)'], sub: 'fill 1st' }),
-          q: b(0, -14, { r: 2.2, h: 48, color: 'amber', label: ['2. Queue (100)'], sub: 'fill 2nd!' }),
-          max: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['3. Max (16)'], sub: 'only if Q full' }),
-          card: S({ x: -12, y: 12 }, '2. ThreadPoolExecutor Submission Order', [
+          os: makeBlock(-12, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['1. Core (4)'], sub: 'fill 1st' }),
+          q: makeDb(0, -14, { r: 2.2, h: 48, color: 'amber', label: ['2. Queue (100)'], sub: 'fill 2nd!' }),
+          max: makeBlock(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['3. Max (16)'], sub: 'only if Q full' }),
+          card: makePanel({ x: -12, y: 12 }, 'ThreadPoolExecutor Submission Order', [
             'new ThreadPoolExecutor(4, 16, 60L, SECONDS,',
             '  new ArrayBlockingQueue<>(100), new CallerRunsPolicy());',
             '// Order: 1) corePoolSize -> 2) workQueue -> 3) maxPoolSize',
           ], { icon: 'terminal' }),
         },
         links: {
-          cr_q: h('os', 'q', ['os', 'q'], { heads: 'end', label: 'busy' }),
-          q_mx: h('q', 'max', ['q', 'max'], { heads: 'end', label: 'queue full' }),
+          cr_q: makeLink('os', 'q', ['os', 'q'], { heads: 'end', label: 'busy' }),
+          q_mx: makeLink('q', 'max', ['q', 'max'], { heads: 'end', label: 'queue full' }),
         },
         flows: [{ route: ['cr_q', 'q_mx'], kind: 'req', rate: 1.9 }],
       },
@@ -92,7 +91,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'TL Leak',
       chapter: 'executors',
-      title: '3. Why Tomcat ThreadPools Leak ThreadLocal',
+      title: 'Why Tomcat ThreadPools Leak ThreadLocal',
       body: [
         '<code>ThreadLocal.set(val)</code> stores an <code>Entry</code> inside the Thread’s <code>ThreadLocalMap</code>: the <strong>key</strong> is a <code>WeakReference</code>, but the <strong>value is a STRONG ref</strong>!',
         'Since Tomcat worker threads never die, forgetting <code>tl.remove()</code> in <code>finally</code> leaks Heap RAM and bleeds user data into future requests.',
@@ -105,18 +104,18 @@ export const javaVirtualThreadsLesson: Lesson = {
       metrics: { thread_model: 'ThreadLocMap', ram_per_task: 'Strong Value', io_behavior: 'Cross-req bug', scalability: 'Leak risk' },
       scene: {
         entities: {
-          os: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Pool Thread'], sub: 'lives forever' }),
-          map: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['ThreadLocMap'], sub: 'WeakKey+Val' }),
-          fin: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['finally remove'], sub: 'tl.remove()' }),
-          card: S({ x: -12, y: 12 }, '3. ThreadLocalMap Leak & Mandatory Cleanup', [
+          os: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Pool Thread'], sub: 'lives forever' }),
+          map: makeBlock(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['ThreadLocMap'], sub: 'WeakKey+Val' }),
+          fin: makeBlock(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['finally remove'], sub: 'tl.remove()' }),
+          card: makePanel({ x: -12, y: 12 }, 'ThreadLocalMap Leak & Mandatory Cleanup', [
             '// Entry extends WeakReference<ThreadLocal<?>> { Object value; }',
             'try { CTX.set(user); handle(); }',
             'finally { CTX.remove(); } // prevents OOM + data bleed!',
           ], { icon: 'terminal' }),
         },
         links: {
-          th_mp: h('os', 'map', ['os', 'map'], { heads: 'end', label: 'owns map' }),
-          mp_fn: h('map', 'fin', ['map', 'fin'], { heads: 'end', label: 'clean entry' }),
+          th_mp: makeLink('os', 'map', ['os', 'map'], { heads: 'end', label: 'owns map' }),
+          mp_fn: makeLink('map', 'fin', ['map', 'fin'], { heads: 'end', label: 'clean entry' }),
         },
         flows: [{ route: ['th_mp', 'mp_fn'], kind: 'res', rate: 1.8 }],
       },
@@ -124,7 +123,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'CompletableFuture',
       chapter: 'async',
-      title: '4. CompletableFuture Async Pipelines',
+      title: 'CompletableFuture Async Pipelines',
       body: [
         '<code>CompletableFuture</code> chains non-blocking callbacks (<code>thenApply</code>, <code>thenCompose</code>, <code>allOf</code>) so OS threads are not held idle waiting for I/O.',
         'Trade-off: callback chains split stack traces and complicate debugging and structured error handling.',
@@ -137,10 +136,10 @@ export const javaVirtualThreadsLesson: Lesson = {
       metrics: { thread_model: 'Async Callbacks', ram_per_task: 'Future heap', io_behavior: 'Non-blocking', scalability: 'High (complex)' },
       scene: {
         entities: {
-          f1: d(-12, -16, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['supplyAsync()'], sub: 'fetch user' }),
-          f2: d(-12, -2, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['thenCompose()'], sub: 'fetch orders' }),
-          join: d(4, -9, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['allOf().join()'], sub: 'merge DAG' }),
-          card: S({ x: -12, y: 12 }, '4. Composing Async Pipelines', [
+          f1: makeBlock(-12, -16, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['supplyAsync()'], sub: 'fetch user' }),
+          f2: makeBlock(-12, -2, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['thenCompose()'], sub: 'fetch orders' }),
+          join: makeBlock(4, -9, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['allOf().join()'], sub: 'merge DAG' }),
+          card: makePanel({ x: -12, y: 12 }, 'Composing Async Pipelines', [
             'CompletableFuture.supplyAsync(() -> getUser(id), ioPool)',
             '  .thenCompose(u -> getOrdersAsync(u))',
             '  .exceptionally(ex -> fallbackOrders())',
@@ -148,8 +147,8 @@ export const javaVirtualThreadsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          f1_jn: h('f1', 'join', ['f1', 'join'], { heads: 'end', label: 'combine' }),
-          f2_jn: h('f2', 'join', ['f2', 'join'], { heads: 'end', label: 'flatMap' }),
+          f1_jn: makeLink('f1', 'join', ['f1', 'join'], { heads: 'end', label: 'combine' }),
+          f2_jn: makeLink('f2', 'join', ['f2', 'join'], { heads: 'end', label: 'flatMap' }),
         },
         flows: [{ route: ['f1_jn'], kind: 'res', rate: 2.0 }, { route: ['f2_jn'], kind: 'res', rate: 2.0 }],
       },
@@ -157,7 +156,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'NIO epoll',
       chapter: 'nio',
-      title: '5. Java NIO Selector & OS epoll Multiplexing',
+      title: 'Java NIO Selector & OS epoll Multiplexing',
       body: [
         'Underneath Netty, WebFlux, and Project Loom, <code>java.nio.channels.Selector</code> registers thousands of <code>SocketChannel</code> descriptors onto a single OS <code>epoll</code>/<code>kqueue</code> loop.',
         'The kernel wakes the event loop only when bytes actually arrive on a socket.',
@@ -170,10 +169,10 @@ export const javaVirtualThreadsLesson: Lesson = {
       metrics: { thread_model: '1 Event Loop', ram_per_task: 'FD buffer', io_behavior: 'Multiplexed', scalability: '100k+ sockets' },
       scene: {
         entities: {
-          socks: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['10k Sockets'], sub: 'SocketChannel' }),
-          sel: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['NIO Selector'], sub: 'epoll_wait()' }),
-          buf: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['ByteBuffer'], sub: 'OP_READ ready' }),
-          card: S({ x: -12, y: 12 }, '5. Non-Blocking NIO Event Loop', [
+          socks: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['10k Sockets'], sub: 'SocketChannel' }),
+          sel: makeBlock(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['NIO Selector'], sub: 'epoll_wait()' }),
+          buf: makeDb(0, 0, { r: 2.2, h: 48, color: 'green', label: ['ByteBuffer'], sub: 'OP_READ ready' }),
+          card: makePanel({ x: -12, y: 12 }, 'Non-Blocking NIO Event Loop', [
             'channel.configureBlocking(false);',
             'channel.register(selector, SelectionKey.OP_READ);',
             'selector.select(); // OS epoll_wait returns ready keys',
@@ -181,8 +180,8 @@ export const javaVirtualThreadsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          sk_sel: h('socks', 'sel', ['socks', 'sel'], { heads: 'end', label: 'register FD' }),
-          sel_bf: h('sel', 'buf', ['sel', 'buf'], { heads: 'end', label: 'read ready' }),
+          sk_sel: makeLink('socks', 'sel', ['socks', 'sel'], { heads: 'end', label: 'register FD' }),
+          sel_bf: makeLink('sel', 'buf', ['sel', 'buf'], { heads: 'end', label: 'read ready' }),
         },
         flows: [{ route: ['sk_sel', 'sel_bf'], kind: 'req', rate: 2.0 }],
       },
@@ -190,7 +189,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'Virtual Threads',
       chapter: 'loom',
-      title: '6. JDK 21 Virtual Threads: Mount & Unmount',
+      title: 'JDK 21 Virtual Threads: Mount & Unmount',
       body: [
         '<strong>Virtual Threads</strong> (<code>Thread.ofVirtual()</code>) are cheap M:N user-mode continuations (~few KB on Heap) scheduled onto a small <code>ForkJoinPool</code> of OS <strong>Carrier Threads</strong>.',
         'When a virtual thread hits blocking I/O, the JVM automatically <strong>unmounts</strong> its stack to the Heap and registers an NIO epoll callback — freeing the Carrier for other virtual threads!',
@@ -203,10 +202,10 @@ export const javaVirtualThreadsLesson: Lesson = {
       metrics: { thread_model: 'M:N Loom', ram_per_task: '~2 KB Heap', io_behavior: 'Auto-unmount', scalability: '1M+ virtual' },
       scene: {
         entities: {
-          vt: d(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Virtual Threads'], sub: '1M+ cheap' }),
-          car: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Carrier Pool'], sub: 'CPU-core OS' }),
-          heap: b(0, 0, { r: 2.2, h: 48, color: 'purple', label: ['Parked Stack'], sub: 'Heap chunk' }),
-          card: S({ x: -12, y: 12 }, '6. Project Loom Virtual Threads (JDK 21+)', [
+          vt: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Virtual Threads'], sub: '1M+ cheap' }),
+          car: makeBlock(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Carrier Pool'], sub: 'CPU-core OS' }),
+          heap: makeDb(0, 0, { r: 2.2, h: 48, color: 'purple', label: ['Parked Stack'], sub: 'Heap chunk' }),
+          card: makePanel({ x: -12, y: 12 }, 'Project Loom Virtual Threads (JDK 21+)', [
             'try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {',
             '  exec.submit(() -> httpClient.get(url));',
             '} // On I/O wait: unmount -> park on Heap -> free Carrier',
@@ -214,8 +213,8 @@ export const javaVirtualThreadsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vt_car: h('vt', 'car', ['vt', 'car'], { heads: 'end', label: 'mount' }),
-          car_hp: h('car', 'heap', ['car', 'heap'], { heads: 'end', label: 'park on I/O' }),
+          vt_car: makeLink('vt', 'car', ['vt', 'car'], { heads: 'end', label: 'mount' }),
+          car_hp: makeLink('car', 'heap', ['car', 'heap'], { heads: 'end', label: 'park on I/O' }),
         },
         flows: [{ route: ['vt_car', 'car_hp'], kind: 'res', rate: 2.2 }],
       },
@@ -223,7 +222,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'Pinning Fix',
       chapter: 'loom',
-      title: '7. Avoiding Carrier Pinning (synchronized -> Lock)',
+      title: 'Avoiding Carrier Pinning (synchronized -> Lock)',
       body: [
         'In JDK 21, performing blocking I/O inside a <code>synchronized</code> block or native JNI frame <strong>pins</strong> the virtual thread to its OS Carrier Thread, preventing unmount.',
         'Replace long I/O-wrapping <code>synchronized</code> blocks with <code>ReentrantLock</code> (which parks cleanly), or upgrade to JDK 24+ (JEP 491) which unpins <code>synchronized</code>.',
@@ -236,10 +235,10 @@ export const javaVirtualThreadsLesson: Lesson = {
       metrics: { thread_model: 'Loom Safe', ram_per_task: '~2 KB Heap', io_behavior: 'Unpinned Lock', scalability: 'Full Loom' },
       scene: {
         entities: {
-          vt: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['synchronized'], sub: 'pins Carrier!' }),
-          lock: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['ReentrantLock'], sub: 'unmounts I/O' }),
-          car: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Carrier Free'], sub: 'runs next VT' }),
-          card: S({ x: -12, y: 12 }, '7. Eliminating Virtual Thread Pinning', [
+          vt: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['synchronized'], sub: 'pins Carrier!' }),
+          lock: makeBlock(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['ReentrantLock'], sub: 'unmounts I/O' }),
+          car: makeBlock(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Carrier Free'], sub: 'runs next VT' }),
+          card: makePanel({ x: -12, y: 12 }, 'Eliminating Virtual Thread Pinning', [
             '// BAD (JDK 21): synchronized(mu) { db.query(); } // PINS!',
             '// GOOD: ReentrantLock allows clean unmount:',
             'lock.lock(); try { db.query(); } finally { lock.unlock(); }',
@@ -247,8 +246,8 @@ export const javaVirtualThreadsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          vt_lk: h('vt', 'lock', ['vt', 'lock'], { heads: 'end', label: 'refactor' }),
-          lk_cr: h('lock', 'car', ['lock', 'car'], { heads: 'end', label: 'free carrier' }),
+          vt_lk: makeLink('vt', 'lock', ['vt', 'lock'], { heads: 'end', label: 'refactor' }),
+          lk_cr: makeLink('lock', 'car', ['lock', 'car'], { heads: 'end', label: 'free carrier' }),
         },
         flows: [{ route: ['vt_lk', 'lk_cr'], kind: 'res', rate: 1.9 }],
       },
@@ -256,7 +255,7 @@ export const javaVirtualThreadsLesson: Lesson = {
     {
       short: 'ScopedValue',
       chapter: 'loom',
-      title: '8. Modern Fix: ScopedValue for Virtual Threads',
+      title: 'Modern Fix: ScopedValue for Virtual Threads',
       body: [
         'With 1M Virtual Threads, mutable <code>ThreadLocal</code> maps waste Heap RAM and risk forgetting <code>remove()</code>.',
         '<strong><code>ScopedValue</code></strong> binds an <strong>immutable</strong> value strictly for the dynamic scope of <code>ScopedValue.where(KEY, val).run(...)</code> — auto-freed on exit with zero leaks!',
@@ -269,10 +268,10 @@ export const javaVirtualThreadsLesson: Lesson = {
       metrics: { thread_model: '1M Virtual', ram_per_task: 'Immutable', io_behavior: 'Auto-freed', scalability: 'Zero leaks' },
       scene: {
         entities: {
-          bind: d(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Scoped.where'], sub: 'immutable bind' }),
-          vt: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Virtual Task'], sub: 'KEY.get()' }),
-          car: d(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Auto Unbind'], sub: '0 remove() bug' }),
-          card: S({ x: -12, y: 12 }, '8. ScopedValue Replaces ThreadLocal', [
+          bind: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['Scoped.where'], sub: 'immutable bind' }),
+          vt: makeBlock(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Virtual Task'], sub: 'KEY.get()' }),
+          car: makeBlock(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'cpu', label: ['Auto Unbind'], sub: '0 remove() bug' }),
+          card: makePanel({ x: -12, y: 12 }, 'ScopedValue Replaces ThreadLocal', [
             'static final ScopedValue<User> USER = ScopedValue.newInstance();',
             'ScopedValue.where(USER, currentUser).run(() -> {',
             '  handleOrder(); // reads USER.get() safely',
@@ -280,8 +279,8 @@ export const javaVirtualThreadsLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          bd_vt: h('bind', 'vt', ['bind', 'vt'], { heads: 'end', label: 'enter scope' }),
-          vt_ex: h('vt', 'car', ['vt', 'car'], { heads: 'end', label: 'auto clean' }),
+          bd_vt: makeLink('bind', 'vt', ['bind', 'vt'], { heads: 'end', label: 'enter scope' }),
+          vt_ex: makeLink('vt', 'car', ['vt', 'car'], { heads: 'end', label: 'auto clean' }),
         },
         flows: [{ route: ['bd_vt', 'vt_ex'], kind: 'res', rate: 2.0 }],
       },

@@ -1,27 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBalancer,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink
 } from '@/lib/simulator/scene-builders';
 
 // ============================================================================
@@ -70,21 +52,21 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-18, -4, {
+            client: makeDevice(-18, -4, {
               label: `users`,
               tags: [{ text: `https://app.io`, icon: `globe` }],
             }),
-            ec2: d(-1, -4, {
+            ec2: makeBlock(-1, -4, {
               color: `yellow`,
               glyph: `server`,
               label: [`EC2`, `us-east-1a`],
               cpu: 0.85,
             }),
-            db: b(15, -4, { label: `MySQL Single`, cpu: 0.6 }),
+            db: makeDb(15, -4, { label: `MySQL Single`, cpu: 0.6 }),
           },
           links: {
-            c1: h(`client`, `ec2`, [`client`, `ec2`], { label: `Direct Traffic`, heads: `both` }),
-            d1: h(`ec2`, `db`, [`ec2`, `db`], { label: `Read/Write`, heads: `both` }),
+            c1: makeLink(`client`, `ec2`, [`client`, `ec2`], { label: `Direct Traffic`, heads: `both` }),
+            d1: makeLink(`ec2`, `db`, [`ec2`, `db`], { label: `Read/Write`, heads: `both` }),
           },
           flows: [{ route: [`c1`, `d1`], bounce: !0, rate: 1 }],
         },
@@ -115,25 +97,25 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-18, -4, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
-            r53: d(-2, -16, {
+            client: makeDevice(-18, -4, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
+            r53: makeBlock(-2, -16, {
               color: `yellow`,
               glyph: `globe`,
               label: [`Route 53`],
               sub: `Latency Route`,
             }),
-            cf: d(-2, 8, {
+            cf: makeBlock(-2, 8, {
               color: `purple`,
               glyph: `shield`,
               label: [`CloudFront`],
               sub: `Edge Cache`,
             }),
-            ec2: d(14, 0, { color: `blue`, glyph: `server`, label: [`Origin VPC`], cpu: 0.35 }),
+            ec2: makeBlock(14, 0, { color: `blue`, glyph: `server`, label: [`Origin VPC`], cpu: 0.35 }),
           },
           links: {
-            dns: h(`client`, `r53`, [`client`, `r53`], { label: `DNS Query`, heads: `both` }),
-            edge: h(`client`, `cf`, [`client`, `cf`], { label: `HTTPS / TLS 1.3`, heads: `both` }),
-            origin: h(`cf`, `ec2`, [`cf`, `ec2`], { label: `Origin Fetch`, heads: `both` }),
+            dns: makeLink(`client`, `r53`, [`client`, `r53`], { label: `DNS Query`, heads: `both` }),
+            edge: makeLink(`client`, `cf`, [`client`, `cf`], { label: `HTTPS / TLS 1.3`, heads: `both` }),
+            origin: makeLink(`cf`, `ec2`, [`cf`, `ec2`], { label: `Origin Fetch`, heads: `both` }),
           },
           flows: [{ route: [`edge`], bounce: !0, rate: 1.5 }],
         },
@@ -160,20 +142,20 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-18, -4, { label: `users` }),
-            alb: f(-2, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            srv_a: d(12, -12, {
+            client: makeDevice(-18, -4, { label: `users` }),
+            alb: makeBalancer(-2, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            srv_a: makeBlock(12, -12, {
               color: `blue`,
               glyph: `server`,
               label: [`Target AZ-1a`],
               cpu: 0.25,
             }),
-            srv_b: d(12, 4, { color: `blue`, glyph: `server`, label: [`Target AZ-1b`], cpu: 0.25 }),
+            srv_b: makeBlock(12, 4, { color: `blue`, glyph: `server`, label: [`Target AZ-1b`], cpu: 0.25 }),
           },
           links: {
-            in: h(`client`, `alb`, [`client`, `alb`], { label: `HTTPS`, heads: `both` }),
-            t_a: h(`alb`, `srv_a`, [`alb`, `srv_a`], { label: `HTTP /health`, heads: `both` }),
-            t_b: h(`alb`, `srv_b`, [`alb`, `srv_b`], { label: `HTTP /health`, heads: `both` }),
+            in: makeLink(`client`, `alb`, [`client`, `alb`], { label: `HTTPS`, heads: `both` }),
+            t_a: makeLink(`alb`, `srv_a`, [`alb`, `srv_a`], { label: `HTTP /health`, heads: `both` }),
+            t_b: makeLink(`alb`, `srv_b`, [`alb`, `srv_b`], { label: `HTTP /health`, heads: `both` }),
           },
           flows: [
             { route: [`in`, `t_a`], bounce: !0, rate: 0.9 },
@@ -207,17 +189,17 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            alb: f(-8, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs1: d(6, -14, { color: `blue`, glyph: `server`, label: [`ECS-1 (AZ-a)`], cpu: 0.3 }),
-            ecs2: d(6, -6,  { color: `blue`, glyph: `server`, label: [`ECS-2 (AZ-a)`], cpu: 0.3 }),
-            ecs3: d(6, 2,   { color: `blue`, glyph: `server`, label: [`ECS-3 (AZ-b)`], cpu: 0.3 }),
-            ecs4: d(6, 10,  { color: `blue`, glyph: `server`, label: [`ECS-4 (AZ-b)`], cpu: 0.3 }),
+            alb: makeBalancer(-8, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs1: makeBlock(6, -14, { color: `blue`, glyph: `server`, label: [`ECS-1 (AZ-a)`], cpu: 0.3 }),
+            ecs2: makeBlock(6, -6,  { color: `blue`, glyph: `server`, label: [`ECS-2 (AZ-a)`], cpu: 0.3 }),
+            ecs3: makeBlock(6, 2,   { color: `blue`, glyph: `server`, label: [`ECS-3 (AZ-b)`], cpu: 0.3 }),
+            ecs4: makeBlock(6, 10,  { color: `blue`, glyph: `server`, label: [`ECS-4 (AZ-b)`], cpu: 0.3 }),
           },
           links: {
-            l1: h(`alb`, `ecs1`, [`alb`, `ecs1`]),
-            l2: h(`alb`, `ecs2`, [`alb`, `ecs2`]),
-            l3: h(`alb`, `ecs3`, [`alb`, `ecs3`]),
-            l4: h(`alb`, `ecs4`, [`alb`, `ecs4`]),
+            l1: makeLink(`alb`, `ecs1`, [`alb`, `ecs1`]),
+            l2: makeLink(`alb`, `ecs2`, [`alb`, `ecs2`]),
+            l3: makeLink(`alb`, `ecs3`, [`alb`, `ecs3`]),
+            l4: makeLink(`alb`, `ecs4`, [`alb`, `ecs4`]),
           },
           flows: [
             { route: [`l1`], bounce: !0, rate: 0.8 },
@@ -247,18 +229,18 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            ecs_a: d(-2, -8, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1a`] }),
-            ecs_b: d(-2, 4, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1b`] }),
-            redis_p: d(10, -8, { color: `green`, glyph: `zap`, label: [`Redis Master`, `AZ-1a`] }),
-            redis_r: d(10, 4, { color: `green`, glyph: `zap`, label: [`Redis Replica`, `AZ-1b`] }),
+            ecs_a: makeBlock(-2, -8, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1a`] }),
+            ecs_b: makeBlock(-2, 4, { color: `blue`, glyph: `server`, label: [`ECS Cluster`, `AZ-1b`] }),
+            redis_p: makeBlock(10, -8, { color: `green`, glyph: `zap`, label: [`Redis Master`, `AZ-1a`] }),
+            redis_r: makeBlock(10, 4, { color: `green`, glyph: `zap`, label: [`Redis Replica`, `AZ-1b`] }),
           },
           links: {
-            r1: h(`ecs_a`, `redis_p`, [`ecs_a`, `redis_p`], {
+            r1: makeLink(`ecs_a`, `redis_p`, [`ecs_a`, `redis_p`], {
               label: `GET /hot-key (<1ms)`,
               heads: `both`,
             }),
-            r2: h(`ecs_b`, `redis_r`, [`ecs_b`, `redis_r`], { label: `Read Cache`, heads: `both` }),
-            sync: h(`redis_p`, `redis_r`, [`redis_p`, `redis_r`], {
+            r2: makeLink(`ecs_b`, `redis_r`, [`ecs_b`, `redis_r`], { label: `Read Cache`, heads: `both` }),
+            sync: makeLink(`redis_p`, `redis_r`, [`redis_p`, `redis_r`], {
               label: `Replication`,
               style: `dashed`,
             }),
@@ -295,23 +277,23 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            ecs_a: d(-2, -8, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
-            ecs_b: d(-2, 4, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
-            db_p: b(10, -8, {
+            ecs_a: makeBlock(-2, -8, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
+            ecs_b: makeBlock(-2, 4, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
+            db_p: makeDb(10, -8, {
               label: `Aurora Writer`,
               cpu: 0.35,
               tags: [{ text: `Primary`, tone: `green` }],
             }),
-            db_r: b(10, 4, {
+            db_r: makeDb(10, 4, {
               label: `Aurora Replica`,
               cpu: 0.2,
               tags: [{ text: `Standby`, tone: `blue` }],
             }),
           },
           links: {
-            w1: h(`ecs_a`, `db_p`, [`ecs_a`, `db_p`], { label: `INSERT / UPDATE`, heads: `both` }),
-            r_read: h(`ecs_b`, `db_r`, [`ecs_b`, `db_r`], { label: `SELECT read-only`, heads: `both` }),
-            aurora_sync: h(`db_p`, `db_r`, [`db_p`, `db_r`], {
+            w1: makeLink(`ecs_a`, `db_p`, [`ecs_a`, `db_p`], { label: `INSERT / UPDATE`, heads: `both` }),
+            r_read: makeLink(`ecs_b`, `db_r`, [`ecs_b`, `db_r`], { label: `SELECT read-only`, heads: `both` }),
+            aurora_sync: makeLink(`db_p`, `db_r`, [`db_p`, `db_r`], {
               label: `Shared Storage (6-way)`,
               heads: `both`,
             }),
@@ -348,37 +330,37 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            alb: f(-14, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs_a: d(0, -10, {
+            alb: makeBalancer(-14, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs_a: makeBlock(0, -10, {
               color: `slab`,
               glyph: `skull`,
               dead: 1,
               label: [`ECS AZ-1a (DOWN)`],
               tags: [{ text: `DOWN`, tone: `red`, icon: `alert` }],
             }),
-            ecs_b: d(0, 4, {
+            ecs_b: makeBlock(0, 4, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-1b (HEALTHY)`],
               cpu: 0.75,
             }),
-            db_a: b(12, -10, {
+            db_a: makeDb(12, -10, {
               label: `Writer AZ-a (DOWN)`,
               dead: 1,
               heat: 0.9,
               tags: [{ text: `FAILED`, tone: `red` }],
             }),
-            db_b: b(12, 4, {
+            db_b: makeDb(12, 4, {
               label: `Replica AZ-b`,
               tags: [{ text: `Promoting…`, tone: `amber` }],
             }),
           },
           links: {
-            fail_link: h(`alb`, `ecs_a`, [`alb`, `ecs_a`], {
+            fail_link: makeLink(`alb`, `ecs_a`, [`alb`, `ecs_a`], {
               style: `off`,
               label: `Connection timeout`,
             }),
-            live_link: h(`alb`, `ecs_b`, [`alb`, `ecs_b`], {
+            live_link: makeLink(`alb`, `ecs_b`, [`alb`, `ecs_b`], {
               label: `Active Route`,
               heads: `both`,
             }),
@@ -412,34 +394,34 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-14, -4, {
+            client: makeDevice(-14, -4, {
               label: `users`,
               tags: [{ text: `0 downtime`, tone: `green`, icon: `check` }],
             }),
-            alb: f(-4, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Healthy`] }),
-            ecs_b1: d(6, -8, {
+            alb: makeBalancer(-4, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Healthy`] }),
+            ecs_b1: makeBlock(6, -8, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-b (#1)`],
               cpu: 0.35,
             }),
-            ecs_b2: d(6, 0, {
+            ecs_b2: makeBlock(6, 0, {
               color: `blue`,
               glyph: `server`,
               label: [`ECS AZ-b (#2)`],
               cpu: 0.35,
             }),
-            db_b: b(18, -2, {
+            db_b: makeDb(18, -2, {
               label: `Aurora New Writer`,
               cpu: 0.4,
               tags: [{ text: `PRIMARY WRITER`, tone: `green` }],
             }),
           },
           links: {
-            c: h(`client`, `alb`, [`client`, `alb`], { heads: `both` }),
-            l1: h(`alb`, `ecs_b1`, [`alb`, `ecs_b1`], { heads: `both` }),
-            l2: h(`alb`, `ecs_b2`, [`alb`, `ecs_b2`], { heads: `both` }),
-            db_l: h(`ecs_b1`, `db_b`, [`ecs_b1`, `db_b`], { label: `Active R/W`, heads: `both` }),
+            c: makeLink(`client`, `alb`, [`client`, `alb`], { heads: `both` }),
+            l1: makeLink(`alb`, `ecs_b1`, [`alb`, `ecs_b1`], { heads: `both` }),
+            l2: makeLink(`alb`, `ecs_b2`, [`alb`, `ecs_b2`], { heads: `both` }),
+            db_l: makeLink(`ecs_b1`, `db_b`, [`ecs_b1`, `db_b`], { label: `Active R/W`, heads: `both` }),
           },
           flows: [
             { route: [`c`, `l1`, `db_l`], bounce: !0, rate: 1.4 },
@@ -467,18 +449,18 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: y(-14, -4, { label: `users`, tags: [{ text: `resilient`, tone: `green` }] }),
-            alb: f(-4, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
-            ecs_a: d(6, -10, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
-            ecs_b: d(6, 2, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
-            db_a: b(16, -10, { label: `Aurora Writer`, tags: [{ text: `Active`, tone: `green` }] }),
-            db_b: b(16, 2, { label: `Aurora Standby`, tags: [{ text: `Replica`, tone: `blue` }] }),
+            client: makeDevice(-14, -4, { label: `users`, tags: [{ text: `resilient`, tone: `green` }] }),
+            alb: makeBalancer(-4, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            ecs_a: makeBlock(6, -10, { color: `blue`, glyph: `server`, label: [`ECS AZ-1a`] }),
+            ecs_b: makeBlock(6, 2, { color: `blue`, glyph: `server`, label: [`ECS AZ-1b`] }),
+            db_a: makeDb(16, -10, { label: `Aurora Writer`, tags: [{ text: `Active`, tone: `green` }] }),
+            db_b: makeDb(16, 2, { label: `Aurora Standby`, tags: [{ text: `Replica`, tone: `blue` }] }),
           },
           links: {
-            c: h(`client`, `alb`, [`client`, `alb`], { heads: `both` }),
-            l_a: h(`alb`, `ecs_a`, [`alb`, `ecs_a`], { heads: `both` }),
-            l_b: h(`alb`, `ecs_b`, [`alb`, `ecs_b`], { heads: `both` }),
-            db_sync: h(`db_a`, `db_b`, [`db_a`, `db_b`], { label: `Storage Sync`, heads: `both` }),
+            c: makeLink(`client`, `alb`, [`client`, `alb`], { heads: `both` }),
+            l_a: makeLink(`alb`, `ecs_a`, [`alb`, `ecs_a`], { heads: `both` }),
+            l_b: makeLink(`alb`, `ecs_b`, [`alb`, `ecs_b`], { heads: `both` }),
+            db_sync: makeLink(`db_a`, `db_b`, [`db_a`, `db_b`], { label: `Storage Sync`, heads: `both` }),
           },
           flows: [
             { route: [`c`, `l_a`], bounce: !0, rate: 1 },

@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const gitopsArgocdLesson = {
@@ -40,9 +38,9 @@ export const gitopsArgocdLesson = {
       metrics: { syncStatus: 'Synced', healthStatus: 'Healthy', reconcileInterval: '3m (Webhook)', driftPolicy: 'Self-Heal Active' },
       scene: {
         entities: {
-          gitRepo: y(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
-          argoController: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'package', label: ['ArgoCD Controller'], sub: 'prod overlay' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'kustomization.yaml (Git)', [
+          gitRepo: makeDevice(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
+          argoController: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'package', label: ['ArgoCD Controller'], sub: 'prod overlay' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'kustomization.yaml (Git)', [
             `apiVersion: kustomize.config.k8s.io/v1beta1`,
             `kind: Kustomization`,
             `resources: [../base]`,
@@ -55,7 +53,7 @@ export const gitopsArgocdLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ga: h('gitRepo', 'argoController', ['gitRepo', 'argoController'], { label: 'read manifests' }),
+          ga: makeLink('gitRepo', 'argoController', ['gitRepo', 'argoController'], { label: 'read manifests' }),
         },
         flows: [{ route: ['ga'], kind: 'git', rate: 1.4 }],
       },
@@ -76,10 +74,10 @@ export const gitopsArgocdLesson = {
       metrics: { syncStatus: 'Synced', healthStatus: 'Healthy (3/3)', reconcileInterval: 'Continuous Loop', driftPolicy: 'Self-Heal Active' },
       scene: {
         entities: {
-          gitRepo: y(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
-          argoController: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['ArgoCD Controller'], sub: 'git vs etcd' }),
-          k8sCluster: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: '3 clean pods' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Application CRD Spec', [
+          gitRepo: makeDevice(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
+          argoController: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'cpu', label: ['ArgoCD Controller'], sub: 'git vs etcd' }),
+          k8sCluster: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: '3 clean pods' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Application CRD Spec', [
             `apiVersion: argoproj.io/v1alpha1`,
             `kind: Application`,
             `spec:`,
@@ -92,8 +90,8 @@ export const gitopsArgocdLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ga: h('gitRepo', 'argoController', ['gitRepo', 'argoController'], { label: 'desired state' }),
-          ak: h('argoController', 'k8sCluster', ['argoController', 'k8sCluster'], { label: 'live state' }),
+          ga: makeLink('gitRepo', 'argoController', ['gitRepo', 'argoController'], { label: 'desired state' }),
+          ak: makeLink('argoController', 'k8sCluster', ['argoController', 'k8sCluster'], { label: 'live state' }),
         },
         flows: [{ route: ['ga', 'ak'], kind: 'git', rate: 1.5 }],
       },
@@ -114,10 +112,10 @@ export const gitopsArgocdLesson = {
       metrics: { syncStatus: 'OutOfSync (Drift)', healthStatus: 'Degraded', reconcileInterval: 'Instant Event', driftPolicy: 'Auto-Sync Triggered' },
       scene: {
         entities: {
-          gitRepo: y(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
-          argoController: d(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'alert', label: ['ArgoCD Controller'], sub: 'replica drift' }),
-          k8sCluster: b(6, 0, { s: 4.6, h: 48, color: 'red', glyph: 'boxes', label: ['K8s Production'], sub: '10 drift pods' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'ArgoCD Field Diff', [
+          gitRepo: makeDevice(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
+          argoController: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'alert', label: ['ArgoCD Controller'], sub: 'replica drift' }),
+          k8sCluster: makeDb(6, 0, { s: 4.6, h: 48, color: 'red', glyph: 'boxes', label: ['K8s Production'], sub: '10 drift pods' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ArgoCD Field Diff', [
             `Resource: apps/v1 Deployment payment-api`,
             `Diff found at path .spec.replicas:`,
             `- desired (Git):  3`,
@@ -127,8 +125,8 @@ export const gitopsArgocdLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ga: h('gitRepo', 'argoController', ['gitRepo', 'argoController'], { label: 'desired (3)' }),
-          ak: h('argoController', 'k8sCluster', ['argoController', 'k8sCluster'], { label: 'actual (10)' }),
+          ga: makeLink('gitRepo', 'argoController', ['gitRepo', 'argoController'], { label: 'desired (3)' }),
+          ak: makeLink('argoController', 'k8sCluster', ['argoController', 'k8sCluster'], { label: 'actual (10)' }),
         },
         flows: [{ route: ['ak'], kind: 'drift', rate: 2.0 }],
       },
@@ -149,10 +147,10 @@ export const gitopsArgocdLesson = {
       metrics: { syncStatus: 'Synced (Healed)', healthStatus: 'Healthy (3/3)', reconcileInterval: 'Loop Active', driftPolicy: 'Self-Healed' },
       scene: {
         entities: {
-          gitRepo: y(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
-          argoController: d(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['ArgoCD Controller'], sub: 'override drift' }),
-          k8sCluster: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: '3 clean pods' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Self-Healing Sync Event', [
+          gitRepo: makeDevice(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
+          argoController: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['ArgoCD Controller'], sub: 'override drift' }),
+          k8sCluster: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: '3 clean pods' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Self-Healing Sync Event', [
             `Event: AutoSyncTriggered`,
             `Patch: spec.replicas -> 3`,
             `Strategy: Server-Side Apply (fieldManager=argocd)`,
@@ -161,8 +159,8 @@ export const gitopsArgocdLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ga: h('gitRepo', 'argoController', ['gitRepo', 'argoController'], { label: 'git truth' }),
-          ak: h('argoController', 'k8sCluster', ['argoController', 'k8sCluster'], { label: 'reconcile' }),
+          ga: makeLink('gitRepo', 'argoController', ['gitRepo', 'argoController'], { label: 'git truth' }),
+          ak: makeLink('argoController', 'k8sCluster', ['argoController', 'k8sCluster'], { label: 'reconcile' }),
         },
         flows: [{ route: ['ga', 'ak'], kind: 'heal', rate: 1.8 }],
       },
@@ -183,11 +181,11 @@ export const gitopsArgocdLesson = {
       metrics: { syncStatus: 'Wave 1 Active', healthStatus: 'Healthy', reconcileInterval: 'Sync Wave 1/2', driftPolicy: 'Ordered Rollout' },
       scene: {
         entities: {
-          gitRepo: y(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
-          argoController: d(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['ArgoCD Controller'], sub: 'git vs etcd' }),
-          k8sCluster: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: '3 clean pods' }),
-          syncCoordinator: d(-4, 16, { s: 4.6, h: 48, color: 'purple', glyph: 'clock', label: ['PreSync Hook'], sub: 'flyway pass' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Sync Wave Annotation Spec', [
+          gitRepo: makeDevice(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
+          argoController: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'package', label: ['ArgoCD Controller'], sub: 'git vs etcd' }),
+          k8sCluster: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: '3 clean pods' }),
+          syncCoordinator: makeBlock(-4, 16, { s: 4.6, h: 48, color: 'purple', glyph: 'clock', label: ['PreSync Hook'], sub: 'flyway pass' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Sync Wave Annotation Spec', [
             `Wave -1: [Job] Flyway DB Migration    -> PASS (12s)`,
             `Wave  0: [ConfigMap] App Config Maps  -> Synced`,
             `Wave  1: [Deployment] Payment API v2  -> Running`,
@@ -196,8 +194,8 @@ export const gitopsArgocdLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          as: h('argoController', 'syncCoordinator', ['argoController', 'syncCoordinator'], { label: 'wave 0 hook' }),
-          sk: h('syncCoordinator', 'k8sCluster', ['syncCoordinator', 'k8sCluster'], { label: 'apply schema' }),
+          as: makeLink('argoController', 'syncCoordinator', ['argoController', 'syncCoordinator'], { label: 'wave 0 hook' }),
+          sk: makeLink('syncCoordinator', 'k8sCluster', ['syncCoordinator', 'k8sCluster'], { label: 'apply schema' }),
         },
         flows: [{ route: ['as', 'sk'], kind: 'git', rate: 1.6 }],
       },
@@ -218,11 +216,11 @@ export const gitopsArgocdLesson = {
       metrics: { syncStatus: 'Synced (Pruned)', healthStatus: 'Healthy', reconcileInterval: '3m (Loop)', driftPolicy: 'Zero Orphans' },
       scene: {
         entities: {
-          gitRepo: y(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
-          argoController: d(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['ArgoCD Controller'], sub: 'reap orphans' }),
-          k8sCluster: b(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: 'zero orphans' }),
-          prodService: b(14, 6, { s: 4.6, h: 48, color: 'blue', glyph: 'network', label: ['Payment Service'], sub: '3 clean pods' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Prune Deletion Audit', [
+          gitRepo: makeDevice(-18, -6, { label: 'git-repo', tags: [{ text: 'k8s-manifests.git', tone: 'green', icon: 'gitBranch' }] }),
+          argoController: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['ArgoCD Controller'], sub: 'reap orphans' }),
+          k8sCluster: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: 'zero orphans' }),
+          prodService: makeDb(14, 6, { s: 4.6, h: 48, color: 'blue', glyph: 'network', label: ['Payment Service'], sub: '3 clean pods' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Prune Deletion Audit', [
             `Prune candidate: payment-v1-canary`,
             `Action: kubectl delete deployment payment-v1-canary`,
             `Reason: Manifest deleted in Git commit c9a041`,
@@ -231,8 +229,8 @@ export const gitopsArgocdLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ak: h('argoController', 'k8sCluster', ['argoController', 'k8sCluster'], { label: 'prune orphans' }),
-          kp: h('k8sCluster', 'prodService', ['k8sCluster', 'prodService'], { label: 'live service' }),
+          ak: makeLink('argoController', 'k8sCluster', ['argoController', 'k8sCluster'], { label: 'prune orphans' }),
+          kp: makeLink('k8sCluster', 'prodService', ['k8sCluster', 'prodService'], { label: 'live service' }),
         },
         flows: [{ route: ['ak', 'kp'], kind: 'git', rate: 1.4 }],
       },

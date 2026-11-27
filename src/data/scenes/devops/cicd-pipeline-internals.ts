@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const cicdPipelineInternalsLesson = {
@@ -40,9 +38,9 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Job Queued', webhookAuth: 'HMAC Validated', cacheMatch: 'Pending', artifactStore: 'Idle' },
       scene: {
         entities: {
-          devLaptop: y(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
-          webhookGate: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'HTTP POST /api/webhook', [
+          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'HTTP POST /api/webhook', [
             `POST /api/webhook/github HTTP/1.1`,
             `Host: ci.company.internal`,
             `X-GitHub-Event: push`,
@@ -52,7 +50,7 @@ export const cicdPipelineInternalsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dw: h('devLaptop', 'webhookGate', ['devLaptop', 'webhookGate'], { label: 'POST webhook' }),
+          dw: makeLink('devLaptop', 'webhookGate', ['devLaptop', 'webhookGate'], { label: 'POST webhook' }),
         },
         flows: [{ route: ['dw'], kind: 'hook', rate: 1.5 }],
       },
@@ -73,10 +71,10 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Scaling Pool', webhookAuth: 'Verified (200)', cacheMatch: 'Pending', artifactStore: 'Idle' },
       scene: {
         entities: {
-          devLaptop: y(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
-          webhookGate: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
-          ephemeralRunner: d(6, 0, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Runner Pool'], sub: 'spawn workers' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Autoscaler Metrics', [
+          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
+          ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Runner Pool'], sub: 'spawn workers' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Autoscaler Metrics', [
             `stream: ci:jobs:pending (len=1)`,
             `lag: 140ms | target_capacity: +1`,
             `pool: bare-metal-c6i.4xlarge`,
@@ -85,8 +83,8 @@ export const cicdPipelineInternalsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dw: h('devLaptop', 'webhookGate', ['devLaptop', 'webhookGate'], { label: 'POST webhook' }),
-          we: h('webhookGate', 'ephemeralRunner', ['webhookGate', 'ephemeralRunner'], { label: 'enqueue job' }),
+          dw: makeLink('devLaptop', 'webhookGate', ['devLaptop', 'webhookGate'], { label: 'POST webhook' }),
+          we: makeLink('webhookGate', 'ephemeralRunner', ['webhookGate', 'ephemeralRunner'], { label: 'enqueue job' }),
         },
         flows: [{ route: ['dw', 'we'], kind: 'hook', rate: 1.6 }],
       },
@@ -107,10 +105,10 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Running (KVM)', webhookAuth: 'Verified', cacheMatch: 'Calculating', artifactStore: 'Idle' },
       scene: {
         entities: {
-          devLaptop: y(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
-          webhookGate: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
-          ephemeralRunner: d(6, 0, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['MicroVM Runner'], sub: 'boot 38ms KVM' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Shallow Git Clone Command', [
+          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
+          ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['MicroVM Runner'], sub: 'boot 38ms KVM' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Shallow Git Clone Command', [
             `boot_time: 38ms (Firecracker KVM)`,
             `$ git init -q`,
             `$ git remote add origin https://...`,
@@ -120,7 +118,7 @@ export const cicdPipelineInternalsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          we: h('webhookGate', 'ephemeralRunner', ['webhookGate', 'ephemeralRunner'], { label: 'shallow clone' }),
+          we: makeLink('webhookGate', 'ephemeralRunner', ['webhookGate', 'ephemeralRunner'], { label: 'shallow clone' }),
         },
         flows: [{ route: ['we'], kind: 'build', rate: 1.8 }],
       },
@@ -141,11 +139,11 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Dependencies Ready', webhookAuth: 'Verified', cacheMatch: 'Cache HIT (2.1s)', artifactStore: 'Idle' },
       scene: {
         entities: {
-          devLaptop: y(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
-          webhookGate: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
-          ephemeralRunner: d(6, 0, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['MicroVM Runner'], sub: 'cached 2.1s' }),
-          s3Cache: b(-4, 16, { s: 4.6, h: 48, color: 'orange', glyph: 'database', label: ['S3 CAS Cache'], sub: 'S3 CAS store' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Cache Hydration Log', [
+          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
+          ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['MicroVM Runner'], sub: 'cached 2.1s' }),
+          s3Cache: makeDb(-4, 16, { s: 4.6, h: 48, color: 'orange', glyph: 'database', label: ['S3 CAS Cache'], sub: 'S3 CAS store' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Cache Hydration Log', [
             `key: npm-linux-x64-9f8a3c4b...`,
             `GET /cache/npm-linux-x64-9f8a3c4b.tz`,
             `status: 200 OK (Content-Length: 284MB)`,
@@ -154,7 +152,7 @@ export const cicdPipelineInternalsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ce: h('s3Cache', 'ephemeralRunner', ['s3Cache', 'ephemeralRunner'], { label: 'restore cache' }),
+          ce: makeLink('s3Cache', 'ephemeralRunner', ['s3Cache', 'ephemeralRunner'], { label: 'restore cache' }),
         },
         flows: [{ route: ['ce'], kind: 'cache', rate: 1.8 }],
       },
@@ -175,11 +173,11 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: '4 Shards Running', webhookAuth: 'Verified', cacheMatch: 'Cache HIT', artifactStore: 'Building' },
       scene: {
         entities: {
-          devLaptop: y(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
-          webhookGate: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
-          ephemeralRunner: d(6, 0, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['Active Runner'], sub: '4 test shards' }),
-          s3Cache: b(-4, 16, { s: 4.6, h: 48, color: 'orange', glyph: 'database', label: ['S3 CAS Cache'], sub: 'S3 CAS store' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Parallel Shard Status', [
+          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
+          ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['Active Runner'], sub: '4 test shards' }),
+          s3Cache: makeDb(-4, 16, { s: 4.6, h: 48, color: 'orange', glyph: 'database', label: ['S3 CAS Cache'], sub: 'S3 CAS store' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Parallel Shard Status', [
             `shard 1/4: unit-tests        (42s) [PASS]`,
             `shard 2/4: auth-e2e          (58s) [PASS]`,
             `shard 3/4: api-contracts     (39s) [PASS]`,
@@ -188,8 +186,8 @@ export const cicdPipelineInternalsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          we: h('webhookGate', 'ephemeralRunner', ['webhookGate', 'ephemeralRunner'], { label: 'run shards' }),
-          ce: h('s3Cache', 'ephemeralRunner', ['s3Cache', 'ephemeralRunner'], { label: 'cache active' }),
+          we: makeLink('webhookGate', 'ephemeralRunner', ['webhookGate', 'ephemeralRunner'], { label: 'run shards' }),
+          ce: makeLink('s3Cache', 'ephemeralRunner', ['s3Cache', 'ephemeralRunner'], { label: 'cache active' }),
         },
         flows: [{ route: ['we'], kind: 'build', rate: 2.0 }],
       },
@@ -210,12 +208,12 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Wiped & Clean', webhookAuth: 'Verified', cacheMatch: 'Cache HIT', artifactStore: 'Exported (S3)' },
       scene: {
         entities: {
-          devLaptop: y(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
-          webhookGate: d(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
-          ephemeralRunner: d(6, 0, { s: 4.8, h: 50, color: 'gray', glyph: 'cpu', label: ['Ephemeral Host'], sub: 'zeroed in 15ms' }),
-          artifactStore: b(14, 6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Artifact Store'], sub: 'S3 CAS store' }),
-          s3Cache: b(-4, 16, { s: 4.6, h: 48, color: 'orange', glyph: 'database', label: ['S3 CAS Cache'], sub: 'S3 CAS store' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'S3 PutObject Manifest', [
+          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
+          ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'gray', glyph: 'cpu', label: ['Ephemeral Host'], sub: 'zeroed in 15ms' }),
+          artifactStore: makeDb(14, 6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Artifact Store'], sub: 'S3 CAS store' }),
+          s3Cache: makeDb(-4, 16, { s: 4.6, h: 48, color: 'orange', glyph: 'database', label: ['S3 CAS Cache'], sub: 'S3 CAS store' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'S3 PutObject Manifest', [
             `$ cosign sign --key k8s://... dist/app.tar.gz`,
             `PUT /builds/8a2a415-release.tar.gz`,
             `Content-SHA256: 3c7a10... (Immutable)`,
@@ -224,7 +222,7 @@ export const cicdPipelineInternalsLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ea: h('ephemeralRunner', 'artifactStore', ['ephemeralRunner', 'artifactStore'], { label: 'export artifact' }),
+          ea: makeLink('ephemeralRunner', 'artifactStore', ['ephemeralRunner', 'artifactStore'], { label: 'export artifact' }),
         },
         flows: [{ route: ['ea'], kind: 'build', rate: 1.5 }],
       },

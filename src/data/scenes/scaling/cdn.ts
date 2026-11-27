@@ -1,49 +1,33 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeHot,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const vt = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
 
 const yt = { x0: 18, x1: 24, y0: -4.5, y1: 4.5 };
 
-const bt = (e = 11, t = `London`) => p(vt, e, t);
+const bt = (e = 11, t = `London`) => makeCrowd(vt, e, t);
 
-const xt = (e = 11, t = `Sydney`) => p(yt, e, t);
+const xt = (e = 11, t = `Sydney`) => makeCrowd(yt, e, t);
 
-const St = (e = {}) => d(0, 0, { label: [`Origin`], sub: `Virginia`, ...e });
+const St = (e = {}) => makeBlock(0, 0, { label: [`Origin`], sub: `Virginia`, ...e });
 
 const Ct = (e, t, n, r = {}) =>
-    d(e, t, { color: `green`, glyph: `globe`, label: [`Edge`], sub: n, ...r });
+    makeBlock(e, t, { color: `green`, glyph: `globe`, label: [`Edge`], sub: n, ...r });
 
 const wt = (e = {}, t = {}) => ({ el: Ct(0, -12, `London`, e), es: Ct(12, 0, `Sydney`, t) });
 
 const Tt = 0.72;
 
 const Et = {
-    lo: h(`lon`, `origin`, [`lon`, `origin`], { heads: `both`, label: `≈ 75 ms per round trip` }),
-    so: h(`syd`, `origin`, [`syd`, `origin`], {
+    lo: makeLink(`lon`, `origin`, [`lon`, `origin`], { heads: `both`, label: `≈ 75 ms per round trip` }),
+    so: makeLink(`syd`, `origin`, [`syd`, `origin`], {
       heads: `both`,
       label: `≈ 200 ms per round trip`,
       labelTone: `amber`,
@@ -51,14 +35,14 @@ const Et = {
   };
 
 const Dt = {
-    le: h(`lon`, `el`, [`lon`, `el`], { heads: `both`, label: `≈ 10 ms` }),
-    eo: h(`el`, `origin`, [`el`, `origin`], {
+    le: makeLink(`lon`, `el`, [`lon`, `el`], { heads: `both`, label: `≈ 10 ms` }),
+    eo: makeLink(`el`, `origin`, [`el`, `origin`], {
       heads: `both`,
       style: `dashed`,
       label: `only on a miss`,
     }),
-    se: h(`syd`, `es`, [`syd`, `es`], { heads: `both`, label: `≈ 12 ms` }),
-    eso: h(`es`, `origin`, [`es`, `origin`], {
+    se: makeLink(`syd`, `es`, [`syd`, `es`], { heads: `both`, label: `≈ 12 ms` }),
+    eso: makeLink(`es`, `origin`, [`es`, `origin`], {
       heads: `both`,
       style: `dashed`,
       label: `only on a miss`,
@@ -118,7 +102,7 @@ export const cdnLesson = {
         },
         metrics: { lon: 80, syd: 210, origin: 9e3, hitRate: 0 },
         scene: {
-          entities: { lon: bt(), syd: xt(), origin: St(_(0.88)) },
+          entities: { lon: bt(), syd: xt(), origin: St(makeHot(0.88)) },
           links: Et,
           flows: [
             { route: [`lo`], rate: 1.6, bounce: !0, speed: Tt },
@@ -140,8 +124,8 @@ export const cdnLesson = {
           entities: {
             lon: bt(),
             syd: xt(),
-            origin: St(_(0.88)),
-            card: ((e, t, n) => S({ x: 0, y: 0, z: 0, dx: -340, dy: -230 }, e, t, { icon: n }))(
+            origin: St(makeHot(0.88)),
+            card: ((e, t, n) => makePanel({ x: 0, y: 0, z: 0, dx: -340, dy: -230 }, e, t, { icon: n }))(
               `What a page is made of`,
               [
                 `HTML (per user)     30 KB`,
@@ -178,7 +162,7 @@ export const cdnLesson = {
         ],
         metrics: { lon: 12, syd: 15, origin: 900, hitRate: 90 },
         scene: {
-          entities: { lon: bt(), syd: xt(), origin: St(v(0.2)), ...wt() },
+          entities: { lon: bt(), syd: xt(), origin: St(makeCool(0.2)), ...wt() },
           links: Dt,
           flows: Ot(),
         },
@@ -204,7 +188,7 @@ export const cdnLesson = {
           entities: {
             lon: bt(),
             syd: xt(),
-            origin: St(v(0.32)),
+            origin: St(makeCool(0.32)),
             ...wt(
               { tags: [{ text: `warm`, tone: `green` }] },
               { tags: [{ text: `cold · filling`, tone: `amber`, icon: `alert` }] },
@@ -232,7 +216,7 @@ export const cdnLesson = {
           entities: {
             lon: bt(),
             syd: xt(),
-            origin: St({ ...v(0.2), tags: [{ text: `logo.png · new`, tone: `green` }] }),
+            origin: St({ ...makeCool(0.2), tags: [{ text: `logo.png · new`, tone: `green` }] }),
             ...wt(
               { tags: [{ text: `logo.png · old`, tone: `red`, icon: `alert` }] },
               { tags: [{ text: `logo.png · old`, tone: `red`, icon: `alert` }] },
@@ -260,7 +244,7 @@ export const cdnLesson = {
           entities: {
             lon: bt(),
             syd: xt(),
-            origin: St({ ...v(0.15), tags: [{ text: `logo.3f9a.png`, tone: `green` }] }),
+            origin: St({ ...makeCool(0.15), tags: [{ text: `logo.3f9a.png`, tone: `green` }] }),
             ...wt(
               { tags: [{ text: `logo.3f9a.png · 1 yr`, tone: `green` }] },
               { tags: [{ text: `logo.3f9a.png · 1 yr`, tone: `green` }] },
@@ -288,7 +272,7 @@ export const cdnLesson = {
           entities: {
             lon: bt(15, `London · ×20`),
             syd: xt(15, `Sydney · ×20`),
-            origin: St(v(0.2)),
+            origin: St(makeCool(0.2)),
             ...wt({ cpu: 0.6 }, { cpu: 0.6 }),
           },
           links: Dt,
@@ -316,7 +300,7 @@ export const cdnLesson = {
           entities: {
             lon: bt(),
             syd: xt(),
-            origin: St(v(0.22)),
+            origin: St(makeCool(0.22)),
             ...wt(
               { tags: [{ text: `/cart → private · pass`, tone: `amber`, icon: `lock` }] },
               { tags: [{ text: `/cart → private · pass`, tone: `amber`, icon: `lock` }] },
@@ -347,8 +331,8 @@ export const cdnLesson = {
           entities: {
             lon: bt(),
             syd: xt(),
-            origin: d(-9, 9, { label: [`Origin`], sub: `Virginia`, ...v(0.05) }),
-            sh: d(0, 0, {
+            origin: makeBlock(-9, 9, { label: [`Origin`], sub: `Virginia`, ...makeCool(0.05) }),
+            sh: makeBlock(0, 0, {
               color: `green`,
               glyph: `shield`,
               label: [`Shield`],
@@ -359,13 +343,13 @@ export const cdnLesson = {
           links: {
             le: Dt.le,
             se: Dt.se,
-            esh: h(`el`, `sh`, [`el`, `sh`], {
+            esh: makeLink(`el`, `sh`, [`el`, `sh`], {
               heads: `both`,
               style: `dashed`,
               label: `edge miss`,
             }),
-            ssh: h(`es`, `sh`, [`es`, `sh`], { heads: `both`, style: `dashed` }),
-            sho: h(`sh`, `origin`, [`sh`, [`sh`, `origin`], `origin`], {
+            ssh: makeLink(`es`, `sh`, [`es`, `sh`], { heads: `both`, style: `dashed` }),
+            sho: makeLink(`sh`, `origin`, [`sh`, [`sh`, `origin`], `origin`], {
               heads: `both`,
               label: `once per file`,
             }),
@@ -414,7 +398,7 @@ export const cdnLesson = {
         },
         metrics: { lon: 12, syd: 15, origin: 900, hitRate: 96 },
         scene: {
-          entities: { lon: bt(), syd: xt(), origin: St(v(0.15)), ...wt() },
+          entities: { lon: bt(), syd: xt(), origin: St(makeCool(0.15)), ...wt() },
           links: Dt,
           flows: Ot(0.96, 0.96),
         },

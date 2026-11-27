@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const rabbitmqAmqpModelLesson = {
@@ -38,9 +36,9 @@ export const rabbitmqAmqpModelLesson = {
       metrics: { amqp_protocol: 'AMQP 0-9-1', tcp_conns: '1 TCP', multiplexed_channels: 'Active', broker_model: 'Smart Broker' },
       scene: {
         entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Order App', tags: [{ text: 'Publish Order', icon: 'zap' }] }),
-          broker: d(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['RabbitMQ Broker', 'Erlang BEAM VM'], sub: 'Smart Routing & State' }),
-          card: S({ x: -2, y: 14 }, 'RabbitMQ vs Kafka Comparison', [
+          producer: makeDevice(-10, -8, { form: 'phone', label: 'Order App', tags: [{ text: 'Publish Order', icon: 'zap' }] }),
+          broker: makeBlock(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['RabbitMQ Broker', 'Erlang BEAM VM'], sub: 'Smart Routing & State' }),
+          card: makePanel({ x: -2, y: 14 }, 'RabbitMQ vs Kafka Comparison', [
             'RabbitMQ (Smart Broker):',
             '  - Messages deleted once consumed & acknowledged',
             '  - Granular per-message routing (Exchanges & Bindings)',
@@ -50,7 +48,7 @@ export const rabbitmqAmqpModelLesson = {
           ], { icon: 'layers' })
         },
         links: {
-          pb: h('producer', 'broker', ['producer', 'broker'], { heads: 'both', label: 'AMQP 0-9-1' })
+          pb: makeLink('producer', 'broker', ['producer', 'broker'], { heads: 'both', label: 'AMQP 0-9-1' })
         },
         flows: [{ route: ['pb'], bounce: true, rate: 2.5 }]
       }
@@ -70,10 +68,10 @@ export const rabbitmqAmqpModelLesson = {
       metrics: { amqp_protocol: 'AMQP Pipeline', tcp_conns: '1 TCP', multiplexed_channels: 'Channel 1', broker_model: 'Exchange -> Queue' },
       scene: {
         entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Producer', tags: [{ text: 'RoutingKey: "order.paid"', icon: 'zap' }] }),
-          exchange: d(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'route', label: ['Exchange: orders', 'Direct / Topic'], sub: 'Evaluates Bindings' }),
-          queue: d(8, 4, { s: 4.8, h: 50, color: 'teal', glyph: 'inbox', label: ['Queue: billing_q', 'FIFO Buffer'], sub: 'Durable Disk Backed' }),
-          card: S({ x: -2, y: 14 }, 'AMQP 0-9-1 Core Entities', [
+          producer: makeDevice(-12, -4, { form: 'phone', label: 'Producer', tags: [{ text: 'RoutingKey: "order.paid"', icon: 'zap' }] }),
+          exchange: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'route', label: ['Exchange: orders', 'Direct / Topic'], sub: 'Evaluates Bindings' }),
+          queue: makeBlock(8, 4, { s: 4.8, h: 50, color: 'teal', glyph: 'inbox', label: ['Queue: billing_q', 'FIFO Buffer'], sub: 'Durable Disk Backed' }),
+          card: makePanel({ x: -2, y: 14 }, 'AMQP 0-9-1 Core Entities', [
             '1. Producer: basic.publish(exchange="orders", routingKey="order.paid")',
             '2. Exchange: Compares routingKey against Binding keys',
             '3. Binding: Link connecting Exchange -> Queue with criteria',
@@ -82,8 +80,8 @@ export const rabbitmqAmqpModelLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          pe: h('producer', 'exchange', ['producer', 'exchange'], { heads: 'end' }),
-          eq: h('exchange', 'queue', ['exchange', 'queue'], { heads: 'end', label: 'Binding: order.*' })
+          pe: makeLink('producer', 'exchange', ['producer', 'exchange'], { heads: 'end' }),
+          eq: makeLink('exchange', 'queue', ['exchange', 'queue'], { heads: 'end', label: 'Binding: order.*' })
         },
         flows: [
           { route: ['pe'], bounce: false, rate: 2.2 },
@@ -106,13 +104,13 @@ export const rabbitmqAmqpModelLesson = {
       metrics: { amqp_protocol: 'Multiplexed AMQP', tcp_conns: '1 Physical TCP', multiplexed_channels: '50 Channels', broker_model: 'Zero Handshake Overhead' },
       scene: {
         entities: {
-          appThreads: y(-10, -8, { form: 'phone', label: 'Multi-Thread App', tags: [{ text: '50 Worker Threads', icon: 'workflow' }] }),
-          tcpPipe: d(0, 0, { s: 4.6, h: 52, color: 'blue', glyph: 'network', label: ['Single TCP Connection', 'Port 5672 (AMQP)'], sub: 'Carries Frames 1..50' }),
-          broker: d(10, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['RabbitMQ Broker', 'Channel Dispatcher'], sub: 'Erlang Actors per Channel' }),
+          appThreads: makeDevice(-10, -8, { form: 'phone', label: 'Multi-Thread App', tags: [{ text: '50 Worker Threads', icon: 'workflow' }] }),
+          tcpPipe: makeBlock(0, 0, { s: 4.6, h: 52, color: 'blue', glyph: 'network', label: ['Single TCP Connection', 'Port 5672 (AMQP)'], sub: 'Carries Frames 1..50' }),
+          broker: makeBlock(10, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['RabbitMQ Broker', 'Channel Dispatcher'], sub: 'Erlang Actors per Channel' }),
         },
         links: {
-          at: h('appThreads', 'tcpPipe', ['appThreads', 'tcpPipe'], { heads: 'both' }),
-          tb: h('tcpPipe', 'broker', ['tcpPipe', 'broker'], { heads: 'both' })
+          at: makeLink('appThreads', 'tcpPipe', ['appThreads', 'tcpPipe'], { heads: 'both' }),
+          tb: makeLink('tcpPipe', 'broker', ['tcpPipe', 'broker'], { heads: 'both' })
         },
         flows: [{ route: ['at', 'tb'], bounce: true, rate: 2.8 }]
       }
@@ -132,9 +130,9 @@ export const rabbitmqAmqpModelLesson = {
       metrics: { amqp_protocol: 'Multi-Tenant', tcp_conns: 'Shared Cluster', multiplexed_channels: 'vhost Isolated', broker_model: 'Namespace Segregated' },
       scene: {
         entities: {
-          vhostProd: d(-8, -4, { s: 4.6, h: 52, color: 'green', glyph: 'shield', label: ['vhost: /production', 'Strict Permissions'], sub: 'Exchanges + Queues' }),
-          vhostStage: d(8, 4, { s: 4.6, h: 52, color: 'purple', glyph: 'shield', label: ['vhost: /staging', 'Sandbox Environment'], sub: 'Exchanges + Queues' }),
-          card: S({ x: 0, y: 14 }, 'vhost Permissions Config', [
+          vhostProd: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'green', glyph: 'shield', label: ['vhost: /production', 'Strict Permissions'], sub: 'Exchanges + Queues' }),
+          vhostStage: makeBlock(8, 4, { s: 4.6, h: 52, color: 'purple', glyph: 'shield', label: ['vhost: /staging', 'Sandbox Environment'], sub: 'Exchanges + Queues' }),
+          card: makePanel({ x: 0, y: 14 }, 'vhost Permissions Config', [
             'rabbitmqctl add_vhost /production',
             'rabbitmqctl set_permissions -p /production app_user ".*" ".*" ".*"',
             'Client connects: amqp://app_user:pass@rabbitmq:5672/production',
@@ -160,9 +158,9 @@ export const rabbitmqAmqpModelLesson = {
       metrics: { amqp_protocol: 'Manual Acks', tcp_conns: '1 TCP', multiplexed_channels: 'basic.ack Active', broker_model: 'At-Least-Once' },
       scene: {
         entities: {
-          queue: d(-8, -4, { s: 4.8, h: 50, color: 'teal', glyph: 'inbox', label: ['Queue: orders_q', 'Unacknowledged: 1'], sub: 'Awaiting Consumer ACK' }),
-          worker: d(8, 4, { s: 4.6, h: 52, color: 'green', glyph: 'server', label: ['Worker Thread', 'Processing Job'], sub: 'Sends basic.ack(tag)' }),
-          card: S({ x: 0, y: 14 }, 'Consumer Acknowledgment Flow', [
+          queue: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'teal', glyph: 'inbox', label: ['Queue: orders_q', 'Unacknowledged: 1'], sub: 'Awaiting Consumer ACK' }),
+          worker: makeBlock(8, 4, { s: 4.6, h: 52, color: 'green', glyph: 'server', label: ['Worker Thread', 'Processing Job'], sub: 'Sends basic.ack(tag)' }),
+          card: makePanel({ x: 0, y: 14 }, 'Consumer Acknowledgment Flow', [
             '1. Broker delivers message with delivery_tag = 104',
             '2. Queue marks message as UNACKED (held in memory)',
             '3. Worker saves order to DB -> sends channel.basic_ack(104)',
@@ -171,7 +169,7 @@ export const rabbitmqAmqpModelLesson = {
           ], { icon: 'check' })
         },
         links: {
-          qw: h('queue', 'worker', ['queue', 'worker'], { heads: 'both', label: 'Deliver / basic.ack' })
+          qw: makeLink('queue', 'worker', ['queue', 'worker'], { heads: 'both', label: 'Deliver / basic.ack' })
         },
         flows: [{ route: ['qw'], bounce: true, rate: 2.2 }]
       }
@@ -191,9 +189,9 @@ export const rabbitmqAmqpModelLesson = {
       metrics: { amqp_protocol: 'Lazy Queues', tcp_conns: 'Stable', multiplexed_channels: 'Active', broker_model: 'Disk-First Paging' },
       scene: {
         entities: {
-          publisher: y(-10, -8, { form: 'phone', label: 'Publisher', tags: [{ text: '50M Message Backlog', tone: 'amber', icon: 'layers' }] }),
-          lazyQueue: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Lazy Queue on Disk', 'RAM: 20MB (Constant)'], sub: 'Zero Memory Pressure' }),
-          card: S({ x: -2, y: 14 }, 'Standard vs Lazy Queues', [
+          publisher: makeDevice(-10, -8, { form: 'phone', label: 'Publisher', tags: [{ text: '50M Message Backlog', tone: 'amber', icon: 'layers' }] }),
+          lazyQueue: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Lazy Queue on Disk', 'RAM: 20MB (Constant)'], sub: 'Zero Memory Pressure' }),
+          card: makePanel({ x: -2, y: 14 }, 'Standard vs Lazy Queues', [
             'Standard Queue:',
             '  - Messages stored in RAM -> Memory spikes -> Garbage Collection freezes',
             'Lazy Queue (x-queue-mode: lazy):',
@@ -203,7 +201,7 @@ export const rabbitmqAmqpModelLesson = {
           ], { icon: 'database' })
         },
         links: {
-          pl: h('publisher', 'lazyQueue', ['publisher', 'lazyQueue'], { heads: 'end', label: 'Direct Disk Append' })
+          pl: makeLink('publisher', 'lazyQueue', ['publisher', 'lazyQueue'], { heads: 'end', label: 'Direct Disk Append' })
         },
         flows: [{ route: ['pl'], bounce: false, rate: 2.6 }]
       }
@@ -223,9 +221,9 @@ export const rabbitmqAmqpModelLesson = {
       metrics: { amqp_protocol: 'Heartbeat 60s', tcp_conns: 'Monitored', multiplexed_channels: 'Protected', broker_model: 'Clean Teardown' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Worker Client', tags: [{ text: 'Heartbeat 30s', icon: 'heartPulse' }] }),
-          broker: d(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['RabbitMQ Broker', 'Heartbeat Watchdog'], sub: 'Closes dead sockets' }),
-          card: S({ x: -2, y: 14 }, 'AMQP Heartbeat Protocol', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Worker Client', tags: [{ text: 'Heartbeat 30s', icon: 'heartPulse' }] }),
+          broker: makeBlock(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['RabbitMQ Broker', 'Heartbeat Watchdog'], sub: 'Closes dead sockets' }),
+          card: makePanel({ x: -2, y: 14 }, 'AMQP Heartbeat Protocol', [
             'Client <-> Broker: Exchange Heartbeat Frame (Type 8) every 30s',
             'If no frame received for 60 seconds (2 missed cycles):',
             '  1. Broker closes TCP socket',
@@ -234,7 +232,7 @@ export const rabbitmqAmqpModelLesson = {
           ], { icon: 'heartPulse' })
         },
         links: {
-          cb: h('client', 'broker', ['client', 'broker'], { heads: 'both', label: 'Heartbeat Frames' })
+          cb: makeLink('client', 'broker', ['client', 'broker'], { heads: 'both', label: 'Heartbeat Frames' })
         },
         flows: [{ route: ['cb'], bounce: true, rate: 1.5 }]
       }

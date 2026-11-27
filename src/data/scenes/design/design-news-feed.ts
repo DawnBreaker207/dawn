@@ -1,39 +1,24 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCrowd,
+  makeDb,
+  makeDevice,
+  makeHot,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const ud = { x0: -4.5, x1: 4.5, y0: -19, y1: -13 };
 
-const dd = (e = `people opening their feed`) => p(ud, 12, e);
+const dd = (e = `people opening their feed`) => makeCrowd(ud, 12, e);
 
-const fd = (e = [], t = {}) => d(0, -4, { s: 4.8, h: 52, label: [`Feed`, `API`], tags: e, ...t });
+const fd = (e = [], t = {}) => makeBlock(0, -4, { s: 4.8, h: 52, label: [`Feed`, `API`], tags: e, ...t });
 
-const pd = (e = `Ana posts`) => y(-16, -12, { form: `phone`, label: e });
+const pd = (e = `Ana posts`) => makeDevice(-16, -12, { form: `phone`, label: e });
 
 const md = (e = [], t = {}) =>
-    d(-12, -4, {
+    makeBlock(-12, -4, {
       s: 4.8,
       h: 52,
       color: `green`,
@@ -45,10 +30,10 @@ const md = (e = [], t = {}) =>
     });
 
 const hd = (e = [], t = {}) =>
-    d(0, 9, { s: 3.4, h: 34, color: `orange`, glyph: `inbox`, label: [`Queue`], tags: e, ...t });
+    makeBlock(0, 9, { s: 3.4, h: 34, color: `orange`, glyph: `inbox`, label: [`Queue`], tags: e, ...t });
 
 const gd = (e = [], t = {}) =>
-    d(-12, 9, {
+    makeBlock(-12, 9, {
       s: 4.4,
       h: 46,
       color: `purple`,
@@ -58,7 +43,7 @@ const gd = (e = [], t = {}) =>
       ...t,
     });
 
-const _d = () => b(-12, 19, { r: 1.6, glyph: `network`, color: `store`, label: `who follows whom` });
+const _d = () => makeDb(-12, 19, { r: 1.6, glyph: `network`, color: `store`, label: `who follows whom` });
 
 const vd = [-10, -4, 2];
 
@@ -66,25 +51,25 @@ const yd = (e = {}) =>
     Object.fromEntries(
       vd.map((t, n) => [
         `k${n}`,
-        b(12, t, { r: 1.6, glyph: `database`, label: n === 1 ? `posts, by author` : ``, ...e }),
+        makeDb(12, t, { r: 1.6, glyph: `database`, label: n === 1 ? `posts, by author` : ``, ...e }),
       ]),
     );
 
 const bd = {
-    us: h(`readers`, `api`, [`readers`, `api`], { heads: `both` }),
-    au: h(`author`, `api`, [`author`, [-1.4, `author`], [-1.4, `api`]]),
-    fc: (e = {}) => h(`api`, `feeds`, [`api`, `feeds`], { heads: `both`, ...e }),
-    q: h(`api`, `jobs`, [`api`, `jobs`]),
-    qw: h(`jobs`, `workers`, [`jobs`, `workers`]),
-    wf: (e = {}) => h(`workers`, `feeds`, [`workers`, `feeds`], e),
-    wg: h(`workers`, `graph`, [`workers`, `graph`], { heads: `both` }),
+    us: makeLink(`readers`, `api`, [`readers`, `api`], { heads: `both` }),
+    au: makeLink(`author`, `api`, [`author`, [-1.4, `author`], [-1.4, `api`]]),
+    fc: (e = {}) => makeLink(`api`, `feeds`, [`api`, `feeds`], { heads: `both`, ...e }),
+    q: makeLink(`api`, `jobs`, [`api`, `jobs`]),
+    qw: makeLink(`jobs`, `workers`, [`jobs`, `workers`]),
+    wf: (e = {}) => makeLink(`workers`, `feeds`, [`workers`, `feeds`], e),
+    wg: makeLink(`workers`, `graph`, [`workers`, `graph`], { heads: `both` }),
   };
 
 const xd = (e = {}) =>
     Object.fromEntries(
       vd.map((t, n) => [
         `k${n}l`,
-        h(`api`, `k${n}`, n === 1 ? [`api`, `k1`] : [`api`, [7, `api`], [7, t], `k${n}`], {
+        makeLink(`api`, `k${n}`, n === 1 ? [`api`, `k1`] : [`api`, [7, `api`], [7, t], `k${n}`], {
           heads: `both`,
           ...(n === 1 ? e : {}),
         }),
@@ -145,7 +130,7 @@ const Ad = { x: 0, y: -4, dx: 70, dy: -215 };
 
 const jd = { x: 12, y: -4, dx: -185, dy: 84 };
 
-const Md = (e, t, n, r = jd) => S({ z: 0, ...r }, e, t, { icon: n });
+const Md = (e, t, n, r = jd) => makePanel({ z: 0, ...r }, e, t, { icon: n });
 
 const Nd = { feedMs: 60, readWork: `1 list + a few`, fanout: `≈ 70 · active only`, postDelay: `≈ 2 s` };
 
@@ -291,7 +276,7 @@ const Pd = {
           entities: {
             readers: dd(),
             api: fd([{ text: `merge 200 timelines`, icon: `merge` }]),
-            ...yd({ ..._(0.97), heat: 0.8 }),
+            ...yd({ ...makeHot(0.97), heat: 0.8 }),
             card: Md(
               `Cost of pull`,
               [
@@ -392,7 +377,7 @@ const Pd = {
             jobs: hd([{ text: `backlog: 50 M deliveries`, tone: `red`, icon: `alert` }], {
               heat: 0.8,
             }),
-            workers: gd([], { ..._(1), heat: 0.9 }),
+            workers: gd([], { ...makeHot(1), heat: 0.9 }),
           }),
           links: Od(),
           flows: [Cd(), wd(), ...Td(0.5), Ed(7)],

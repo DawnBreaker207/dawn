@@ -1,37 +1,21 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
-const es = (e = []) => y(0, -19, { form: `phone`, w: 5, d: 5, label: `Alice`, tags: e });
+const es = (e = []) => makeDevice(0, -19, { form: `phone`, w: 5, d: 5, label: `Alice`, tags: e });
 
-const ts = (e = []) => y(13, -6, { form: `phone`, w: 5, d: 5, label: `Bob`, tags: e });
+const ts = (e = []) => makeDevice(13, -6, { form: `phone`, w: 5, d: 5, label: `Bob`, tags: e });
 
-const ns = (e = {}) => d(0, -6, { label: [`Chat`, `Server`], glyph: `message`, ...e });
+const ns = (e = {}) => makeBlock(0, -6, { label: [`Chat`, `Server`], glyph: `message`, ...e });
 
 const rs = (e = {}) => ({
-    ap: h(
+    ap: makeLink(
       `alice`,
       `srv`,
       [
@@ -43,7 +27,7 @@ const rs = (e = {}) => ({
   });
 
 const is = (e = {}) => ({
-    sa: h(
+    sa: makeLink(
       `srv`,
       `alice`,
       [
@@ -55,7 +39,7 @@ const is = (e = {}) => ({
   });
 
 const as = (e = {}) => ({
-    bs: h(
+    bs: makeLink(
       `bob`,
       `srv`,
       [
@@ -67,7 +51,7 @@ const as = (e = {}) => ({
   });
 
 const os = (e = {}) => ({
-    sb: h(
+    sb: makeLink(
       `srv`,
       `bob`,
       [
@@ -80,28 +64,28 @@ const os = (e = {}) => ({
 
 const ss = { text: `new message from Bob`, tone: `violet`, icon: `message` };
 
-const cs = (e, t, n) => S({ x: 13, y: -6, z: 0, dx: 40, dy: -205 }, e, t, { icon: n });
+const cs = (e, t, n) => makePanel({ x: 13, y: -6, z: 0, dx: 40, dy: -205 }, e, t, { icon: n });
 
 const ls = () => ({
     alice: es([ss]),
     srv: ns({ label: [`Server 1`], tags: [{ text: `Alice’s socket` }] }),
-    bob: y(13, -8, { form: `phone`, w: 5, d: 5, label: `Bob` }),
-    srv2: d(13, 6, { label: [`Server 2`], glyph: `message`, tags: [{ text: `Bob’s socket` }] }),
-    br: d(0, 6, { color: `slab`, glyph: `radio`, label: [`Pub/Sub`], sub: `Redis` }),
+    bob: makeDevice(13, -8, { form: `phone`, w: 5, d: 5, label: `Bob` }),
+    srv2: makeBlock(13, 6, { label: [`Server 2`], glyph: `message`, tags: [{ text: `Bob’s socket` }] }),
+    br: makeBlock(0, 6, { color: `slab`, glyph: `radio`, label: [`Pub/Sub`], sub: `Redis` }),
   });
 
 const us = {
     ...rs(),
     ...is(),
-    b2: h(`bob`, `srv2`, [
+    b2: makeLink(`bob`, `srv2`, [
       [`bob-1`, `bob`],
       [`srv2-1`, `srv2`],
     ]),
-    x2b: h(`srv2`, `bob`, [
+    x2b: makeLink(`srv2`, `bob`, [
       [`srv2+1`, `srv2`],
       [`bob+1`, `bob`],
     ]),
-    s2r: h(
+    s2r: makeLink(
       `srv2`,
       `br`,
       [
@@ -110,15 +94,15 @@ const us = {
       ],
       { label: `publish “alice”`, labelAt: 0.55 },
     ),
-    r2: h(`br`, `srv2`, [
+    r2: makeLink(`br`, `srv2`, [
       [`br`, `br+1`],
       [`srv2`, `srv2+1`],
     ]),
-    rs: h(`br`, `srv`, [
+    rs: makeLink(`br`, `srv`, [
       [`br+1`, `br`],
       [`srv+1`, `srv`],
     ]),
-    sr: h(`srv`, `br`, [
+    sr: makeLink(`srv`, `br`, [
       [`srv-1`, `srv`],
       [`br-1`, `br`],
     ]),
@@ -188,7 +172,7 @@ const fs = {
         changes: [`+ Alice polls every 2 s`],
         metrics: { delay: `up to 2 s`, rpm: 30, wasted: 95, conns: 0 },
         scene: {
-          entities: { alice: es(), srv: ns(v(0.15)), bob: ts() },
+          entities: { alice: es(), srv: ns(makeCool(0.15)), bob: ts() },
           links: { ...rs({ heads: `both`, label: `GET /messages · every 2 s` }), ...as() },
           flows: [
             {
@@ -258,7 +242,7 @@ const fs = {
         scene: {
           entities: {
             alice: es(),
-            srv: ns({ ...v(0.2), tags: [{ text: `holding until news`, icon: `hourglass` }] }),
+            srv: ns({ ...makeCool(0.2), tags: [{ text: `holding until news`, icon: `hourglass` }] }),
             bob: ts(),
           },
           links: { ...rs({ heads: `both`, label: `GET /messages · held open` }), ...as() },
@@ -283,7 +267,7 @@ const fs = {
         changes: [`+ One long-lived event stream to Alice`, `~ Delay → under 50 ms`],
         metrics: { delay: `< 50 ms`, rpm: 0, wasted: 0, conns: `1 per user` },
         scene: {
-          entities: { alice: es([ss]), srv: ns(v(0.15)), bob: ts() },
+          entities: { alice: es([ss]), srv: ns(makeCool(0.15)), bob: ts() },
           links: {
             ...rs({ heads: `both` }),
             ...is({ label: `event stream (SSE)`, labelAt: 0.3 }),
@@ -313,7 +297,7 @@ const fs = {
         ],
         metrics: { delay: `< 20 ms`, rpm: 0, wasted: 0, conns: `1 per user` },
         scene: {
-          entities: { alice: es([ss]), srv: ns(v(0.15)), bob: ts() },
+          entities: { alice: es([ss]), srv: ns(makeCool(0.15)), bob: ts() },
           links: {
             ...rs({ label: `WebSocket · both ways` }),
             ...is(),
@@ -372,7 +356,7 @@ const fs = {
               label: [`Server 1`],
               tags: [{ text: `no socket for Alice`, tone: `amber` }],
             }),
-            ms: b(-13, 6, {
+            ms: makeDb(-13, 6, {
               r: 1.6,
               h: 34,
               glyph: `message`,
@@ -382,7 +366,7 @@ const fs = {
           },
           links: {
             ...us,
-            sa: h(
+            sa: makeLink(
               `srv`,
               `alice`,
               [
@@ -391,7 +375,7 @@ const fs = {
               ],
               { style: `off`, fail: 1 },
             ),
-            ms: h(`br`, `ms`, [`br`, `ms`], { label: `store first` }),
+            ms: makeLink(`br`, `ms`, [`br`, `ms`], { label: `store first` }),
           },
           flows: [{ route: [`b2`, `s2r`, `ms`], kind: `msg`, rate: 0.6, speed: 1.2 }],
         },
@@ -414,7 +398,7 @@ const fs = {
           entities: {
             ...ls(),
             alice: es([{ text: `online`, tone: `green`, icon: `signal` }]),
-            ps: b(-13, 6, {
+            ps: makeDb(-13, 6, {
               r: 1.6,
               h: 34,
               glyph: `zap`,
@@ -424,7 +408,7 @@ const fs = {
           },
           links: {
             ...us,
-            ps: h(`srv`, `ps`, [`srv`, [`ps`, `srv`], `ps`], { label: `heartbeat`, labelAt: 0.6 }),
+            ps: makeLink(`srv`, `ps`, [`srv`, [`ps`, `srv`], `ps`], { label: `heartbeat`, labelAt: 0.6 }),
           },
           flows: [...ds, { route: [`ap`, `ps`], kind: `ping`, rate: 0.7 }],
         },

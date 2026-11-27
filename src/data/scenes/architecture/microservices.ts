@@ -1,36 +1,22 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBalancer,
+  makeBlock,
+  makeCrowd,
+  makeDb,
+  makeHot,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 // ============================================================================
 // MICROSERVICES & DISTRIBUTED SYSTEMS
 // ============================================================================
 const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
-  pc = () => p(fc, 13, `shoppers`),
+  pc = () => makeCrowd(fc, 13, `shoppers`),
   mc = (x, y = 4, t = {}) =>
-    d(x, y, {
+    makeBlock(x, y, {
       s: 5.5,
       h: 60,
       color: `orange`,
@@ -41,17 +27,17 @@ const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
     }),
   hc = (e = {}, t = {}, n = {}) => ({
     users: pc(),
-    lb: f(-5, -6),
+    lb: makeBalancer(-5, -6),
     m1: mc(-3, 6, e),
     m2: mc(8, -4, t),
-    mdb: b(9, 7, { r: 2.2, h: 44, label: `one database`, ...n }),
+    mdb: makeDb(9, 7, { r: 2.2, h: 44, label: `one database`, ...n }),
   }),
   gc = {
-    ul: h(`users`, `lb`, [`users`, `lb`], { heads: `both` }),
-    l1: h(`lb`, `m1`, [`lb`, [`m1`, `lb`], `m1`]),
-    l2: h(`lb`, `m2`, [`lb`, [`m2`, `lb`], `m2`]),
-    d1: h(`m1`, `mdb`, [`m1`, [`m1`, `mdb`], `mdb`], { heads: `both` }),
-    d2: h(`m2`, `mdb`, [`m2`, [`m2`, `mdb`], `mdb`], { heads: `both` }),
+    ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both` }),
+    l1: makeLink(`lb`, `m1`, [`lb`, [`m1`, `lb`], `m1`]),
+    l2: makeLink(`lb`, `m2`, [`lb`, [`m2`, `lb`], `m2`]),
+    d1: makeLink(`m1`, `mdb`, [`m1`, [`m1`, `mdb`], `mdb`], { heads: `both` }),
+    d2: makeLink(`m2`, `mdb`, [`m2`, [`m2`, `mdb`], `mdb`], { heads: `both` }),
   },
   _c = [
     { routes: [{ path: [`ul`, `l1`, `d1`] }, { path: [`ul`, `l2`, `d2`] }], rate: 2.4, bounce: !0 },
@@ -64,7 +50,7 @@ const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
   },
   yc = Object.keys(vc),
   bc = (e = []) =>
-    d(-2, -6, {
+    makeBlock(-2, -6, {
       color: `orange`,
       glyph: `route`,
       label: [`API`, `Gateway`],
@@ -72,27 +58,27 @@ const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
       pills: `below`,
     }),
   xc = (e = {}) =>
-    Object.fromEntries(yc.map((t) => [t, d(vc[t].x, vc[t].y, { ...vc[t], ...(e[t] || {}) })])),
+    Object.fromEntries(yc.map((t) => [t, makeBlock(vc[t].x, vc[t].y, { ...vc[t], ...(e[t] || {}) })])),
   Sc = () =>
-    Object.fromEntries(yc.map((e) => [`${e}db`, b(vc[e].x, 14, { r: 1.5, h: 30, label: `` })])),
+    Object.fromEntries(yc.map((e) => [`${e}db`, makeDb(vc[e].x, 14, { r: 1.5, h: 30, label: `` })])),
   Cc = (e = {}) => ({
-    ug: h(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
+    ug: makeLink(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
     ...Object.fromEntries(
       yc.map((t) => [
         `g${t}`,
-        h(`gw`, t, [`gw`, t], { heads: `both`, ...(e[t] || {}) }),
+        makeLink(`gw`, t, [`gw`, t], { heads: `both`, ...(e[t] || {}) }),
       ]),
     ),
   }),
   wc = () =>
-    Object.fromEntries(yc.map((e) => [`d${e}`, h(e, `${e}db`, [e, `${e}db`], { heads: `both` })])),
+    Object.fromEntries(yc.map((e) => [`d${e}`, makeLink(e, `${e}db`, [e, `${e}db`], { heads: `both` })])),
   Tc = (e = {}) => ({
-    op: h(`ord`, `pay`, [`ord`, `pay`], { heads: `both`, label: `API call`, ...e }),
+    op: makeLink(`ord`, `pay`, [`ord`, `pay`], { heads: `both`, label: `API call`, ...e }),
   }),
   Ec = (e = 2.6) => [
     { routes: yc.map((e) => ({ path: [`ug`, `g${e}`, `d${e}`] })), rate: e, bounce: !0 },
   ],
-  Dc = (e, t, n) => S({ x: 15, y: 14, z: 0, dx: 60, dy: -175 }, e, t, { icon: n });
+  Dc = (e, t, n) => makePanel({ x: 15, y: 14, z: 0, dx: 60, dy: -175 }, e, t, { icon: n });
 
 export const microservicesLesson = {
     id: `microservices`,
@@ -151,12 +137,12 @@ export const microservicesLesson = {
         scene: {
           entities: hc(
             {
-              ..._(0.97),
+              ...makeHot(0.97),
               tags: [{ text: `reports leak · out of memory`, tone: `red`, icon: `bug` }],
             },
-            { ...g, tags: [{ text: `crashed · checkout down too`, tone: `red`, icon: `alert` }] },
+            { ...DEAD_STATE, tags: [{ text: `crashed · checkout down too`, tone: `red`, icon: `alert` }] },
           ),
-          links: { ...gc, l2: h(`lb`, `m2`, [`lb`, [`m2`, `lb`], `m2`], { style: `off` }) },
+          links: { ...gc, l2: makeLink(`lb`, `m2`, [`lb`, [`m2`, `lb`], `m2`], { style: `off` }) },
           flows: [{ route: [`ul`, `l1`, `d1`], rate: 2.4, bounce: !0 }],
         },
       },
@@ -179,12 +165,12 @@ export const microservicesLesson = {
             users: pc(),
             gw: bc(),
             ...xc(),
-            mdb: b(2, 14, { r: 2.2, h: 44, label: `one database` }),
+            mdb: makeDb(2, 14, { r: 2.2, h: 44, label: `one database` }),
           },
           links: {
             ...Cc(),
             ...Object.fromEntries(
-              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, `mdb`], { heads: `both` })]),
+              yc.map((e) => [`m${e}`, makeLink(e, `mdb`, [e, `mdb`], { heads: `both` })]),
             ),
           },
           flows: [
@@ -281,13 +267,13 @@ export const microservicesLesson = {
             users: pc(),
             gw: bc([{ text: `release train: all 4 together`, tone: `red`, icon: `alert` }]),
             ...xc(),
-            mdb: b(2, 14, { r: 2.2, h: 44, label: `shared tables`, heat: 0.6 }),
+            mdb: makeDb(2, 14, { r: 2.2, h: 44, label: `shared tables`, heat: 0.6 }),
           },
           links: {
             ...Cc(),
             ...Tc({ label: `chatty calls` }),
             ...Object.fromEntries(
-              yc.map((e) => [`m${e}`, h(e, `mdb`, [e, `mdb`], { heads: `both` })]),
+              yc.map((e) => [`m${e}`, makeLink(e, `mdb`, [e, `mdb`], { heads: `both` })]),
             ),
           },
           flows: [
@@ -323,7 +309,7 @@ export const microservicesLesson = {
           links: {
             ...Cc(),
             ...wc(),
-            oc: h(`ord`, `cat`, [`ord`, `cat`], {
+            oc: makeLink(`ord`, `cat`, [`ord`, `cat`], {
               heads: `both`,
               label: `× 20 calls`,
               labelTone: `red`,
@@ -365,7 +351,7 @@ export const microservicesLesson = {
           links: {
             ...Cc(),
             ...wc(),
-            co: h(`cat`, `ord`, [`cat`, `ord`], { label: `ProductUpdated` }),
+            co: makeLink(`cat`, `ord`, [`cat`, `ord`], { label: `ProductUpdated` }),
           },
           flows: [...Ec(), { route: [`co`], kind: `msg`, rate: 0.6 }],
         },
@@ -454,24 +440,24 @@ export const microservicesLesson = {
             users: pc(),
             gw: bc(),
             m1: mc(-4, 4, { tags: [{ text: `users · catalog · orders` }] }),
-            mdb: b(-4, 14, { r: 2.2, h: 44, label: `monolith DB` }),
-            pay: d(12, 4, { ...vc.pay, tags: [{ text: `new`, tone: `green` }] }),
-            paydb: b(12, 14, { r: 1.5, h: 30, label: `` }),
+            mdb: makeDb(-4, 14, { r: 2.2, h: 44, label: `monolith DB` }),
+            pay: makeBlock(12, 4, { ...vc.pay, tags: [{ text: `new`, tone: `green` }] }),
+            paydb: makeDb(12, 14, { r: 1.5, h: 30, label: `` }),
           },
           links: {
-            ug: h(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
-            gm: h(`gw`, `m1`, [`gw`, `m1`], {
+            ug: makeLink(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
+            gm: makeLink(`gw`, `m1`, [`gw`, `m1`], {
               heads: `both`,
               label: `everything else`,
               labelAt: 0.45,
             }),
-            gpay: h(`gw`, `pay`, [`gw`, `pay`], {
+            gpay: makeLink(`gw`, `pay`, [`gw`, `pay`], {
               heads: `both`,
               label: `/payments/*`,
               labelAt: 0.45,
             }),
-            dm: h(`m1`, `mdb`, [`m1`, `mdb`], { heads: `both` }),
-            dpay: h(`pay`, `paydb`, [`pay`, `paydb`], { heads: `both` }),
+            dm: makeLink(`m1`, `mdb`, [`m1`, `mdb`], { heads: `both` }),
+            dpay: makeLink(`pay`, `paydb`, [`pay`, `paydb`], { heads: `both` }),
           },
           flows: [
             {

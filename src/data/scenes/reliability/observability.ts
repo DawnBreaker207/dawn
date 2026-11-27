@@ -1,34 +1,17 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCrowd,
+  makeDb,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const nc = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
 
-const rc = (e = `shoppers`) => p(nc, 11, e);
+const rc = (e = `shoppers`) => makeCrowd(nc, 11, e);
 
-const ic = (e, t, n) => d(e, t, n);
+const ic = (e, t, n) => makeBlock(e, t, n);
 
 const ac = (e = {}) => ({
     gw: ic(0, -11, { color: `orange`, glyph: `globe`, label: [`Gateway`], tags: e.gw || [] }),
@@ -40,7 +23,7 @@ const ac = (e = {}) => ({
       label: [`Payments`],
       tags: e.pay || [],
     }),
-    db: b(0, 11, { r: 1.7, glyph: `database`, label: `orders DB`, tags: e.db || [] }),
+    db: makeDb(0, 11, { r: 1.7, glyph: `database`, label: `orders DB`, tags: e.db || [] }),
     fraud: ic(10, 11, {
       color: `slab`,
       glyph: `shield`,
@@ -51,12 +34,12 @@ const ac = (e = {}) => ({
   });
 
 const oc = (e = {}) => ({
-    ug: h(`shoppers`, `gw`, [`shoppers`, `gw`], { heads: `both` }),
-    go: h(`gw`, `orders`, [`gw`, `orders`], { heads: `both` }),
-    oi: h(`orders`, `inv`, [`orders`, `inv`], { heads: `both` }),
-    op: h(`orders`, `pay`, [`orders`, `pay`], { heads: `both` }),
-    od: h(`orders`, `db`, [`orders`, `db`], { heads: `both` }),
-    pf: h(`pay`, `fraud`, [`pay`, `fraud`], { heads: `both`, ...(e.pf || {}) }),
+    ug: makeLink(`shoppers`, `gw`, [`shoppers`, `gw`], { heads: `both` }),
+    go: makeLink(`gw`, `orders`, [`gw`, `orders`], { heads: `both` }),
+    oi: makeLink(`orders`, `inv`, [`orders`, `inv`], { heads: `both` }),
+    op: makeLink(`orders`, `pay`, [`orders`, `pay`], { heads: `both` }),
+    od: makeLink(`orders`, `db`, [`orders`, `db`], { heads: `both` }),
+    pf: makeLink(`pay`, `fraud`, [`pay`, `fraud`], { heads: `both`, ...(e.pf || {}) }),
   });
 
 const sc = (e = 1.6, t) => [
@@ -66,7 +49,7 @@ const sc = (e = 1.6, t) => [
 
 const cc = (e, t = `paper`, n) => ({ text: e, tone: t, icon: n });
 
-const lc = (e, t, n, r = {}) => S({ x: -10, y: 0, z: 0, dx: -400, dy: -110 }, e, t, { icon: n, ...r });
+const lc = (e, t, n, r = {}) => makePanel({ x: -10, y: 0, z: 0, dx: -400, dy: -110 }, e, t, { icon: n, ...r });
 
 const uc = {
     gw: [cc(`p99 2.4 s`, `red`, `timer`)],
@@ -348,7 +331,7 @@ const dc = {
           },
           links: {
             ...oc(),
-            oi: h(`orders`, `inv`, [`orders`, `inv`], { heads: `both`, fail: 0.35 }),
+            oi: makeLink(`orders`, `inv`, [`orders`, `inv`], { heads: `both`, fail: 0.35 }),
           },
           flows: sc(0),
         },

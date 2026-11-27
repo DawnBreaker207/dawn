@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const angularFlowLesson = {
@@ -31,7 +29,7 @@ export const angularFlowLesson = {
     {
       short: 'Bootstrap & SSR',
       chapter: 'setup',
-      title: '1. Bootstrap, SSR Hydration & Event Replay',
+      title: 'Bootstrap, SSR Hydration & Event Replay',
       body: [
         'Angular boots via <code>bootstrapApplication(AppComponent, appConfig)</code>, creating <code>PlatformInjector</code>, <code>EnvironmentInjector</code>, and <code>ApplicationRef</code>.',
         'With SSR, <code>provideClientHydration(withEventReplay())</code> reuses server HTML (<code>&lt;!--nghm--&gt;</code>) non-destructively and buffers early user clicks in <code>__jsaction</code> until hydration finishes.',
@@ -43,9 +41,9 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Bootstrap + SSR', networkState: 'Idle', reactivityMode: 'Hydrating', domMutations: '0 (Preserved)' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '1. Bootstrap & Hydration', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Bootstrap & Hydration', [
             `bootstrapApplication(AppComponent, {`,
             `  providers: [`,
             `    provideRouter(routes, withComponentInputBinding()),`,
@@ -57,7 +55,7 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
         },
         flows: [{ route: ['ur'], kind: 'req', rate: 1.5 }],
       },
@@ -65,7 +63,7 @@ export const angularFlowLesson = {
     {
       short: 'Router & @defer',
       chapter: 'setup',
-      title: '2. Router UrlTree, Standalone & @defer Chunks',
+      title: 'Router UrlTree, Standalone & @defer Chunks',
       body: [
         'The <b>Router</b> parses the URL into an immutable <code>UrlTree</code> and traverses route configs.',
         'Thanks to <b>Standalone</b> components (no bloated <code>NgModule</code>), ESBuild tree-shakes unused code and lazy-loads only the needed chunk via <code>loadComponent</code> or template-level <code>@defer (on viewport; prefetch on idle)</code>.',
@@ -78,10 +76,10 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Router + Chunk', networkState: 'Chunk Ready', reactivityMode: 'Init', domMutations: '0' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '2. Route & Lazy Chunk', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Route & Lazy Chunk', [
             `{`,
             `  path: 'orders/:id',`,
             `  canMatch: [v2OrdersGuard],`,
@@ -92,8 +90,8 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
-          rg: h('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          rg: makeLink('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
         },
         flows: [{ route: ['ur', 'rg'], kind: 'req', rate: 1.5 }],
       },
@@ -101,7 +99,7 @@ export const angularFlowLesson = {
     {
       short: 'Guards & Resolvers',
       chapter: 'setup',
-      title: '3. Route Guards (canMatch, canActivate) & Resolvers',
+      title: 'Route Guards (canMatch, canActivate) & Resolvers',
       body: [
         'Before downloading JS chunks, <code>canMatch</code> checks feature flags; then <code>canActivate</code> verifies authentication (returning <code>true</code> or an atomic <code>UrlTree</code> redirect to <code>/login</code>).',
         'Next, functional <b>Resolvers</b> (<code>ResolveFn</code>) pre-fetch critical route data and bind it straight to component signal inputs via <code>withComponentInputBinding()</code>.',
@@ -114,11 +112,11 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Guards + Resolver', networkState: 'Authorized', reactivityMode: 'Resolving', domMutations: '0' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: d(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '3. Guards & Resolvers', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
+          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Guards & Resolvers', [
             `export const authGuard: CanActivateFn = () => {`,
             `  return inject(AuthService).isLoggedIn()`,
             `    ? true`,
@@ -127,9 +125,9 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
-          rg: h('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
-          gd: h('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          rg: makeLink('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
+          gd: makeLink('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
         },
         flows: [{ route: ['ur', 'rg', 'gd'], kind: 'req', rate: 1.5 }],
       },
@@ -137,7 +135,7 @@ export const angularFlowLesson = {
     {
       short: 'DI & Lifecycle',
       chapter: 'execution',
-      title: '4. Hierarchical DI (inject()), Lifecycle & RxJS Streams',
+      title: 'Hierarchical DI (inject()), Lifecycle & RxJS Streams',
       body: [
         '<code>&lt;router-outlet&gt;</code> instantiates the component. Angular’s <b>Dual-Tree DI</b> resolves services via <code>inject()</code> from <code>NodeInjector</code> up to <code>EnvironmentInjector</code>, while Lifecycle hooks run <code>constructor</code> $\\rightarrow$ <code>ngOnInit</code> $\\rightarrow$ <code>ngAfterViewInit</code>.',
         'For reactive events (search, filters), <b>RxJS</b> orchestrates streams with <code>debounceTime()</code>, <code>distinctUntilChanged()</code>, and <code>switchMap()</code> (auto-cancelling stale requests) plus <code>takeUntilDestroyed()</code> for zero-leak cleanup.',
@@ -150,12 +148,12 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'DI + Lifecycle', networkState: 'Preparing Req', reactivityMode: 'ngOnInit', domMutations: 'Mount' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: d(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: d(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '4. DI, Lifecycle & RxJS Stream', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
+          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'DI, Lifecycle & RxJS Stream', [
             `orders$ = this.query$.pipe(`,
             `  debounceTime(300), distinctUntilChanged(),`,
             `  switchMap(q => inject(HttpClient).get('/api/orders?q=' + q)),`,
@@ -164,10 +162,10 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
-          rg: h('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
-          gd: h('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
-          di: h('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          rg: makeLink('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
+          gd: makeLink('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
+          di: makeLink('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
         },
         flows: [{ route: ['ur', 'rg', 'gd', 'di'], kind: 'req', rate: 1.5 }],
       },
@@ -175,7 +173,7 @@ export const angularFlowLesson = {
     {
       short: 'HTTP Interceptors',
       chapter: 'execution',
-      title: '5. HTTP Interceptors, req.clone() & HttpContext',
+      title: 'HTTP Interceptors, req.clone() & HttpContext',
       body: [
         '<code>HttpClient</code> creates an immutable <code>HttpRequest</code> and passes it through functional <code>withInterceptors([])</code>.',
         'Interceptors check <code>HttpContextToken</code> flags (e.g. <code>IS_PUBLIC</code> bypass), call <code>req.clone()</code> to inject <code>Authorization: Bearer JWT</code> headers, and hand off to <code>HttpBackend</code> (<code>fetch()</code>).',
@@ -188,13 +186,13 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Interceptors', networkState: 'In Flight', reactivityMode: 'Pending', domMutations: '0' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: d(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: d(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
-          backendApi: b(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '5. Interceptors & Backend', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
+          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Interceptors & Backend', [
             `const authReq = req.clone({`,
             `  setHeaders: { Authorization: \`Bearer \${token}\` }`,
             `});`,
@@ -202,11 +200,11 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
-          rg: h('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
-          gd: h('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
-          di: h('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
-          ib: h('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          rg: makeLink('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
+          gd: makeLink('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
+          di: makeLink('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
+          ib: makeLink('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
         },
         flows: [{ route: ['ur', 'rg', 'gd', 'di', 'ib'], kind: 'req', rate: 1.5 }],
       },
@@ -214,7 +212,7 @@ export const angularFlowLesson = {
     {
       short: 'Backend & Interop',
       chapter: 'execution',
-      title: '6. Backend API Response, catchError/retry & toSignal()',
+      title: 'Backend API Response, catchError/retry & toSignal()',
       body: [
         'The <b>Backend API</b> validates the JWT, queries the database, and returns JSON <code>200 OK</code>. If <code>503</code> occurs, RxJS <code>retry()</code> with exponential backoff recovers while inner <code>catchError()</code> protects the outer stream.',
         'The response flows back through the Interceptor pipe, and <code>toSignal()</code> bridges the async RxJS Observable into a synchronous Angular Signal.',
@@ -227,14 +225,14 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Backend -> Signal', networkState: '200 OK', reactivityMode: 'toSignal()', domMutations: 'Pending' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: d(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: d(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
-          backendApi: b(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
-          resSignals: d(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '6. Response & Signals DAG', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
+          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
+          resSignals: makeBlock(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Response & Signals DAG', [
             `orders = toSignal(this.http.get<Order[]>('/api/orders'), {`,
             `  initialValue: []`,
             `});`,
@@ -242,12 +240,12 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
-          rg: h('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
-          gd: h('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
-          di: h('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
-          ib: h('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
-          br: h('backendApi', 'resSignals', ['backendApi', 'resSignals'], { label: '200 OK -> Signal' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          rg: makeLink('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
+          gd: makeLink('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
+          di: makeLink('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
+          ib: makeLink('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
+          br: makeLink('backendApi', 'resSignals', ['backendApi', 'resSignals'], { label: '200 OK -> Signal' }),
         },
         flows: [
           { route: ['ur', 'rg', 'gd', 'di', 'ib'], kind: 'req', rate: 1.4 },
@@ -258,7 +256,7 @@ export const angularFlowLesson = {
     {
       short: 'Signals DAG',
       chapter: 'technique',
-      title: '7. Glitch-Free Push-Pull Signals DAG & effect()',
+      title: 'Glitch-Free Push-Pull Signals DAG & effect()',
       body: [
         'Updating the producer Signal executes Phase 1 (<b>Push</b>): marking downstream <code>computed()</code> nodes as <code>DIRTY</code> without eager recalculation.',
         'Phase 2 (<b>Pull</b>) topologically sorts diamond dependencies so <code>computed()</code> evaluates lazily once (100% glitch-free), while <code>effect()</code> runs side effects with <code>onCleanup()</code>.',
@@ -271,15 +269,15 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Signals DAG', networkState: 'Cached', reactivityMode: 'Glitch-Free', domMutations: 'Scheduled' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: d(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: d(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
-          backendApi: b(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
-          resSignals: d(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
-          zonelessCd: d(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '7. Signals -> Zoneless Scheduler', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
+          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
+          resSignals: makeBlock(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
+          zonelessCd: makeBlock(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Signals -> Zoneless Scheduler', [
             `// Signal notifies Zoneless ChangeDetectionScheduler:`,
             `// - Zero Zone.js monkey-patching (-35KB)`,
             `// - Coalesces updates in single microtask`,
@@ -287,13 +285,13 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
-          rg: h('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
-          gd: h('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
-          di: h('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
-          ib: h('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
-          br: h('backendApi', 'resSignals', ['backendApi', 'resSignals'], { label: '200 OK -> Signal' }),
-          rz: h('resSignals', 'zonelessCd', ['resSignals', 'zonelessCd'], { label: 'notify scheduler' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          rg: makeLink('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
+          gd: makeLink('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
+          di: makeLink('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
+          ib: makeLink('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
+          br: makeLink('backendApi', 'resSignals', ['backendApi', 'resSignals'], { label: '200 OK -> Signal' }),
+          rz: makeLink('resSignals', 'zonelessCd', ['resSignals', 'zonelessCd'], { label: 'notify scheduler' }),
         },
         flows: [
           { route: ['ur', 'rg', 'gd', 'di', 'ib'], kind: 'req', rate: 1.4 },
@@ -304,7 +302,7 @@ export const angularFlowLesson = {
     {
       short: 'Zoneless & OnPush',
       chapter: 'execution',
-      title: '8. Zoneless Scheduler & OnPush Subtree Pruning',
+      title: 'Zoneless Scheduler & OnPush Subtree Pruning',
       body: [
         'Unlike legacy <code>Zone.js</code> (which monkey-patched APIs and ran top-down <code>appRef.tick()</code> over 500+ nodes), <b>Zoneless</b> Angular uses <code>ChangeDetectionScheduler</code> to mark <b>only</b> the view reading the mutated Signal.',
         'Clean <code>OnPush</code> sibling branches are completely pruned (<code>0ms</code> spent), and native <code>async/await</code> stack traces stay pristine.',
@@ -317,16 +315,16 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Zoneless + OnPush', networkState: 'Complete', reactivityMode: 'Surgical O(1)', domMutations: 'Ready' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: d(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: d(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
-          backendApi: b(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
-          resSignals: d(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
-          zonelessCd: d(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
-          ivyControl: d(-18, 2, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['Ivy + @for'], sub: 'in-place DOM' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '8. Zoneless -> Ivy Incremental DOM', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
+          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
+          resSignals: makeBlock(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
+          zonelessCd: makeBlock(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
+          ivyControl: makeBlock(-18, 2, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['Ivy + @for'], sub: 'in-place DOM' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zoneless -> Ivy Incremental DOM', [
             `@if (orders().length) {`,
             `  @for (o of orders(); track o.id) {`,
             `    <row>{{ o.total | currency }}</row>`,
@@ -335,14 +333,14 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
-          rg: h('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
-          gd: h('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
-          di: h('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
-          ib: h('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
-          br: h('backendApi', 'resSignals', ['backendApi', 'resSignals'], { label: '200 OK -> Signal' }),
-          rz: h('resSignals', 'zonelessCd', ['resSignals', 'zonelessCd'], { label: 'notify scheduler' }),
-          zi: h('zonelessCd', 'ivyControl', ['zonelessCd', 'ivyControl'], { label: 'execute Ivy pass' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          rg: makeLink('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
+          gd: makeLink('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
+          di: makeLink('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
+          ib: makeLink('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
+          br: makeLink('backendApi', 'resSignals', ['backendApi', 'resSignals'], { label: '200 OK -> Signal' }),
+          rz: makeLink('resSignals', 'zonelessCd', ['resSignals', 'zonelessCd'], { label: 'notify scheduler' }),
+          zi: makeLink('zonelessCd', 'ivyControl', ['zonelessCd', 'ivyControl'], { label: 'execute Ivy pass' }),
         },
         flows: [
           { route: ['ur', 'rg', 'gd', 'di', 'ib'], kind: 'req', rate: 1.4 },
@@ -354,7 +352,7 @@ export const angularFlowLesson = {
     {
       short: 'Ivy & @for DOM',
       chapter: 'scaling',
-      title: '9. Ivy Incremental DOM, @if/@for track & Pure Pipes',
+      title: 'Ivy Incremental DOM, @if/@for track & Pure Pipes',
       body: [
         'Finally, <b>Ivy Incremental DOM</b> runs template update mode (<code>rf & 2</code>): built-in <code>@if</code> / <code>@for (track o.id)</code> reuses DOM elements by key, and Pure Pipes skip unchanged values via <code>===</code> memoization.',
         'Opcodes <code>ɵɵadvance</code> and <code>ɵɵtextInterpolate</code> mutate the real DOM in-place (zero Virtual DOM allocation or GC stutter), delivering a 60fps UI back to the user.',
@@ -367,16 +365,16 @@ export const angularFlowLesson = {
       metrics: { activeStage: '60fps Painted', networkState: 'Complete', reactivityMode: 'Zoneless + Ivy', domMutations: 'In-Place (0 GC)' },
       scene: {
         entities: {
-          userHydrate: y(-18, -12, { label: 'User / SSR', tags: [{ text: '60fps Painted', tone: 'green', icon: 'shield' }] }),
-          routerMatch: d(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
-          routeGuards: d(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: d(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: d(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
-          backendApi: b(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
-          resSignals: d(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
-          zonelessCd: d(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
-          ivyControl: d(-18, 2, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['Ivy + @for'], sub: 'in-place DOM' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '9. Complete Angular Flow', [
+          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: '60fps Painted', tone: 'green', icon: 'shield' }] }),
+          routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
+          routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
+          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
+          resSignals: makeBlock(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
+          zonelessCd: makeBlock(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
+          ivyControl: makeBlock(-18, 2, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['Ivy + @for'], sub: 'in-place DOM' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Complete Angular Flow', [
             `User/SSR -> Router -> Guards/Resolver -> DI/Lifecycle`,
             `  -> Interceptors (req.clone) -> Backend API`,
             `  -> toSignal() -> Signals DAG -> Zoneless CD`,
@@ -384,15 +382,15 @@ export const angularFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ur: h('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
-          rg: h('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
-          gd: h('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
-          di: h('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
-          ib: h('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
-          br: h('backendApi', 'resSignals', ['backendApi', 'resSignals'], { label: '200 OK -> Signal' }),
-          rz: h('resSignals', 'zonelessCd', ['resSignals', 'zonelessCd'], { label: 'notify scheduler' }),
-          zi: h('zonelessCd', 'ivyControl', ['zonelessCd', 'ivyControl'], { label: 'execute Ivy pass' }),
-          iu: h('ivyControl', 'userHydrate', ['ivyControl', 'userHydrate'], { label: 'paint 60fps UI' }),
+          ur: makeLink('userHydrate', 'routerMatch', ['userHydrate', 'routerMatch'], { label: 'navigate /orders' }),
+          rg: makeLink('routerMatch', 'routeGuards', ['routerMatch', 'routeGuards'], { label: 'check guards' }),
+          gd: makeLink('routeGuards', 'diLifecycle', ['routeGuards', 'diLifecycle'], { label: 'activate outlet' }),
+          di: makeLink('diLifecycle', 'interceptors', ['diLifecycle', 'interceptors'], { label: 'http.get()' }),
+          ib: makeLink('interceptors', 'backendApi', ['interceptors', 'backendApi'], { label: 'fetch() wire' }),
+          br: makeLink('backendApi', 'resSignals', ['backendApi', 'resSignals'], { label: '200 OK -> Signal' }),
+          rz: makeLink('resSignals', 'zonelessCd', ['resSignals', 'zonelessCd'], { label: 'notify scheduler' }),
+          zi: makeLink('zonelessCd', 'ivyControl', ['zonelessCd', 'ivyControl'], { label: 'execute Ivy pass' }),
+          iu: makeLink('ivyControl', 'userHydrate', ['ivyControl', 'userHydrate'], { label: 'paint 60fps UI' }),
         },
         flows: [
           { route: ['ur', 'rg', 'gd', 'di', 'ib'], kind: 'req', rate: 1.4 },

@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const angularZonejsDirtyCheckingLesson = {
@@ -30,7 +28,7 @@ export const angularZonejsDirtyCheckingLesson = {
     {
       short: 'Zone.js Top-Down',
       chapter: 'concept',
-      title: '1. Zone.js Monkey-Patching & Top-Down Dirty Checking',
+      title: 'Zone.js Monkey-Patching & Top-Down Dirty Checking',
       body: [
         'Historically, <code>Zone.js</code> monkey-patched 150+ async Web APIs (<code>setTimeout</code>, <code>addEventListener</code>, <code>Promise</code>). When the microtask queue drained, <code>NgZone</code> emitted <code>onMicrotaskEmpty</code>.',
         '<code>ApplicationRef.tick()</code> then walked the <b>entire component tree top-down</b>—checking all 500+ components even for a single button click.',
@@ -42,18 +40,18 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { cdStrategy: 'Zone.js Default', zonejsPayload: '+35 KB', nodesChecked: '500 / tick', renderLatency: '14.8 ms' },
       scene: {
         entities: {
-          browserApi: y(-16, -6, { label: 'Web APIs', tags: [{ text: 'setTimeout', tone: 'blue', icon: 'zap' }] }),
-          zonePatch: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['NgZone Patch'], sub: 'onMicrotask' }),
-          appRefTick: d(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'package', label: ['appRef.tick()'], sub: 'walk 500 nodes' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zone.js Top-Down Tick', [
+          browserApi: makeDevice(-16, -6, { label: 'Web APIs', tags: [{ text: 'setTimeout', tone: 'blue', icon: 'zap' }] }),
+          zonePatch: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['NgZone Patch'], sub: 'onMicrotask' }),
+          appRefTick: makeBlock(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'package', label: ['appRef.tick()'], sub: 'walk 500 nodes' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zone.js Top-Down Tick', [
             `this.ngZone.onMicrotaskEmpty.subscribe(() => {`,
             `  this.appRef.tick(); // Walks App -> Nav -> All 500 leaves!`,
             `});`,
           ], { icon: 'terminal' }),
         },
         links: {
-          bz: h('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'intercept async' }),
-          za: h('zonePatch', 'appRefTick', ['zonePatch', 'appRefTick'], { label: 'trigger tick()' }),
+          bz: makeLink('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'intercept async' }),
+          za: makeLink('zonePatch', 'appRefTick', ['zonePatch', 'appRefTick'], { label: 'trigger tick()' }),
         },
         flows: [{ route: ['bz', 'za'], kind: 'async', rate: 1.5 }],
       },
@@ -61,7 +59,7 @@ export const angularZonejsDirtyCheckingLesson = {
     {
       short: 'runOutside & Flags',
       chapter: 'technique',
-      title: '2. Escaping Zone: runOutsideAngular & zone-flags.ts',
+      title: 'Escaping Zone: runOutsideAngular & zone-flags.ts',
       body: [
         'For 60Hz <code>scroll</code> / <code>mousemove</code> / WebGL loops, wrap listeners in <code>ngZone.runOutsideAngular(() =&gt; ...)</code> so they bypass Zone and trigger <b>0 ticks</b>.',
         'You can also globally unpatch noisy events via <code>zone-flags.ts</code> (e.g. <code>__Zone_disable_requestAnimationFrame = true</code>) before importing <code>zone.js</code>.',
@@ -74,10 +72,10 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { cdStrategy: 'Outside Angular', zonejsPayload: '+35 KB', nodesChecked: '0 (Bypassed)', renderLatency: '0 ms tick' },
       scene: {
         entities: {
-          browserApi: y(-16, -6, { label: 'Scroll / rAF', tags: [{ text: '60Hz events', tone: 'cyan', icon: 'zap' }] }),
-          zonePatch: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['runOutside'], sub: 'bypass Zone' }),
-          leanDom: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Direct Canvas'], sub: '0 CD ticks' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'runOutsideAngular & zone-flags', [
+          browserApi: makeDevice(-16, -6, { label: 'Scroll / rAF', tags: [{ text: '60Hz events', tone: 'cyan', icon: 'zap' }] }),
+          zonePatch: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['runOutside'], sub: 'bypass Zone' }),
+          leanDom: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Direct Canvas'], sub: '0 CD ticks' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'runOutsideAngular & zone-flags', [
             `this.ngZone.runOutsideAngular(() => {`,
             `  window.addEventListener('scroll', () => this.updateParallax());`,
             `});`,
@@ -85,8 +83,8 @@ export const angularZonejsDirtyCheckingLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          bz: h('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'run outside' }),
-          zl: h('zonePatch', 'leanDom', ['zonePatch', 'leanDom'], { label: 'direct paint' }),
+          bz: makeLink('browserApi', 'zonePatch', ['browserApi', 'zonePatch'], { label: 'run outside' }),
+          zl: makeLink('zonePatch', 'leanDom', ['zonePatch', 'leanDom'], { label: 'direct paint' }),
         },
         flows: [{ route: ['bz', 'zl'], kind: 'bypass', rate: 1.5 }],
       },
@@ -94,7 +92,7 @@ export const angularZonejsDirtyCheckingLesson = {
     {
       short: 'OnPush Pruning',
       chapter: 'execution',
-      title: '3. OnPush Subtree Pruning & Input Identity (===)',
+      title: 'OnPush Subtree Pruning & Input Identity (===)',
       body: [
         'Setting <code>changeDetection: ChangeDetectionStrategy.OnPush</code> turns a component into an isolated boundary: Angular <b>skips</b> the entire subtree unless notified.',
         'Trigger 1: An <code>@Input()</code> changes by <b>reference identity</b> (<code>newPtr !== oldPtr</code>). Mutating <code>user.name = \'Bob\'</code> in-place is ignored—use immutable spread <code>user = { ...user, name: \'Bob\' }</code>.',
@@ -107,20 +105,20 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { cdStrategy: 'OnPush', zonejsPayload: '+35 KB', nodesChecked: 'Active Branch', renderLatency: '3.2 ms' },
       scene: {
         entities: {
-          rootComp: d(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'root tick' }),
-          branchDefault: d(-12, 0, { s: 4.8, h: 52, color: 'amber', glyph: 'boxes', label: ['Default Branch'], sub: 'always checked' }),
-          branchOnPush: d(12, 0, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['OnPush Branch'], sub: 'pruned unless ===' }),
-          leafOnPush: b(12, 14, { s: 4.6, h: 48, color: 'slab', glyph: 'server', label: ['Child Views'], sub: 'skipped subtree' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'OnPush Immutable Input', [
+          rootComp: makeBlock(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'root tick' }),
+          branchDefault: makeBlock(-12, 0, { s: 4.8, h: 52, color: 'amber', glyph: 'boxes', label: ['Default Branch'], sub: 'always checked' }),
+          branchOnPush: makeBlock(12, 0, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['OnPush Branch'], sub: 'pruned unless ===' }),
+          leafOnPush: makeDb(12, 14, { s: 4.6, h: 48, color: 'slab', glyph: 'server', label: ['Child Views'], sub: 'skipped subtree' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'OnPush Immutable Input', [
             `@Component({ changeDetection: ChangeDetectionStrategy.OnPush })`,
             `// ❌ Mutating in-place: OnPush skips!`,
             `// ✅ New reference: this.user = { ...this.user, name: 'Bob' };`,
           ], { icon: 'terminal' }),
         },
         links: {
-          rd: h('rootComp', 'branchDefault', ['rootComp', 'branchDefault'], { label: 'check default' }),
-          ro: h('rootComp', 'branchOnPush', ['rootComp', 'branchOnPush'], { label: 'check ref ===' }),
-          ol: h('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'prune clean' }),
+          rd: makeLink('rootComp', 'branchDefault', ['rootComp', 'branchDefault'], { label: 'check default' }),
+          ro: makeLink('rootComp', 'branchOnPush', ['rootComp', 'branchOnPush'], { label: 'check ref ===' }),
+          ol: makeLink('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'prune clean' }),
         },
         flows: [
           { route: ['rd'], kind: 'async', rate: 1.5 },
@@ -131,7 +129,7 @@ export const angularZonejsDirtyCheckingLesson = {
     {
       short: 'markForCheck & detach',
       chapter: 'execution',
-      title: '4. Internal Events, AsyncPipe, markForCheck() & detach()',
+      title: 'Internal Events, AsyncPipe, markForCheck() & detach()',
       body: [
         'Other OnPush triggers: (2) DOM events originating inside the subtree, (3) <code>AsyncPipe</code> emissions calling <code>markForCheck()</code>.',
         'For external WebSockets/timers, inject <code>ChangeDetectorRef</code>: <code>markForCheck()</code> schedules the next tick; <code>detectChanges()</code> runs synchronously; <code>detach()</code> disconnects a 60Hz canvas completely.',
@@ -144,18 +142,18 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { cdStrategy: 'OnPush + CDR', zonejsPayload: '+35 KB', nodesChecked: 'Marked Path', renderLatency: '2.1 ms' },
       scene: {
         entities: {
-          rootComp: d(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'ancestor path' }),
-          branchOnPush: d(12, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['AsyncPipe / CDR'], sub: 'markForCheck' }),
-          leafOnPush: b(12, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['OnPush View'], sub: 'updated leaf' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'ChangeDetectorRef API', [
+          rootComp: makeBlock(0, -12, { s: 5.0, h: 54, color: 'blue', glyph: 'boxes', label: ['AppComponent'], sub: 'ancestor path' }),
+          branchOnPush: makeBlock(12, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['AsyncPipe / CDR'], sub: 'markForCheck' }),
+          leafOnPush: makeDb(12, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['OnPush View'], sub: 'updated leaf' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ChangeDetectorRef API', [
             `this.cdr.markForCheck();  // Async coalesced (Recommended)`,
             `this.cdr.detectChanges(); // Synchronous immediate check`,
             `this.cdr.detach();        // Disconnect from CD tree`,
           ], { icon: 'terminal' }),
         },
         links: {
-          bc: h('branchOnPush', 'rootComp', ['branchOnPush', 'rootComp'], { label: 'mark path dirty' }),
-          bl: h('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'update template' }),
+          bc: makeLink('branchOnPush', 'rootComp', ['branchOnPush', 'rootComp'], { label: 'mark path dirty' }),
+          bl: makeLink('branchOnPush', 'leafOnPush', ['branchOnPush', 'leafOnPush'], { label: 'update template' }),
         },
         flows: [{ route: ['bc', 'bl'], kind: 'mark', rate: 1.5 }],
       },
@@ -163,7 +161,7 @@ export const angularZonejsDirtyCheckingLesson = {
     {
       short: 'Dropping Zone.js',
       chapter: 'technique',
-      title: '5. Dropping Zone.js (-35KB) & Native Async/Await',
+      title: 'Dropping Zone.js (-35KB) & Native Async/Await',
       body: [
         'Adding <code>provideExperimentalZonelessChangeDetection()</code> lets you delete <code>zone.js</code> from <code>angular.json</code> polyfills completely.',
         'Bundle size drops by <b>~35KB</b>, 150+ browser APIs are no longer monkey-patched, and Chrome DevTools displays pristine native <code>async/await</code> stack traces without 30 lines of <code>zone.js</code> noise.',
@@ -176,10 +174,10 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { cdStrategy: 'Zoneless', zonejsPayload: '0 KB (Removed)', nodesChecked: 'On-Demand', renderLatency: 'Native JS' },
       scene: {
         entities: {
-          appConfig: y(-16, -6, { label: 'app.config.ts', tags: [{ text: 'Zoneless Mode', tone: 'green', icon: 'zap' }] }),
-          droppedPoly: d(-4, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'boxes', label: ['zone.js Dropped'], sub: 'no polyfill' }),
-          leanBundle: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Native Runtime'], sub: '-35KB bundle' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zoneless Bootstrap', [
+          appConfig: makeDevice(-16, -6, { label: 'app.config.ts', tags: [{ text: 'Zoneless Mode', tone: 'green', icon: 'zap' }] }),
+          droppedPoly: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'boxes', label: ['zone.js Dropped'], sub: 'no polyfill' }),
+          leanBundle: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Native Runtime'], sub: '-35KB bundle' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zoneless Bootstrap', [
             `export const appConfig: ApplicationConfig = {`,
             `  providers: [provideExperimentalZonelessChangeDetection()]`,
             `};`,
@@ -187,8 +185,8 @@ export const angularZonejsDirtyCheckingLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ad: h('appConfig', 'droppedPoly', ['appConfig', 'droppedPoly'], { label: 'drop polyfill' }),
-          dl: h('droppedPoly', 'leanBundle', ['droppedPoly', 'leanBundle'], { label: 'native Promises' }),
+          ad: makeLink('appConfig', 'droppedPoly', ['appConfig', 'droppedPoly'], { label: 'drop polyfill' }),
+          dl: makeLink('droppedPoly', 'leanBundle', ['droppedPoly', 'leanBundle'], { label: 'native Promises' }),
         },
         flows: [{ route: ['ad', 'dl'], kind: 'mark', rate: 1.5 }],
       },
@@ -196,7 +194,7 @@ export const angularZonejsDirtyCheckingLesson = {
     {
       short: 'CD Scheduler',
       chapter: 'execution',
-      title: '6. Zoneless ChangeDetectionScheduler & Coalescing',
+      title: 'Zoneless ChangeDetectionScheduler & Coalescing',
       body: [
         'Without Zone.js, Angular introduces the <b>ChangeDetectionScheduler</b>.',
         'Whenever a Signal updates, an input changes, or a template event fires, the scheduler coalesces multiple synchronous mutations into a <b>single</b> microtask / animation frame render pass.',
@@ -209,18 +207,18 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { cdStrategy: 'Zoneless', zonejsPayload: '0 KB', nodesChecked: 'Coalesced', renderLatency: '0.3 ms' },
       scene: {
         entities: {
-          appConfig: y(-16, -6, { label: 'count.set(5)', tags: [{ text: 'Signal Mutate', tone: 'blue', icon: 'zap' }] }),
-          cdScheduler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['CD Scheduler'], sub: 'coalesce tick' }),
-          renderTick: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['1 Render Pass'], sub: 'microtask' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Scheduler Coalescing', [
+          appConfig: makeDevice(-16, -6, { label: 'count.set(5)', tags: [{ text: 'Signal Mutate', tone: 'blue', icon: 'zap' }] }),
+          cdScheduler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['CD Scheduler'], sub: 'coalesce tick' }),
+          renderTick: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['1 Render Pass'], sub: 'microtask' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Scheduler Coalescing', [
             `count.set(1); count.set(2); count.set(3);`,
             `// Coalesced into 1 queueMicrotask:`,
             `queueMicrotask(() => renderDirtyViews());`,
           ], { icon: 'terminal' }),
         },
         links: {
-          ac: h('appConfig', 'cdScheduler', ['appConfig', 'cdScheduler'], { label: 'notify mutation' }),
-          cr: h('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'coalesce pass' }),
+          ac: makeLink('appConfig', 'cdScheduler', ['appConfig', 'cdScheduler'], { label: 'notify mutation' }),
+          cr: makeLink('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'coalesce pass' }),
         },
         flows: [{ route: ['ac', 'cr'], kind: 'mark', rate: 1.5 }],
       },
@@ -228,7 +226,7 @@ export const angularZonejsDirtyCheckingLesson = {
     {
       short: 'Targeted Signal',
       chapter: 'execution',
-      title: '7. Targeted Signal Notification & O(1) Surgical Render',
+      title: 'Targeted Signal Notification & O(1) Surgical Render',
       body: [
         'When a template reads <code>{{ userName() }}</code>, that view’s <code>LView</code> registers as a reactive consumer.',
         'Calling <code>userName.set(\'Alice\')</code> notifies <b>only that component view</b>—skipping 499 clean components and mutating the DOM in ~0.2ms.',
@@ -241,17 +239,17 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { cdStrategy: 'Zoneless + Signals', zonejsPayload: '0 KB', nodesChecked: '1 Component', renderLatency: '0.2 ms' },
       scene: {
         entities: {
-          cdScheduler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['CD Scheduler'], sub: 'O(1) target' }),
-          renderTick: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Dirty View'], sub: '1 node check' }),
-          cleanDom: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['DOM Mutated'], sub: '0.2ms update' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Surgical O(1) Render', [
+          cdScheduler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['CD Scheduler'], sub: 'O(1) target' }),
+          renderTick: makeBlock(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Dirty View'], sub: '1 node check' }),
+          cleanDom: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['DOM Mutated'], sub: '0.2ms update' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Surgical O(1) Render', [
             `// Zone.js:   500 components checked -> 14.8 ms`,
             `// Zoneless:    1 component checked  ->  0.2 ms (-98% CPU!)`,
           ], { icon: 'terminal' }),
         },
         links: {
-          cr: h('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'traverse dirty' }),
-          rc: h('renderTick', 'cleanDom', ['renderTick', 'cleanDom'], { label: 'mutate DOM' }),
+          cr: makeLink('cdScheduler', 'renderTick', ['cdScheduler', 'renderTick'], { label: 'traverse dirty' }),
+          rc: makeLink('renderTick', 'cleanDom', ['renderTick', 'cleanDom'], { label: 'mutate DOM' }),
         },
         flows: [{ route: ['cr', 'rc'], kind: 'mark', rate: 1.6 }],
       },
@@ -259,7 +257,7 @@ export const angularZonejsDirtyCheckingLesson = {
     {
       short: 'Benchmark',
       chapter: 'scaling',
-      title: '8. Enterprise Benchmark: Zone.js vs OnPush vs Zoneless',
+      title: 'Enterprise Benchmark: Zone.js vs OnPush vs Zoneless',
       body: [
         'On a 10,000-row real-time dashboard, migrating from Zone.js Default $\\rightarrow$ OnPush $\\rightarrow$ <b>Zoneless + Signals</b> eliminates bundle bloat (-35KB), cuts memory heap by 38%, and locks 60fps under heavy churn.',
       ],
@@ -271,10 +269,10 @@ export const angularZonejsDirtyCheckingLesson = {
       metrics: { cdStrategy: 'Zoneless Peak', zonejsPayload: '0 KB', nodesChecked: 'Surgical Only', renderLatency: '60 FPS Locked' },
       scene: {
         entities: {
-          appConfig: y(-16, -6, { label: '10k Rows Grid', tags: [{ text: 'High Churn', tone: 'purple', icon: 'zap' }] }),
-          cdScheduler: d(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['Zoneless Core'], sub: 'targeted CD' }),
-          cleanDom: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['60 FPS Locked'], sub: '-80% CPU' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Performance Benchmark', [
+          appConfig: makeDevice(-16, -6, { label: '10k Rows Grid', tags: [{ text: 'High Churn', tone: 'purple', icon: 'zap' }] }),
+          cdScheduler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['Zoneless Core'], sub: 'targeted CD' }),
+          cleanDom: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['60 FPS Locked'], sub: '-80% CPU' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Performance Benchmark', [
             `Metric       | Zone.js   | OnPush   | Zoneless (Signals)`,
             `-------------+-----------+----------+-------------------`,
             `Polyfill     | +35 KB    | +35 KB   | 0 KB (Removed)`,
@@ -283,8 +281,8 @@ export const angularZonejsDirtyCheckingLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ac: h('appConfig', 'cdScheduler', ['appConfig', 'cdScheduler'], { label: 'stream deltas' }),
-          cl: h('cdScheduler', 'cleanDom', ['cdScheduler', 'cleanDom'], { label: 'render 60fps' }),
+          ac: makeLink('appConfig', 'cdScheduler', ['appConfig', 'cdScheduler'], { label: 'stream deltas' }),
+          cl: makeLink('cdScheduler', 'cleanDom', ['cdScheduler', 'cleanDom'], { label: 'render 60fps' }),
         },
         flows: [{ route: ['ac', 'cl'], kind: 'mark', rate: 1.6 }],
       },

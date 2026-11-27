@@ -1,21 +1,70 @@
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
+
+// One heap for the whole lesson. The same `order` object is allocated in Eden,
+// survives a Minor GC into Survivor and is finally tenured into Old Gen — the
+// engine tweens it between the floor regions, so the learner watches it age.
+// The thread stack is the GC root: collections trace along its reference.
+//
+//                     thread (GC root)
+//   string pool   [EDEN] order → [SURVIVOR] → [OLD GEN] ──klass──► Metaspace
+
+/** Screen position (px) → world grid point. */
+const at = (sx: number, sy: number) => ({
+  x: +((sx / 14 + sy / 7) / 2).toFixed(2),
+  y: +((sx / 14 - sy / 7) / 2).toFixed(2),
+});
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+const P = {
+  stack: at(40, -170),
+  pool: at(-290, -40),
+  inEden: at(-130, 50),
+  inSurv: at(80, 20),
+  inOld: at(250, -40),
+  // off-heap: deliberately outside every heap region
+  meta: at(-150, -110),
+};
+
+const stack = (tags: Tag[] = []) =>
+  makeBlock(P.stack.x, P.stack.y, { s: 4.4, h: 52, color: `blue`, glyph: `layers`, label: [`Thread`], sub: `stack frames`, tags });
+const order = (where: { x: number; y: number }, tags: Tag[] = [], o: Record<string, unknown> = {}) =>
+  makeBlock(where.x, where.y, { s: 4.2, h: 48, color: `green`, glyph: `box`, label: [`Order`], sub: `heap object`, tags, ...o });
+const pool = (tags: Tag[] = []) => makeDb(P.pool.x, P.pool.y, { r: 2, h: 42, label: `String pool`, tags });
+const meta = (tags: Tag[] = []) => makeDb(P.meta.x, P.meta.y, { r: 2, h: 42, label: `Metaspace`, tags });
+
+/** Floor regions, padded so each title runs clear of the object inside it. */
+const zones = () => ({
+  eden: makeZone({ x0: -4.5, x1: 2.5, y0: -13.5, y1: -3.5 }, `EDEN`),
+  surv: makeZone({ x0: 2.6, x1: 8, y0: -4.5, y1: 5.5 }, `SURVIVOR S0/S1`),
+  old: makeZone({ x0: 3.5, x1: 10, y0: 6, y1: 17.5 }, `OLD GEN`),
+});
+
+const L = {
+  ref: makeLink(`stack`, `order`, [`stack`, `order`], { label: `ref` }),
+  refQuiet: makeLink(`stack`, `order`, [`stack`, `order`]),
+  // collections trace live objects starting from GC roots such as this stack
+  root: makeLink(`stack`, `order`, [`stack`, `order`], { label: `GC root` }),
+  refWeak: makeLink(`stack`, `order`, [`stack`, `order`], { style: `dash`, label: `WeakRef` }),
+  literal: makeLink(`stack`, `pool`, [`stack`, `pool`], { label: `"ok"` }),
+  literalQuiet: makeLink(`stack`, `pool`, [`stack`, `pool`], { style: `off` }),
+  loads: makeLink(`stack`, `meta`, [`stack`, `meta`], { label: `load class` }),
+};
+
+/** Code card parked top-right, beside the thread and above Old Gen. */
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: P.stack.x, y: P.stack.y, z: 0, dx: 85, dy: -85 }, title, lines, { icon: `code` });
 
 export const javaJvmMemoryLesson: Lesson = {
   id: 'java-jvm-memory',
   title: 'JVM Memory, GC & Refs',
   summary:
-    'Follow objects from Eden TLAB and Survivor age promotion through G1GC, Strong/Soft/Weak/Phantom References, and Metaspace OOM boundaries.',
+    'Follow one object from a TLAB in Eden, through a Minor GC into Survivor and up to Old Gen — then see how references and Metaspace decide what can be collected.',
   minutes: 13,
   level: 'intermediate',
-  metrics: ['heap_region', 'gc_phase', 'allocation', 'oom_risk'],
-  legend: ['flow', ['req', 'allocate / ref'], ['res', 'promote / collect'], ['fail', 'OOM boundary']],
+  metrics: ['eden', 'survivor', 'oldGen', 'gcPause'],
+  legend: [['write', 'allocate'], ['msg', 'GC trace'], 'req', ['fail', 'OOM']],
   goals: [
     { text: 'Distinguish Thread Stack frames from Heap objects', step: 1 },
     { text: 'Intern String literals in Heap String Pool', step: 2 },
@@ -28,228 +77,219 @@ export const javaJvmMemoryLesson: Lesson = {
   steps: [
     {
       short: 'Stack vs Heap',
-      chapter: 'memory',
-      title: '1. Thread Stack Frames vs Shared Heap',
+      chapter: 'setup',
+      title: 'The reference lives on the stack, the object on the heap',
       body: [
-        'Every JVM thread owns a private <strong>Stack</strong> storing local primitives and object references in stack frames — freed automatically on method return.',
-        'All actual object instances live on the shared <strong>Heap</strong>, managed by the Garbage Collector.',
+        'Every thread owns a private <strong>stack</strong> of frames: local primitives and <em>references</em>. A frame is freed the moment the method returns.',
+        'The object itself — <code>new Order()</code> — lives on the shared <strong>heap</strong>, split into generations. New objects start in <strong>Eden</strong>.',
       ],
       callout: {
         kind: 'insight',
-        text: 'StackOverFlowError happens on deep recursion (Stack); OutOfMemoryError: Java heap space happens when live objects fill Heap.',
+        text: 'Deep recursion fills the stack (StackOverflowError); live objects filling the heap give OutOfMemoryError: Java heap space.',
       },
-      metrics: { heap_region: 'Stack + Heap', gc_phase: 'None (alloc)', allocation: 'Ref -> Obj', oom_risk: 'StackOverflow' },
+      metrics: { eden: '12 / 256 MB', survivor: '0 / 32 MB', oldGen: '40 / 512 MB', gcPause: '—' },
       scene: {
         entities: {
-          stack: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Thread Stack'], sub: 'local ref' }),
-          eden: b(2, -6, { r: 2.3, h: 50, color: 'blue', label: ['JVM Heap'], sub: 'new Order()' }),
-          card: S({ x: -12, y: 12 }, '1. Stack References & Heap Objects', [
-            'void process() {',
-            '  int qty = 5;              // Stack primitive',
-            '  Order o = new Order();    // Ref on Stack -> Obj on Heap',
-            '} // Stack frame popped; Order waits for GC',
-          ], { icon: 'terminal' }),
+          ...zones(),
+          stack: stack(),
+          order: order(P.inEden, [{ text: `age 0`, tone: `green` }]),
+          card: card(`OrderService.java`, [
+            `void process() {`,
+            `  int qty = 5;            // in the stack frame`,
+            `  Order o = new Order();  // ref → object in Eden`,
+            `} // frame popped; Order now waits for GC`,
+          ]),
         },
-        links: {
-          st_hp: h('stack', 'eden', ['stack', 'eden'], { heads: 'end', label: 'points to' }),
-        },
-        flows: [{ route: ['st_hp'], kind: 'req', rate: 1.7 }],
+        links: { ref: L.ref },
+        flows: [{ route: ['ref'], kind: 'write', rate: 1.4 }],
       },
     },
     {
-      short: 'String Pool',
-      chapter: 'memory',
-      title: '2. String Pool & Compact Strings (byte[])',
+      short: 'String pool',
+      chapter: 'technique',
+      title: 'Literals are shared through the String pool',
       body: [
-        'Since Java 7, the <strong>String Pool</strong> (canonical hash table) resides inside the Heap so unused interned strings can be garbage collected.',
-        'Literals like <code>"ok"</code> reuse the pooled instance, while <code>new String("ok")</code> allocates a duplicate wrapper. Java 9+ uses <code>byte[]</code> (Latin-1 = 1 byte/char) for 50% memory savings.',
+        'String literals are interned in the <strong>String pool</strong>, a hash table that has lived <em>inside the heap</em> since Java 7 — so unused entries can be collected.',
+        '<code>"ok" == "ok"</code> is the same pooled instance; <code>new String("ok")</code> allocates a copy. Since Java 9, Latin-1 strings store 1 byte per char (Compact Strings).',
       ],
       callout: {
         kind: 'tip',
-        text: 'Never call .intern() on unbounded user input — it bloats the StringTable and slows down GC.',
+        text: 'Never intern() unbounded user input — the StringTable grows and every GC has to scan it.',
       },
-      changes: ['+ String Pool deduplicates literals in Heap', '+ Compact Strings use byte[] + coder'],
-      metrics: { heap_region: 'Heap StringTbl', gc_phase: 'GC-eligible', allocation: 'Deduplicated', oom_risk: 'Pool bloat' },
+      changes: ['+ String pool (in the heap)'],
+      metrics: { eden: '14 / 256 MB', survivor: '0 / 32 MB', oldGen: '40 / 512 MB', gcPause: '—' },
       scene: {
         entities: {
-          stack: d(-12, -16, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['"hello" Ref'], sub: 'Stack ref' }),
-          dup: d(-14, 0, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['new String()'], sub: 'extra Heap obj' }),
-          pool: b(4, -9, { r: 2.2, h: 48, color: 'purple', label: ['String Pool'], sub: 'Heap table' }),
-          card: S({ x: -12, y: 12 }, '2. String Pool & Compact byte[] Backing', [
-            'String a = "hello";              // pooled instance',
-            'String b = "hello";              // a == b is true!',
-            'String c = new String("hello");  // a == c is false',
-            '// Java 9+: byte[] value (1B Latin-1 vs 2B UTF-16)',
-          ], { icon: 'terminal' }),
+          ...zones(),
+          stack: stack(),
+          order: order(P.inEden, [{ text: `age 0`, tone: `green` }]),
+          pool: pool([{ text: `"ok" × 1`, tone: `violet` }]),
+          card: card(`Strings.java`, [
+            `String a = "ok";             // pooled`,
+            `String b = "ok";             // a == b  → true`,
+            `String c = new String("ok"); // a == c  → false`,
+            `// Java 9+: byte[], 1 byte per Latin-1 char`,
+          ]),
         },
-        links: {
-          lit_p: h('stack', 'pool', ['stack', 'pool'], { heads: 'end', label: 'reuse ref' }),
-          dup_p: h('dup', 'pool', ['dup', 'pool'], { heads: 'end', label: 'intern()' }),
-        },
-        flows: [{ route: ['lit_p'], kind: 'res', rate: 1.8 }],
+        links: { ref: L.refQuiet, literal: L.literal },
+        flows: [{ route: ['literal'], rate: 1.2, bounce: true }],
       },
     },
     {
-      short: 'Eden TLAB',
-      chapter: 'gc',
-      title: '3. Young Gen Eden & TLAB Fast Allocation',
+      short: 'TLAB',
+      chapter: 'technique',
+      title: 'Allocation is a pointer bump in the thread’s TLAB',
       body: [
-        'Each thread receives a private <strong>TLAB</strong> (Thread-Local Allocation Buffer) inside <strong>Eden</strong> so <code>new Object()</code> is just a lock-free pointer bump.',
-        'Most objects die young (Weak Generational Hypothesis): 90%+ never survive their first Minor GC.',
+        'Each thread gets a private <strong>TLAB</strong> (thread-local allocation buffer) carved out of Eden. <code>new</code> just moves a pointer forward — no lock, no free list.',
+        'Most objects die young: in a typical service 90%+ of Eden is garbage by the next collection.',
       ],
       callout: {
         kind: 'insight',
-        text: 'TLAB bump-pointer allocation in Java can be faster than C malloc() because no global free-list lock is taken.',
+        text: 'A TLAB bump allocation is a handful of instructions — often cheaper than malloc() in C.',
       },
-      changes: ['+ Eden TLAB lock-free bump-pointer', '+ 90% short-lived objects allocated here'],
-      metrics: { heap_region: 'Young: Eden', gc_phase: 'TLAB Alloc', allocation: 'Bump pointer', oom_risk: 'Low' },
+      changes: ['~ Eden fills: 240 of 256 MB'],
+      metrics: { eden: '240 / 256 MB', survivor: '0 / 32 MB', oldGen: '40 / 512 MB', gcPause: '—' },
       scene: {
         entities: {
-          stack: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'cpu', label: ['Thread T1'], sub: 'new DTO()' }),
-          eden: b(2, -6, { r: 2.3, h: 50, color: 'green', label: ['Eden (TLAB)'], sub: 'bump ptr' }),
-          card: S({ x: -12, y: 12 }, '3. Lock-Free TLAB Allocation in Eden', [
-            '// Thread-Local Allocation Buffer (TLAB):',
-            'ptr = tlab.top;',
-            'if (ptr + size <= tlab.end) { tlab.top += size; }',
-            '// Zero CAS/mutex contention across threads',
-          ], { icon: 'terminal' }),
+          ...zones(),
+          stack: stack([{ text: `TLAB bump ptr`, tone: `violet` }]),
+          order: order(P.inEden, [{ text: `age 0`, tone: `green` }]),
+          pool: pool(),
+          card: card(`TLAB fast path (pseudo)`, [
+            `top = tlab.top;`,
+            `if (top + size <= tlab.end) {`,
+            `  tlab.top = top + size;  // no CAS, no lock`,
+            `  return top;`,
+            `} // else: refill TLAB or slow path`,
+          ]),
         },
-        links: {
-          t_eden: h('stack', 'eden', ['stack', 'eden'], { heads: 'end', label: 'alloc TLAB' }),
-        },
-        flows: [{ route: ['t_eden'], kind: 'req', rate: 2.2 }],
+        links: { ref: L.refQuiet, literal: L.literalQuiet },
+        flows: [{ route: ['ref'], kind: 'write', rate: 3 }],
       },
     },
     {
       short: 'Minor GC',
-      chapter: 'gc',
-      title: '4. Minor GC & Survivor Spaces (S0 / S1)',
+      chapter: 'solution',
+      title: 'Minor GC copies the survivors out of Eden',
       body: [
-        'When Eden fills, a fast <strong>Minor GC</strong> traces from GC Roots (stacks, statics), copies live objects to Survivor <code>S0/S1</code>, and increments their <strong>age</strong>.',
-        'Dead garbage in Eden is never touched — the whole Eden region is cleared in $O(\\text{live})$ time.',
+        'Eden is full, so a <strong>Minor GC</strong> runs. It traces from GC roots (thread stacks, statics) and <em>copies</em> only the live objects into a Survivor space, adding 1 to their age.',
+        'Everything left in Eden is garbage and is reclaimed by simply resetting Eden — the cost depends on what <em>survives</em>, not on how much was allocated.',
       ],
       callout: {
         kind: 'insight',
-        text: 'Minor GC time depends on how many objects SURVIVE, not how much garbage was allocated.',
+        text: 'Survivors flip between S0 and S1 on every Minor GC; one of the two is always empty.',
       },
-      changes: ['+ Eden evacuated -> live copied to S0/S1', '+ Age counter incremented per survival'],
-      metrics: { heap_region: 'Survivor S0/S1', gc_phase: 'Minor GC', allocation: 'Copy live', oom_risk: 'Premature promo' },
+      changes: ['~ Order copied Eden → Survivor (age 1)', '~ Eden emptied'],
+      metrics: { eden: '0 / 256 MB', survivor: '9 / 32 MB', oldGen: '40 / 512 MB', gcPause: '6 ms' },
       scene: {
         entities: {
-          eden: b(-12, -14, { r: 2.2, h: 48, color: 'green', label: ['Eden Space'], sub: '90% dead' }),
-          gc: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Minor GC'], sub: 'mark & copy' }),
-          surv: b(0, 0, { r: 2.2, h: 48, color: 'blue', label: ['Survivor S0'], sub: 'age++ <= 15' }),
-          card: S({ x: -12, y: 12 }, '4. Copying Collector: Eden -> Survivor', [
-            '// GC Roots: Thread stacks, static fields, JNI',
-            '// Live objects copied Eden -> S0 (age = 1)',
-            '// Next Minor GC: S0 + Eden -> S1 (age++)',
-            '// MaxTenuringThreshold = 15 -> Old Gen',
-          ], { icon: 'terminal' }),
+          ...zones(),
+          stack: stack(),
+          order: order(P.inSurv, [{ text: `age 1 · copied`, tone: `green` }]),
+          pool: pool(),
+          card: card(`GC log`, [
+            `[gc] GC(12) Pause Young (Normal)`,
+            `[gc]   Eden 256M->0M  Survivor 0M->9M`,
+            `[gc]   Old 40M->40M`,
+            `= [gc] GC(12) 6.1ms`,
+          ]),
         },
-        links: {
-          ed_gc: h('eden', 'gc', ['eden', 'gc'], { heads: 'end', label: 'full' }),
-          gc_sv: h('gc', 'surv', ['gc', 'surv'], { heads: 'end', label: 'copy live' }),
-        },
-        flows: [{ route: ['ed_gc', 'gc_sv'], kind: 'res', rate: 1.9 }],
+        links: { ref: L.root, literal: L.literalQuiet },
+        flows: [{ route: ['ref'], kind: 'msg', rate: 1.6 }],
       },
     },
     {
-      short: 'Old Gen & G1',
-      chapter: 'gc',
-      title: '5. Old Gen Promotion & G1GC Regions',
+      short: 'Old Gen',
+      chapter: 'technique',
+      title: 'Long-lived objects are tenured into Old Gen',
       body: [
-        'Objects reaching age 15 (<code>MaxTenuringThreshold</code>) promote to <strong>Old Gen</strong>. <strong>G1GC</strong> divides the heap into ~2048 equal regions and prioritizes regions with the most garbage first (Garbage-First).',
-        'Concurrent marking runs alongside app threads to keep pause times predictable (<code>-XX:MaxGCPauseMillis=200</code>).',
+        'Each Minor GC the object survives adds to its age. At the tenuring threshold (max 15) it is <strong>promoted</strong> to Old Gen.',
+        '<strong>G1</strong> splits the heap into ~2048 equal regions and, in a <em>mixed</em> collection, evacuates the Old regions with the most garbage first — aiming at <code>MaxGCPauseMillis</code>.',
       ],
       callout: {
         kind: 'tip',
-        text: 'For ultra-low latency (<1ms pauses) on large heaps, JDK 21 Generational ZGC collects concurrently without stop-the-world compaction.',
+        text: 'For sub-millisecond pauses on big heaps, JDK 21 Generational ZGC does the copying concurrently.',
       },
-      changes: ['+ Age >= 15 promotes to Old Gen', '+ G1GC evacuates highest-garbage regions'],
-      metrics: { heap_region: 'Old Gen (G1)', gc_phase: 'Mixed GC', allocation: 'Region-based', oom_risk: 'Memory leak' },
+      changes: ['~ Order promoted to Old Gen (age 15)', '~ G1 mixed collection'],
+      metrics: { eden: '96 / 256 MB', survivor: '11 / 32 MB', oldGen: '310 / 512 MB', gcPause: '38 ms' },
       scene: {
         entities: {
-          surv: b(-14, -14, { r: 2.2, h: 48, color: 'blue', label: ['Survivor'], sub: 'age == 15' }),
-          old: b(0, -14, { r: 2.3, h: 50, color: 'purple', label: ['Old Gen (G1)'], sub: '2048 regions' }),
-          g1: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['G1 Mixed GC'], sub: 'pause <= 200ms' }),
-          card: S({ x: -12, y: 12 }, '5. Old Gen & G1GC Tuning', [
-            '-XX:+UseG1GC -XX:MaxGCPauseMillis=200',
-            '// JDK 21 ultra-low-latency option:',
-            '-XX:+UseZGC -XX:+ZGenerational',
-            '// Leak symptom: Old Gen stays >90% after Full GC',
-          ], { icon: 'terminal' }),
+          ...zones(),
+          stack: stack(),
+          order: order(P.inOld, [{ text: `tenured · age 15`, tone: `violet` }]),
+          pool: pool(),
+          card: card(`JVM flags`, [
+            `-XX:+UseG1GC -XX:MaxGCPauseMillis=200`,
+            `-XX:MaxTenuringThreshold=15`,
+            `# JDK 21 low-latency alternative:`,
+            `-XX:+UseZGC -XX:+ZGenerational`,
+          ]),
         },
-        links: {
-          sv_old: h('surv', 'old', ['surv', 'old'], { heads: 'end', label: 'promote' }),
-          old_g1: h('old', 'g1', ['old', 'g1'], { heads: 'end', label: 'evacuate' }),
-        },
-        flows: [{ route: ['sv_old', 'old_g1'], kind: 'res', rate: 1.8 }],
+        links: { ref: L.root, literal: L.literalQuiet },
+        flows: [{ route: ['ref'], kind: 'msg', rate: 1.2 }],
       },
     },
     {
-      short: 'Ref Types',
-      chapter: 'gc',
-      title: '6. Strong, Soft, Weak & Phantom References (Cleaner)',
+      short: 'References',
+      chapter: 'insight',
+      title: 'How strongly is it referenced?',
       body: [
-        '<strong>Strong</strong> refs never GC. <strong>SoftReference</strong> clears only near OOM (caches). <strong>WeakReference</strong> clears on the very next GC cycle (<code>WeakHashMap</code>, <code>ThreadLocal</code> keys).',
-        '<strong>PhantomReference</strong> + <code>Cleaner</code> runs post-mortem native cleanup, replacing deprecated <code>Object.finalize()</code>.',
+        'A <strong>strong</strong> reference keeps the object alive. A <strong>SoftReference</strong> is cleared only when memory runs low (caches). A <strong>WeakReference</strong> is cleared at the very next GC once nothing strong points at it.',
+        'A <strong>PhantomReference</strong> with <code>Cleaner</code> runs native cleanup <em>after</em> the object is gone — the replacement for the deprecated <code>finalize()</code>.',
       ],
       callout: {
         kind: 'insight',
-        text: 'Effective Java Item 8: Avoid finalizers (slow, unpredictable); use AutoCloseable + Cleaner as a safety net.',
+        text: 'WeakHashMap keys and ThreadLocal map keys are weak references — their values are not.',
       },
-      changes: ['+ Soft: GC near OOM; Weak: next GC cycle', '+ Phantom + Cleaner replaces finalize()'],
-      metrics: { heap_region: '4 Ref Levels', gc_phase: 'Reachability', allocation: 'RefQueue', oom_risk: 'finalize() bad' },
+      changes: ['~ stack holds only a WeakReference', '~ Order collectable at next GC'],
+      metrics: { eden: '120 / 256 MB', survivor: '11 / 32 MB', oldGen: '310 / 512 MB', gcPause: '38 ms' },
       scene: {
         entities: {
-          soft: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['SoftRef'], sub: 'GC near OOM' }),
-          weak: d(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['WeakRef'], sub: 'GC next cycle' }),
-          phnt: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['PhantomRef'], sub: 'Cleaner hook' }),
-          card: S({ x: -12, y: 12 }, '6. Java Reference Strength Hierarchy', [
-            '// Strong -> SoftReference (OOM-sensitive cache)',
-            '//        -> WeakReference (next GC if unreferenced)',
-            '//        -> PhantomReference + java.lang.ref.Cleaner',
-            '//           (replaces deprecated Object.finalize())',
-          ], { icon: 'terminal' }),
+          ...zones(),
+          stack: stack(),
+          order: order(P.inOld, [{ text: `weakly reachable`, tone: `amber` }], { dim: 0.35 }),
+          pool: pool(),
+          card: card(`References.java`, [
+            `var soft = new SoftReference<>(cache); // near OOM`,
+            `var weak = new WeakReference<>(order); // next GC`,
+            `Cleaner.create().register(res, () -> free(ptr));`,
+            `// strong > soft > weak > phantom`,
+          ]),
         },
-        links: {
-          sf_wk: h('soft', 'weak', ['soft', 'weak'], { heads: 'end', label: 'weaker' }),
-          wk_ph: h('weak', 'phnt', ['weak', 'phnt'], { heads: 'end', label: 'post-GC' }),
-        },
-        flows: [{ route: ['sf_wk', 'wk_ph'], kind: 'req', rate: 1.7 }],
+        links: { ref: L.refWeak, literal: L.literalQuiet },
+        flows: [{ route: ['ref'], kind: 'msg', rate: 1 }],
       },
     },
     {
       short: 'Metaspace',
-      chapter: 'oom',
-      title: '7. Off-Heap Metaspace & OOM Boundaries',
+      chapter: 'problem',
+      title: 'Class metadata lives off-heap in Metaspace',
       body: [
-        'Since Java 8, class metadata, bytecode methods, and constant pools live in native off-heap <strong>Metaspace</strong> (replacing PermGen).',
-        'Unbounded dynamic proxy/classloader generation fills Metaspace (<code>OOM: Metaspace</code>), whereas leaking static caches fills Heap (<code>OOM: Java heap space</code>).',
+        'Every class the thread loads is defined into native <strong>Metaspace</strong> — methods, bytecode, constant pool — outside the heap since Java 8 (each object header points back to it). <code>-Xmx</code> does not limit it.',
+        'Generating classes without bound (proxies, scripting, leaking class loaders) ends in <code>OutOfMemoryError: Metaspace</code>; a leaking static cache ends in <code>Java heap space</code> instead.',
       ],
       callout: {
         kind: 'warn',
-        text: 'Always set -XX:MaxMetaspaceSize in containers alongside -Xmx so native OS memory cannot silently OOM-kill the Pod.',
+        text: 'In containers set -XX:MaxMetaspaceSize next to -Xmx (or MaxRAMPercentage), or native growth gets the Pod OOM-killed.',
       },
-      changes: ['+ Metaspace stores Class<?> in native RAM', '+ -XX:MaxMetaspaceSize caps native growth'],
-      metrics: { heap_region: 'Native Off-Heap', gc_phase: 'Class unload', allocation: 'ClassLoader', oom_risk: 'Metaspace OOM' },
+      changes: ['+ Metaspace (native memory)', '! 256 MB cap reached'],
+      metrics: { eden: '120 / 256 MB', survivor: '11 / 32 MB', oldGen: '180 / 512 MB', gcPause: '38 ms' },
       scene: {
         entities: {
-          cl: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['ClassLoader'], sub: 'loads .class' }),
-          meta: b(0, -14, { r: 2.3, h: 50, color: 'purple', label: ['Metaspace'], sub: 'native RAM' }),
-          oom: d(0, 0, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['OOM Guard'], sub: 'MaxMetaspace' }),
-          card: S({ x: -12, y: 12 }, '7. Metaspace & Container Memory Flags', [
-            '-XX:MaxRAMPercentage=75.0   // container-aware heap',
-            '-XX:MaxMetaspaceSize=256m   // cap native metadata',
-            '-XX:+HeapDumpOnOutOfMemoryError',
-            '// OOM: Metaspace vs OOM: Java heap space',
-          ], { icon: 'terminal' }),
+          ...zones(),
+          stack: stack(),
+          order: order(P.inOld),
+          pool: pool(),
+          meta: meta([{ text: `OOM: Metaspace`, tone: `red`, icon: `alert` }]),
+          card: card(`container JVM flags`, [
+            `-XX:MaxRAMPercentage=75`,
+            `-XX:MaxMetaspaceSize=256m`,
+            `-XX:+HeapDumpOnOutOfMemoryError`,
+            `! java.lang.OutOfMemoryError: Metaspace`,
+          ]),
         },
-        links: {
-          cl_m: h('cl', 'meta', ['cl', 'meta'], { heads: 'end', label: 'store Class' }),
-          m_oom: h('meta', 'oom', ['meta', 'oom'], { heads: 'end', label: 'exceeds cap' }),
-        },
-        flows: [{ route: ['cl_m'], kind: 'req', rate: 1.7 }, { route: ['m_oom'], kind: 'fail', rate: 1.4 }],
+        links: { ref: L.refQuiet, loads: L.loads },
+        flows: [{ route: ['loads'], kind: 'fail', rate: 1.2 }],
       },
     },
   ],

@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const dnsAnycastLesson = {
@@ -38,9 +36,9 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: 'None', resolution_ms: '0ms (Cache)', routing_type: 'Localhost', security_mode: 'Local OS' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'User Device', tags: [{ text: 'Lookup: shop.example', icon: 'search' }] }),
-          resolver: d(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'globe', label: ['Recursive DNS', '1.1.1.1 / 8.8.8.8'], sub: 'Local ISP / Cloudflare' }),
-          card: S({ x: -2, y: 14 }, 'DNS Cache Priority', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'User Device', tags: [{ text: 'Lookup: shop.example', icon: 'search' }] }),
+          resolver: makeBlock(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'globe', label: ['Recursive DNS', '1.1.1.1 / 8.8.8.8'], sub: 'Local ISP / Cloudflare' }),
+          card: makePanel({ x: -2, y: 14 }, 'DNS Cache Priority', [
             '1. Browser DNS cache (chrome://net-internals/#dns)',
             '2. OS Resolver cache (ipconfig /displaydns / /etc/hosts)',
             '3. Router DNS cache (Local Gateway 192.168.1.1)',
@@ -48,7 +46,7 @@ export const dnsAnycastLesson = {
           ], { icon: 'search' })
         },
         links: {
-          cr: h('client', 'resolver', ['client', 'resolver'], { heads: 'both', label: 'Recursive Query' })
+          cr: makeLink('client', 'resolver', ['client', 'resolver'], { heads: 'both', label: 'Recursive Query' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 2.0 }]
       }
@@ -68,11 +66,11 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: '300s', resolution_ms: '120ms (4 hops)', routing_type: 'Iterative Chain', security_mode: 'Standard UDP' },
       scene: {
         entities: {
-          resolver: d(-10, -6, { s: 4.6, h: 52, color: 'yellow', glyph: 'globe', label: ['Recursive Resolver'], sub: '1.1.1.1' }),
-          root: d(0, -6, { s: 4.2, h: 52, color: 'purple', glyph: 'server', label: ['Root Server', 'Zone: "."'], sub: 'Refers to .com' }),
-          tld: d(10, -6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['TLD Server', 'Zone: ".com"'], sub: 'Refers to NS' }),
-          auth: d(10, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Authoritative NS', 'shop.example'], sub: 'Returns A Record' }),
-          card: S({ x: -2, y: 14 }, 'Iterative Query Path', [
+          resolver: makeBlock(-10, -6, { s: 4.6, h: 52, color: 'yellow', glyph: 'globe', label: ['Recursive Resolver'], sub: '1.1.1.1' }),
+          root: makeBlock(0, -6, { s: 4.2, h: 52, color: 'purple', glyph: 'server', label: ['Root Server', 'Zone: "."'], sub: 'Refers to .com' }),
+          tld: makeBlock(10, -6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['TLD Server', 'Zone: ".com"'], sub: 'Refers to NS' }),
+          auth: makeBlock(10, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Authoritative NS', 'shop.example'], sub: 'Returns A Record' }),
+          card: makePanel({ x: -2, y: 14 }, 'Iterative Query Path', [
             'Resolver -> Root ("."): "Where is .com?" -> NS a.gtld-servers.net',
             'Resolver -> TLD (".com"): "Where is shop.example?" -> NS ns1.cloudflare.com',
             'Resolver -> Auth ("shop.example"): "What is IP?" -> A: 93.184.216.34',
@@ -80,9 +78,9 @@ export const dnsAnycastLesson = {
           ], { icon: 'network' })
         },
         links: {
-          rr: h('resolver', 'root', ['resolver', 'root'], { heads: 'both' }),
-          rt: h('resolver', 'tld', ['resolver', 'tld'], { heads: 'both' }),
-          ra: h('resolver', 'auth', ['resolver', 'auth'], { heads: 'both' })
+          rr: makeLink('resolver', 'root', ['resolver', 'root'], { heads: 'both' }),
+          rt: makeLink('resolver', 'tld', ['resolver', 'tld'], { heads: 'both' }),
+          ra: makeLink('resolver', 'auth', ['resolver', 'auth'], { heads: 'both' })
         },
         flows: [
           { route: ['rr'], bounce: true, rate: 1.5 },
@@ -106,11 +104,11 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: '3600s', resolution_ms: '5ms (Warm)', routing_type: 'Record Lookup', security_mode: 'RFC 1035' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'IPv4 + IPv6 Dual', icon: 'zap' }] }),
-          auth: d(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Authoritative NS', 'Zone Records'], sub: 'Zone apex: @' }),
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'IPv4 + IPv6 Dual', icon: 'zap' }] }),
+          auth: makeBlock(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Authoritative NS', 'Zone Records'], sub: 'Zone apex: @' }),
         },
         links: {
-          ca: h('client', 'auth', ['client', 'auth'], { heads: 'both', label: 'Query Type: A + AAAA' })
+          ca: makeLink('client', 'auth', ['client', 'auth'], { heads: 'both', label: 'Query Type: A + AAAA' })
         },
         flows: [{ route: ['ca'], bounce: true, rate: 2.2 }]
       }
@@ -130,9 +128,9 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: '60s (Low TTL)', resolution_ms: '1ms (Cache Hit)', routing_type: 'TTL Expiry', security_mode: 'RFC 2308' },
       scene: {
         entities: {
-          resolver: d(-10, -6, { s: 4.6, h: 52, color: 'yellow', glyph: 'globe', label: ['Resolver Cache', 'TTL Countdown'], sub: 'TTL: 42s left' }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Origin Web Host', 'Port 443'], sub: '198.51.100.1' }),
-          card: S({ x: -2, y: 14 }, 'TTL Caching Trade-offs', [
+          resolver: makeBlock(-10, -6, { s: 4.6, h: 52, color: 'yellow', glyph: 'globe', label: ['Resolver Cache', 'TTL Countdown'], sub: 'TTL: 42s left' }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Origin Web Host', 'Port 443'], sub: '198.51.100.1' }),
+          card: makePanel({ x: -2, y: 14 }, 'TTL Caching Trade-offs', [
             'TTL = 86400 (24h): 99.9% Cache Hit Rate, BUT DNS changes take 24h to propagate',
             'TTL = 60s: Fast failover, but resolver queries origin frequently',
             'Negative Caching: If domain does not exist (NXDOMAIN), resolvers cache failure',
@@ -140,7 +138,7 @@ export const dnsAnycastLesson = {
           ], { icon: 'clock' })
         },
         links: {
-          rs: h('resolver', 'server', ['resolver', 'server'], { heads: 'both', label: 'Cached Answer' })
+          rs: makeLink('resolver', 'server', ['resolver', 'server'], { heads: 'both', label: 'Cached Answer' })
         },
         flows: [{ route: ['rs'], bounce: true, rate: 2.5 }]
       }
@@ -160,11 +158,11 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: 'Anycast', resolution_ms: '12ms (Nearest PoP)', routing_type: 'BGP Anycast', security_mode: 'DDoS Absorbed' },
       scene: {
         entities: {
-          clientUs: y(-12, -10, { form: 'phone', label: 'US User', tags: [{ text: 'Routes to San Jose', icon: 'globe' }] }),
-          clientEu: y(-12, 4, { form: 'phone', label: 'EU User', tags: [{ text: 'Routes to Frankfurt', icon: 'globe' }] }),
-          popUs: d(6, -10, { s: 4.6, h: 52, color: 'orange', glyph: 'globe', label: ['Anycast PoP (US)', 'IP: 1.1.1.1'], sub: 'San Jose Edge (12ms)' }),
-          popEu: d(6, 4, { s: 4.6, h: 52, color: 'orange', glyph: 'globe', label: ['Anycast PoP (EU)', 'IP: 1.1.1.1'], sub: 'Frankfurt Edge (14ms)' }),
-          card: S({ x: -2, y: 14 }, 'BGP Anycast Advantages', [
+          clientUs: makeDevice(-12, -10, { form: 'phone', label: 'US User', tags: [{ text: 'Routes to San Jose', icon: 'globe' }] }),
+          clientEu: makeDevice(-12, 4, { form: 'phone', label: 'EU User', tags: [{ text: 'Routes to Frankfurt', icon: 'globe' }] }),
+          popUs: makeBlock(6, -10, { s: 4.6, h: 52, color: 'orange', glyph: 'globe', label: ['Anycast PoP (US)', 'IP: 1.1.1.1'], sub: 'San Jose Edge (12ms)' }),
+          popEu: makeBlock(6, 4, { s: 4.6, h: 52, color: 'orange', glyph: 'globe', label: ['Anycast PoP (EU)', 'IP: 1.1.1.1'], sub: 'Frankfurt Edge (14ms)' }),
+          card: makePanel({ x: -2, y: 14 }, 'BGP Anycast Advantages', [
             'Same IP: 1.1.1.1 announced in 300+ cities simultaneously',
             'BGP AS-Path routing directs users to lowest-cost / lowest-hop PoP',
             'DDoS attack in Asia is contained in Asian PoPs without affecting US/EU',
@@ -172,8 +170,8 @@ export const dnsAnycastLesson = {
           ], { icon: 'globe' })
         },
         links: {
-          u1: h('clientUs', 'popUs', ['clientUs', 'popUs'], { heads: 'both', label: 'BGP Path 1' }),
-          u2: h('clientEu', 'popEu', ['clientEu', 'popEu'], { heads: 'both', label: 'BGP Path 2' })
+          u1: makeLink('clientUs', 'popUs', ['clientUs', 'popUs'], { heads: 'both', label: 'BGP Path 1' }),
+          u2: makeLink('clientEu', 'popEu', ['clientEu', 'popEu'], { heads: 'both', label: 'BGP Path 2' })
         },
         flows: [
           { route: ['u1'], bounce: true, rate: 2.0 },
@@ -196,9 +194,9 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: '60s', resolution_ms: '15ms', routing_type: 'GeoDNS GSLB', security_mode: 'EDNS0 ECS' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Tokyo Client', tags: [{ text: 'ECS: 210.140.x.x/24', icon: 'mapPin' }] }),
-          geodns: d(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'globe', label: ['GeoDNS Engine', 'Route 53 Geolocation'], sub: 'Resolves to ap-northeast-1' }),
-          card: S({ x: -2, y: 14 }, 'GeoDNS Decision Logic', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Tokyo Client', tags: [{ text: 'ECS: 210.140.x.x/24', icon: 'mapPin' }] }),
+          geodns: makeBlock(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'globe', label: ['GeoDNS Engine', 'Route 53 Geolocation'], sub: 'Resolves to ap-northeast-1' }),
+          card: makePanel({ x: -2, y: 14 }, 'GeoDNS Decision Logic', [
             'Query from Client with EDNS Client Subnet: 210.140.10.0/24',
             'GeoDNS Database maps IP to Tokyo, Japan',
             'Rule match: Return closest application region:',
@@ -207,7 +205,7 @@ export const dnsAnycastLesson = {
           ], { icon: 'mapPin' })
         },
         links: {
-          cg: h('client', 'geodns', ['client', 'geodns'], { heads: 'both', label: 'Geo-Targeted Query' })
+          cg: makeLink('client', 'geodns', ['client', 'geodns'], { heads: 'both', label: 'Geo-Targeted Query' })
         },
         flows: [{ route: ['cg'], bounce: true, rate: 2.6 }]
       }
@@ -227,9 +225,9 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: '300s', resolution_ms: '18ms', routing_type: 'DoH (HTTPS Port 443)', security_mode: 'DNSSEC + TLS' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'DoH Client', tags: [{ text: 'Encrypted via HTTPS', tone: 'green', icon: 'lock' }] }),
-          resolver: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['DoH Resolver', 'DNSSEC Validating'], sub: '1.1.1.1 /dns-query' }),
-          card: S({ x: -2, y: 14 }, 'Modern DNS Security Stack', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'DoH Client', tags: [{ text: 'Encrypted via HTTPS', tone: 'green', icon: 'lock' }] }),
+          resolver: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['DoH Resolver', 'DNSSEC Validating'], sub: '1.1.1.1 /dns-query' }),
+          card: makePanel({ x: -2, y: 14 }, 'Modern DNS Security Stack', [
             '1. Privacy (Client <-> Resolver):',
             '   DNS-over-HTTPS (DoH, RFC 8484) encrypted on port 443',
             '2. Authenticity (Resolver <-> Auth NS):',
@@ -238,7 +236,7 @@ export const dnsAnycastLesson = {
           ], { icon: 'shield' })
         },
         links: {
-          cr: h('client', 'resolver', ['client', 'resolver'], { heads: 'both', label: 'Encrypted TLS Tunnel' })
+          cr: makeLink('client', 'resolver', ['client', 'resolver'], { heads: 'both', label: 'Encrypted TLS Tunnel' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 2.8 }]
       }

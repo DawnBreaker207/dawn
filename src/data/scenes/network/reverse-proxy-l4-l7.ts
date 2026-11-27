@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const reverseProxyL4L7Lesson = {
@@ -38,10 +36,10 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'L4 Transport', throughput_conn_sec: '5,000,000/s', tls_termination: 'Backend Only', routing_granularity: 'IP:Port Hash' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'HTTPS GET /api/v1', icon: 'globe' }] }),
-          lb: d(0, 0, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['L4 vs L7 Balancer', 'Port 443'], sub: 'Architecture Split' }),
-          backend: d(10, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Backend Cluster', 'Compute Nodes'], sub: 'Web / API' }),
-          card: S({ x: -2, y: 14 }, 'OSI Layer Comparison', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'HTTPS GET /api/v1', icon: 'globe' }] }),
+          lb: makeBlock(0, 0, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['L4 vs L7 Balancer', 'Port 443'], sub: 'Architecture Split' }),
+          backend: makeBlock(10, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Backend Cluster', 'Compute Nodes'], sub: 'Web / API' }),
+          card: makePanel({ x: -2, y: 14 }, 'OSI Layer Comparison', [
             'L4 (Transport - NLB / IPVS):',
             '  - Inspects only: Source/Dest IP + TCP Port (5-tuple)',
             '  - Zero HTTP knowledge. Cannot route /api vs /static',
@@ -51,8 +49,8 @@ export const reverseProxyL4L7Lesson = {
           ], { icon: 'layers' })
         },
         links: {
-          cl: h('client', 'lb', ['client', 'lb'], { heads: 'both' }),
-          lbk: h('lb', 'backend', ['lb', 'backend'], { heads: 'both' })
+          cl: makeLink('client', 'lb', ['client', 'lb'], { heads: 'both' }),
+          lbk: makeLink('lb', 'backend', ['lb', 'backend'], { heads: 'both' })
         },
         flows: [{ route: ['cl', 'lbk'], bounce: true, rate: 2.5 }]
       }
@@ -72,11 +70,11 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'L4 NLB / IPVS', throughput_conn_sec: '10,000,000/s', tls_termination: 'Passthrough', routing_granularity: '5-Tuple Hash' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Traffic Flood', tags: [{ text: 'Raw TCP Packets', icon: 'zap' }] }),
-          l4: d(0, 0, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['AWS NLB / IPVS', 'Kernel L4 Engine'], sub: '10M Packets/sec' }),
-          b1: d(10, -6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node A'], sub: 'Terminates TLS' }),
-          b2: d(10, 6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node B'], sub: 'Terminates TLS' }),
-          card: S({ x: -2, y: 14 }, 'L4 Packet Forwarding Mechanism', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Traffic Flood', tags: [{ text: 'Raw TCP Packets', icon: 'zap' }] }),
+          l4: makeBlock(0, 0, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['AWS NLB / IPVS', 'Kernel L4 Engine'], sub: '10M Packets/sec' }),
+          b1: makeBlock(10, -6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node A'], sub: 'Terminates TLS' }),
+          b2: makeBlock(10, 6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node B'], sub: 'Terminates TLS' }),
+          card: makePanel({ x: -2, y: 14 }, 'L4 Packet Forwarding Mechanism', [
             'Packet: [Src: 203.0.113.5:54120 -> Dst: 198.51.100.1:443]',
             'NLB rewrites destination MAC or IP to Node A (10.0.1.5)',
             'TCP state tracked via Maglev consistent hashing',
@@ -84,9 +82,9 @@ export const reverseProxyL4L7Lesson = {
           ], { icon: 'zap' })
         },
         links: {
-          cl_l4: h('client', 'l4', ['client', 'l4'], { heads: 'both' }),
-          l1: h('l4', 'b1', ['l4', 'b1'], { heads: 'both' }),
-          l2: h('l4', 'b2', ['l4', 'b2'], { heads: 'both' })
+          cl_l4: makeLink('client', 'l4', ['client', 'l4'], { heads: 'both' }),
+          l1: makeLink('l4', 'b1', ['l4', 'b1'], { heads: 'both' }),
+          l2: makeLink('l4', 'b2', ['l4', 'b2'], { heads: 'both' })
         },
         flows: [
           { route: ['cl_l4', 'l1'], bounce: true, rate: 2.0 },
@@ -109,10 +107,10 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'L4 DSR Mode', throughput_conn_sec: 'Asymmetric 10x', tls_termination: 'Backend Direct', routing_granularity: 'Bypass Outbound' },
       scene: {
         entities: {
-          client: y(-10, -6, { form: 'phone', label: 'Client', tags: [{ text: 'Direct Response', icon: 'zap' }] }),
-          l4: d(0, -6, { s: 4.6, h: 52, color: 'orange', glyph: 'balancer', label: ['DSR Balancer', 'Inbound Only'], sub: 'Tiny GETs only' }),
-          server: d(8, 6, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Backend Server', 'VIP on lo interface'], sub: 'Answers directly to Client' }),
-          card: S({ x: -2, y: 14 }, 'DSR Flow Architecture', [
+          client: makeDevice(-10, -6, { form: 'phone', label: 'Client', tags: [{ text: 'Direct Response', icon: 'zap' }] }),
+          l4: makeBlock(0, -6, { s: 4.6, h: 52, color: 'orange', glyph: 'balancer', label: ['DSR Balancer', 'Inbound Only'], sub: 'Tiny GETs only' }),
+          server: makeBlock(8, 6, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Backend Server', 'VIP on lo interface'], sub: 'Answers directly to Client' }),
+          card: makePanel({ x: -2, y: 14 }, 'DSR Flow Architecture', [
             '1. Client -> DSR Balancer: GET request (500 bytes)',
             '2. Balancer forwards to Backend via L2 MAC rewrite',
             '3. Backend receives packet on loopback VIP (lo:0)',
@@ -121,9 +119,9 @@ export const reverseProxyL4L7Lesson = {
           ], { icon: 'workflow' })
         },
         links: {
-          cr: h('client', 'l4', ['client', 'l4'], { heads: 'end', label: 'Request (Inbound)' }),
-          ls: h('l4', 'server', ['l4', 'server'], { heads: 'end', label: 'Forward' }),
-          sc: h('server', 'client', ['server', 'client'], { heads: 'end', label: 'Direct Response (Bypasses LB)' })
+          cr: makeLink('client', 'l4', ['client', 'l4'], { heads: 'end', label: 'Request (Inbound)' }),
+          ls: makeLink('l4', 'server', ['l4', 'server'], { heads: 'end', label: 'Forward' }),
+          sc: makeLink('server', 'client', ['server', 'client'], { heads: 'end', label: 'Direct Response (Bypasses LB)' })
         },
         flows: [
           { route: ['cr', 'ls'], bounce: false, rate: 2.2 },
@@ -146,11 +144,11 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'L7 Envoy / ALB', throughput_conn_sec: '150,000/s', tls_termination: 'Terminated at Proxy', routing_granularity: 'Path / Header / Cookie' },
       scene: {
         entities: {
-          client: y(-12, -4, { form: 'phone', label: 'Client', tags: [{ text: 'GET /api/v1/orders', icon: 'globe' }] }),
-          envoy: d(-2, -4, { s: 4.8, h: 50, color: 'purple', glyph: 'route', label: ['Envoy Proxy L7', 'TLS Offloaded'], sub: 'xDS Dynamic Routing' }),
-          svcApi: d(8, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'workflow', label: ['Orders Service', 'Port 8080'], sub: 'Cluster: orders' }),
-          svcStatic: d(8, 2, { s: 4.4, h: 52, color: 'teal', glyph: 'folder', label: ['Static Assets', 'Port 80'], sub: 'Cluster: static' }),
-          card: S({ x: -2, y: 14 }, 'Envoy L7 Routing Matcher', [
+          client: makeDevice(-12, -4, { form: 'phone', label: 'Client', tags: [{ text: 'GET /api/v1/orders', icon: 'globe' }] }),
+          envoy: makeBlock(-2, -4, { s: 4.8, h: 50, color: 'purple', glyph: 'route', label: ['Envoy Proxy L7', 'TLS Offloaded'], sub: 'xDS Dynamic Routing' }),
+          svcApi: makeBlock(8, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'workflow', label: ['Orders Service', 'Port 8080'], sub: 'Cluster: orders' }),
+          svcStatic: makeBlock(8, 2, { s: 4.4, h: 52, color: 'teal', glyph: 'folder', label: ['Static Assets', 'Port 80'], sub: 'Cluster: static' }),
+          card: makePanel({ x: -2, y: 14 }, 'Envoy L7 Routing Matcher', [
             'route_config:',
             '  routes:',
             '  - match: { prefix: "/api/orders" }',
@@ -160,9 +158,9 @@ export const reverseProxyL4L7Lesson = {
           ], { icon: 'route' })
         },
         links: {
-          ce: h('client', 'envoy', ['client', 'envoy'], { heads: 'both', label: 'HTTPS' }),
-          ea: h('envoy', 'svcApi', ['envoy', 'svcApi'], { heads: 'both', label: 'Path: /api' }),
-          es: h('envoy', 'svcStatic', ['envoy', 'svcStatic'], { heads: 'both', label: 'Path: /static' })
+          ce: makeLink('client', 'envoy', ['client', 'envoy'], { heads: 'both', label: 'HTTPS' }),
+          ea: makeLink('envoy', 'svcApi', ['envoy', 'svcApi'], { heads: 'both', label: 'Path: /api' }),
+          es: makeLink('envoy', 'svcStatic', ['envoy', 'svcStatic'], { heads: 'both', label: 'Path: /static' })
         },
         flows: [
           { route: ['ce', 'ea'], bounce: true, rate: 2.4 }
@@ -184,11 +182,11 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'Algorithm', throughput_conn_sec: 'P2C Optimal', tls_termination: 'Terminated', routing_granularity: 'O(1) Balanced' },
       scene: {
         entities: {
-          envoy: d(-8, -4, { s: 4.8, h: 50, color: 'purple', glyph: 'balancer', label: ['Envoy Balancer', 'P2C Algorithm'], sub: 'Random Sample 2' }),
-          n1: d(4, -12, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node 1 (Busy)', '42 Conns'], sub: 'Skip' }),
-          n2: d(4, -4, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node 2 (Idle)', '3 Conns'], sub: 'Chosen by P2C' }),
-          n3: d(4, 4, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node 3 (Busy)', '38 Conns'], sub: 'Ignored' }),
-          card: S({ x: -2, y: 14 }, 'Power of Two Random Choices (P2C)', [
+          envoy: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'purple', glyph: 'balancer', label: ['Envoy Balancer', 'P2C Algorithm'], sub: 'Random Sample 2' }),
+          n1: makeBlock(4, -12, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node 1 (Busy)', '42 Conns'], sub: 'Skip' }),
+          n2: makeBlock(4, -4, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node 2 (Idle)', '3 Conns'], sub: 'Chosen by P2C' }),
+          n3: makeBlock(4, 4, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node 3 (Busy)', '38 Conns'], sub: 'Ignored' }),
+          card: makePanel({ x: -2, y: 14 }, 'Power of Two Random Choices (P2C)', [
             '1. Randomly sample 2 nodes: [Node 1, Node 2]',
             '2. Compare inflight requests: Node 1 (42) vs Node 2 (3)',
             '3. Route new request to Node 2 (least loaded of pair)',
@@ -196,7 +194,7 @@ export const reverseProxyL4L7Lesson = {
           ], { icon: 'trendingUp' })
         },
         links: {
-          e2: h('envoy', 'n2', ['envoy', 'n2'], { heads: 'both', label: 'Selected Node' })
+          e2: makeLink('envoy', 'n2', ['envoy', 'n2'], { heads: 'both', label: 'Selected Node' })
         },
         flows: [{ route: ['e2'], bounce: true, rate: 2.8 }]
       }
@@ -216,12 +214,12 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'L7 Sticky Session', throughput_conn_sec: 'Cookie Routed', tls_termination: 'Terminated', routing_granularity: 'Per-User Sticky' },
       scene: {
         entities: {
-          user1: y(-12, -8, { form: 'phone', label: 'User Alice', tags: [{ text: 'Cookie: ALB_NodeA', icon: 'user' }] }),
-          user2: y(-12, 4, { form: 'phone', label: 'User Bob', tags: [{ text: 'Cookie: ALB_NodeB', icon: 'user' }] }),
-          alb: d(-2, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['AWS ALB', 'Sticky Session Engine'], sub: 'Inspects Cookie' }),
-          nodeA: d(8, -8, { s: 4.4, h: 52, color: 'blue', glyph: 'server', label: ['Node A', 'Alice Session'], sub: 'Sticky Destination' }),
-          nodeB: d(8, 4, { s: 4.4, h: 52, color: 'blue', glyph: 'server', label: ['Node B', 'Bob Session'], sub: 'Sticky Destination' }),
-          card: S({ x: -2, y: 16 }, 'Sticky Cookie Handling', [
+          user1: makeDevice(-12, -8, { form: 'phone', label: 'User Alice', tags: [{ text: 'Cookie: ALB_NodeA', icon: 'user' }] }),
+          user2: makeDevice(-12, 4, { form: 'phone', label: 'User Bob', tags: [{ text: 'Cookie: ALB_NodeB', icon: 'user' }] }),
+          alb: makeBlock(-2, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['AWS ALB', 'Sticky Session Engine'], sub: 'Inspects Cookie' }),
+          nodeA: makeBlock(8, -8, { s: 4.4, h: 52, color: 'blue', glyph: 'server', label: ['Node A', 'Alice Session'], sub: 'Sticky Destination' }),
+          nodeB: makeBlock(8, 4, { s: 4.4, h: 52, color: 'blue', glyph: 'server', label: ['Node B', 'Bob Session'], sub: 'Sticky Destination' }),
+          card: makePanel({ x: -2, y: 16 }, 'Sticky Cookie Handling', [
             'Set-Cookie: AWSALB=u8f9a21c; Path=/; Expires=...; HttpOnly',
             'Alice always hits Node A where her local session memory resides',
             'Better Modern Architecture: Remove stickiness entirely,',
@@ -229,10 +227,10 @@ export const reverseProxyL4L7Lesson = {
           ], { icon: 'lock' })
         },
         links: {
-          u1a: h('user1', 'alb', ['user1', 'alb'], { heads: 'both' }),
-          u2a: h('user2', 'alb', ['user2', 'alb'], { heads: 'both' }),
-          anA: h('alb', 'nodeA', ['alb', 'nodeA'], { heads: 'both' }),
-          anB: h('alb', 'nodeB', ['alb', 'nodeB'], { heads: 'both' })
+          u1a: makeLink('user1', 'alb', ['user1', 'alb'], { heads: 'both' }),
+          u2a: makeLink('user2', 'alb', ['user2', 'alb'], { heads: 'both' }),
+          anA: makeLink('alb', 'nodeA', ['alb', 'nodeA'], { heads: 'both' }),
+          anB: makeLink('alb', 'nodeB', ['alb', 'nodeB'], { heads: 'both' })
         },
         flows: [
           { route: ['u1a', 'anA'], bounce: true, rate: 2.0 },
@@ -255,15 +253,15 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'L7 Lifecycle', throughput_conn_sec: '0 Dropped Requests', tls_termination: 'Terminated', routing_granularity: 'Draining Mode' },
       scene: {
         entities: {
-          client: y(-12, -4, { form: 'phone', label: 'In-Flight User', tags: [{ text: 'Active Checkout', tone: 'green', icon: 'cart' }] }),
-          proxy: d(-2, -4, { s: 4.8, h: 50, color: 'purple', glyph: 'balancer', label: ['Ingress / Envoy', 'Drain Controller'], sub: 'Drain Timer: 24s left' }),
-          oldNode: d(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'server', label: ['Old Pod v1', 'DRAINING (No New Conns)'], sub: 'Finishing 3 requests' }),
-          newNode: d(8, 2, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['New Pod v2', 'HEALTHY (100% Traffic)'], sub: 'Accepting all new traffic' }),
+          client: makeDevice(-12, -4, { form: 'phone', label: 'In-Flight User', tags: [{ text: 'Active Checkout', tone: 'green', icon: 'cart' }] }),
+          proxy: makeBlock(-2, -4, { s: 4.8, h: 50, color: 'purple', glyph: 'balancer', label: ['Ingress / Envoy', 'Drain Controller'], sub: 'Drain Timer: 24s left' }),
+          oldNode: makeBlock(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'server', label: ['Old Pod v1', 'DRAINING (No New Conns)'], sub: 'Finishing 3 requests' }),
+          newNode: makeBlock(8, 2, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['New Pod v2', 'HEALTHY (100% Traffic)'], sub: 'Accepting all new traffic' }),
         },
         links: {
-          cp: h('client', 'proxy', ['client', 'proxy'], { heads: 'both' }),
-          po: h('proxy', 'oldNode', ['proxy', 'oldNode'], { heads: 'both', label: 'Drain Active' }),
-          pn: h('proxy', 'newNode', ['proxy', 'newNode'], { heads: 'both', label: 'New Traffic' })
+          cp: makeLink('client', 'proxy', ['client', 'proxy'], { heads: 'both' }),
+          po: makeLink('proxy', 'oldNode', ['proxy', 'oldNode'], { heads: 'both', label: 'Drain Active' }),
+          pn: makeLink('proxy', 'newNode', ['proxy', 'newNode'], { heads: 'both', label: 'New Traffic' })
         },
         flows: [
           { route: ['cp', 'po'], bounce: true, rate: 1.2 },

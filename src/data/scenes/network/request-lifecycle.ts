@@ -1,27 +1,13 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  CACHED_DNS_LINK,
+  LINK_TEMPLATES,
+  URL_TAG,
+  makeDatabase,
+  makeDevice,
+  makeDns,
+  makePanel,
+  makeUser,
+  makeWebServer
 } from '@/lib/simulator/scene-builders';
 
 /* eslint-disable */
@@ -54,7 +40,7 @@ export const requestLifecycleLesson = {
           text: `Every web request is a conversation between machines. Each step costs time, and the costs add up.`,
         },
         metrics: { dns: null, connect: null, request: null, download: null, total: null },
-        scene: { entities: { dev: te([ae]) }, links: {}, flows: [] },
+        scene: { entities: { dev: makeUser([URL_TAG]) }, links: {}, flows: [] },
       },
       {
         short: `Find address`,
@@ -72,10 +58,10 @@ export const requestLifecycleLesson = {
         metrics: { dns: 20, connect: null, request: null, download: null, total: 20 },
         scene: {
           entities: {
-            dev: te([ae]),
-            dns: ne({ tags: [{ text: `→ 203.0.113.7`, tone: `amber` }] }),
+            dev: makeUser([URL_TAG]),
+            dns: makeDns({ tags: [{ text: `→ 203.0.113.7`, tone: `amber` }] }),
           },
-          links: { q: C.dns() },
+          links: { q: LINK_TEMPLATES.dns() },
           flows: [{ route: [`q`], bounce: !0, rate: 0.8 }],
         },
       },
@@ -94,8 +80,8 @@ export const requestLifecycleLesson = {
         changes: [`+ Web server`, `~ DNS answer cached`, `+ Handshake: 2 round trips = 60 ms`],
         metrics: { dns: 20, connect: 60, request: null, download: null, total: 80 },
         scene: {
-          entities: { dev: te([ae]), dns: ne({ tags: [{ text: `→ 203.0.113.7`, tone: `amber` }] }), web: re() },
-          links: { q: oe, h: C.web({ label: `TCP + TLS handshake` }) },
+          entities: { dev: makeUser([URL_TAG]), dns: makeDns({ tags: [{ text: `→ 203.0.113.7`, tone: `amber` }] }), web: makeWebServer() },
+          links: { q: CACHED_DNS_LINK, h: LINK_TEMPLATES.web({ label: `TCP + TLS handshake` }) },
           flows: [{ route: [`h`], kind: `ping`, bounce: !0, rate: 1.3 }],
         },
       },
@@ -110,8 +96,8 @@ export const requestLifecycleLesson = {
         changes: [`+ Request: 1 round trip + 10 ms server time`],
         metrics: { dns: 20, connect: 60, request: 40, download: null, total: 120 },
         scene: {
-          entities: { dev: te([ae]), dns: ne(), web: re({ cpu: 0.3 }) },
-          links: { q: oe, h: C.web({ label: `GET /products` }) },
+          entities: { dev: makeUser([URL_TAG]), dns: makeDns(), web: makeWebServer({ cpu: 0.3 }) },
+          links: { q: CACHED_DNS_LINK, h: LINK_TEMPLATES.web({ label: `GET /products` }) },
           flows: [{ route: [`h`], bounce: !0, rate: 0.9 }],
         },
       },
@@ -130,8 +116,8 @@ export const requestLifecycleLesson = {
         changes: [`+ Database`, `+ Query: 15 ms`],
         metrics: { dns: 20, connect: 60, request: 55, download: null, total: 135 },
         scene: {
-          entities: { dev: te([ae]), dns: ne(), web: re({ cpu: 0.3 }), db: ie() },
-          links: { q: oe, h: C.web({ label: `GET /products` }), s: C.db() },
+          entities: { dev: makeUser([URL_TAG]), dns: makeDns(), web: makeWebServer({ cpu: 0.3 }), db: makeDatabase() },
+          links: { q: CACHED_DNS_LINK, h: LINK_TEMPLATES.web({ label: `GET /products` }), s: LINK_TEMPLATES.db() },
           flows: [{ route: [`h`, `s`], bounce: !0, rate: 0.9 }],
         },
       },
@@ -147,12 +133,12 @@ export const requestLifecycleLesson = {
         metrics: { dns: 20, connect: 60, request: 55, download: 20, total: 155 },
         scene: {
           entities: {
-            dev: te([{ text: `page ready · 155 ms`, tone: `green`, icon: `check` }]),
-            dns: ne(),
-            web: re({ cpu: 0.3 }),
-            db: ie(),
+            dev: makeUser([{ text: `page ready · 155 ms`, tone: `green`, icon: `check` }]),
+            dns: makeDns(),
+            web: makeWebServer({ cpu: 0.3 }),
+            db: makeDatabase(),
           },
-          links: { q: oe, h: C.web({ label: `HTML · 120 KB` }), s: C.db() },
+          links: { q: CACHED_DNS_LINK, h: LINK_TEMPLATES.web({ label: `HTML · 120 KB` }), s: LINK_TEMPLATES.db() },
           flows: [{ route: [`h`, `s`], bounce: !0, rate: 1.1 }],
         },
       },
@@ -176,12 +162,12 @@ export const requestLifecycleLesson = {
         metrics: { dns: 20, connect: 60, request: 55, download: 140, total: 275 },
         scene: {
           entities: {
-            dev: te([{ text: `40 files · 1 connection`, tone: `violet`, icon: `layers` }]),
-            dns: ne(),
-            web: re({ cpu: 0.35 }),
-            db: ie(),
+            dev: makeUser([{ text: `40 files · 1 connection`, tone: `violet`, icon: `layers` }]),
+            dns: makeDns(),
+            web: makeWebServer({ cpu: 0.35 }),
+            db: makeDatabase(),
           },
-          links: { q: oe, h: C.web({ label: `HTTP/2 · many requests at once` }), s: C.db() },
+          links: { q: CACHED_DNS_LINK, h: LINK_TEMPLATES.web({ label: `HTTP/2 · many requests at once` }), s: LINK_TEMPLATES.db() },
           flows: [{ route: [`h`], bounce: !0, rate: 4.2, speed: 1.2 }],
         },
       },
@@ -205,18 +191,18 @@ export const requestLifecycleLesson = {
         metrics: { dns: 20, connect: 60, request: 440, download: 20, total: 540 },
         scene: {
           entities: {
-            dev: te([ae]),
-            dns: ne(),
-            web: re({ cpu: 0.3 }),
-            db: ie({
+            dev: makeUser([URL_TAG]),
+            dns: makeDns(),
+            web: makeWebServer({ cpu: 0.3 }),
+            db: makeDatabase({
               heat: 0.7,
               tags: [{ text: `400 ms · scanning`, tone: `red`, icon: `hourglass` }],
             }),
           },
           links: {
-            q: oe,
-            h: C.web({ label: `GET /products` }),
-            s: C.db({ label: `ORDER BY score · 400 ms`, labelTone: `red` }),
+            q: CACHED_DNS_LINK,
+            h: LINK_TEMPLATES.web({ label: `GET /products` }),
+            s: LINK_TEMPLATES.db({ label: `ORDER BY score · 400 ms`, labelTone: `red` }),
           },
           flows: [{ route: [`h`, `s`], bounce: !0, rate: 0.6, hold: 1.4 }],
         },
@@ -241,15 +227,15 @@ export const requestLifecycleLesson = {
         metrics: { dns: 20, connect: 400, request: 225, download: 60, total: 705 },
         scene: {
           entities: {
-            dev: y(0, -22, { label: `you · Sydney`, tags: [ae] }),
-            dns: ne(),
-            web: re({ tags: [{ text: `Virginia`, icon: `globe` }] }),
-            db: ie(),
+            dev: makeDevice(0, -22, { label: `you · Sydney`, tags: [URL_TAG] }),
+            dns: makeDns(),
+            web: makeWebServer({ tags: [{ text: `Virginia`, icon: `globe` }] }),
+            db: makeDatabase(),
           },
           links: {
-            q: oe,
-            h: C.web({ label: `≈ 200 ms per round trip`, labelTone: `amber` }),
-            s: C.db(),
+            q: CACHED_DNS_LINK,
+            h: LINK_TEMPLATES.web({ label: `≈ 200 ms per round trip`, labelTone: `amber` }),
+            s: LINK_TEMPLATES.db(),
           },
           flows: [{ route: [`h`, `s`], bounce: !0, rate: 0.9, speed: 0.55 }],
         },
@@ -274,11 +260,11 @@ export const requestLifecycleLesson = {
         metrics: { dns: 20, connect: 60, request: 55, download: 20, total: 155 },
         scene: {
           entities: {
-            dev: te([{ text: `page ready · 155 ms`, tone: `green`, icon: `check` }]),
-            dns: ne(),
-            web: re(),
-            db: ie(),
-            card: S({ x: -2, y: 14 }, 'cURL Production Trace (155ms)', [
+            dev: makeUser([{ text: `page ready · 155 ms`, tone: `green`, icon: `check` }]),
+            dns: makeDns(),
+            web: makeWebServer(),
+            db: makeDatabase(),
+            card: makePanel({ x: -2, y: 14 }, 'cURL Production Trace (155ms)', [
               '$ curl -w "@format.txt" -o /dev/null -s https://shop.example',
               'time_namelookup:    0.020s (DNS)',
               'time_connect:       0.040s (TCP SYN/ACK)',
@@ -288,9 +274,9 @@ export const requestLifecycleLesson = {
             ], { icon: 'timer' }),
           },
           links: {
-            q: C.dns({ label: `20 ms`, style: `off` }),
-            h: C.web({ label: `60 + 55 + 20 ms` }),
-            s: C.db({ label: `15 ms` }),
+            q: LINK_TEMPLATES.dns({ label: `20 ms`, style: `off` }),
+            h: LINK_TEMPLATES.web({ label: `60 + 55 + 20 ms` }),
+            s: LINK_TEMPLATES.db({ label: `15 ms` }),
           },
           flows: [{ route: [`h`, `s`], bounce: !0, rate: 0.9 }],
         },

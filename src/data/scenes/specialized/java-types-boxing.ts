@@ -1,293 +1,265 @@
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
+
+// One stage for the whole lesson: a method's stack frame on the left, heap objects
+// in the middle, the JVM's Integer cache top-right. Act 2 (generics) brings in javac.
+//
+//            javac            IntegerCache
+//   stack frame ── heap object
+//                      └── second object / BigDecimal
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+/** Screen position (px) → world grid coordinates. */
+const at = (sx: number, sy: number) => ({
+  x: Math.round(((sx / 14 + sy / 7) / 2) * 10) / 10,
+  y: Math.round(((sx / 14 - sy / 7) / 2) * 10) / 10,
+});
+const P = {
+  stack: at(-220, 60),
+  javac: at(-120, -150),
+  heap: at(0, 0),
+  cache: at(180, -140),
+  low: at(60, 190),
+};
+
+const block = (p: { x: number; y: number }, o: Opts) => makeBlock(p.x, p.y, { s: 4.4, h: 52, ...o });
+const stack = (tags: Tag[] = []) =>
+  block(P.stack, { color: `blue`, glyph: `layers`, label: [`Stack frame`], sub: `main()`, tags });
+const boxA = (label: string, tags: Tag[] = []) =>
+  block(P.heap, { color: `green`, glyph: `box`, label: [label], sub: `16 B object`, tags });
+const cache = (tags: Tag[] = []) =>
+  block(P.cache, { color: `purple`, glyph: `database`, label: [`IntegerCache`], sub: `-128 … 127`, tags });
+const boxB = (label: string, sub: string, tags: Tag[] = []) =>
+  block(P.low, { color: `green`, glyph: `box`, label: [label], sub, tags });
+const javac = (tags: Tag[] = []) =>
+  block(P.javac, { color: `orange`, glyph: `code`, label: [`javac`], sub: `compiler`, tags });
+const list = (tags: Tag[] = []) =>
+  block(P.heap, { color: `green`, glyph: `boxes`, label: [`ArrayList`], sub: `Object[] inside`, tags });
+
+const L = {
+  ref: makeLink(`stack`, `boxA`, [`stack`, `boxA`], { label: `ref` }),
+  refQuiet: makeLink(`stack`, `boxA`, [`stack`, `boxA`]),
+  cached: makeLink(`cache`, `boxA`, [`cache`, `boxA`], { label: `same object` }),
+  newObj: makeLink(`stack`, `boxB`, [`stack`, `boxB`], { label: `new` }),
+  newQuiet: makeLink(`stack`, `boxB`, [`stack`, `boxB`]),
+  listRef: makeLink(`stack`, `list`, [`stack`, `list`], { heads: `both` }),
+  erase: makeLink(`javac`, `list`, [`javac`, `list`], { label: `erases <T>` }),
+  emitBridge: makeLink(`javac`, `bridge`, [`javac`, `bridge`], { label: `adds bridge` }),
+  copy: makeLink(`list`, `sink`, [`list`, `sink`], { label: `copy` }),
+  rawAdd: makeLink(`stack`, `list`, [`stack`, `list`], { label: `raw add(42)`, labelTone: `red` }),
+};
+
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: 0, y: 0, z: 0, dx: 250, dy: -70 }, title, lines, { icon: `code` });
 
 export const javaTypesBoxingLesson: Lesson = {
   id: 'java-types-boxing',
   title: 'Types, Boxing & Generics',
   summary:
-    'Understand WHY Integer 127 == 127 is true while 128 is false, why double fails money, how Type Erasure & Bridge Methods work, and why PECS bounds prevent heap pollution.',
+    'Where an int lives versus an Integer, why 128 == 128 is false, where boxing hides NPEs and money bugs, and what generics turn into after javac.',
   minutes: 14,
   level: 'core',
-  metrics: ['memory_slot', 'equality_rule', 'precision', 'tricky_bug'],
-  legend: ['flow', ['req', 'box / check'], ['res', 'cache / PECS'], ['fail', 'NPE / drift']],
+  metrics: ['objects', 'heapBytes', 'casts', 'bugs'],
+  legend: [[`req`, `reference`], [`res`, `value`], [`write`, `compile step`], [`fail`, `bug`]],
   goals: [
-    { text: 'Contrast 4-byte Stack primitive vs 16-byte Heap Wrapper', step: 1 },
-    { text: 'Explain IntegerCache (-128..127) == vs .equals() trap', step: 2 },
-    { text: 'Diagnose hidden autoboxing loop & null unboxing NPE', step: 3 },
-    { text: 'Fix IEEE-754 double rounding drift with BigDecimal', step: 4 },
-    { text: 'Explain why Generics use Compile-Time Type Erasure', step: 5 },
-    { text: 'Inspect synthetic Bridge Methods emitted by javac', step: 6 },
-    { text: 'Apply PECS (? extends / ? super) variance bounds', step: 7 },
-    { text: 'Prevent Heap Pollution from raw types & varargs', step: 8 },
+    { text: 'Contrast a 4-byte stack int with a 16-byte heap Integer', step: 1 },
+    { text: 'Explain the IntegerCache == vs equals() trap', step: 2 },
+    { text: 'Spot hidden autoboxing loops and null-unboxing NPEs', step: 3 },
+    { text: 'Fix double rounding drift with BigDecimal', step: 4 },
+    { text: 'Explain why generics are erased at compile time', step: 5 },
+    { text: 'Inspect the bridge methods javac generates', step: 6 },
+    { text: 'Apply PECS (? extends / ? super)', step: 7 },
+    { text: 'Prevent heap pollution from raw types', step: 8 },
   ],
   steps: [
     {
-      short: 'Stack vs Heap',
-      chapter: 'types',
-      title: '1. Why Primitives Live on Stack, Wrappers on Heap',
+      short: 'Stack vs heap',
+      chapter: 'setup',
+      title: 'An int is a value, an Integer is an object',
       body: [
-        'An <code>int</code> takes 4 raw bytes directly in a thread’s Stack frame. An <code>Integer</code> is a full Heap object with a 12–16 byte JVM object header + 4-byte payload + pointer indirection.',
-        'Collections (<code>List&lt;Integer&gt;</code>) require Objects because Java Generics erase to <code>Object</code> — primitives cannot be stored directly without boxing.',
+        '<code>int a = 42</code> is 4 bytes stored directly in the method’s <span class="term">stack frame</span>. No allocation, nothing for the GC to do.',
+        '<code>Integer b = 42</code> is a <b>reference</b> in the frame pointing at a separate heap object: a 12-byte header plus the int, padded to 16 bytes.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Effective Java Item 61: Prefer primitives to boxed primitives whenever nullability or Generics are not required.',
-      },
-      metrics: { memory_slot: '4B vs 16B Heap', equality_rule: 'Value vs Ref', precision: 'Exact int', tricky_bug: 'Memory bloat' },
+      callout: { kind: 'tip', text: 'Collections can only hold objects, so a List<Integer> of a million numbers is a million heap objects. Use int[] or IntStream when it matters.' },
+      metrics: { objects: 1, heapBytes: 16, casts: 0, bugs: 0 },
       scene: {
         entities: {
-          prim: d(-12, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['int x = 42'], sub: '4B on Stack' }),
-          wrap: b(2, -6, { r: 2.2, h: 48, color: 'amber', label: ['Integer'], sub: '16B Heap obj' }),
-          card: S({ x: -12, y: 12 }, '1. Primitive vs Boxed Wrapper Layout', [
-            'int a = 42;            // 4 bytes raw value on Stack',
-            'Integer b = 42;        // Heap Object: 12B Header + 4B int',
-            '// Why boxing exists: List<T> erases T to Object!',
-          ], { icon: 'terminal' }),
+          stack: stack([{ text: 'int a = 42 · 4 B', tone: 'violet' }]),
+          boxA: boxA('Integer 42'),
+          card: card('Main.java', ['int a = 42;      // 4 B, in the frame', 'Integer b = 42;  // ref → heap object', '# header 12 B + int 4 B = 16 B']),
         },
-        links: {
-          pr_wr: h('prim', 'wrap', ['prim', 'wrap'], { heads: 'end', label: 'box -> Heap' }),
-        },
-        flows: [{ route: ['pr_wr'], kind: 'req', rate: 1.7 }],
+        links: { ref: L.ref },
+        flows: [{ route: ['ref'], rate: 1, bounce: true }],
       },
     },
     {
-      short: 'IntegerCache',
-      chapter: 'types',
-      title: '2. Why 127 == 127 Is True, But 128 == 128 Is False',
+      short: 'Int cache',
+      chapter: 'problem',
+      title: 'Why 127 == 127 is true but 128 == 128 is false',
       body: [
-        '<code>Integer a = 127</code> compiles to <code>Integer.valueOf(127)</code>. The JVM pre-caches <code>-128..127</code> in <code>IntegerCache</code>, so both variables point to the exact same Heap object!',
-        'For <code>128</code>, <code>valueOf()</code> allocates two distinct <code>Integer</code> objects. Using <code>==</code> compares Heap addresses (<code>false</code>), whereas <code>.equals()</code> compares values (<code>true</code>).',
+        'Autoboxing calls <code>Integer.valueOf()</code>. For values from -128 to 127 it returns a shared object from the <span class="term">IntegerCache</span>, so two boxed 127s are the <em>same</em> object.',
+        '128 is outside the cache, so each box is a new object. <code>==</code> compares references, not values: the two 128s are different objects.',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Classic OCP trap: NEVER compare boxed Wrappers (Integer, Long) with == — always use .equals()!',
-      },
-      changes: ['+ IntegerCache[-128..127] returns shared ref', '+ >=128 allocates new Heap Integer'],
-      metrics: { memory_slot: 'IntegerCache', equality_rule: '== checks ref!', precision: 'Exact int', tricky_bug: '128 == 128 false' },
+      callout: { kind: 'warn', text: 'Always compare boxed numbers with equals() (or unbox first). == happens to work in tests with small ids and breaks in production.' },
+      changes: ['+ IntegerCache', '+ a new Integer(128)'],
+      metrics: { objects: 3, heapBytes: 48, casts: 0, bugs: 1 },
       scene: {
         entities: {
-          prim: d(-12, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['valueOf(int)'], sub: 'autoboxing' }),
-          cache: b(-12, -2, { r: 2.2, h: 48, color: 'green', label: ['IntegerCache'], sub: '-128 .. 127' }),
-          a127: d(4, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['127 == 127'], sub: 'same ref: true' }),
-          a128: d(4, -2, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['128 == 128'], sub: 'diff ref' }),
-          card: S({ x: -12, y: 12 }, '2. Why Integer.valueOf() Caches -128..127', [
-            'Integer a = 127, b = 127; // valueOf(127) -> cached!',
-            'a == b;      // true  (same object in IntegerCache)',
-            'Integer x = 128, y = 128; // new Integer(128) twice!',
-            'x == y;      // false! Always use x.equals(y)',
-          ], { icon: 'terminal' }),
+          stack: stack([
+            { text: 'a == b  → true', tone: 'green' },
+            { text: 'c == d  → false', tone: 'red', icon: 'alert' },
+          ]),
+          boxA: boxA('Integer 127'),
+          cache: cache([{ text: '256 shared objects', tone: 'violet' }]),
+          boxB: boxB('Integer 128', 'one per box'),
+          card: card('== vs equals()', ['Integer a = 127, b = 127;', 'a == b        // true  (cached)', 'Integer c = 128, d = 128;', '! c == d        // false (2 objects)', '= c.equals(d)   // true']),
         },
-        links: {
-          pr_ch: h('prim', 'cache', ['prim', 'cache'], { heads: 'end', label: 'cache' }),
-          ch_127: h('cache', 'a127', ['cache', 'a127'], { heads: 'end', label: 'hit' }),
-          ch_128: h('cache', 'a128', ['cache', 'a128'], { heads: 'end', label: 'miss -> new' }),
-        },
-        flows: [{ route: ['pr_ch', 'ch_127'], kind: 'res', rate: 1.9 }, { route: ['ch_128'], kind: 'fail', rate: 1.4 }],
+        links: { ref: L.refQuiet, cached: L.cached, newObj: L.newObj },
+        flows: [
+          { route: ['newObj'], kind: 'fail', rate: 0.8 },
+          { route: ['cached'], kind: 'res', rate: 1 },
+        ],
       },
     },
     {
-      short: 'Unbox NPE',
-      chapter: 'types',
-      title: '3. Hidden Autoboxing Loops & Null Unboxing NPE',
+      short: 'Hidden box',
+      chapter: 'problem',
+      title: 'Boxing you didn’t write — and the NPE it hides',
       body: [
-        'Writing <code>Long sum = 0L; sum += i;</code> inside a million-item loop silently unboxes <code>sum</code>, adds <code>i</code>, and boxes a brand-new <code>Long</code> on the Heap on every iteration!',
-        'Worse: unboxing a <code>null</code> wrapper (e.g. <code>int x = nullableInt;</code> or ternary <code>flag ? null : 1</code>) calls <code>.intValue()</code> and crashes with <code>NullPointerException</code>.',
+        'Declare the accumulator as <code>Long</code> and every <code>sum += i</code> unboxes, adds and boxes again: a million loop turns create a million objects for the GC.',
+        'Unboxing calls <code>intValue()</code>. If the reference is <code>null</code>, a line with no visible method call throws <code>NullPointerException</code>.',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Effective Java Item 61: Beware ternary unboxing! (cond ? map.get(k) : 0) unboxes map.get(k) to int -> NPE if missing!',
-      },
-      changes: ['+ sum += i allocates 1M Heap Longs', '+ Unboxing null throws NPE'],
-      metrics: { memory_slot: '1M Heap objs', equality_rule: '.intValue()', precision: 'N/A', tricky_bug: 'Silent NPE' },
+      callout: { kind: 'tip', text: 'Use primitives for counters and accumulators. When a value can be absent, make that explicit (OptionalInt, a default) instead of a nullable wrapper.' },
+      changes: ['~ 1,000,000 Long objects', '− null unboxed → NPE'],
+      metrics: { objects: 1000000, heapBytes: 24000000, casts: 0, bugs: 2 },
       scene: {
         entities: {
-          loop: d(-12, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Long sum += i'], sub: 'boxes / iter' }),
-          wrap: b(2, -16, { r: 2.2, h: 48, color: 'amber', label: ['1M Heap Longs'], sub: 'GC churn' }),
-          npe: d(2, -2, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Throw NPE'], sub: 'if null -> NPE' }),
-          card: S({ x: -12, y: 12 }, '3. Two Classic Autoboxing Traps', [
-            'Long sum = 0L; // BUG: use primitive long sum = 0L!',
-            'for (long i = 0; i < 1_000_000; i++) sum += i;',
-            '// Ternary NPE trap: Integer a = null;',
-            'Integer res = flag ? a : 0; // unboxes a -> NPE!',
-          ], { icon: 'terminal' }),
+          stack: stack([{ text: 'int y = x  → NPE', tone: 'red', icon: 'alert' }]),
+          boxA: boxA('Integer 127'),
+          cache: cache(),
+          boxB: boxB('Long sum', 'new each turn', [{ text: '× 1,000,000', tone: 'red' }]),
+          card: card('Loop.java', ['Long sum = 0L;', 'for (long i = 0; i < 1_000_000; i++)', '! sum += i;   // unbox, add, box again', 'Integer x = null;', '! int y = x;   // x.intValue() → NPE']),
         },
-        links: {
-          lp_wr: h('loop', 'wrap', ['loop', 'wrap'], { heads: 'end', label: 'box 1M' }),
-          lp_np: h('loop', 'npe', ['loop', 'npe'], { heads: 'end', label: 'null unbox' }),
-        },
-        flows: [{ route: ['lp_wr'], kind: 'fail', rate: 1.8 }, { route: ['lp_np'], kind: 'fail', rate: 1.5 }],
+        links: { ref: L.refQuiet, newObj: L.newObj },
+        flows: [{ route: ['newObj'], kind: 'fail', rate: 3 }],
       },
     },
     {
       short: 'BigDecimal',
-      chapter: 'precision',
-      title: '4. Why double Fails Money (0.1 + 0.2 != 0.3)',
+      chapter: 'solution',
+      title: 'double cannot store 0.1 — money needs BigDecimal',
       body: [
-        '<code>float</code> and <code>double</code> use binary IEEE-754 floating point: base-10 fractions like <code>0.1</code> cannot be represented exactly in binary, so <code>0.1 + 0.2 == 0.30000000000000004</code>.',
-        'For currency, use <code>BigDecimal("0.10")</code> (always pass a <code>String</code>, NEVER <code>new BigDecimal(0.1)</code>!) which stores an exact integer <code>unscaledValue</code> + base-10 <code>scale</code>.',
+        '<code>double</code> is binary floating point: 0.1 has no exact binary form, so <code>0.1 + 0.2</code> is <code>0.30000000000000004</code>. Small errors add up across many invoices.',
+        '<span class="term">BigDecimal</span> stores an unscaled integer and a scale (<code>10</code>, scale 2 = 0.10), so decimal math is exact. Build it from a String, never from a double.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Effective Java Item 60: Never use float or double for exact answers like money; use BigDecimal(String) or integer cents.',
-      },
-      changes: ['+ Binary IEEE-754 drifts on 0.1', '+ BigDecimal(String) keeps exact base-10'],
-      metrics: { memory_slot: 'BigDecimal', equality_rule: 'compareTo()==0', precision: 'Exact base-10', tricky_bug: 'new BD(0.1)' },
+      callout: { kind: 'warn', text: 'new BigDecimal(0.1) copies the double’s error (0.1000000000000000055…). Use new BigDecimal("0.1") or BigDecimal.valueOf(0.1), and compare with compareTo().' },
+      changes: ['− Long loop', '+ BigDecimal'],
+      metrics: { objects: 3, heapBytes: 96, casts: 0, bugs: 0 },
       scene: {
         entities: {
-          dbl: d(-12, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['double 0.1'], sub: 'binary drift' }),
-          bd: d(-12, -2, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BigDecimal'], sub: 'String ctor' }),
-          scale: b(4, -8, { r: 2.2, h: 48, color: 'blue', label: ['int + scale'], sub: '10 * 10^-2' }),
-          card: S({ x: -12, y: 12 }, '4. Exact Financial Math with BigDecimal', [
-            '0.1 + 0.2; // 0.30000000000000004 (IEEE-754 binary)',
-            'new BigDecimal(0.1);    // BAD: 0.10000000000000000555...',
-            'new BigDecimal("0.10"); // GOOD: exact 10 * 10^-2',
-            '// Note: 1.0.equals(1.00) is FALSE; compareTo() is 0!',
-          ], { icon: 'terminal' }),
+          stack: stack([{ text: '0.1 + 0.2 ≠ 0.3', tone: 'red' }]),
+          boxA: boxA('Integer 127'),
+          cache: cache(),
+          boxB: boxB('BigDecimal', 'value + scale', [{ text: '0.30 exactly', tone: 'green' }]),
+          card: card('Money.java', ['! 0.1 + 0.2              // 0.30000000000000004', 'var a = new BigDecimal("0.1");', 'var b = new BigDecimal("0.2");', '= a.add(b)               // 0.3 exact']),
         },
-        links: {
-          db_bd: h('dbl', 'bd', ['dbl', 'bd'], { heads: 'end', label: 'fix' }),
-          bd_sc: h('bd', 'scale', ['bd', 'scale'], { heads: 'end', label: 'exact' }),
-        },
-        flows: [{ route: ['db_bd', 'bd_sc'], kind: 'res', rate: 1.8 }],
+        links: { ref: L.refQuiet, newObj: L.newQuiet },
+        flows: [{ route: ['newObj'], kind: 'res', rate: 1, bounce: true }],
       },
     },
     {
-      short: 'Type Erasure',
-      chapter: 'generics',
-      title: '5. Why Generics Erase <T> at Runtime (Type Erasure)',
+      short: 'Erasure',
+      chapter: 'insight',
+      title: 'Generics exist only at compile time',
       body: [
-        'Java Generics are a <code>javac</code> compile-time check: at runtime, <code>List&lt;String&gt;</code> and <code>List&lt;Integer&gt;</code> both erase to raw <code>List</code> (storing <code>Object</code>).',
-        'That is WHY <code>new T()</code> and <code>obj instanceof List&lt;String&gt;</code> are illegal — and why <code>List&lt;Integer&gt;</code> must box primitives!',
+        '<code>javac</code> checks <code>List&lt;String&gt;</code> and then <span class="term">erases</span> the type argument: the runtime object is a plain ArrayList holding <code>Object[]</code>.',
+        'To give you back a String, javac inserts a <code>checkcast</code> at every <code>get()</code>. That is why you can’t write <code>new T()</code> or check <code>instanceof List&lt;String&gt;</code>.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Type Erasure preserved 100% binary compatibility with pre-Java 5 bytecode without changing JVM instructions.',
-      },
-      changes: ['+ javac erases <T> to Object / upper bound', '+ Inserts checkcast bytecode on reads'],
-      metrics: { memory_slot: 'Erased Object', equality_rule: 'Same .class', precision: 'Compile check', tricky_bug: 'No new T()' },
+      callout: { kind: 'insight', text: 'Erasure kept Java 5 generics binary-compatible with pre-generics libraries: List<String> and List<Integer> are the same class at runtime.' },
+      changes: ['+ javac', '~ heap object is now an ArrayList'],
+      metrics: { objects: 1, heapBytes: 56, casts: 1, bugs: 0 },
       scene: {
         entities: {
-          src: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['List<String>'], sub: 'source code' }),
-          jvc: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['javac Eraser'], sub: 'check + erase' }),
-          bc: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['.class Bytecode'], sub: 'Object + cast' }),
-          card: S({ x: -12, y: 12 }, '5. Compile-Time Type Erasure', [
-            '// Source:   String s = list.get(0);',
-            '// Bytecode: String s = (String) list.get(0); // checkcast',
-            'List<String>.class == List<Integer>.class; // TRUE!',
-          ], { icon: 'terminal' }),
+          stack: stack([{ text: 'String s = names.get(0)', tone: 'violet' }]),
+          javac: javac([{ text: 'inserts checkcast', tone: 'amber' }]),
+          list: list([{ text: 'runtime: List', tone: 'gray' }]),
+          card: card('after javac', ['List<String> names = new ArrayList<>();', '# compiles to:', 'List names = new ArrayList();', '= String s = (String) names.get(0);']),
         },
-        links: {
-          sr_jv: h('src', 'jvc', ['src', 'jvc'], { heads: 'end', label: 'verify <T>' }),
-          jv_bc: h('jvc', 'bc', ['jvc', 'bc'], { heads: 'end', label: 'erase' }),
-        },
-        flows: [{ route: ['sr_jv', 'jv_bc'], kind: 'req', rate: 1.8 }],
+        links: { listRef: L.listRef, erase: L.erase },
+        flows: [
+          { route: ['erase'], kind: 'write', rate: 0.8 },
+          { route: ['listRef'], rate: 1, bounce: true },
+        ],
       },
     },
     {
-      short: 'Bridge Method',
-      chapter: 'generics',
-      title: '6. Synthetic Bridge Methods for Polymorphism',
+      short: 'Bridge',
+      chapter: 'technique',
+      title: 'Bridge methods keep overriding working',
       body: [
-        'If <code>class StrNode extends Node&lt;String&gt;</code> overrides <code>setData(String)</code>, after erasure the parent has <code>setData(Object)</code> while the child has <code>setData(String)</code> — different signatures!',
-        'To keep polymorphism working, <code>javac</code> silently generates a synthetic <code>setData(Object)</code> <strong>Bridge Method</strong> that casts and delegates to <code>setData(String)</code>.',
+        '<code>class IntBox extends Box&lt;Integer&gt;</code> overrides <code>set(Integer)</code>. After erasure the parent’s method is <code>set(Object)</code> — a different signature, so polymorphism would silently break.',
+        'javac adds a synthetic <span class="term">bridge method</span> <code>set(Object)</code> that casts and calls <code>set(Integer)</code>. You see it in <code>javap</code> and in reflection.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'If you inspect methods via Reflection, filter out method.isBridge() / method.isSynthetic() to avoid duplicate entries.',
-      },
-      changes: ['+ javac emits synthetic bridge method', '+ Casts Object -> String before delegate'],
-      metrics: { memory_slot: 'Bridge Method', equality_rule: 'Polymorphic', precision: 'Runtime cast', tricky_bug: 'Reflection dup' },
+      callout: { kind: 'tip', text: 'When scanning methods with reflection, skip m.isBridge() — otherwise every generic override shows up twice.' },
+      changes: ['+ IntBox.class with a bridge'],
+      metrics: { objects: 1, heapBytes: 56, casts: 2, bugs: 0 },
       scene: {
         entities: {
-          par: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Node<Object>'], sub: 'setData(Obj)' }),
-          jvc: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Bridge Method'], sub: 'javac synth' }),
-          cld: d(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['StrNode'], sub: 'setData(Str)' }),
-          card: S({ x: -12, y: 12 }, '6. Hidden Synthetic Bridge Method', [
-            'class StrNode extends Node<String> {',
-            '  // Emitted by javac so Node.setData(Object) overrides:',
-            '  /* synthetic bridge */ void setData(Object x) {',
-            '    setData((String) x); // ClassCastException if polluted!',
-            '  }',
-            '}',
-          ], { icon: 'terminal' }),
+          stack: stack(),
+          javac: javac(),
+          list: list(),
+          bridge: block(P.cache, { color: `orange`, glyph: `split`, label: [`IntBox.class`], sub: `2 set() methods` }),
+          card: card('javap -c IntBox', ['void set(Integer v)       // yours', 'synthetic bridge void set(Object v)', '= checkcast Integer; invokevirtual set(Integer)']),
         },
-        links: {
-          pr_br: h('par', 'jvc', ['par', 'jvc'], { heads: 'end', label: 'override' }),
-          br_cl: h('jvc', 'cld', ['jvc', 'cld'], { heads: 'end', label: 'cast()' }),
-        },
-        flows: [{ route: ['pr_br', 'br_cl'], kind: 'res', rate: 1.8 }],
+        links: { listRef: L.listRef, emitBridge: L.emitBridge },
+        flows: [{ route: ['emitBridge'], kind: 'write', rate: 0.8 }],
       },
     },
     {
       short: 'PECS',
-      chapter: 'generics',
-      title: '7. Variance & PECS (? extends vs ? super)',
+      chapter: 'technique',
+      title: 'Producer extends, consumer super',
       body: [
-        'Arrays are covariant (<code>Integer[]</code> is a <code>Number[]</code>, risking runtime <code>ArrayStoreException</code>), while Generics are <strong>invariant</strong> for safety.',
-        'Use <strong>PECS</strong>: <em>Producer Extends</em> (<code>? extends T</code> to read <code>T</code>) and <em>Consumer Super</em> (<code>? super T</code> to write <code>T</code>).',
+        'Generics are <b>invariant</b>: a <code>List&lt;Integer&gt;</code> is not a <code>List&lt;Number&gt;</code>. Wildcards say how a parameter is used.',
+        'Read from a <span class="term">producer</span> declared <code>? extends T</code>; write into a <span class="term">consumer</span> declared <code>? super T</code>. That is exactly the signature of <code>Collections.copy</code>.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Effective Java Item 31: Producer-Extends, Consumer-Super (PECS) makes generic APIs maximally flexible and type-safe.',
-      },
-      changes: ['+ ? extends T read-only producer', '+ ? super T write-safe consumer'],
-      metrics: { memory_slot: 'PECS Bounds', equality_rule: 'Invariant', precision: 'Compile-safe', tricky_bug: 'Cant add ext' },
+      callout: { kind: 'tip', text: 'You cannot add to a List<? extends Number> (except null) — the compiler doesn’t know which subtype it holds.' },
+      changes: ['− bridge', '+ List<Object> consumer'],
+      metrics: { objects: 2, heapBytes: 112, casts: 0, bugs: 0 },
       scene: {
         entities: {
-          prod: d(-12, -16, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['Producer'], sub: '? extends T' }),
-          cons: d(-12, -2, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Consumer'], sub: '? super T' }),
-          copier: d(4, -9, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Copy Engine'], sub: 'PECS safe' }),
-          card: S({ x: -12, y: 12 }, '7. PECS: Producer Extends, Consumer Super', [
-            'void copy(List<? super Number> dst,',
-            '          List<? extends Number> src) {',
-            '  for (Number n : src) dst.add(n); // read + write safe',
-            '}',
-          ], { icon: 'terminal' }),
+          stack: stack(),
+          javac: javac([{ text: 'checks bounds', tone: 'green' }]),
+          list: list([{ text: '? extends Number', tone: 'green' }]),
+          sink: boxB('Object list', 'consumer', [{ text: '? super Integer', tone: 'green' }]),
+          card: card('Collections.java', ['static <T> void copy(', '    List<? super T> dest,', '    List<? extends T> src)', '= copy(objects, integers);   // compiles']),
         },
-        links: {
-          pr_cp: h('prod', 'copier', ['prod', 'copier'], { heads: 'end', label: 'read T' }),
-          cp_cn: h('copier', 'cons', ['copier', 'cons'], { heads: 'end', label: 'write T' }),
-        },
-        flows: [{ route: ['pr_cp', 'cp_cn'], kind: 'res', rate: 1.9 }],
+        links: { listRef: L.listRef, copy: L.copy },
+        flows: [{ route: ['copy'], kind: 'res', rate: 1.4 }],
       },
     },
     {
-      short: 'Heap Pollution',
-      chapter: 'generics',
-      title: '8. Preventing Heap Pollution (Raw Types & Varargs)',
+      short: 'Raw types',
+      chapter: 'problem',
+      title: 'Raw types let the wrong object in',
       body: [
-        'Mixing raw <code>List</code> with <code>List&lt;String&gt;</code>—or mutating a generic varargs array <code>T... args</code>—causes <strong>Heap Pollution</strong>: a <code>List&lt;String&gt;</code> secretly holds an <code>Integer</code> until a distant read crashes!',
-        'Never use raw types; use <code>@SafeVarargs</code> only when you never store into or expose the varargs array.',
+        'A <span class="term">raw type</span> (<code>List</code> without &lt;…&gt;) switches the checks off. You can add an Integer to what is really a List&lt;String&gt; — javac only warns.',
+        'The error surfaces far away, as a <code>ClassCastException</code> at the hidden cast when someone reads it. This is <span class="term">heap pollution</span>.',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Effective Java Item 26 & 32: Use List<?> instead of raw List, and prefer List<T> over T... varargs.',
-      },
-      changes: ['+ Raw List / T[] bypasses compile check', '+ List<?> & @SafeVarargs prevent pollution'],
-      metrics: { memory_slot: 'Type-Safe', equality_rule: 'No raw types', precision: 'Zero cast err', tricky_bug: 'Heap polluted' },
+      callout: { kind: 'warn', text: 'Never ignore “unchecked” warnings. For generic varargs, mark safe methods with @SafeVarargs instead of suppressing warnings everywhere.' },
+      changes: ['− consumer list', '! Integer inside List<String>'],
+      metrics: { objects: 2, heapBytes: 72, casts: 1, bugs: 1 },
       scene: {
         entities: {
-          raw: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Raw List / T...'], sub: 'pollutes Heap' }),
-          safe: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['List<?> / Safe'], sub: 'compile guard' }),
-          bc: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['Clean Heap'], sub: 'no cast crash' }),
-          card: S({ x: -12, y: 12 }, '8. Eliminating Heap Pollution', [
-            '// BAD: raw List allows Integer into List<String>!',
-            '// GOOD: List<?> rejects unsafe writes at compile time',
-            '@SafeVarargs // only when array is read-only & not exposed!',
-            'static <T> List<T> ofAll(T... items) { ... }',
-          ], { icon: 'terminal' }),
+          stack: stack([{ text: 'ClassCastException', tone: 'red', icon: 'alert' }]),
+          javac: javac([{ text: 'unchecked warning', tone: 'amber', icon: 'alert' }]),
+          list: list([{ text: 'Integer among Strings', tone: 'red' }]),
+          card: card('Polluted.java', ['List<String> names = new ArrayList<>();', 'List raw = names;', '! raw.add(42);                 // only a warning', '! String s = names.get(0);     // ClassCastException']),
         },
-        links: {
-          rw_sf: h('raw', 'safe', ['raw', 'safe'], { heads: 'end', label: 'ban raw' }),
-          sf_ok: h('safe', 'bc', ['safe', 'bc'], { heads: 'end', label: 'safe' }),
-        },
-        flows: [{ route: ['rw_sf', 'sf_ok'], kind: 'res', rate: 1.9 }],
+        links: { rawAdd: L.rawAdd },
+        flows: [{ route: ['rawAdd'], kind: 'fail', rate: 1 }],
       },
     },
   ],

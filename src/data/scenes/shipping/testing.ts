@@ -1,41 +1,27 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeGhost,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const Xl = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
 
-const Zl = (e = `shoppers`) => p(Xl, 10, e);
+const Zl = (e = `shoppers`) => makeCrowd(Xl, 10, e);
 
-const Ql = (e = {}) => d(-13, -4, { color: `green`, glyph: `flask`, label: [`Tests`], ...e });
+const Ql = (e = {}) => makeBlock(-13, -4, { color: `green`, glyph: `flask`, label: [`Tests`], ...e });
 
-const $l = (e = {}) => d(0, -4, { glyph: `cart`, label: [`Checkout`], sub: `your code`, ...e });
+const $l = (e = {}) => makeBlock(0, -4, { glyph: `cart`, label: [`Checkout`], sub: `your code`, ...e });
 
-const eu = (e = {}) => b(11, -4, { label: `orders db`, ...e });
+const eu = (e = {}) => makeDb(11, -4, { label: `orders db`, ...e });
 
 const tu = (e = {}) =>
-    d(0, 9, {
+    makeBlock(0, 9, {
       s: 4.8,
       h: 52,
       color: `purple`,
@@ -46,30 +32,30 @@ const tu = (e = {}) =>
     });
 
 const nu = (e = {}) =>
-    d(11, 9, { color: `yellow`, glyph: `boxes`, label: [`Inventory`], sub: `another team`, ...e });
+    makeBlock(11, 9, { color: `yellow`, glyph: `boxes`, label: [`Inventory`], sub: `another team`, ...e });
 
-const ru = (e = `fake db · in memory`) => m(11, -4, 3.6, 30, e);
+const ru = (e = `fake db · in memory`) => makeGhost(11, -4, 3.6, 30, e);
 
-const iu = (e = `stub: “approved”`) => m(0, 9, 4, 34, e);
+const iu = (e = `stub: “approved”`) => makeGhost(0, 9, 4, 34, e);
 
-const au = (e = `stub: “in stock”`) => m(11, 9, 4, 34, e);
+const au = (e = `stub: “in stock”`) => makeGhost(11, 9, 4, 34, e);
 
 const W = {
-    ts: (e = {}) => h(`tests`, `svc`, [`tests`, `svc`], { heads: `both`, ...e }),
-    us: (e = {}) => h(`users`, `svc`, [`users`, `svc`], { heads: `both`, ...e }),
-    sd: (e = `db`, t = {}) => typeof e === 'object' ? h(`svc`, `db`, [`svc`, `db`], { heads: `both`, ...e }) : h(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
-    sp: (e = `pay`, t = {}) => typeof e === 'object' ? h(`svc`, `pay`, [`svc`, `pay`], { heads: `both`, ...e }) : h(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
+    ts: (e = {}) => makeLink(`tests`, `svc`, [`tests`, `svc`], { heads: `both`, ...e }),
+    us: (e = {}) => makeLink(`users`, `svc`, [`users`, `svc`], { heads: `both`, ...e }),
+    sd: (e = `db`, t = {}) => typeof e === 'object' ? makeLink(`svc`, `db`, [`svc`, `db`], { heads: `both`, ...e }) : makeLink(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
+    sp: (e = `pay`, t = {}) => typeof e === 'object' ? makeLink(`svc`, `pay`, [`svc`, `pay`], { heads: `both`, ...e }) : makeLink(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
     si: (e = `inv`, t = {}) => {
       const target = typeof e === 'object' ? `inv` : e;
       const opts = typeof e === 'object' ? e : t;
-      return h(`svc`, target, [`svc`, [`svc`, `svc+1.5`], [5.5, `svc+1.5`], [5.5, target], target], {
+      return makeLink(`svc`, target, [`svc`, [`svc`, `svc+1.5`], [5.5, `svc+1.5`], [5.5, target], target], {
         heads: `both`,
         ...opts,
       });
     },
   };
 
-const ou = (e, t, n) => S({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
+const ou = (e, t, n) => makePanel({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
 
 const G = (e, t = 2.4, n = {}) => ({ route: e, rate: t, bounce: !0, ...n });
 
@@ -302,7 +288,7 @@ const su = {
             inv: nu(),
           },
           links: {
-            tu: h(`tests`, `users`, [`tests`, [`tests`, `users`], `users`], { style: `dashed` }),
+            tu: makeLink(`tests`, `users`, [`tests`, [`tests`, `users`], `users`], { style: `dashed` }),
             us: W.us(),
             sd: W.sd(),
             sp: W.sp(),
@@ -377,7 +363,7 @@ const su = {
             inv: nu(),
           },
           links: {
-            tu: h(`tests`, `users`, [`tests`, [`tests`, `users`], `users`], {
+            tu: makeLink(`tests`, `users`, [`tests`, [`tests`, `users`], `users`], {
               style: `dashed`,
               fail: 0.35,
             }),
@@ -410,12 +396,12 @@ const su = {
           entities: {
             users: Zl(`load generator · 5× traffic`),
             svc: $l({
-              ...v(0.82),
+              ...makeCool(0.82),
               tags: [{ text: `p99 rises at 4.2×`, tone: `amber`, icon: `trendingUp` }],
             }),
-            db: eu({ ...v(0.7) }),
+            db: eu({ ...makeCool(0.7) }),
             pay: tu({
-              ...g,
+              ...DEAD_STATE,
               dead: 0,
               tags: [{ text: `injected: 5 s delay`, tone: `red`, icon: `hourglass` }],
             }),

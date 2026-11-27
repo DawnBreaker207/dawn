@@ -1,27 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 // ============================================================================
@@ -72,13 +54,13 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          producer: d(-14, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`Order API`, `Producer`] }),
-          sqs: d(0, 0, { s: 3.8, h: 42, color: `purple`, glyph: `inbox`, label: [`Amazon SQS`, `Standard Queue`] }),
-          consumer: d(14, 4, { s: 3.8, h: 42, color: `orange`, glyph: `cpu`, label: [`Payment Worker`, `Consumer`] }),
+          producer: makeBlock(-14, -4, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`Order API`, `Producer`] }),
+          sqs: makeBlock(0, 0, { s: 3.8, h: 42, color: `purple`, glyph: `inbox`, label: [`Amazon SQS`, `Standard Queue`] }),
+          consumer: makeBlock(14, 4, { s: 3.8, h: 42, color: `orange`, glyph: `cpu`, label: [`Payment Worker`, `Consumer`] }),
         },
         links: {
-          send: h(`producer`, `sqs`, [`producer`, `sqs`], { heads: `end`, label: `SendMessage` }),
-          poll: h(`sqs`, `consumer`, [`sqs`, `consumer`], { heads: `both`, label: `Long Polling (20s)` }),
+          send: makeLink(`producer`, `sqs`, [`producer`, `sqs`], { heads: `end`, label: `SendMessage` }),
+          poll: makeLink(`sqs`, `consumer`, [`sqs`, `consumer`], { heads: `both`, label: `Long Polling (20s)` }),
         },
         flows: [
           { route: [`send`], bounce: false, rate: 2.0 },
@@ -112,13 +94,13 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          queue: d(-14, -4, { s: 3.8, h: 44, color: `purple`, glyph: `inbox`, label: [`Primary SQS`], sub: `maxReceive: 3` }),
-          worker: d(0, -4, { s: 3.8, h: 44, color: `rose`, glyph: `alertTriangle`, label: [`Worker`], sub: `Crash 3x` }),
-          dlq: d(14, 4, { s: 3.8, h: 46, color: `red`, glyph: `skull`, label: [`Dead Letter SQS`], sub: `Poison Msg` }),
+          queue: makeBlock(-14, -4, { s: 3.8, h: 44, color: `purple`, glyph: `inbox`, label: [`Primary SQS`], sub: `maxReceive: 3` }),
+          worker: makeBlock(0, -4, { s: 3.8, h: 44, color: `rose`, glyph: `alertTriangle`, label: [`Worker`], sub: `Crash 3x` }),
+          dlq: makeBlock(14, 4, { s: 3.8, h: 46, color: `red`, glyph: `skull`, label: [`Dead Letter SQS`], sub: `Poison Msg` }),
         },
         links: {
-          qw: h(`queue`, `worker`, [`queue`, `worker`], { heads: `both`, label: `poll & crash` }),
-          wd: h(`worker`, `dlq`, [`worker`, `dlq`], { heads: `end`, label: `redrive after 3x`, style: `dashed` }),
+          qw: makeLink(`queue`, `worker`, [`queue`, `worker`], { heads: `both`, label: `poll & crash` }),
+          wd: makeLink(`worker`, `dlq`, [`worker`, `dlq`], { heads: `end`, label: `redrive after 3x`, style: `dashed` }),
         },
         flows: [
           { route: [`qw`, `wd`], bounce: false, rate: 1.2 },
@@ -155,17 +137,17 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          order_svc: d(-15, -4, { s: 3.6, h: 40, color: `teal`, glyph: `cart`, label: [`Order Service`] }),
-          sns: d(-2, -4, { s: 3.8, h: 42, color: `rose`, glyph: `signpost`, label: [`SNS Topic`], sub: `OrderPlaced` }),
-          q_bill: d(10, -12, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Billing SQS`] }),
-          q_ship: d(10, -4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Shipping SQS`] }),
-          q_notif: d(10, 4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Email SQS`] }),
+          order_svc: makeBlock(-15, -4, { s: 3.6, h: 40, color: `teal`, glyph: `cart`, label: [`Order Service`] }),
+          sns: makeBlock(-2, -4, { s: 3.8, h: 42, color: `rose`, glyph: `signpost`, label: [`SNS Topic`], sub: `OrderPlaced` }),
+          q_bill: makeBlock(10, -12, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Billing SQS`] }),
+          q_ship: makeBlock(10, -4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Shipping SQS`] }),
+          q_notif: makeBlock(10, 4, { s: 3.4, h: 36, color: `purple`, glyph: `inbox`, label: [`Email SQS`] }),
         },
         links: {
-          pub: h(`order_svc`, `sns`, [`order_svc`, `sns`], { heads: `end`, label: `Publish` }),
-          f1: h(`sns`, `q_bill`, [`sns`, `q_bill`], { heads: `end` }),
-          f2: h(`sns`, `q_ship`, [`sns`, `q_ship`], { heads: `end` }),
-          f3: h(`sns`, `q_notif`, [`sns`, `q_notif`], { heads: `end` }),
+          pub: makeLink(`order_svc`, `sns`, [`order_svc`, `sns`], { heads: `end`, label: `Publish` }),
+          f1: makeLink(`sns`, `q_bill`, [`sns`, `q_bill`], { heads: `end` }),
+          f2: makeLink(`sns`, `q_ship`, [`sns`, `q_ship`], { heads: `end` }),
+          f3: makeLink(`sns`, `q_notif`, [`sns`, `q_notif`], { heads: `end` }),
         },
         flows: [
           { route: [`pub`], bounce: false, rate: 2.0 },
@@ -199,15 +181,15 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          saas: y(-15, -4, { label: `Stripe Webhook`, tags: [{ text: 'Payment.Success', icon: 'zap' }] }),
-          bus: d(1, -4, { s: 3.8, h: 44, color: `purple`, glyph: `workflow`, label: [`EventBridge`], sub: `Event Bus` }),
-          l_refund: d(13, -10, { s: 4.2, h: 48, color: `yellow`, glyph: `zap`, label: [`Lambda Target`], sub: `Refund Handler` }),
-          step_fn: d(13, 2, { s: 4.2, h: 48, color: `blue`, glyph: `workflow`, label: [`Step Functions`], sub: `Order Saga` }),
+          saas: makeDevice(-15, -4, { label: `Stripe Webhook`, tags: [{ text: 'Payment.Success', icon: 'zap' }] }),
+          bus: makeBlock(1, -4, { s: 3.8, h: 44, color: `purple`, glyph: `workflow`, label: [`EventBridge`], sub: `Event Bus` }),
+          l_refund: makeBlock(13, -10, { s: 4.2, h: 48, color: `yellow`, glyph: `zap`, label: [`Lambda Target`], sub: `Refund Handler` }),
+          step_fn: makeBlock(13, 2, { s: 4.2, h: 48, color: `blue`, glyph: `workflow`, label: [`Step Functions`], sub: `Order Saga` }),
         },
         links: {
-          sb: h(`saas`, `bus`, [`saas`, `bus`], { heads: `end`, label: `putEvents` }),
-          bl: h(`bus`, `l_refund`, [`bus`, `l_refund`], { heads: `end` }),
-          bs: h(`bus`, `step_fn`, [`bus`, `step_fn`], { heads: `end` }),
+          sb: makeLink(`saas`, `bus`, [`saas`, `bus`], { heads: `end`, label: `putEvents` }),
+          bl: makeLink(`bus`, `l_refund`, [`bus`, `l_refund`], { heads: `end` }),
+          bs: makeLink(`bus`, `step_fn`, [`bus`, `step_fn`], { heads: `end` }),
         },
         flows: [
           { route: [`sb`, `bl`], bounce: false, rate: 1.4 },
@@ -243,15 +225,15 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          client: y(-14, -4, { label: `Mobile / Web User`, tags: [{ text: `HTTPS`, icon: `globe` }] }),
-          apigw: d(-4, -4, { s: 4.2, h: 48, color: `orange`, glyph: `route`, label: [`API Gateway`], sub: `HTTP /api/v1` }),
-          lambda: d(5, -4, { s: 4.2, h: 48, color: `yellow`, glyph: `zap`, label: [`AWS Lambda`], sub: `Stateless Fn` }),
-          ddb: b(14, -4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
+          client: makeDevice(-14, -4, { label: `Mobile / Web User`, tags: [{ text: `HTTPS`, icon: `globe` }] }),
+          apigw: makeBlock(-4, -4, { s: 4.2, h: 48, color: `orange`, glyph: `route`, label: [`API Gateway`], sub: `HTTP /api/v1` }),
+          lambda: makeBlock(5, -4, { s: 4.2, h: 48, color: `yellow`, glyph: `zap`, label: [`AWS Lambda`], sub: `Stateless Fn` }),
+          ddb: makeDb(14, -4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
         },
         links: {
-          c_gw: h(`client`, `apigw`, [`client`, `apigw`], { heads: `both` }),
-          gw_l: h(`apigw`, `lambda`, [`apigw`, `lambda`], { heads: `both` }),
-          l_db: h(`lambda`, `ddb`, [`lambda`, `ddb`], { heads: `both` }),
+          c_gw: makeLink(`client`, `apigw`, [`client`, `apigw`], { heads: `both` }),
+          gw_l: makeLink(`apigw`, `lambda`, [`apigw`, `lambda`], { heads: `both` }),
+          l_db: makeLink(`lambda`, `ddb`, [`lambda`, `ddb`], { heads: `both` }),
         },
         flows: [
           { route: [`c_gw`, `gw_l`, `l_db`], bounce: true, rate: 2.5 },
@@ -283,18 +265,18 @@ export const awsServerlessLesson = {
       },
       scene: {
         entities: {
-          sfn: d(-14, -8, { s: 4.4, h: 50, color: `purple`, glyph: `workflow`, label: [`Step Functions`], sub: `Standard Saga` }),
-          lam: d(0, -8, { s: 4.4, h: 50, color: `yellow`, glyph: `zap`, label: [`Lambda (Prov)`], sub: `0ms Cold Start` }),
-          rds: b(15, -8, { r: 2.2, h: 48, color: `blue`, label: [`RDS Proxy`], sub: `Pooled Conns` }),
-          card: S({ x: -12, y: 12 }, `6. Lambda Concurrency & RDS Proxy`, [
+          sfn: makeBlock(-14, -8, { s: 4.4, h: 50, color: `purple`, glyph: `workflow`, label: [`Step Functions`], sub: `Standard Saga` }),
+          lam: makeBlock(0, -8, { s: 4.4, h: 50, color: `yellow`, glyph: `zap`, label: [`Lambda (Prov)`], sub: `0ms Cold Start` }),
+          rds: makeDb(15, -8, { r: 2.2, h: 48, color: `blue`, label: [`RDS Proxy`], sub: `Pooled Conns` }),
+          card: makePanel({ x: -12, y: 12 }, `Lambda Concurrency & RDS Proxy`, [
             `// Reserved Concurrency: caps max instances (protects RDS)`,
             `// Provisioned Concurrency: keeps warm microVMs (0ms cold start)`,
             `// RDS Proxy: pools thousands of Lambda connections to Postgres`,
           ], { icon: `terminal` }),
         },
         links: {
-          sfn_lam: h(`sfn`, `lam`, [`sfn`, `lam`], { heads: `end`, label: `invoke` }),
-          lam_rds: h(`lam`, `rds`, [`lam`, `rds`], { heads: `end`, label: `pooled SQL` }),
+          sfn_lam: makeLink(`sfn`, `lam`, [`sfn`, `lam`], { heads: `end`, label: `invoke` }),
+          lam_rds: makeLink(`lam`, `rds`, [`lam`, `rds`], { heads: `end`, label: `pooled SQL` }),
         },
         flows: [
           { route: [`sfn_lam`, `lam_rds`], bounce: false, rate: 2.0 },

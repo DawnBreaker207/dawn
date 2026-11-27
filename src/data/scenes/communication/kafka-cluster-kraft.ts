@@ -1,257 +1,246 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeLink, makePanel, makeQueue } from '@/lib/simulator/scene-builders';
+
+// One cluster for the whole lesson: a producer on top, three brokers in a row,
+// each holding one partition of `orders` (the amber log hanging below it), and a
+// consumer under each log. Metadata first lives in ZooKeeper (right), then moves
+// into the brokers themselves as a KRaft quorum.
+//
+//                 producer
+//        broker-0  broker-1  broker-2      ZooKeeper
+//         log p0    log p1    log p2
+//       consumer  consumer  consumer
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+const B = { b0: [-9.3, -5], b1: [-3.1, 1.1], b2: [3, 7.3] } as const;
+const C = { c0: [2.1, -16.4], c1: [8.3, -10.3], c2: [14.4, -4.1] } as const;
+type BrokerId = keyof typeof B;
+type ConsumerId = keyof typeof C;
+
+const producer = (tags: Tag[] = []) =>
+  makeBlock(-15.3, 13.3, { s: 4.4, h: 48, color: `blue`, glyph: `send`, label: [`Producer`], sub: `orders app`, tags });
+const broker = (id: BrokerId, tags: Tag[] = [], o: Opts = {}) =>
+  makeBlock(B[id][0], B[id][1], { s: 4.6, h: 52, color: `slab`, glyph: `server`, label: [`broker-${id[1]}`], sub: `partition ${id[1]}`, tags, ...o });
+/** Partition log hanging in front of its broker; it grows downward on screen. */
+const log = (id: BrokerId, n: number) => makeQueue(B[id][0] + 2.6, B[id][1] - 2.6, n, [0.62, -0.62]);
+const consumer = (id: ConsumerId, o: Opts = {}) =>
+  makeBlock(C[id][0], C[id][1], { s: 4.2, h: 46, color: `green`, glyph: `inbox`, label: [`consumer`], sub: `group: billing`, ...o });
+const zk = (tags: Tag[] = []) =>
+  makeBlock(-4.3, 20, { s: 4.4, h: 50, color: `yellow`, glyph: `layers`, label: [`ZooKeeper`], sub: `3-node ensemble`, tags });
+
+const send = (id: BrokerId, o: Opts = {}) => makeLink(`producer`, id, [`producer`, id], o);
+const read = (b: BrokerId, c: ConsumerId) => makeLink(b, c, [b, c]);
+
+const L = {
+  p0: send(`b0`),
+  p1: send(`b1`),
+  p2: send(`b2`),
+  r0: read(`b0`, `c0`),
+  r1: read(`b1`, `c1`),
+  r2: read(`b2`, `c2`),
+  // single consumer reading every partition (before the group scales out)
+  r0x: makeLink(`b0`, `c1`, [`b0`, `c1`]),
+  r2x: makeLink(`b2`, `c1`, [`b2`, `c1`]),
+  zkCtl: makeLink(`b2`, `zk`, [`b2`, `zk`], { heads: `both` }),
+  // KRaft: brokers fetch the metadata log from the active controller (broker-1)
+  meta0: makeLink(`b0`, `b1`, [`b0`, `b1`], { heads: `both`, style: `dashed` }),
+  meta2: makeLink(`b2`, `b1`, [`b2`, `b1`], { heads: `both`, style: `dashed` }),
+};
+
+const card = (title: string, lines: string[], icon: string) =>
+  makePanel({ x: -9.3, y: -5, z: 0, dx: -250, dy: -170 }, title, lines, { icon });
+
+const allBrokers = (tags: Partial<Record<BrokerId, Tag[]>> = {}, o: Partial<Record<BrokerId, Opts>> = {}) => ({
+  b0: broker(`b0`, tags.b0, o.b0),
+  b1: broker(`b1`, tags.b1, o.b1),
+  b2: broker(`b2`, tags.b2, o.b2),
+});
+const logs = (n0: number, n1: number, n2: number) => ({ l0: log(`b0`, n0), l1: log(`b1`, n1), l2: log(`b2`, n2) });
+const group = () => ({ c0: consumer(`c0`), c1: consumer(`c1`), c2: consumer(`c2`) });
+const produceAll = (rate = 1.4) => ({ routes: [{ path: [`p0`] }, { path: [`p1`] }, { path: [`p2`] }], kind: `msg`, rate });
+const readAll = (rate = 1.2) => ({ routes: [{ path: [`r0`] }, { path: [`r1`] }, { path: [`r2`] }], kind: `msg`, rate });
 
 export const kafkaClusterKraftLesson = {
-  id: 'kafka-cluster-kraft',
-  title: 'Apache Kafka Architecture: Partitions & KRaft Consensus',
-  summary: 'Inside modern Kafka: partition log sharding, producers, and the retirement of ZooKeeper in favor of the high-speed KRaft metadata quorum.',
+  id: `kafka-cluster-kraft`,
+  title: `Apache Kafka Architecture: Partitions & KRaft Consensus`,
+  summary: `Inside a Kafka cluster: a topic split into partition logs across brokers, keyed producers, consumer groups — and the move from ZooKeeper to the KRaft metadata quorum.`,
   minutes: 14,
-  level: 'intermediate',
-  metrics: ['consensus_mode', 'topic_partitions', 'metadata_latency', 'cluster_brokers'],
-  legend: ['req', 'res', ['ping', 'partition flow'], 'fail'],
+  level: `intermediate`,
+  metrics: [`partitions`, `throughput`, `consumers`, `failover`],
+  legend: [`req`, [`msg`, `record`], [`ping`, `metadata`], `fail`],
   goals: [
-    { text: 'Kafka distributed partition log design', step: 1 },
-    { text: 'Why ZooKeeper was replaced by', step: 2 },
-    { text: 'KRaft metadata quorum and the', step: 3 },
-    { text: 'Producer partition routing strategies', step: 4 },
-    { text: 'Sub-second active controller leader', step: 6 },
+    { text: `A topic is a distributed, partitioned log`, step: 2 },
+    { text: `How producers pick a partition`, step: 3 },
+    { text: `Consumer groups split the partitions`, step: 4 },
+    { text: `Why ZooKeeper became a bottleneck`, step: 5 },
+    { text: `The KRaft metadata quorum`, step: 6 },
+    { text: `Fast controller failover`, step: 7 },
   ],
   steps: [
     {
-      short: 'Why Kafka?',
-      chapter: 'setup',
-      title: 'The Distributed Commit Log Paradigm',
+      short: `A log`,
+      chapter: `setup`,
+      title: `Kafka is a log, not a queue`,
       body: [
-        'Traditional message queues (RabbitMQ, SQS) delete messages once acknowledged. <b>Apache Kafka</b> is built on a fundamentally different concept: an immutable, append-only <b>Distributed Commit Log</b>.',
-        'Messages are retained for days, weeks, or indefinitely. Multiple independent consumer systems read the log at their own pace without removing messages, enabling event streaming at millions of records per second.'
+        `A producer appends <b>records</b> to a topic. A broker stores them in order in an append-only <span class="term">log</span> and gives each one an <b>offset</b>: 0, 1, 2…`,
+        `Reading doesn’t remove anything. A consumer just remembers the offset it reached, so many consumers can read the same records — or re-read last week’s.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'In Kafka, reading a message does not mutate state. Consumers simply advance an offset pointer.'
-      },
-      metrics: { consensus_mode: 'KRaft Native', topic_partitions: '3 Partitions', metadata_latency: 'Sub-ms', cluster_brokers: '3 Brokers' },
+      metrics: { partitions: 1, throughput: 50000, consumers: 1, failover: null },
       scene: {
-        entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Order App', tags: [{ text: '100,000 Events/s', icon: 'zap' }] }),
-          broker: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Kafka Broker 1', 'Topic: orders'], sub: 'Immutable Append Log' }),
-          card: S({ x: -2, y: 14 }, 'Queue vs Distributed Commit Log', [
-            'Traditional Queue (RabbitMQ):',
-            '  - Message removed once consumed -> One-to-one delivery',
-            'Kafka Distributed Log:',
-            '  - Messages appended to immutable disk log with strict offset',
-            '  - Billing, Analytics, and Fraud check all read same log independently',
-            '  - Consumers can rewind offset to replay history!'
-          ], { icon: 'listOrdered' })
-        },
-        links: {
-          pb: h('producer', 'broker', ['producer', 'broker'], { heads: 'end', label: 'Append Records' })
-        },
-        flows: [{ route: ['pb'], bounce: false, rate: 2.8 }]
-      }
-    },
-    {
-      short: 'Partitions & Ordering',
-      chapter: 'technique',
-      title: 'Topic Partitions: The Unit of Parallelism',
-      body: [
-        'A Kafka Topic is split into multiple <b>Partitions</b> distributed across different physical brokers.',
-        '<b>Ordering is strictly guaranteed within a single partition, NOT across the entire topic</b>. By hashing a partition key (e.g. <code>hash(order_id)</code>), all events for that specific order land on the same partition in exact chronological sequence.'
-      ],
-      callout: {
-        kind: 'tip',
-        text: 'Adding partitions increases parallelism: 10 partitions can be consumed simultaneously by 10 consumer instances.'
-      },
-      metrics: { consensus_mode: 'KRaft Native', topic_partitions: 'Partitions 0, 1, 2', metadata_latency: '1ms', cluster_brokers: '3 Brokers' },
-      scene: {
-        entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Producer', tags: [{ text: 'hash(order_id)', icon: 'zap' }] }),
-          p0: d(6, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'layers', label: ['Partition 0 (Broker 1)', 'Offsets: 0..9420'], sub: 'Order #100 events' }),
-          p1: d(6, -2, { s: 4.4, h: 52, color: 'teal', glyph: 'layers', label: ['Partition 1 (Broker 2)', 'Offsets: 0..8112'], sub: 'Order #101 events' }),
-          p2: d(6, 6, { s: 4.4, h: 52, color: 'purple', glyph: 'layers', label: ['Partition 2 (Broker 3)', 'Offsets: 0..9050'], sub: 'Order #102 events' }),
-          card: S({ x: -2, y: 16 }, 'Partition Ordering Law', [
-            'Rule 1: Events within Partition 0 are strictly ordered (Offset 0, 1, 2...)',
-            'Rule 2: No order guarantee between Partition 0 and Partition 1',
-            'To guarantee customer event order: Use customerId as message key!',
-            'All events for customer A land on same partition in exact order'
-          ], { icon: 'layers' })
-        },
-        links: {
-          pp0: h('producer', 'p0', ['producer', 'p0'], { heads: 'end' }),
-          pp1: h('producer', 'p1', ['producer', 'p1'], { heads: 'end' }),
-          pp2: h('producer', 'p2', ['producer', 'p2'], { heads: 'end' })
-        },
+        entities: { producer: producer(), b1: broker(`b1`), l1: log(`b1`, 6), c1: consumer(`c1`, { tags: [{ text: `at offset 5`, icon: `bookmark` }] }) },
+        links: { p1: L.p1, r1: L.r1 },
         flows: [
-          { route: ['pp0'], bounce: false, rate: 1.8 },
-          { route: ['pp1'], bounce: false, rate: 1.8 },
-          { route: ['pp2'], bounce: false, rate: 1.8 }
-        ]
-      }
+          { route: [`p1`], kind: `msg`, rate: 1.4 },
+          { route: [`r1`], kind: `msg`, rate: 1.2 },
+        ],
+      },
     },
     {
-      short: 'ZooKeeper Flaw',
-      chapter: 'problem',
-      title: 'The ZooKeeper Bottleneck (Why KIP-500 Was Born)',
+      short: `Partitions`,
+      chapter: `technique`,
+      title: `Partitions spread one topic over many brokers`,
       body: [
-        'In legacy Kafka, cluster metadata (topics, partitions, replicas, ACLs) was stored in an external Apache ZooKeeper cluster.',
-        'ZooKeeper had severe limitations: 1. Maximum 200,000 partitions per cluster.<br>2. When the active controller broker died, loading all metadata from ZooKeeper took <b>several minutes</b>, stalling the entire enterprise pipeline.'
+        `One log on one machine has a ceiling. So a topic is split into <span class="term">partitions</span> — here 3 — and each partition lives on a different broker. Writes to different partitions happen in parallel.`,
+        `Order is guaranteed <b>within</b> a partition, not across them. Offsets are per partition: partition 0 and partition 2 both have an offset 5.`,
       ],
-      callout: {
-        kind: 'alert',
-        text: 'ZooKeeper was a foreign dependency requiring separate JVM tuning, security configurations, and operational overhead.'
-      },
-      metrics: { consensus_mode: 'Legacy ZooKeeper', topic_partitions: 'Capped at 200k', metadata_latency: '150s Failover!', cluster_brokers: 'Dual Systems' },
+      changes: [`+ broker-0, broker-2`, `~ orders: 1 → 3 partitions`],
+      metrics: { partitions: 3, throughput: 150000, consumers: 1, failover: null },
       scene: {
-        entities: {
-          zk: d(-8, -4, { s: 4.6, h: 52, color: 'rose', glyph: 'database', label: ['External ZooKeeper', 'Metadata Bottleneck'], sub: 'Slow Full-State Sync' }),
-          broker: d(8, 4, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Kafka Controller', 'JVM Memory Rebuild'], sub: 'Stalled 3 minutes on reboot' }),
-          card: S({ x: 0, y: 14 }, 'ZooKeeper Flaws', [
-            '1. Dual-system operational burden (Kafka cluster + ZK cluster)',
-            '2. Partition ceiling: Cannot exceed 200,000 partitions',
-            '3. Controller failover latency: Controller had to scan ZK tree on boot',
-            'Solution: KIP-500 (Kafka Raft Metadata Mode - KRaft)!'
-          ], { icon: 'alert' })
-        },
-        links: {
-          zb: h('zk', 'broker', ['zk', 'broker'], { heads: 'both', label: 'Slow ZNode RPCs' })
-        },
-        flows: [{ route: ['zb'], bounce: true, rate: 1.2 }]
-      }
+        entities: { producer: producer(), ...allBrokers(), ...logs(5, 6, 4), c1: consumer(`c1`, { tags: [{ text: `reads all 3`, tone: `amber`, icon: `hourglass` }] }) },
+        links: { p0: L.p0, p1: L.p1, p2: L.p2, r1: L.r1, r0x: L.r0x, r2x: L.r2x },
+        flows: [produceAll(), { routes: [{ path: [`r0x`] }, { path: [`r1`] }, { path: [`r2x`] }], kind: `msg`, rate: 1 }],
+      },
     },
     {
-      short: 'KRaft Consensus',
-      chapter: 'technique',
-      title: 'Modern Kafka: KRaft (Kafka Raft Consensus)',
+      short: `Keys`,
+      chapter: `technique`,
+      title: `The key decides the partition`,
       body: [
-        'Starting in Kafka 3.3+, ZooKeeper is completely removed. Metadata is managed natively using an event-driven Raft consensus algorithm called <b>KRaft</b>.',
-        'Metadata changes are stored as records in a special internal topic: <code>@metadata</code>. All brokers replicate this log in real time and maintain an in-memory snapshot of cluster state, scaling to millions of partitions.'
+        `A record with a key goes to <code>hash(key) % partitions</code>, so every event for <code>user-42</code> lands in the same partition and stays in order.`,
+        `Records without a key use the <span class="term">sticky partitioner</span>: fill one batch for one partition, then switch. Bigger batches mean fewer requests and better compression.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'KRaft handles millions of partitions per cluster with sub-second controller failovers.'
-      },
-      metrics: { consensus_mode: 'KRaft Native Quorum', topic_partitions: 'Millions of Partitions', metadata_latency: '< 20ms', cluster_brokers: 'Unified Cluster' },
+      changes: [`~ key user-42 → always partition 1`],
+      metrics: { partitions: 3, throughput: 180000, consumers: 1, failover: null },
       scene: {
         entities: {
-          c1: d(-8, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'shield', label: ['KRaft Leader', 'Active Controller'], sub: 'Appends to @metadata' }),
-          c2: d(8, -4, { s: 4.4, h: 52, color: 'orange', glyph: 'shield', label: ['KRaft Follower', 'Controller 2'], sub: 'In-Memory State Synced' }),
-          broker: d(0, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Data Broker', 'Zero ZooKeeper'], sub: 'Replicates @metadata log' }),
-          card: S({ x: -2, y: 16 }, 'KRaft Architecture (KIP-500)', [
-            '1. Raft consensus quorum elected among Kafka controller nodes',
-            '2. Cluster metadata stored as standard Kafka records in @metadata log',
-            '3. Zero polling: State changes streamed directly to all brokers',
-            '4. Eliminates external ZooKeeper entirely (Single binary deployment)'
-          ], { icon: 'check' })
+          producer: producer([{ text: `key user-42 → p1`, tone: `violet`, icon: `key` }]),
+          ...allBrokers({ b1: [{ text: `user-42 in order`, tone: `green` }] }),
+          ...logs(5, 7, 4),
+          c1: consumer(`c1`),
+          card: card(`producer`, [`producer.send(new ProducerRecord<>(`, `    "orders", "user-42", orderJson));`, `# murmur2("user-42") % 3 = 1 → partition 1`, `props.put("linger.ms", "10");  // fill batches`], `code`),
         },
-        links: {
-          c12: h('c1', 'c2', ['c1', 'c2'], { heads: 'both', label: 'Raft Consensus' }),
-          c1b: h('c1', 'broker', ['c1', 'broker'], { heads: 'end', label: '@metadata sync' })
-        },
-        flows: [
-          { route: ['c12'], bounce: true, rate: 2.0 },
-          { route: ['c1b'], bounce: false, rate: 2.5 }
-        ]
-      }
+        links: { p0: L.p0, p1: L.p1, p2: L.p2, r1: L.r1, r0x: L.r0x, r2x: L.r2x },
+        flows: [{ route: [`p1`], kind: `msg`, rate: 2.2 }, { routes: [{ path: [`p0`] }, { path: [`p2`] }], kind: `msg`, rate: 0.8 }],
+      },
     },
     {
-      short: 'Producer Partitioner',
-      chapter: 'deep',
-      title: 'Producer Partitioning & The Sticky Partitioner',
+      short: `Group`,
+      chapter: `solution`,
+      title: `A consumer group splits the partitions`,
       body: [
-        'When a producer calls <code>send(record)</code>, the partitioner determines which partition receives the message.',
-        '• <b>Keyed messages:</b> <code>MurmurHash2(key) % numPartitions</code> guarantees all keys with the same ID land together.<br>• <b>Non-keyed messages:</b> The <b>Sticky Partitioner</b> batches records to fill one partition buffer before switching to the next, maximizing compression and network throughput.'
+        `One consumer can’t keep up with three partitions. Start more with the same <code>group.id</code> and Kafka assigns each partition to exactly <b>one</b> member — here one each.`,
+        `That is the scaling limit too: a 4th consumer in this group would sit idle, because there are only 3 partitions. Choose the partition count with future consumers in mind.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'The Sticky Partitioner (KIP-480) reduces latency by 50% on non-keyed streams by eliminating tiny 1-message network packets.'
-      },
-      metrics: { consensus_mode: 'KRaft', topic_partitions: 'Optimized Batch', metadata_latency: 'Sub-ms', cluster_brokers: 'Sticky Batch' },
+      changes: [`+ 2 consumers in group billing`, `~ 1 partition per consumer`],
+      metrics: { partitions: 3, throughput: 180000, consumers: 3, failover: null },
       scene: {
-        entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Producer App', tags: [{ text: 'Sticky Batching 16KB', icon: 'zap' }] }),
-          broker: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Kafka Broker', 'Batch Ingestion'], sub: 'Full 16KB RecordBatches' }),
-          card: S({ x: -2, y: 14 }, 'Producer Batching Parameters', [
-            '- batch.size: 16384 (16 KB buffer per partition)',
-            '- linger.ms: 20 (Wait up to 20ms to fill the batch)',
-            '- compression.type: zstd or lz4 (Compresses entire batch)',
-            'Result: Massive network throughput increase with minimal CPU'
-          ], { icon: 'layers' })
-        },
-        links: {
-          pb: h('producer', 'broker', ['producer', 'broker'], { heads: 'end', label: 'Compressed RecordBatches' })
-        },
-        flows: [{ route: ['pb'], bounce: false, rate: 3.2 }]
-      }
+        entities: { producer: producer(), ...allBrokers(), ...logs(4, 5, 4), ...group() },
+        links: { p0: L.p0, p1: L.p1, p2: L.p2, r0: L.r0, r1: L.r1, r2: L.r2 },
+        flows: [produceAll(), readAll(1.6)],
+      },
     },
     {
-      short: 'Controller Failover',
-      chapter: 'solution',
-      title: 'KRaft Sub-Second Controller Failover',
+      short: `ZooKeeper`,
+      chapter: `problem`,
+      title: `Cluster metadata used to live outside Kafka`,
       body: [
-        'In KRaft, every controller node already holds the complete cluster metadata in memory by continuously tailing the <code>@metadata</code> log.',
-        'When the active controller crashes, the remaining controller nodes run a Raft leader election. The new leader takes over immediately in <b>less than 200 milliseconds</b> because there is zero metadata reload delay!'
+        `Who leads each partition, which brokers are alive, topic configs — that <b>metadata</b> lived in a separate <span class="term">ZooKeeper</span> ensemble. One broker was elected controller and pushed changes to the others.`,
+        `Two systems to run and secure, and a slow path: after a controller crash, the new one had to load all metadata from ZooKeeper first. With hundreds of thousands of partitions that took minutes.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Controller failover time dropped from 3 minutes in ZooKeeper to 200 milliseconds in KRaft.'
-      },
-      metrics: { consensus_mode: 'KRaft Failover', topic_partitions: 'Millions Safe', metadata_latency: '180ms Takeover!', cluster_brokers: 'Zero Downtime' },
+      changes: [`+ ZooKeeper (external)`, `~ broker-2 = controller`],
+      metrics: { partitions: 3, throughput: 180000, consumers: 3, failover: `~2 min` },
       scene: {
         entities: {
-          deadC1: d(-8, -4, { s: 4.4, h: 52, color: 'rose', glyph: 'shield', label: ['Old Leader C1 (FAIL)', 'Heartbeat Missed'], sub: 'Dead' }),
-          newC2: d(8, 4, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Elected Leader C2', 'NEW CONTROLLER'], sub: 'Takes over in 180ms!' }),
-          card: S({ x: 0, y: 14 }, 'KRaft Failover Sequence', [
-            '1. Controller C1 misses heartbeat timeout (heartbeat.interval.ms)',
-            '2. Controller C2 starts Raft election: votes granted by quorum',
-            '3. C2 has already replicated @metadata log: State is 100% current!',
-            '4. Total failover time: < 200 ms (Zero ZooKeeper reload lag)'
-          ], { icon: 'zap' })
+          producer: producer(),
+          ...allBrokers({ b2: [{ text: `controller`, tone: `amber`, icon: `flag` }] }),
+          ...logs(4, 5, 4),
+          ...group(),
+          zk: zk([{ text: `200k partitions max`, tone: `red` }]),
         },
-        links: {
-          dc: h('deadC1', 'newC2', ['deadC1', 'newC2'], { heads: 'end', label: 'Raft Takeover' })
-        },
-        flows: [{ route: ['dc'], bounce: false, rate: 2.0 }]
-      }
+        links: { p0: L.p0, p1: L.p1, p2: L.p2, r0: L.r0, r1: L.r1, r2: L.r2, zkCtl: L.zkCtl },
+        flows: [produceAll(1), readAll(1.2), { route: [`zkCtl`], kind: `ping`, rate: 1.2, bounce: true }],
+      },
     },
     {
-      short: 'Summary Matrix',
-      chapter: 'solution',
-      title: 'Kafka Production Cluster Architecture',
+      short: `KRaft`,
+      chapter: `solution`,
+      title: `KRaft: Kafka stores its own metadata`,
       body: [
-        'A production KRaft cluster runs combined or dedicated broker and controller nodes.',
-        'Producers publish to partition leaders, followers replicate the log, consumers read via consumer groups, and KRaft controllers maintain the global topology state seamlessly.'
+        `Since Kafka 3.3 (and only option in 4.0), metadata is itself a Kafka log, <code>__cluster_metadata</code>, replicated with <span class="term">Raft</span> among controller nodes. ZooKeeper is gone.`,
+        `One controller is active; the others are voters holding a full, up-to-date copy. Brokers simply fetch new metadata records like any follower. Here the three brokers also run as controllers (combined mode); large clusters use dedicated controller nodes.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Deploy 3 dedicated KRaft controller nodes alongside your data broker fleet for maximum cluster stability.'
-      },
-      metrics: { consensus_mode: 'KRaft Production', topic_partitions: '1,000,000', metadata_latency: 'Sub-ms', cluster_brokers: 'Enterprise Ready' },
+      changes: [`− ZooKeeper`, `+ KRaft quorum: 3 voters`, `~ broker-1 = active controller`],
+      metrics: { partitions: 3, throughput: 180000, consumers: 3, failover: `< 1 s` },
       scene: {
         entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Producers', tags: [{ text: 'Zstd Batches', icon: 'zap' }] }),
-          kraftQuorum: d(-2, -4, { s: 4.8, h: 50, color: 'orange', glyph: 'shield', label: ['KRaft Quorum (3x)', 'Metadata Controllers'], sub: '@metadata log' }),
-          brokers: d(8, -4, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Data Broker Pool', 'Partitions 0..N'], sub: 'Zero-Copy Storage' }),
-          card: S({ x: -2, y: 14 }, 'Kafka Architecture Checklist', [
-            '- Protocol: Binary TCP on port 9092',
-            '- Storage: Append-only disk segments + OS PageCache',
-            '- Consensus: KRaft metadata quorum (ZooKeeper deprecated)',
-            '- Consumer offsets: Stored in __consumer_offsets topic'
-          ], { icon: 'check' })
+          producer: producer(),
+          ...allBrokers({
+            b0: [{ text: `voter`, tone: `violet` }],
+            b1: [{ text: `active controller`, tone: `violet`, icon: `flag` }],
+            b2: [{ text: `voter`, tone: `violet` }],
+          }),
+          ...logs(4, 5, 4),
+          ...group(),
+          card: card(`server.properties`, [`process.roles=broker,controller`, `controller.quorum.voters=`, `  0@b0:9093,1@b1:9093,2@b2:9093`, `$ kafka-metadata-quorum.sh describe --status`, `= LeaderId: 1  CurrentVoters: [0,1,2]`], `settings`),
         },
-        links: {
-          pk: h('producer', 'brokers', ['producer', 'brokers'], { heads: 'end' }),
-          kb: h('kraftQuorum', 'brokers', ['kraftQuorum', 'brokers'], { heads: 'both' })
+        links: { p0: L.p0, p1: L.p1, p2: L.p2, r0: L.r0, r1: L.r1, r2: L.r2, meta0: L.meta0, meta2: L.meta2 },
+        flows: [produceAll(1), readAll(1.2), { routes: [{ path: [`meta0`] }, { path: [`meta2`] }], kind: `ping`, rate: 1 }],
+      },
+    },
+    {
+      short: `Failover`,
+      chapter: `technique`,
+      title: `The controller dies — a voter takes over`,
+      body: [
+        `broker-1 crashes. The remaining voters notice missed heartbeats, hold a Raft election and broker-0 becomes the active controller — it already has the whole metadata log, so there is nothing to reload.`,
+        `It then moves leadership of partition 1 to a surviving replica (covered in the replication lesson). Takeover is well under a second instead of minutes.`,
+      ],
+      changes: [`− broker-1 down`, `~ broker-0 = active controller`],
+      metrics: { partitions: 3, throughput: 120000, consumers: 3, failover: `180 ms` },
+      scene: {
+        entities: {
+          producer: producer(),
+          ...allBrokers(
+            { b0: [{ text: `active controller`, tone: `violet`, icon: `flag` }], b2: [{ text: `voter`, tone: `violet` }] },
+            { b1: DEAD_STATE },
+          ),
+          ...logs(5, 5, 5),
+          ...group(),
         },
-        flows: [
-          { route: ['pk'], bounce: false, rate: 3.0 },
-          { route: ['kb'], bounce: true, rate: 1.5 }
-        ]
-      }
-    }
-  ]
+        links: { p0: L.p0, p1: { ...L.p1, fail: 1 }, p2: L.p2, r0: L.r0, r1: { ...L.r1, style: `off` }, r2: L.r2 },
+        flows: [{ routes: [{ path: [`p0`] }, { path: [`p2`] }], kind: `msg`, rate: 1.2 }, { routes: [{ path: [`r0`] }, { path: [`r2`] }], kind: `msg`, rate: 1.2 }],
+      },
+    },
+    {
+      short: `Recap`,
+      chapter: `recap`,
+      title: `One system, many logs`,
+      body: [
+        `A topic is a set of partition logs spread over brokers. Keys pick the partition and keep per-key order; consumer groups divide partitions among members.`,
+        `Even the cluster’s own metadata is a replicated log now. KRaft removes ZooKeeper, scales to millions of partitions and fails over in milliseconds.`,
+      ],
+      metrics: { partitions: 3, throughput: 180000, consumers: 3, failover: `< 1 s` },
+      scene: {
+        entities: {
+          producer: producer(),
+          ...allBrokers({ b1: [{ text: `active controller`, tone: `violet`, icon: `flag` }] }),
+          ...logs(5, 6, 5),
+          ...group(),
+        },
+        links: { p0: L.p0, p1: L.p1, p2: L.p2, r0: L.r0, r1: L.r1, r2: L.r2, meta0: L.meta0, meta2: L.meta2 },
+        flows: [produceAll(), readAll(1.4), { routes: [{ path: [`meta0`] }, { path: [`meta2`] }], kind: `ping`, rate: 0.6 }],
+      },
+    },
+  ],
 };

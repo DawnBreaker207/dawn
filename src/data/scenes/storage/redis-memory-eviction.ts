@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const redisMemoryEvictionLesson = {
@@ -38,9 +36,9 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'noeviction', used_memory: '4.0 GB / 4.0 GB', evicted_keys_sec: '0', frag_ratio: '1.02' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET user:99 (OOM!)', tone: 'red', icon: 'alert' }] }),
-          redis: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis RAM Core', '100% Saturated (4GB)'], sub: 'noeviction: Rejecting writes' }),
-          card: S({ x: -2, y: 14 }, 'OOM Error Response', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET user:99 (OOM!)', tone: 'red', icon: 'alert' }] }),
+          redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis RAM Core', '100% Saturated (4GB)'], sub: 'noeviction: Rejecting writes' }),
+          card: makePanel({ x: -2, y: 14 }, 'OOM Error Response', [
             'Client -> SET new_session "data"',
             'Server -> (error) OOM command not allowed when used memory > maxmemory',
             'Read commands (GET, HGET) still succeed!',
@@ -48,7 +46,7 @@ export const redisMemoryEvictionLesson = {
           ], { icon: 'alert' })
         },
         links: {
-          cr: h('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'Rejected Write' })
+          cr: makeLink('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'Rejected Write' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 1.5 }]
       }
@@ -68,9 +66,9 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'allkeys-lru', used_memory: '4.0 GB (Stable)', evicted_keys_sec: '1,200/s', frag_ratio: '1.04' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET writes continuous', tone: 'green', icon: 'zap' }] }),
-          redis: d(6, 8, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Redis Engine', 'allkeys-lru Active'], sub: 'Evicting stale keys' }),
-          card: S({ x: -2, y: 14 }, '8 Policy Matrix', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET writes continuous', tone: 'green', icon: 'zap' }] }),
+          redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Redis Engine', 'allkeys-lru Active'], sub: 'Evicting stale keys' }),
+          card: makePanel({ x: -2, y: 14 }, '8 Policy Matrix', [
             '+------------------+------------------------------------------------+',
             '| Policy           | Description                                    |',
             '+------------------+------------------------------------------------+',
@@ -83,7 +81,7 @@ export const redisMemoryEvictionLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          cr: h('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'Continuous Throughput' })
+          cr: makeLink('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'Continuous Throughput' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 2.8 }]
       }
@@ -103,9 +101,9 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'Approximated LRU', used_memory: '4.0 GB', evicted_keys_sec: '2,400/s', frag_ratio: '1.02' },
       scene: {
         entities: {
-          keyspace: d(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'database', label: ['Redis Keyspace', '10M Total Keys'], sub: 'Random sample 5 keys' }),
-          pool: d(8, 4, { s: 4.8, h: 50, color: 'orange', glyph: 'layers', label: ['Eviction Pool (16 slots)', 'Sorted by Idle Time'], sub: 'Evicts oldest idle key' }),
-          card: S({ x: 0, y: 14 }, 'Approximated LRU Sampling', [
+          keyspace: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'database', label: ['Redis Keyspace', '10M Total Keys'], sub: 'Random sample 5 keys' }),
+          pool: makeBlock(8, 4, { s: 4.8, h: 50, color: 'orange', glyph: 'layers', label: ['Eviction Pool (16 slots)', 'Sorted by Idle Time'], sub: 'Evicts oldest idle key' }),
+          card: makePanel({ x: 0, y: 14 }, 'Approximated LRU Sampling', [
             '1. Randomly pick 5 keys from keyspace',
             '2. Idle time = current_time_clock - robj->lru',
             '3. Insert into 16-element Eviction Pool (sorted ascending by idle time)',
@@ -114,7 +112,7 @@ export const redisMemoryEvictionLesson = {
           ], { icon: 'refresh' })
         },
         links: {
-          kp: h('keyspace', 'pool', ['keyspace', 'pool'], { heads: 'end', label: '5 Random Samples' })
+          kp: makeLink('keyspace', 'pool', ['keyspace', 'pool'], { heads: 'end', label: '5 Random Samples' })
         },
         flows: [{ route: ['kp'], bounce: false, rate: 2.2 }]
       }
@@ -134,9 +132,9 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'allkeys-lfu', used_memory: '4.0 GB', evicted_keys_sec: '1,800/s', frag_ratio: '1.03' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Access hot key', icon: 'zap' }] }),
-          lfuNode: d(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'layers', label: ['LFU 24-bit Field', 'LDT:16 | LOG_C:8'], sub: 'Freq: 42 (Probabilistic)' }),
-          card: S({ x: -2, y: 14 }, 'LFU 8-Bit Counter Math', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Access hot key', icon: 'zap' }] }),
+          lfuNode: makeBlock(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'layers', label: ['LFU 24-bit Field', 'LDT:16 | LOG_C:8'], sub: 'Freq: 42 (Probabilistic)' }),
+          card: makePanel({ x: -2, y: 14 }, 'LFU 8-Bit Counter Math', [
             'Increment formula:',
             '  double r = (double)rand() / RAND_MAX;',
             '  double p = 1.0 / (baseval * lfu_log_factor + 1);',
@@ -146,7 +144,7 @@ export const redisMemoryEvictionLesson = {
           ], { icon: 'trendingUp' })
         },
         links: {
-          cl: h('client', 'lfuNode', ['client', 'lfuNode'], { heads: 'both', label: 'LFU Increment' })
+          cl: makeLink('client', 'lfuNode', ['client', 'lfuNode'], { heads: 'both', label: 'LFU Increment' })
         },
         flows: [{ route: ['cl'], bounce: true, rate: 2.5 }]
       }
@@ -166,10 +164,10 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'Active + Passive', used_memory: 'Filtered', evicted_keys_sec: 'Expired: 450/s', frag_ratio: '1.02' },
       scene: {
         entities: {
-          client: y(-12, -6, { form: 'phone', label: 'Client', tags: [{ text: 'GET expired_key -> nil', icon: 'search' }] }),
-          cron: d(0, -6, { s: 4.4, h: 52, color: 'purple', glyph: 'clock', label: ['serverCron (10Hz)', 'Active Sampling'], sub: 'Checks 20 random keys' }),
-          expires: d(8, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['db[0].expires Dict', 'Key -> Expiry Timestamp'], sub: 'Lazy deleted on access' }),
-          card: S({ x: -2, y: 14 }, 'Active Expiration Cycle (activeExpireCycle)', [
+          client: makeDevice(-12, -6, { form: 'phone', label: 'Client', tags: [{ text: 'GET expired_key -> nil', icon: 'search' }] }),
+          cron: makeBlock(0, -6, { s: 4.4, h: 52, color: 'purple', glyph: 'clock', label: ['serverCron (10Hz)', 'Active Sampling'], sub: 'Checks 20 random keys' }),
+          expires: makeBlock(8, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['db[0].expires Dict', 'Key -> Expiry Timestamp'], sub: 'Lazy deleted on access' }),
+          card: makePanel({ x: -2, y: 14 }, 'Active Expiration Cycle (activeExpireCycle)', [
             '1. Sample 20 random keys from db->expires dict',
             '2. Delete all keys that have passed current timestamp',
             '3. If more than 5 keys (25%) were expired in the sample:',
@@ -178,8 +176,8 @@ export const redisMemoryEvictionLesson = {
           ], { icon: 'clock' })
         },
         links: {
-          cg: h('client', 'expires', ['client', 'expires'], { heads: 'both' }),
-          ce: h('cron', 'expires', ['cron', 'expires'], { heads: 'end', label: '10Hz Sample' })
+          cg: makeLink('client', 'expires', ['client', 'expires'], { heads: 'both' }),
+          ce: makeLink('cron', 'expires', ['cron', 'expires'], { heads: 'end', label: '10Hz Sample' })
         },
         flows: [
           { route: ['cg'], bounce: true, rate: 1.5 },
@@ -202,9 +200,9 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'Jemalloc Allocator', used_memory: '8.0 GB', evicted_keys_sec: '0', frag_ratio: '1.65 (High!)' },
       scene: {
         entities: {
-          osRam: d(-8, -4, { s: 4.6, h: 52, color: 'rose', glyph: 'server', label: ['OS Physical RAM', '12 GB Allocated (RSS)'], sub: 'Holes in memory chunks' }),
-          data: d(8, 4, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Actual Redis Data', '8 GB In-Use'], sub: 'Fragmentation: 1.65' }),
-          card: S({ x: 0, y: 14 }, 'Fragmentation Causes', [
+          osRam: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'rose', glyph: 'server', label: ['OS Physical RAM', '12 GB Allocated (RSS)'], sub: 'Holes in memory chunks' }),
+          data: makeBlock(8, 4, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Actual Redis Data', '8 GB In-Use'], sub: 'Fragmentation: 1.65' }),
+          card: makePanel({ x: 0, y: 14 }, 'Fragmentation Causes', [
             '1. Random key deletions create non-contiguous free memory holes',
             '2. Jemalloc memory chunk size class rounding',
             '3. OS cannot reclaim physical pages unless entire 4KB page is empty',
@@ -213,7 +211,7 @@ export const redisMemoryEvictionLesson = {
           ], { icon: 'alert' })
         },
         links: {
-          od: h('osRam', 'data', ['osRam', 'data'], { heads: 'both', label: 'Memory Gap (4GB Holes)' })
+          od: makeLink('osRam', 'data', ['osRam', 'data'], { heads: 'both', label: 'Memory Gap (4GB Holes)' })
         },
         flows: [{ route: ['od'], bounce: true, rate: 1.8 }]
       }
@@ -233,8 +231,8 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'activedefrag yes', used_memory: '8.0 GB', evicted_keys_sec: 'Defragging', frag_ratio: '1.08 (Optimal)' },
       scene: {
         entities: {
-          defrag: d(0, 0, { s: 5.2, h: 52, color: 'green', glyph: 'refresh', label: ['Active Defragmenter', 'Jemalloc Compaction'], sub: 'Frag Ratio: 1.65 -> 1.08' }),
-          card: S({ x: -2, y: 14 }, 'Active Defrag Configuration', [
+          defrag: makeBlock(0, 0, { s: 5.2, h: 52, color: 'green', glyph: 'refresh', label: ['Active Defragmenter', 'Jemalloc Compaction'], sub: 'Frag Ratio: 1.65 -> 1.08' }),
+          card: makePanel({ x: -2, y: 14 }, 'Active Defrag Configuration', [
             'CONFIG SET activedefrag yes',
             'active-defrag-ignore-bytes 100mb',
             'active-defrag-threshold-lower 10  (Trigger at 1.10 ratio)',

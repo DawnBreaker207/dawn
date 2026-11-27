@@ -1,47 +1,30 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCrowd,
+  makeDb,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const lt = { x0: -4.5, x1: 4.5, y0: -18, y1: -12 };
 
-const ut = (e = `20,000 users`) => p(lt, 13, e);
+const ut = (e = `20,000 users`) => makeCrowd(lt, 13, e);
 
-const dt = () => d(0, -3, { label: [`App`, `Server`] });
+const dt = () => makeBlock(0, -3, { label: [`App`, `Server`] });
 
-const ft = (e = {}) => b(11, -3, { label: `database`, ...e });
+const ft = (e = {}) => makeDb(11, -3, { label: `database`, ...e });
 
 const pt = (e = {}) =>
-    d(-11, -3, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `in memory`, ...e });
+    makeBlock(-11, -3, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `in memory`, ...e });
 
 const mt = {
-    us: h(`users`, `app`, [`users`, `app`], { heads: `both` }),
-    sd: h(`app`, `db`, [`app`, `db`], { heads: `both` }),
-    sc: h(`app`, `cache`, [`app`, `cache`], { heads: `both` }),
+    us: makeLink(`users`, `app`, [`users`, `app`], { heads: `both` }),
+    sd: makeLink(`app`, `db`, [`app`, `db`], { heads: `both` }),
+    sc: makeLink(`app`, `cache`, [`app`, `cache`], { heads: `both` }),
   };
 
-const ht = (e, t, n) => S({ x: 11, y: -3, z: 0, dx: 30, dy: -250 }, e, t, { icon: n });
+const ht = (e, t, n) => makePanel({ x: 11, y: -3, z: 0, dx: 30, dy: -250 }, e, t, { icon: n });
 
 const gt = (e, t = 4) => [
     {

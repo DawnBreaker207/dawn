@@ -1,6 +1,4 @@
-// @ts-nocheck
-/* eslint-disable */
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock,makeDb,makeLink,makePanel } from '@/lib/simulator/scene-builders';
 
 export const k8sStorageCsiLesson = {
   id: 'k8s-storage-csi',

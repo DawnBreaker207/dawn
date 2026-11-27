@@ -1,27 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 // ============================================================================
@@ -74,13 +55,13 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          s3_std: b(-10, -4, { r: 1.8, h: 32, label: `S3 Standard ($0.023/GB)`, color: `green` }),
-          s3_ia: b(0, 0, { r: 1.8, h: 32, label: `S3 Standard-IA ($0.0125/GB)`, color: `yellow` }),
-          s3_glacier: b(10, 4, { r: 1.8, h: 32, label: `Glacier Deep ($0.00099/GB)`, color: `blue` }),
+          s3_std: makeDb(-10, -4, { r: 1.8, h: 32, label: `S3 Standard ($0.023/GB)`, color: `green` }),
+          s3_ia: makeDb(0, 0, { r: 1.8, h: 32, label: `S3 Standard-IA ($0.0125/GB)`, color: `yellow` }),
+          s3_glacier: makeDb(10, 4, { r: 1.8, h: 32, label: `Glacier Deep ($0.00099/GB)`, color: `blue` }),
         },
         links: {
-          t1: h(`s3_std`, `s3_ia`, [`s3_std`, `s3_ia`], { heads: `end`, label: `30 days` }),
-          t2: h(`s3_ia`, `s3_glacier`, [`s3_ia`, `s3_glacier`], { heads: `end`, label: `90 days` }),
+          t1: makeLink(`s3_std`, `s3_ia`, [`s3_std`, `s3_ia`], { heads: `end`, label: `30 days` }),
+          t2: makeLink(`s3_ia`, `s3_glacier`, [`s3_ia`, `s3_glacier`], { heads: `end`, label: `90 days` }),
         },
         flows: [
           { route: [`t1`], bounce: false, rate: 1.0 },
@@ -115,13 +96,13 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          ec2_1: d(-11, -6, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
-          ec2_2: d(11, -6, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
-          efs: d(0, 8, { s: 4.4, h: 48, color: `orange`, glyph: `folder`, label: [`Amazon EFS`], sub: `Shared POSIX` }),
+          ec2_1: makeBlock(-11, -6, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
+          ec2_2: makeBlock(11, -6, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
+          efs: makeBlock(0, 8, { s: 4.4, h: 48, color: `orange`, glyph: `folder`, label: [`Amazon EFS`], sub: `Shared POSIX` }),
         },
         links: {
-          m1: h(`ec2_1`, `efs`, [`ec2_1`, `efs`], { heads: `both`, label: `NFS Mount` }),
-          m2: h(`ec2_2`, `efs`, [`ec2_2`, `efs`], { heads: `both`, label: `NFS Mount` }),
+          m1: makeLink(`ec2_1`, `efs`, [`ec2_1`, `efs`], { heads: `both`, label: `NFS Mount` }),
+          m2: makeLink(`ec2_2`, `efs`, [`ec2_2`, `efs`], { heads: `both`, label: `NFS Mount` }),
         },
         flows: [
           { route: [`m1`], bounce: true, rate: 1.5 },
@@ -159,20 +140,20 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          writer: b(-15, -8, { r: 2.2, h: 48, label: ['Aurora Writer'], sub: 'Primary AZ-1a', color: `purple` }),
-          storageVol: b(0, -8, { r: 2.3, h: 50, label: ['Shared Storage'], sub: '6x / 3 AZs', color: `cyan` }),
-          reader1: b(15, -16, { r: 2.1, h: 46, label: ['Read Replica 1'], sub: 'AZ-1b (<10ms)', color: `blue` }),
-          reader2: b(15, 0, { r: 2.1, h: 46, label: ['Read Replica 2'], sub: 'AZ-1c (<10ms)', color: `blue` }),
-          card: S({ x: -12, y: 12 }, `3. Aurora Cluster Endpoints & Quorum`, [
+          writer: makeDb(-15, -8, { r: 2.2, h: 48, label: ['Aurora Writer'], sub: 'Primary AZ-1a', color: `purple` }),
+          storageVol: makeDb(0, -8, { r: 2.3, h: 50, label: ['Shared Storage'], sub: '6x / 3 AZs', color: `cyan` }),
+          reader1: makeDb(15, -16, { r: 2.1, h: 46, label: ['Read Replica 1'], sub: 'AZ-1b (<10ms)', color: `blue` }),
+          reader2: makeDb(15, 0, { r: 2.1, h: 46, label: ['Read Replica 2'], sub: 'AZ-1c (<10ms)', color: `blue` }),
+          card: makePanel({ x: -12, y: 12 }, `Aurora Cluster Endpoints & Quorum`, [
             `// Writer Endpoint -> always routes to Primary (4/6 write quorum)`,
             `// Reader Endpoint -> load-balances across up to 15 Read Replicas`,
             `// Shared 6-way storage across 3 AZs -> <30s failover, zero data loss`,
           ], { icon: `terminal` }),
         },
         links: {
-          w_s: h(`writer`, `storageVol`, [`writer`, `storageVol`], { heads: `end`, label: `4/6 write` }),
-          s_r1: h(`storageVol`, `reader1`, [`storageVol`, `reader1`], { heads: `end`, label: `read` }),
-          s_r2: h(`storageVol`, `reader2`, [`storageVol`, `reader2`], { heads: `end`, label: `read` }),
+          w_s: makeLink(`writer`, `storageVol`, [`writer`, `storageVol`], { heads: `end`, label: `4/6 write` }),
+          s_r1: makeLink(`storageVol`, `reader1`, [`storageVol`, `reader1`], { heads: `end`, label: `read` }),
+          s_r2: makeLink(`storageVol`, `reader2`, [`storageVol`, `reader2`], { heads: `end`, label: `read` }),
         },
         flows: [
           { route: [`w_s`, `s_r1`], bounce: false, rate: 2.0 },
@@ -208,13 +189,13 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          app: d(-14, -4, { s: 4.8, h: 52, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
-          dax: d(0, 0, { s: 4.4, h: 48, color: `orange`, glyph: `zap`, label: [`DAX Cache`], sub: `In-Memory` }),
-          dynamo: b(14, 4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
+          app: makeBlock(-14, -4, { s: 4.8, h: 52, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
+          dax: makeBlock(0, 0, { s: 4.4, h: 48, color: `orange`, glyph: `zap`, label: [`DAX Cache`], sub: `In-Memory` }),
+          dynamo: makeDb(14, 4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
         },
         links: {
-          a_dax: h(`app`, `dax`, [`app`, `dax`], { heads: `both`, label: `Cache Hit (<1ms)` }),
-          dax_ddb: h(`dax`, `dynamo`, [`dax`, `dynamo`], { heads: `both`, label: `Cache Miss (4ms)` }),
+          a_dax: makeLink(`app`, `dax`, [`app`, `dax`], { heads: `both`, label: `Cache Hit (<1ms)` }),
+          dax_ddb: makeLink(`dax`, `dynamo`, [`dax`, `dynamo`], { heads: `both`, label: `Cache Miss (4ms)` }),
         },
         flows: [
           { route: [`a_dax`], bounce: true, rate: 3.0 },
@@ -248,13 +229,13 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          app: d(-14, -4, { s: 4.4, h: 48, color: `teal`, glyph: `server`, label: [`API Cluster`] }),
-          redis: d(0, 0, { s: 4.4, h: 48, color: `rose`, glyph: `zap`, label: [`ElastiCache`], sub: `Redis Cluster` }),
-          db: b(14, 4, { r: 2.2, h: 36, label: `Primary Aurora DB`, color: `purple` }),
+          app: makeBlock(-14, -4, { s: 4.4, h: 48, color: `teal`, glyph: `server`, label: [`API Cluster`] }),
+          redis: makeBlock(0, 0, { s: 4.4, h: 48, color: `rose`, glyph: `zap`, label: [`ElastiCache`], sub: `Redis Cluster` }),
+          db: makeDb(14, 4, { r: 2.2, h: 36, label: `Primary Aurora DB`, color: `purple` }),
         },
         links: {
-          ar: h(`app`, `redis`, [`app`, `redis`], { heads: `both`, label: `Cache-Aside (0.8ms)` }),
-          ad: h(`app`, `db`, [`app`, `db`], { heads: `both`, label: `DB Fallback on Miss`, style: `dashed` }),
+          ar: makeLink(`app`, `redis`, [`app`, `redis`], { heads: `both`, label: `Cache-Aside (0.8ms)` }),
+          ad: makeLink(`app`, `db`, [`app`, `db`], { heads: `both`, label: `DB Fallback on Miss`, style: `dashed` }),
         },
         flows: [
           { route: [`ar`], bounce: true, rate: 2.5 },
@@ -286,18 +267,18 @@ export const awsStorageDbLesson = {
       },
       scene: {
         entities: {
-          srcS3: b(-14, -8, { r: 2.2, h: 48, color: `orange`, label: [`Source S3`], sub: `Versioning ON` }),
-          lock: d(0, -8, { s: 4.4, h: 50, color: `purple`, glyph: `shield`, label: [`Object Lock`], sub: `WORM Lock` }),
-          drS3: b(15, -8, { r: 2.2, h: 48, color: `green`, label: [`DR Bucket`], sub: `CRR Replica` }),
-          card: S({ x: -12, y: 12 }, `6. S3 Object Lock (Governance vs Compliance)`, [
+          srcS3: makeDb(-14, -8, { r: 2.2, h: 48, color: `orange`, label: [`Source S3`], sub: `Versioning ON` }),
+          lock: makeBlock(0, -8, { s: 4.4, h: 50, color: `purple`, glyph: `shield`, label: [`Object Lock`], sub: `WORM Lock` }),
+          drS3: makeDb(15, -8, { r: 2.2, h: 48, color: `green`, label: [`DR Bucket`], sub: `CRR Replica` }),
+          card: makePanel({ x: -12, y: 12 }, `S3 Object Lock (Governance vs Compliance)`, [
             `// Governance Mode: special IAM permission can override/delete`,
             `// Compliance Mode: NOBODY (even root) can delete until retain-until`,
             `// Prerequisite: Versioning MUST be enabled on source & target`,
           ], { icon: `terminal` }),
         },
         links: {
-          s_lk: h(`srcS3`, `lock`, [`srcS3`, `lock`], { heads: `end`, label: `WORM seal` }),
-          lk_dr: h(`lock`, `drS3`, [`lock`, `drS3`], { heads: `end`, label: `CRR copy` }),
+          s_lk: makeLink(`srcS3`, `lock`, [`srcS3`, `lock`], { heads: `end`, label: `WORM seal` }),
+          lk_dr: makeLink(`lock`, `drS3`, [`lock`, `drS3`], { heads: `end`, label: `CRR copy` }),
         },
         flows: [
           { route: [`s_lk`, `lk_dr`], bounce: false, rate: 1.8 },

@@ -1,12 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makeZone as x,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 export const angularIvyIncrementalDomLesson = {
@@ -41,9 +38,9 @@ export const angularIvyIncrementalDomLesson = {
       metrics: { compilerTarget: 'Incremental DOM', vdomAllocation: '0 objects / tick', treeShaking: '100% Tree-shakable', memoryFootprint: 'Ultra low' },
       scene: {
         entities: {
-          templateAst: y(-16, -6, { label: 'Template', tags: [{ text: 'HTML AST', tone: 'blue', icon: 'zap' }] }),
-          ivyCompiler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'VDOM vs iDOM Architecture', [
+          templateAst: makeDevice(-16, -6, { label: 'Template', tags: [{ text: 'HTML AST', tone: 'blue', icon: 'zap' }] }),
+          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'VDOM vs iDOM Architecture', [
             `Virtual DOM (React):`,
             `  render() -> generates JS VNode objects -> diff trees -> patch DOM`,
             `  Memory: Allocates new objects on every render cycle.`,
@@ -54,7 +51,7 @@ export const angularIvyIncrementalDomLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ti: h('templateAst', 'ivyCompiler', ['templateAst', 'ivyCompiler'], { label: 'compile template' }),
+          ti: makeLink('templateAst', 'ivyCompiler', ['templateAst', 'ivyCompiler'], { label: 'compile template' }),
         },
         flows: [{ route: ['ti'], kind: 'code', rate: 1.5 }],
       },
@@ -75,10 +72,10 @@ export const angularIvyIncrementalDomLesson = {
       metrics: { compilerTarget: 'Static Function', vdomAllocation: '0 objects', treeShaking: 'Functional opcodes', memoryFootprint: 'Minimal' },
       scene: {
         entities: {
-          templateAst: y(-16, -6, { label: 'Template', tags: [{ text: 'HTML AST', tone: 'blue', icon: 'zap' }] }),
-          ivyCompiler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
-          instructions: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['ɵcmp.template'], sub: 'executable ops' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Compiled Ivy Template Function', [
+          templateAst: makeDevice(-16, -6, { label: 'Template', tags: [{ text: 'HTML AST', tone: 'blue', icon: 'zap' }] }),
+          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
+          instructions: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['ɵcmp.template'], sub: 'executable ops' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Compiled Ivy Template Function', [
             `function AppComponent_Template(rf, ctx) {`,
             `  if (rf & 1) { // Creation Mode`,
             `    ɵɵelementStart(0, "h1");`,
@@ -93,8 +90,8 @@ export const angularIvyIncrementalDomLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ti: h('templateAst', 'ivyCompiler', ['templateAst', 'ivyCompiler'], { label: 'parse HTML tokens' }),
-          ii: h('ivyCompiler', 'instructions', ['ivyCompiler', 'instructions'], { label: 'emit opcodes' }),
+          ti: makeLink('templateAst', 'ivyCompiler', ['templateAst', 'ivyCompiler'], { label: 'parse HTML tokens' }),
+          ii: makeLink('ivyCompiler', 'instructions', ['ivyCompiler', 'instructions'], { label: 'emit opcodes' }),
         },
         flows: [{ route: ['ti', 'ii'], kind: 'code', rate: 1.5 }],
       },
@@ -116,10 +113,10 @@ export const angularIvyIncrementalDomLesson = {
       metrics: { compilerTarget: 'Bitmask Branching', vdomAllocation: '0 objects', treeShaking: 'Active', memoryFootprint: 'Zero branch waste' },
       scene: {
         entities: {
-          ivyCompiler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
-          instructions: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['RenderFlags'], sub: 'rf bitmask' }),
-          realDomNode: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Update Branch'], sub: 'dynamic pass' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'RenderFlags Bitmask Logic', [
+          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
+          instructions: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['RenderFlags'], sub: 'rf bitmask' }),
+          realDomNode: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Update Branch'], sub: 'dynamic pass' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'RenderFlags Bitmask Logic', [
             `enum RenderFlags {`,
             `  Create = 1 << 0, // 1 (binary 01)`,
             `  Update = 1 << 1  // 2 (binary 10)`,
@@ -130,8 +127,8 @@ export const angularIvyIncrementalDomLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ii: h('ivyCompiler', 'instructions', ['ivyCompiler', 'instructions'], { label: 'emit bitmask' }),
-          ir: h('instructions', 'realDomNode', ['instructions', 'realDomNode'], { label: 'execute update pass' }),
+          ii: makeLink('ivyCompiler', 'instructions', ['ivyCompiler', 'instructions'], { label: 'emit bitmask' }),
+          ir: makeLink('instructions', 'realDomNode', ['instructions', 'realDomNode'], { label: 'execute update pass' }),
         },
         flows: [{ route: ['ii', 'ir'], kind: 'code', rate: 1.5 }],
       },
@@ -152,10 +149,10 @@ export const angularIvyIncrementalDomLesson = {
       metrics: { compilerTarget: 'Slot Array (LView)', vdomAllocation: '0 objects', treeShaking: 'In-place write', memoryFootprint: 'Flat Array' },
       scene: {
         entities: {
-          instructions: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['ɵɵadvance(1)'], sub: 'slot pointer' }),
-          realDomNode: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Real DOM H1'], sub: 'in-place write' }),
-          flatHeapProfile: d(-4, 8, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['LView Slots'], sub: 'slot array' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Slot Mutation Mechanics', [
+          instructions: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['ɵɵadvance(1)'], sub: 'slot pointer' }),
+          realDomNode: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Real DOM H1'], sub: 'in-place write' }),
+          flatHeapProfile: makeBlock(-4, 8, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['LView Slots'], sub: 'slot array' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Slot Mutation Mechanics', [
             `LView array at runtime:`,
             `  LView[0] = HTMLHeadingElement (<h1>)`,
             `  LView[1] = TextNode ("Hello World")`,
@@ -166,8 +163,8 @@ export const angularIvyIncrementalDomLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ir: h('instructions', 'realDomNode', ['instructions', 'realDomNode'], { label: 'select slot' }),
-          rf: h('realDomNode', 'flatHeapProfile', ['realDomNode', 'flatHeapProfile'], { label: 'write native property' }),
+          ir: makeLink('instructions', 'realDomNode', ['instructions', 'realDomNode'], { label: 'select slot' }),
+          rf: makeLink('realDomNode', 'flatHeapProfile', ['realDomNode', 'flatHeapProfile'], { label: 'write native property' }),
         },
         flows: [{ route: ['ir', 'rf'], kind: 'dom', rate: 1.5 }],
       },
@@ -188,10 +185,10 @@ export const angularIvyIncrementalDomLesson = {
       metrics: { compilerTarget: 'Tree-Shaken Opcodes', vdomAllocation: '0 objects', treeShaking: '100% Stripped', memoryFootprint: '14 KB baseline' },
       scene: {
         entities: {
-          instructions: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Ivy Opcodes'], sub: 'exported fns' }),
-          realDomNode: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Used Opcodes'], sub: 'element, text' }),
-          leanFramework: d(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Runtime'], sub: 'tree-shaken' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Opcode Tree-Shaking Output', [
+          instructions: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Ivy Opcodes'], sub: 'exported fns' }),
+          realDomNode: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Used Opcodes'], sub: 'element, text' }),
+          leanFramework: makeBlock(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Runtime'], sub: 'tree-shaken' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Opcode Tree-Shaking Output', [
             `@angular/core export inventory:`,
             `  [USED]     ɵɵelementStart`,
             `  [USED]     ɵɵtext`,
@@ -202,8 +199,8 @@ export const angularIvyIncrementalDomLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ni: h('instructions', 'realDomNode', ['instructions', 'realDomNode'], { label: 'analyze references' }),
-          rl: h('realDomNode', 'leanFramework', ['realDomNode', 'leanFramework'], { label: 'bundle used only' }),
+          ni: makeLink('instructions', 'realDomNode', ['instructions', 'realDomNode'], { label: 'analyze references' }),
+          rl: makeLink('realDomNode', 'leanFramework', ['realDomNode', 'leanFramework'], { label: 'bundle used only' }),
         },
         flows: [{ route: ['ni', 'rl'], kind: 'code', rate: 1.6 }],
       },
@@ -224,12 +221,12 @@ export const angularIvyIncrementalDomLesson = {
       metrics: { compilerTarget: 'Production Ivy', vdomAllocation: '0 KB churn', treeShaking: 'Optimal', memoryFootprint: 'Flat Memory Line' },
       scene: {
         entities: {
-          templateAst: y(-16, -6, { label: 'WebSocket', tags: [{ text: '60Hz stream', tone: 'blue', icon: 'zap' }] }),
-          ivyCompiler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Runtime'], sub: 'slot mutate' }),
-          realDomNode: b(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Real DOM H1'], sub: 'in-place write' }),
-          flatHeapProfile: d(-4, 8, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['Zero GC Pauses'], sub: 'zero GC pause' }),
-          leanFramework: d(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Runtime'], sub: 'tree-shaken' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Memory Profiler Timeline', [
+          templateAst: makeDevice(-16, -6, { label: 'WebSocket', tags: [{ text: '60Hz stream', tone: 'blue', icon: 'zap' }] }),
+          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Runtime'], sub: 'slot mutate' }),
+          realDomNode: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Real DOM H1'], sub: 'in-place write' }),
+          flatHeapProfile: makeBlock(-4, 8, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['Zero GC Pauses'], sub: 'zero GC pause' }),
+          leanFramework: makeBlock(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Runtime'], sub: 'tree-shaken' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Memory Profiler Timeline', [
             `Browser DevTools Memory Timeline (60 seconds):`,
             `  Virtual DOM: Sawtooth pattern (allocating 50MB -> GC freeze 30ms)`,
             `  Incremental DOM: Flat line (0MB churn -> zero GC freezes)`,
@@ -237,9 +234,9 @@ export const angularIvyIncrementalDomLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ti: h('templateAst', 'ivyCompiler', ['templateAst', 'ivyCompiler'], { label: '60Hz data push' }),
-          ir: h('ivyCompiler', 'realDomNode', ['ivyCompiler', 'realDomNode'], { label: 'in-place mutate' }),
-          rf: h('realDomNode', 'flatHeapProfile', ['realDomNode', 'flatHeapProfile'], { label: 'zero allocation' }),
+          ti: makeLink('templateAst', 'ivyCompiler', ['templateAst', 'ivyCompiler'], { label: '60Hz data push' }),
+          ir: makeLink('ivyCompiler', 'realDomNode', ['ivyCompiler', 'realDomNode'], { label: 'in-place mutate' }),
+          rf: makeLink('realDomNode', 'flatHeapProfile', ['realDomNode', 'flatHeapProfile'], { label: 'zero allocation' }),
         },
         flows: [{ route: ['ti', 'ir', 'rf'], kind: 'clean', rate: 1.6 }],
       },

@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const redisDataStructuresLesson = {
@@ -38,9 +36,9 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'redisObject', encoding: 'OBJ_ENCODING_RAW', time_complexity: 'O(1)', memory_efficiency: '16B Overhead' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET key "val"', icon: 'zap' }] }),
-          robj: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['redisObject (robj)', '16-Byte Header'], sub: 'type: 4b | enc: 4b | ptr: 8B' }),
-          card: S({ x: -2, y: 14 }, 'struct redisObject Definition', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET key "val"', icon: 'zap' }] }),
+          robj: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['redisObject (robj)', '16-Byte Header'], sub: 'type: 4b | enc: 4b | ptr: 8B' }),
+          card: makePanel({ x: -2, y: 14 }, 'struct redisObject Definition', [
             'struct redisObject {',
             '  unsigned type:4;      // OBJ_STRING, OBJ_HASH, OBJ_LIST...',
             '  unsigned encoding:4;  // OBJ_ENCODING_RAW, EMBSTR, LISTPACK...',
@@ -51,7 +49,7 @@ export const redisDataStructuresLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          cr: h('client', 'robj', ['client', 'robj'], { heads: 'both', label: 'Payload Pointer' })
+          cr: makeLink('client', 'robj', ['client', 'robj'], { heads: 'both', label: 'Payload Pointer' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 2.2 }]
       }
@@ -71,9 +69,9 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'sdshdr8', encoding: 'OBJ_ENCODING_EMBSTR', time_complexity: 'O(1) strlen', memory_efficiency: 'Pre-allocated' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'STRLEN user:name', icon: 'zap' }] }),
-          sds: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'folder', label: ['SDS Struct (sdshdr8)', 'Contiguous Memory'], sub: 'len: 4 | alloc: 8 | buf[]' }),
-          card: S({ x: -2, y: 14 }, 'Why SDS Trumps C char*', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'STRLEN user:name', icon: 'zap' }] }),
+          sds: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'folder', label: ['SDS Struct (sdshdr8)', 'Contiguous Memory'], sub: 'len: 4 | alloc: 8 | buf[]' }),
+          card: makePanel({ x: -2, y: 14 }, 'Why SDS Trumps C char*', [
             '1. O(1) Length: Reads len directly from header (Zero scanning)',
             '2. Safe Concatenation: Automatically expands buffer before appending',
             '3. Binary Safe: Can contain \\0 characters (Protobuf / JPEG binary)',
@@ -82,7 +80,7 @@ export const redisDataStructuresLesson = {
           ], { icon: 'check' })
         },
         links: {
-          cs: h('client', 'sds', ['client', 'sds'], { heads: 'both', label: 'Instant O(1)' })
+          cs: makeLink('client', 'sds', ['client', 'sds'], { heads: 'both', label: 'Instant O(1)' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.8 }]
       }
@@ -102,10 +100,10 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'dict (ht[0] + ht[1])', encoding: 'Chained Hash Table', time_complexity: 'O(1) Amortized', memory_efficiency: 'Dynamic' },
       scene: {
         entities: {
-          dict: d(-8, -4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['dict Controller', 'rehashidx: 42'], sub: 'Progressive Migration' }),
-          ht0: d(6, -10, { s: 4.4, h: 52, color: 'purple', glyph: 'layers', label: ['ht[0] (Old Table)', 'Size: 1,024 Buckets'], sub: 'Draining buckets' }),
-          ht1: d(6, 4, { s: 4.4, h: 52, color: 'green', glyph: 'layers', label: ['ht[1] (New Table)', 'Size: 2,048 Buckets'], sub: 'Receiving keys' }),
-          card: S({ x: -2, y: 14 }, 'Progressive Rehash Process', [
+          dict: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['dict Controller', 'rehashidx: 42'], sub: 'Progressive Migration' }),
+          ht0: makeBlock(6, -10, { s: 4.4, h: 52, color: 'purple', glyph: 'layers', label: ['ht[0] (Old Table)', 'Size: 1,024 Buckets'], sub: 'Draining buckets' }),
+          ht1: makeBlock(6, 4, { s: 4.4, h: 52, color: 'green', glyph: 'layers', label: ['ht[1] (New Table)', 'Size: 2,048 Buckets'], sub: 'Receiving keys' }),
+          card: makePanel({ x: -2, y: 14 }, 'Progressive Rehash Process', [
             '1. Table grows: malloc(ht[1], size * 2)',
             '2. rehashidx = 0 (Rehash active)',
             '3. On every client command: Migrate 1 bucket from ht[0] to ht[1]',
@@ -114,9 +112,9 @@ export const redisDataStructuresLesson = {
           ], { icon: 'refresh' })
         },
         links: {
-          dh0: h('dict', 'ht0', ['dict', 'ht0'], { heads: 'both' }),
-          dh1: h('dict', 'ht1', ['dict', 'ht1'], { heads: 'both' }),
-          mig: h('ht0', 'ht1', ['ht0', 'ht1'], { heads: 'end', label: 'Progressive Bucket Transfer' })
+          dh0: makeLink('dict', 'ht0', ['dict', 'ht0'], { heads: 'both' }),
+          dh1: makeLink('dict', 'ht1', ['dict', 'ht1'], { heads: 'both' }),
+          mig: makeLink('ht0', 'ht1', ['ht0', 'ht1'], { heads: 'end', label: 'Progressive Bucket Transfer' })
         },
         flows: [
           { route: ['dh0'], bounce: true, rate: 1.5 },
@@ -139,9 +137,9 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'listpack / intset', encoding: 'OBJ_ENCODING_LISTPACK', time_complexity: 'O(N) Small N (N<=512)', memory_efficiency: 'Ultra High (Zero Ptrs)' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'HSET user:10 name "Sam"', icon: 'zap' }] }),
-          lp: d(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'folder', label: ['Listpack Block', 'Contiguous Memory Array'], sub: 'Total bytes | Entries | Elements' }),
-          card: S({ x: -2, y: 14 }, 'Listpack Memory Layout', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'HSET user:10 name "Sam"', icon: 'zap' }] }),
+          lp: makeBlock(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'folder', label: ['Listpack Block', 'Contiguous Memory Array'], sub: 'Total bytes | Entries | Elements' }),
+          card: makePanel({ x: -2, y: 14 }, 'Listpack Memory Layout', [
             '[<tot-bytes> <num-elements> <entry 1> <entry 2> ... <end-byte 0xFF>]',
             'Entry structure:',
             '  [encoding | data-bytes | backlen]',
@@ -151,7 +149,7 @@ export const redisDataStructuresLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          clp: h('client', 'lp', ['client', 'lp'], { heads: 'both', label: 'Compact Byte Scan' })
+          clp: makeLink('client', 'lp', ['client', 'lp'], { heads: 'both', label: 'Compact Byte Scan' })
         },
         flows: [{ route: ['clp'], bounce: true, rate: 2.5 }]
       }
@@ -171,9 +169,9 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'quicklist', encoding: 'OBJ_ENCODING_QUICKLIST', time_complexity: 'O(1) Head / Tail', memory_efficiency: 'Hybrid Compressed' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Queue Producer', tags: [{ text: 'LPUSH / RPOP', icon: 'zap' }] }),
-          ql: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'layers', label: ['Quicklist Container', 'Doubly-Linked Chunks'], sub: 'Node 1 (LP) <-> Node 2 (LP)' }),
-          card: S({ x: -2, y: 14 }, 'Quicklist Structure', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Queue Producer', tags: [{ text: 'LPUSH / RPOP', icon: 'zap' }] }),
+          ql: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'layers', label: ['Quicklist Container', 'Doubly-Linked Chunks'], sub: 'Node 1 (LP) <-> Node 2 (LP)' }),
+          card: makePanel({ x: -2, y: 14 }, 'Quicklist Structure', [
             'Head Node [Listpack 8KB] <--> Middle Node [LZF Compressed] <--> Tail Node [Listpack 8KB]',
             '- Push and pop operations hit the uncompressed head/tail nodes in O(1)',
             '- Middle nodes are transparently compressed to save RAM',
@@ -181,7 +179,7 @@ export const redisDataStructuresLesson = {
           ], { icon: 'layers' })
         },
         links: {
-          cq: h('client', 'ql', ['client', 'ql'], { heads: 'both', label: 'Push / Pop Operations' })
+          cq: makeLink('client', 'ql', ['client', 'ql'], { heads: 'both', label: 'Push / Pop Operations' })
         },
         flows: [{ route: ['cq'], bounce: true, rate: 2.6 }]
       }
@@ -201,9 +199,9 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'Top-Level Strings', encoding: 'Fragmented RAW', time_complexity: 'O(1)', memory_efficiency: '80% Wasted Metadata' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'App Client', tags: [{ text: '10M Top-level Keys', tone: 'red', icon: 'alert' }] }),
-          db: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Fragmented RAM', 'Overhead: 1.2 GB'], sub: 'Payload: only 200MB!' }),
-          card: S({ x: -2, y: 14 }, 'Memory Breakdown for 1 String Key', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'App Client', tags: [{ text: '10M Top-level Keys', tone: 'red', icon: 'alert' }] }),
+          db: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Fragmented RAM', 'Overhead: 1.2 GB'], sub: 'Payload: only 200MB!' }),
+          card: makePanel({ x: -2, y: 14 }, 'Memory Breakdown for 1 String Key', [
             '- dictEntry (Hash table node): 24 bytes',
             '- key (SDS string): 16 bytes',
             '- val redisObject header: 16 bytes',
@@ -213,7 +211,7 @@ export const redisDataStructuresLesson = {
           ], { icon: 'alert' })
         },
         links: {
-          cd: h('client', 'db', ['client', 'db'], { heads: 'both', label: 'Metadata Bloat' })
+          cd: makeLink('client', 'db', ['client', 'db'], { heads: 'both', label: 'Metadata Bloat' })
         },
         flows: [{ route: ['cd'], bounce: true, rate: 2.0 }]
       }
@@ -233,9 +231,9 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'Hashed Buckets', encoding: 'OBJ_ENCODING_LISTPACK', time_complexity: 'O(1) Lookups', memory_efficiency: '75% RAM Saved' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Optimized App', tags: [{ text: 'HSET users:1 42 data', tone: 'green', icon: 'zap' }] }),
-          redis: d(6, 8, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Compact Redis Hash', '280 MB Total RAM'], sub: 'Listpack Encoded (500 fields)' }),
-          card: S({ x: -2, y: 14 }, 'Hash Bucketing Implementation', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Optimized App', tags: [{ text: 'HSET users:1 42 data', tone: 'green', icon: 'zap' }] }),
+          redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Compact Redis Hash', '280 MB Total RAM'], sub: 'Listpack Encoded (500 fields)' }),
+          card: makePanel({ x: -2, y: 14 }, 'Hash Bucketing Implementation', [
             'Function getBucket(userId):',
             '  bucketKey = "users:" + (userId / 500);',
             '  field = userId % 500;',
@@ -244,7 +242,7 @@ export const redisDataStructuresLesson = {
           ], { icon: 'zap' })
         },
         links: {
-          cr: h('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'Efficient Listpack Hash' })
+          cr: makeLink('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'Efficient Listpack Hash' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 3.2 }]
       }

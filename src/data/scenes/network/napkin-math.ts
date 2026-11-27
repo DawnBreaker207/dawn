@@ -1,27 +1,13 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeHot,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const ge = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
@@ -30,10 +16,10 @@ const _e = { x0: -8.5, x1: 8.5, y0: -12.5, y1: -2.5 };
 
 const ve = { x0: 12.5, x1: 20.5, y0: -13.5, y1: -2.5 };
 
-const ye = () => p(ge, 15, `10M daily users`);
+const ye = () => makeCrowd(ge, 15, `10M daily users`);
 
 const be = (e, t, n = `sparkles`) =>
-    S({ x: -8.5, y: -2.5, z: 0, dx: 150, dy: -205 }, e, t, { icon: n });
+    makePanel({ x: -8.5, y: -2.5, z: 0, dx: 150, dy: -205 }, e, t, { icon: n });
 
 const xe = [-6.4, -3.2, 0, 3.2, 6.4];
 
@@ -43,45 +29,45 @@ const Ce = () => {
     let e = {};
     return (
       xe.forEach((t, n) => {
-        ((e[Se[n]] = d(t, -9.6, { s: 2.8, h: 34, label: [], ...v(-1) })),
-          (e[`t${n}`] = d(t, -5.4, { s: 2.8, h: 34, label: [], ...v(-1) })));
+        ((e[Se[n]] = makeBlock(t, -9.6, { s: 2.8, h: 34, label: [], ...makeCool(-1) })),
+          (e[`t${n}`] = makeBlock(t, -5.4, { s: 2.8, h: 34, label: [], ...makeCool(-1) })));
       }),
       e
     );
   };
 
-const we = (e = {}) => ({ s0: d(0, -7.5, { label: [`One`, `server?`], ...e }) });
+const we = (e = {}) => ({ s0: makeBlock(0, -7.5, { label: [`One`, `server?`], ...e }) });
 
 const Te = () =>
     Object.fromEntries(
       [-10.2, -4.8].flatMap((e, t) =>
-        [11.5, 15.5].map((n, r) => [`d${t}${r}`, b(n, e, { r: 1.45, h: 30 })]),
+        [11.5, 15.5].map((n, r) => [`d${t}${r}`, makeDb(n, e, { r: 1.45, h: 30 })]),
       ),
     );
 
-const Ee = (e) => ({ u: h(`users`, `s0`, [`users`, `s0`], e) });
+const Ee = (e) => ({ u: makeLink(`users`, `s0`, [`users`, `s0`], e) });
 
-const De = { uw: h(`users`, `web`, [`users`, `web`]) };
+const De = { uw: makeLink(`users`, `web`, [`users`, `web`]) };
 
-const Oe = { w: h(`web`, `store`, [`web`, `store`]) };
+const Oe = { w: makeLink(`web`, `store`, [`web`, `store`]) };
 
 const ke = (e = !1) => ({
-    cdn: d(12, -21, { color: `green`, glyph: `globe`, label: [`CDN`] }),
+    cdn: makeBlock(12, -21, { color: `green`, glyph: `globe`, label: [`CDN`] }),
     ...(e
-      ? { cache: d(-14, -7.5, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `~21 GB` }) }
+      ? { cache: makeBlock(-14, -7.5, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `~21 GB` }) }
       : {}),
   });
 
 const Ae = {
-    sc: h(`store`, `cdn`, [`store`, [`store`, `cdn`], `cdn`], {
+    sc: makeLink(`store`, `cdn`, [`store`, [`store`, `cdn`], `cdn`], {
       style: `dashed`,
       label: `cache fill`,
       labelAt: 0.3,
     }),
-    cu: h(`cdn`, `users`, [`cdn`, `users`], { label: `images · ~16 Gbit/s`, labelAt: 0.5 }),
+    cu: makeLink(`cdn`, `users`, [`cdn`, `users`], { label: `images · ~16 Gbit/s`, labelAt: 0.5 }),
   };
 
-const je = { wc: h(`web`, `cache`, [`web`, `cache`], { heads: `both` }) };
+const je = { wc: makeLink(`web`, `cache`, [`web`, `cache`], { heads: `both` }) };
 
 const Me = be(
     `The brief`,
@@ -178,7 +164,7 @@ export const napkinMathLesson = {
         scene: {
           entities: {
             users: ye(),
-            ...we(_(1)),
+            ...we(makeHot(1)),
           },
           links: Ee({ fail: 0.35 }),
           flows: [{ route: [`u`], rate: 6.5 }],
@@ -201,7 +187,7 @@ export const napkinMathLesson = {
         scene: {
           entities: {
             users: ye(),
-            web: x(_e, `WEB TIER · 10 SERVERS`),
+            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
             ...Ce(),
             card: be(
               `Servers`,
@@ -235,9 +221,9 @@ export const napkinMathLesson = {
         scene: {
           entities: {
             users: ye(),
-            web: x(_e, `WEB TIER · 10 SERVERS`),
+            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
             ...Ce(),
-            store: x(ve, `STORAGE`),
+            store: makeZone(ve, `STORAGE`),
             ...Te(),
             card: be(
               `Storage`,
@@ -274,9 +260,9 @@ export const napkinMathLesson = {
         scene: {
           entities: {
             users: ye(),
-            web: x(_e, `WEB TIER · 10 SERVERS`),
+            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
             ...Ce(),
-            store: x(ve, `STORAGE`),
+            store: makeZone(ve, `STORAGE`),
             ...Te(),
             ...ke(),
             card: be(
@@ -315,12 +301,12 @@ export const napkinMathLesson = {
         scene: {
           entities: {
             users: ye(),
-            web: x(_e, `WEB TIER · 10 SERVERS`),
+            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
             ...Ce(),
-            store: x(ve, `STORAGE`),
+            store: makeZone(ve, `STORAGE`),
             ...Te(),
             ...ke(),
-            cache: d(-14, -7.5, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `~21 GB` }),
+            cache: makeBlock(-14, -7.5, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `~21 GB` }),
             card: be(
               `Hot data in RAM`,
               [
@@ -335,7 +321,7 @@ export const napkinMathLesson = {
             ...De,
             ...Oe,
             ...Ae,
-            wc: h(`web`, `cache`, [`web`, `cache`], { heads: `both` }),
+            wc: makeLink(`web`, `cache`, [`web`, `cache`], { heads: `both` }),
           },
           flows: [
             { route: [`uw`], rate: 6 },
@@ -365,9 +351,9 @@ export const napkinMathLesson = {
         scene: {
           entities: {
             users: ye(),
-            web: x(_e, `WEB TIER · 10 SERVERS`),
+            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
             ...Ce(),
-            store: x(ve, `STORAGE`),
+            store: makeZone(ve, `STORAGE`),
             ...Te(),
             ...ke(!0),
             card: be(
@@ -409,9 +395,9 @@ export const napkinMathLesson = {
         scene: {
           entities: {
             users: ye(),
-            web: x(_e, `WEB TIER · 10 SERVERS`),
+            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
             ...Ce(),
-            store: x(ve, `STORAGE`),
+            store: makeZone(ve, `STORAGE`),
             ...Te(),
             ...ke(!0),
             card: be(

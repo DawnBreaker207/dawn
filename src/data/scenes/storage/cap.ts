@@ -1,27 +1,11 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeCrowd,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const da = { x0: -4, x1: 16, y0: -14.5, y1: -5.5 };
@@ -32,29 +16,29 @@ const pa = { x0: 9.5, x1: 14.5, y0: -13, y1: -7 };
 
 const ma = { x0: 9.5, x1: 14.5, y0: 7, y1: 13 };
 
-const ha = () => ({ euz: x(da, `EU REGION`), usz: x(fa, `US REGION`) });
+const ha = () => ({ euz: makeZone(da, `EU REGION`), usz: makeZone(fa, `US REGION`) });
 
-const ga = (e = {}) => b(0, -10, { r: 1.9, glyph: `database`, ...e });
+const ga = (e = {}) => makeDb(0, -10, { r: 1.9, glyph: `database`, ...e });
 
-const _a = (e = {}) => b(0, 10, { r: 1.9, glyph: `database`, ...e });
+const _a = (e = {}) => makeDb(0, 10, { r: 1.9, glyph: `database`, ...e });
 
-const va = (e = `EU users`) => p(pa, 8, e);
+const va = (e = `EU users`) => makeCrowd(pa, 8, e);
 
-const ya = (e = `US users`) => p(ma, 8, e);
+const ya = (e = `US users`) => makeCrowd(ma, 8, e);
 
 const ba = (e, t = `paper`, n = ``) => ({ text: `seats left: ${e}${n}`, tone: t, icon: `info` });
 
 const xa = (e = {}) => ({
-    ue: h(`eus`, `eu`, [`eus`, `eu`], { heads: `both`, ...(e.eu || {}) }),
-    uu: h(`uss`, `us`, [`uss`, `us`], { heads: `both`, ...(e.us || {}) }),
+    ue: makeLink(`eus`, `eu`, [`eus`, `eu`], { heads: `both`, ...(e.eu || {}) }),
+    uu: makeLink(`uss`, `us`, [`uss`, `us`], { heads: `both`, ...(e.us || {}) }),
   });
 
 const Sa = (e = {}) => ({
-    rep: h(`eu`, `us`, [`eu`, `us`], { heads: `both`, label: `replication`, ...e }),
+    rep: makeLink(`eu`, `us`, [`eu`, `us`], { heads: `both`, label: `replication`, ...e }),
   });
 
 const Ca = {
-    rep: h(`eu`, `us`, [`eu`, `us`], {
+    rep: makeLink(`eu`, `us`, [`eu`, `us`], {
       heads: `none`,
       style: `cut`,
       label: `✕ network partition`,
@@ -67,23 +51,23 @@ const wa = (e = !1) => [
     { route: [`uu`], rate: 1.8, bounce: !e },
   ];
 
-const Ta = (e, t, n) => S({ x: -4, y: -14.5, z: 0, dx: -52, dy: -262 }, e, t, { icon: n });
+const Ta = (e, t, n) => makePanel({ x: -4, y: -14.5, z: 0, dx: -52, dy: -262 }, e, t, { icon: n });
 
 const Ea = (e = {}) => ({
-    cl: y(0, -12, { label: `client` }),
-    q1: b(-7, 0, {
+    cl: makeDevice(0, -12, { label: `client` }),
+    q1: makeDb(-7, 0, {
       r: 1.7,
       glyph: `database`,
       tags: [{ text: `v2`, tone: `green` }],
       ...(e.q1 || {}),
     }),
-    q2: b(0, 0, {
+    q2: makeDb(0, 0, {
       r: 1.7,
       glyph: `database`,
       tags: [{ text: `v2`, tone: `green` }],
       ...(e.q2 || {}),
     }),
-    q3: b(7, 0, {
+    q3: makeDb(7, 0, {
       r: 1.7,
       glyph: `database`,
       tags: [{ text: `v1 · stale`, tone: `amber` }],
@@ -92,9 +76,9 @@ const Ea = (e = {}) => ({
   });
 
 const Da = {
-    c1: h(`cl`, `q1`, [`cl`, [`q1`, `cl`], `q1`], { heads: `both` }),
-    c2: h(`cl`, `q2`, [`cl`, `q2`], { heads: `both` }),
-    c3: h(`cl`, `q3`, [`cl`, [`q3`, `cl`], `q3`], { heads: `both` }),
+    c1: makeLink(`cl`, `q1`, [`cl`, [`q1`, `cl`], `q1`], { heads: `both` }),
+    c2: makeLink(`cl`, `q2`, [`cl`, `q2`], { heads: `both` }),
+    c3: makeLink(`cl`, `q3`, [`cl`, [`q3`, `cl`], `q3`], { heads: `both` }),
   };
 
 const Oa = {
@@ -352,7 +336,7 @@ const Oa = {
         scene: {
           entities: {
             ...Ea(),
-            card: S(
+            card: makePanel(
               { x: 7, y: 0, z: 0, dx: 60, dy: -220 },
               `N = 3, W = 2, R = 2`,
               [
@@ -393,7 +377,7 @@ const Oa = {
         scene: {
           entities: {
             ...Ea({ q3: { tags: [{ text: `v2`, tone: `green` }] } }),
-            card: S(
+            card: makePanel(
               { x: 7, y: 0, z: 0, dx: 60, dy: -220 },
               `Choose per operation`,
               [

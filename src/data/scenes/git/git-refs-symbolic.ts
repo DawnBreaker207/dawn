@@ -1,245 +1,198 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+
+// One fixed stage: refs on the right, the commits they name on the left.
+//
+//   commit 3f8a12 ── main ── HEAD
+//        │             │
+//   commit 9c1d22   origin/main ── packed-refs
+//
+// Git colours: commit = purple, ref = yellow, ref storage = db.
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+const at = (sx: number, sy: number): [number, number] => [
+  Math.round((sx / 28 + sy / 14) * 100) / 100,
+  Math.round((sx / 28 - sy / 14) * 100) / 100,
+];
+
+const head = () => makeBlock(...at(310, -100), { s: 4.4, h: 50, color: `yellow`, glyph: `target`, label: [`HEAD`], sub: `.git/HEAD` });
+const main = (tags: Tag[] = []) =>
+  makeBlock(...at(110, -40), { s: 4.4, h: 50, color: `yellow`, glyph: `gitBranch`, label: [`main`], sub: `refs/heads`, tags });
+const origin = () =>
+  makeBlock(...at(110, 150), { s: 4.4, h: 50, color: `yellow`, glyph: `globe`, label: [`origin/main`], sub: `refs/remotes` });
+const commitA = () =>
+  makeBlock(...at(-120, -110), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`3f8a12`], sub: `feat: auth` });
+const commitB = () =>
+  makeBlock(...at(-150, 90), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`9c1d22`], sub: `fix: login` });
+const packed = () => makeDb(...at(300, 60), { r: 2.2, h: 46, glyph: `listOrdered`, label: `packed-refs` });
+
+const L = {
+  mainA: makeLink(`main`, `commitA`, [`main`, `commitA`], { label: `target` }),
+  sym: makeLink(`head`, `main`, [`head`, `main`], { style: `dash`, label: `ref:` }),
+  originA: makeLink(`origin`, `commitA`, [`origin`, `commitA`]),
+  mainB: makeLink(`main`, `commitB`, [`main`, `commitB`], { label: `target` }),
+  parent: makeLink(`commitB`, `commitA`, [`commitB`, `commitA`], { label: `parent` }),
+  packMain: makeLink(`main`, `packed`, [`main`, `packed`]),
+  packOrigin: makeLink(`origin`, `packed`, [`origin`, `packed`]),
+};
+
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: 0, y: 0, z: 0, dx: -450, dy: 150 }, title, lines, { icon: `keyboard` });
 
 export const gitRefsSymbolicLesson = {
-  id: 'git-refs-symbolic',
-  title: 'Git References: Symbolic Refs, Remotes & Packed-Refs',
-  summary: 'Deconstruct how Git tracks branch state: 41-byte loose refs, symbolic reference dereferencing (.git/HEAD), remote-tracking branches, and packed-refs optimization.',
-  minutes: 25,
-  level: 'intermediate',
-  metrics: ['headRef', 'branchTarget', 'refType', 'packedState'],
-  legend: ['flow', ['sym', 'symbolic pointer'], ['pointer', 'direct ref'], ['packed', 'packed refs table'], ['remote', 'network sync']],
+  id: `git-refs-symbolic`,
+  title: `Git References: Symbolic Refs, Remotes & Packed-Refs`,
+  summary: `What a branch, HEAD and origin/main really are on disk: 41-byte files, a symbolic pointer, read-only bookmarks, packed-refs and lockfiles.`,
+  minutes: 14,
+  level: `intermediate`,
+  metrics: [`head`, `main`, `origin`, `looseRefs`],
+  legend: [`req`, [`msg`, `ref lookup`], [`write`, `ref write`]],
   goals: [
-    { text: 'A branch is literally just a 41-byte text file on disk', step: 1 },
-    { text: 'HEAD: The symbolic reference pointing to branch names', step: 2 },
-    { text: 'Remote-tracking references in .git/refs/remotes/origin/', step: 3 },
-    { text: 'Branch upstream tracking configuration in .git/config', step: 4 },
-    { text: 'Packed-refs: Consolidating 50,000 loose references into one file', step: 5 },
-    { text: 'Atomic reference updates via temporary lockfiles and rename()', step: 6 },
+    { text: `A branch is a 41-byte file holding a hash`, step: 1 },
+    { text: `HEAD is a symbolic ref to the current branch`, step: 2 },
+    { text: `Remote-tracking refs in refs/remotes/origin`, step: 3 },
+    { text: `Upstream config and ahead/behind`, step: 4 },
+    { text: `packed-refs: many refs in one file`, step: 5 },
+    { text: `Atomic ref updates with lockfiles`, step: 6 },
   ],
   steps: [
     {
-      short: 'Branch Ref',
-      chapter: 'setup',
-      title: 'A Branch is Just a 41-Byte Text File',
+      short: `Branch`,
+      chapter: `setup`,
+      title: `A branch is a 41-byte file`,
       body: [
-        'Many developers imagine a Git branch as a heavyweight container or copy of the project. In reality, a branch is literally a single file containing 40 hex characters and a newline character (41 bytes) stored at <code>.git/refs/heads/<branch-name></code>.',
-        'Creating a branch with <code>git branch feature</code> simply writes the current commit hash into a new text file. It consumes zero extra disk space for your project files.',
+        `A branch is not a copy of your code. <code>.git/refs/heads/main</code> is a text file with one commit hash and a newline — 41 bytes.`,
+        `Creating a branch writes one such file; deleting it removes the file. That is why branches are instant and free.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Creating, deleting, and renaming branches in Git is instantaneous because it is just creating a 41-byte file on disk.',
-      },
-      metrics: { headRef: 'ref: refs/heads/main', branchTarget: 'Commit 3f8a12', refType: 'Loose ref', packedState: 'Unpacked' },
+      metrics: { head: `—`, main: `3f8a12`, origin: `—`, looseRefs: 1 },
       scene: {
         entities: {
-          mainBranch: d(0, 2, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: '41-byte ref' }),
-          commitObj: d(12, 8, { s: 4.4, h: 56, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'commit 3f8a12' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Branch File on Filesystem', [
-            `$ cat .git/refs/heads/main`,
-            `3f8a12c49b56f890e123456789abcdef01234567`,
-            `$ ls -la .git/refs/heads/`,
-            `-rw-r--r-- 1 dawn staff 41 Nov 24 10:00 main`,
-            `= Exactly 41 bytes (40 hex chars + 1 newline)`,
-          ], { icon: 'terminal' }),
+          main: main(),
+          commitA: commitA(),
+          card: card(`refs/heads/main`, [`$ cat .git/refs/heads/main`, `3f8a12c49b56f890e123456789abcdef01234567`, `$ wc -c .git/refs/heads/main`, `41 .git/refs/heads/main`]),
         },
-        links: {
-          mc: h('mainBranch', 'commitObj', ['mainBranch', 'commitObj'], { label: 'points to commit' }),
-        },
-        flows: [{ route: ['mc'], kind: 'pointer', rate: 1.4 }],
+        links: { mainA: L.mainA },
+        flows: [{ route: [`mainA`], kind: `msg`, rate: 1.2 }],
       },
     },
     {
-      short: 'HEAD Pointer',
-      chapter: 'setup',
-      title: 'HEAD: The Symbolic Reference',
+      short: `HEAD`,
+      chapter: `technique`,
+      title: `HEAD names a branch, not a commit`,
       body: [
-        'How does Git know which branch you are currently on? It reads <code>.git/HEAD</code>.',
-        'In normal operation, HEAD is a <b>Symbolic Reference</b> containing <code>ref: refs/heads/main</code>. When you commit, Git dereferences HEAD to find <code>main</code>, and updates <code>main</code> to the new commit hash. HEAD moves automatically with the branch.',
+        `<code>.git/HEAD</code> normally holds <code>ref: refs/heads/main</code> — a <span class="term">symbolic ref</span>. To find the current commit Git follows two hops: HEAD → main → 3f8a12.`,
+        `When you commit, Git updates <code>main</code>, and HEAD comes along for free. Switching branch only rewrites that one line.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'If HEAD points directly to a commit hash instead of a branch ref, you are in the infamous "Detached HEAD" state.',
-      },
-      changes: ['+ HEAD points to refs/heads/main', '+ Switching branches changes only the text inside .git/HEAD'],
-      metrics: { headRef: 'ref: refs/heads/main', branchTarget: 'refs/heads/main', refType: 'Symbolic Ref', packedState: 'Active' },
+      changes: [`+ HEAD → main`],
+      metrics: { head: `ref: main`, main: `3f8a12`, origin: `—`, looseRefs: 1 },
       scene: {
         entities: {
-          headRef: d(-10, -4, { s: 4.4, h: 56, color: 'cyan', glyph: 'terminal', label: ['.git/HEAD'], sub: 'symbolic ref' }),
-          mainBranch: d(0, 2, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: '41-byte ref' }),
-          commitObj: d(12, 8, { s: 4.4, h: 56, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'commit 3f8a12' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'HEAD Symbolic Dereference', [
-            `$ cat .git/HEAD`,
-            `ref: refs/heads/main`,
-            `$ git symbolic-ref HEAD`,
-            `refs/heads/main`,
-            `$ git rev-parse HEAD`,
-            `3f8a12c49b56f890e123456789abcdef01234567`,
-          ], { icon: 'terminal' }),
+          head: head(),
+          main: main(),
+          commitA: commitA(),
+          card: card(`.git/HEAD`, [`$ cat .git/HEAD`, `ref: refs/heads/main`, `$ git rev-parse HEAD`, `3f8a12c49b56f890e123456789abcdef01234567`]),
         },
-        links: {
-          hm: h('headRef', 'mainBranch', ['headRef', 'mainBranch'], { style: 'dashed', label: 'symbolic ref' }),
-          mc: h('mainBranch', 'commitObj', ['mainBranch', 'commitObj'], { label: 'direct ref' }),
-        },
-        flows: [{ route: ['hm', 'mc'], kind: 'sym', rate: 1.5 }],
+        links: { sym: L.sym, mainA: L.mainA },
+        flows: [{ route: [`sym`, `mainA`], kind: `msg`, rate: 1.2 }],
       },
     },
     {
-      short: 'Remote Tracking',
-      chapter: 'execution',
-      title: 'Remote Tracking Refs (.git/refs/remotes/)',
+      short: `origin/main`,
+      chapter: `technique`,
+      title: `origin/main is a read-only bookmark`,
       body: [
-        'When you clone a repository, Git creates <b>Remote Tracking References</b> under <code>.git/refs/remotes/origin/</code>.',
-        'These are local bookmarks of where the remote server was during the last <code>fetch</code> or <code>push</code>. You cannot commit directly to them; they only update during network transfers.',
+        `<code>refs/remotes/origin/main</code> records where <code>main</code> was on the server the last time you fetched or pushed.`,
+        `You never commit to it. Only network operations move it — so it can be behind the real server until the next fetch.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Running git fetch origin updates origin/main without touching your local main branch or your working directory.',
-      },
-      changes: ['+ origin/main tracks remote commit pointer', '+ Local main remains separate until merged or rebased'],
-      metrics: { headRef: 'refs/heads/main', branchTarget: 'origin/main', refType: 'Remote tracking', packedState: 'Synced' },
+      changes: [`+ origin/main → 3f8a12`],
+      metrics: { head: `ref: main`, main: `3f8a12`, origin: `3f8a12`, looseRefs: 2 },
       scene: {
         entities: {
-          headRef: d(-10, -4, { s: 4.4, h: 56, color: 'cyan', glyph: 'terminal', label: ['.git/HEAD'], sub: 'symbolic ref' }),
-          mainBranch: d(0, 2, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: 'local branch' }),
-          commitObj: d(12, 8, { s: 4.4, h: 56, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'commit 3f8a12' }),
-          remoteRef: d(-4, 16, { s: 4.4, h: 54, color: 'blue', glyph: 'cloud', label: ['origin/main'], sub: 'remote ref' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Remote Tracking State', [
-            `$ git branch -r`,
-            `origin/HEAD -> origin/main`,
-            `origin/main`,
-            `$ git rev-parse origin/main`,
-            `3f8a12c49b56f890e123456789abcdef01234567`,
-            `= Tracks upstream commit bookmark locally`,
-          ], { icon: 'terminal' }),
+          head: head(),
+          main: main(),
+          origin: origin(),
+          commitA: commitA(),
+          card: card(`remote refs`, [`$ git branch -r`, `  origin/HEAD -> origin/main`, `  origin/main`, `$ git rev-parse --short origin/main`, `3f8a12`]),
         },
-        links: {
-          hm: h('headRef', 'mainBranch', ['headRef', 'mainBranch'], { style: 'dashed', label: 'symbolic ref' }),
-          mc: h('mainBranch', 'commitObj', ['mainBranch', 'commitObj'], { label: 'direct ref' }),
-          mr: h('mainBranch', 'remoteRef', ['mainBranch', 'remoteRef'], { label: 'git fetch sync' }),
-        },
-        flows: [{ route: ['mr'], kind: 'remote', rate: 1.5 }],
+        links: { sym: L.sym, mainA: L.mainA, originA: L.originA },
+        flows: [{ route: [`originA`], kind: `msg`, rate: 1 }],
       },
     },
     {
-      short: 'Upstream Config',
-      chapter: 'execution',
-      title: 'Branch Upstream Configuration (.git/config)',
+      short: `Upstream`,
+      chapter: `technique`,
+      title: `Upstream turns refs into “ahead 1”`,
       body: [
-        'How does <code>git push</code> know where to send commits? Git maps local branches to remote branches in <code>.git/config</code>.',
-        'Setting upstream via <code>git push -u origin main</code> writes a section in <code>.git/config</code> linking <code>branch "main"</code> to <code>remote = origin</code> and <code>merge = refs/heads/main</code>.',
+        `You commit <code>9c1d22</code>; <code>main</code> moves, <code>origin/main</code> does not. <code>git push -u</code> saved an <span class="term">upstream</span> for main in <code>.git/config</code>, so Git knows which two refs to compare.`,
+        `“Ahead 1” is just the commits reachable from <code>main</code> but not from <code>origin/main</code>.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Without upstream configured, git pull and git push require explicit remote and branch arguments.',
-      },
-      changes: ['+ Upstream metadata written to .git/config', '+ git status can now report ahead/behind counts'],
-      metrics: { headRef: 'refs/heads/main', branchTarget: 'origin/main', refType: 'Upstream tracked', packedState: 'Configured' },
+      changes: [`+ commit 9c1d22`, `~ main → 9c1d22`, `~ main: ahead 1`],
+      metrics: { head: `ref: main`, main: `9c1d22`, origin: `3f8a12`, looseRefs: 2 },
       scene: {
         entities: {
-          devLaptop: y(-22, -8, { label: 'Dev Laptop', tags: [{ text: 'git status', tone: 'cyan', icon: 'terminal' }] }),
-          headRef: d(-10, -4, { s: 4.4, h: 56, color: 'cyan', glyph: 'terminal', label: ['.git/HEAD'], sub: 'symbolic ref' }),
-          mainBranch: d(0, 2, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: 'ahead 1 commit' }),
-          commitObj: d(12, 8, { s: 4.4, h: 56, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'commit 3f8a12' }),
-          remoteRef: d(-4, 16, { s: 4.4, h: 54, color: 'blue', glyph: 'cloud', label: ['origin/main'], sub: 'remote ref' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Upstream Config Section', [
-            `$ git branch -vv`,
-            `* main 3f8a12 [origin/main: ahead 1] feat: auth`,
-            `$ cat .git/config`,
-            `[branch "main"]`,
-            `    remote = origin`,
-            `    merge = refs/heads/main`,
-          ], { icon: 'terminal' }),
+          head: head(),
+          main: main([{ text: `ahead 1`, tone: `amber` }]),
+          origin: origin(),
+          commitA: commitA(),
+          commitB: commitB(),
+          card: card(`upstream`, [`$ git branch -vv`, `* main 9c1d22 [origin/main: ahead 1] fix: login`, `$ git config --get-regexp '^branch\\.main'`, `branch.main.remote origin`, `branch.main.merge refs/heads/main`]),
         },
-        links: {
-          dh: h('devLaptop', 'headRef', ['devLaptop', 'headRef'], { label: 'reads ref' }),
-          hm: h('headRef', 'mainBranch', ['headRef', 'mainBranch'], { style: 'dashed', label: 'symbolic ref' }),
-          mr: h('mainBranch', 'remoteRef', ['mainBranch', 'remoteRef'], { label: 'upstream pair' }),
-        },
-        flows: [{ route: ['dh', 'hm', 'mr'], kind: 'pointer', rate: 1.5 }],
+        links: { sym: L.sym, mainB: L.mainB, parent: L.parent, originA: L.originA },
+        flows: [
+          { route: [`mainB`, `parent`], kind: `msg`, rate: 1 },
+          { route: [`originA`], kind: `msg`, rate: 1 },
+        ],
       },
     },
     {
-      short: 'Packed-Refs',
-      chapter: 'scaling',
-      title: 'Packed-Refs: Consolidating 50,000 Loose References',
+      short: `packed-refs`,
+      chapter: `solution`,
+      title: `Thousands of refs in one file`,
       body: [
-        'In repositories with thousands of tags and branches, storing each ref as a 41-byte loose file on disk wastes inodes and slows down filesystem directory scans.',
-        'Git solves this by running <code>git pack-refs --all</code>, consolidating all loose reference files into a single flat lookup table: <code>.git/packed-refs</code>.',
+        `A repo with 50,000 tags would mean 50,000 tiny files. <code>git pack-refs --all</code> (run by <code>git gc</code>) moves them into one sorted file, <code>.git/packed-refs</code>.`,
+        `Lookups check for a loose file first and fall back to packed-refs, so a loose ref always wins.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'When dereferencing a ref, Git checks .git/refs/heads/ first (loose ref). If not found, it falls back to binary searching .git/packed-refs.',
-      },
-      changes: ['+ 50,000 loose ref files consolidated into single .git/packed-refs', '+ Inodes recovered and ref lookup accelerated to O(log N)'],
-      metrics: { headRef: 'refs/heads/main', branchTarget: 'Packed index', refType: 'Packed ref table', packedState: '50k refs packed' },
+      changes: [`+ packed-refs`, `− loose ref files`],
+      metrics: { head: `ref: main`, main: `9c1d22`, origin: `3f8a12`, looseRefs: 0 },
       scene: {
         entities: {
-          devLaptop: y(-22, -8, { label: 'Dev Laptop', tags: [{ text: 'git gc / pack', tone: 'amber', icon: 'terminal' }] }),
-          headRef: d(-10, -4, { s: 4.4, h: 56, color: 'cyan', glyph: 'terminal', label: ['.git/HEAD'], sub: 'symbolic ref' }),
-          mainBranch: d(0, 2, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: 'loose cached' }),
-          commitObj: d(12, 8, { s: 4.4, h: 56, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'commit 3f8a12' }),
-          remoteRef: d(-4, 16, { s: 4.4, h: 54, color: 'blue', glyph: 'cloud', label: ['origin/main'], sub: 'remote ref' }),
-          packedRefs: b(14, 20, { r: 2.2, h: 52, color: 'amber', glyph: 'database', label: ['.git/packed-refs'], sub: '50k refs tbl' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Packed-Refs Table Format', [
-            `# pack-refs with: peeled-tags`,
-            `3f8a12c49b56f890e123456789abcdef01234567 refs/heads/main`,
-            `7d9e44a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7 refs/remotes/origin/main`,
-            `c4f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9 refs/tags/v1.0.0`,
-            `= Single flat file replaces 50k filesystem inodes`,
-          ], { icon: 'terminal' }),
+          head: head(),
+          main: main([{ text: `packed`, tone: `gray` }]),
+          origin: origin(),
+          commitA: commitA(),
+          commitB: commitB(),
+          packed: packed(),
+          card: card(`packed-refs`, [`$ git pack-refs --all`, `$ cat .git/packed-refs`, `# pack-refs with: peeled fully-peeled sorted`, `9c1d22… refs/heads/main`, `3f8a12… refs/remotes/origin/main`]),
         },
-        links: {
-          hm: h('headRef', 'mainBranch', ['headRef', 'mainBranch'], { style: 'dashed', label: 'symbolic ref' }),
-          mc: h('mainBranch', 'commitObj', ['mainBranch', 'commitObj'], { label: 'loose target' }),
-          cp: h('commitObj', 'packedRefs', ['commitObj', 'packedRefs'], { label: 'record in table' }),
-          rp: h('remoteRef', 'packedRefs', ['remoteRef', 'packedRefs'], { label: 'pack remote' }),
-        },
-        flows: [{ route: ['hm', 'mc', 'cp'], kind: 'packed', rate: 1.5 }, { route: ['rp'], kind: 'packed', rate: 1.5 }],
+        links: { sym: L.sym, mainB: L.mainB, parent: L.parent, originA: L.originA, packMain: L.packMain, packOrigin: L.packOrigin },
+        flows: [
+          { route: [`packMain`], kind: `write`, rate: 1 },
+          { route: [`packOrigin`], kind: `write`, rate: 1 },
+        ],
       },
     },
     {
-      short: 'Atomic Lock',
-      chapter: 'scaling',
-      title: 'Atomic Ref Updates with Lockfiles (.git/refs/*.lock)',
+      short: `Lockfile`,
+      chapter: `insight`,
+      title: `Ref updates are all-or-nothing`,
       body: [
-        'What prevents two concurrent Git commands from corrupting a branch pointer? Git writes to a temporary mutex file: <code>.git/refs/heads/main.lock</code>.',
-        'Once the new commit SHA is fully written and flushed to disk, Git executes an atomic POSIX <code>rename("main.lock", "main")</code>. Readers never see a half-written ref.',
+        `To move <code>main</code>, Git creates <code>main.lock</code> exclusively, writes the new hash, flushes it, and renames the lock over <code>main</code>. A second writer finds the lock and fails instead of racing.`,
+        `Readers see the old hash or the new one — never half a file. The fresh loose <code>main</code> now overrides its packed copy.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Atomic filesystem renames guarantee that branch reference updates are crash-consistent and thread-safe.',
-      },
-      changes: ['+ Atomic lockfile main.lock created during ref update', '+ POSIX rename() replaces ref instantaneously with zero race condition'],
-      metrics: { headRef: 'refs/heads/main', branchTarget: 'Atomic update', refType: 'POSIX rename()', packedState: 'Consistent' },
+      changes: [`+ main.lock → rename`, `~ loose main again`],
+      metrics: { head: `ref: main`, main: `9c1d22`, origin: `3f8a12`, looseRefs: 1 },
       scene: {
         entities: {
-          headRef: d(-10, -4, { s: 4.4, h: 56, color: 'cyan', glyph: 'terminal', label: ['.git/HEAD'], sub: 'symbolic ref' }),
-          mainBranch: d(0, 2, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: 'atomic mutex' }),
-          commitObj: d(12, 8, { s: 4.4, h: 56, color: 'purple', glyph: 'package', label: ['Commit 3f8a12'], sub: 'commit 3f8a12' }),
-          remoteRef: d(-4, 16, { s: 4.4, h: 54, color: 'blue', glyph: 'cloud', label: ['origin/main'], sub: 'remote ref' }),
-          packedRefs: b(14, 20, { r: 2.2, h: 52, color: 'amber', glyph: 'database', label: ['.git/packed-refs'], sub: '50k refs tbl' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Atomic Ref Transaction Flow', [
-            `1. open(".git/refs/heads/main.lock", O_CREAT|O_EXCL)`,
-            `2. write(fd, "3f8a12c4...", 41)`,
-            `3. fsync(fd)`,
-            `4. close(fd)`,
-            `5. rename(".git/refs/heads/main.lock", ".git/refs/heads/main")`,
-            `= Guaranteed atomic, crash-proof update`,
-          ], { icon: 'terminal' }),
+          head: head(),
+          main: main([{ text: `main.lock`, tone: `red`, icon: `lock` }]),
+          origin: origin(),
+          commitA: commitA(),
+          commitB: commitB(),
+          packed: packed(),
+          card: card(`update-ref`, [`$ git update-ref refs/heads/main 9c1d22 3f8a12`, `# open(main.lock, O_CREAT|O_EXCL)`, `# write + fsync, then rename(main.lock, main)`, `$ git update-ref refs/heads/main 1111111 3f8a12`, `fatal: cannot lock ref 'refs/heads/main'`]),
         },
-        links: {
-          hm: h('headRef', 'mainBranch', ['headRef', 'mainBranch'], { style: 'dashed', label: 'symbolic ref' }),
-          mc: h('mainBranch', 'commitObj', ['mainBranch', 'commitObj'], { label: 'atomic pointer' }),
-        },
-        flows: [{ route: ['hm', 'mc'], kind: 'pointer', rate: 1.6 }],
+        links: { sym: L.sym, mainB: L.mainB, parent: L.parent, originA: L.originA, packMain: L.packMain, packOrigin: L.packOrigin },
+        flows: [{ route: [`mainB`], kind: `write`, rate: 1.2 }],
       },
     },
   ],

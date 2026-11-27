@@ -1,47 +1,35 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBalancer,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const cu = { x0: 15.5, x1: 22.5, y0: -3.5, y1: 3.5 };
 
-const lu = (e = `users`) => p(cu, 10, e);
+const lu = (e = `users`) => makeCrowd(cu, 10, e);
 
-const uu = (e = {}) => y(-21, -9, { label: `developer`, ...e });
+const uu = (e = {}) => makeDevice(-21, -9, { label: `developer`, ...e });
 
 const du = (e = {}) =>
-    d(-12, -9, { color: `slab`, glyph: `gitBranch`, label: [`Git`], sub: `main`, ...e });
+    makeBlock(-12, -9, { color: `slab`, glyph: `gitBranch`, label: [`Git`], sub: `main`, ...e });
 
-const fu = (e, t, n, r = {}) => d(e, -9, { s: 3.6, h: 28, color: `green`, glyph: t, label: n, ...r });
+const fu = (e, t, n, r = {}) => makeBlock(e, -9, { s: 3.6, h: 28, color: `green`, glyph: t, label: n, ...r });
 
-const pu = (e = {}) => b(10, -9, { color: `store`, glyph: `package`, label: `artifacts`, ...e });
+const pu = (e = {}) => makeDb(10, -9, { color: `store`, glyph: `package`, label: `artifacts`, ...e });
 
 const mu = { x0: -6, x1: 6, y0: -12, y1: -6 };
 
-const hu = (e = {}) => f(10, 0, { ...e });
+const hu = (e = {}) => makeBalancer(10, 0, { ...e });
 
-const gu = (e, t, n) => S({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
+const gu = (e, t, n) => makePanel({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
 
 const _u = [
     [2, -12],
@@ -54,7 +42,7 @@ const vu = (e, t = {}) =>
     Object.fromEntries(
       e.map((e, n) => [
         `s${n}`,
-        d(_u[n][0], _u[n][1], {
+        makeBlock(_u[n][0], _u[n][1], {
           s: 3.6,
           h: 30,
           color: e === `v42` ? `green` : `blue`,
@@ -68,14 +56,14 @@ const yu = (e, t = {}) =>
     Object.fromEntries(
       Array.from({ length: e }, (e, n) => [
         `l${n}`,
-        h(`lb`, `s${n}`, [`lb`, [7, `lb`], [7, `s${n}`], `s${n}`], {
+        makeLink(`lb`, `s${n}`, [`lb`, [7, `lb`], [7, `s${n}`], `s${n}`], {
           heads: `both`,
           ...(t[n] || {}),
         }),
       ]),
     );
 
-const bu = () => ({ ul: h(`users`, `lb`, [`users`, `lb`], { heads: `both` }) });
+const bu = () => ({ ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both` }) });
 
 const xu = (e, t = 3.2, n = []) => ({
     routes: e
@@ -120,16 +108,16 @@ const Cu = {
         scene: {
           entities: {
             dev: uu({ tags: [{ text: `build on my laptop`, icon: `hammer` }] }),
-            srv: d(2, 0, { label: [`Production`], ...v(0.4) }),
+            srv: makeBlock(2, 0, { label: [`Production`], ...makeCool(0.4) }),
             users: lu(),
           },
           links: {
-            ds: h(`dev`, `srv`, [`dev`, [`dev`, 0], `srv`], {
+            ds: makeLink(`dev`, `srv`, [`dev`, [`dev`, 0], `srv`], {
               style: `dashed`,
               label: `copy over SSH`,
               labelAt: 0.3,
             }),
-            us: h(`users`, `srv`, [`users`, `srv`], { heads: `both` }),
+            us: makeLink(`users`, `srv`, [`users`, `srv`], { heads: `both` }),
           },
           flows: [
             { route: [`ds`], kind: `heavy`, rate: 0.25 },
@@ -154,16 +142,16 @@ const Cu = {
         scene: {
           entities: {
             dev: uu({ tags: [{ text: `which change was it?`, tone: `red`, icon: `alert` }] }),
-            srv: d(2, 0, { label: [`Production`], ...g }),
+            srv: makeBlock(2, 0, { label: [`Production`], ...DEAD_STATE }),
             users: lu(`users · site down`),
           },
           links: {
-            ds: h(`dev`, `srv`, [`dev`, [`dev`, 0], `srv`], {
+            ds: makeLink(`dev`, `srv`, [`dev`, [`dev`, 0], `srv`], {
               style: `dashed`,
               label: `copy over SSH`,
               labelAt: 0.3,
             }),
-            us: h(`users`, `srv`, [`users`, `srv`], { heads: `both`, fail: 1 }),
+            us: makeLink(`users`, `srv`, [`users`, `srv`], { heads: `both`, fail: 1 }),
           },
           flows: [{ route: [`us`], rate: 2.6 }],
         },
@@ -189,16 +177,16 @@ const Cu = {
           entities: {
             dev: uu(),
             repo: du(),
-            pz: x(mu, `CI PIPELINE`),
+            pz: makeZone(mu, `CI PIPELINE`),
             build: fu(-3, `hammer`, [`Build`], {
               tags: [{ text: `clean machine`, icon: `check` }],
             }),
             test: fu(3, `flask`, [`Test`]),
           },
           links: {
-            dr: h(`dev`, `repo`, [`dev`, `repo`]),
-            rb: h(`repo`, `build`, [`repo`, `build`]),
-            bt: h(`build`, `test`, [`build`, `test`]),
+            dr: makeLink(`dev`, `repo`, [`dev`, `repo`]),
+            rb: makeLink(`repo`, `build`, [`repo`, `build`]),
+            bt: makeLink(`build`, `test`, [`build`, `test`]),
           },
           flows: [{ route: [`dr`, `rb`, `bt`], kind: `heavy`, rate: 0.8 }],
         },
@@ -221,16 +209,16 @@ const Cu = {
           entities: {
             dev: uu(),
             repo: du(),
-            pz: x({ ...mu, x1: 6 }, `CI PIPELINE`),
+            pz: makeZone({ ...mu, x1: 6 }, `CI PIPELINE`),
             build: fu(-3, `hammer`, [`Build`]),
             test: fu(3, `flask`, [`Test`]),
             reg: pu({ tags: [{ text: `checkout:3f9c2a1`, icon: `gitCommit` }] }),
           },
           links: {
-            dr: h(`dev`, `repo`, [`dev`, `repo`]),
-            rb: h(`repo`, `build`, [`repo`, `build`]),
-            bt: h(`build`, `test`, [`build`, `test`]),
-            tr: h(`test`, `reg`, [`test`, `reg`]),
+            dr: makeLink(`dev`, `repo`, [`dev`, `repo`]),
+            rb: makeLink(`repo`, `build`, [`repo`, `build`]),
+            bt: makeLink(`build`, `test`, [`build`, `test`]),
+            tr: makeLink(`test`, `reg`, [`test`, `reg`]),
           },
           flows: [{ route: [`dr`, `rb`, `bt`, `tr`], kind: `heavy`, rate: 0.8 }],
         },
@@ -255,11 +243,11 @@ const Cu = {
         scene: {
           entities: {
             repo: du(),
-            pz: x({ ...mu, x1: 6 }, `CI PIPELINE`),
+            pz: makeZone({ ...mu, x1: 6 }, `CI PIPELINE`),
             build: fu(-3, `hammer`, [`Build`]),
             test: fu(3, `flask`, [`Test`]),
             reg: pu(),
-            stg: d(10, 2, {
+            stg: makeBlock(10, 2, {
               s: 3.6,
               h: 28,
               color: `yellow`,
@@ -267,14 +255,14 @@ const Cu = {
               label: [`Staging`],
               tags: [{ text: `smoke tests ✓`, tone: `green`, icon: `check` }],
             }),
-            prod: d(10, 13, { label: [`Production`], ...v(0.4) }),
+            prod: makeBlock(10, 13, { label: [`Production`], ...makeCool(0.4) }),
           },
           links: {
-            rb: h(`repo`, `build`, [`repo`, `build`]),
-            bt: h(`build`, `test`, [`build`, `test`]),
-            tr: h(`test`, `reg`, [`test`, `reg`]),
-            rs: h(`reg`, `stg`, [`reg`, `stg`], { label: `deploy`, labelAt: 0.5 }),
-            sp: h(`stg`, `prod`, [`stg`, `prod`], {
+            rb: makeLink(`repo`, `build`, [`repo`, `build`]),
+            bt: makeLink(`build`, `test`, [`build`, `test`]),
+            tr: makeLink(`test`, `reg`, [`test`, `reg`]),
+            rs: makeLink(`reg`, `stg`, [`reg`, `stg`], { label: `deploy`, labelAt: 0.5 }),
+            sp: makeLink(`stg`, `prod`, [`stg`, `prod`], {
               style: `dashed`,
               label: `promote · 1 click`,
               labelAt: 0.5,
@@ -312,8 +300,8 @@ const Cu = {
               1: { dim: 0.5 },
               3: { tags: [{ text: `green · live`, tone: `green`, icon: `check` }] },
             }),
-            bz: x({ x0: -1.5, x1: 5.5, y0: -16, y1: -0.4 }, ``),
-            gz: x({ x0: -1.5, x1: 5.5, y0: 0.4, y1: 16 }, ``),
+            bz: makeZone({ x0: -1.5, x1: 5.5, y0: -16, y1: -0.4 }, ``),
+            gz: makeZone({ x0: -1.5, x1: 5.5, y0: 0.4, y1: 16 }, ``),
           },
           links: { ...bu(), ...yu(4, { 0: { style: `off` }, 1: { style: `off` } }) },
           flows: [xu([0, 0, 1, 1])],
@@ -380,7 +368,7 @@ const Cu = {
               1: { heat: 0.6 },
               2: { heat: 0.6 },
             }),
-            db: b(-8, 0, {
+            db: makeDb(-8, 0, {
               label: `users table`,
               tags: [{ text: `name → full_name`, tone: `amber`, icon: `database` }],
             }),
@@ -391,7 +379,7 @@ const Cu = {
             ...Object.fromEntries(
               [1, 3].map((e) => [
                 `d${e}`,
-                h(`s${e}`, `db`, [`s${e}`, [-3, `s${e}`], [-3, `db`], `db`], { heads: `none` }),
+                makeLink(`s${e}`, `db`, [`s${e}`, [-3, `s${e}`], [-3, `db`], `db`], { heads: `none` }),
               ]),
             ),
           },
@@ -417,7 +405,7 @@ const Cu = {
             users: lu(),
             lb: hu(),
             ...vu([`v42`, `v42`, `v42`, `v42`]),
-            flags: d(-8, 0, {
+            flags: makeBlock(-8, 0, {
               s: 3.6,
               h: 28,
               color: `yellow`,
@@ -432,7 +420,7 @@ const Cu = {
             ...Object.fromEntries(
               [0, 1, 2, 3].map((e) => [
                 `f${e}`,
-                h(`flags`, `s${e}`, [`flags`, [-3, `flags`], [-3, `s${e}`], `s${e}`], {
+                makeLink(`flags`, `s${e}`, [`flags`, [-3, `flags`], [-3, `s${e}`], `s${e}`], {
                   style: `dashed`,
                   heads: `none`,
                 }),

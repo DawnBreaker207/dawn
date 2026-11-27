@@ -1,256 +1,251 @@
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
+
+// One stage: a stack frame holding String references, the String objects on the heap,
+// the byte[] that actually stores the characters, and the JVM's StringTable (pool).
+// javac and the GC's dedup thread join later. Nothing moves; references re-point.
+//
+//   javac          StringTable      dedup (GC)
+//   stack ── "ok" (pooled) ── byte[]
+//              new String ──┘
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+const at = (sx: number, sy: number) => ({
+  x: Math.round(((sx / 14 + sy / 7) / 2) * 10) / 10,
+  y: Math.round(((sx / 14 - sy / 7) / 2) * 10) / 10,
+});
+const P = {
+  stack: at(-220, 60),
+  javac: at(-120, -150),
+  lit: at(0, 0),
+  table: at(180, -140),
+  dup: at(60, 190),
+  bytes: at(200, 110),
+  gc: at(330, -20),
+};
+
+const stack = (tags: Tag[] = []) =>
+  makeBlock(P.stack.x, P.stack.y, { s: 4.4, h: 52, color: `blue`, glyph: `layers`, label: [`Stack frame`], sub: `a, b, c`, tags });
+const lit = (tags: Tag[] = []) =>
+  makeBlock(P.lit.x, P.lit.y, { s: 4.4, h: 52, color: `green`, glyph: `file`, label: [`String "ok"`], sub: `pooled`, tags });
+const dup = (sub: string, tags: Tag[] = []) =>
+  makeBlock(P.dup.x, P.dup.y, { s: 4.2, h: 50, color: `green`, glyph: `file`, label: [`String "ok"`], sub, tags });
+const table = (tags: Tag[] = []) =>
+  makeBlock(P.table.x, P.table.y, { s: 4.4, h: 52, color: `purple`, glyph: `hash`, label: [`StringTable`], sub: `in the heap`, tags });
+const bytes = (sub: string, tags: Tag[] = []) => makeDb(P.bytes.x, P.bytes.y, { r: 2, h: 44, glyph: `database`, label: `byte[] · ${sub}`, tags });
+const javac = (tags: Tag[] = []) =>
+  makeBlock(P.javac.x, P.javac.y, { s: 4.4, h: 52, color: `orange`, glyph: `code`, label: [`javac`], sub: `+ indy concat`, tags });
+const gc = (tags: Tag[] = []) =>
+  makeBlock(P.gc.x, P.gc.y, { s: 4.2, h: 50, color: `orange`, glyph: `refresh`, label: [`GC dedup`], sub: `background`, tags });
+
+const L = {
+  refA: makeLink(`stack`, `lit`, [`stack`, `lit`], { label: `a` }),
+  refAB: makeLink(`stack`, `lit`, [`stack`, `lit`], { label: `a, b` }),
+  refQuiet: makeLink(`stack`, `lit`, [`stack`, `lit`]),
+  value: makeLink(`lit`, `bytes`, [`lit`, `bytes`], { label: `value` }),
+  valueQuiet: makeLink(`lit`, `bytes`, [`lit`, `bytes`]),
+  pooled: makeLink(`table`, `lit`, [`table`, `lit`], { label: `pooled` }),
+  pooledQuiet: makeLink(`table`, `lit`, [`table`, `lit`]),
+  refC: makeLink(`stack`, `dup`, [`stack`, `dup`], { label: `c = new` }),
+  refCQuiet: makeLink(`stack`, `dup`, [`stack`, `dup`]),
+  share: makeLink(`dup`, `bytes`, [`dup`, `bytes`]),
+  intern: makeLink(`dup`, `lit`, [`dup`, `lit`], { label: `intern()` }),
+  concat: makeLink(`javac`, `stack`, [`javac`, `stack`], { label: `indy` }),
+  concatQuiet: makeLink(`javac`, `stack`, [`javac`, `stack`]),
+  dedup: makeLink(`gc`, `bytes`, [`gc`, `bytes`], { label: `dedup` }),
+};
+
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: 0, y: 0, z: 0, dx: -480, dy: 125 }, title, lines, { icon: `code` });
 
 export const javaStringInternalsLesson: Lesson = {
   id: 'java-string-internals',
   title: 'String Pool & Compact Strings',
   summary:
-    'Understand WHY Strings are immutable, how ldc + StringTable + intern() work, how JDK 9+ Compact Strings halve RAM, why + in loops hurts, and G1GC String Deduplication.',
+    'What a String really is on the heap: an immutable wrapper around a byte[], literals shared through the StringTable, Compact Strings, concatenation, deduplication and text blocks.',
   minutes: 12,
   level: 'core',
-  metrics: ['backing_array', 'pool_region', 'concat_op', 'heap_cost'],
-  legend: ['flow', ['req', 'ldc / intern'], ['res', 'dedup / reuse'], ['fail', 'loop alloc']],
+  metrics: ['strings', 'byteArrays', 'bytes', 'copies'],
+  legend: [[`req`, `reference`], [`res`, `shared data`], [`write`, `compile / GC work`], [`fail`, `waste`]],
   goals: [
-    { text: 'Explain why String immutability caches hash & secures refs', step: 1 },
-    { text: 'Trace ldc bytecode into Heap StringTable vs new String()', step: 2 },
-    { text: 'Probe StringTable via String.intern() (Java 7+ Heap)', step: 3 },
-    { text: 'Halve RAM with JDK 9+ Compact Strings (byte[] + coder)', step: 4 },
-    { text: 'Contrast + in loops vs StringConcatFactory invokedynamic', step: 5 },
-    { text: 'Share backing byte[] via G1GC String Deduplication', step: 6 },
-    { text: 'Write clean SQL/JSON with Text Blocks (""") & formatted()', step: 7 },
+    { text: 'Explain why immutability lets String cache its hash', step: 1 },
+    { text: 'Trace a literal into the StringTable vs new String()', step: 2 },
+    { text: 'Use String.intern() to get the pooled instance', step: 3 },
+    { text: 'Halve memory with Compact Strings (byte[] + coder)', step: 4 },
+    { text: 'Contrast + in loops with invokedynamic concat', step: 5 },
+    { text: 'Share byte[] arrays with GC string deduplication', step: 6 },
+    { text: 'Write SQL/JSON with text blocks and formatted()', step: 7 },
   ],
   steps: [
     {
       short: 'Immutable',
-      chapter: 'string',
-      title: '1. Why String Is Immutable & Caches hashCode',
+      chapter: 'setup',
+      title: 'A String is a wrapper around a byte[] that never changes',
       body: [
-        '<code>String</code> wraps a <code>private final byte[] value</code> with no mutating setters. Because characters never change, <code>String</code> safely caches its <code>int hash</code> field after the first <code>hashCode()</code> call.',
-        'Immutability also makes <code>String</code> automatically thread-safe and safe for security checks (URLs, class names, file paths cannot be swapped mid-flight).',
+        'A <code>String</code> object holds a <code>final byte[] value</code>, a <code>coder</code> and a cached <code>hash</code>. No method ever modifies the array — “changing” a string always creates a new one.',
+        'Because the content can’t change, the hash code can be computed once and reused (great for HashMap keys), and the same object can be shared by any number of threads safely.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Cached hashCode makes String the fastest, safest HashMap key — O(1) hash lookup on repeat calls.',
-      },
-      metrics: { backing_array: 'final byte[]', pool_region: 'Immutable', concat_op: 'N/A', heap_cost: 'Cached hash' },
+      callout: { kind: 'insight', text: 'Immutability is also a security property: a file path or URL checked once can’t be swapped by another thread after the check.' },
+      metrics: { strings: 1, byteArrays: 1, bytes: 2, copies: 0 },
       scene: {
         entities: {
-          str: d(-12, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'shield', label: ['String Obj'], sub: 'cached hash' }),
-          arr: b(2, -6, { r: 2.2, h: 48, color: 'green', label: ['final byte[]'], sub: 'read-only' }),
-          card: S({ x: -12, y: 12 }, '1. Immutability & Lazy Hash Caching', [
-            'public final class String {',
-            '  private final byte[] value; // no setters!',
-            '  private int hash;           // cached after 1st call',
-            '} // Safe for HashMap keys, threads, & classloading',
-          ], { icon: 'terminal' }),
+          stack: stack(),
+          lit: lit([{ text: 'hash cached', tone: 'green' }]),
+          bytes: bytes(`2 B`),
+          card: card('String.java (JDK 21)', ['private final byte[] value;', 'private final byte coder;  // LATIN1 / UTF16', 'private int hash;          // computed once', '= no setter for value — ever']),
         },
-        links: {
-          st_ar: h('str', 'arr', ['str', 'arr'], { heads: 'end', label: 'final ref' }),
-        },
-        flows: [{ route: ['st_ar'], kind: 'res', rate: 1.7 }],
+        links: { refA: L.refA, value: L.value },
+        flows: [{ route: ['refA', 'value'], rate: 1 }],
       },
     },
     {
-      short: 'StringTable',
-      chapter: 'string',
-      title: '2. Literal ldc -> StringTable vs new String("ok")',
+      short: 'Literals',
+      chapter: 'technique',
+      title: 'Literals share one pooled object, new String() does not',
       body: [
-        'String literals (<code>"ok"</code>) compile to <code>ldc</code> bytecode. On first run, the JVM looks up <code>"ok"</code> in the Heap <strong>StringTable</strong> (C++ hash table) and returns that canonical reference.',
-        'Calling <code>new String("ok")</code> forces a <strong>second</strong> wrapper object on the Heap outside the pool — so <code>"ok" == new String("ok")</code> is <code>false</code>!',
+        'Every literal <code>"ok"</code> compiles to an <code>ldc</code> instruction. The JVM looks it up in the <span class="term">StringTable</span> and returns the single pooled instance — so <code>a</code> and <code>b</code> point to the same object.',
+        '<code>new String("ok")</code> always allocates a second String object. It reuses the same byte[] (no characters are copied), but it is a different object, so <code>a == c</code> is false.',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Never write new String("literal") — it wastes a Heap object and breaks == reference sharing.',
-      },
-      changes: ['+ ldc resolves literal in StringTable', '+ new String() allocates extra Heap wrapper'],
-      metrics: { backing_array: 'Shared byte[]', pool_region: 'Heap StringTbl', concat_op: 'ldc lookup', heap_cost: '1 vs 2 objs' },
+      callout: { kind: 'warn', text: 'There is almost never a reason to write new String("..."). Compare strings with equals(), never ==.' },
+      changes: ['+ StringTable', '+ new String object'],
+      metrics: { strings: 2, byteArrays: 1, bytes: 2, copies: 0 },
       scene: {
         entities: {
-          ldc: d(-12, -16, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['"ok" Literal'], sub: 'ldc bytecode' }),
-          nw: d(-12, -2, { s: 4.8, h: 54, color: 'amber', glyph: 'alert', label: ['new String()'], sub: 'extra wrapper' }),
-          tbl: b(4, -9, { r: 2.2, h: 48, color: 'purple', label: ['StringTable'], sub: 'Heap C++ map' }),
-          card: S({ x: -12, y: 12 }, '2. Why "ok" == "ok" But "ok" != new String("ok")', [
-            'String a = "ok";             // ldc -> StringTable ref',
-            'String b = "ok";             // a == b is TRUE',
-            'String c = new String("ok"); // new Heap String wrapper',
-            'a == c; // FALSE!  a.equals(c) // TRUE',
-          ], { icon: 'terminal' }),
+          stack: stack([{ text: 'a == c  → false', tone: 'red' }]),
+          lit: lit(),
+          table: table([{ text: '"ok" → 1 entry', tone: 'violet' }]),
+          dup: dup(`not pooled`),
+          bytes: bytes(`shared`),
+          card: card('ldc vs new', ['String a = "ok";              // ldc → pool', 'String b = "ok";              // same object', 'String c = new String("ok");  // new object', '! a == c        // false', '= a.equals(c)   // true']),
         },
-        links: {
-          ld_tb: h('ldc', 'tbl', ['ldc', 'tbl'], { heads: 'end', label: 'reuse ref' }),
-          nw_tb: h('nw', 'tbl', ['nw', 'tbl'], { heads: 'end', label: 'copies ref' }),
-        },
-        flows: [{ route: ['ld_tb'], kind: 'res', rate: 1.9 }, { route: ['nw_tb'], kind: 'req', rate: 1.4 }],
+        links: { refAB: L.refAB, value: L.valueQuiet, pooled: L.pooled, refC: L.refC, share: L.share },
+        flows: [
+          { route: ['refAB'], rate: 1 },
+          { route: ['refC'], kind: 'fail', rate: 0.6 },
+        ],
       },
     },
     {
       short: 'intern()',
-      chapter: 'string',
-      title: '3. How String.intern() Works (Java 6 PermGen -> 7+ Heap)',
+      chapter: 'technique',
+      title: 'intern() hands you the pooled instance',
       body: [
-        '<code>s.intern()</code> probes <code>StringTable</code>: if an equal string exists, it returns the pooled reference; otherwise it inserts <code>s</code> directly into <code>StringTable</code>.',
-        'Since Java 7, <code>StringTable</code> moved from fixed <strong>PermGen</strong> into the <strong>Heap</strong>, so unreferenced interned strings can be garbage collected.',
+        '<code>c.intern()</code> looks up c’s content in the StringTable. If an equal string is there, you get that pooled object back; if not, c itself is added.',
+        'Since Java 7 the table lives in the regular heap, so unused entries are garbage-collected like anything else.',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Avoid .intern() on arbitrary user input — StringTable has a fixed bucket count and slows down GC.',
-      },
-      changes: ['+ intern() probes & registers in StringTable', '+ Heap-resident since Java 7 (GC-able)'],
-      metrics: { backing_array: 'Canonical', pool_region: 'Heap StringTbl', concat_op: 'JNI probe', heap_cost: 'GC-eligible' },
+      callout: { kind: 'tip', text: 'Interning helps only for many repeated values from outside the code (e.g. country codes read from a file). For literals the compiler already did it.' },
+      changes: ['~ c = c.intern() → pooled object'],
+      metrics: { strings: 2, byteArrays: 1, bytes: 2, copies: 0 },
       scene: {
         entities: {
-          dyn: d(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Heap String'], sub: 'runtime built' }),
-          intrn: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['s.intern()'], sub: 'probe table' }),
-          tbl: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['StringTable'], sub: 'canonical ref' }),
-          card: S({ x: -12, y: 12 }, '3. Canonicalizing Strings with intern()', [
-            'String s = new StringBuilder("o").append("k").toString();',
-            's == "ok";          // false (on Heap)',
-            's.intern() == "ok"; // true  (returns StringTable ref!)',
-          ], { icon: 'terminal' }),
+          stack: stack([{ text: 'c.intern() == a → true', tone: 'green' }]),
+          lit: lit(),
+          table: table(),
+          dup: dup(`garbage soon`, [{ text: 'unreferenced', tone: 'gray' }]),
+          bytes: bytes(`shared`),
+          card: card('intern()', ['String c = new String("ok");', 'c = c.intern();      // look up "ok" in the table', '= c == a             // true: pooled object']),
         },
-        links: {
-          dy_in: h('dyn', 'intrn', ['dyn', 'intrn'], { heads: 'end', label: 'intern()' }),
-          in_tb: h('intrn', 'tbl', ['intrn', 'tbl'], { heads: 'end', label: 'intern' }),
-        },
-        flows: [{ route: ['dy_in', 'in_tb'], kind: 'res', rate: 1.8 }],
+        links: { refAB: L.refAB, value: L.valueQuiet, pooled: L.pooledQuiet, intern: L.intern, share: L.share },
+        flows: [{ route: ['intern'], kind: 'res', rate: 1 }],
       },
     },
     {
-      short: 'Compact byte[]',
-      chapter: 'memory',
-      title: '4. JDK 9+ Compact Strings (byte[] + coder)',
+      short: 'Compact',
+      chapter: 'insight',
+      title: 'Compact Strings: 1 byte per char when possible',
       body: [
-        'In Java 8, every character used a 2-byte UTF-16 <code>char[]</code>, wasting 50% RAM for ASCII/Latin-1 text (JSON, SQL, logs).',
-        'JDK 9+ replaced <code>char[]</code> with <code>byte[] value</code> + 1-byte <code>coder</code> (<code>LATIN1 = 0</code> uses 1B/char; <code>UTF16 = 1</code> uses 2B/char only when needed).',
+        'Since JDK 9 the array is a <code>byte[]</code>, not a <code>char[]</code>. If every character fits in Latin-1, the String uses <span class="term">LATIN1</span> coding: 1 byte per character.',
+        'One character outside Latin-1 (like ✓ or 你) switches that string to <span class="term">UTF16</span>: 2 bytes per character. Typical apps save 20–50% of their string memory.',
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Compact Strings cut total JVM Heap usage by 20–30% in typical web microservices with zero code changes.',
-      },
-      changes: ['+ char[] (2B) -> byte[] + coder (1B Latin-1)', '+ Auto-switches to UTF16=1 for emoji/CJK'],
-      metrics: { backing_array: 'byte[] + coder', pool_region: 'Heap (-50%)', concat_op: 'Coder check', heap_cost: '1B / ASCII' },
+      callout: { kind: 'insight', text: 'The check happens once, when the String is created. Methods like charAt() branch on coder, which the JIT handles very cheaply.' },
+      changes: ['~ byte[] coder = LATIN1'],
+      metrics: { strings: 2, byteArrays: 2, bytes: 10, copies: 0 },
       scene: {
         entities: {
-          ascii: d(-12, -16, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['"order_42"'], sub: 'coder=0 (1B)' }),
-          cjk: d(-12, -2, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['"Xin chào"'], sub: 'coder=1 (2B)' }),
-          arr: b(4, -9, { r: 2.2, h: 48, color: 'blue', label: ['byte[] Array'], sub: 'Compact Str' }),
-          card: S({ x: -12, y: 12 }, '4. Why JDK 9+ Strings Use Half the Memory', [
-            '// Java 8:  private final char[] value; (always 2B/char)',
-            '// Java 9+: private final byte[] value; private final byte coder;',
-            '// "hello" -> 5 bytes (LATIN1 = 0)',
-            '// "chào"  -> 8 bytes (UTF16 = 1)',
-          ], { icon: 'terminal' }),
+          stack: stack(),
+          lit: lit([{ text: 'coder = LATIN1', tone: 'green' }]),
+          table: table(),
+          dup: dup(`"ok✓" UTF16`, [{ text: '2 B per char', tone: 'amber' }]),
+          bytes: bytes(`2 B`, [{ text: '1 B per char', tone: 'green' }]),
+          card: card('memory for the chars', ['"ok"     LATIN1   2 chars →  2 bytes', '"ok✓"    UTF16    3 chars →  6 bytes', '# before JDK 9 every char took 2 bytes', '# opt out: -XX:-CompactStrings']),
         },
-        links: {
-          as_hp: h('ascii', 'arr', ['ascii', 'arr'], { heads: 'end', label: '1B/char' }),
-          cj_hp: h('cjk', 'arr', ['cjk', 'arr'], { heads: 'end', label: '2B/char' }),
-        },
-        flows: [{ route: ['as_hp'], kind: 'res', rate: 1.9 }, { route: ['cj_hp'], kind: 'req', rate: 1.5 }],
+        links: { refAB: L.refQuiet, value: L.value, pooled: L.pooledQuiet, refC: L.refCQuiet },
+        flows: [{ route: ['value'], kind: 'res', rate: 1 }],
       },
     },
     {
-      short: 'Concat & Loops',
-      chapter: 'concat',
-      title: '5. Why + in Loops Hurts vs StringConcatFactory',
+      short: 'Concat',
+      chapter: 'problem',
+      title: '+ is fast once, slow in a loop',
       body: [
-        'Outside loops, JDK 9+ compiles <code>a + ":" + b</code> to <code>invokedynamic StringConcatFactory</code>, sizing the exact <code>byte[]</code> buffer in 1 shot.',
-        'Inside a <code>for</code> loop, <code>s += item</code> STILL creates a new <code>StringBuilder</code> and copies the whole string on every iteration ($O(n^2)$)! Use an explicit <code>StringBuilder</code>.',
+        'Since JDK 9 javac compiles <code>a + b + c</code> to one <code>invokedynamic</code> call to <span class="term">StringConcatFactory</span>, which sizes the result exactly and copies each part once.',
+        'Inside a loop, <code>s += x</code> builds a brand-new String every turn and copies everything so far: 10,000 turns copy about 50 million characters. Use a <code>StringBuilder</code> (or <code>String.join</code>).',
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Effective Java Item 63: Using + in a loop of N iterations is O(n^2) time and GC allocation!',
-      },
-      changes: ['+ Loop += allocates O(n^2) StringBuilders', '+ StringConcatFactory sizes 1-shot concat'],
-      metrics: { backing_array: 'Presized byte[]', pool_region: 'Eden TLAB', concat_op: 'invokedynamic', heap_cost: 'O(n) vs O(n^2)' },
+      callout: { kind: 'tip', text: 'Single-expression concatenation is fine — don’t replace readable a + ":" + b with StringBuilder. Only loops need it.' },
+      changes: ['+ javac (indy concat)', '− loop: 10,000 throw-away Strings'],
+      metrics: { strings: 10000, byteArrays: 10000, bytes: 50000000, copies: 10000 },
       scene: {
         entities: {
-          loop: d(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['for (s += x)'], sub: 'O(n^2) copies' }),
-          sb: d(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'cpu', label: ['StringBuilder'], sub: 'O(n) buffer' }),
-          scf: d(0, 0, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['ConcatFactory'], sub: 'invokedynamic' }),
-          card: S({ x: -12, y: 12 }, '5. Loop Concatenation vs StringConcatFactory', [
-            '// BAD O(n^2): allocates new StringBuilder every iter!',
-            'for (var x : items) out += x;',
-            '// GOOD O(n): var sb = new StringBuilder();',
-            '// Single-line a + b: invokedynamic StringConcatFactory',
-          ], { icon: 'terminal' }),
+          stack: stack([{ text: 's += x  × 10,000', tone: 'red' }]),
+          javac: javac([{ text: 'one presized copy', tone: 'green' }]),
+          lit: lit(),
+          table: table(),
+          bytes: bytes(`2 B`),
+          card: card('Report.java', ['String line = id + ":" + name;    // 1 indy call', 'String s = "";', '! for (var x : items) s += x;       // O(n²) copies', '= var sb = new StringBuilder();', '= for (var x : items) sb.append(x);']),
         },
-        links: {
-          lp_sb: h('loop', 'sb', ['loop', 'sb'], { heads: 'end', label: 'fix -> O(n)' }),
-          sb_sc: h('sb', 'scf', ['sb', 'scf'], { heads: 'end', label: 'indy' }),
-        },
-        flows: [{ route: ['lp_sb', 'sb_sc'], kind: 'res', rate: 1.9 }],
+        links: { refAB: L.refQuiet, value: L.valueQuiet, pooled: L.pooledQuiet, concat: L.concat },
+        flows: [{ route: ['concat'], kind: 'write', rate: 2.5 }],
       },
     },
     {
-      short: 'G1 Dedup',
-      chapter: 'gc',
-      title: '6. G1GC String Deduplication (-XX:+UseStringDeduplication)',
+      short: 'Dedup',
+      chapter: 'solution',
+      title: 'The GC can merge identical byte[] arrays',
       body: [
-        'Microservices parse millions of identical JSON keys/statuses into separate Heap <code>String</code> objects, each holding a duplicate <code>byte[]</code>.',
-        'With <code>-XX:+UseStringDeduplication</code>, G1GC hashes surviving <code>String</code>s and re-points duplicate wrappers to share <strong>one</strong> <code>byte[]</code> — saving RAM without changing <code>String</code> identity!',
+        'Strings parsed from JSON or a database are new objects with their own arrays — 50,000 copies of <code>"VN"</code> means 50,000 identical byte[]s.',
+        'With <code>-XX:+UseStringDeduplication</code> a background GC thread finds Strings with equal content and points them at one shared byte[]. The String objects stay separate; only the arrays merge. G1 had it first; since JDK 18 every collector supports it.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Unlike intern(), G1 String Deduplication preserves s1 != s2 object identity and never bloats StringTable.',
-      },
-      changes: ['+ G1GC compares byte[] hashes after GC', '+ Duplicate Strings share 1 backing byte[]'],
-      metrics: { backing_array: 'Shared byte[]', pool_region: 'G1GC Dedup', concat_op: 'Background GC', heap_cost: 'Zero dup bytes' },
+      callout: { kind: 'insight', text: 'Dedup is safe precisely because Strings are immutable: nobody can ever write into the shared array.' },
+      changes: ['+ GC dedup thread', '~ 50,000 arrays → 1'],
+      metrics: { strings: 50000, byteArrays: 1, bytes: 2, copies: 0 },
       scene: {
         entities: {
-          s1: d(-12, -16, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['String #1'], sub: 'JSON parse 1' }),
-          s2: d(-12, -2, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['String #2'], sub: 'JSON parse 2' }),
-          arr: b(4, -9, { r: 2.3, h: 50, color: 'green', label: ['1 Shared byte[]'], sub: 'G1 Dedup' }),
-          card: S({ x: -12, y: 12 }, '6. G1GC Automatic String Deduplication', [
-            '-XX:+UseG1GC -XX:+UseStringDeduplication',
-            '// s1 != s2 (distinct String wrappers)',
-            '// s1.value == s2.value (share 1 backing byte[]!)',
-            '// Safe, automatic, zero StringTable contention',
-          ], { icon: 'terminal' }),
+          stack: stack(),
+          javac: javac(),
+          lit: lit(),
+          table: table(),
+          dup: dup(`from JSON`, [{ text: '× 50,000', tone: 'violet' }]),
+          bytes: bytes(`1 shared`, [{ text: '49,999 freed', tone: 'green' }]),
+          gc: gc(),
+          card: card('JVM flags', ['$ java -XX:+UseG1GC \\', '       -XX:+UseStringDeduplication -jar app.jar', '# String objects stay; their byte[] is shared']),
         },
-        links: {
-          s1_ar: h('s1', 'arr', ['s1', 'arr'], { heads: 'end', label: 'points to' }),
-          s2_ar: h('s2', 'arr', ['s2', 'arr'], { heads: 'end', label: 'dedup ptr' }),
-        },
-        flows: [{ route: ['s1_ar'], kind: 'res', rate: 1.8 }, { route: ['s2_ar'], kind: 'res', rate: 1.8 }],
+        links: { refAB: L.refQuiet, value: L.valueQuiet, pooled: L.pooledQuiet, concat: L.concatQuiet, share: L.share, dedup: L.dedup },
+        flows: [{ route: ['dedup'], kind: 'write', rate: 1 }],
       },
     },
     {
-      short: 'Text Blocks',
-      chapter: 'string',
-      title: '7. Text Blocks (""") & String.formatted() (Java 15–21)',
+      short: 'Text blocks',
+      chapter: 'recap',
+      title: 'Text blocks: multi-line strings without the noise',
       body: [
-        '<strong>Text Blocks</strong> (<code>""" ... """</code>) eliminate noisy <code>+</code> concatenation and escaped quotes (<code>\\"</code>) for multiline SQL, JSON, and HTML.',
-        'At compile time, <code>javac</code> strips common leading indentation automatically; pair with <code>.formatted(args...)</code> as a clean replacement for <code>String.format(...)</code>.',
+        'A <span class="term">text block</span> (<code>"""</code>, Java 15) lets you paste SQL or JSON as-is. javac strips the common indentation at compile time — the result is an ordinary pooled String.',
+        'Fill in values with <code>formatted()</code>. Recap: Strings are immutable wrappers around a byte[], literals are pooled, Compact Strings halve memory, loops need a builder, and the GC can share duplicate arrays.',
       ],
-      callout: {
-        kind: 'tip',
-        text: 'The position of the closing """ controls how much leading whitespace is stripped from every line!',
-      },
-      changes: ['+ Text Blocks strip common leading indentation', '+ .formatted() binds arguments cleanly'],
-      metrics: { backing_array: 'Compile strip', pool_region: 'Heap StringTbl', concat_op: '.formatted()', heap_cost: 'Zero + noise' },
+      callout: { kind: 'warn', text: 'formatted() is not a SQL escaper. Pass user values as PreparedStatement parameters, never by formatting them into the query.' },
+      changes: ['~ javac strips indentation'],
+      metrics: { strings: 1, byteArrays: 1, bytes: 62, copies: 0 },
       scene: {
         entities: {
-          raw: d(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['Text Block """'], sub: 'SQL / JSON' }),
-          javac: d(1, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['javac Strip'], sub: 'incidental WS' }),
-          fmt: b(15, -10, { r: 2.2, h: 48, color: 'green', label: ['.formatted()'], sub: 'clean String' }),
-          card: S({ x: -12, y: 12 }, '7. Multiline SQL/JSON with Text Blocks', [
-            'String sql = """',
-            '    SELECT id, total FROM orders',
-            '    WHERE status = \'%s\'',
-            '    """.formatted("PAID");',
-          ], { icon: 'terminal' }),
+          stack: stack(),
+          javac: javac([{ text: 'strips indent', tone: 'green' }]),
+          lit: lit([{ text: 'text block · pooled', tone: 'green' }]),
+          table: table(),
+          bytes: bytes(`62 B`),
+          card: card('Query.java', ['String sql = """', '    SELECT id, name', '    FROM users', '    WHERE country = ?', '    """;']),
         },
-        links: {
-          rw_jc: h('raw', 'javac', ['raw', 'javac'], { heads: 'end', label: 'strip indent' }),
-          jc_fm: h('javac', 'fmt', ['javac', 'fmt'], { heads: 'end', label: 'formatted()' }),
-        },
-        flows: [{ route: ['rw_jc', 'jc_fm'], kind: 'res', rate: 1.8 }],
+        links: { refAB: L.refQuiet, value: L.valueQuiet, pooled: L.pooled, concat: L.concat },
+        flows: [{ route: ['concat'], kind: 'write', rate: 0.8 }],
       },
     },
   ],

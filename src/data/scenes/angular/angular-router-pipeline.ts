@@ -1,12 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makeZone as x,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 export const angularRouterPipelineLesson = {
@@ -41,9 +38,9 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'NavigationStart', activeGuards: 'None', resolverState: 'Pending', outletTarget: 'UrlTree Parsed' },
       scene: {
         entities: {
-          userClick: y(-16, -6, { label: 'routerLink', tags: [{ text: '/orders/42', tone: 'blue', icon: 'zap' }] }),
-          serializer: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'UrlTree Parsing Output', [
+          userClick: makeDevice(-16, -6, { label: 'routerLink', tags: [{ text: '/orders/42', tone: 'blue', icon: 'zap' }] }),
+          serializer: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'UrlTree Parsing Output', [
             `$ router.navigate(['/orders', 42], { queryParams: { tab: 'items' } })`,
             `UrlTree {`,
             `  root: UrlSegmentGroup {`,
@@ -54,7 +51,7 @@ export const angularRouterPipelineLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          us: h('userClick', 'serializer', ['userClick', 'serializer'], { label: 'navigate event' }),
+          us: makeLink('userClick', 'serializer', ['userClick', 'serializer'], { label: 'navigate event' }),
         },
         flows: [{ route: ['us'], kind: 'nav', rate: 1.5 }],
       },
@@ -75,10 +72,10 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'RoutesRecognized', activeGuards: 'Pending', resolverState: 'Pending', outletTarget: 'OrderComponent' },
       scene: {
         entities: {
-          userClick: y(-16, -6, { label: 'routerLink', tags: [{ text: '/orders/42', tone: 'blue', icon: 'zap' }] }),
-          serializer: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
-          routeMatcher: d(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Route Matching Definition', [
+          userClick: makeDevice(-16, -6, { label: 'routerLink', tags: [{ text: '/orders/42', tone: 'blue', icon: 'zap' }] }),
+          serializer: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
+          routeMatcher: makeBlock(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Route Matching Definition', [
             `const routes: Routes = [`,
             `  {`,
             `    path: 'orders/:orderId',`,
@@ -91,8 +88,8 @@ export const angularRouterPipelineLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          us: h('userClick', 'serializer', ['userClick', 'serializer'], { label: 'navigate event' }),
-          sr: h('serializer', 'routeMatcher', ['serializer', 'routeMatcher'], { label: 'match segments' }),
+          us: makeLink('userClick', 'serializer', ['userClick', 'serializer'], { label: 'navigate event' }),
+          sr: makeLink('serializer', 'routeMatcher', ['serializer', 'routeMatcher'], { label: 'match segments' }),
         },
         flows: [{ route: ['us', 'sr'], kind: 'nav', rate: 1.5 }],
       },
@@ -113,10 +110,10 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'GuardsCheckStart', activeGuards: 'canMatch (Pass)', resolverState: 'Pending', outletTarget: 'OrderComponent' },
       scene: {
         entities: {
-          serializer: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
-          routeMatcher: d(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
-          guardEvaluator: d(8, 8, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['canMatch'], sub: 'feature flag' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional canMatch Guard', [
+          serializer: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['UrlSerializer'], sub: 'parses URL' }),
+          routeMatcher: makeBlock(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
+          guardEvaluator: makeBlock(8, 8, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['canMatch'], sub: 'feature flag' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional canMatch Guard', [
             `export const v2OrdersGuard: CanMatchFn = (route, segments) => {`,
             `  const flags = inject(FeatureFlagService);`,
             `  // If disabled, router skips to legacy v1 orders route!`,
@@ -125,8 +122,8 @@ export const angularRouterPipelineLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          sr: h('serializer', 'routeMatcher', ['serializer', 'routeMatcher'], { label: 'match segments' }),
-          rg: h('routeMatcher', 'guardEvaluator', ['routeMatcher', 'guardEvaluator'], { label: 'evaluate flag' }),
+          sr: makeLink('serializer', 'routeMatcher', ['serializer', 'routeMatcher'], { label: 'match segments' }),
+          rg: makeLink('routeMatcher', 'guardEvaluator', ['routeMatcher', 'guardEvaluator'], { label: 'evaluate flag' }),
         },
         flows: [{ route: ['sr', 'rg'], kind: 'guard', rate: 1.5 }],
       },
@@ -147,9 +144,9 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'GuardsChecked', activeGuards: 'canActivate (Pass)', resolverState: 'Pending', outletTarget: 'OrderComponent' },
       scene: {
         entities: {
-          routeMatcher: d(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
-          guardEvaluator: d(8, 8, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['canActivate'], sub: 'auth session' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional canActivate with Redirect', [
+          routeMatcher: makeBlock(8, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['RouteMatcher'], sub: 'path matching' }),
+          guardEvaluator: makeBlock(8, 8, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['canActivate'], sub: 'auth session' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional canActivate with Redirect', [
             `export const authGuard: CanActivateFn = (route, state) => {`,
             `  const auth = inject(AuthService);`,
             `  const router = inject(Router);`,
@@ -163,7 +160,7 @@ export const angularRouterPipelineLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          rg: h('routeMatcher', 'guardEvaluator', ['routeMatcher', 'guardEvaluator'], { label: 'check auth' }),
+          rg: makeLink('routeMatcher', 'guardEvaluator', ['routeMatcher', 'guardEvaluator'], { label: 'check auth' }),
         },
         flows: [{ route: ['rg'], kind: 'guard', rate: 1.5 }],
       },
@@ -184,9 +181,9 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'ResolveEnd', activeGuards: 'All Passed', resolverState: 'Resolved (200 OK)', outletTarget: 'Ready to Mount' },
       scene: {
         entities: {
-          guardEvaluator: d(8, 8, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['canActivate'], sub: 'auth session' }),
-          resolver: b(-4, 8, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['orderResolver'], sub: 'pre-fetch API' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional Resolver Pattern', [
+          guardEvaluator: makeBlock(8, 8, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['canActivate'], sub: 'auth session' }),
+          resolver: makeDb(-4, 8, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['orderResolver'], sub: 'pre-fetch API' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional Resolver Pattern', [
             `export const orderResolver: ResolveFn<Order> = (route) => {`,
             `  const api = inject(OrderService);`,
             `  const orderId = route.paramMap.get('orderId')!;`,
@@ -199,7 +196,7 @@ export const angularRouterPipelineLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          gr: h('guardEvaluator', 'resolver', ['guardEvaluator', 'resolver'], { label: 'trigger resolve' }),
+          gr: makeLink('guardEvaluator', 'resolver', ['guardEvaluator', 'resolver'], { label: 'trigger resolve' }),
         },
         flows: [{ route: ['gr'], kind: 'resolve', rate: 1.5 }],
       },
@@ -220,10 +217,10 @@ export const angularRouterPipelineLesson = {
       metrics: { navState: 'NavigationEnd', activeGuards: 'Done', resolverState: 'Consumed', outletTarget: 'Active in DOM' },
       scene: {
         entities: {
-          resolver: b(-4, 8, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['orderResolver'], sub: 'pre-fetch API' }),
-          outletHost: d(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['<router-outlet>'], sub: 'mount view' }),
-          orderView: d(-16, -6, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['OrderComponent'], sub: 'DOM active' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Navigation Complete', [
+          resolver: makeDb(-4, 8, { s: 4.6, h: 48, color: 'cyan', glyph: 'server', label: ['orderResolver'], sub: 'pre-fetch API' }),
+          outletHost: makeBlock(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['<router-outlet>'], sub: 'mount view' }),
+          orderView: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['OrderComponent'], sub: 'DOM active' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Navigation Complete', [
             `Router Events Sequence:`,
             `  1. NavigationStart (/orders/42)`,
             `  2. RoutesRecognized`,
@@ -234,8 +231,8 @@ export const angularRouterPipelineLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ro: h('resolver', 'outletHost', ['resolver', 'outletHost'], { label: 'hydrate outlet' }),
-          ov: h('outletHost', 'orderView', ['outletHost', 'orderView'], { label: 'render component' }),
+          ro: makeLink('resolver', 'outletHost', ['resolver', 'outletHost'], { label: 'hydrate outlet' }),
+          ov: makeLink('outletHost', 'orderView', ['outletHost', 'orderView'], { label: 'render component' }),
         },
         flows: [{ route: ['ro', 'ov'], kind: 'mount', rate: 1.6 }],
       },

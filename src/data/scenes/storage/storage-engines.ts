@@ -1,35 +1,20 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeHot,
+  makeLink,
+  makePanel,
+  makeQueue,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const tn = 2;
 
-const nn = (e = {}) => d(0, -15, { label: [`App`], ...e });
+const nn = (e = {}) => makeBlock(0, -15, { label: [`App`], ...e });
 
 const rn = (e = {}) =>
-    d(0, -5, { s: 4.4, h: 44, color: `green`, glyph: `zap`, label: [`Pages in`, `memory`], ...e });
+    makeBlock(0, -5, { s: 4.4, h: 44, color: `green`, glyph: `zap`, label: [`Pages in`, `memory`], ...e });
 
 const an = (e = {}) =>
     rn({ glyph: `listOrdered`, label: [`Memtable`], sub: `sorted · in memory`, ...e });
@@ -37,9 +22,9 @@ const an = (e = {}) =>
 const on = { x0: 10.2, x1: 23.4, y0: -8.6, y1: -2.4 };
 
 const sn = (e, t = []) => ({
-    lz: x(on, `LOG FILE · APPEND ONLY`),
-    wal: d(13, -5, { s: 4.0, h: 42, color: `yellow`, glyph: `scroll`, label: [`Log`], tags: t }),
-    ent: ee(16.2, -5, e, [1, 0], { gap: 1.05, color: `#8d99ae` }),
+    lz: makeZone(on, `LOG FILE · APPEND ONLY`),
+    wal: makeBlock(13, -5, { s: 4.0, h: 42, color: `yellow`, glyph: `scroll`, label: [`Log`], tags: t }),
+    ent: makeQueue(16.2, -5, e, [1, 0], { gap: 1.05, color: `#8d99ae` }),
   });
 
 const cn = Array.from({ length: 10 }, (e, t) => -9.45 + t * 2.1);
@@ -47,10 +32,10 @@ const cn = Array.from({ length: 10 }, (e, t) => -9.45 + t * 2.1);
 const ln = { x0: -11, x1: 11, y0: 7.4, y1: 10.6 };
 
 const un = (e = [], t = `data file · 8 KB pages`, n = {}) => {
-    let r = { pz: x(ln, ``) };
+    let r = { pz: makeZone(ln, ``) };
     return (
       cn.forEach((i, a) => {
-        r[`p${a}`] = d(i, 9, {
+        r[`p${a}`] = makeBlock(i, 9, {
           s: 1.7,
           h: 11,
           radius: 3,
@@ -66,7 +51,7 @@ const un = (e = [], t = `data file · 8 KB pages`, n = {}) => {
     );
   };
 
-const dn = (e, t = {}) => h(`mem`, `p${e}`, [`mem`, [`mem`, tn], [cn[e], tn], `p${e}`], t);
+const dn = (e, t = {}) => makeLink(`mem`, `p${e}`, [`mem`, [`mem`, tn], [cn[e], tn], `p${e}`], t);
 
 const fn = (e, t = {}) => Object.fromEntries(e.map((e) => [`f${e}`, dn(e, t)]));
 
@@ -84,28 +69,28 @@ const hn = [0, 2, 3, 5, 7, 9];
 const gn = [-7.5, -2.5, 2.5, 7.5];
 
 const _n = (e, t = [], n = {}) =>
-    d(gn[e], 9, { s: 3.5, h: 13, radius: 4, color: `purple`, glyph: ``, label: [], tags: t, ...n });
+    makeBlock(gn[e], 9, { s: 3.5, h: 13, radius: 4, color: `purple`, glyph: ``, label: [], tags: t, ...n });
 
 const vn = (e = {}) => ({
-    pz: x(ln, ``),
+    pz: makeZone(ln, ``),
     s0: _n(0, e[0] || [{ text: `sorted files (SSTables) · oldest`, icon: `file` }]),
     s1: _n(1, e[1] || []),
     s2: _n(2, e[2] || []),
     s3: _n(3, e[3] || [{ text: `newest`, icon: `clock` }]),
   });
 
-const yn = (e, t = {}) => h(`mem`, `s${e}`, [`mem`, [`mem`, tn], [gn[e], tn], `s${e}`], t);
+const yn = (e, t = {}) => makeLink(`mem`, `s${e}`, [`mem`, [`mem`, tn], [gn[e], tn], `s${e}`], t);
 
 const T = {
-    am: (e = {}) => h(`app`, `mem`, [`app`, `mem`], { heads: `both`, ...e }),
-    mw: (e = {}) => h(`mem`, `wal`, [`mem`, `wal`], e),
+    am: (e = {}) => makeLink(`app`, `mem`, [`app`, `mem`], { heads: `both`, ...e }),
+    mw: (e = {}) => makeLink(`mem`, `wal`, [`mem`, `wal`], e),
   };
 
 const bn = (e = 1.4, t = {}) => ({ route: [`am`], kind: `write`, rate: e, bounce: !0, ...t });
 
 const xn = (e = 1.4, t = {}) => ({ route: [`mw`], kind: `write`, rate: e, ...t });
 
-const Sn = (e, t, n, r = {}) => S({ x: 0, y: -5, z: 0, dx: -398, dy: -196, ...r }, e, t, { icon: n });
+const Sn = (e, t, n, r = {}) => makePanel({ x: 0, y: -5, z: 0, dx: -398, dy: -196, ...r }, e, t, { icon: n });
 
 const Cn = { crashSafe: `yes`, wps: 4e4, diskPattern: `log + random pages`, lookupCost: `3–4 pages` };
 
@@ -115,8 +100,8 @@ const Tn = (e = [{ text: `merged · newest values only`, tone: `green`, icon: `m
     app: nn(),
     mem: an(),
     ...sn(3),
-    pz: x(ln, ``),
-    big: d(-4, 9, { s: 5.2, h: 15, radius: 4, color: `purple`, glyph: ``, label: [], tags: e }),
+    pz: makeZone(ln, ``),
+    big: makeBlock(-4, 9, { s: 5.2, h: 15, radius: 4, color: `purple`, glyph: ``, label: [], tags: e }),
     s3: _n(3, [{ text: `newest`, icon: `clock` }]),
   });
 
@@ -192,7 +177,7 @@ export const storageEnginesLesson = {
           entities: {
             app: nn(),
             mem: rn({
-              ...g,
+              ...DEAD_STATE,
               tags: [{ text: `power cut · 4 s of writes gone`, tone: `red`, icon: `power` }],
             }),
             ...un([], `data file · 8 KB pages`, {
@@ -354,7 +339,7 @@ export const storageEnginesLesson = {
           entities: {
             app: nn({ label: [`200,000`, `writes / s`] }),
             mem: rn({
-              ..._(1),
+              ...makeHot(1),
               heat: 0.7,
               tags: [{ text: `full of changed pages`, tone: `red`, icon: `alert` }],
             }),
@@ -509,11 +494,11 @@ export const storageEnginesLesson = {
           entities: {
             app: nn({ label: [`Analytics`, `query`], glyph: `chart`, color: `orange` }),
             ...un([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], `row store · every page read`),
-            cz: x({ x0: -12.8, x1: 12.8, y0: -3.4, y1: 1.4 }, ``),
+            cz: makeZone({ x0: -12.8, x1: 12.8, y0: -3.4, y1: 1.4 }, ``),
             ...Object.fromEntries(
               On.map((e, t) => [
                 `c${t}`,
-                d(e, -1, {
+                makeBlock(e, -1, {
                   s: 3.1,
                   h: 12,
                   radius: 4,
@@ -527,13 +512,13 @@ export const storageEnginesLesson = {
             ),
           },
           links: {
-            col: h(`app`, `c3`, [`app`, [`app`, -8], [On[3], -8], `c3`], {
+            col: makeLink(`app`, `c3`, [`app`, [`app`, -8], [On[3], -8], `c3`], {
               heads: `both`,
               label: `reads 1 column of 40`,
               labelTone: `green`,
               labelAt: 0.45,
             }),
-            scan: h(`app`, null, [`app`, [-15, `app`], [-15, 6.6], [11, 6.6]], { heads: `none` }),
+            scan: makeLink(`app`, null, [`app`, [-15, `app`], [-15, 6.6], [11, 6.6]], { heads: `none` }),
           },
           flows: [
             { route: [`col`], rate: 1.6, bounce: !0 },

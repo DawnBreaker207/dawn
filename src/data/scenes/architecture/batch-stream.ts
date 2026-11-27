@@ -1,64 +1,50 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeHot,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const el = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 };
 
 const tl = { x0: -16, x1: -6, y0: -3, y1: 9 };
 
-const nl = () => p(el, 13, `viewers`);
+const nl = () => makeCrowd(el, 13, `viewers`);
 
-const rl = () => d(0, -5, { label: [`Video`, `App`] });
+const rl = () => makeBlock(0, -5, { label: [`Video`, `App`] });
 
-const il = (e = {}) => b(0, 0, { r: 2, h: 42, label: `production DB`, ...e });
+const il = (e = {}) => makeDb(0, 0, { r: 2, h: 42, label: `production DB`, ...e });
 
-const al = (e = []) => d(0, 6, { color: `slab`, glyph: `chartLine`, label: [`Dashboard`], tags: e });
+const al = (e = []) => makeBlock(0, 6, { color: `slab`, glyph: `chartLine`, label: [`Dashboard`], tags: e });
 
 const ol = (e = `NIGHTLY BATCH JOB`, t = {}) => ({
-    logs: b(-5, -5, { r: 1.8, h: 36, glyph: `box`, label: `event logs` }),
-    batch: x(tl, e),
-    w1: d(-13.5, 0, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w1 || [] }),
-    w2: d(-8.5, 0, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w2 || [] }),
-    w3: d(-13.5, 6, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w3 || [] }),
-    w4: d(-8.5, 6, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w4 || [] }),
-    wh: b(-5, 6, { r: 1.8, h: 36, glyph: `chart`, label: `warehouse` }),
+    logs: makeDb(-5, -5, { r: 1.8, h: 36, glyph: `box`, label: `event logs` }),
+    batch: makeZone(tl, e),
+    w1: makeBlock(-13.5, 0, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w1 || [] }),
+    w2: makeBlock(-8.5, 0, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w2 || [] }),
+    w3: makeBlock(-13.5, 6, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w3 || [] }),
+    w4: makeBlock(-8.5, 6, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w4 || [] }),
+    wh: makeDb(-5, 6, { r: 1.8, h: 36, glyph: `chart`, label: `warehouse` }),
   });
 
 const sl = (e = [], t = []) => ({
-    kafka: d(5, -5, { color: `slab`, glyph: `waves`, label: [`Event`, `Stream`], tags: t }),
-    proc: d(11, 3, { color: `green`, glyph: `activity`, label: [`Stream`, `Processor`], tags: e }),
-    live: b(5, 6, { r: 1.8, h: 36, glyph: `zap`, label: `live counts` }),
+    kafka: makeBlock(5, -5, { color: `slab`, glyph: `waves`, label: [`Event`, `Stream`], tags: t }),
+    proc: makeBlock(11, 3, { color: `green`, glyph: `activity`, label: [`Stream`, `Processor`], tags: e }),
+    live: makeDb(5, 6, { r: 1.8, h: 36, glyph: `zap`, label: `live counts` }),
   });
 
 const z = {
     base: {
-      va: h(`viewers`, `app`, [`viewers`, `app`], { heads: `both` }),
-      ad: h(`app`, `prod`, [`app`, `prod`], { heads: `both` }),
+      va: makeLink(`viewers`, `app`, [`viewers`, `app`], { heads: `both` }),
+      ad: makeLink(`app`, `prod`, [`app`, `prod`], { heads: `both` }),
     },
     heavy: {
-      dp: h(`dash`, `prod`, [`dash`, `prod`], {
+      dp: makeLink(`dash`, `prod`, [`dash`, `prod`], {
         heads: `both`,
         label: `GROUP BY video · every minute`,
         labelTone: `red`,
@@ -66,16 +52,16 @@ const z = {
       }),
     },
     batch: {
-      al: h(`app`, `logs`, [`app`, `logs`], { label: `append events` }),
-      lb: h(`logs`, `batch`, [`logs`, `batch`], { label: `read 1 day`, labelAt: 0.45 }),
-      bw: h(`batch`, `wh`, [`batch`, `wh`], { label: `write results`, labelAt: 0.55 }),
-      dw: h(`dash`, `wh`, [`dash`, `wh`], { heads: `both` }),
+      al: makeLink(`app`, `logs`, [`app`, `logs`], { label: `append events` }),
+      lb: makeLink(`logs`, `batch`, [`logs`, `batch`], { label: `read 1 day`, labelAt: 0.45 }),
+      bw: makeLink(`batch`, `wh`, [`batch`, `wh`], { label: `write results`, labelAt: 0.55 }),
+      dw: makeLink(`dash`, `wh`, [`dash`, `wh`], { heads: `both` }),
     },
     stream: {
-      ak: h(`app`, `kafka`, [`app`, `kafka`], { label: `publish each view` }),
-      kp: h(`kafka`, `proc`, [`kafka`, `proc`]),
-      pl: h(`proc`, `live`, [`proc`, `live`], { label: `update counts`, labelAt: 0.5 }),
-      dl: h(`dash`, `live`, [`dash`, `live`], { heads: `both` }),
+      ak: makeLink(`app`, `kafka`, [`app`, `kafka`], { label: `publish each view` }),
+      kp: makeLink(`kafka`, `proc`, [`kafka`, `proc`]),
+      pl: makeLink(`proc`, `live`, [`proc`, `live`], { label: `update counts`, labelAt: 0.5 }),
+      dl: makeLink(`dash`, `live`, [`dash`, `live`], { heads: `both` }),
     },
   };
 
@@ -93,9 +79,9 @@ const B = {
     ],
   };
 
-const cl = (e, t, n, r = {}) => S({ x: 0, y: 0, z: 0, dx: 75, dy: 25 }, e, t, { icon: n, ...r });
+const cl = (e, t, n, r = {}) => makePanel({ x: 0, y: 0, z: 0, dx: 75, dy: 25 }, e, t, { icon: n, ...r });
 
-const ll = (e, t, n, r = {}) => S({ x: -5, y: -5, z: 0, dx: -40, dy: -215 }, e, t, { icon: n, ...r });
+const ll = (e, t, n, r = {}) => makePanel({ x: -5, y: -5, z: 0, dx: -40, dy: -215 }, e, t, { icon: n, ...r });
 
 const ul = {
     id: `batch-stream`,
@@ -134,7 +120,7 @@ const ul = {
         },
         metrics: { freshness: `live`, prodLoad: 95, eventsDay: `2 billion`, exact: `yes` },
         scene: {
-          entities: { viewers: nl(), app: rl(), prod: il(_(0.95)), dash: al() },
+          entities: { viewers: nl(), app: rl(), prod: il(makeHot(0.95)), dash: al() },
           links: { ...z.base, ...z.heavy },
           flows: [B.base, { route: [`dp`], kind: `heavy`, rate: 0.6, bounce: !0, hold: 1.3 }],
         },
@@ -159,7 +145,7 @@ const ul = {
         ],
         metrics: { freshness: `up to 24 h`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
-          entities: { viewers: nl(), app: rl(), prod: il(v(0.3)), dash: al(), ...ol() },
+          entities: { viewers: nl(), app: rl(), prod: il(makeCool(0.3)), dash: al(), ...ol() },
           links: { ...z.base, ...z.batch },
           flows: [B.base, ...B.batch],
         },
@@ -182,7 +168,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al(),
             ...ol(`MAP → SHUFFLE → REDUCE`, {
               w1: [{ text: `map` }],
@@ -217,14 +203,14 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al(),
             ...ol(`MAP → SHUFFLE → REDUCE`, {
               w1: [{ text: `map` }],
               w2: [{ text: `map` }],
               w4: [{ text: `5 min`, tone: `green` }],
             }),
-            w3: d(-13.5, 6, {
+            w3: makeBlock(-13.5, 6, {
               s: 3,
               h: 30,
               color: `green`,
@@ -260,7 +246,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al(),
             ...ol(`MAP + COMBINE → REDUCE`, {
               w1: [{ text: `map + combine` }],
@@ -301,7 +287,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al([{ text: `trending: yesterday’s`, tone: `red`, icon: `clock` }]),
             ...ol(),
           },
@@ -333,7 +319,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
             ...sl(),
           },
@@ -359,7 +345,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
             ...sl([{ text: `windows: 1 min`, icon: `clock` }]),
             card: ll(`Views of video 4f2 per minute`, [], `chartLine`, {
@@ -394,7 +380,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al(),
             ...sl(
               [{ text: `watermark: 12:05 · dedupe on`, icon: `filter` }],
@@ -443,10 +429,10 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al([{ text: `live counts: 4 min old`, tone: `amber`, icon: `clock` }]),
             ...sl([], [{ text: `lag: 4 min · 18M events`, tone: `red`, icon: `clock` }]),
-            proc: d(11, 3, {
+            proc: makeBlock(11, 3, {
               color: `green`,
               glyph: `activity`,
               label: [`Stream`, `Processor`],
@@ -481,13 +467,13 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
             ...sl(
               [{ text: `partitions 0–1` }],
               [{ text: `4 partitions · lag 2 s`, tone: `green`, icon: `layers` }],
             ),
-            proc2: d(6, 0, {
+            proc2: makeBlock(6, 0, {
               color: `green`,
               glyph: `activity`,
               label: [`Stream`, `Processor`],
@@ -497,8 +483,8 @@ const ul = {
           links: {
             ...z.base,
             ...z.stream,
-            kp2: h(`kafka`, `proc2`, [`kafka`, [`proc2`, `kafka`], `proc2`]),
-            p2l: h(`proc2`, `live`, [`proc2`, [`proc2`, `live`], `live`]),
+            kp2: makeLink(`kafka`, `proc2`, [`kafka`, [`proc2`, `kafka`], `proc2`]),
+            p2l: makeLink(`proc2`, `live`, [`proc2`, [`proc2`, `live`], `live`]),
           },
           flows: [
             B.base,
@@ -535,7 +521,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al([{ text: `unique viewers ≈ 48.2M`, icon: `users` }]),
             ...sl([{ text: `HyperLogLog per video`, icon: `sigma` }]),
             card: ll(
@@ -579,7 +565,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al(),
             ...ol(`NIGHTLY · EXACT`),
             ...sl(),
@@ -610,7 +596,7 @@ const ul = {
           entities: {
             viewers: nl(),
             app: rl(),
-            prod: il(v(0.3)),
+            prod: il(makeCool(0.3)),
             dash: al(),
             ...ol(`NIGHTLY · EXACT`),
             ...sl(),

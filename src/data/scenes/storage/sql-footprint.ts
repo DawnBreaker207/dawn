@@ -1,27 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 export const sqlFootprintLesson = {
@@ -55,13 +37,13 @@ export const sqlFootprintLesson = {
       metrics: { page_size: `8192 B`, free_space: `3420 B`, live_tuples: `82 rows`, dead_tuples: `0`, bloat_pct: `0%` },
       scene: {
         entities: {
-          header_block: d(-11, -4, { s: 3.8, h: 42, color: `blue`, glyph: `file`, label: [`Page Header`], sub: `24 Bytes LSN` }),
-          free_space: d(0, -4, { s: 3.8, h: 42, color: `green`, glyph: `box`, label: [`Free Space`], sub: `Middle Hole` }),
-          tuples_block: d(11, -4, { s: 3.8, h: 42, color: `purple`, glyph: `layers`, label: [`Tuple Data`], sub: `Bottom-Up` }),
+          header_block: makeBlock(-11, -4, { s: 3.8, h: 42, color: `blue`, glyph: `file`, label: [`Page Header`], sub: `24 Bytes LSN` }),
+          free_space: makeBlock(0, -4, { s: 3.8, h: 42, color: `green`, glyph: `box`, label: [`Free Space`], sub: `Middle Hole` }),
+          tuples_block: makeBlock(11, -4, { s: 3.8, h: 42, color: `purple`, glyph: `layers`, label: [`Tuple Data`], sub: `Bottom-Up` }),
         },
         links: {
-          hf: h(`header_block`, `free_space`, [`header_block`, `free_space`], { heads: `end`, label: `pd_lower ↓` }),
-          tf: h(`tuples_block`, `free_space`, [`tuples_block`, `free_space`], { heads: `end`, label: `pd_upper ↑` }),
+          hf: makeLink(`header_block`, `free_space`, [`header_block`, `free_space`], { heads: `end`, label: `pd_lower ↓` }),
+          tf: makeLink(`tuples_block`, `free_space`, [`tuples_block`, `free_space`], { heads: `end`, label: `pd_upper ↑` }),
         },
         flows: [
           { route: [`hf`, `tf`], bounce: true, rate: 1.5 },
@@ -83,13 +65,13 @@ export const sqlFootprintLesson = {
       metrics: { page_size: `8192 B`, free_space: `2800 B`, live_tuples: `120 rows`, dead_tuples: `0`, bloat_pct: `0%` },
       scene: {
         entities: {
-          pointer: d(-11, -4, { s: 3.8, h: 42, color: `yellow`, glyph: `route`, label: [`Line Pointer`], sub: `ItemId (4B)` }),
-          tuple_hdr: d(0, -4, { s: 3.8, h: 42, color: `orange`, glyph: `shield`, label: [`Tuple Header`], sub: `xmin / xmax 23B` }),
-          payload: d(11, -4, { s: 3.8, h: 42, color: `teal`, glyph: `database`, label: [`User Columns`], sub: `Data Payload` }),
+          pointer: makeBlock(-11, -4, { s: 3.8, h: 42, color: `yellow`, glyph: `route`, label: [`Line Pointer`], sub: `ItemId (4B)` }),
+          tuple_hdr: makeBlock(0, -4, { s: 3.8, h: 42, color: `orange`, glyph: `shield`, label: [`Tuple Header`], sub: `xmin / xmax 23B` }),
+          payload: makeBlock(11, -4, { s: 3.8, h: 42, color: `teal`, glyph: `database`, label: [`User Columns`], sub: `Data Payload` }),
         },
         links: {
-          pt: h(`pointer`, `tuple_hdr`, [`pointer`, `tuple_hdr`], { heads: `end`, label: `offset` }),
-          tp: h(`tuple_hdr`, `payload`, [`tuple_hdr`, `payload`], { heads: `end`, label: `null bitmap` }),
+          pt: makeLink(`pointer`, `tuple_hdr`, [`pointer`, `tuple_hdr`], { heads: `end`, label: `offset` }),
+          tp: makeLink(`tuple_hdr`, `payload`, [`tuple_hdr`, `payload`], { heads: `end`, label: `null bitmap` }),
         },
         flows: [
           { route: [`pt`, `tp`], bounce: false, rate: 2.0 },
@@ -108,13 +90,13 @@ export const sqlFootprintLesson = {
       metrics: { page_size: `8192 B`, free_space: `1228 B (15%)`, live_tuples: `70 rows`, dead_tuples: `0`, bloat_pct: `0%` },
       scene: {
         entities: {
-          client: y(-11, -4, { label: `Client`, tags: [{ text: `UPDATE balance`, icon: `zap` }] }),
-          hot_page: d(0, -4, { s: 3.8, h: 42, color: `green`, glyph: `server`, label: [`HOT Page`], sub: `fillfactor 85` }),
-          index_root: b(11, -4, { r: 2.2, h: 36, label: `B-Tree Index (No Change)`, color: `blue` }),
+          client: makeDevice(-11, -4, { label: `Client`, tags: [{ text: `UPDATE balance`, icon: `zap` }] }),
+          hot_page: makeBlock(0, -4, { s: 3.8, h: 42, color: `green`, glyph: `server`, label: [`HOT Page`], sub: `fillfactor 85` }),
+          index_root: makeDb(11, -4, { r: 2.2, h: 36, label: `B-Tree Index (No Change)`, color: `blue` }),
         },
         links: {
-          ch: h(`client`, `hot_page`, [`client`, `hot_page`], { heads: `end`, label: `in-page update` }),
-          hi: h(`hot_page`, `index_root`, [`hot_page`, `index_root`], { heads: `none`, label: `index untouched` }),
+          ch: makeLink(`client`, `hot_page`, [`client`, `hot_page`], { heads: `end`, label: `in-page update` }),
+          hi: makeLink(`hot_page`, `index_root`, [`hot_page`, `index_root`], { heads: `none`, label: `index untouched` }),
         },
         flows: [
           { route: [`ch`], bounce: false, rate: 2.2 },
@@ -133,13 +115,13 @@ export const sqlFootprintLesson = {
       metrics: { page_size: `8192 B`, free_space: `400 B`, live_tuples: `40 rows`, dead_tuples: `95 rows`, bloat_pct: `68% Bloat` },
       scene: {
         entities: {
-          writer: d(-11, -4, { s: 3.8, h: 42, color: `rose`, glyph: `alertTriangle`, label: [`Heavy UPDATEs`], sub: `xid: 10420` }),
-          bloated_page: d(0, -4, { s: 3.8, h: 42, color: `purple`, glyph: `archive`, label: [`Bloated Page`], sub: `Dead Tuples` }),
-          long_txn: y(11, -4, { label: `Long Txn Reader`, tags: [{ text: `Snapshot Active`, tone: `red`, icon: `clock` }] }),
+          writer: makeBlock(-11, -4, { s: 3.8, h: 42, color: `rose`, glyph: `alertTriangle`, label: [`Heavy UPDATEs`], sub: `xid: 10420` }),
+          bloated_page: makeBlock(0, -4, { s: 3.8, h: 42, color: `purple`, glyph: `archive`, label: [`Bloated Page`], sub: `Dead Tuples` }),
+          long_txn: makeDevice(11, -4, { label: `Long Txn Reader`, tags: [{ text: `Snapshot Active`, tone: `red`, icon: `clock` }] }),
         },
         links: {
-          wb: h(`writer`, `bloated_page`, [`writer`, `bloated_page`], { heads: `end`, label: `creates dead tuples` }),
-          lb: h(`long_txn`, `bloated_page`, [`long_txn`, `bloated_page`], { heads: `none`, label: `pins xmin horizon` }),
+          wb: makeLink(`writer`, `bloated_page`, [`writer`, `bloated_page`], { heads: `end`, label: `creates dead tuples` }),
+          lb: makeLink(`long_txn`, `bloated_page`, [`long_txn`, `bloated_page`], { heads: `none`, label: `pins xmin horizon` }),
         },
         flows: [
           { route: [`wb`], bounce: false, rate: 1.8 },
@@ -158,13 +140,13 @@ export const sqlFootprintLesson = {
       metrics: { page_size: `8192 B`, free_space: `4200 B Reclaimed`, live_tuples: `40 rows`, dead_tuples: `0`, bloat_pct: `Clean` },
       scene: {
         entities: {
-          vacuum: d(-11, -4, { s: 4.4, h: 48, color: `blue`, glyph: `workflow`, label: [`Autovacuum`], sub: `Worker` }),
-          clean_page: d(0, -4, { s: 3.8, h: 42, color: `green`, glyph: `server`, label: [`Clean Page`], sub: `Dead Purged` }),
-          fsm: b(11, -4, { r: 2.2, h: 36, label: `Free Space Map`, color: `teal` }),
+          vacuum: makeBlock(-11, -4, { s: 4.4, h: 48, color: `blue`, glyph: `workflow`, label: [`Autovacuum`], sub: `Worker` }),
+          clean_page: makeBlock(0, -4, { s: 3.8, h: 42, color: `green`, glyph: `server`, label: [`Clean Page`], sub: `Dead Purged` }),
+          fsm: makeDb(11, -4, { r: 2.2, h: 36, label: `Free Space Map`, color: `teal` }),
         },
         links: {
-          vc: h(`vacuum`, `clean_page`, [`vacuum`, `clean_page`], { heads: `end`, label: `sweep dead rows` }),
-          cf: h(`clean_page`, `fsm`, [`clean_page`, `fsm`], { heads: `end`, label: `register free bytes` }),
+          vc: makeLink(`vacuum`, `clean_page`, [`vacuum`, `clean_page`], { heads: `end`, label: `sweep dead rows` }),
+          cf: makeLink(`clean_page`, `fsm`, [`clean_page`, `fsm`], { heads: `end`, label: `register free bytes` }),
         },
         flows: [
           { route: [`vc`, `cf`], bounce: false, rate: 1.6 },
@@ -183,18 +165,18 @@ export const sqlFootprintLesson = {
       metrics: { page_size: `8192 B`, free_space: `fillfactor=80`, live_tuples: `HOT Chain`, dead_tuples: `0 idx writes`, bloat_pct: `TOAST >2KB` },
       scene: {
         entities: {
-          upd: d(-14, -10, { s: 4.6, h: 52, color: `green`, glyph: `zap`, label: [`HOT UPDATE`], sub: `same 8KB page` }),
-          page: d(0, -10, { s: 4.6, h: 52, color: `blue`, glyph: `layers`, label: [`8KB Heap Page`], sub: `0 index write` }),
-          toast: b(15, -10, { r: 2.2, h: 48, color: `purple`, label: [`TOAST Table`], sub: `>2KB off-page` }),
-          card: S({ x: -12, y: 12 }, `6. HOT Updates & TOAST Threshold`, [
+          upd: makeBlock(-14, -10, { s: 4.6, h: 52, color: `green`, glyph: `zap`, label: [`HOT UPDATE`], sub: `same 8KB page` }),
+          page: makeBlock(0, -10, { s: 4.6, h: 52, color: `blue`, glyph: `layers`, label: [`8KB Heap Page`], sub: `0 index write` }),
+          toast: makeDb(15, -10, { r: 2.2, h: 48, color: `purple`, label: [`TOAST Table`], sub: `>2KB off-page` }),
+          card: makePanel({ x: -12, y: 12 }, `HOT Updates & TOAST Threshold`, [
             `ALTER TABLE orders SET (fillfactor = 80);`,
             `-- HOT update: non-indexed col + free space on page = 0 index writes!`,
             `-- TOAST: values > 2KB compressed (LZ4/pglz) & stored out-of-line`,
           ], { icon: `terminal` }),
         },
         links: {
-          up_pg: h(`upd`, `page`, [`upd`, `page`], { heads: `end`, label: `same page` }),
-          pg_ts: h(`page`, `toast`, [`page`, `toast`], { heads: `end`, label: `>2KB JSONB` }),
+          up_pg: makeLink(`upd`, `page`, [`upd`, `page`], { heads: `end`, label: `same page` }),
+          pg_ts: makeLink(`page`, `toast`, [`page`, `toast`], { heads: `end`, label: `>2KB JSONB` }),
         },
         flows: [{ route: [`up_pg`, `pg_ts`], bounce: false, rate: 1.8 }],
       },

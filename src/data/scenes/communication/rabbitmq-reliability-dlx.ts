@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const rabbitmqReliabilityDlxLesson = {
@@ -38,9 +36,9 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'Unprotected', delivery_guarantee: 'At-Most-Once', dlx_policy: 'None', queue_type: 'Classic Transient' },
       scene: {
         entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Producer', tags: [{ text: 'Unconfirmed writes', tone: 'red', icon: 'alert' }] }),
-          broker: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'inbox', label: ['RabbitMQ Broker', 'Transient Queue'], sub: 'Data lost on power crash' }),
-          card: S({ x: -2, y: 14 }, 'The 3 Vulnerability Points', [
+          producer: makeDevice(-10, -8, { form: 'phone', label: 'Producer', tags: [{ text: 'Unconfirmed writes', tone: 'red', icon: 'alert' }] }),
+          broker: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'inbox', label: ['RabbitMQ Broker', 'Transient Queue'], sub: 'Data lost on power crash' }),
+          card: makePanel({ x: -2, y: 14 }, 'The 3 Vulnerability Points', [
             'Point A: Producer -> Broker (Message drops on network glitch)',
             'Point B: Inside Broker (Server killed before fsync to disk)',
             'Point C: Broker -> Consumer (Worker throws unhandled Exception)',
@@ -48,7 +46,7 @@ export const rabbitmqReliabilityDlxLesson = {
           ], { icon: 'alert' })
         },
         links: {
-          pb: h('producer', 'broker', ['producer', 'broker'], { heads: 'end', label: 'Unverified Publish' })
+          pb: makeLink('producer', 'broker', ['producer', 'broker'], { heads: 'end', label: 'Unverified Publish' })
         },
         flows: [{ route: ['pb'], bounce: false, rate: 2.0 }]
       }
@@ -68,9 +66,9 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'Publisher Confirmed', delivery_guarantee: 'Guaranteed Ingestion', dlx_policy: 'None', queue_type: 'Durable Queue' },
       scene: {
         entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Producer App', tags: [{ text: 'confirm.select', tone: 'green', icon: 'lock' }] }),
-          broker: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'inbox', label: ['RabbitMQ Broker', 'Persisted to Disk'], sub: 'Returns basic.ack(seq)' }),
-          card: S({ x: -2, y: 14 }, 'Publisher Confirms Flow', [
+          producer: makeDevice(-10, -8, { form: 'phone', label: 'Producer App', tags: [{ text: 'confirm.select', tone: 'green', icon: 'lock' }] }),
+          broker: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'inbox', label: ['RabbitMQ Broker', 'Persisted to Disk'], sub: 'Returns basic.ack(seq)' }),
+          card: makePanel({ x: -2, y: 14 }, 'Publisher Confirms Flow', [
             '1. channel.confirm_select() enables async confirms',
             '2. Producer sends message #1, #2, #3 without blocking',
             '3. Broker writes to durable queue disk buffer',
@@ -79,7 +77,7 @@ export const rabbitmqReliabilityDlxLesson = {
           ], { icon: 'check' })
         },
         links: {
-          pb: h('producer', 'broker', ['producer', 'broker'], { heads: 'both', label: 'Publish / basic.ack' })
+          pb: makeLink('producer', 'broker', ['producer', 'broker'], { heads: 'both', label: 'Publish / basic.ack' })
         },
         flows: [{ route: ['pb'], bounce: true, rate: 2.8 }]
       }
@@ -99,10 +97,10 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'QoS Balanced', delivery_guarantee: 'At-Least-Once', dlx_policy: 'None', queue_type: 'Fair Dispatch' },
       scene: {
         entities: {
-          queue: d(-8, -4, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['Task Queue', 'prefetch = 1'], sub: 'Dispatches only when idle' }),
-          w1: d(8, -8, { s: 4.4, h: 52, color: 'purple', glyph: 'server', label: ['Worker 1 (Busy)', 'Processing Task #1'], sub: 'Unacked: 1 (Blocked)' }),
-          w2: d(8, 4, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['Worker 2 (Free)', 'Idle'], sub: 'Receives next message' }),
-          card: S({ x: -2, y: 14 }, 'Prefetch QoS Mechanics', [
+          queue: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['Task Queue', 'prefetch = 1'], sub: 'Dispatches only when idle' }),
+          w1: makeBlock(8, -8, { s: 4.4, h: 52, color: 'purple', glyph: 'server', label: ['Worker 1 (Busy)', 'Processing Task #1'], sub: 'Unacked: 1 (Blocked)' }),
+          w2: makeBlock(8, 4, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['Worker 2 (Free)', 'Idle'], sub: 'Receives next message' }),
+          card: makePanel({ x: -2, y: 14 }, 'Prefetch QoS Mechanics', [
             'Without prefetch: 100 messages split 50/50 upfront -> Worker 1 stalls',
             'With basic.qos(prefetch_count=1):',
             '- RabbitMQ will NOT send a message to a worker that has 1 unacked task',
@@ -111,8 +109,8 @@ export const rabbitmqReliabilityDlxLesson = {
           ], { icon: 'layers' })
         },
         links: {
-          qw1: h('queue', 'w1', ['queue', 'w1'], { heads: 'both' }),
-          qw2: h('queue', 'w2', ['queue', 'w2'], { heads: 'both' })
+          qw1: makeLink('queue', 'w1', ['queue', 'w1'], { heads: 'both' }),
+          qw2: makeLink('queue', 'w2', ['queue', 'w2'], { heads: 'both' })
         },
         flows: [
           { route: ['qw1'], bounce: true, rate: 1.0 },
@@ -135,10 +133,10 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'DLX Protected', delivery_guarantee: 'Poison Isolated', dlx_policy: 'x-dead-letter-exchange', queue_type: 'DLQ Routed' },
       scene: {
         entities: {
-          mainQ: d(-12, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'inbox', label: ['Main Queue: orders', 'Poison Msg Detected'], sub: 'basic.reject(requeue=false)' }),
-          dlx: d(-2, 4, { s: 4.6, h: 52, color: 'rose', glyph: 'route', label: ['DLX: orders_dlx', 'Dead Letter Exchange'], sub: 'Captures failed jobs' }),
-          dlq: d(12, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue (DLQ)', 'Isolated for Review'], sub: 'Alerts sent to Sentry / Slack' }),
-          card: S({ x: -2, y: 16 }, 'DLX Routing Arguments', [
+          mainQ: makeBlock(-12, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'inbox', label: ['Main Queue: orders', 'Poison Msg Detected'], sub: 'basic.reject(requeue=false)' }),
+          dlx: makeBlock(-2, 4, { s: 4.6, h: 52, color: 'rose', glyph: 'route', label: ['DLX: orders_dlx', 'Dead Letter Exchange'], sub: 'Captures failed jobs' }),
+          dlq: makeBlock(12, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue (DLQ)', 'Isolated for Review'], sub: 'Alerts sent to Sentry / Slack' }),
+          card: makePanel({ x: -2, y: 16 }, 'DLX Routing Arguments', [
             'Map<String, Object> args = new HashMap<>();',
             'args.put("x-dead-letter-exchange", "orders_dlx");',
             'args.put("x-dead-letter-routing-key", "orders_dead");',
@@ -147,8 +145,8 @@ export const rabbitmqReliabilityDlxLesson = {
           ], { icon: 'alert' })
         },
         links: {
-          qd: h('mainQ', 'dlx', ['mainQ', 'dlx'], { heads: 'end', label: 'Rejected' }),
-          dq: h('dlx', 'dlq', ['dlx', 'dlq'], { heads: 'end', label: 'Store in DLQ' })
+          qd: makeLink('mainQ', 'dlx', ['mainQ', 'dlx'], { heads: 'end', label: 'Rejected' }),
+          dq: makeLink('dlx', 'dlq', ['dlx', 'dlq'], { heads: 'end', label: 'Store in DLQ' })
         },
         flows: [
           { route: ['qd'], bounce: false, rate: 1.5 },
@@ -171,9 +169,9 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'Retry Loop', delivery_guarantee: 'Exponential Backoff', dlx_policy: 'TTL -> Return to Main', queue_type: 'Delayed Retry' },
       scene: {
         entities: {
-          mainQ: d(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'inbox', label: ['Main Queue', 'Attempts 1 & 2'], sub: 'Executes job' }),
-          retryQ: d(8, -4, { s: 4.8, h: 50, color: 'amber', glyph: 'clock', label: ['Retry Queue (30s TTL)', 'No Active Consumers'], sub: 'x-message-ttl: 30000' }),
-          card: S({ x: 0, y: 14 }, 'The Dead-Letter Retry Loop', [
+          mainQ: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'inbox', label: ['Main Queue', 'Attempts 1 & 2'], sub: 'Executes job' }),
+          retryQ: makeBlock(8, -4, { s: 4.8, h: 50, color: 'amber', glyph: 'clock', label: ['Retry Queue (30s TTL)', 'No Active Consumers'], sub: 'x-message-ttl: 30000' }),
+          card: makePanel({ x: 0, y: 14 }, 'The Dead-Letter Retry Loop', [
             '1. Worker fails to charge credit card (Gateway timeout)',
             '2. Worker rejects message -> DLX sends to retry_30s_q',
             '3. retry_30s_q has NO consumers: Message sits for 30s TTL',
@@ -182,8 +180,8 @@ export const rabbitmqReliabilityDlxLesson = {
           ], { icon: 'refresh' })
         },
         links: {
-          mr: h('mainQ', 'retryQ', ['mainQ', 'retryQ'], { heads: 'end', label: 'Fail -> Retry Q' }),
-          rm: h('retryQ', 'mainQ', ['retryQ', 'mainQ'], { heads: 'end', label: 'TTL Expired -> Return' })
+          mr: makeLink('mainQ', 'retryQ', ['mainQ', 'retryQ'], { heads: 'end', label: 'Fail -> Retry Q' }),
+          rm: makeLink('retryQ', 'mainQ', ['retryQ', 'mainQ'], { heads: 'end', label: 'TTL Expired -> Return' })
         },
         flows: [
           { route: ['mr'], bounce: false, rate: 1.8 },
@@ -206,10 +204,10 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'Raft Consensus', delivery_guarantee: 'Zero Data Loss', dlx_policy: 'Quorum Replicated', queue_type: 'Quorum Queue' },
       scene: {
         entities: {
-          leader: d(-8, -4, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Quorum Leader', 'Raft Term 4'], sub: 'Quorum size: 3' }),
-          follower1: d(8, -8, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Quorum Follower 1', 'Raft Log Replicated'], sub: 'Persisted to disk' }),
-          follower2: d(8, 4, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Quorum Follower 2', 'Raft Log Replicated'], sub: 'Persisted to disk' }),
-          card: S({ x: -2, y: 16 }, 'Quorum Queue Guarantees', [
+          leader: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Quorum Leader', 'Raft Term 4'], sub: 'Quorum size: 3' }),
+          follower1: makeBlock(8, -8, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Quorum Follower 1', 'Raft Log Replicated'], sub: 'Persisted to disk' }),
+          follower2: makeBlock(8, 4, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Quorum Follower 2', 'Raft Log Replicated'], sub: 'Persisted to disk' }),
+          card: makePanel({ x: -2, y: 16 }, 'Quorum Queue Guarantees', [
             '1. Message written to Raft Leader',
             '2. Leader replicates to Follower 1 and Follower 2',
             '3. When majority (2 of 3) persist to disk -> Publisher ACK returned',
@@ -217,8 +215,8 @@ export const rabbitmqReliabilityDlxLesson = {
           ], { icon: 'shield' })
         },
         links: {
-          lf1: h('leader', 'follower1', ['leader', 'follower1'], { heads: 'both' }),
-          lf2: h('leader', 'follower2', ['leader', 'follower2'], { heads: 'both' })
+          lf1: makeLink('leader', 'follower1', ['leader', 'follower1'], { heads: 'both' }),
+          lf2: makeLink('leader', 'follower2', ['leader', 'follower2'], { heads: 'both' })
         },
         flows: [
           { route: ['lf1'], bounce: true, rate: 2.2 },
@@ -241,11 +239,11 @@ export const rabbitmqReliabilityDlxLesson = {
       metrics: { reliability_tier: 'Enterprise Bulletproof', delivery_guarantee: '100% Durability', dlx_policy: 'Full DLX + DLQ', queue_type: 'Quorum + Confirms' },
       scene: {
         entities: {
-          publisher: y(-12, -4, { form: 'phone', label: 'Publisher', tags: [{ text: 'delivery_mode=2', tone: 'green', icon: 'lock' }] }),
-          quorumQ: d(-2, -4, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Quorum Queue (Raft)', 'durable=true'], sub: '3-Node Multi-AZ Quorum' }),
-          consumer: d(8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'server', label: ['Worker Pool', 'manual_ack'], sub: 'prefetch_count=1' }),
-          dlq: d(8, 6, { s: 4.4, h: 52, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue', 'Quarantine'], sub: 'Unrecoverable jobs' }),
-          card: S({ x: -2, y: 16 }, 'Production Reliability Checklist', [
+          publisher: makeDevice(-12, -4, { form: 'phone', label: 'Publisher', tags: [{ text: 'delivery_mode=2', tone: 'green', icon: 'lock' }] }),
+          quorumQ: makeBlock(-2, -4, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Quorum Queue (Raft)', 'durable=true'], sub: '3-Node Multi-AZ Quorum' }),
+          consumer: makeBlock(8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'server', label: ['Worker Pool', 'manual_ack'], sub: 'prefetch_count=1' }),
+          dlq: makeBlock(8, 6, { s: 4.4, h: 52, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue', 'Quarantine'], sub: 'Unrecoverable jobs' }),
+          card: makePanel({ x: -2, y: 16 }, 'Production Reliability Checklist', [
             '1. delivery_mode = 2 (PERSISTENT message header)',
             '2. x-queue-type = "quorum" (Raft replication across 3 AZs)',
             '3. channel.basic_qos(prefetch_count=1) (Fair dispatch)',
@@ -254,9 +252,9 @@ export const rabbitmqReliabilityDlxLesson = {
           ], { icon: 'check' })
         },
         links: {
-          pq: h('publisher', 'quorumQ', ['publisher', 'quorumQ'], { heads: 'both' }),
-          qc: h('quorumQ', 'consumer', ['quorumQ', 'consumer'], { heads: 'both' }),
-          qdl: h('quorumQ', 'dlq', ['quorumQ', 'dlq'], { heads: 'end', label: 'DLX' })
+          pq: makeLink('publisher', 'quorumQ', ['publisher', 'quorumQ'], { heads: 'both' }),
+          qc: makeLink('quorumQ', 'consumer', ['quorumQ', 'consumer'], { heads: 'both' }),
+          qdl: makeLink('quorumQ', 'dlq', ['quorumQ', 'dlq'], { heads: 'end', label: 'DLX' })
         },
         flows: [
           { route: ['pq'], bounce: true, rate: 2.5 },

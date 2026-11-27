@@ -1,27 +1,13 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBalancer,
+  makeBlock,
+  makeCrowd,
+  makeDb,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const ps = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
@@ -32,13 +18,13 @@ const hs = { x0: -15, x1: -1.2, y0: -3.6, y1: 13.8 };
 
 const gs = { x0: 1.2, x1: 15, y0: -3.6, y1: 13.8 };
 
-const _s = () => p(ps, 12, `1M users`);
+const _s = () => makeCrowd(ps, 12, `1M users`);
 
-const vs = (e = {}) => f(0, -10, e);
+const vs = (e = {}) => makeBalancer(0, -10, e);
 
-const ys = (e, t, n = {}) => ({ [e]: d(t, 0, { label: [`App`], ...n }) });
+const ys = (e, t, n = {}) => ({ [e]: makeBlock(t, 0, { label: [`App`], ...n }) });
 
-const bs = (e, t, n = {}) => ({ [e]: b(t, 10, { r: 1.8, glyph: `database`, ...n }) });
+const bs = (e, t, n = {}) => ({ [e]: makeDb(t, 10, { r: 1.8, glyph: `database`, ...n }) });
 
 const xs = { tags: [{ text: `single point of failure`, tone: `red`, icon: `alert` }] };
 
@@ -50,9 +36,9 @@ const Ss = (e = {}) => ({
   });
 
 const Cs = (e = {}) => ({
-    ul: h(`users`, `lb`, [`users`, `lb`], { heads: `both`, ...e }),
-    la1: h(`lb`, `a1`, [`lb`, `a1`]),
-    adb: h(`a1`, `db`, [`a1`, `db`], { heads: `both` }),
+    ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both`, ...e }),
+    la1: makeLink(`lb`, `a1`, [`lb`, `a1`]),
+    adb: makeLink(`a1`, `db`, [`a1`, `db`], { heads: `both` }),
   });
 
 const ws = (e, t = {}) => ({
@@ -63,15 +49,15 @@ const ws = (e, t = {}) => ({
   });
 
 const Ts = (e = {}) => ({
-    ul: h(`users`, `lb`, [`users`, `lb`], { heads: `both`, ...(e.ul || {}) }),
-    la1: h(`lb`, `a1`, [`lb`, [`a1`, `lb`], `a1`], e.la1),
-    la2: h(`lb`, `a2`, [`lb`, [`a2`, `lb`], `a2`], e.la2),
-    adb: h(`a1`, `db`, [`a1`, `db`], { heads: `both`, ...(e.adb || {}) }),
-    a2db: h(`a2`, `db`, [`a2`, [`a2`, 5], [`db+1`, 5], [`db+1`, `db`]], {
+    ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both`, ...(e.ul || {}) }),
+    la1: makeLink(`lb`, `a1`, [`lb`, [`a1`, `lb`], `a1`], e.la1),
+    la2: makeLink(`lb`, `a2`, [`lb`, [`a2`, `lb`], `a2`], e.la2),
+    adb: makeLink(`a1`, `db`, [`a1`, `db`], { heads: `both`, ...(e.adb || {}) }),
+    a2db: makeLink(`a2`, `db`, [`a2`, [`a2`, 5], [`db+1`, 5], [`db+1`, `db`]], {
       heads: `both`,
       ...(e.a2db || {}),
     }),
-    rep: h(`db`, `db2`, [`db`, `db2`], { label: `replication`, ...(e.rep || {}) }),
+    rep: makeLink(`db`, `db2`, [`db`, `db2`], { label: `replication`, ...(e.rep || {}) }),
   });
 
 const Es = [
@@ -86,26 +72,26 @@ const Es = [
 const Ds = (e = {}) => ({
     users: _s(),
     lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-    za: x(hs, `ZONE A · OFFLINE`),
-    zb: x(gs, `ZONE B`),
+    za: makeZone(hs, `ZONE A · OFFLINE`),
+    zb: makeZone(gs, `ZONE B`),
     ...ws(8, {
-      a1: g,
-      db: { ...g, label: `leader` },
+      a1: DEAD_STATE,
+      db: { ...DEAD_STATE, label: `leader` },
       db2: { label: `leader`, tags: [{ text: `promoted`, tone: `green`, icon: `check` }] },
     }),
     ...e,
   });
 
 const Os = {
-    ul: h(`users`, `lb`, [`users`, `lb`], { heads: `both` }),
-    la1: h(`lb`, `a1`, [`lb`, [`a1`, `lb`], `a1`], { style: `off` }),
-    la2: h(`lb`, `a2`, [`lb`, [`a2`, `lb`], `a2`]),
-    a2d2: h(`a2`, `db2`, [`a2`, `db2`], { heads: `both` }),
+    ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both` }),
+    la1: makeLink(`lb`, `a1`, [`lb`, [`a1`, `lb`], `a1`], { style: `off` }),
+    la2: makeLink(`lb`, `a2`, [`lb`, [`a2`, `lb`], `a2`]),
+    a2d2: makeLink(`a2`, `db2`, [`a2`, `db2`], { heads: `both` }),
   };
 
 const ks = [{ route: [`ul`, `la2`, `a2d2`], rate: 2.6, bounce: !0 }];
 
-const As = (e, t, n) => S({ x: 15, y: 13.8, z: 0, dx: -130, dy: -240 }, e, t, { icon: n });
+const As = (e, t, n) => makePanel({ x: 15, y: 13.8, z: 0, dx: -130, dy: -240 }, e, t, { icon: n });
 
 // --- reliability ---
 const js = {
@@ -226,13 +212,13 @@ const js = {
         scene: {
           entities: {
             users: _s(),
-            dc: x(ms, `ONE DATA CENTER · POWER LOST`),
-            lb: vs(g),
+            dc: makeZone(ms, `ONE DATA CENTER · POWER LOST`),
+            lb: vs(DEAD_STATE),
             ...ws(5, {
-              a1: g,
-              a2: g,
-              db: { ...g, label: `leader` },
-              db2: { ...g, label: `follower` },
+              a1: DEAD_STATE,
+              a2: DEAD_STATE,
+              db: { ...DEAD_STATE, label: `leader` },
+              db2: { ...DEAD_STATE, label: `follower` },
             }),
           },
           links: Ts({
@@ -268,8 +254,8 @@ const js = {
           entities: {
             users: _s(),
             lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-            za: x(hs, `ZONE A`),
-            zb: x(gs, `ZONE B`),
+            za: makeZone(hs, `ZONE A`),
+            zb: makeZone(gs, `ZONE B`),
             ...ws(8),
           },
           links: Ts({ rep: { label: `cross-zone replication` } }),
@@ -334,10 +320,10 @@ const js = {
           entities: {
             users: _s(),
             lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-            za: x(hs, `ZONE A`),
-            zb: x(gs, `ZONE B`),
+            za: makeZone(hs, `ZONE A`),
+            zb: makeZone(gs, `ZONE B`),
             ...ws(8, {
-              a1: { ...g, tags: [{ text: `killed by chaos test`, tone: `amber`, icon: `bug` }] },
+              a1: { ...DEAD_STATE, tags: [{ text: `killed by chaos test`, tone: `amber`, icon: `bug` }] },
             }),
           },
           links: Ts({ la1: { style: `off` }, adb: { style: `off` } }),
@@ -365,11 +351,11 @@ const js = {
           entities: {
             users: _s(),
             lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-            za: x(hs, `ZONE A`),
-            zb: x(gs, `ZONE B`),
+            za: makeZone(hs, `ZONE A`),
+            zb: makeZone(gs, `ZONE B`),
             ...ws(8, {
-              a1: { ...g, tags: [{ text: `v2.4 · crashing`, tone: `red`, icon: `bug` }] },
-              a2: { ...g, tags: [{ text: `v2.4 · crashing`, tone: `red`, icon: `bug` }] },
+              a1: { ...DEAD_STATE, tags: [{ text: `v2.4 · crashing`, tone: `red`, icon: `bug` }] },
+              a2: { ...DEAD_STATE, tags: [{ text: `v2.4 · crashing`, tone: `red`, icon: `bug` }] },
             }),
           },
           links: Ts({
@@ -403,8 +389,8 @@ const js = {
           entities: {
             users: _s(),
             lb: vs({ tags: [{ text: `1% → canary`, tone: `amber`, icon: `split` }] }),
-            za: x(hs, `ZONE A`),
-            zb: x(gs, `ZONE B`),
+            za: makeZone(hs, `ZONE A`),
+            zb: makeZone(gs, `ZONE B`),
             ...ws(8, {
               a1: { tags: [{ text: `v2.3 · 99%`, tone: `green` }] },
               a2: { tags: [{ text: `v2.4 canary · 1%`, tone: `amber`, icon: `bug` }] },
@@ -446,14 +432,14 @@ const js = {
         scene: {
           entities: {
             users: _s(),
-            lb: d(0, -10, {
+            lb: makeBlock(0, -10, {
               color: `orange`,
               glyph: `globe`,
               label: [`Global`, `DNS`],
               tags: [{ text: `nearest healthy region`, icon: `globe` }],
             }),
-            za: x(hs, `REGION · EU`),
-            zb: x(gs, `REGION · US`),
+            za: makeZone(hs, `REGION · EU`),
+            zb: makeZone(gs, `REGION · US`),
             ...ws(8, { db: { label: `EU primary` }, db2: { label: `US replica` } }),
           },
           links: Ts({ rep: { label: `cross-region · ~100 ms lag` } }),
@@ -482,8 +468,8 @@ const js = {
           entities: {
             users: _s(),
             lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-            za: x(hs, `ZONE A`),
-            zb: x(gs, `ZONE B`),
+            za: makeZone(hs, `ZONE A`),
+            zb: makeZone(gs, `ZONE B`),
             ...ws(8),
           },
           links: Ts({ rep: { label: `cross-zone replication` } }),

@@ -1,271 +1,260 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeHot, makeLink, makePanel, makeQueue } from '@/lib/simulator/scene-builders';
+
+// One partition (orders-0), three replicas. broker-1 holds the leader copy; the
+// followers on either side fetch from it. Each replica's log hangs below its
+// broker, so you can see who is behind. The consumer under the leader may only
+// read up to the high watermark.
+//
+//                 producer
+//      broker-0 ←── broker-1 ──→ broker-2
+//       replica     leader       replica
+//                  consumer
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+const B = { b0: [-9.3, -5], b1: [-3.1, 1.1], b2: [3, 7.3] } as const;
+type BrokerId = keyof typeof B;
+
+const producer = (tags: Tag[] = [], o: Opts = {}) =>
+  makeBlock(-15.3, 13.3, { s: 4.4, h: 48, color: `blue`, glyph: `send`, label: [`Producer`], sub: `orders app`, tags, ...o });
+const broker = (id: BrokerId, role: string, tags: Tag[] = [], o: Opts = {}) =>
+  makeBlock(B[id][0], B[id][1], { s: 4.6, h: 52, color: `slab`, glyph: `server`, label: [`broker-${id[1]}`], sub: role, tags, ...o });
+const log = (id: BrokerId, n: number) => makeQueue(B[id][0] + 2.6, B[id][1] - 2.6, n, [0.62, -0.62]);
+const consumer = (tags: Tag[] = []) =>
+  makeBlock(8.3, -10.3, { s: 4.2, h: 46, color: `green`, glyph: `inbox`, label: [`consumer`], sub: `billing`, tags });
+
+const L = {
+  produce: makeLink(`producer`, `b1`, [`producer`, `b1`]),
+  read: makeLink(`b1`, `c1`, [`b1`, `c1`]),
+  fetch0: makeLink(`b0`, `b1`, [`b0`, `b1`], { heads: `both` }),
+  fetch2: makeLink(`b2`, `b1`, [`b2`, `b1`], { heads: `both` }),
+};
+
+const card = (title: string, lines: string[], icon: string) =>
+  makePanel({ x: -9.3, y: -5, z: 0, dx: -240, dy: -175 }, title, lines, { icon });
+
+const replicate = (rate = 1.2) => ({ routes: [{ path: [`fetch0`] }, { path: [`fetch2`] }], kind: `msg`, rate, bounce: true });
 
 export const kafkaReplicationIsrLesson = {
-  id: 'kafka-replication-isr',
-  title: 'Kafka Replication: ISR, High Watermark & acks=all',
-  summary: 'Architect zero-data-loss durability: Leader-Follower replication, In-Sync Replicas (ISR), High Watermark commits, and min.insync.replicas.',
+  id: `kafka-replication-isr`,
+  title: `Kafka Replication: ISR, High Watermark & acks=all`,
+  summary: `Zero-data-loss Kafka: leader and follower replicas, the in-sync replica set, the high watermark, acks=all with min.insync.replicas, and unclean leader election.`,
   minutes: 14,
-  level: 'intermediate',
-  metrics: ['replication_factor', 'producer_acks', 'min_isr', 'high_watermark'],
-  legend: ['req', 'res', ['ping', 'fetch replication'], 'fail'],
+  level: `intermediate`,
+  metrics: [`rf`, `acks`, `isr`, `hw`],
+  legend: [`req`, `res`, [`msg`, `record / fetch`], `fail`],
   goals: [
-    { text: 'Leader-Follower partition replication mechanics', step: 1 },
-    { text: 'In-Sync Replicas (ISR) and the', step: 2 },
-    { text: 'Producer acks=0, acks=1 vs acks=all', step: 3 },
-    { text: 'Why acks=all requires min.insync.replicas', step: 4 },
-    { text: 'Clean vs unclean leader election', step: 6 },
+    { text: `Leader and follower replicas`, step: 2 },
+    { text: `In-sync replicas and the high watermark`, step: 3 },
+    { text: `acks=0, acks=1 and acks=all`, step: 4 },
+    { text: `How a slow follower leaves the ISR`, step: 5 },
+    { text: `Why acks=all needs min.insync.replicas`, step: 6 },
+    { text: `Clean vs unclean leader election`, step: 7 },
   ],
   steps: [
     {
-      short: 'Why Replicate?',
-      chapter: 'setup',
-      title: 'Broker Failures & The Replication Factor',
+      short: `One copy`,
+      chapter: `problem`,
+      title: `One broker, one copy`,
       body: [
-        'Hardware fails constantly in cloud datacenters: bad disks, kernel panics, network splits.',
-        'To prevent catastrophic data loss, Kafka replicates each partition across multiple brokers (typically <code>replication.factor = 3</code>). Exactly one broker acts as the <b>Partition Leader</b> (handling all client reads and writes), while other brokers act as <b>Followers</b> passively replicating the log.'
+        `Partition <code>orders-0</code> lives on broker-1 only. Producers write to it and consumers read from it.`,
+        `If that disk dies, every record in the partition is gone. Brokers fail all the time — disks, kernels, whole racks — so one copy is not storage, it is a bet.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'A replication factor of 3 allows the cluster to survive 2 broker deaths without data loss.'
-      },
-      metrics: { replication_factor: '3 Replicas', producer_acks: 'acks=all', min_isr: '2', high_watermark: 'Offset 100' },
+      metrics: { rf: 1, acks: `1`, isr: `1 / 1`, hw: 100 },
       scene: {
         entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Producer', tags: [{ text: 'Write to Leader', icon: 'zap' }] }),
-          leader: d(6, -6, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Broker 1 (Leader)', 'Partition 0'], sub: 'Serves all Reads/Writes' }),
-          follower: d(6, 6, { s: 4.6, h: 52, color: 'teal', glyph: 'database', label: ['Broker 2 (Follower)', 'Partition 0'], sub: 'Passive Replica' }),
-          card: S({ x: -2, y: 14 }, 'Replication Terminology', [
-            '- Leader: Serves all produce and consume requests',
-            '- Follower: Sends continuous FetchRequests to replicate the log',
-            '- Replication Factor: 3 (1 Leader + 2 Followers)',
-            '- Goal: If Broker 1 bursts into flames, Broker 2 takes over instantly'
-          ], { icon: 'layers' })
+          producer: producer(),
+          b1: broker(`b1`, `leader`, [{ text: `only copy`, tone: `amber`, icon: `alert` }]),
+          l1: log(`b1`, 6),
+          c1: consumer(),
         },
-        links: {
-          pl: h('producer', 'leader', ['producer', 'leader'], { heads: 'both' }),
-          lf: h('leader', 'follower', ['leader', 'follower'], { heads: 'both', label: 'FetchRequest' })
-        },
+        links: { produce: L.produce, read: L.read },
         flows: [
-          { route: ['pl'], bounce: true, rate: 2.2 },
-          { route: ['lf'], bounce: true, rate: 2.2 }
-        ]
-      }
+          { route: [`produce`], kind: `msg`, rate: 1.4, bounce: true },
+          { route: [`read`], kind: `msg`, rate: 1.2 },
+        ],
+      },
     },
     {
-      short: 'ISR & High Watermark',
-      chapter: 'technique',
-      title: 'In-Sync Replicas (ISR) & High Watermark (HW)',
+      short: `Followers`,
+      chapter: `technique`,
+      title: `Followers copy the leader`,
       body: [
-        'Not all followers are equal. A follower that falls behind due to network issues is kicked out of the <b>In-Sync Replicas (ISR)</b> pool.',
-        'The <b>High Watermark (HW)</b> is the highest offset that has been replicated to <b>ALL members of the ISR</b>. Consumers can <b>only read messages below the High Watermark</b>, ensuring uncommitted records are never exposed to clients!'
+        `With <code>replication.factor=3</code> the partition has three replicas on three brokers. One is the <span class="term">leader</span>: every produce and fetch goes to it.`,
+        `The other two are <span class="term">followers</span>. They don’t receive writes from producers — they fetch from the leader, exactly like a consumer, and append the same records in the same order.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'The High Watermark guarantees that even if the leader crashes, consumers never experience phantom reads or rolled-back messages.'
-      },
-      metrics: { replication_factor: '3', producer_acks: 'acks=all', min_isr: '2 (Healthy)', high_watermark: 'HW = Offset 104' },
+      changes: [`+ broker-0, broker-2 (followers)`, `~ replication.factor 1 → 3`],
+      metrics: { rf: 3, acks: `1`, isr: `3 / 3`, hw: 104 },
       scene: {
         entities: {
-          leader: d(-8, -4, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Leader (Broker 1)', 'Log End Offset (LEO): 106'], sub: 'High Watermark (HW): 104' }),
-          isr1: d(8, -8, { s: 4.4, h: 52, color: 'green', glyph: 'database', label: ['Follower 1 (In-Sync)', 'LEO: 104'], sub: 'ISR Member' }),
-          isr2: d(8, 4, { s: 4.4, h: 52, color: 'green', glyph: 'database', label: ['Follower 2 (In-Sync)', 'LEO: 104'], sub: 'ISR Member' }),
-          card: S({ x: -2, y: 16 }, 'LEO vs High Watermark (HW)', [
-            '- Log End Offset (LEO): Next offset written to local disk (106)',
-            '- High Watermark (HW): Offset replicated to ALL ISR replicas (104)',
-            '- Offsets 105 & 106: In-flight replication (HIDDEN FROM CONSUMERS)',
-            '- Only when Follower 1 & 2 ACK 106 does HW advance to 106'
-          ], { icon: 'listOrdered' })
+          producer: producer(),
+          b0: broker(`b0`, `follower`),
+          b1: broker(`b1`, `leader`),
+          b2: broker(`b2`, `follower`),
+          l0: log(`b0`, 6),
+          l1: log(`b1`, 6),
+          l2: log(`b2`, 6),
+          c1: consumer(),
         },
-        links: {
-          l1: h('leader', 'isr1', ['leader', 'isr1'], { heads: 'both' }),
-          l2: h('leader', 'isr2', ['leader', 'isr2'], { heads: 'both' })
-        },
-        flows: [
-          { route: ['l1'], bounce: true, rate: 2.0 },
-          { route: ['l2'], bounce: true, rate: 2.0 }
-        ]
-      }
+        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: L.fetch2 },
+        flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, replicate(), { route: [`read`], kind: `msg`, rate: 1.2 }],
+      },
     },
     {
-      short: 'Producer Acks',
-      chapter: 'technique',
-      title: 'Producer acks=0, acks=1 vs acks=all (-1)',
+      short: `HW`,
+      chapter: `insight`,
+      title: `Consumers only see what every in-sync copy has`,
       body: [
-        'The producer controls its durability guarantee via the <code>acks</code> configuration parameter:',
-        '• <code>acks=0:</code> "Fire and Forget" — producer never waits for a reply (zero latency, high risk of silent data loss).<br>• <code>acks=1:</code> Waits only for Leader to write locally (loses data if leader dies before replicating).<br>• <code>acks=all (-1):</code> Waits until the message is written to the Leader <b>AND all ISR replicas</b>.'
+        `Replicas that are caught up form the <span class="term">ISR</span> (in-sync replicas). The leader tracks how far each one has fetched.`,
+        `The <span class="term">high watermark</span> is the last offset present on <b>all</b> ISR members. Consumers can read only up to it — so they never see a record that could still vanish if the leader failed right now.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'For financial transactions, payments, or critical events, acks=all is non-negotiable.'
-      },
-      metrics: { replication_factor: '3', producer_acks: 'acks=all (Full Quorum)', min_isr: '2', high_watermark: 'Committed' },
+      changes: [`~ leader at 108, followers at 106 and 104`, `~ high watermark = 104`],
+      metrics: { rf: 3, acks: `1`, isr: `3 / 3`, hw: 104 },
       scene: {
         entities: {
-          producer: y(-10, -8, { form: 'phone', label: 'Payment Producer', tags: [{ text: 'acks=all (-1)', tone: 'green', icon: 'lock' }] }),
-          leader: d(0, 0, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Leader', 'Writes & Fans Out'], sub: 'Waits for ISR ACKs' }),
-          follower: d(10, 8, { s: 4.6, h: 52, color: 'teal', glyph: 'database', label: ['ISR Replica', 'Acks to Leader'], sub: 'Persisted to disk' }),
-          card: S({ x: -2, y: 14 }, 'Producer Acks Matrix', [
-            'acks=0:  Throughput: Max  | Latency: <1ms  | Durability: Terrible (Data lost if network glitch)',
-            'acks=1:  Throughput: High | Latency: 2ms   | Durability: Medium (Lost if leader crashes before sync)',
-            'acks=-1: Throughput: High | Latency: 5ms   | Durability: Maximum (Zero data loss across crashes)'
-          ], { icon: 'check' })
+          producer: producer(),
+          b0: broker(`b0`, `follower`, [{ text: `LEO 106`, tone: `gray` }]),
+          b1: broker(`b1`, `leader`, [{ text: `LEO 108`, tone: `gray` }]),
+          b2: broker(`b2`, `follower`, [{ text: `LEO 104`, tone: `gray` }]),
+          l0: log(`b0`, 7),
+          l1: log(`b1`, 8),
+          l2: log(`b2`, 6),
+          c1: consumer([{ text: `reads ≤ HW 104`, tone: `green`, icon: `eye` }]),
+          card: card(`describe the topic`, [`$ kafka-topics.sh --describe --topic orders`, `Partition: 0  Leader: 1`, `= Replicas: 1,0,2   Isr: 1,0,2`], `search`),
         },
-        links: {
-          pl: h('producer', 'leader', ['producer', 'leader'], { heads: 'both' }),
-          lf: h('leader', 'follower', ['leader', 'follower'], { heads: 'both', label: 'ISR Replication' })
-        },
-        flows: [
-          { route: ['pl'], bounce: true, rate: 2.2 },
-          { route: ['lf'], bounce: true, rate: 2.2 }
-        ]
-      }
+        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: L.fetch2 },
+        flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, replicate(), { route: [`read`], kind: `msg`, rate: 1 }],
+      },
     },
     {
-      short: 'min.insync.replicas',
-      chapter: 'deep',
-      title: 'The acks=all Trap: Why You Need min.insync.replicas',
+      short: `acks`,
+      chapter: `technique`,
+      title: `acks decides when “sent” means sent`,
       body: [
-        'A common mistake: developers set <code>acks=all</code> and assume data is 100% safe. But what happens if 2 followers die?',
-        'The ISR shrinks to just the Leader itself (ISR size = 1). Now <code>acks=all</code> only writes to the Leader! If the leader crashes, data is permanently lost. To fix this, you must set <code>min.insync.replicas=2</code>: if fewer than 2 replicas exist in the ISR, the leader <b>rejects writes with NotEnoughReplicasException</b>!'
+        `<code>acks=0</code>: don’t wait at all. <code>acks=1</code>: wait for the leader’s write — lost if the leader dies before followers copy it. <code>acks=all</code>: wait until every ISR member has it.`,
+        `With <code>acks=all</code> a record is acknowledged only once it is below the high watermark. That costs one replication round trip — a few milliseconds — and buys durability.`,
       ],
-      callout: {
-        kind: 'alert',
-        text: 'The Holy Trinity of Kafka Durability: replication.factor=3 + acks=all + min.insync.replicas=2.'
-      },
-      metrics: { replication_factor: '3', producer_acks: 'acks=all', min_isr: 'min.insync.replicas=2', high_watermark: 'Strict Enforced' },
+      changes: [`~ producer acks 1 → all`],
+      metrics: { rf: 3, acks: `all`, isr: `3 / 3`, hw: 108 },
       scene: {
         entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Producer', tags: [{ text: 'acks=all', icon: 'zap' }] }),
-          leader: d(-2, -4, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Leader', 'ISR Check: 1 < 2!'], sub: 'Rejects write (Safety!)' }),
-          dead1: d(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'server', label: ['Follower 1 (DOWN)', 'Crashed'], sub: 'Kicked from ISR' }),
-          dead2: d(8, 2, { s: 4.4, h: 52, color: 'rose', glyph: 'server', label: ['Follower 2 (DOWN)', 'Network Partition'], sub: 'Kicked from ISR' }),
-          card: S({ x: -2, y: 14 }, 'NotEnoughReplicasException Protection', [
-            'Scenario: Both followers crashed. Only Leader alive (ISR size = 1)',
-            'With default config: acks=all succeeds on Leader alone -> High risk!',
-            'With min.insync.replicas = 2:',
-            'Leader throws: NotEnoughReplicasException',
-            'Prevents un-replicated writes: Producer retries until a follower recovers!'
-          ], { icon: 'alert' })
+          producer: producer([{ text: `acks=all`, tone: `green`, icon: `check` }]),
+          b0: broker(`b0`, `follower`),
+          b1: broker(`b1`, `leader`),
+          b2: broker(`b2`, `follower`),
+          l0: log(`b0`, 8),
+          l1: log(`b1`, 8),
+          l2: log(`b2`, 8),
+          c1: consumer(),
+          card: card(`producer config`, [`props.put("acks", "all");`, `props.put("enable.idempotence", "true");`, `# ack = written by leader AND all of the ISR`], `code`),
         },
-        links: {
-          pl: h('producer', 'leader', ['producer', 'leader'], { heads: 'both', label: 'Exception Thrown' })
-        },
-        flows: [{ route: ['pl'], bounce: true, rate: 1.4 }]
-      }
+        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: L.fetch2 },
+        flows: [{ route: [`produce`], kind: `msg`, rate: 1.2, bounce: true, speed: 0.6 }, replicate(1.4), { route: [`read`], kind: `msg`, rate: 1 }],
+      },
     },
     {
-      short: 'ISR Eviction',
-      chapter: 'deep',
-      title: 'Follower Lag & ISR Eviction (replica.lag.time.max.ms)',
+      short: `Lagging`,
+      chapter: `problem`,
+      title: `A slow follower is dropped from the ISR`,
       body: [
-        'How does a leader know when to kick a slow follower out of the ISR pool?',
-        'If a follower stops sending FetchRequests or fails to catch up to the leader\'s Log End Offset within <code>replica.lag.time.max.ms</code> (default 30 seconds), the leader evicts it from the ISR and writes the updated ISR to the controller. Once the follower recovers and catches up, it is re-admitted to the ISR.'
+        `broker-2 has a failing disk and falls behind. If it stayed in the ISR, every <code>acks=all</code> write would wait for it.`,
+        `So a follower that hasn’t caught up for <code>replica.lag.time.max.ms</code> (30 s) is removed from the ISR. Writes continue with the two healthy copies; broker-2 rejoins once it catches up.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Evicting slow followers prevents a single degraded network switch from stalling all acks=all producers.'
-      },
-      metrics: { replication_factor: '3', producer_acks: 'acks=all', min_isr: '2 Alive', high_watermark: 'Unstalled' },
+      changes: [`− broker-2 out of ISR`, `~ ISR {1,0,2} → {1,0}`],
+      metrics: { rf: 3, acks: `all`, isr: `2 / 3`, hw: 112 },
       scene: {
         entities: {
-          leader: d(-8, -4, { s: 4.8, h: 50, color: 'blue', glyph: 'database', label: ['Leader', 'Heartbeat Monitor'], sub: 'Evicts slow follower' }),
-          fastFollower: d(8, -8, { s: 4.4, h: 52, color: 'green', glyph: 'database', label: ['Follower 1 (Healthy)', 'Lag: 2ms'], sub: 'In-Sync (ISR)' }),
-          slowFollower: d(8, 4, { s: 4.4, h: 52, color: 'rose', glyph: 'database', label: ['Follower 2 (Stalled)', 'Lag: 35s > 30s!'], sub: 'EVICTED FROM ISR' }),
-          card: S({ x: 0, y: 14 }, 'ISR Eviction Parameters', [
-            'replica.lag.time.max.ms = 30000 (30 seconds)',
-            'Follower 2 suffers GC pause or packet loss > 30s:',
-            '1. Leader detects timeout -> Removes Follower 2 from ISR',
-            '2. Updated ISR [Broker 1, Broker 2] written to @metadata',
-            '3. Producers continue producing without being stalled by Follower 2!'
-          ], { icon: 'clock' })
+          producer: producer([{ text: `acks=all`, tone: `green`, icon: `check` }]),
+          b0: broker(`b0`, `follower`),
+          b1: broker(`b1`, `leader`),
+          b2: broker(`b2`, `follower`, [{ text: `lag 45 s · out of ISR`, tone: `red`, icon: `hourglass` }], makeHot(0.95)),
+          l0: log(`b0`, 9),
+          l1: log(`b1`, 9),
+          l2: log(`b2`, 5),
+          c1: consumer(),
+          card: card(`broker config`, [`$ kafka-configs.sh --describe --entity-type brokers`, `replica.lag.time.max.ms=30000`, `= Isr: 1,0`], `hourglass`),
         },
-        links: {
-          lf: h('leader', 'fastFollower', ['leader', 'fastFollower'], { heads: 'both' }),
-          ls: h('leader', 'slowFollower', ['leader', 'slowFollower'], { heads: 'end', label: 'Lag Timeout' })
-        },
-        flows: [
-          { route: ['lf'], bounce: true, rate: 2.2 },
-          { route: ['ls'], bounce: false, rate: 0.8 }
-        ]
-      }
+        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: { ...L.fetch2, style: `dashed` } },
+        flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, { route: [`fetch0`], kind: `msg`, rate: 1.4, bounce: true }, { route: [`fetch2`], kind: `slow`, rate: 0.3 }, { route: [`read`], kind: `msg`, rate: 1 }],
+      },
     },
     {
-      short: 'Unclean Election',
-      chapter: 'problem',
-      title: 'Unclean Leader Election: Availability vs Durability',
+      short: `min ISR`,
+      chapter: `solution`,
+      title: `acks=all alone can mean “acks=1”`,
       body: [
-        'What happens if the Leader crashes while all remaining followers are out of sync (ISR is empty)? You face an impossible CAP theorem dilemma:',
-        '1. <b>Clean Election (Default):</b> Wait for the old leader to recover. Safe, but partition remains offline (Favors Consistency).<br>2. <b>Unclean Leader Election (<code>unclean.leader.election.enable=true</code>):</b> Elect an out-of-sync follower. Restores service immediately, but permanently loses un-replicated messages (Favors Availability).'
+        `Now broker-0 dies too. The ISR shrinks to just the leader — and <code>acks=all</code> means “all of the ISR”, which is one copy. Durability silently became <code>acks=1</code>.`,
+        `<code>min.insync.replicas=2</code> closes the gap: if fewer than 2 replicas are in sync, the leader rejects writes with <code>NotEnoughReplicas</code>. The producer retries instead of trusting a single disk.`,
       ],
-      callout: {
-        kind: 'alert',
-        text: 'Never enable unclean.leader.election in financial or audit systems. It violates message ordering and causes silent data truncation.'
-      },
-      metrics: { replication_factor: '3', producer_acks: 'unclean=false', min_isr: '0 (Leader Dead)', high_watermark: 'Offline / Safe' },
+      changes: [`− broker-0 down`, `~ ISR {1}: writes rejected`],
+      metrics: { rf: 3, acks: `all`, isr: `1 / 3`, hw: 112 },
       scene: {
         entities: {
-          deadLeader: d(-8, -4, { s: 4.4, h: 52, color: 'rose', glyph: 'server', label: ['Old Leader (DEAD)', 'Had Offsets 0..150'], sub: 'Holds true state' }),
-          outOfSync: d(8, 4, { s: 4.6, h: 52, color: 'amber', glyph: 'database', label: ['Out-of-Sync Follower', 'Only has Offsets 0..100'], sub: 'Missing 50 messages!' }),
-          card: S({ x: 0, y: 14 }, 'The Unclean Election Dilemma', [
-            'unclean.leader.election.enable = false (Recommended):',
-            '  - Partition stays OFFLINE until Broker 1 boots back up',
-            '  - Zero data loss: 100% messages preserved',
-            'unclean.leader.election.enable = true (High Availability):',
-            '  - Out-of-sync node promoted -> Messages 101..150 ARE DELETED FOREVER!',
-            '  - Offsets re-numbered, consumers experience duplicate or lost records'
-          ], { icon: 'alert' })
+          producer: producer([{ text: `NotEnoughReplicas`, tone: `red`, icon: `alert` }]),
+          b0: broker(`b0`, `follower`, [], DEAD_STATE),
+          b1: broker(`b1`, `leader`, [{ text: `ISR 1 < min 2`, tone: `red`, icon: `shield` }]),
+          b2: broker(`b2`, `follower`, [{ text: `out of ISR`, tone: `red` }]),
+          l0: log(`b0`, 9),
+          l1: log(`b1`, 9),
+          l2: log(`b2`, 6),
+          c1: consumer(),
+          card: card(`topic config`, [`$ kafka-configs.sh --alter --topic orders \\`, `    --add-config min.insync.replicas=2`, `# RF=3, min ISR=2: survives 1 broker loss`], `shield`),
         },
-        links: {
-          do: h('deadLeader', 'outOfSync', ['deadLeader', 'outOfSync'], { heads: 'both', label: '50 Messages Gap' })
-        },
-        flows: [{ route: ['do'], bounce: true, rate: 1.0 }]
-      }
+        links: { produce: { ...L.produce, fail: 1 }, read: L.read, fetch0: { ...L.fetch0, style: `off` }, fetch2: { ...L.fetch2, style: `dashed` } },
+        flows: [{ route: [`produce`], kind: `fail`, rate: 1 }, { route: [`fetch2`], kind: `slow`, rate: 0.4 }, { route: [`read`], kind: `msg`, rate: 0.8 }],
+      },
     },
     {
-      short: 'Golden Rules',
-      chapter: 'solution',
-      title: 'Production Kafka Durability Blueprint',
+      short: `Unclean`,
+      chapter: `tradeoff`,
+      title: `The leader dies: wait, or lose data?`,
       body: [
-        'To achieve 100% zero data loss in production, configure the enterprise golden standard:',
-        '• <code>replication.factor = 3</code> (spread across 3 Availability Zones).<br>• <code>acks = all</code> on all producers.<br>• <code>min.insync.replicas = 2</code> on all topics.<br>• <code>unclean.leader.election.enable = false</code>.<br>• <code>enable.idempotence = true</code> on producers (prevents duplicate retries).'
+        `broker-1 fails. The only live replica is broker-2, which left the ISR and is missing offsets 105–112. Making it leader would bring the partition back — and silently drop 8 acknowledged records.`,
+        `With <code>unclean.leader.election.enable=false</code> (the default) Kafka refuses and keeps the partition offline until an in-sync replica returns. Consistency over availability — usually the right call.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'This blueprint guarantees zero message loss and exactly-once delivery semantics (EOS) across all failure modes.'
-      },
-      metrics: { replication_factor: '3 (Multi-AZ)', producer_acks: 'acks=all', min_isr: '2', high_watermark: 'Enterprise Gold' },
+      changes: [`− broker-1 down`, `~ partition offline (no ISR member)`],
+      metrics: { rf: 3, acks: `all`, isr: `0 / 3`, hw: 112 },
       scene: {
         entities: {
-          producer: y(-12, -4, { form: 'phone', label: 'Idempotent Producer', tags: [{ text: 'enable.idempotence=true', tone: 'green', icon: 'check' }] }),
-          broker1: d(0, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'database', label: ['Broker 1 (AZ 1)', 'Leader'], sub: 'In-Sync' }),
-          broker2: d(0, 0, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Broker 2 (AZ 2)', 'Follower'], sub: 'In-Sync' }),
-          broker3: d(0, 10, { s: 4.4, h: 52, color: 'purple', glyph: 'database', label: ['Broker 3 (AZ 3)', 'Follower'], sub: 'In-Sync' }),
-          card: S({ x: 10, y: 0 }, 'Zero-Loss Checklist', [
-            '1. replication.factor: 3 (Multi-AZ)',
-            '2. min.insync.replicas: 2',
-            '3. acks: all (-1)',
-            '4. enable.idempotence: true',
-            '5. unclean.leader.election: false'
-          ], { icon: 'check' })
+          producer: producer([{ text: `partition offline`, tone: `red`, icon: `alert` }]),
+          b0: broker(`b0`, `follower`, [], DEAD_STATE),
+          b1: broker(`b1`, `leader`, [], DEAD_STATE),
+          b2: broker(`b2`, `follower`, [{ text: `behind · not in ISR`, tone: `amber`, icon: `ban` }]),
+          l0: log(`b0`, 9),
+          l1: log(`b1`, 9),
+          l2: log(`b2`, 6),
+          c1: consumer(),
+          card: card(`broker config`, [`unclean.leader.election.enable=false`, `# true: elect broker-2 → offsets 105–112 lost`, `# false: wait for broker-0 or broker-1`], `scale`),
         },
-        links: {
-          p1: h('producer', 'broker1', ['producer', 'broker1'], { heads: 'both' }),
-          b12: h('broker1', 'broker2', ['broker1', 'broker2'], { heads: 'both' }),
-          b13: h('broker1', 'broker3', ['broker1', 'broker3'], { heads: 'both' })
+        links: { produce: { ...L.produce, fail: 1 }, read: { ...L.read, style: `off` }, fetch0: { ...L.fetch0, style: `off` }, fetch2: { ...L.fetch2, style: `off` } },
+        flows: [{ route: [`produce`], kind: `fail`, rate: 0.8 }],
+      },
+    },
+    {
+      short: `Recap`,
+      chapter: `recap`,
+      title: `The durability recipe`,
+      body: [
+        `Three replicas on different racks or zones, <code>acks=all</code>, <code>min.insync.replicas=2</code>, idempotent producers and no unclean election.`,
+        `That combination survives any single broker loss without losing an acknowledged record, and refuses to pretend when it can’t.`,
+      ],
+      metrics: { rf: 3, acks: `all`, isr: `3 / 3`, hw: 120 },
+      scene: {
+        entities: {
+          producer: producer([{ text: `acks=all`, tone: `green`, icon: `check` }]),
+          b0: broker(`b0`, `follower`),
+          b1: broker(`b1`, `leader`, [{ text: `min ISR 2`, tone: `green`, icon: `shield` }]),
+          b2: broker(`b2`, `follower`),
+          l0: log(`b0`, 8),
+          l1: log(`b1`, 8),
+          l2: log(`b2`, 8),
+          c1: consumer(),
+          card: card(`orders topic`, [`$ kafka-topics.sh --create --topic orders \\`, `    --replication-factor 3 --partitions 6 \\`, `    --config min.insync.replicas=2`], `check`),
         },
-        flows: [
-          { route: ['p1'], bounce: true, rate: 2.5 },
-          { route: ['b12'], bounce: true, rate: 2.0 },
-          { route: ['b13'], bounce: true, rate: 2.0 }
-        ]
-      }
-    }
-  ]
+        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: L.fetch2 },
+        flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, replicate(1.4), { route: [`read`], kind: `msg`, rate: 1.2 }],
+      },
+    },
+  ],
 };

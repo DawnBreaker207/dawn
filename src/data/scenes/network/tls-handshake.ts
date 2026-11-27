@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const tlsHandshakeLesson = {
@@ -38,10 +36,10 @@ export const tlsHandshakeLesson = {
       metrics: { handshake_rtt: '0 RTT', cipher_suite: 'None (Plaintext)', forward_secrecy: 'NO', auth_type: 'None' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Shopper', tags: [{ text: 'cookie: auth_token', tone: 'red', icon: 'lock' }] }),
-          attacker: d(0, 0, { s: 4.4, h: 52, color: 'rose', glyph: 'shield', label: ['Packet Sniffer', 'Rogue Wi-Fi Router'], sub: 'Plaintext exposed' }),
-          server: d(10, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Bank Server', 'Port 80 (HTTP)'], sub: 'Insecure' }),
-          card: S({ x: -2, y: 14 }, 'Plaintext Packet Inspection', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Shopper', tags: [{ text: 'cookie: auth_token', tone: 'red', icon: 'lock' }] }),
+          attacker: makeBlock(0, 0, { s: 4.4, h: 52, color: 'rose', glyph: 'shield', label: ['Packet Sniffer', 'Rogue Wi-Fi Router'], sub: 'Plaintext exposed' }),
+          server: makeBlock(10, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Bank Server', 'Port 80 (HTTP)'], sub: 'Insecure' }),
+          card: makePanel({ x: -2, y: 14 }, 'Plaintext Packet Inspection', [
             'GET /account/balance HTTP/1.1',
             'Host: bank.example.com',
             'Cookie: session_id=9f2c841e (EXPOSED TO ANY HOP)',
@@ -49,8 +47,8 @@ export const tlsHandshakeLesson = {
           ], { icon: 'alert' })
         },
         links: {
-          ca: h('client', 'attacker', ['client', 'attacker'], { heads: 'both', label: 'Unencrypted' }),
-          as: h('attacker', 'server', ['attacker', 'server'], { heads: 'both', label: 'Cleartext' })
+          ca: makeLink('client', 'attacker', ['client', 'attacker'], { heads: 'both', label: 'Unencrypted' }),
+          as: makeLink('attacker', 'server', ['attacker', 'server'], { heads: 'both', label: 'Cleartext' })
         },
         flows: [{ route: ['ca', 'as'], bounce: true, rate: 1.8 }]
       }
@@ -70,9 +68,9 @@ export const tlsHandshakeLesson = {
       metrics: { handshake_rtt: '2 RTT (160ms)', cipher_suite: 'RSA / DHE (Legacy)', forward_secrecy: 'Optional', auth_type: 'Server Only' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Round 1: Hello', icon: 'refresh' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'TLS 1.2'], sub: 'Cert + KeyExchange' }),
-          card: S({ x: -2, y: 14 }, 'TLS 1.2 Handshake (2 RTT)', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Round 1: Hello', icon: 'refresh' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'TLS 1.2'], sub: 'Cert + KeyExchange' }),
+          card: makePanel({ x: -2, y: 14 }, 'TLS 1.2 Handshake (2 RTT)', [
             'RTT 1: ClientHello -> ServerHello + Certificate',
             'RTT 2: ClientKeyExchange + [ChangeCipherSpec] -> Finished',
             'RTT 3: First HTTP GET request permitted',
@@ -80,7 +78,7 @@ export const tlsHandshakeLesson = {
           ], { icon: 'clock' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: '2-RTT Exchanges' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: '2-RTT Exchanges' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.2 }]
       }
@@ -100,9 +98,9 @@ export const tlsHandshakeLesson = {
       metrics: { handshake_rtt: '1 RTT (80ms)', cipher_suite: 'TLS_AES_256_GCM_SHA384', forward_secrecy: 'MANDATORY', auth_type: 'Server Only' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'KeyShare: X25519', tone: 'green', icon: 'key' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'TLS 1.3 Active'], sub: '1 RTT Encryption' }),
-          card: S({ x: -2, y: 14 }, 'TLS 1.3 1-RTT Optimization', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'KeyShare: X25519', tone: 'green', icon: 'key' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'TLS 1.3 Active'], sub: '1 RTT Encryption' }),
+          card: makePanel({ x: -2, y: 14 }, 'TLS 1.3 1-RTT Optimization', [
             'Client -> Server: ClientHello + KeyShare (Curve25519) + SNI',
             'Server -> Client: ServerHello + KeyShare + EncryptedExtensions + Cert + Finished',
             'Both sides compute: SharedSecret = ECDH(ClientKey, ServerKey)',
@@ -110,7 +108,7 @@ export const tlsHandshakeLesson = {
           ], { icon: 'zap' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'ClientHello + KeyShare' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'ClientHello + KeyShare' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.8 }]
       }
@@ -130,9 +128,9 @@ export const tlsHandshakeLesson = {
       metrics: { handshake_rtt: '1 RTT', cipher_suite: 'ECDHE-ECDSA', forward_secrecy: 'YES', auth_type: 'X.509 Verified' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SNI: shop.example', icon: 'globe' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Reverse Proxy', 'SNI Dispatcher'], sub: 'Cert: Let\'s Encrypt' }),
-          card: S({ x: -2, y: 14 }, 'Certificate Chain of Trust', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SNI: shop.example', icon: 'globe' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Reverse Proxy', 'SNI Dispatcher'], sub: 'Cert: Let\'s Encrypt' }),
+          card: makePanel({ x: -2, y: 14 }, 'Certificate Chain of Trust', [
             '1. Root CA (ISRG Root X1 in OS Trust Store) -> signs:',
             '2. Intermediate CA (R3) -> signs:',
             '3. Leaf Certificate (shop.example.com):',
@@ -141,7 +139,7 @@ export const tlsHandshakeLesson = {
           ], { icon: 'check' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'SNI & Cert Validation' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'SNI & Cert Validation' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.4 }]
       }
@@ -161,9 +159,9 @@ export const tlsHandshakeLesson = {
       metrics: { handshake_rtt: '0 RTT (0ms)', cipher_suite: 'PSK Resumption', forward_secrecy: 'Limited on EarlyData', auth_type: 'PSK Ticket' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Returning User', tags: [{ text: 'PSK Early Data', tone: 'green', icon: 'zap' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Edge Server', 'Anti-Replay Filter'], sub: 'Ticket Cached' }),
-          card: S({ x: -2, y: 14 }, '0-RTT Early Data Safety', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Returning User', tags: [{ text: 'PSK Early Data', tone: 'green', icon: 'zap' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Edge Server', 'Anti-Replay Filter'], sub: 'Ticket Cached' }),
+          card: makePanel({ x: -2, y: 14 }, '0-RTT Early Data Safety', [
             'Packet 1: ClientHello + PSK + HTTP GET /feed (Early Data)',
             'Server executes GET immediately without handshake delay',
             'Protection against Replay:',
@@ -172,7 +170,7 @@ export const tlsHandshakeLesson = {
           ], { icon: 'shield' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: '0-RTT Instant Data' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: '0-RTT Instant Data' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 3.2 }]
       }
@@ -192,11 +190,11 @@ export const tlsHandshakeLesson = {
       metrics: { handshake_rtt: '1 RTT', cipher_suite: 'TLS 1.3 mTLS', forward_secrecy: 'YES', auth_type: 'Mutual (2-Way)' },
       scene: {
         entities: {
-          client: d(-8, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Order Service', 'SPIFFE Cert'], sub: 'spiffe://cluster/ns/order' }),
-          server: d(8, 4, { s: 4.8, h: 50, color: 'purple', glyph: 'database', label: ['Payment Gateway', 'Mutual TLS Policy'], sub: 'Validates Client Cert' }),
+          client: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Order Service', 'SPIFFE Cert'], sub: 'spiffe://cluster/ns/order' }),
+          server: makeBlock(8, 4, { s: 4.8, h: 50, color: 'purple', glyph: 'database', label: ['Payment Gateway', 'Mutual TLS Policy'], sub: 'Validates Client Cert' }),
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'mTLS Encrypted Lane' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'mTLS Encrypted Lane' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.6 }]
       }
@@ -216,9 +214,9 @@ export const tlsHandshakeLesson = {
       metrics: { handshake_rtt: '1 RTT', cipher_suite: 'ALPN: h2', forward_secrecy: 'YES', auth_type: 'Verified' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Browser', tags: [{ text: 'ALPN: ["h2", "http/1.1"]', icon: 'zap' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Edge Server', 'ALPN Selector'], sub: 'Selected: h2' }),
-          card: S({ x: -2, y: 14 }, 'ALPN Handshake Extension', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Browser', tags: [{ text: 'ALPN: ["h2", "http/1.1"]', icon: 'zap' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Edge Server', 'ALPN Selector'], sub: 'Selected: h2' }),
+          card: makePanel({ x: -2, y: 14 }, 'ALPN Handshake Extension', [
             'ClientHello extension: ALPN [protocols: "h2", "http/1.1"]',
             'Server selects: "h2" (HTTP/2 binary framing)',
             'ServerHello extension: ALPN selected = "h2"',
@@ -226,7 +224,7 @@ export const tlsHandshakeLesson = {
           ], { icon: 'check' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'ALPN Protocol Selection' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'ALPN Protocol Selection' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.5 }]
       }

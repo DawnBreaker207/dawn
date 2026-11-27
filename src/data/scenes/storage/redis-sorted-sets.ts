@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const redisSortedSetsLesson = {
@@ -38,9 +36,9 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'ZSET (Dict + SkipList)', lookup_cost: 'O(1)', range_cost: 'O(log N + M)', skiplist_levels: '32 Max' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Game Client', tags: [{ text: 'ZADD scores 950 "Alice"', icon: 'zap' }] }),
-          zset: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis ZSET Engine', 'Dual Structure'], sub: 'Dict + SkipList' }),
-          card: S({ x: -2, y: 14 }, 'ZSET Core Operations', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Game Client', tags: [{ text: 'ZADD scores 950 "Alice"', icon: 'zap' }] }),
+          zset: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis ZSET Engine', 'Dual Structure'], sub: 'Dict + SkipList' }),
+          card: makePanel({ x: -2, y: 14 }, 'ZSET Core Operations', [
             'ZADD leaderboard 950 "Alice"      -> O(log N)',
             'ZSCORE leaderboard "Alice"        -> O(1) via Dict hash table',
             'ZRANK leaderboard "Alice"         -> O(log N) via SkipList span',
@@ -48,7 +46,7 @@ export const redisSortedSetsLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          cz: h('client', 'zset', ['client', 'zset'], { heads: 'both', label: 'ZADD / ZRANGE' })
+          cz: makeLink('client', 'zset', ['client', 'zset'], { heads: 'both', label: 'ZADD / ZRANGE' })
         },
         flows: [{ route: ['cz'], bounce: true, rate: 2.5 }]
       }
@@ -68,9 +66,9 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'struct zset', lookup_cost: 'O(1) Dict', range_cost: 'O(log N) SkipList', skiplist_levels: 'Active' },
       scene: {
         entities: {
-          dict: d(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'folder', label: ['Dict Hash Table', 'Member -> Score'], sub: '"Alice" -> 950 (O(1))' }),
-          skiplist: d(8, 4, { s: 4.8, h: 50, color: 'purple', glyph: 'layers', label: ['SkipList Engine', 'Ordered by Score'], sub: 'Score: 120 -> 500 -> 950' }),
-          card: S({ x: 0, y: 14 }, 'struct zset in C', [
+          dict: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'folder', label: ['Dict Hash Table', 'Member -> Score'], sub: '"Alice" -> 950 (O(1))' }),
+          skiplist: makeBlock(8, 4, { s: 4.8, h: 50, color: 'purple', glyph: 'layers', label: ['SkipList Engine', 'Ordered by Score'], sub: 'Score: 120 -> 500 -> 950' }),
+          card: makePanel({ x: 0, y: 14 }, 'struct zset in C', [
             'typedef struct zset {',
             '    dict *dict;             // member -> score (O(1) lookup)',
             '    zskiplist *zsl;         // ordered nodes (O(log N) range)',
@@ -79,7 +77,7 @@ export const redisSortedSetsLesson = {
           ], { icon: 'layers' })
         },
         links: {
-          ds: h('dict', 'skiplist', ['dict', 'skiplist'], { heads: 'both', label: 'Shared Member Pointers' })
+          ds: makeLink('dict', 'skiplist', ['dict', 'skiplist'], { heads: 'both', label: 'Shared Member Pointers' })
         },
         flows: [{ route: ['ds'], bounce: true, rate: 2.0 }]
       }
@@ -99,10 +97,10 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'SkipList Levels', lookup_cost: 'O(log N)', range_cost: 'O(log N)', skiplist_levels: 'p = 0.25 (Max 32)' },
       scene: {
         entities: {
-          level3: d(-8, -8, { s: 4.4, h: 52, color: 'orange', glyph: 'route', label: ['Level 3 (Express)', 'Jumps 8 Nodes'], sub: 'Fast Skip' }),
-          level2: d(0, -4, { s: 4.4, h: 52, color: 'orange', glyph: 'route', label: ['Level 2 (Semi)', 'Jumps 4 Nodes'], sub: 'Medium Skip' }),
-          level1: d(8, 0, { s: 4.4, h: 52, color: 'orange', glyph: 'route', label: ['Level 1 (All)', 'All Elements'], sub: '120 -> 500 -> 950' }),
-          card: S({ x: -2, y: 14 }, 'SkipList Traversal Mechanism', [
+          level3: makeBlock(-8, -8, { s: 4.4, h: 52, color: 'orange', glyph: 'route', label: ['Level 3 (Express)', 'Jumps 8 Nodes'], sub: 'Fast Skip' }),
+          level2: makeBlock(0, -4, { s: 4.4, h: 52, color: 'orange', glyph: 'route', label: ['Level 2 (Semi)', 'Jumps 4 Nodes'], sub: 'Medium Skip' }),
+          level1: makeBlock(8, 0, { s: 4.4, h: 52, color: 'orange', glyph: 'route', label: ['Level 1 (All)', 'All Elements'], sub: '120 -> 500 -> 950' }),
+          card: makePanel({ x: -2, y: 14 }, 'SkipList Traversal Mechanism', [
             'Search for Score = 950:',
             '1. Start at Header Level 3 -> jumps forward over 100 elements',
             '2. Next node > 950? Drop down to Level 2',
@@ -111,8 +109,8 @@ export const redisSortedSetsLesson = {
           ], { icon: 'route' })
         },
         links: {
-          l32: h('level3', 'level2', ['level3', 'level2'], { heads: 'end' }),
-          l21: h('level2', 'level1', ['level2', 'level1'], { heads: 'end' })
+          l32: makeLink('level3', 'level2', ['level3', 'level2'], { heads: 'end' }),
+          l21: makeLink('level2', 'level1', ['level2', 'level1'], { heads: 'end' })
         },
         flows: [{ route: ['l32', 'l21'], bounce: false, rate: 2.2 }]
       }
@@ -132,9 +130,9 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'zskiplistLevel', lookup_cost: 'O(log N) Rank', range_cost: 'O(log N)', skiplist_levels: 'span counting' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Player', tags: [{ text: 'ZRANK user:42', icon: 'search' }] }),
-          zsl: d(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'layers', label: ['SkipList Node', 'Span Accumulator'], sub: 'Span: 1000 + 400 + 2 = #1402' }),
-          card: S({ x: -2, y: 14 }, 'Span-Based Ranking Math', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Player', tags: [{ text: 'ZRANK user:42', icon: 'search' }] }),
+          zsl: makeBlock(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'layers', label: ['SkipList Node', 'Span Accumulator'], sub: 'Span: 1000 + 400 + 2 = #1402' }),
+          card: makePanel({ x: -2, y: 14 }, 'Span-Based Ranking Math', [
             'Traversal step 1: Jumps Level 4 link with span = 1,000 (rank = 1000)',
             'Traversal step 2: Jumps Level 2 link with span = 400   (rank = 1400)',
             'Traversal step 3: Jumps Level 1 link with span = 2     (rank = 1402)',
@@ -142,7 +140,7 @@ export const redisSortedSetsLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          cz: h('client', 'zsl', ['client', 'zsl'], { heads: 'both', label: 'O(log N) Rank Query' })
+          cz: makeLink('client', 'zsl', ['client', 'zsl'], { heads: 'both', label: 'O(log N) Rank Query' })
         },
         flows: [{ route: ['cz'], bounce: true, rate: 2.8 }]
       }
@@ -162,10 +160,10 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'Delayed Queue', lookup_cost: 'O(log N)', range_cost: 'O(M)', skiplist_levels: 'Epoch Sorted' },
       scene: {
         entities: {
-          producer: d(-10, -6, { s: 4.4, h: 52, color: 'orange', glyph: 'workflow', label: ['Job Producer', 'Checkout Service'], sub: 'ZADD queue <ts+900> id' }),
-          queue: d(0, 4, { s: 4.8, h: 50, color: 'purple', glyph: 'clock', label: ['ZSET Delayed Queue', 'Sorted by Epoch'], sub: 'Due tasks at the top' }),
-          worker: d(10, -6, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['Queue Worker', 'Polling Loop'], sub: 'Executes expired tasks' }),
-          card: S({ x: -2, y: 16 }, 'Delayed Queue Lua Script', [
+          producer: makeBlock(-10, -6, { s: 4.4, h: 52, color: 'orange', glyph: 'workflow', label: ['Job Producer', 'Checkout Service'], sub: 'ZADD queue <ts+900> id' }),
+          queue: makeBlock(0, 4, { s: 4.8, h: 50, color: 'purple', glyph: 'clock', label: ['ZSET Delayed Queue', 'Sorted by Epoch'], sub: 'Due tasks at the top' }),
+          worker: makeBlock(10, -6, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['Queue Worker', 'Polling Loop'], sub: 'Executes expired tasks' }),
+          card: makePanel({ x: -2, y: 16 }, 'Delayed Queue Lua Script', [
             '-- Atomic fetch and claim',
             'local tasks = redis.call("ZRANGEBYSCORE", KEYS[1], 0, ARGV[1], "LIMIT", 0, 10)',
             'if #tasks > 0 then',
@@ -175,8 +173,8 @@ export const redisSortedSetsLesson = {
           ], { icon: 'clock' })
         },
         links: {
-          pq: h('producer', 'queue', ['producer', 'queue'], { heads: 'end', label: 'Schedule' }),
-          qw: h('queue', 'worker', ['queue', 'worker'], { heads: 'end', label: 'Claim' })
+          pq: makeLink('producer', 'queue', ['producer', 'queue'], { heads: 'end', label: 'Schedule' }),
+          qw: makeLink('queue', 'worker', ['queue', 'worker'], { heads: 'end', label: 'Claim' })
         },
         flows: [
           { route: ['pq'], bounce: false, rate: 1.8 },
@@ -199,9 +197,9 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'ZSET (Listpack)', lookup_cost: 'O(N) Small N', range_cost: 'O(N) Compact', skiplist_levels: 'Zero Pointers' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'ZADD mini_set 1 "a"', icon: 'zap' }] }),
-          lp: d(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'folder', label: ['Listpack Encoded ZSET', 'Zero Pointer Overhead'], sub: '["member1", 10, "member2", 20]' }),
-          card: S({ x: -2, y: 14 }, 'Automatic Encoding Upgrade', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'ZADD mini_set 1 "a"', icon: 'zap' }] }),
+          lp: makeBlock(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'folder', label: ['Listpack Encoded ZSET', 'Zero Pointer Overhead'], sub: '["member1", 10, "member2", 20]' }),
+          card: makePanel({ x: -2, y: 14 }, 'Automatic Encoding Upgrade', [
             'Initial state: <= 128 members -> Stored as flat Listpack',
             'Memory usage: ~300 bytes',
             'User inserts 129th member -> Transparent upgrade:',
@@ -211,7 +209,7 @@ export const redisSortedSetsLesson = {
           ], { icon: 'refresh' })
         },
         links: {
-          clp: h('client', 'lp', ['client', 'lp'], { heads: 'both', label: 'Auto Converted' })
+          clp: makeLink('client', 'lp', ['client', 'lp'], { heads: 'both', label: 'Auto Converted' })
         },
         flows: [{ route: ['clp'], bounce: true, rate: 2.2 }]
       }
@@ -231,9 +229,9 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'Geohash in ZSET', lookup_cost: 'O(log N)', range_cost: 'GEOSEARCH', skiplist_levels: '52-bit Score' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Rider App', tags: [{ text: 'GEOSEARCH 5km radius', icon: 'mapPin' }] }),
-          geozset: d(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'globe', label: ['Geospatial ZSET', '52-Bit Geohash Scores'], sub: 'Score = Interleaved Lat/Lon' }),
-          card: S({ x: -2, y: 14 }, 'How GEOADD Secretly Works', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Rider App', tags: [{ text: 'GEOSEARCH 5km radius', icon: 'mapPin' }] }),
+          geozset: makeBlock(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'globe', label: ['Geospatial ZSET', '52-Bit Geohash Scores'], sub: 'Score = Interleaved Lat/Lon' }),
+          card: makePanel({ x: -2, y: 14 }, 'How GEOADD Secretly Works', [
             '1. GEOADD drivers 106.660172 10.762622 "Driver_A"',
             '2. Algorithm converts (lat, lon) -> 52-bit integer Geohash: 3478129038',
             '3. Executes: ZADD drivers 3478129038 "Driver_A"',
@@ -242,7 +240,7 @@ export const redisSortedSetsLesson = {
           ], { icon: 'mapPin' })
         },
         links: {
-          cg: h('client', 'geozset', ['client', 'geozset'], { heads: 'both', label: 'Proximity Query' })
+          cg: makeLink('client', 'geozset', ['client', 'geozset'], { heads: 'both', label: 'Proximity Query' })
         },
         flows: [{ route: ['cg'], bounce: true, rate: 3.0 }]
       }

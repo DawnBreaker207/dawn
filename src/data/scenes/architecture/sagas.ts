@@ -1,27 +1,11 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const Wc = {
@@ -32,32 +16,32 @@ const Wc = {
 
 const Gc = Object.keys(Wc);
 
-const Kc = (e = []) => y(0, -20, { label: `traveller`, tags: e });
+const Kc = (e = []) => makeDevice(0, -20, { label: `traveller`, tags: e });
 
 const qc = (e = {}) =>
-    d(0, -9, { color: `orange`, glyph: `route`, label: [`Trip`, `Service`], pills: `below`, ...e });
+    makeBlock(0, -9, { color: `orange`, glyph: `route`, label: [`Trip`, `Service`], pills: `below`, ...e });
 
 const Jc = (e = {}) =>
-    Object.fromEntries(Gc.map((t) => [t, d(Wc[t].x, 2, { ...Wc[t], ...(e[t] || {}) })]));
+    Object.fromEntries(Gc.map((t) => [t, makeBlock(Wc[t].x, 2, { ...Wc[t], ...(e[t] || {}) })]));
 
 const Yc = () =>
-    Object.fromEntries(Gc.map((e) => [`${e}db`, b(Wc[e].x, 11, { r: 1.5, h: 30, label: `` })]));
+    Object.fromEntries(Gc.map((e) => [`${e}db`, makeDb(Wc[e].x, 11, { r: 1.5, h: 30, label: `` })]));
 
 const R = {
-    ut: { ut: h(`trav`, `trip`, [`trav`, `trip`], { heads: `both` }) },
+    ut: { ut: makeLink(`trav`, `trip`, [`trav`, `trip`], { heads: `both` }) },
     calls: (e = `trip`, t = {}) =>
       Object.fromEntries(
-        Gc.map((n) => [`${e[0]}${n}`, h(e, n, [e, [n, e], n], { heads: `both`, ...(t[n] || {}) })]),
+        Gc.map((n) => [`${e[0]}${n}`, makeLink(e, n, [e, [n, e], n], { heads: `both`, ...(t[n] || {}) })]),
       ),
     dbs: () =>
       Object.fromEntries(
-        Gc.map((e) => [`d${e}`, h(e, `${e}db`, [e, `${e}db`], { heads: `both` })]),
+        Gc.map((e) => [`d${e}`, makeLink(e, `${e}db`, [e, `${e}db`], { heads: `both` })]),
       ),
   };
 
 const Xc = (e) => ({ text: `${e} booked`, tone: `green`, icon: `check` });
 
-const Zc = (e, t, n) => S({ x: 9, y: 11, z: 0, dx: -30, dy: -195 }, e, t, { icon: n });
+const Zc = (e, t, n) => makePanel({ x: 9, y: 11, z: 0, dx: -30, dy: -195 }, e, t, { icon: n });
 
 const Qc = (e = `t`, t = {}) =>
     Gc.map((n) => ({ route: [`${e}${n}`, `d${n}`], rate: 0.6, bounce: !0, ...(t[n] || {}) }));
@@ -179,7 +163,7 @@ const $c = {
         scene: {
           entities: {
             trav: Kc([{ text: `waiting…`, tone: `amber`, icon: `hourglass` }]),
-            trip: qc({ ...g, label: [`Coordinator`] }),
+            trip: qc({ ...DEAD_STATE, label: [`Coordinator`] }),
             ...Jc({
               fl: { heat: 0.4, tags: [{ text: `locked`, tone: `red`, icon: `lock` }] },
               ho: { heat: 0.4, tags: [{ text: `locked`, tone: `red`, icon: `lock` }] },
@@ -257,13 +241,13 @@ const $c = {
               label: [`Saga`, `Orchestrator`],
               tags: [{ text: `trip 81: hotel ✓ · car pending`, icon: `workflow` }],
             }),
-            odb: b(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
+            odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
             ...Jc({ fl: { tags: [Xc(`flight`)] }, ho: { tags: [Xc(`room`)] } }),
             ...Yc(),
           },
           links: {
             ...R.ut,
-            so: h(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
+            so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
             ...R.calls(),
             ...R.dbs(),
           },
@@ -291,7 +275,7 @@ const $c = {
         scene: {
           entities: {
             trav: Kc(),
-            bus: d(0, -9, { color: `slab`, glyph: `radio`, label: [`Event`, `Bus`] }),
+            bus: makeBlock(0, -9, { color: `slab`, glyph: `radio`, label: [`Event`, `Bus`] }),
             ...Jc({
               fl: { tags: [{ text: `→ FlightBooked` }] },
               ho: { tags: [{ text: `→ HotelBooked` }] },
@@ -300,7 +284,7 @@ const $c = {
             ...Yc(),
           },
           links: {
-            ub: h(`trav`, `bus`, [`trav`, `bus`], { heads: `both` }),
+            ub: makeLink(`trav`, `bus`, [`trav`, `bus`], { heads: `both` }),
             ...R.calls(`bus`),
             ...R.dbs(),
           },
@@ -332,7 +316,7 @@ const $c = {
           entities: {
             trav: Kc([{ text: `charged only at the end`, icon: `creditCard` }]),
             trip: qc({ label: [`Saga`, `Orchestrator`] }),
-            odb: b(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
+            odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
             ...Jc({
               fl: { tags: [{ text: `seat: reserved`, tone: `amber`, icon: `clock` }] },
               ho: { tags: [{ text: `room: reserved`, tone: `amber`, icon: `clock` }] },
@@ -352,7 +336,7 @@ const $c = {
           },
           links: {
             ...R.ut,
-            so: h(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
+            so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
             ...R.calls(),
             ...R.dbs(),
           },
@@ -384,7 +368,7 @@ const $c = {
               label: [`Saga`, `Orchestrator`],
               tags: [{ text: `restarted · resuming trip 81`, tone: `amber`, icon: `replay` }],
             }),
-            odb: b(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
+            odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
             ...Jc({
               fl: { tags: [Xc(`flight`)] },
               ho: { tags: [{ text: `key 81-hotel seen → same room`, tone: `green`, icon: `key` }] },
@@ -393,7 +377,7 @@ const $c = {
           },
           links: {
             ...R.ut,
-            so: h(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
+            so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
             ...R.calls(`trip`, { ho: { label: `book hotel · key 81-hotel`, labelAt: 0.5 } }),
             ...R.dbs(),
           },
@@ -428,17 +412,17 @@ const $c = {
               label: [`Saga`, `Orchestrator`],
               tags: [{ text: `cancel hotel · attempt 4`, tone: `amber`, icon: `replay` }],
             }),
-            odb: b(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
+            odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
             ...Jc({
               fl: { tags: [{ text: `cancelled ✓`, tone: `green`, icon: `undo` }] },
-              ho: { ...g, tags: [{ text: `API down`, tone: `red`, icon: `alert` }] },
+              ho: { ...DEAD_STATE, tags: [{ text: `API down`, tone: `red`, icon: `alert` }] },
               car: { tags: [{ text: `no cars left`, tone: `red`, icon: `alert` }] },
             }),
             ...Yc(),
           },
           links: {
             ...R.ut,
-            so: h(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
+            so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
             ...R.calls(`trip`, { ho: { fail: 1, label: `retry with backoff`, labelAt: 0.5 } }),
             ...R.dbs(),
           },
@@ -473,7 +457,7 @@ const $c = {
               label: [`Saga`, `Orchestrator`],
               tags: [{ text: `car: unknown → asking`, tone: `amber`, icon: `info` }],
             }),
-            odb: b(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
+            odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
             ...Jc({
               fl: { tags: [Xc(`flight`)] },
               ho: { tags: [Xc(`room`)] },
@@ -483,7 +467,7 @@ const $c = {
           },
           links: {
             ...R.ut,
-            so: h(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
+            so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
             ...R.calls(`trip`, { car: { label: `status of 81-car?`, labelAt: 0.5 } }),
             ...R.dbs(),
           },
@@ -515,7 +499,7 @@ const $c = {
           entities: {
             trav: Kc([{ text: `trip confirmed`, tone: `green`, icon: `check` }]),
             trip: qc({ label: [`Saga`, `Orchestrator`] }),
-            odb: b(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
+            odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
             ...Jc({
               fl: { tags: [Xc(`flight`)] },
               ho: { tags: [Xc(`room`)] },
@@ -525,7 +509,7 @@ const $c = {
           },
           links: {
             ...R.ut,
-            so: h(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
+            so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
             ...R.calls(),
             ...R.dbs(),
           },

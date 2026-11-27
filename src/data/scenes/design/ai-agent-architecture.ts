@@ -1,10 +1,9 @@
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDb as b,
-  makeLink as h,
-  makePanel as S,
-  makeZone as x,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel,
+  makeZone,
 } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
@@ -29,9 +28,9 @@ export const aiAgentArchitectureLesson: Lesson = {
   ],
   steps: [
     {
-      short: '1. LLM Seed',
+      short: 'LLM Seed',
       chapter: 'seed',
-      title: '1. Seed: The Naked LLM Core (Next-Token Predictor)',
+      title: 'Seed: The Naked LLM Core (Next-Token Predictor)',
       body: [
         'Every AI agent begins with a single seed: a stateless <strong>Foundation LLM</strong> predicting the next token from input text.',
         'By itself, it has no memory of your repo, no filesystem access, no terminal, and no way to verify whether its generated code even compiles.',
@@ -43,8 +42,8 @@ export const aiAgentArchitectureLesson: Lesson = {
       metrics: { active_layers: '1 / 8 (LLM)', context_scope: 'Prompt only', execution_mode: 'Single-turn', safety_level: 'Stateless' },
       scene: {
         entities: {
-          llmCore: d(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'Next-Token Core' }),
-          card: S({ x: 14, y: -16 }, '1. Seed: Stateless LLM Completion', [
+          llmCore: makeBlock(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'Next-Token Core' }),
+          card: makePanel({ x: 14, y: -16 }, 'Seed: Stateless LLM Completion', [
             'POST /v1/messages { model: "claude/gemini",',
             '  messages: [{ role: "user", content: "Fix bug" }] }',
             '// Output: plain text guess (cannot read files or run tests)',
@@ -55,9 +54,9 @@ export const aiAgentArchitectureLesson: Lesson = {
       },
     },
     {
-      short: '2. +RAG Memory',
+      short: '+RAG Memory',
       chapter: 'memory',
-      title: '2. +RAG: Hybrid Search & Knowledge Buffer',
+      title: '+RAG: Hybrid Search & Knowledge Buffer',
       body: [
         'Layer 2 attaches a <strong>Vector + BM25 Hybrid Store</strong> around the seed LLM.',
         'Private codebase chunks, docs, and schemas are retrieved semantically and injected into the prompt context, grounding answers in real project facts.',
@@ -70,25 +69,25 @@ export const aiAgentArchitectureLesson: Lesson = {
       metrics: { active_layers: '2 / 8 (+RAG)', context_scope: 'Repo grounded', execution_mode: 'Grounded Q&A', safety_level: 'Read-only' },
       scene: {
         entities: {
-          ragZone: x({ x0: -14, x1: 3, y0: -7, y1: 1 }, 'L2: RAG', { color: 'blue' }),
-          llmCore: d(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: '+RAG Context' }),
-          vectorDb: b(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
-          card: S({ x: 14, y: -16 }, '2. Injecting Grounded RAG Context', [
+          ragZone: makeZone({ x0: -14, x1: 3, y0: -7, y1: 1 }, 'L2: RAG', { color: 'blue' }),
+          llmCore: makeBlock(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: '+RAG Context' }),
+          vectorDb: makeDb(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
+          card: makePanel({ x: 14, y: -16 }, 'Injecting Grounded RAG Context', [
             'const chunks = await hybridSearch(query, { topK: 8 });',
             'const prompt = `<context>${chunks}</context>\\n${query}`;',
             '// LLM now sees real schemas, but still cannot act!',
           ], { icon: 'terminal' }),
         },
         links: {
-          rag_inject: h('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
+          rag_inject: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
         },
         flows: [{ route: ['rag_inject'], kind: 'res', rate: 1.8 }],
       },
     },
     {
-      short: '3. +MCP Tools',
+      short: '+MCP Tools',
       chapter: 'tools',
-      title: '3. +MCP: Standardized Tool Interfaces (USB-C)',
+      title: '+MCP: Standardized Tool Interfaces (USB-C)',
       body: [
         'Layer 3 gives the agent hands via the <strong>Model Context Protocol (MCP)</strong> — a universal JSON-RPC standard connecting the LLM to Filesystem, Terminal, and DB tools.',
         'Instead of bespoke glue code per model, any MCP-compliant client discovers tool schemas dynamically and executes structured <code>tool_call</code> requests.',
@@ -101,19 +100,19 @@ export const aiAgentArchitectureLesson: Lesson = {
       metrics: { active_layers: '3 / 8 (+MCP)', context_scope: 'Repo + Tools', execution_mode: 'Tool-Call JSON', safety_level: 'Unbounded' },
       scene: {
         entities: {
-          mcpZone: x({ x0: -15, x1: 15, y0: -9, y1: 3 }, 'L3: MCP', { color: 'orange' }),
-          ragZone: x({ x0: -14, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
-          llmCore: d(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'MCP Client' }),
-          vectorDb: b(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
-          mcpHub: d(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
-          card: S({ x: 14, y: -16 }, '3. Standardized MCP JSON-RPC Tool Call', [
+          mcpZone: makeZone({ x0: -15, x1: 15, y0: -9, y1: 3 }, 'L3: MCP', { color: 'orange' }),
+          ragZone: makeZone({ x0: -14, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
+          llmCore: makeBlock(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'MCP Client' }),
+          vectorDb: makeDb(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
+          mcpHub: makeBlock(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
+          card: makePanel({ x: 14, y: -16 }, 'Standardized MCP JSON-RPC Tool Call', [
             '{ "jsonrpc": "2.0", "method": "tools/call",',
             '  "params": { "name": "read_file", "arguments": { "path": "app.ts" } } }',
           ], { icon: 'terminal' }),
         },
         links: {
-          rag_inject: h('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
-          mcp_call: h('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
+          rag_inject: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
+          mcp_call: makeLink('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
         },
         flows: [
           { route: ['rag_inject'], kind: 'res', rate: 1.6 },
@@ -122,9 +121,9 @@ export const aiAgentArchitectureLesson: Lesson = {
       },
     },
     {
-      short: '4. +ReAct Loop',
+      short: '+ReAct Loop',
       chapter: 'loop',
-      title: '4. +ReAct Loop: Reason, Act, Observe & Self-Heal',
+      title: '+ReAct Loop: Reason, Act, Observe & Self-Heal',
       body: [
         'One tool call is just a macro. Layer 4 wraps the LLM + MCP in a <strong>Cognitive ReAct Loop</strong>: Reason → Act → Observe stdout/stderr → Reflect.',
         'When tests fail with exit code 1, the loop feeds the compiler/test error right back to the LLM so it self-corrects until green.',
@@ -137,14 +136,14 @@ export const aiAgentArchitectureLesson: Lesson = {
       metrics: { active_layers: '4 / 8 (+ReAct)', context_scope: 'Multi-turn', execution_mode: 'Autonomous Loop', safety_level: 'Unconfined' },
       scene: {
         entities: {
-          reactZone: x({ x0: -15, x1: 15, y0: -18, y1: 4 }, 'L4: REACT', { color: 'purple' }),
-          mcpZone: x({ x0: -14, x1: 14, y0: -9, y1: 3 }, '', { color: 'orange' }),
-          ragZone: x({ x0: -13, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
-          llmCore: d(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'ReAct Brain' }),
-          vectorDb: b(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
-          mcpHub: d(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
-          reactLoop: d(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['ReAct Loop'], sub: 'Act -> Observe' }),
-          card: S({ x: 14, y: -16 }, '4. Multi-Turn ReAct Self-Healing Loop', [
+          reactZone: makeZone({ x0: -15, x1: 15, y0: -18, y1: 4 }, 'L4: REACT', { color: 'purple' }),
+          mcpZone: makeZone({ x0: -14, x1: 14, y0: -9, y1: 3 }, '', { color: 'orange' }),
+          ragZone: makeZone({ x0: -13, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
+          llmCore: makeBlock(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'ReAct Brain' }),
+          vectorDb: makeDb(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
+          mcpHub: makeBlock(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
+          reactLoop: makeBlock(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['ReAct Loop'], sub: 'Act -> Observe' }),
+          card: makePanel({ x: 14, y: -16 }, 'Multi-Turn ReAct Self-Healing Loop', [
             'while (!done && steps < MAX_STEPS) {',
             '  const action = await llm.think(history);',
             '  const obs = await mcp.execute(action); // stdout + exitCode',
@@ -153,9 +152,9 @@ export const aiAgentArchitectureLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          rag_inject: h('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
-          mcp_call: h('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
-          react_cycle: h('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'observe' }),
+          rag_inject: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
+          mcp_call: makeLink('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
+          react_cycle: makeLink('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'observe' }),
         },
         flows: [
           { route: ['react_cycle', 'mcp_call'], kind: 'req', rate: 2.0 },
@@ -164,9 +163,9 @@ export const aiAgentArchitectureLesson: Lesson = {
       },
     },
     {
-      short: '5. +OS Harness',
+      short: '+OS Harness',
       chapter: 'harness',
-      title: '5. +Harness: OS Sandbox & Context Compactor',
+      title: '+Harness: OS Sandbox & Context Compactor',
       body: [
         'An unbounded loop running shell commands is dangerous. Layer 5 wraps the loop in an <strong>Execution Harness</strong>: OS/container sandbox, seccomp/network policy, and permission checks.',
         'Alongside security sits the <strong>Context Compactor</strong>: summarizing older tool outputs when approaching the context window limit so long sessions never degrade.',
@@ -179,28 +178,28 @@ export const aiAgentArchitectureLesson: Lesson = {
       metrics: { active_layers: '5 / 8 (+Harness)', context_scope: 'Compacted', execution_mode: 'Sandboxed Loop', safety_level: 'Policy Enforced' },
       scene: {
         entities: {
-          harnessZone: x({ x0: -16, x1: 16, y0: -20, y1: 5 }, 'L5: HARNESS', { color: 'slab' }),
-          reactZone: x({ x0: -15, x1: 15, y0: -18, y1: 4 }, '', { color: 'purple' }),
-          mcpZone: x({ x0: -14, x1: 14, y0: -9, y1: 3 }, '', { color: 'orange' }),
-          ragZone: x({ x0: -13, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
-          llmCore: d(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'Sandboxed' }),
-          vectorDb: b(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
-          mcpHub: d(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
-          reactLoop: d(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['ReAct Loop'], sub: 'Act -> Observe' }),
-          harness: d(-12, -15, { s: 4.6, h: 52, color: 'red', glyph: 'shield', label: ['OS Sandbox'], sub: 'Seccomp/Policy' }),
-          compactor: d(12, -15, { s: 4.6, h: 52, color: 'cyan', glyph: 'layers', label: ['Compactor'], sub: 'Prunes Tokens' }),
-          card: S({ x: 14, y: -16 }, '5. Sandbox Policy & Context Compaction', [
+          harnessZone: makeZone({ x0: -16, x1: 16, y0: -20, y1: 5 }, 'L5: HARNESS', { color: 'slab' }),
+          reactZone: makeZone({ x0: -15, x1: 15, y0: -18, y1: 4 }, '', { color: 'purple' }),
+          mcpZone: makeZone({ x0: -14, x1: 14, y0: -9, y1: 3 }, '', { color: 'orange' }),
+          ragZone: makeZone({ x0: -13, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
+          llmCore: makeBlock(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'Sandboxed' }),
+          vectorDb: makeDb(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
+          mcpHub: makeBlock(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
+          reactLoop: makeBlock(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['ReAct Loop'], sub: 'Act -> Observe' }),
+          harness: makeBlock(-12, -15, { s: 4.6, h: 52, color: 'red', glyph: 'shield', label: ['OS Sandbox'], sub: 'Seccomp/Policy' }),
+          compactor: makeBlock(12, -15, { s: 4.6, h: 52, color: 'cyan', glyph: 'layers', label: ['Compactor'], sub: 'Prunes Tokens' }),
+          card: makePanel({ x: 14, y: -16 }, 'Sandbox Policy & Context Compaction', [
             '// Harness intercepts dangerous calls & enforces workspace bounds',
             'if (!policy.allows(cmd, cwd)) throw new SandboxDeniedError();',
             'if (tokens > 0.8 * MAX_CTX) history = compactSummary(history);',
           ], { icon: 'terminal' }),
         },
         links: {
-          rag_inject: h('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
-          mcp_call: h('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
-          react_cycle: h('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'observe' }),
-          harness_guard: h('harness', 'reactLoop', ['harness', 'reactLoop'], { heads: 'end', label: 'policy' }),
-          compact_sync: h('compactor', 'mcpHub', ['compactor', 'mcpHub'], { heads: 'end', label: 'compact' }),
+          rag_inject: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
+          mcp_call: makeLink('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
+          react_cycle: makeLink('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'observe' }),
+          harness_guard: makeLink('harness', 'reactLoop', ['harness', 'reactLoop'], { heads: 'end', label: 'policy' }),
+          compact_sync: makeLink('compactor', 'mcpHub', ['compactor', 'mcpHub'], { heads: 'end', label: 'compact' }),
         },
         flows: [
           { route: ['harness_guard', 'react_cycle'], kind: 'fail', rate: 1.6 },
@@ -209,9 +208,9 @@ export const aiAgentArchitectureLesson: Lesson = {
       },
     },
     {
-      short: '6. +Skills',
+      short: '+Skills',
       chapter: 'skills',
-      title: '6. +Skills: On-Demand Progressive Disclosure',
+      title: '+Skills: On-Demand Progressive Disclosure',
       body: [
         'Loading 50 specialized instructions (Playwright, SQL tuning, AST migrations) into every prompt bloats tokens and confuses the model.',
         'Layer 6 introduces <strong>Modular Skills</strong> (<code>SKILL.md</code> + scripts): the agent reads only a tiny index at startup and loads full domain playbooks strictly on demand.',
@@ -224,31 +223,31 @@ export const aiAgentArchitectureLesson: Lesson = {
       metrics: { active_layers: '6 / 8 (+Skills)', context_scope: 'On-Demand', execution_mode: 'Skill-Guided', safety_level: 'Policy Enforced' },
       scene: {
         entities: {
-          skillsZone: x({ x0: -16, x1: 16, y0: -21, y1: 12 }, 'L6: SKILLS', { color: 'green' }),
-          harnessZone: x({ x0: -15, x1: 15, y0: -19, y1: 5 }, '', { color: 'slab' }),
-          reactZone: x({ x0: -14, x1: 14, y0: -18, y1: 4 }, '', { color: 'purple' }),
-          mcpZone: x({ x0: -13, x1: 13, y0: -9, y1: 3 }, '', { color: 'orange' }),
-          ragZone: x({ x0: -12, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
-          llmCore: d(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'Skill-Aware' }),
-          vectorDb: b(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
-          mcpHub: d(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
-          reactLoop: d(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['ReAct Loop'], sub: 'Act -> Observe' }),
-          harness: d(-12, -15, { s: 4.6, h: 52, color: 'red', glyph: 'shield', label: ['OS Sandbox'], sub: 'Seccomp/Policy' }),
-          compactor: d(12, -15, { s: 4.6, h: 52, color: 'cyan', glyph: 'layers', label: ['Compactor'], sub: 'Prunes Tokens' }),
-          skills: d(0, 9, { s: 4.6, h: 52, color: 'green', glyph: 'code', label: ['Skill Packs'], sub: 'SKILL.md lazy' }),
-          card: S({ x: 14, y: -16 }, '6. Progressive Disclosure Skill Loading', [
+          skillsZone: makeZone({ x0: -16, x1: 16, y0: -21, y1: 12 }, 'L6: SKILLS', { color: 'green' }),
+          harnessZone: makeZone({ x0: -15, x1: 15, y0: -19, y1: 5 }, '', { color: 'slab' }),
+          reactZone: makeZone({ x0: -14, x1: 14, y0: -18, y1: 4 }, '', { color: 'purple' }),
+          mcpZone: makeZone({ x0: -13, x1: 13, y0: -9, y1: 3 }, '', { color: 'orange' }),
+          ragZone: makeZone({ x0: -12, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
+          llmCore: makeBlock(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Foundation LLM'], sub: 'Skill-Aware' }),
+          vectorDb: makeDb(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
+          mcpHub: makeBlock(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
+          reactLoop: makeBlock(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['ReAct Loop'], sub: 'Act -> Observe' }),
+          harness: makeBlock(-12, -15, { s: 4.6, h: 52, color: 'red', glyph: 'shield', label: ['OS Sandbox'], sub: 'Seccomp/Policy' }),
+          compactor: makeBlock(12, -15, { s: 4.6, h: 52, color: 'cyan', glyph: 'layers', label: ['Compactor'], sub: 'Prunes Tokens' }),
+          skills: makeBlock(0, 9, { s: 4.6, h: 52, color: 'green', glyph: 'code', label: ['Skill Packs'], sub: 'SKILL.md lazy' }),
+          card: makePanel({ x: 14, y: -16 }, 'Progressive Disclosure Skill Loading', [
             '// Startup: only 1-line skill descriptions in prompt',
             '// Triggered: read_file("skills/fixing-accessibility/SKILL.md")',
             '// Result: deep domain rules loaded ONLY for matching tasks',
           ], { icon: 'terminal' }),
         },
         links: {
-          rag_inject: h('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
-          mcp_call: h('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
-          react_cycle: h('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'observe' }),
-          harness_guard: h('harness', 'reactLoop', ['harness', 'reactLoop'], { heads: 'end', label: 'policy' }),
-          compact_sync: h('compactor', 'mcpHub', ['compactor', 'mcpHub'], { heads: 'end', label: 'compact' }),
-          skill_load: h('skills', 'llmCore', ['skills', 'llmCore'], { heads: 'end', label: 'SKILL.md' }),
+          rag_inject: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
+          mcp_call: makeLink('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
+          react_cycle: makeLink('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'observe' }),
+          harness_guard: makeLink('harness', 'reactLoop', ['harness', 'reactLoop'], { heads: 'end', label: 'policy' }),
+          compact_sync: makeLink('compactor', 'mcpHub', ['compactor', 'mcpHub'], { heads: 'end', label: 'compact' }),
+          skill_load: makeLink('skills', 'llmCore', ['skills', 'llmCore'], { heads: 'end', label: 'SKILL.md' }),
         },
         flows: [
           { route: ['skill_load', 'react_cycle'], kind: 'res', rate: 1.9 },
@@ -257,9 +256,9 @@ export const aiAgentArchitectureLesson: Lesson = {
       },
     },
     {
-      short: '7. +State/HITL',
+      short: '+State/HITL',
       chapter: 'state',
-      title: '7. +State Machine: Durable Checkpoints & HITL Gate',
+      title: '+State Machine: Durable Checkpoints & HITL Gate',
       body: [
         'Production workflows cannot lose progress on crash or run destructive migrations unchecked. Layer 7 adds a <strong>Durable State Graph</strong> (e.g. LangGraph).',
         'Every transition saves a <strong>Checkpoint</strong> to Postgres/Redis and pauses at a <strong>Human-in-the-Loop (HITL)</strong> gate for approval before irreversible actions.',
@@ -272,36 +271,36 @@ export const aiAgentArchitectureLesson: Lesson = {
       metrics: { active_layers: '7 / 8 (+FSM)', context_scope: 'Checkpointed', execution_mode: 'Durable Graph', safety_level: 'HITL + Sandbox' },
       scene: {
         entities: {
-          graphZone: x({ x0: -16, x1: 16, y0: -22, y1: 13 }, 'L7: STATE', { color: 'blue' }),
-          skillsZone: x({ x0: -15, x1: 15, y0: -20, y1: 12 }, '', { color: 'green' }),
-          harnessZone: x({ x0: -14, x1: 14, y0: -19, y1: 5 }, '', { color: 'slab' }),
-          reactZone: x({ x0: -13, x1: 13, y0: -17, y1: 4 }, '', { color: 'purple' }),
-          mcpZone: x({ x0: -12, x1: 12, y0: -9, y1: 3 }, '', { color: 'orange' }),
-          ragZone: x({ x0: -11, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
-          llmCore: d(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Agent FSM Node'], sub: 'Resumable' }),
-          vectorDb: b(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
-          mcpHub: d(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
-          reactLoop: d(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['ReAct Loop'], sub: 'Act -> Observe' }),
-          harness: d(-12, -15, { s: 4.6, h: 52, color: 'red', glyph: 'shield', label: ['OS Sandbox'], sub: 'Seccomp/Policy' }),
-          compactor: d(12, -15, { s: 4.6, h: 52, color: 'cyan', glyph: 'layers', label: ['Compactor'], sub: 'Prunes Tokens' }),
-          skills: d(0, 9, { s: 4.6, h: 52, color: 'green', glyph: 'code', label: ['Skill Packs'], sub: 'SKILL.md lazy' }),
-          humanGate: d(-12, 9, { s: 4.6, h: 52, color: 'amber', glyph: 'shield', label: ['Human Gate'], sub: 'HITL Approve' }),
-          stateDb: b(12, 9, { r: 2.2, h: 48, color: 'purple', label: ['Checkpoint DB'], sub: 'Postgres State' }),
-          card: S({ x: 14, y: -16 }, '7. Durable Checkpointing & HITL Interrupt', [
+          graphZone: makeZone({ x0: -16, x1: 16, y0: -22, y1: 13 }, 'L7: STATE', { color: 'blue' }),
+          skillsZone: makeZone({ x0: -15, x1: 15, y0: -20, y1: 12 }, '', { color: 'green' }),
+          harnessZone: makeZone({ x0: -14, x1: 14, y0: -19, y1: 5 }, '', { color: 'slab' }),
+          reactZone: makeZone({ x0: -13, x1: 13, y0: -17, y1: 4 }, '', { color: 'purple' }),
+          mcpZone: makeZone({ x0: -12, x1: 12, y0: -9, y1: 3 }, '', { color: 'orange' }),
+          ragZone: makeZone({ x0: -11, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
+          llmCore: makeBlock(0, -3, { s: 5.2, h: 56, color: 'purple', glyph: 'cpu', label: ['Agent FSM Node'], sub: 'Resumable' }),
+          vectorDb: makeDb(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Vector Store'], sub: 'Hybrid + Rerank' }),
+          mcpHub: makeBlock(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['MCP Servers'], sub: 'FS / Shell / DB' }),
+          reactLoop: makeBlock(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['ReAct Loop'], sub: 'Act -> Observe' }),
+          harness: makeBlock(-12, -15, { s: 4.6, h: 52, color: 'red', glyph: 'shield', label: ['OS Sandbox'], sub: 'Seccomp/Policy' }),
+          compactor: makeBlock(12, -15, { s: 4.6, h: 52, color: 'cyan', glyph: 'layers', label: ['Compactor'], sub: 'Prunes Tokens' }),
+          skills: makeBlock(0, 9, { s: 4.6, h: 52, color: 'green', glyph: 'code', label: ['Skill Packs'], sub: 'SKILL.md lazy' }),
+          humanGate: makeBlock(-12, 9, { s: 4.6, h: 52, color: 'amber', glyph: 'shield', label: ['Human Gate'], sub: 'HITL Approve' }),
+          stateDb: makeDb(12, 9, { r: 2.2, h: 48, color: 'purple', label: ['Checkpoint DB'], sub: 'Postgres State' }),
+          card: makePanel({ x: 14, y: -16 }, 'Durable Checkpointing & HITL Interrupt', [
             'graph.addEdge("plan", "human_review");',
             'const state = interrupt({ diff, cmd }); // pauses & persists',
             '// Resumes days later from Postgres checkpoint on approve()',
           ], { icon: 'terminal' }),
         },
         links: {
-          rag_inject: h('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
-          mcp_call: h('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
-          react_cycle: h('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'observe' }),
-          harness_guard: h('harness', 'reactLoop', ['harness', 'reactLoop'], { heads: 'end', label: 'policy' }),
-          compact_sync: h('compactor', 'mcpHub', ['compactor', 'mcpHub'], { heads: 'end', label: 'compact' }),
-          skill_load: h('skills', 'llmCore', ['skills', 'llmCore'], { heads: 'end', label: 'SKILL.md' }),
-          hitl_gate: h('humanGate', 'skills', ['humanGate', 'skills'], { heads: 'end', label: 'approve' }),
-          ckpt_save: h('mcpHub', 'stateDb', ['mcpHub', 'stateDb'], { heads: 'end', label: 'save' }),
+          rag_inject: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'end', label: 'inject' }),
+          mcp_call: makeLink('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'JSON-RPC' }),
+          react_cycle: makeLink('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'observe' }),
+          harness_guard: makeLink('harness', 'reactLoop', ['harness', 'reactLoop'], { heads: 'end', label: 'policy' }),
+          compact_sync: makeLink('compactor', 'mcpHub', ['compactor', 'mcpHub'], { heads: 'end', label: 'compact' }),
+          skill_load: makeLink('skills', 'llmCore', ['skills', 'llmCore'], { heads: 'end', label: 'SKILL.md' }),
+          hitl_gate: makeLink('humanGate', 'skills', ['humanGate', 'skills'], { heads: 'end', label: 'approve' }),
+          ckpt_save: makeLink('mcpHub', 'stateDb', ['mcpHub', 'stateDb'], { heads: 'end', label: 'save' }),
         },
         flows: [
           { route: ['hitl_gate', 'skill_load'], kind: 'res', rate: 1.7 },
@@ -310,9 +309,9 @@ export const aiAgentArchitectureLesson: Lesson = {
       },
     },
     {
-      short: '8. Swarm Result',
+      short: 'Swarm Result',
       chapter: 'result',
-      title: '8. Result: Multi-Agent Swarm Orchestration',
+      title: 'Result: Multi-Agent Swarm Orchestration',
       body: [
         'At the outermost layer, the single agent evolves into a <strong>Swarm Coordinator</strong> orchestrating specialized parallel workers (Researcher, Coder, QA Verifier) over a shared message board.',
         'Every previous layer stays active: each worker inherits RAG grounding, MCP tools, ReAct self-healing, OS Sandbox safety, on-demand Skills, and durable Checkpoints!',
@@ -325,23 +324,23 @@ export const aiAgentArchitectureLesson: Lesson = {
       metrics: { active_layers: '8 / 8 (Swarm)', context_scope: 'Shared Board', execution_mode: 'Parallel Swarm', safety_level: 'Full Stack' },
       scene: {
         entities: {
-          swarmZone: x({ x0: -16, x1: 16, y0: -23, y1: 14 }, 'L8: SWARM', { color: 'purple' }),
-          graphZone: x({ x0: -15, x1: 15, y0: -21, y1: 13 }, '', { color: 'blue' }),
-          skillsZone: x({ x0: -14, x1: 14, y0: -20, y1: 12 }, '', { color: 'green' }),
-          harnessZone: x({ x0: -13, x1: 13, y0: -19, y1: 5 }, '', { color: 'slab' }),
-          reactZone: x({ x0: -12, x1: 12, y0: -17, y1: 4 }, '', { color: 'purple' }),
-          mcpZone: x({ x0: -11, x1: 11, y0: -9, y1: 3 }, '', { color: 'orange' }),
-          ragZone: x({ x0: -10, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
-          llmCore: d(0, -3, { s: 5.4, h: 58, color: 'purple', glyph: 'balancer', label: ['Swarm Coord'], sub: 'Orchestrator' }),
-          vectorDb: b(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Research Agent'], sub: 'RAG + Retrieval' }),
-          mcpHub: d(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['Coder Agent'], sub: 'MCP Edit/Write' }),
-          reactLoop: d(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['QA Verifier'], sub: 'Test + Audit' }),
-          harness: d(-12, -15, { s: 4.6, h: 52, color: 'red', glyph: 'shield', label: ['OS Sandbox'], sub: 'Seccomp/Policy' }),
-          compactor: d(12, -15, { s: 4.6, h: 52, color: 'cyan', glyph: 'layers', label: ['Compactor'], sub: 'Prunes Tokens' }),
-          skills: d(0, 9, { s: 4.6, h: 52, color: 'green', glyph: 'code', label: ['Skill Packs'], sub: 'SKILL.md lazy' }),
-          humanGate: d(-12, 9, { s: 4.6, h: 52, color: 'amber', glyph: 'shield', label: ['Human Gate'], sub: 'HITL Approve' }),
-          stateDb: b(12, 9, { r: 2.2, h: 48, color: 'purple', label: ['Swarm Board DB'], sub: 'Shared State' }),
-          card: S({ x: 14, y: -16 }, '8. Result: Parallel Multi-Agent Swarm', [
+          swarmZone: makeZone({ x0: -16, x1: 16, y0: -23, y1: 14 }, 'L8: SWARM', { color: 'purple' }),
+          graphZone: makeZone({ x0: -15, x1: 15, y0: -21, y1: 13 }, '', { color: 'blue' }),
+          skillsZone: makeZone({ x0: -14, x1: 14, y0: -20, y1: 12 }, '', { color: 'green' }),
+          harnessZone: makeZone({ x0: -13, x1: 13, y0: -19, y1: 5 }, '', { color: 'slab' }),
+          reactZone: makeZone({ x0: -12, x1: 12, y0: -17, y1: 4 }, '', { color: 'purple' }),
+          mcpZone: makeZone({ x0: -11, x1: 11, y0: -9, y1: 3 }, '', { color: 'orange' }),
+          ragZone: makeZone({ x0: -10, x1: 3, y0: -7, y1: 1 }, '', { color: 'blue' }),
+          llmCore: makeBlock(0, -3, { s: 5.4, h: 58, color: 'purple', glyph: 'balancer', label: ['Swarm Coord'], sub: 'Orchestrator' }),
+          vectorDb: makeDb(-12, -3, { r: 2.2, h: 48, color: 'blue', label: ['Research Agent'], sub: 'RAG + Retrieval' }),
+          mcpHub: makeBlock(12, -3, { s: 4.6, h: 52, color: 'green', glyph: 'workflow', label: ['Coder Agent'], sub: 'MCP Edit/Write' }),
+          reactLoop: makeBlock(0, -15, { s: 4.6, h: 52, color: 'amber', glyph: 'zap', label: ['QA Verifier'], sub: 'Test + Audit' }),
+          harness: makeBlock(-12, -15, { s: 4.6, h: 52, color: 'red', glyph: 'shield', label: ['OS Sandbox'], sub: 'Seccomp/Policy' }),
+          compactor: makeBlock(12, -15, { s: 4.6, h: 52, color: 'cyan', glyph: 'layers', label: ['Compactor'], sub: 'Prunes Tokens' }),
+          skills: makeBlock(0, 9, { s: 4.6, h: 52, color: 'green', glyph: 'code', label: ['Skill Packs'], sub: 'SKILL.md lazy' }),
+          humanGate: makeBlock(-12, 9, { s: 4.6, h: 52, color: 'amber', glyph: 'shield', label: ['Human Gate'], sub: 'HITL Approve' }),
+          stateDb: makeDb(12, 9, { r: 2.2, h: 48, color: 'purple', label: ['Swarm Board DB'], sub: 'Shared State' }),
+          card: makePanel({ x: 14, y: -16 }, 'Result: Parallel Multi-Agent Swarm', [
             'swarm.add({ name: "researcher", workspace: "inherit" });',
             'swarm.add({ name: "coder",      workspace: "share"   });',
             'swarm.add({ name: "verifier",   brief: "test + build" });',
@@ -349,14 +348,14 @@ export const aiAgentArchitectureLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          rag_inject: h('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'both', label: 'research' }),
-          mcp_call: h('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'code' }),
-          react_cycle: h('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'verify' }),
-          harness_guard: h('harness', 'reactLoop', ['harness', 'reactLoop'], { heads: 'end', label: 'policy' }),
-          compact_sync: h('compactor', 'mcpHub', ['compactor', 'mcpHub'], { heads: 'end', label: 'compact' }),
-          skill_load: h('skills', 'llmCore', ['skills', 'llmCore'], { heads: 'end', label: 'SKILL.md' }),
-          hitl_gate: h('humanGate', 'skills', ['humanGate', 'skills'], { heads: 'end', label: 'approve' }),
-          ckpt_save: h('mcpHub', 'stateDb', ['mcpHub', 'stateDb'], { heads: 'end', label: 'sync' }),
+          rag_inject: makeLink('vectorDb', 'llmCore', ['vectorDb', 'llmCore'], { heads: 'both', label: 'research' }),
+          mcp_call: makeLink('llmCore', 'mcpHub', ['llmCore', 'mcpHub'], { heads: 'both', label: 'code' }),
+          react_cycle: makeLink('llmCore', 'reactLoop', ['llmCore', 'reactLoop'], { heads: 'both', label: 'verify' }),
+          harness_guard: makeLink('harness', 'reactLoop', ['harness', 'reactLoop'], { heads: 'end', label: 'policy' }),
+          compact_sync: makeLink('compactor', 'mcpHub', ['compactor', 'mcpHub'], { heads: 'end', label: 'compact' }),
+          skill_load: makeLink('skills', 'llmCore', ['skills', 'llmCore'], { heads: 'end', label: 'SKILL.md' }),
+          hitl_gate: makeLink('humanGate', 'skills', ['humanGate', 'skills'], { heads: 'end', label: 'approve' }),
+          ckpt_save: makeLink('mcpHub', 'stateDb', ['mcpHub', 'stateDb'], { heads: 'end', label: 'sync' }),
         },
         flows: [
           { route: ['rag_inject'], kind: 'res', rate: 1.8 },

@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const gitDetachedHeadReflogLesson = {
@@ -40,10 +38,10 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Detached (c4f1a2)', danglingCommits: '0', reflogEntries: '1 checkout', rescueBranch: 'None' },
       scene: {
         entities: {
-          mainBranch: d(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
-          detachedCommit: d(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'raw commit SHA' }),
-          headPointer: y(-10, 14, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> raw SHA', tone: 'rose', icon: 'terminal' }] }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Detached HEAD Status', [
+          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
+          detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'raw commit SHA' }),
+          headPointer: makeDevice(-10, 14, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> raw SHA', tone: 'rose', icon: 'terminal' }] }),
+          card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Detached HEAD Status', [
             `$ git checkout c4f1a2`,
             `Note: switching to 'c4f1a2'.`,
             `You are in 'detached HEAD' state.`,
@@ -53,7 +51,7 @@ export const gitDetachedHeadReflogLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          hd: h('headPointer', 'detachedCommit', ['headPointer', 'detachedCommit'], { label: 'direct SHA-1' }),
+          hd: makeLink('headPointer', 'detachedCommit', ['headPointer', 'detachedCommit'], { label: 'direct SHA-1' }),
         },
         flows: [{ route: ['hd'], kind: 'detached', rate: 1.4 }],
       },
@@ -74,11 +72,11 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Detached (e8a1b2)', danglingCommits: '1 vulnerable', reflogEntries: '2 commits', rescueBranch: 'None' },
       scene: {
         entities: {
-          mainBranch: d(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
-          detachedCommit: d(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
-          headPointer: y(-10, 14, { label: 'HEAD Ref', tags: [{ text: 'e8a1b2 (HEAD)', tone: 'amber', icon: 'terminal' }] }),
-          newCommit: d(6, 2, { s: 4.4, h: 56, color: 'amber', glyph: 'package', label: ['Commit e8a1b2'], sub: 'unanchored fix' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Unanchored Commit Creation', [
+          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
+          detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
+          headPointer: makeDevice(-10, 14, { label: 'HEAD Ref', tags: [{ text: 'e8a1b2 (HEAD)', tone: 'amber', icon: 'terminal' }] }),
+          newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'amber', glyph: 'package', label: ['Commit e8a1b2'], sub: 'unanchored fix' }),
+          card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Unanchored Commit Creation', [
             `$ git commit -m "fix: memory leak"`,
             `[detached HEAD e8a1b2] fix: memory leak`,
             ` 1 file changed, 14 insertions(+)`,
@@ -86,8 +84,8 @@ export const gitDetachedHeadReflogLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dn: h('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { label: 'parent pointer' }),
-          hn: h('headPointer', 'newCommit', ['headPointer', 'newCommit'], { label: 'direct HEAD' }),
+          dn: makeLink('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { label: 'parent pointer' }),
+          hn: makeLink('headPointer', 'newCommit', ['headPointer', 'newCommit'], { label: 'direct HEAD' }),
         },
         flows: [{ route: ['hn', 'dn'], kind: 'detached', rate: 1.5 }],
       },
@@ -108,11 +106,11 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Attached to main', danglingCommits: '1 orphaned (e8a1b2)', reflogEntries: '3 entries', rescueBranch: 'None' },
       scene: {
         entities: {
-          mainBranch: d(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'HEAD attached' }),
-          detachedCommit: d(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
-          headPointer: y(-22, -18, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
-          newCommit: d(6, 2, { s: 4.4, h: 56, color: 'rose', glyph: 'alert', label: ['Commit e8a1b2'], sub: 'orphan commit' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Commit Dangling Orphaned', [
+          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'HEAD attached' }),
+          detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
+          headPointer: makeDevice(-22, -18, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
+          newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'rose', glyph: 'alert', label: ['Commit e8a1b2'], sub: 'orphan commit' }),
+          card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Commit Dangling Orphaned', [
             `$ git checkout main`,
             `Warning: you are leaving 1 commit behind, not connected to`,
             `any of your branches: e8a1b2 fix: memory leak`,
@@ -121,8 +119,8 @@ export const gitDetachedHeadReflogLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          hm: h('headPointer', 'mainBranch', ['headPointer', 'mainBranch'], { label: 'HEAD -> main' }),
-          dn: h('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { style: 'dashed', label: 'unreferenced' }),
+          hm: makeLink('headPointer', 'mainBranch', ['headPointer', 'mainBranch'], { label: 'HEAD -> main' }),
+          dn: makeLink('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { style: 'dashed', label: 'unreferenced' }),
         },
         flows: [{ route: ['dn'], kind: 'orphan', rate: 1.2 }],
       },
@@ -143,12 +141,12 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Attached to main', danglingCommits: 'Located via reflog', reflogEntries: 'e8a1b2 verified', rescueBranch: 'Pending' },
       scene: {
         entities: {
-          mainBranch: d(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active main' }),
-          detachedCommit: d(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
-          headPointer: y(-22, -18, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
-          newCommit: d(6, 2, { s: 4.4, h: 56, color: 'amber', glyph: 'package', label: ['Commit e8a1b2'], sub: 'recovered SHA' }),
-          reflogLedger: b(0, 18, { r: 2.2, h: 52, color: 'cyan', glyph: 'database', label: ['.git/logs/HEAD'], sub: 'reflog ledger' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Reflog Ledger Query', [
+          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active main' }),
+          detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
+          headPointer: makeDevice(-22, -18, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
+          newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'amber', glyph: 'package', label: ['Commit e8a1b2'], sub: 'recovered SHA' }),
+          reflogLedger: makeDb(0, 18, { r: 2.2, h: 52, color: 'cyan', glyph: 'database', label: ['.git/logs/HEAD'], sub: 'reflog ledger' }),
+          card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Reflog Ledger Query', [
             `$ git reflog`,
             `7d9e44a (HEAD -> main) HEAD@{0}: checkout: moving to main`,
             `e8a1b2c HEAD@{1}: commit: fix: memory leak`,
@@ -157,8 +155,8 @@ export const gitDetachedHeadReflogLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          hm: h('headPointer', 'mainBranch', ['headPointer', 'mainBranch'], { label: 'attached' }),
-          nr: h('newCommit', 'reflogLedger', ['newCommit', 'reflogLedger'], { label: 'trace hash in log' }),
+          hm: makeLink('headPointer', 'mainBranch', ['headPointer', 'mainBranch'], { label: 'attached' }),
+          nr: makeLink('newCommit', 'reflogLedger', ['newCommit', 'reflogLedger'], { label: 'trace hash in log' }),
         },
         flows: [{ route: ['nr'], kind: 'rescue', rate: 1.5 }],
       },
@@ -179,11 +177,11 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Attached to main', danglingCommits: '0 (anchored)', reflogEntries: 'Reflog safe', rescueBranch: 'Branch rescue' },
       scene: {
         entities: {
-          mainBranch: d(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active main' }),
-          detachedCommit: d(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
-          newCommit: d(6, 2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Commit e8a1b2'], sub: 'anchored fix' }),
-          rescueBranch: d(16, 6, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch rescue'], sub: 'anchored ref' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Branch Anchor Creation', [
+          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active main' }),
+          detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
+          newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Commit e8a1b2'], sub: 'anchored fix' }),
+          rescueBranch: makeBlock(16, 6, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch rescue'], sub: 'anchored ref' }),
+          card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Branch Anchor Creation', [
             `$ git branch rescue e8a1b2`,
             `$ cat .git/refs/heads/rescue`,
             `e8a1b2c49b56f890e123456789abcdef01234567`,
@@ -193,8 +191,8 @@ export const gitDetachedHeadReflogLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dn: h('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { label: 'parent' }),
-          rn: h('rescueBranch', 'newCommit', ['rescueBranch', 'newCommit'], { label: 'anchors commit' }),
+          dn: makeLink('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { label: 'parent' }),
+          rn: makeLink('rescueBranch', 'newCommit', ['rescueBranch', 'newCommit'], { label: 'anchors commit' }),
         },
         flows: [{ route: ['rn'], kind: 'rescue', rate: 1.5 }],
       },
@@ -215,10 +213,10 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'main (merged)', danglingCommits: '0', reflogEntries: 'Complete', rescueBranch: 'Deleted' },
       scene: {
         entities: {
-          mainBranch: d(-18, -6, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: 'contains fix' }),
-          detachedCommit: d(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'ancestor' }),
-          newCommit: d(6, 2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Commit e8a1b2'], sub: 'merged fix' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merge Completion', [
+          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: 'contains fix' }),
+          detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'ancestor' }),
+          newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Commit e8a1b2'], sub: 'merged fix' }),
+          card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merge Completion', [
             `$ git merge rescue`,
             `Merge made by the 'ort' strategy.`,
             ` src/engine.ts | 14 ++++++++++++++`,
@@ -228,8 +226,8 @@ export const gitDetachedHeadReflogLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          md: h('mainBranch', 'detachedCommit', ['mainBranch', 'detachedCommit'], { label: 'ancestor' }),
-          dn: h('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { label: 'merged fix' }),
+          md: makeLink('mainBranch', 'detachedCommit', ['mainBranch', 'detachedCommit'], { label: 'ancestor' }),
+          dn: makeLink('detachedCommit', 'newCommit', ['detachedCommit', 'newCommit'], { label: 'merged fix' }),
         },
         flows: [{ route: ['md', 'dn'], kind: 'rescue', rate: 1.6 }],
       },

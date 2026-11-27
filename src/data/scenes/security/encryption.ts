@@ -1,66 +1,50 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBalancer,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
-const Ml = (e = [], t = {}) => y(0, -21, { label: `Alice · café Wi-Fi`, tags: e, ...t });
+const Ml = (e = [], t = {}) => makeDevice(0, -21, { label: `Alice · café Wi-Fi`, tags: e, ...t });
 
-const Nl = () => d(0, -12, { s: 3, h: 30, color: `slab`, glyph: `wifi`, label: [] });
+const Nl = () => makeBlock(0, -12, { s: 3, h: 30, color: `slab`, glyph: `wifi`, label: [] });
 
-const Pl = (e = []) => y(-14, -3, { label: `Mallory · same Wi-Fi`, tags: e });
+const Pl = (e = []) => makeDevice(-14, -3, { label: `Mallory · same Wi-Fi`, tags: e });
 
-const Fl = (e = []) => f(0, -3, { tags: e, pills: `below` });
+const Fl = (e = []) => makeBalancer(0, -3, { tags: e, pills: `below` });
 
-const Il = (e = []) => d(0, 6, { label: [`App`], tags: e });
+const Il = (e = []) => makeBlock(0, 6, { label: [`App`], tags: e });
 
 const Ll = (e = [], t = {}) =>
-    b(0, 15, { r: 2, h: 42, glyph: `user`, label: `customer DB`, tags: e, ...t });
+    makeDb(0, 15, { r: 2, h: 42, glyph: `user`, label: `customer DB`, tags: e, ...t });
 
-const Rl = (e = []) => y(13, 15, { label: `thief`, tags: e });
+const Rl = (e = []) => makeDevice(13, 15, { label: `thief`, tags: e });
 
-const zl = () => d(0, 25, { color: `yellow`, glyph: `key`, label: [`KMS`], sub: `key service` });
+const zl = () => makeBlock(0, 25, { color: `yellow`, glyph: `key`, label: [`KMS`], sub: `key service` });
 
 const Bl = (e = []) =>
-    d(-12, 6, { color: `yellow`, glyph: `keyhole`, label: [`Secrets`, `Manager`], tags: e });
+    makeBlock(-12, 6, { color: `yellow`, glyph: `keyhole`, label: [`Secrets`, `Manager`], tags: e });
 
-const Vl = (e = []) => d(13, 6, { color: `slab`, glyph: `file`, label: [`Public`, `Repo`], tags: e });
+const Vl = (e = []) => makeBlock(13, 6, { color: `slab`, glyph: `file`, label: [`Public`, `Repo`], tags: e });
 
-const Hl = (e = []) => y(15, -5, { label: `scanner bot`, tags: e });
+const Hl = (e = []) => makeDevice(15, -5, { label: `scanner bot`, tags: e });
 
 const Ul = (e = {}) => ({
-    ar: h(`alice`, `router`, [`alice`, `router`], { heads: `both`, ...(e.ar || {}) }),
-    rl: h(`router`, `lb`, [`router`, `lb`], { heads: `both`, ...(e.rl || {}) }),
-    la: h(`lb`, `app`, [`lb`, `app`], { heads: `both`, ...(e.la || {}) }),
-    ad: h(`app`, `db`, [`app`, `db`], { heads: `both`, ...(e.ad || {}) }),
+    ar: makeLink(`alice`, `router`, [`alice`, `router`], { heads: `both`, ...(e.ar || {}) }),
+    rl: makeLink(`router`, `lb`, [`router`, `lb`], { heads: `both`, ...(e.rl || {}) }),
+    la: makeLink(`lb`, `app`, [`lb`, `app`], { heads: `both`, ...(e.la || {}) }),
+    ad: makeLink(`app`, `db`, [`app`, `db`], { heads: `both`, ...(e.ad || {}) }),
   });
 
 const Wl = () => ({
-    sn: h(`router`, `mallory`, [`router`, [`mallory`, `router`], `mallory`], { style: `dashed` }),
+    sn: makeLink(`router`, `mallory`, [`router`, [`mallory`, `router`], `mallory`], { style: `dashed` }),
   });
 
 const Gl = {
-    st: h(`db`, `thief`, [`db`, `thief`], {
+    st: makeLink(`db`, `thief`, [`db`, `thief`], {
       style: `dashed`,
       label: `backup copied`,
       labelTone: `red`,
@@ -83,7 +67,7 @@ const ql = (e = {}) => ({
     db: Ll(e.db, e.dbProps),
   });
 
-const Jl = (e, t, n) => S({ x: -12, y: 2, z: 0, dx: -150, dy: -150 }, e, t, { icon: n });
+const Jl = (e, t, n) => makePanel({ x: -12, y: 2, z: 0, dx: -150, dy: -150 }, e, t, { icon: n });
 
 const Yl = {
     id: `encryption`,
@@ -278,7 +262,7 @@ const Yl = {
           links: {
             ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
             ...Gl,
-            dk: h(`db`, `kms`, [`db`, `kms`], { heads: `both`, label: `unwrap data key` }),
+            dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both`, label: `unwrap data key` }),
           },
           flows: [Kl.req, Kl.stealCipher, { route: [`dk`], kind: `write`, rate: 0.4, bounce: !0 }],
         },
@@ -318,7 +302,7 @@ const Yl = {
           },
           links: {
             ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
-            dk: h(`db`, `kms`, [`db`, `kms`], { heads: `both`, label: `re-wrap data keys` }),
+            dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both`, label: `re-wrap data keys` }),
           },
           flows: [Kl.req, { route: [`dk`], kind: `write`, rate: 1.2, bounce: !0 }],
         },
@@ -346,9 +330,9 @@ const Yl = {
           },
           links: {
             ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
-            dk: h(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
-            ap: h(`app`, `repo`, [`app`, `repo`], { label: `git push` }),
-            rb: h(`repo`, `bot`, [`repo`, [`bot`, `repo`], `bot`], {
+            dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
+            ap: makeLink(`app`, `repo`, [`app`, `repo`], { label: `git push` }),
+            rb: makeLink(`repo`, `bot`, [`repo`, [`bot`, `repo`], `bot`], {
               style: `dashed`,
               label: `scraped`,
               labelTone: `red`,
@@ -388,9 +372,9 @@ const Yl = {
           },
           links: {
             ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
-            dk: h(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
-            av: h(`app`, `vault`, [`app`, `vault`], { heads: `both`, label: `fetch at startup` }),
-            ap: h(`app`, `repo`, [`app`, `repo`], { label: `git push` }),
+            dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
+            av: makeLink(`app`, `vault`, [`app`, `vault`], { heads: `both`, label: `fetch at startup` }),
+            ap: makeLink(`app`, `repo`, [`app`, `repo`], { label: `git push` }),
           },
           flows: [
             Kl.req,
@@ -424,7 +408,7 @@ const Yl = {
               db: [{ text: `card: tok_4f2c`, tone: `green`, icon: `creditCard` }],
             }),
             kms: zl(),
-            pp: d(-12, 15, {
+            pp: makeBlock(-12, 15, {
               color: `purple`,
               glyph: `creditCard`,
               label: [`Payment`, `Provider`],
@@ -434,8 +418,8 @@ const Yl = {
           },
           links: {
             ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
-            dk: h(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
-            pt: h(`app`, `pp`, [`app`, [-6, `app`], [-6, `pp`], `pp`], {
+            dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
+            pt: makeLink(`app`, `pp`, [`app`, [-6, `app`], [-6, `pp`], `pp`], {
               heads: `both`,
               label: `card → token`,
               labelAt: 0.45,
@@ -468,12 +452,12 @@ const Yl = {
               d: 5,
               label: `Alice`,
             }),
-            chat: d(0, -6, {
+            chat: makeBlock(0, -6, {
               glyph: `message`,
               label: [`Chat`, `Server`],
               tags: [{ text: `sees only ciphertext`, tone: `green`, icon: `eyeOff` }],
             }),
-            bob: y(13, -6, {
+            bob: makeDevice(13, -6, {
               form: `phone`,
               w: 5,
               d: 5,
@@ -482,8 +466,8 @@ const Yl = {
             }),
           },
           links: {
-            ac: h(`alice`, `chat`, [`alice`, `chat`]),
-            cb: h(`chat`, `bob`, [`chat`, `bob`]),
+            ac: makeLink(`alice`, `chat`, [`alice`, `chat`]),
+            cb: makeLink(`chat`, `bob`, [`chat`, `bob`]),
           },
           flows: [{ route: [`ac`, `cb`], kind: `empty`, rate: 0.9 }],
         },
@@ -511,8 +495,8 @@ const Yl = {
           entities: { ...ql(), kms: zl(), vault: Bl() },
           links: {
             ...Ul({ ar: { label: `TLS` }, la: { label: `mTLS` }, ad: { label: `mTLS` } }),
-            dk: h(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
-            av: h(`app`, `vault`, [`app`, `vault`], { heads: `both` }),
+            dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
+            av: makeLink(`app`, `vault`, [`app`, `vault`], { heads: `both` }),
           },
           flows: [Kl.req, { route: [`av`], kind: `write`, rate: 0.4, bounce: !0 }],
         },

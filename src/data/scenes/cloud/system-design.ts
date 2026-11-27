@@ -1,28 +1,4 @@
 // @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
-} from '@/lib/simulator/scene-builders';
 
 // ============================================================================
 // DAWN BLOG SYSTEM ARCHITECTURE (FULL EDGE & C4 MODEL)

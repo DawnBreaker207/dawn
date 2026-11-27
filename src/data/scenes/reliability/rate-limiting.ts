@@ -1,27 +1,15 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeDevice,
+  makeHot,
+  makeLink,
+  makePanel,
+  makeQueue,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const Ms = { x0: -10, x1: -2, y0: -23, y1: -17 };
@@ -30,14 +18,14 @@ const Ns = { x0: -17.5, x1: -7.6, y0: -12.6, y1: -9.4 };
 
 const Ps = { x0: 10.6, x1: 20.5, y0: -12.6, y1: -9.4 };
 
-const Fs = (e = 11, t = `real users`) => p(Ms, e, t);
+const Fs = (e = 11, t = `real users`) => makeCrowd(Ms, e, t);
 
-const Is = (e = []) => y(8, -20, { label: `runaway script`, tags: e });
+const Is = (e = []) => makeDevice(8, -20, { label: `runaway script`, tags: e });
 
-const Ls = (e = {}) => d(0, 3, { label: [`API`], ...e });
+const Ls = (e = {}) => makeBlock(0, 3, { label: [`API`], ...e });
 
 const Rs = (e = 0, t = {}) =>
-    d(e, -9, { color: `orange`, glyph: `gauge`, label: [`Gateway`], sub: `rate limiter`, ...t });
+    makeBlock(e, -9, { color: `orange`, glyph: `gauge`, label: [`Gateway`], sub: `rate limiter`, ...t });
 
 const zs = { text: `5,000 req/s`, tone: `red`, icon: `bot` };
 
@@ -45,12 +33,12 @@ const Bs = { text: `limit: 10 req/s per client`, icon: `gauge` };
 
 const Vs = {
     direct: (e = {}) => ({
-      ua: h(`users`, `api`, [`users`, [`users`, `api`], `api`], { heads: `both`, ...(e.ua || {}) }),
-      ba: h(`bot`, `api`, [`bot`, [`bot`, `api`], `api`], e.ba),
+      ua: makeLink(`users`, `api`, [`users`, [`users`, `api`], `api`], { heads: `both`, ...(e.ua || {}) }),
+      ba: makeLink(`bot`, `api`, [`bot`, [`bot`, `api`], `api`], e.ba),
     }),
     edge: (e = `gw`, t = {}) => ({
-      ug: h(`users`, e, [`users`, [`users`, e], e], { heads: `both`, ...(t.ug || {}) }),
-      bg: h(`bot`, e, [`bot`, [`bot`, e], e], {
+      ug: makeLink(`users`, e, [`users`, [`users`, e], e], { heads: `both`, ...(t.ug || {}) }),
+      bg: makeLink(`bot`, e, [`bot`, [`bot`, e], e], {
         label: `429 Too Many Requests`,
         labelTone: `red`,
         labelAt: 0.82,
@@ -59,40 +47,40 @@ const Vs = {
       }),
     }),
     toApi: (e = `gw`, t = `ga`) => ({
-      [t]: h(e, `api`, [e, [e, `api`], `api`], { heads: `both` }),
+      [t]: makeLink(e, `api`, [e, [e, `api`], `api`], { heads: `both` }),
     }),
   };
 
 const Hs = (e = 8) => ({
-    ubz: x(Ns, `USER · ${e} TOKENS`),
-    ubt: ee(-16.8, -10.4, e, [1, 0], { gap: 1.1, color: `#9fd28f` }),
-    bbz: x(Ps, `SCRIPT · EMPTY`),
+    ubz: makeZone(Ns, `USER · ${e} TOKENS`),
+    ubt: makeQueue(-16.8, -10.4, e, [1, 0], { gap: 1.1, color: `#9fd28f` }),
+    bbz: makeZone(Ps, `SCRIPT · EMPTY`),
   });
 
-const Us = (e, t, n) => S({ x: 12.5, y: 3, z: 0, dx: 20, dy: -260 }, e, t, { icon: n });
+const Us = (e, t, n) => makePanel({ x: 12.5, y: 3, z: 0, dx: 20, dy: -260 }, e, t, { icon: n });
 
 const Ws = (e = [zs], t = {}) => ({
     users: Fs(),
     bot: Is(e),
-    api: Ls(v(0.42)),
+    api: Ls(makeCool(0.42)),
     gw: Rs(-6, { tags: [] }),
     gw2: Rs(8, t),
-    redis: b(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
+    redis: makeDb(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
   });
 
 const Gs = (e = {}) => ({
-    ug: h(`users`, `gw`, [`users`, [`users`, `gw`], `gw`], { heads: `both` }),
-    bg2: h(`bot`, `gw2`, [`bot`, `gw2`], {
+    ug: makeLink(`users`, `gw`, [`users`, [`users`, `gw`], `gw`], { heads: `both` }),
+    bg2: makeLink(`bot`, `gw2`, [`bot`, `gw2`], {
       label: `429 Too Many Requests`,
       labelTone: `red`,
       labelAt: 0.5,
       fail: 0.92,
       ...e,
     }),
-    ga: h(`gw`, `api`, [`gw`, [`gw`, `api`], `api`], { heads: `both` }),
-    ga2: h(`gw2`, `api`, [`gw2`, [`gw2`, `api`], `api`], { heads: `both` }),
-    gr: h(`gw`, `redis`, [`gw`, `redis`], { heads: `both`, label: `INCR`, labelAt: 0.5 }),
-    g2r: h(`gw2`, `redis`, [`gw2`, `redis`], { heads: `both` }),
+    ga: makeLink(`gw`, `api`, [`gw`, [`gw`, `api`], `api`], { heads: `both` }),
+    ga2: makeLink(`gw2`, `api`, [`gw2`, [`gw2`, `api`], `api`], { heads: `both` }),
+    gr: makeLink(`gw`, `redis`, [`gw`, `redis`], { heads: `both`, label: `INCR`, labelAt: 0.5 }),
+    g2r: makeLink(`gw2`, `redis`, [`gw2`, `redis`], { heads: `both` }),
   });
 
 const Ks = {
@@ -129,7 +117,7 @@ const Ks = {
             users: Fs(),
             bot: Is([zs]),
             api: Ls({
-              ..._(0.99),
+              ...makeHot(0.99),
               tags: [{ text: `mostly serving one client`, tone: `red`, icon: `alert` }],
             }),
           },
@@ -159,7 +147,7 @@ const Ks = {
         ],
         metrics: { abuser: 5e3, served: 99, apiCpu: 45, limited: 4990 },
         scene: {
-          entities: { users: Fs(), bot: Is([zs]), api: Ls(v(0.45)), gw: Rs(0, { tags: [Bs] }) },
+          entities: { users: Fs(), bot: Is([zs]), api: Ls(makeCool(0.45)), gw: Rs(0, { tags: [Bs] }) },
           links: { ...Vs.edge(), ...Vs.toApi() },
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
@@ -185,7 +173,7 @@ const Ks = {
           entities: {
             users: Fs(),
             bot: Is([zs]),
-            api: Ls(v(0.45)),
+            api: Ls(makeCool(0.45)),
             gw: Rs(0, { tags: [Bs] }),
             ...Hs(8),
           },
@@ -213,7 +201,7 @@ const Ks = {
           entities: {
             users: Fs(),
             bot: Is([zs]),
-            api: Ls(v(0.45)),
+            api: Ls(makeCool(0.45)),
             gw: Rs(0, { tags: [Bs] }),
             ...Hs(8),
             card: Us(
@@ -307,16 +295,16 @@ const Ks = {
           entities: {
             users: Fs(15, `Acme Corp · 10,000 users`),
             bot: Is(),
-            api: Ls(v(0.55)),
+            api: Ls(makeCool(0.55)),
             gw: Rs(-6, {
               tags: [{ text: `tenant Acme: 2,000 req/s`, tone: `amber`, icon: `building` }],
             }),
             gw2: Rs(8, { tags: [Bs] }),
-            redis: b(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
+            redis: makeDb(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
           },
           links: {
             ...Gs({ fail: 0, label: `within limit`, labelTone: `green` }),
-            ug: h(`users`, `gw`, [`users`, [`users`, `gw`], `gw`], {
+            ug: makeLink(`users`, `gw`, [`users`, [`users`, `gw`], `gw`], {
               heads: `both`,
               fail: 0.3,
               label: `over tenant quota → 429`,
@@ -358,11 +346,11 @@ const Ks = {
               tags: [{ text: `shedding background work`, tone: `amber`, icon: `layers` }],
             }),
             gw2: Rs(8),
-            redis: b(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
+            redis: makeDb(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
           },
           links: {
             ...Gs({ fail: 0, label: `within limit`, labelTone: `green` }),
-            ul2: h(`users`, `gw`, [[`users+1.6`, `users`], [`users+1.6`, `gw`], `gw`], {
+            ul2: makeLink(`users`, `gw`, [[`users+1.6`, `users`], [`users+1.6`, `gw`], `gw`], {
               style: `dashed`,
               fail: 0.85,
               label: `background · dropped first`,

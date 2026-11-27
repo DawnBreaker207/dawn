@@ -1,243 +1,210 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+
+// Two commit trains on fixed rails. Top rail: main (M1, M2) — later B1', B2' are grafted
+// onto its tip. Bottom rail: feat-A (A1, A2) with feat-B (B1, B2) stacked on top of it.
+// Arrows point child → parent. `--onto` cuts B1..B2 off A2 and replays them onto M2.
+//
+//   M1 ← M2 ← B1' ← B2'          (main, then feat-B)
+//    ↖
+//     A1 ← A2 ← B1 ← B2           (feat-A, feat-B)
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+const TRUNK = -9;
+const SIDE = 5;
+const commit = (x: number, y: number, sha: string, sub: string, tags: Tag[] = [], o: Opts = {}) =>
+  makeBlock(x, y, { s: 4.2, h: 50, color: `purple`, glyph: `gitCommit`, label: [sha], sub, tags, ...o });
+const ref = (name: string): Tag => ({ text: name, tone: `amber`, icon: `gitBranch` });
+const dropped: Opts = { dim: 0.75 };
+
+const M1 = (t: Tag[] = []) => commit(TRUNK, -22, `3c1d00`, `M1`, t);
+const M2 = (t: Tag[] = [ref(`main`)]) => commit(TRUNK, -10, `8f2e11`, `M2`, t);
+const A1 = (t: Tag[] = [], o: Opts = {}) => commit(SIDE, -18, `a1b2c3`, `A1`, t, o);
+const A2 = (t: Tag[] = [ref(`feat-A`)], o: Opts = {}) => commit(SIDE, -6, `a4d5e6`, `A2`, t, o);
+const B1 = (t: Tag[] = [], o: Opts = {}) => commit(SIDE, 6, `b17f20`, `B1`, t, o);
+const B2 = (t: Tag[] = [ref(`feat-B`)], o: Opts = {}) => commit(SIDE, 18, `b29c31`, `B2`, t, o);
+const B1n = (t: Tag[] = []) => commit(TRUNK, 2, `c5e6f7`, `B1'`, t);
+const B2n = (t: Tag[] = [ref(`feat-B`)]) => commit(TRUNK, 14, `c8a9b0`, `B2'`, t);
+
+const L = {
+  m2: makeLink(`M2`, `M1`, [`M2`, `M1`]),
+  a1: makeLink(`A1`, `M1`, [`A1`, `M1`]),
+  a2: makeLink(`A2`, `A1`, [`A2`, `A1`]),
+  b1: makeLink(`B1`, `A2`, [`B1`, `A2`]),
+  b2: makeLink(`B2`, `B1`, [`B2`, `B1`]),
+  b1Old: makeLink(`B1`, `A2`, [`B1`, `A2`], { style: `off` }),
+  b2Old: makeLink(`B2`, `B1`, [`B2`, `B1`], { style: `off` }),
+  b1n: makeLink(`B1n`, `M2`, [`B1n`, `M2`], { label: `replayed` }),
+  b2n: makeLink(`B2n`, `B1n`, [`B2n`, `B1n`]),
+  b1nQuiet: makeLink(`B1n`, `M2`, [`B1n`, `M2`]),
+};
+const sideLinks = { m2: L.m2, a1: L.a1, a2: L.a2 };
+
+/** CLI card in the empty corner below the bottom rail. */
+const card = (title: string, lines: string[], icon = `keyboard`) =>
+  makePanel({ x: SIDE, y: 18, z: 0, dx: -40, dy: 70 }, title, lines, { icon });
 
 export const gitRebaseOntoSurgeryLesson = {
-  id: 'git-rebase-onto-surgery',
-  title: 'Case 7: Git Rebase --onto Surgery (Dependency Traps)',
-  summary: 'Surgically transplant a feature branch onto main while slicing out rejected intermediate dependencies using git rebase --onto.',
-  minutes: 25,
-  level: 'advanced',
-  metrics: ['upstreamBase', 'sourceBranch', 'targetDestination', 'graftedCommits'],
-  legend: ['flow', ['cut', 'sliced commit'], ['graft', 'transplanted commit'], ['base', 'stable trunk']],
+  id: `git-rebase-onto-surgery`,
+  title: `Case 7: Git Rebase --onto Surgery (Dependency Traps)`,
+  summary: `Move a stacked branch onto main while leaving its rejected parent branch behind, with git rebase --onto.`,
+  minutes: 16,
+  level: `advanced`,
+  metrics: [`featB`, `wouldCopy`, `main`, `featA`],
+  legend: [`req`, [`write`, `replayed commit`]],
   goals: [
-    { text: 'The dependency trap: Branch B stacked on top of Branch A', step: 1 },
-    { text: 'Why standard git rebase main fails and drags unwanted commits', step: 2 },
-    { text: 'Surgical syntax: git rebase --onto <new-base> <upstream-to-drop> <branch>', step: 3 },
-    { text: 'Transplanting commits B1 and B2 directly onto main', step: 4 },
-    { text: 'Verifying history integrity with git log --graph', step: 5 },
-    { text: 'Discarding Branch A and fast-forward merging Branch B', step: 6 },
+    { text: `The trap: feat-B stacked on feat-A`, step: 1 },
+    { text: `Why plain rebase main drags feat-A along`, step: 2 },
+    { text: `git rebase --onto <new> <old> <branch>`, step: 3 },
+    { text: `B1 and B2 are replayed onto main`, step: 4 },
+    { text: `Check the result with git log --graph`, step: 5 },
+    { text: `Fast-forward main, delete feat-A`, step: 6 },
   ],
   steps: [
     {
-      short: 'Dependency Trap',
-      chapter: 'problem',
-      title: 'Branch B Trapped on Outdated Branch A',
+      short: `Stacked`,
+      chapter: `problem`,
+      title: `feat-B was built on top of feat-A`,
       body: [
-        'Developer branched <code>feat-B</code> off <code>feat-A</code> because they needed <code>feat-A</code>’s helper functions.',
-        'Later, <code>feat-A</code> is completely rejected in code review. Now <code>feat-B</code> needs to land into <code>main</code>, but <code>feat-B</code>’s commits sit directly on top of <code>feat-A</code>’s discarded commits.',
+        `You branched <code>feat-B</code> from <code>feat-A</code> because you needed one of its helpers. So B1 and B2 sit on top of A1 and A2, which sit on M1.`,
+        `In Git a branch is just a pointer to its newest commit. Everything reachable behind <code>feat-B</code> — B2, B1, A2, A1, M1 — is “in” feat-B.`,
       ],
-      callout: {
-        kind: 'warning',
-        text: 'If you merge feat-B into main right now, you will accidentally merge the broken, unapproved code from feat-A too!',
-      },
-      metrics: { upstreamBase: 'feat-A (rejected)', sourceBranch: 'feat-B (good)', targetDestination: 'main', graftedCommits: '0' },
+      metrics: { featB: `B2 on A2`, wouldCopy: `—`, main: `M1`, featA: `in review` },
       scene: {
         entities: {
-          m1: d(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['main (M1)'], sub: 'common root' }),
-          m2: d(-6, -2, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['main (M2)'], sub: 'stable tip' }),
-          featA: d(-4, -20, { s: 4.4, h: 54, color: 'rose', glyph: 'alert', label: ['feat-A (Bad)'], sub: 'rejected work' }),
-          featB: d(8, -16, { s: 4.4, h: 56, color: 'amber', glyph: 'boxes', label: ['feat-B (Good)'], sub: 'valid feature' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'DAG Entanglement', [
-            `main: --- M1 --- M2`,
-            `           \\`,
-            `feat-A:     A1 --- A2 (REJECTED)`,
-            `                     \\`,
-            `feat-B:               B1 --- B2 (VALID WORK)`,
-            `! How to extract B1 and B2 without taking A1 and A2?`,
-          ], { icon: 'terminal' }),
+          M1: M1([ref(`main`)]),
+          A1: A1(),
+          A2: A2(),
+          B1: B1(),
+          B2: B2(),
+          card: card(`terminal`, [`$ git log --oneline --graph --all`, `* b29c31 (feat-B) B2`, `* b17f20 B1`, `* a4d5e6 (feat-A) A2`, `* a1b2c3 A1`, `* 3c1d00 (main) M1`]),
         },
-        links: {
-          m1m2: h('m1', 'm2', ['m1', 'm2'], { label: 'trunk commit' }),
-          m1a: h('m1', 'featA', ['m1', 'featA'], { label: 'stale branch' }),
-          ab: h('featA', 'featB', ['featA', 'featB'], { label: 'stacked on A' }),
-        },
-        flows: [{ route: ['m1a', 'ab'], kind: 'cut', rate: 1.5 }],
+        links: { a1: L.a1, a2: L.a2, b1: L.b1, b2: L.b2 },
+        flows: [{ route: [`b2`, `b1`, `a2`, `a1`], rate: 0.7 }],
       },
     },
     {
-      short: 'Standard Failure',
-      chapter: 'problem',
-      title: 'Why Standard git rebase main Fails',
+      short: `The trap`,
+      chapter: `problem`,
+      title: `feat-A is rejected — plain rebase drags it in`,
       body: [
-        'Running standard <code>git rebase main</code> while on <code>feat-B</code> traverses back to the common ancestor with <code>main</code>, which is <code>M1</code>!',
-        'Git takes commits <code>A1</code>, <code>A2</code>, <code>B1</code>, and <code>B2</code> and replays ALL four commits on top of <code>main</code>, defeating your goal of discarding <code>feat-A</code>.',
+        `Review rejects <code>feat-A</code>, and <code>main</code> moves on to M2. You want feat-B on top of M2 — without A1 and A2.`,
+        `<code>git rebase main</code> replays every commit on feat-B that is not on main: that is A1, A2, B1 <em>and</em> B2. The rejected work comes straight back.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Standard git rebase operates on the entire fork lineage back to the merge base with target.',
-      },
-      changes: ['+ Standard rebase drags unwanted A1 and A2 commits onto main'],
-      metrics: { upstreamBase: 'main', sourceBranch: 'feat-B', targetDestination: 'main', graftedCommits: 'A1, A2, B1, B2 (Polluted)' },
+      changes: [`+ M2 on main`, `− feat-A rejected`],
+      metrics: { featB: `B2 on A2`, wouldCopy: `A1 A2 B1 B2`, main: `M2`, featA: `rejected` },
       scene: {
         entities: {
-          m1: d(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['main (M1)'], sub: 'common root' }),
-          m2: d(-6, -2, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['main (M2)'], sub: 'stable tip' }),
-          featA: d(-4, -20, { s: 4.4, h: 54, color: 'rose', glyph: 'alert', label: ['feat-A (Bad)'], sub: 'drags to main' }),
-          featB: d(8, -16, { s: 4.4, h: 56, color: 'amber', glyph: 'boxes', label: ['feat-B (Good)'], sub: 'dirty rebase' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Standard Rebase Flaw', [
-            `$ git checkout feat-B`,
-            `$ git rebase main`,
-            `First, rewinding head to replay your work on top of it...`,
-            `Applying: feat-A commit 1  # UNWANTED!`,
-            `Applying: feat-A commit 2  # UNWANTED!`,
-            `Applying: feat-B commit 1`,
-            `Applying: feat-B commit 2`,
-            `! Pollutes main with rejected feat-A code!`,
-          ], { icon: 'terminal' }),
+          M1: M1(),
+          M2: M2(),
+          A1: A1([{ text: `rejected`, tone: `red` }], dropped),
+          A2: A2([ref(`feat-A`), { text: `rejected`, tone: `red` }], dropped),
+          B1: B1(),
+          B2: B2(),
+          card: card(`terminal`, [`$ git log --oneline main..feat-B`, `b29c31 B2`, `b17f20 B1`, `! a4d5e6 A2`, `! a1b2c3 A1`, `# git rebase main would copy all four`], `alertTriangle`),
         },
-        links: {
-          m1m2: h('m1', 'm2', ['m1', 'm2'], { label: 'trunk' }),
-          m2a: h('m2', 'featA', ['m2', 'featA'], { label: 'drags A1/A2' }),
-          ab: h('featA', 'featB', ['featA', 'featB'], { label: 'drags B1/B2' }),
-        },
-        flows: [{ route: ['m2a', 'ab'], kind: 'cut', rate: 1.6 }],
+        links: { ...sideLinks, b1: L.b1, b2: L.b2 },
+        flows: [{ route: [`b2`, `b1`, `a2`, `a1`], kind: `fail`, rate: 0.8 }],
       },
     },
     {
-      short: 'Surgical Syntax',
-      chapter: 'technique',
-      title: 'The Surgical Syntax: git rebase --onto',
+      short: `--onto`,
+      chapter: `technique`,
+      title: `Say exactly where to cut`,
       body: [
-        'The solution is the 3-argument surgical command: <code>git rebase --onto &lt;new-base&gt; &lt;upstream-to-drop&gt; &lt;branch&gt;</code>.',
-        'Here: <code>git rebase --onto main feat-A feat-B</code>. This instructs Git: take the commits reachable from <code>feat-B</code> but NOT from <code>feat-A</code> (i.e. only B1 and B2), and replay them on top of <code>main</code>.',
+        `<code>git rebase --onto main feat-A feat-B</code> reads as: take the commits in <code>feat-A..feat-B</code> (reachable from feat-B but not from feat-A) and replay them <b>onto</b> main.`,
+        `That range is just B1 and B2. A1 and A2 are below the cut, so they stay where they are.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Mnemonic: git rebase --onto [Where to go] [What to slice off] [Branch to move].',
-      },
-      changes: ['+ Slicing boundaries defined: range is feat-A..feat-B', '+ A1 and A2 completely excluded from replaying'],
-      metrics: { upstreamBase: 'feat-A', sourceBranch: 'feat-B (isolated)', targetDestination: 'main', graftedCommits: 'B1, B2 only' },
+      changes: [`~ range feat-A..feat-B = B1, B2`],
+      metrics: { featB: `B2 on A2`, wouldCopy: `B1 B2`, main: `M2`, featA: `rejected` },
       scene: {
         entities: {
-          m1: d(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['main (M1)'], sub: 'common root' }),
-          m2: d(-6, -2, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['main (M2)'], sub: 'new-base tip' }),
-          featA: d(-4, -20, { s: 4.4, h: 54, color: 'rose', glyph: 'alert', label: ['feat-A (Bad)'], sub: 'slice point' }),
-          featB: d(8, -16, { s: 4.4, h: 56, color: 'amber', glyph: 'boxes', label: ['feat-B (Good)'], sub: 'moving branch' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Surgical Rebase Command', [
-            `$ git rebase --onto main feat-A feat-B`,
-            `Formula: git rebase --onto <new-base> <upstream-to-drop> <branch>`,
-            `New Base: main (M2)`,
-            `Upstream to drop: feat-A (A1, A2 discarded)`,
-            `Branch to transplant: feat-B (only B1, B2 copied)`,
-          ], { icon: 'terminal' }),
+          M1: M1(),
+          M2: M2([ref(`main`), { text: `new base`, tone: `violet` }]),
+          A1: A1([], dropped),
+          A2: A2([ref(`feat-A`), { text: `cut here`, tone: `amber`, icon: `alert` }], dropped),
+          B1: B1([{ text: `to move`, tone: `violet` }]),
+          B2: B2([ref(`feat-B`), { text: `to move`, tone: `violet` }]),
+          card: card(`terminal`, [`$ git rebase --onto main feat-A feat-B`, `#              new base  old base  branch`, `# replays: feat-A..feat-B = B1, B2`]),
         },
-        links: {
-          m1m2: h('m1', 'm2', ['m1', 'm2'], { label: 'stable trunk' }),
-          m2b: h('m2', 'featB', ['m2', 'featB'], { style: 'dashed', label: 'graft plan' }),
-        },
-        flows: [{ route: ['m2b'], kind: 'graft', rate: 1.5 }],
+        links: { ...sideLinks, b1: L.b1, b2: L.b2 },
+        flows: [{ route: [`b2`, `b1`], rate: 1 }],
       },
     },
     {
-      short: 'Transplant Commits',
-      chapter: 'execution',
-      title: 'Transplanting Commits B1 and B2 onto main',
+      short: `Replay`,
+      chapter: `solution`,
+      title: `B1 and B2 are copied onto M2`,
       body: [
-        'Git creates new commit objects <code>B1\'</code> and <code>B2\'</code> whose parent is directly <code>M2</code>.',
-        '<code>feat-B</code> now points to <code>B2\'</code>. The rejected commits on <code>feat-A</code> are completely bypassed and left behind.',
+        `Git replays each commit’s change onto M2. The copies get <b>new hashes</b> — B1' and B2' — because their parent changed. Then the <code>feat-B</code> pointer moves to B2'.`,
+        `The old B1 and B2 are untouched; they’re simply no longer on any branch.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'The newly created commits have new SHAs (B1\', B2\') because their parent hash has changed to M2.',
-      },
-      changes: ['+ Commits B1\' and B2\' created on top of main (M2)', '+ feat-B points to clean B2\''],
-      metrics: { upstreamBase: 'main (M2)', sourceBranch: 'feat-B (grafted)', targetDestination: 'main', graftedCommits: 'B1\', B2\' clean' },
+      changes: [`+ B1' c5e6f7, B2' c8a9b0`, `~ feat-B → B2'`],
+      metrics: { featB: `B2' on M2`, wouldCopy: `done`, main: `M2`, featA: `rejected` },
       scene: {
         entities: {
-          m1: d(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['main (M1)'], sub: 'common root' }),
-          m2: d(-6, -2, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['main (M2)'], sub: 'stable tip' }),
-          featA: d(-4, -20, { s: 4.4, h: 54, color: 'slab', glyph: 'alert', label: ['feat-A (Bad)'], sub: 'orphaned line' }),
-          featB: d(8, -16, { s: 4.4, h: 56, color: 'amber', glyph: 'boxes', label: ['feat-B (Good)'], sub: 'old pointer' }),
-          transplantedB: d(4, 8, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['feat-B (Graft)'], sub: 'rebased onto' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Transplant Execution', [
-            `Applying: feat-B commit 1 (as B1')`,
-            `Applying: feat-B commit 2 (as B2')`,
-            `Successfully rebased and updated refs/heads/feat-B.`,
-            `= feat-B now sits cleanly on main with 0 dependencies on feat-A`,
-          ], { icon: 'terminal' }),
+          M1: M1(),
+          M2: M2(),
+          A1: A1([], dropped),
+          A2: A2([ref(`feat-A`)], dropped),
+          B1: B1([{ text: `old`, tone: `gray` }], dropped),
+          B2: B2([{ text: `old`, tone: `gray` }], dropped),
+          B1n: B1n(),
+          B2n: B2n(),
+          card: card(`terminal`, [`$ git rebase --onto main feat-A feat-B`, `= Successfully rebased and updated refs/heads/feat-B.`]),
         },
-        links: {
-          m1m2: h('m1', 'm2', ['m1', 'm2'], { label: 'stable trunk' }),
-          m2g: h('m2', 'transplantedB', ['m2', 'transplantedB'], { label: 'clean graft' }),
-        },
-        flows: [{ route: ['m2g'], kind: 'graft', rate: 1.6 }],
+        links: { ...sideLinks, b1: L.b1Old, b2: L.b2Old, b1n: L.b1n, b2n: L.b2n },
+        flows: [
+          { route: [`b1n`], kind: `write`, rate: 1 },
+          { route: [`b2n`], kind: `write`, rate: 1 },
+        ],
       },
     },
     {
-      short: 'Verify History',
-      chapter: 'execution',
-      title: 'Verifying History Integrity with git log --graph',
+      short: `Verify`,
+      chapter: `technique`,
+      title: `Check the new history`,
       body: [
-        'Before pushing, verify that <code>feat-B</code> contains exactly your expected commits and zero residual artifacts from <code>feat-A</code>.',
-        'Run <code>git log --oneline --graph main..feat-B</code>. It should output exactly B1\' and B2\'.',
+        `<code>git log --graph main..feat-B</code> should now list exactly two commits, sitting right on top of main. No A1, no A2.`,
+        `The old B1 and B2 are unreachable; Git garbage-collects them later. Until then <code>git reflog</code> can still bring them back if something went wrong.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'git log A..B means "all commits reachable from B that are not reachable from A".',
-      },
-      changes: ['+ Verified 0 leftover commits from feat-A', '+ Clean linear history ready for merge'],
-      metrics: { upstreamBase: 'main (M2)', sourceBranch: 'feat-B (verified)', targetDestination: 'main', graftedCommits: 'Verified' },
+      changes: [`− old B1, B2 (unreachable)`],
+      metrics: { featB: `B2' on M2`, wouldCopy: `—`, main: `M2`, featA: `rejected` },
       scene: {
         entities: {
-          m1: d(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['main (M1)'], sub: 'common root' }),
-          m2: d(-6, -2, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['main (M2)'], sub: 'stable tip' }),
-          featA: d(-4, -20, { s: 4.4, h: 54, color: 'slab', glyph: 'alert', label: ['feat-A (Bad)'], sub: 'abandoned ref' }),
-          transplantedB: d(4, 8, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['feat-B (Graft)'], sub: 'verified tip' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'History Graph Verification', [
-            `$ git log --oneline --graph main..feat-B`,
-            `* e4f5a6b (HEAD -> feat-B) feat-B: finish payment integration`,
-            `* c1d2e3f feat-B: init payment controller`,
-            `= Exactly 2 commits, zero commits from feat-A!`,
-          ], { icon: 'terminal' }),
+          M1: M1(),
+          M2: M2(),
+          A1: A1([], dropped),
+          A2: A2([ref(`feat-A`)], dropped),
+          B1n: B1n(),
+          B2n: B2n([ref(`feat-B`), { text: `2 commits ahead`, tone: `green` }]),
+          card: card(`terminal`, [`$ git log --oneline --graph main..feat-B`, `* c8a9b0 (feat-B) B2'`, `* c5e6f7 B1'`, `= only B1', B2' — feat-A is gone`]),
         },
-        links: {
-          m1m2: h('m1', 'm2', ['m1', 'm2'], { label: 'stable trunk' }),
-          m2g: h('m2', 'transplantedB', ['m2', 'transplantedB'], { label: 'clean graft' }),
-        },
-        flows: [{ route: ['m1m2', 'm2g'], kind: 'base', rate: 1.5 }],
+        links: { ...sideLinks, b1n: L.b1nQuiet, b2n: L.b2n },
+        flows: [{ route: [`b2n`, `b1n`, `m2`], rate: 0.8 }],
       },
     },
     {
-      short: 'Fast-Forward',
-      chapter: 'scaling',
-      title: 'Discarding feat-A and Fast-Forward Merging',
+      short: `Fast-forward`,
+      chapter: `recap`,
+      title: `Fast-forward main, delete feat-A`,
       body: [
-        'Now safely delete the rejected branch: <code>git branch -D feat-A</code>.',
-        'Checkout <code>main</code> and run <code>git merge feat-B</code>. Because <code>feat-B</code> was rebased directly onto <code>main</code>, Git performs an instantaneous <b>Fast-Forward Merge</b>.',
+        `Because B2' sits directly on main’s tip, merging is a <span class="term">fast-forward</span>: the <code>main</code> pointer just slides to B2'. No merge commit.`,
+        `Deleting <code>feat-A</code> removes its pointer; A1 and A2 become unreachable too. History reads M1 → M2 → B1' → B2'.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Fast-forward simply moves main\'s 41-byte pointer to B2\'. Linear, clean, and bug-free.',
-      },
-      changes: ['+ feat-A deleted (-D)', '+ main fast-forwarded to B2\''],
-      metrics: { upstreamBase: 'main (updated)', sourceBranch: 'feat-B (merged)', targetDestination: 'main', graftedCommits: 'Fast-forward' },
+      changes: [`~ main → B2'`, `− feat-A deleted`],
+      metrics: { featB: `merged`, wouldCopy: `—`, main: `B2'`, featA: `deleted` },
       scene: {
         entities: {
-          m1: d(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['main (M1)'], sub: 'common root' }),
-          m2: d(-6, -2, { s: 4.4, h: 56, color: 'blue', glyph: 'gitBranch', label: ['main (M2)'], sub: 'parent commit' }),
-          transplantedB: d(4, 8, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['feat-B (Graft)'], sub: 'merged tip' }),
-          fastForwardMain: d(16, 12, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['main (M3)'], sub: 'fast-forward' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Fast-Forward Completion', [
-            `$ git branch -D feat-A`,
-            `Deleted branch feat-A (was a1b2c3d).`,
-            `$ git checkout main && git merge feat-B`,
-            `Updating m2..b2`,
-            `Fast-forward`,
-            `= Flawless surgical transplantation completed!`,
-          ], { icon: 'terminal' }),
+          M1: M1(),
+          M2: M2([]),
+          B1n: B1n(),
+          B2n: B2n([ref(`main · feat-B`)]),
+          card: card(`terminal`, [`$ git switch main`, `$ git merge --ff-only feat-B`, `Fast-forward  8f2e11..c8a9b0`, `$ git branch -D feat-A`]),
         },
-        links: {
-          m2g: h('m2', 'transplantedB', ['m2', 'transplantedB'], { label: 'lineage' }),
-          gf: h('transplantedB', 'fastForwardMain', ['transplantedB', 'fastForwardMain'], { label: 'fast-forward' }),
-        },
-        flows: [{ route: ['m2g', 'gf'], kind: 'base', rate: 1.6 }],
+        links: { m2: L.m2, b1n: L.b1nQuiet, b2n: L.b2n },
+        flows: [{ route: [`b2n`, `b1n`, `m2`], rate: 0.8 }],
       },
     },
   ],

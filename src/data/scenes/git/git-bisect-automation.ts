@@ -1,242 +1,188 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
+
+// One rail of history from v2.3.0 (good) to HEAD (bad), 1,024 commits apart. A single
+// "probe" commit slides along the rail as bisect halves the range; the dashed zone is
+// the range still in doubt. A test runner joins to automate the checks.
+//
+//   v2.3.0 ─── … ─── probe ─── … ─── HEAD          test.sh ──▶ probe
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+const RAIL = -2;
+const GOOD_Y = -20;
+const BAD_Y = 18;
+/** Commit number (0…1024 after v2.3.0) → position on the rail. */
+const yOf = (n: number) => +(GOOD_Y + ((BAD_Y - GOOD_Y) * n) / 1024).toFixed(2);
+
+const commit = (y: number, sha: string, sub: string, tags: Tag[]) =>
+  makeBlock(RAIL, y, { s: 4.2, h: 50, color: `purple`, glyph: `gitCommit`, label: [sha], sub, tags });
+const good = () => commit(GOOD_Y, `1f0a2b`, `v2.3.0`, [{ text: `good`, tone: `green`, icon: `check` }]);
+const bad = (tags: Tag[] = [{ text: `HEAD · bad`, tone: `red`, icon: `alert` }]) => commit(BAD_Y, `9c8d7e`, `#1024`, tags);
+const probe = (n: number, sha: string, tags: Tag[]) => commit(yOf(n), sha, `#${n}`, tags);
+const runner = () => makeBlock(12, -6, { s: 4.2, h: 50, color: `slab`, glyph: `flask`, label: [`test.sh`], sub: `exit 0 / 1` });
+const revert = () =>
+  makeBlock(12, 8, { s: 4.2, h: 50, color: `purple`, glyph: `undo`, label: [`0f1e2d`], sub: `revert`, tags: [{ text: `main · HEAD`, tone: `amber`, icon: `gitBranch` }] });
+/** Range still in doubt, hugging the rail. */
+const range = (from: number, to: number) => makeZone({ x0: RAIL - 3, x1: RAIL + 3, y0: yOf(from) - 1.5, y1: yOf(to) + 1.5 }, ``);
+
+const L = {
+  upper: makeLink(`bad`, `probe`, [`bad`, `probe`], { style: `off` }),
+  lower: makeLink(`probe`, `good`, [`probe`, `good`], { style: `off` }),
+  whole: makeLink(`bad`, `good`, [`bad`, `good`], { style: `off` }),
+  test: makeLink(`runner`, `probe`, [`runner`, `probe`]),
+  revertParent: makeLink(`revert`, `bad`, [`revert`, `bad`], { label: `parent` }),
+};
+
+const card = (title: string, lines: string[], icon = `keyboard`) =>
+  makePanel({ x: RAIL, y: GOOD_Y, z: 0, dx: -60, dy: 70 }, title, lines, { icon });
 
 export const gitBisectAutomationLesson = {
-  id: 'git-bisect-automation',
-  title: 'Git Bisect: Automated Binary Search Regression Hunting',
-  summary: 'Isolate bug-introducing commits in seconds across thousands of revisions using git bisect binary search and headless automated test scripts.',
-  minutes: 25,
-  level: 'advanced',
-  metrics: ['searchSpace', 'stepsRemaining', 'commitTested', 'culpritFound'],
-  legend: ['flow', ['good', 'passing commit'], ['bad', 'regressed commit'], ['eval', 'automated test run']],
+  id: `git-bisect-automation`,
+  title: `Git Bisect: Automated Binary Search Regression Hunting`,
+  summary: `Find the commit that broke things among a thousand with git bisect — halving the range each time, then letting a script do the testing.`,
+  minutes: 14,
+  level: `advanced`,
+  metrics: [`range`, `testsLeft`, `testing`, `culprit`],
+  legend: [`req`, [`fail`, `test fails`], [`write`, `new commit`]],
   goals: [
-    { text: 'The mystery regression across 1,024 commits: O(N) vs O(log N)', step: 1 },
-    { text: 'Binary halving mathematics in Git commit DAGs', step: 2 },
-    { text: 'Initializing bisect: Marking good and bad boundary commits', step: 3 },
-    { text: 'Automating with git bisect run <script> for zero-touch diagnosis', step: 4 },
-    { text: 'Pinpointing the exact offending commit hash and diff', step: 5 },
-    { text: 'Resetting the bisect session and deploying a surgical git revert', step: 6 },
+    { text: `1,024 commits: one by one vs halving`, step: 1 },
+    { text: `Binary search: log₂ 1024 = 10 tests`, step: 2 },
+    { text: `Start: mark one good and one bad commit`, step: 3 },
+    { text: `git bisect run <script> automates it`, step: 4 },
+    { text: `Git names the first bad commit`, step: 5 },
+    { text: `Reset bisect and revert the culprit`, step: 6 },
   ],
   steps: [
     {
-      short: 'Mystery Bug',
-      chapter: 'problem',
-      title: 'A Bug Lurking Across 1,000 Commits',
+      short: `1,024 commits`,
+      chapter: `problem`,
+      title: `It worked in v2.3.0. It’s broken now.`,
       body: [
-        'A performance regression or silent data corruption is discovered on <code>HEAD</code>. You know the code worked perfectly 6 months ago at tag <code>v1.0.0</code>.',
-        'There are 1,024 commits between <code>v1.0.0</code> and <code>HEAD</code>. Testing each commit manually would take days of developer time.',
+        `Checkout totals are wrong on <code>main</code>. They were right at tag <b>v2.3.0</b>, and 1,024 commits have landed since.`,
+        `Testing them one by one could take a thousand builds. But history is ordered, and the bug appeared once — which is exactly what binary search needs.`,
       ],
-      callout: {
-        kind: 'warning',
-        text: 'Linear search requires O(N) operations (~1,024 tests). Binary search requires O(log2 N) = only 10 tests!',
-      },
-      metrics: { searchSpace: '1,024 commits', stepsRemaining: '10 steps', commitTested: 'None', culpritFound: 'Unknown' },
+      metrics: { range: 1024, testsLeft: `≤ 1024`, testing: `—`, culprit: `?` },
       scene: {
         entities: {
-          goodTag: d(-18, -6, { s: 4.4, h: 54, color: 'green', glyph: 'gitBranch', label: ['tag: v1.0.0'], sub: 'known GOOD' }),
-          commitRange: d(-6, -2, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['1,024 Commits'], sub: 'search space' }),
-          badHead: d(6, 0, { s: 4.4, h: 54, color: 'rose', glyph: 'gitBranch', label: ['HEAD (Broken)'], sub: 'known BAD' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Regression Scale Analysis', [
-            `Range: v1.0.0..HEAD`,
-            `Total commits in range: 1024`,
-            `Linear test time (3m / build): 51.2 HOURS`,
-            `Bisect binary search (log2 1024): 10 STEPS (~30 MIN)`,
-            `! Manual searching is completely intractable`,
-          ], { icon: 'terminal' }),
+          range: range(0, 1024),
+          good: good(),
+          bad: bad(),
+          card: card(`terminal`, [`$ git rev-list --count v2.3.0..HEAD`, `1024`, `# one by one: up to 1,024 builds`]),
         },
-        links: {
-          gc: h('goodTag', 'commitRange', ['goodTag', 'commitRange'], { label: 'known good' }),
-          cb: h('commitRange', 'badHead', ['commitRange', 'badHead'], { label: 'bug detected' }),
-        },
-        flows: [{ route: ['gc', 'cb'], kind: 'eval', rate: 1.5 }],
+        links: { whole: L.whole },
+        flows: [{ route: [`whole`], rate: 0.6 }],
       },
     },
     {
-      short: 'Binary Halving',
-      chapter: 'setup',
-      title: 'Binary Search Mechanics in Directed Acyclic Graphs',
+      short: `Halving`,
+      chapter: `insight`,
+      title: `Test the middle, throw away half`,
       body: [
-        'Git bisect chooses the commit exactly at the topological midpoint (commit 512).',
-        'If commit 512 is <b>good</b>, the bug was introduced in commits 513–1024 (discard 1–512). If commit 512 is <b>bad</b>, the bug was introduced in commits 1–512 (discard 513–1024). Half the commits disappear in one test.',
+        `Check the commit halfway between good and bad. If it is good, the bug came later; if it is bad, it came earlier. Either way half the range is gone.`,
+        `1,024 → 512 → 256 → … → 1 takes <b>10</b> tests, because 2<sup>10</sup> = 1,024. A million commits would take 20.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Even across merge commits and branching topologies, Git computes the true topological midpoint of the DAG.',
-      },
-      changes: ['+ Search space reduced from 1,024 to 512 commits', '+ Commit 512 selected as first test probe'],
-      metrics: { searchSpace: '512 commits', stepsRemaining: '9 steps', commitTested: 'Commit 512', culpritFound: 'Narrowing' },
+      changes: [`+ probe at #512`],
+      metrics: { range: 1024, testsLeft: 10, testing: `#512`, culprit: `?` },
       scene: {
         entities: {
-          goodTag: d(-18, -6, { s: 4.4, h: 54, color: 'green', glyph: 'gitBranch', label: ['tag: v1.0.0'], sub: 'known GOOD' }),
-          commitRange: d(-6, -2, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['1..512 Pass'], sub: 'discarded pass' }),
-          badHead: d(6, 0, { s: 4.4, h: 54, color: 'rose', glyph: 'gitBranch', label: ['HEAD (Broken)'], sub: 'known BAD' }),
-          midpoint: d(-4, 16, { s: 4.4, h: 56, color: 'blue', glyph: 'cpu', label: ['Commit 512'], sub: 'midpoint test' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Binary Halving Math', [
-            `Bisecting: 512 revisions left to test after this`,
-            `[512] feat: update cache serializer`,
-            `# Commits 1..512 tested and verified PASS`,
-            `# Remaining search space: Commits 513..1024`,
-            `= 50% of history pruned in 1 step!`,
-          ], { icon: 'terminal' }),
+          range: range(0, 1024),
+          good: good(),
+          bad: bad(),
+          probe: probe(512, `5a6b7c`, [{ text: `test the middle`, tone: `violet` }]),
+          card: card(`math`, [`tests = log₂(1024) = 10`, `1024 → 512 → 256 → 128 → 64`, `  → 32 → 16 → 8 → 4 → 2 → 1`], `sigma`),
         },
-        links: {
-          gc: h('goodTag', 'commitRange', ['goodTag', 'commitRange'], { label: 'known good' }),
-          cm: h('commitRange', 'midpoint', ['commitRange', 'midpoint'], { label: 'test midpoint' }),
-          mb: h('midpoint', 'badHead', ['midpoint', 'badHead'], { label: 'target' }),
-        },
-        flows: [{ route: ['cm', 'mb'], kind: 'eval', rate: 1.5 }],
+        links: { upper: L.upper, lower: L.lower },
+        flows: [],
       },
     },
     {
-      short: 'Bisect Start',
-      chapter: 'setup',
-      title: 'Initializing Bisect Session (good & bad)',
+      short: `Start`,
+      chapter: `technique`,
+      title: `Mark the ends, let Git pick`,
       body: [
-        'To begin bisecting: run <code>git bisect start</code>.',
-        'Mark the broken state: <code>git bisect bad</code> (defaults to current HEAD). Mark the last known working state: <code>git bisect good v1.0.0</code>. Git automatically checks out the midpoint.',
+        `<code>git bisect start</code>, then mark <code>HEAD</code> bad and <code>v2.3.0</code> good. Git checks out the middle commit for you.`,
+        `You build, test and answer <code>git bisect good</code> or <code>bad</code>. Commit #512 is good, so everything before it is cleared and Git moves on to #768.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Git records active bisect state in .git/BISECT_START, .git/BISECT_GOOD, and .git/BISECT_BAD.',
-      },
-      changes: ['+ Bisect session started', '+ Midpoint checked out for testing'],
-      metrics: { searchSpace: '256 commits', stepsRemaining: '8 steps', commitTested: 'Commit 768', culpritFound: 'Narrowing' },
+      changes: [`~ #512 good → range 512…1024`, `~ probe → #768`],
+      metrics: { range: 512, testsLeft: 9, testing: `#768`, culprit: `?` },
       scene: {
         entities: {
-          goodTag: d(-18, -6, { s: 4.4, h: 54, color: 'green', glyph: 'gitBranch', label: ['tag: v1.0.0'], sub: 'bisect good' }),
-          commitRange: d(-6, -2, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['Bisect State'], sub: '.git/BISECT_*' }),
-          badHead: d(6, 0, { s: 4.4, h: 54, color: 'rose', glyph: 'gitBranch', label: ['HEAD (Broken)'], sub: 'bisect bad' }),
-          midpoint: d(-4, 16, { s: 4.4, h: 56, color: 'cyan', glyph: 'cpu', label: ['Commit 768'], sub: 'active probe' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Bisect Initialization CLI', [
-            `$ git bisect start`,
-            `$ git bisect bad HEAD`,
-            `$ git bisect good v1.0.0`,
-            `Bisecting: 256 revisions left to test after this (roughly 8 steps)`,
-            `[768a1b] fix: pool allocator size`,
-            `= Git checked out commit 768 automatically`,
-          ], { icon: 'terminal' }),
+          range: range(512, 1024),
+          good: good(),
+          bad: bad(),
+          probe: probe(768, `e3f4a5`, [{ text: `checked out`, tone: `violet` }]),
+          card: card(`terminal`, [`$ git bisect start`, `$ git bisect bad HEAD`, `$ git bisect good v2.3.0`, `Bisecting: 511 revisions left to test after this`, `$ git bisect good`, `Bisecting: 255 revisions left to test after this`]),
         },
-        links: {
-          gc: h('goodTag', 'commitRange', ['goodTag', 'commitRange'], { label: 'good marker' }),
-          bc: h('badHead', 'commitRange', ['badHead', 'commitRange'], { label: 'bad marker' }),
-          cm: h('commitRange', 'midpoint', ['commitRange', 'midpoint'], { label: 'checkout probe' }),
-        },
-        flows: [{ route: ['cm'], kind: 'eval', rate: 1.6 }],
+        links: { upper: L.upper, lower: L.lower },
+        flows: [],
       },
     },
     {
-      short: 'Bisect Run',
-      chapter: 'execution',
-      title: 'Automating with git bisect run <script>',
+      short: `bisect run`,
+      chapter: `technique`,
+      title: `Let a script answer good or bad`,
       body: [
-        'Testing 10 commits manually is tedious. <b>git bisect run</b> completely automates the search without human intervention!',
-        'Write a tiny test script <code>test.sh</code> (or <code>npm test</code>). If tests pass, exit with <code>0</code>. If tests fail, exit with non-zero (<code>1</code>). Run: <code>git bisect run ./test.sh</code>.',
+        `Typing good/bad nine more times is boring and error-prone. <code>git bisect run ./test.sh</code> runs the script at every step: exit code <b>0</b> means good, <b>1–127</b> bad, <b>125</b> “can’t test, skip”.`,
+        `The script should test only the bug — a focused unit test, not the whole suite.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'If a commit cannot be tested (e.g. build failure unrelated to the bug), exit with code 125. Git bisect skip will pick an adjacent commit.',
-      },
-      changes: ['+ git bisect run ./test.sh executed', '+ Automated loop tested 10 commits in 90 seconds'],
-      metrics: { searchSpace: '1 commit left', stepsRemaining: '0 steps', commitTested: 'All 10 tested', culpritFound: 'Identified' },
+      changes: [`+ test.sh`, `~ range narrowed to 2 commits`],
+      metrics: { range: 2, testsLeft: 1, testing: `#701`, culprit: `?` },
       scene: {
         entities: {
-          goodTag: d(-18, -6, { s: 4.4, h: 54, color: 'green', glyph: 'gitBranch', label: ['tag: v1.0.0'], sub: 'bisect good' }),
-          commitRange: d(-6, -2, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['Automated Loop'], sub: 'run ./test.sh' }),
-          badHead: d(6, 0, { s: 4.4, h: 54, color: 'rose', glyph: 'gitBranch', label: ['HEAD (Broken)'], sub: 'bisect bad' }),
-          midpoint: d(-4, 16, { s: 4.4, h: 56, color: 'green', glyph: 'cpu', label: ['Runner Script'], sub: 'exit 0 / 1' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Headless Bisect Run Output', [
-            `$ git bisect run npm test -- --grep "tax calculation"`,
-            `running 'npm test ...'`,
-            `Bisecting: 128 revisions left...`,
-            `Bisecting: 64 revisions left...`,
-            `Bisecting: 4 revisions left...`,
-            `Bisecting: 0 revisions left (1 commit to test)`,
-            `= All intermediate commits tested unattended in 85 seconds!`,
-          ], { icon: 'terminal' }),
+          range: range(700, 701),
+          good: good(),
+          bad: bad(),
+          probe: probe(701, `d4e5f6`, [{ text: `testing…`, tone: `violet` }]),
+          runner: runner(),
+          card: card(`terminal`, [`$ git bisect run ./test.sh`, `running './test.sh'`, `Bisecting: 63 revisions left to test after this`, `…`, `Bisecting: 0 revisions left to test after this`]),
         },
-        links: {
-          cm: h('commitRange', 'midpoint', ['commitRange', 'midpoint'], { label: 'automated loop' }),
-        },
-        flows: [{ route: ['cm'], kind: 'eval', rate: 1.8 }],
+        links: { upper: L.upper, lower: L.lower, test: L.test },
+        flows: [{ route: [`test`], kind: `fail`, rate: 1.4 }],
       },
     },
     {
-      short: 'Culprit Isolated',
-      chapter: 'execution',
-      title: 'Pinpointing the Culprit Commit & Diff',
+      short: `Culprit`,
+      chapter: `solution`,
+      title: `Git names the first bad commit`,
       body: [
-        'Git bisect prints the exact first commit that introduced the bug: commit SHA, author, timestamp, and diff.',
-        'The bug was introduced in commit <code>d4e5f6a</code>: an unhandled null check in the tax calculation service.',
+        `After 10 tests Git prints the <b>first bad commit</b>: the one whose parent passes and which itself fails. Here it is <b>d4e5f6</b>, which changed how discounts are rounded.`,
+        `You now read one small diff instead of a thousand commits.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'What would have taken 51 hours of manual debugging took exactly 85 seconds with git bisect run.',
-      },
-      changes: ['+ Offending commit d4e5f6a pinpointed with 100% mathematical certainty'],
-      metrics: { searchSpace: '1 commit', stepsRemaining: 'Complete', commitTested: 'd4e5f6a', culpritFound: 'Commit d4e5f6a' },
+      changes: [`~ culprit: d4e5f6 (#701)`],
+      metrics: { range: 1, testsLeft: 0, testing: `done`, culprit: `d4e5f6` },
       scene: {
         entities: {
-          goodTag: d(-18, -6, { s: 4.4, h: 54, color: 'green', glyph: 'gitBranch', label: ['tag: v1.0.0'], sub: 'known good' }),
-          culpritCommit: d(-6, -2, { s: 4.4, h: 56, color: 'rose', glyph: 'alert', label: ['Culprit Commit'], sub: 'first bad SHA' }),
-          badHead: d(6, 0, { s: 4.4, h: 54, color: 'rose', glyph: 'gitBranch', label: ['HEAD (Broken)'], sub: 'known bad' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Offending Commit Report', [
-            `d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3 is the first bad commit`,
-            `commit d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3`,
-            `Author: Alex <alex@company.com>`,
-            `Date:   Mon May 12 14:22:10 2026`,
-            `    feat: optimize tax calculation memory buffer`,
-            `:100644 100644 e1f2... d3e4... M src/tax.ts`,
-          ], { icon: 'terminal' }),
+          good: good(),
+          bad: bad(),
+          probe: probe(701, `d4e5f6`, [{ text: `first bad commit`, tone: `red`, icon: `bug` }]),
+          runner: runner(),
+          card: card(`terminal`, [`! d4e5f6a is the first bad commit`, `    fix: round discounts per line`, ` src/cart/total.ts | 4 ++--`, `bisect found first bad commit`]),
         },
-        links: {
-          gc: h('goodTag', 'culpritCommit', ['goodTag', 'culpritCommit'], { label: 'ancestor' }),
-          cb: h('culpritCommit', 'badHead', ['culpritCommit', 'badHead'], { label: 'poisoned HEAD' }),
-        },
-        flows: [{ route: ['gc', 'cb'], kind: 'bad', rate: 1.5 }],
+        links: { upper: L.upper, lower: L.lower, test: L.test },
+        flows: [],
       },
     },
     {
-      short: 'Reset & Revert',
-      chapter: 'scaling',
-      title: 'Resetting Bisect & Deploying Surgical Revert',
+      short: `Revert`,
+      chapter: `recap`,
+      title: `Reset, then undo just that commit`,
       body: [
-        'End the bisect session with <code>git bisect reset</code>. Git cleans up temporary files and returns you to original HEAD.',
-        'Deploy a surgical inverse patch: <code>git revert d4e5f6a</code>. The regression is cured without rewriting Git history.',
+        `<code>git bisect reset</code> returns you to the branch you started on. Then <code>git revert d4e5f6</code> adds a new commit that undoes only that change — history stays intact for everyone who already pulled it.`,
+        `Keep <code>test.sh</code> as a regression test so this bug can’t come back unnoticed.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'git revert creates a brand new commit that undoes the changes of the culprit commit. Safe for shared branches!',
-      },
-      changes: ['+ git bisect reset cleaned up session', '+ git revert deployed surgical inverse commit'],
-      metrics: { searchSpace: '0', stepsRemaining: 'Done', commitTested: 'Reverted', culpritFound: 'Resolved' },
+      changes: [`+ revert commit 0f1e2d`, `~ main → 0f1e2d`],
+      metrics: { range: `—`, testsLeft: 0, testing: `—`, culprit: `reverted` },
       scene: {
         entities: {
-          goodTag: d(-18, -6, { s: 4.4, h: 54, color: 'green', glyph: 'gitBranch', label: ['tag: v1.0.0'], sub: 'known good' }),
-          culpritCommit: d(-6, -2, { s: 4.4, h: 56, color: 'rose', glyph: 'alert', label: ['Culprit Commit'], sub: 'isolated bug' }),
-          badHead: d(6, 0, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['HEAD (Broken)'], sub: 'prior state' }),
-          revertCommit: d(18, 4, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['git revert'], sub: 'surgical fix' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Revert & Clean Closure', [
-            `$ git bisect reset`,
-            `Checking out: 'main'`,
-            `$ git revert d4e5f6a`,
-            `[main a9b8c7d] Revert "feat: optimize tax calculation memory buffer"`,
-            ` 1 file changed, 2 insertions(+), 8 deletions(-)`,
-            `$ npm test  # PASS!`,
-            `= Regression resolved with zero downtime!`,
-          ], { icon: 'terminal' }),
+          good: good(),
+          bad: bad([]),
+          probe: probe(701, `d4e5f6`, [{ text: `reverted`, tone: `gray` }]),
+          runner: runner(),
+          revert: revert(),
+          card: card(`terminal`, [`$ git bisect reset`, `$ git revert d4e5f6`, `= [main 0f1e2d] Revert "fix: round discounts per line"`]),
         },
-        links: {
-          cb: h('culpritCommit', 'badHead', ['culpritCommit', 'badHead'], { label: 'isolated bug' }),
-          br: h('badHead', 'revertCommit', ['badHead', 'revertCommit'], { label: 'heals trunk' }),
-        },
-        flows: [{ route: ['cb', 'br'], kind: 'good', rate: 1.6 }],
+        links: { upper: L.upper, lower: L.lower, revertParent: L.revertParent },
+        flows: [{ route: [`revertParent`], kind: `write`, rate: 1 }],
       },
     },
   ],

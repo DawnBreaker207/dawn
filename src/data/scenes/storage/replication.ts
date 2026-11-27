@@ -1,57 +1,43 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const jn = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
 
-const Mn = (e = `300,000 users`) => p(jn, 12, e);
+const Mn = (e = `300,000 users`) => makeCrowd(jn, 12, e);
 
-const Nn = () => d(0, -9, { label: [`App`, `Server`] });
+const Nn = () => makeBlock(0, -9, { label: [`App`, `Server`] });
 
-const Pn = (e = {}) => b(0, 0, { r: 1.9, glyph: `database`, label: `leader`, ...e });
+const Pn = (e = {}) => makeDb(0, 0, { r: 1.9, glyph: `database`, label: `leader`, ...e });
 
-const E = (e, t = {}) => b(e, 9, { r: 1.7, glyph: `database`, label: `follower`, ...t });
+const E = (e, t = {}) => makeDb(e, 9, { r: 1.7, glyph: `database`, label: `follower`, ...t });
 
-const Fn = { ua: h(`users`, `app`, [`users`, `app`], { heads: `both` }) };
+const Fn = { ua: makeLink(`users`, `app`, [`users`, `app`], { heads: `both` }) };
 
-const In = (e = {}) => ({ al: h(`app`, `ld`, [`app`, `ld`], { heads: `both`, ...e }) });
+const In = (e = {}) => ({ al: makeLink(`app`, `ld`, [`app`, `ld`], { heads: `both`, ...e }) });
 
 const Ln = (e = `ld`, t = [`f1`, `f2`], n = ``) => ({
-    [`r1${n}`]: h(e, t[0], [e, [`${t[0]}+1`, e], `${t[0]}+1`], {
+    [`r1${n}`]: makeLink(e, t[0], [e, [`${t[0]}+1`, e], `${t[0]}+1`], {
       label: `replication`,
       labelAt: 0.35,
     }),
-    [`r2${n}`]: h(e, t[1], [e, [`${t[1]}-1`, e], `${t[1]}-1`], {
+    [`r2${n}`]: makeLink(e, t[1], [e, [`${t[1]}-1`, e], `${t[1]}-1`], {
       label: `replication`,
       labelAt: 0.35,
     }),
   });
 
 const Rn = (e = [`f1`, `f2`], t = ``) => ({
-    [`a1${t}`]: h(`app`, e[0], [`app`, [`${e[0]}-1`, `app`], `${e[0]}-1`], { heads: `both` }),
-    [`a2${t}`]: h(`app`, e[1], [`app`, [`${e[1]}+1`, `app`], `${e[1]}+1`], { heads: `both` }),
+    [`a1${t}`]: makeLink(`app`, e[0], [`app`, [`${e[0]}-1`, `app`], `${e[0]}-1`], { heads: `both` }),
+    [`a2${t}`]: makeLink(`app`, e[1], [`app`, [`${e[1]}+1`, `app`], `${e[1]}+1`], { heads: `both` }),
   });
 
 const zn = (e = 0.9, t = ``) => [
@@ -154,7 +140,7 @@ export const replicationLesson = {
         changes: [`~ Reads → followers`, `~ Writes → leader only`, `~ Leader CPU 90% → 30%`],
         metrics: { dbLoad: 30, reads: `2×`, lag: `0 s`, writes: `ok` },
         scene: {
-          entities: { users: Mn(), app: Nn(), ld: Pn(v(0.3)), f1: E(-9, v(0.4)), f2: E(9, v(0.4)) },
+          entities: { users: Mn(), app: Nn(), ld: Pn(makeCool(0.3)), f1: E(-9, makeCool(0.4)), f2: E(9, makeCool(0.4)) },
           links: { ...Fn, ...In({ label: `writes` }), ...Ln(), ...Rn() },
           flows: [
             { routes: [{ path: [`ua`, `a1`] }, { path: [`ua`, `a2`] }], rate: 4, bounce: !0 },
@@ -181,12 +167,12 @@ export const replicationLesson = {
           entities: {
             users: Mn(`Alice sees her old name`),
             app: Nn(),
-            ld: Pn({ ...v(0.3), tags: [{ text: `name: Alice Kim`, tone: `green` }] }),
+            ld: Pn({ ...makeCool(0.3), tags: [{ text: `name: Alice Kim`, tone: `green` }] }),
             f1: E(-9, {
-              ...v(0.4),
+              ...makeCool(0.4),
               tags: [{ text: `name: Alice Lee · 2 s behind`, tone: `red`, icon: `clock` }],
             }),
-            f2: E(9, v(0.4)),
+            f2: E(9, makeCool(0.4)),
           },
           links: { ...Fn, ...In({ label: `writes` }), ...Ln(), ...Rn() },
           flows: [
@@ -215,9 +201,9 @@ export const replicationLesson = {
           entities: {
             users: Mn(`Alice sees her new name`),
             app: Nn(),
-            ld: Pn({ ...v(0.32), tags: [{ text: `name: Alice Kim`, tone: `green` }] }),
-            f1: E(-9, v(0.4)),
-            f2: E(9, v(0.4)),
+            ld: Pn({ ...makeCool(0.32), tags: [{ text: `name: Alice Kim`, tone: `green` }] }),
+            f1: E(-9, makeCool(0.4)),
+            f2: E(9, makeCool(0.4)),
           },
           links: { ...Fn, ...In({ label: `writes + Alice’s reads` }), ...Ln(), ...Rn() },
           flows: [
@@ -238,7 +224,7 @@ export const replicationLesson = {
         changes: [`− Leader down`, `− Writes failing`],
         metrics: { dbLoad: 0, reads: `2×`, lag: `—`, writes: `failing` },
         scene: {
-          entities: { users: Mn(), app: Nn(), ld: Pn(g), f1: E(-9, v(0.5)), f2: E(9, v(0.5)) },
+          entities: { users: Mn(), app: Nn(), ld: Pn(DEAD_STATE), f1: E(-9, makeCool(0.5)), f2: E(9, makeCool(0.5)) },
           links: { ...Fn, ...In({ fail: 1 }), ...Ln(), ...Rn() },
           flows: [
             { routes: [{ path: [`ua`, `a1`] }, { path: [`ua`, `a2`] }], rate: 3, bounce: !0 },
@@ -265,13 +251,13 @@ export const replicationLesson = {
           entities: {
             users: Mn(),
             app: Nn(),
-            f1: Pn({ ...v(0.3), tags: [{ text: `promoted`, tone: `green`, icon: `check` }] }),
-            f3: E(-9, v(0.4)),
-            f2: E(9, v(0.4)),
+            f1: Pn({ ...makeCool(0.3), tags: [{ text: `promoted`, tone: `green`, icon: `check` }] }),
+            f3: E(-9, makeCool(0.4)),
+            f2: E(9, makeCool(0.4)),
           },
           links: {
             ...Fn,
-            al2: h(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
+            al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
             ...Ln(`f1`, [`f3`, `f2`], `n`),
             ...Rn([`f3`, `f2`], `n`),
           },
@@ -299,25 +285,25 @@ export const replicationLesson = {
           entities: {
             users: Mn(),
             app: Nn(),
-            f1: Pn(v(0.3)),
-            f3: E(-9, v(0.4)),
-            f2: E(9, v(0.4)),
-            an: b(0, 19, {
+            f1: Pn(makeCool(0.3)),
+            f3: E(-9, makeCool(0.4)),
+            f2: E(9, makeCool(0.4)),
+            an: makeDb(0, 19, {
               r: 1.7,
               glyph: `chart`,
               label: `analytics replica`,
               heat: 0.6,
               tags: [{ text: `20-min report`, tone: `amber`, icon: `hourglass` }],
             }),
-            analysts: y(13, 19, { label: `finance team` }),
+            analysts: makeDevice(13, 19, { label: `finance team` }),
           },
           links: {
             ...Fn,
-            al2: h(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
+            al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
             ...Ln(`f1`, [`f3`, `f2`], `n`),
             ...Rn([`f3`, `f2`], `n`),
-            r3: h(`f1`, `an`, [`f1`, `an`], { label: `replication`, labelAt: 0.65 }),
-            rep: h(`analysts`, `an`, [`analysts`, `an`], { heads: `both` }),
+            r3: makeLink(`f1`, `an`, [`f1`, `an`], { label: `replication`, labelAt: 0.65 }),
+            rep: makeLink(`analysts`, `an`, [`analysts`, `an`], { heads: `both` }),
           },
           flows: [
             Bn(4, `n`),
@@ -356,18 +342,18 @@ export const replicationLesson = {
             users: Mn(),
             app: Nn(),
             f1: Pn({
-              ...v(0.3),
+              ...makeCool(0.3),
               tags: [{ text: `email = NULL · 2M rows`, tone: `red`, icon: `alert` }],
             }),
             f3: E(-9, {
-              ...v(0.4),
+              ...makeCool(0.4),
               tags: [{ text: `copied the mistake`, tone: `red`, icon: `alert` }],
             }),
             f2: E(9, {
-              ...v(0.4),
+              ...makeCool(0.4),
               tags: [{ text: `copied the mistake`, tone: `red`, icon: `alert` }],
             }),
-            bk: b(0, 19, {
+            bk: makeDb(0, 19, {
               r: 1.7,
               glyph: `clock`,
               color: `store`,
@@ -377,10 +363,10 @@ export const replicationLesson = {
           },
           links: {
             ...Fn,
-            al2: h(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
+            al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
             ...Ln(`f1`, [`f3`, `f2`], `n`),
             ...Rn([`f3`, `f2`], `n`),
-            bkl: h(`f1`, `bk`, [`f1`, `bk`]),
+            bkl: makeLink(`f1`, `bk`, [`f1`, `bk`]),
           },
           flows: [
             Bn(4, `n`),
@@ -407,10 +393,10 @@ export const replicationLesson = {
           entities: {
             users: Mn(),
             app: Nn(),
-            f1: Pn(v(0.3)),
-            f3: E(-9, v(0.4)),
-            f2: E(9, v(0.4)),
-            card: S(
+            f1: Pn(makeCool(0.3)),
+            f3: E(-9, makeCool(0.4)),
+            f2: E(9, makeCool(0.4)),
+            card: makePanel(
               { x: -9, y: 9, z: 0, dx: -365, dy: -70 },
               `Replication styles`,
               [
@@ -423,7 +409,7 @@ export const replicationLesson = {
           },
           links: {
             ...Fn,
-            al2: h(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
+            al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
             ...Ln(`f1`, [`f3`, `f2`], `n`),
             ...Rn([`f3`, `f2`], `n`),
           },
@@ -450,10 +436,10 @@ export const replicationLesson = {
         },
         metrics: { dbLoad: 30, reads: `2×`, lag: `0 s`, writes: `ok` },
         scene: {
-          entities: { users: Mn(), app: Nn(), f1: Pn(v(0.3)), f3: E(-9, v(0.4)), f2: E(9, v(0.4)) },
+          entities: { users: Mn(), app: Nn(), f1: Pn(makeCool(0.3)), f3: E(-9, makeCool(0.4)), f2: E(9, makeCool(0.4)) },
           links: {
             ...Fn,
-            al2: h(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
+            al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
             ...Ln(`f1`, [`f3`, `f2`], `n`),
             ...Rn([`f3`, `f2`], `n`),
           },

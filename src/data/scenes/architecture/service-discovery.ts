@@ -1,34 +1,17 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeCrowd,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 const kc = { color: `purple`, glyph: `creditCard`, label: [`Payments`] };
 
-const Ac = (e = []) => d(-12, 0, { color: `blue`, glyph: `cart`, label: [`Orders`], tags: e });
+const Ac = (e = []) => makeBlock(-12, 0, { color: `blue`, glyph: `cart`, label: [`Orders`], tags: e });
 
-const jc = (e, t, n = {}) => d(0, e, { ...kc, sub: t, ...n });
+const jc = (e, t, n = {}) => makeBlock(0, e, { ...kc, sub: t, ...n });
 
 const Mc = (e) => ({ pa: jc(-9, `10.0.3.7`, e) });
 
@@ -38,23 +21,23 @@ const Pc = (e) => ({ pc: jc(9, `10.0.5.21`, e) });
 
 const Fc = (e) => ({ pn: jc(-9, `10.0.6.4`, e) });
 
-const Ic = (e = {}) => d(12, 0, { color: `yellow`, glyph: `signpost`, label: [`Registry`], ...e });
+const Ic = (e = {}) => makeBlock(12, 0, { color: `yellow`, glyph: `signpost`, label: [`Registry`], ...e });
 
 const I = (e, t = {}) =>
-    h(`ord`, e, e === `pb` ? [`ord`, `pb`] : [`ord`, [-6, `ord`], [-6, e], e], {
+    makeLink(`ord`, e, e === `pb` ? [`ord`, `pb`] : [`ord`, [-6, `ord`], [-6, e], e], {
       heads: `both`,
       ...t,
     });
 
 const L = (e, t = {}) =>
-    h(e, `reg`, e === `pb` ? [`pb`, `reg`] : [e, [6, e], [6, `reg`], `reg`], {
+    makeLink(e, `reg`, e === `pb` ? [`pb`, `reg`] : [e, [6, e], [6, `reg`], `reg`], {
       heads: `none`,
       style: `beat`,
       ...t,
     });
 
 const Lc = (e = {}) => ({
-    lk: h(`ord`, `reg`, [`ord`, [`ord`, 13], [`reg`, 13], `reg`], {
+    lk: makeLink(`ord`, `reg`, [`ord`, [`ord`, 13], [`reg`, 13], `reg`], {
       heads: `both`,
       label: `where is payments?`,
       labelAt: 0.27,
@@ -73,9 +56,9 @@ const zc = (e, t = 0.55) => ({
 
 const Bc = (e = 0.4) => ({ route: [`lk`], rate: e, bounce: !0 });
 
-const Vc = (e, t) => d(e, t, { s: 2.2, h: 22, color: `slab`, glyph: `shield`, label: [] });
+const Vc = (e, t) => makeBlock(e, t, { s: 2.2, h: 22, color: `slab`, glyph: `shield`, label: [] });
 
-const Hc = (e, t, n) => S({ x: 12, y: 0, z: 0, dx: 50, dy: -60 }, e, t, { icon: n });
+const Hc = (e, t, n) => makePanel({ x: 12, y: 0, z: 0, dx: 50, dy: -60 }, e, t, { icon: n });
 
 const Uc = {
     id: `service-discovery`,
@@ -138,7 +121,7 @@ const Uc = {
         scene: {
           entities: {
             ord: Ac([{ text: `config: 10.0.3.7, 10.0.3.8`, icon: `file` }]),
-            ...Mc({ ...g, tags: [{ text: `replaced`, tone: `red`, icon: `alert` }] }),
+            ...Mc({ ...DEAD_STATE, tags: [{ text: `replaced`, tone: `red`, icon: `alert` }] }),
             ...Nc(),
             ...Pc({ dim: 1, tags: [{ text: `idle · nobody knows it`, tone: `gray` }] }),
           },
@@ -197,7 +180,7 @@ const Uc = {
             ...Fc({ tags: [{ text: `new · registered`, tone: `green`, icon: `check` }] }),
             ...Nc(),
             ...Pc({
-              ...g,
+              ...DEAD_STATE,
               tags: [{ text: `missed 3 heartbeats`, tone: `red`, icon: `heartPulse` }],
             }),
             reg: Ic({
@@ -205,9 +188,9 @@ const Uc = {
             }),
           },
           links: {
-            opn: h(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
+            opn: makeLink(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
             opb: I(`pb`),
-            hpn: h(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
+            hpn: makeLink(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
               heads: `none`,
               style: `beat`,
             }),
@@ -239,9 +222,9 @@ const Uc = {
             reg: Ic(),
           },
           links: {
-            opn: h(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
+            opn: makeLink(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
             opb: I(`pb`),
-            hpn: h(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
+            hpn: makeLink(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
               heads: `none`,
               style: `beat`,
             }),
@@ -273,9 +256,9 @@ const Uc = {
             reg: Ic({ glyph: `globe`, label: [`DNS`], sub: `TTL 10 s` }),
           },
           links: {
-            opn: h(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
+            opn: makeLink(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
             opb: I(`pb`),
-            hpn: h(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
+            hpn: makeLink(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
               heads: `none`,
               style: `beat`,
             }),
@@ -400,8 +383,8 @@ const Uc = {
             ...Fc(),
             ...Nc(),
             reg: Ic({ tags: [{ text: `leader · 2 of 3 up`, tone: `green`, icon: `check` }] }),
-            reg2: d(19, 0, { s: 3, h: 32, color: `yellow`, glyph: `signpost`, label: [], ...g }),
-            reg3: d(12, -8, { s: 3, h: 32, color: `yellow`, glyph: `signpost`, label: [] }),
+            reg2: makeBlock(19, 0, { s: 3, h: 32, color: `yellow`, glyph: `signpost`, label: [], ...DEAD_STATE }),
+            reg3: makeBlock(12, -8, { s: 3, h: 32, color: `yellow`, glyph: `signpost`, label: [] }),
           },
           links: {
             opn: I(`pn`),
@@ -409,8 +392,8 @@ const Uc = {
             hpn: L(`pn`),
             hpb: L(`pb`),
             ...Lc(),
-            r2: h(`reg`, `reg2`, [`reg`, `reg2`], { heads: `none`, style: `off` }),
-            r3: h(`reg`, `reg3`, [`reg`, `reg3`], { heads: `none`, style: `beat` }),
+            r2: makeLink(`reg`, `reg2`, [`reg`, `reg2`], { heads: `none`, style: `off` }),
+            r3: makeLink(`reg`, `reg3`, [`reg`, `reg3`], { heads: `none`, style: `beat` }),
           },
           flows: [
             Rc([`pn`, `pb`]),
@@ -444,9 +427,9 @@ const Uc = {
             reg: Ic({ glyph: `globe`, label: [`DNS`], sub: `TTL 10 s` }),
           },
           links: {
-            opn: h(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
+            opn: makeLink(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
             opb: I(`pb`),
-            hpn: h(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
+            hpn: makeLink(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
               heads: `none`,
               style: `beat`,
             }),
@@ -485,14 +468,14 @@ const Uc = {
             spb: Vc(3.6, 3.6),
           },
           links: {
-            opn: h(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
+            opn: makeLink(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
             opb: I(`pb`),
-            hpn: h(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
+            hpn: makeLink(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
               heads: `none`,
               style: `beat`,
             }),
             hpb: L(`pb`),
-            push: h(`reg`, `ord`, [`reg`, [`reg`, 13], [`ord`, 13], `ord`], {
+            push: makeLink(`reg`, `ord`, [`reg`, [`reg`, 13], [`ord`, 13], `ord`], {
               label: `config pushed to sidecars`,
               labelAt: 0.73,
             }),
@@ -520,8 +503,8 @@ const Uc = {
         metrics: { deadCalls: 0, instances: 2, lookup: `mesh sidecars` },
         scene: {
           entities: {
-            clients: p({ x0: -16.5, x1: -7.5, y0: -25, y1: -19 }, 11, `apps & browsers`),
-            gw: d(-12, -11, {
+            clients: makeCrowd({ x0: -16.5, x1: -7.5, y0: -25, y1: -19 }, 11, `apps & browsers`),
+            gw: makeBlock(-12, -11, {
               color: `orange`,
               glyph: `route`,
               label: [`API`, `Gateway`],
@@ -537,11 +520,11 @@ const Uc = {
             spb: Vc(3.6, 3.6),
           },
           links: {
-            cg: h(`clients`, `gw`, [`clients`, `gw`], { heads: `both` }),
-            go: h(`gw`, `ord`, [`gw`, `ord`], { heads: `both` }),
-            opn: h(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
+            cg: makeLink(`clients`, `gw`, [`clients`, `gw`], { heads: `both` }),
+            go: makeLink(`gw`, `ord`, [`gw`, `ord`], { heads: `both` }),
+            opn: makeLink(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
             opb: I(`pb`),
-            hpn: h(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
+            hpn: makeLink(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
               heads: `none`,
               style: `beat`,
             }),
@@ -586,9 +569,9 @@ const Uc = {
             spb: Vc(3.6, 3.6),
           },
           links: {
-            opn: h(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
+            opn: makeLink(`ord`, `pn`, [`ord`, [-6, `ord`], [-6, `pn`], `pn`], { heads: `both` }),
             opb: I(`pb`),
-            hpn: h(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
+            hpn: makeLink(`pn`, `reg`, [`pn`, [6, `pn`], [6, `reg`], `reg`], {
               heads: `none`,
               style: `beat`,
             }),

@@ -1,246 +1,208 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+
+// One diamond DAG for the whole lesson: the merge base on top, our commit on the left,
+// their commit on the right. The conflicted file sits where the merge commit will land,
+// and is replaced by it in the last step. Arrows point child → parent, like Git.
+//
+//              base 1a2b3c
+//            ↗            ↖
+//   ours 4d5e6f            theirs 7a8b9c
+//            ↖            ↗
+//         tax.ts  →  merge 9a8b7c
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+/** Screen position (px) → world grid coordinates. */
+const at = (sx: number, sy: number) => ({ x: +((sx / 14 + sy / 7) / 2).toFixed(2), y: +((sx / 14 - sy / 7) / 2).toFixed(2) });
+
+const P = { base: at(0, -110), ours: at(-210, 0), theirs: at(210, 0), mid: at(0, 120) };
+
+const commit = (p: { x: number; y: number }, sha: string, sub: string, tags: Tag[] = [], o: Record<string, unknown> = {}) =>
+  makeBlock(p.x, p.y, { s: 4.4, h: 52, color: `purple`, glyph: `gitCommit`, label: [sha], sub, tags, ...o });
+const ref = (name: string): Tag => ({ text: name, tone: `amber`, icon: `gitBranch` });
+
+const base = (tags: Tag[] = [], o: Record<string, unknown> = {}) => commit(P.base, `1a2b3c`, `merge base`, tags, o);
+const ours = (tags: Tag[] = [ref(`main · HEAD`)]) => commit(P.ours, `4d5e6f`, `ours`, tags);
+const theirs = (tags: Tag[] = [ref(`feature`)]) => commit(P.theirs, `7a8b9c`, `theirs`, tags);
+const file = (tags: Tag[]) =>
+  makeBlock(P.mid.x, P.mid.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`tax.ts`], sub: `working tree`, tags });
+
+const L = {
+  oursParent: makeLink(`ours`, `base`, [`ours`, `base`]),
+  theirsParent: makeLink(`theirs`, `base`, [`theirs`, `base`]),
+  fromOurs: makeLink(`ours`, `file`, [`ours`, `file`], { label: `ours` }),
+  fromTheirs: makeLink(`theirs`, `file`, [`theirs`, `file`], { label: `theirs` }),
+  fromOursQuiet: makeLink(`ours`, `file`, [`ours`, `file`]),
+  fromTheirsQuiet: makeLink(`theirs`, `file`, [`theirs`, `file`]),
+  fromBase: makeLink(`base`, `file`, [`base`, `file`], { style: `off` }),
+  parent1: makeLink(`merge`, `ours`, [`merge`, `ours`], { label: `parent 1` }),
+  parent2: makeLink(`merge`, `theirs`, [`merge`, `theirs`], { label: `parent 2` }),
+};
+
+/** Terminal / file card, parked top-left in the empty corner above `ours`. */
+const card = (title: string, lines: string[], icon = `keyboard`) =>
+  makePanel({ x: P.ours.x, y: P.ours.y, z: 0, dx: -190, dy: -250 }, title, lines, { icon });
 
 export const gitThreeWayDiff3Lesson = {
-  id: 'git-three-way-diff3',
-  title: 'Case 3: 3-Way Merge Conflicts & Diff3 Topology',
-  summary: 'Why standard 2-way conflict markers cause disastrous logical bugs, how the Common Ancestor (Base) reveals true developer intent, and configuring merge.conflictstyle = diff3.',
-  minutes: 25,
-  level: 'advanced',
-  metrics: ['baseAncestor', 'localOurs', 'remoteTheirs', 'conflictStyle'],
-  legend: ['flow', ['conflict', 'divergent hunk'], ['resolved', 'accurate merge'], ['base', 'merge base']],
+  id: `git-three-way-diff3`,
+  title: `Case 3: 3-Way Merge Conflicts & Diff3 Topology`,
+  summary: `Why 2-way conflict markers hide the truth, how the merge base reveals what each side meant, and merge.conflictstyle = diff3.`,
+  minutes: 18,
+  level: `advanced`,
+  metrics: [`base`, `ours`, `theirs`, `markers`],
+  legend: [`req`, [`write`, `change from a side`], [`fail`, `conflict`]],
   goals: [
-    { text: 'Graph topology of a 3-way merge: Base vs Ours vs Theirs', step: 1 },
-    { text: 'The fatal flaw of standard 2-way markers (<<<<<<< vs >>>>>>>)', step: 2 },
-    { text: 'Enabling diff3 (||||||| base) to see the original baseline code', step: 3 },
-    { text: 'Comparing diffs relative to Base to deduce original intent', step: 4 },
-    { text: 'Surgical hunk checkout: git checkout --ours vs --theirs', step: 5 },
-    { text: 'Sealing the 3-Way Merge Commit with dual parent pointers', step: 6 },
+    { text: `Graph of a 3-way merge: base, ours, theirs`, step: 1 },
+    { text: `Why 2-way markers (<<<<<<< / >>>>>>>) mislead`, step: 2 },
+    { text: `diff3 shows the base (|||||||)`, step: 3 },
+    { text: `Read each side relative to the base`, step: 4 },
+    { text: `Whole-file picks: --ours / --theirs`, step: 5 },
+    { text: `The merge commit has two parents`, step: 6 },
   ],
   steps: [
     {
-      short: 'Merge Base',
-      chapter: 'setup',
-      title: 'Finding the Merge Base (Common Ancestor)',
+      short: `Merge base`,
+      chapter: `setup`,
+      title: `Git merges three commits, not two`,
       body: [
-        'When merging Branch B into Branch A, Git does not compare only Branch A and B. It traverses the DAG to find their <b>Merge Base</b> (the most recent common ancestor).',
-        'Command: <code>git merge-base main feature</code>. If only one branch modified a line compared to the Base, Git applies that change automatically with zero conflicts.',
+        `<code>main</code> and <code>feature</code> both grew from commit <b>1a2b3c</b>. Before merging, Git walks the DAG to find that <span class="term">merge base</span>: the newest commit both branches share.`,
+        `For every line, Git compares each side with the base. If only one side changed a line, that change wins automatically. Only when <em>both</em> sides changed the same lines is there a conflict.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'A conflict occurs ONLY when BOTH branches modified the exact same lines relative to the Base in conflicting ways.',
-      },
-      metrics: { baseAncestor: 'Commit 1a2b3c', localOurs: 'Commit 4d5e6f', remoteTheirs: 'Commit 7g8h9i', conflictStyle: '3-way DAG' },
+      metrics: { base: `1a2b3c`, ours: `4d5e6f`, theirs: `7a8b9c`, markers: `—` },
       scene: {
         entities: {
-          baseAncestor: d(-18, -8, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: 'common base' }),
-          oursBranch: d(-8, 4, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['HEAD (Ours)'], sub: 'discount param' }),
-          theirsBranch: d(-4, -12, { s: 4.4, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Theirs (Feat)'], sub: 'tax rate 15%' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merge Base Discovery', [
-            `$ git merge-base main feature`,
-            `1a2b3c4d5e6f...`,
-            `Base: function calcTax(rate) { return rate * 0.1; }`,
-            `Ours: function calcTax(rate, disc) { return (rate - disc) * 0.1; }`,
-            `Theirs: function calcTax(rate) { return rate * 0.15; }`,
-            `! Both changed tax logic independently!`,
-          ], { icon: 'terminal' }),
+          base: base([{ text: `merge-base`, tone: `violet` }]),
+          ours: ours(),
+          theirs: theirs(),
+          card: card(`terminal`, [`$ git merge-base main feature`, `1a2b3c`, `$ git merge feature`]),
         },
-        links: {
-          bo: h('baseAncestor', 'oursBranch', ['baseAncestor', 'oursBranch'], { label: 'branch ours' }),
-          bt: h('baseAncestor', 'theirsBranch', ['baseAncestor', 'theirsBranch'], { label: 'branch theirs' }),
-        },
-        flows: [{ route: ['bo', 'bt'], kind: 'base', rate: 1.5 }],
+        links: { oursParent: L.oursParent, theirsParent: L.theirsParent },
+        flows: [
+          { route: [`oursParent`], rate: 0.8 },
+          { route: [`theirsParent`], rate: 0.8 },
+        ],
       },
     },
     {
-      short: 'Standard Conflict',
-      chapter: 'problem',
-      title: 'The Blindness of Standard 2-Way Markers',
+      short: `2-way`,
+      chapter: `problem`,
+      title: `Default markers hide the original`,
       body: [
-        'By default, Git outputs standard 2-way conflict markers (<code><<<<<<< HEAD</code> and <code>>>>>>>> feature</code>).',
-        'You see what you have, and you see what they have, but you <b>cannot see what was there originally</b>! Without the base, engineers often guess wrong and introduce catastrophic regressions.',
+        `Both sides edited the same line of <code>tax.ts</code>, so Git stops and writes conflict markers into the file in your <span class="term">working tree</span>.`,
+        `By default you see only <b>ours</b> and <b>theirs</b>. Did we add the discount, or did they remove it? Did they raise the rate, or did we lower it? Without the base you have to guess.`,
       ],
-      callout: {
-        kind: 'warning',
-        text: 'Standard conflict markers hide the original state. You cannot know if someone renamed a variable, deleted a condition, or changed logic.',
-      },
-      changes: ['+ Conflict detected in tax.ts', '+ Standard markers hide original base line'],
-      metrics: { baseAncestor: 'Hidden', localOurs: 'Displayed', remoteTheirs: 'Displayed', conflictStyle: 'merge (2-way)' },
+      changes: [`+ tax.ts with conflict markers`, `− base not shown`],
+      metrics: { base: `hidden`, ours: `4d5e6f`, theirs: `7a8b9c`, markers: `merge` },
       scene: {
         entities: {
-          baseAncestor: d(-18, -8, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c hidden' }),
-          oursBranch: d(-8, 4, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['HEAD (Ours)'], sub: 'discount param' }),
-          theirsBranch: d(-4, -12, { s: 4.4, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Theirs (Feat)'], sub: 'tax rate 15%' }),
-          conflictNode: d(8, -4, { s: 4.4, h: 56, color: 'rose', glyph: 'alert', label: ['tax.ts Clash'], sub: '2-way conflict' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Standard Conflict Markers', [
-            `<<<<<<< HEAD`,
-            `return (rate - disc) * 0.1;`,
-            `=======`,
-            `return rate * 0.15;`,
-            `>>>>>>> feature`,
-            `? Question: What was the original formula? Was disc added or rate changed?`,
-          ], { icon: 'terminal' }),
+          base: base([{ text: `not shown`, tone: `gray` }], { dim: 0.7 }),
+          ours: ours(),
+          theirs: theirs(),
+          file: file([{ text: `1 conflict`, tone: `red`, icon: `alert` }]),
+          card: card(`tax.ts`, [`<<<<<<< HEAD`, `return (rate - disc) * 0.1;`, `=======`, `return rate * 0.15;`, `>>>>>>> feature`, `! which one is the change?`], `file`),
         },
-        links: {
-          oc: h('oursBranch', 'conflictNode', ['oursBranch', 'conflictNode'], { label: 'incoming ours' }),
-          tc: h('theirsBranch', 'conflictNode', ['theirsBranch', 'conflictNode'], { label: 'incoming theirs' }),
-        },
-        flows: [{ route: ['oc', 'tc'], kind: 'conflict', rate: 1.6 }],
+        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, fromOurs: L.fromOurs, fromTheirs: L.fromTheirs },
+        flows: [
+          { route: [`fromOurs`], kind: `fail`, rate: 1.2 },
+          { route: [`fromTheirs`], kind: `fail`, rate: 1.2 },
+        ],
       },
     },
     {
-      short: 'Enable Diff3',
-      chapter: 'technique',
-      title: 'Enabling diff3 Conflict Style (||||||| base)',
+      short: `diff3`,
+      chapter: `technique`,
+      title: `diff3 adds the base to the markers`,
       body: [
-        'Running <code>git config --global merge.conflictstyle diff3</code> (or <code>zdiff3</code>) unlocks the true power of 3-way merging.',
-        'Git injects a third section: <code>||||||| base</code> containing the original common ancestor code before either developer touched it.',
+        `Set <code>merge.conflictstyle</code> to <code>diff3</code> (or <code>zdiff3</code>, which also trims identical lines). Git now adds a third section, <code>||||||| base</code>, with the line as it was in the merge base.`,
+        `Same conflict, but now you can see where each side started from.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'With diff3 enabled, conflict resolution becomes a breeze: compare Ours to Base (we added discount), compare Theirs to Base (they updated rate to 0.15).',
-      },
-      changes: ['+ merge.conflictstyle set to diff3', '+ Conflict markers now include ||||||| base'],
-      metrics: { baseAncestor: 'Visible in marker', localOurs: 'Visible', remoteTheirs: 'Visible', conflictStyle: 'diff3 (3-way)' },
+      changes: [`~ merge.conflictstyle = diff3`, `+ base section in the markers`],
+      metrics: { base: `1a2b3c`, ours: `4d5e6f`, theirs: `7a8b9c`, markers: `diff3` },
       scene: {
         entities: {
-          baseAncestor: d(-18, -8, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c exposed' }),
-          oursBranch: d(-8, 4, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['HEAD (Ours)'], sub: 'discount param' }),
-          theirsBranch: d(-4, -12, { s: 4.4, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Theirs (Feat)'], sub: 'tax rate 15%' }),
-          conflictNode: d(8, -4, { s: 4.4, h: 56, color: 'cyan', glyph: 'cpu', label: ['diff3 Engine'], sub: '||||||| base' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Diff3 Conflict Markers', [
-            `<<<<<<< HEAD`,
-            `return (rate - disc) * 0.1;`,
-            `||||||| 1a2b3c (BASE)`,
-            `return rate * 0.1;`,
-            `=======`,
-            `return rate * 0.15;`,
-            `>>>>>>> feature`,
-          ], { icon: 'terminal' }),
+          base: base([{ text: `shown`, tone: `green` }]),
+          ours: ours(),
+          theirs: theirs(),
+          file: file([{ text: `1 conflict`, tone: `red`, icon: `alert` }]),
+          card: card(`tax.ts`, [`$ git config --global merge.conflictstyle diff3`, `<<<<<<< HEAD`, `return (rate - disc) * 0.1;`, `||||||| 1a2b3c`, `return rate * 0.1;`, `=======`, `return rate * 0.15;`, `>>>>>>> feature`], `file`),
         },
-        links: {
-          bo: h('baseAncestor', 'oursBranch', ['baseAncestor', 'oursBranch'], { label: 'ancestor' }),
-          bt: h('baseAncestor', 'theirsBranch', ['baseAncestor', 'theirsBranch'], { label: 'ancestor' }),
-          od: h('oursBranch', 'conflictNode', ['oursBranch', 'conflictNode'], { label: 'compare ours' }),
-          td: h('theirsBranch', 'conflictNode', ['theirsBranch', 'conflictNode'], { label: 'compare theirs' }),
-        },
-        flows: [{ route: ['bo', 'od'], kind: 'resolved', rate: 1.6 }, { route: ['bt', 'td'], kind: 'resolved', rate: 1.6 }],
+        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, fromOurs: L.fromOursQuiet, fromTheirs: L.fromTheirsQuiet, fromBase: L.fromBase },
+        flows: [{ route: [`fromBase`], rate: 1 }],
       },
     },
     {
-      short: 'Intent Deduction',
-      chapter: 'technique',
-      title: 'Deducing Developer Intent from 3 Sides',
+      short: `Intent`,
+      chapter: `insight`,
+      title: `Compare each side with the base`,
       body: [
-        'By analyzing diff(Base, Ours) and diff(Base, Theirs), true intent becomes mathematically obvious:',
-        '1. Ours added <code>- disc</code> discount handling.<br>2. Theirs increased baseline tax rate from <code>0.1</code> to <code>0.15</code>.',
-        'Neither developer intended to remove the other change! The synthesized result must combine both.',
+        `Ours vs base: we <b>subtracted a discount</b>. Theirs vs base: they <b>raised the rate</b> from 0.1 to 0.15. Neither side undid the other — they changed different parts of the same expression.`,
+        `So the correct result keeps both: <code>(rate - disc) * 0.15</code>. Picking either side would silently drop a feature.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: '90% of tricky merge conflicts disappear once you ask: "What did each person change relative to the common base?"',
-      },
-      changes: ['+ diff(Base, Ours) = added discount parameter', '+ diff(Base, Theirs) = raised tax rate 10% -> 15%'],
-      metrics: { baseAncestor: '1a2b3c', localOurs: 'Add discount', remoteTheirs: 'Update rate', conflictStyle: 'diff3 (3-way)' },
+      changes: [`~ ours: added discount`, `~ theirs: rate 0.1 → 0.15`],
+      metrics: { base: `1a2b3c`, ours: `+ discount`, theirs: `rate 0.15`, markers: `diff3` },
       scene: {
         entities: {
-          baseAncestor: d(-18, -8, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c base' }),
-          oursBranch: d(-8, 4, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['HEAD (Ours)'], sub: 'intent: disc' }),
-          theirsBranch: d(-4, -12, { s: 4.4, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Theirs (Feat)'], sub: 'intent: rate' }),
-          conflictNode: d(8, -4, { s: 4.4, h: 56, color: 'green', glyph: 'cpu', label: ['Intent Logic'], sub: 'combine both' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Synthesized Resolution', [
-            `# Mathematically resolved code:`,
-            `function calcTax(rate, disc) {`,
-            `  return (rate - disc) * 0.15;`,
-            `}`,
-            `= Combines BOTH intents with zero regressions!`,
-          ], { icon: 'terminal' }),
+          base: base(),
+          ours: ours([ref(`main · HEAD`), { text: `Δ − disc`, tone: `violet` }]),
+          theirs: theirs([ref(`feature`), { text: `Δ × 0.15`, tone: `violet` }]),
+          file: file([{ text: `both kept`, tone: `green`, icon: `check` }]),
+          card: card(`tax.ts (resolved)`, [`function calcTax(rate, disc) {`, `  return (rate - disc) * 0.15;`, `}`, `$ git add tax.ts`], `file`),
         },
-        links: {
-          bo: h('baseAncestor', 'oursBranch', ['baseAncestor', 'oursBranch'], { label: 'reference base' }),
-          bt: h('baseAncestor', 'theirsBranch', ['baseAncestor', 'theirsBranch'], { label: 'reference base' }),
-          od: h('oursBranch', 'conflictNode', ['oursBranch', 'conflictNode'], { label: 'merge discount' }),
-          td: h('theirsBranch', 'conflictNode', ['theirsBranch', 'conflictNode'], { label: 'merge rate 15%' }),
-        },
-        flows: [{ route: ['bo', 'od'], kind: 'resolved', rate: 1.6 }, { route: ['bt', 'td'], kind: 'resolved', rate: 1.6 }],
+        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, fromOurs: L.fromOursQuiet, fromTheirs: L.fromTheirsQuiet, fromBase: L.fromBase },
+        flows: [
+          { route: [`fromOurs`], kind: `write`, rate: 1 },
+          { route: [`fromTheirs`], kind: `write`, rate: 1 },
+        ],
       },
     },
     {
-      short: 'Surgical Checkout',
-      chapter: 'technique',
-      title: 'Surgical Hunk Checkout: --ours vs --theirs',
+      short: `Pick a side`,
+      chapter: `technique`,
+      title: `Whole files: take one side`,
       body: [
-        'When an entire binary or generated file is in conflict, you can discard one side wholesale without opening an editor:',
-        '<code>git checkout --ours package-lock.json</code> keeps your version. <code>git checkout --theirs docs/api.md</code> accepts the incoming version cleanly.',
+        `Some files can’t be merged line by line — a lockfile, generated docs, a binary. For those, take one side wholesale with <code>git checkout --ours</code> or <code>--theirs</code>, then <code>git add</code>.`,
+        `Careful during a <b>rebase</b>: there “ours” is the branch you are rebasing <em>onto</em> and “theirs” is your own commit being replayed — the names swap.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Remember: In rebase, --ours and --theirs are swapped because you are replaying your commits on top of upstream!',
-      },
-      changes: ['+ Whole-file conflict resolved cleanly via git checkout --ours / --theirs'],
-      metrics: { baseAncestor: '1a2b3c', localOurs: 'Checked out', remoteTheirs: 'Accepted', conflictStyle: 'hunk checkout' },
+      changes: [`~ package-lock.json ← ours`, `~ docs/api.md ← theirs`],
+      metrics: { base: `1a2b3c`, ours: `lockfile`, theirs: `api docs`, markers: `diff3` },
       scene: {
         entities: {
-          baseAncestor: d(-18, -8, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c base' }),
-          oursBranch: d(-8, 4, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['HEAD (Ours)'], sub: '--ours locked' }),
-          theirsBranch: d(-4, -12, { s: 4.4, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Theirs (Feat)'], sub: '--theirs pass' }),
-          conflictNode: d(8, -4, { s: 4.4, h: 56, color: 'cyan', glyph: 'terminal', label: ['Checkout CLI'], sub: 'surgical pick' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Surgical Checkout Commands', [
-            `$ git checkout --ours package-lock.json`,
-            `$ git checkout --theirs generated-docs.md`,
-            `$ git add package-lock.json generated-docs.md`,
-            `= Conflict resolved instantly for whole files`,
-          ], { icon: 'terminal' }),
+          base: base(),
+          ours: ours([ref(`main · HEAD`), { text: `package-lock.json`, tone: `green` }]),
+          theirs: theirs([ref(`feature`), { text: `docs/api.md`, tone: `green` }]),
+          file: file([{ text: `all resolved`, tone: `green`, icon: `check` }]),
+          card: card(`terminal`, [`$ git checkout --ours package-lock.json`, `$ git checkout --theirs docs/api.md`, `$ git add package-lock.json docs/api.md`, `# rebase: --ours = upstream, --theirs = yours`]),
         },
-        links: {
-          oc: h('oursBranch', 'conflictNode', ['oursBranch', 'conflictNode'], { label: 'checkout --ours' }),
-          tc: h('theirsBranch', 'conflictNode', ['theirsBranch', 'conflictNode'], { label: 'checkout --theirs' }),
-        },
-        flows: [{ route: ['oc', 'tc'], kind: 'resolved', rate: 1.5 }],
+        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, fromOurs: L.fromOurs, fromTheirs: L.fromTheirs },
+        flows: [
+          { route: [`fromOurs`], kind: `write`, rate: 1.1 },
+          { route: [`fromTheirs`], kind: `write`, rate: 1.1 },
+        ],
       },
     },
     {
-      short: 'Merge Commit',
-      chapter: 'scaling',
-      title: 'Sealing the 3-Way Merge Commit with Dual Parents',
+      short: `Merge commit`,
+      chapter: `recap`,
+      title: `A commit with two parents`,
       body: [
-        'Once all conflicts are staged with <code>git add</code>, running <code>git commit</code> produces a unique commit object with <b>two parent hashes</b> (<code>parent 4d5e6f</code> and <code>parent 7g8h9i</code>).',
-        'This dual-parent node seals the two branch DAG histories back together.',
+        `<code>git commit</code> seals the merge: a new commit <b>9a8b7c</b> whose tree has both changes and which lists <b>two parents</b> — 4d5e6f and 7a8b9c.`,
+        `Those two parent pointers join the histories. Next time these branches merge, Git finds a newer merge base (this commit), so the same conflict never comes back.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'A merge commit permanently records both branches\' ancestral histories, guaranteeing that future merges can find a new, closer Merge Base.',
-      },
-      changes: ['+ Merge commit 9a8b7c created with dual parents P1 and P2', '+ DAG histories unified back into trunk'],
-      metrics: { baseAncestor: '1a2b3c', localOurs: 'Parent 1', remoteTheirs: 'Parent 2', conflictStyle: 'Dual parents' },
+      changes: [`+ merge commit 9a8b7c`, `~ main → 9a8b7c`],
+      metrics: { base: `1a2b3c`, ours: `parent 1`, theirs: `parent 2`, markers: `diff3` },
       scene: {
         entities: {
-          baseAncestor: d(-18, -8, { s: 4.4, h: 56, color: 'slab', glyph: 'boxes', label: ['Merge Base'], sub: '1a2b3c base' }),
-          oursBranch: d(-8, 4, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['HEAD (Ours)'], sub: 'parent 1' }),
-          theirsBranch: d(-4, -12, { s: 4.4, h: 54, color: 'purple', glyph: 'gitBranch', label: ['Theirs (Feat)'], sub: 'parent 2' }),
-          mergeCommit: d(8, -4, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Merge Commit'], sub: '2-parent merge' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merge Commit Object Manifest', [
-            `$ git cat-file -p 9a8b7c`,
-            `tree e8f2a1b3...`,
-            `parent 4d5e6f (HEAD / Ours)`,
-            `parent 7g8h9i (feature / Theirs)`,
-            `author Developer <dev@example.com>`,
-            `Merge branch 'feature' into main (diff3 resolved)`,
-            `= Dual parents link both histories permanently`,
-          ], { icon: 'terminal' }),
+          base: base(),
+          ours: ours([]),
+          theirs: theirs(),
+          merge: commit(P.mid, `9a8b7c`, `2 parents`, [ref(`main · HEAD`)]),
+          card: card(`terminal`, [`$ git cat-file -p 9a8b7c`, `tree   e8f2a1`, `parent 4d5e6f`, `parent 7a8b9c`, `= Merge branch 'feature'`]),
         },
-        links: {
-          om: h('oursBranch', 'mergeCommit', ['oursBranch', 'mergeCommit'], { label: 'parent 1' }),
-          tm: h('theirsBranch', 'mergeCommit', ['theirsBranch', 'mergeCommit'], { label: 'parent 2' }),
-        },
-        flows: [{ route: ['om', 'tm'], kind: 'resolved', rate: 1.6 }],
+        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, parent1: L.parent1, parent2: L.parent2 },
+        flows: [
+          { route: [`parent1`], rate: 0.9 },
+          { route: [`parent2`], rate: 0.9 },
+        ],
       },
     },
   ],

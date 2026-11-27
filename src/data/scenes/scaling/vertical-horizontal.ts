@@ -1,27 +1,12 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeGhost,
+  makeHot,
+  makeLink
 } from '@/lib/simulator/scene-builders';
 
 const Pe = { x0: -4.5, x1: 4.5, y0: -15, y1: -9 };
@@ -32,19 +17,19 @@ const Ie = [-10.5, -3.5, 3.5, 10.5];
 
 const Le = [`A`, `B`, `C`, `D`];
 
-const Re = (e) => ({ a: d(0, 0, { label: [`App`, `Server`], ...e }) });
+const Re = (e) => ({ a: makeBlock(0, 0, { label: [`App`, `Server`], ...e }) });
 
 const ze = (e = {}) =>
     Object.fromEntries(
       Ie.map((t, n) => {
         let r = `abcd`[n];
-        return [r, d(t, 0, { label: [`Server ${Le[n]}`], ...v(0.54 - n * 0.02), ...(e[r] || {}) })];
+        return [r, makeBlock(t, 0, { label: [`Server ${Le[n]}`], ...makeCool(0.54 - n * 0.02), ...(e[r] || {}) })];
       }),
     );
 
 const Be = (e = {}) =>
     Object.fromEntries(
-      `abcd`.split(``).map((t) => [`u${t}`, h(`users`, t, [[t, `users`], t], { fail: e[t] || 0 })]),
+      `abcd`.split(``).map((t) => [`u${t}`, makeLink(`users`, t, [[t, `users`], t], { fail: e[t] || 0 })]),
     );
 
 const Ve = (e = ``) => `abcd`.split(``).map((e) => ({ route: [`u${e}`], rate: 1.4 }));
@@ -80,10 +65,10 @@ export const verticalHorizontalLesson = {
         metrics: { users: 100, rps: 4, p95: 80, errors: 0, cost: 150 },
         scene: {
           entities: {
-            users: p(Pe, 3, `100 users`),
+            users: makeCrowd(Pe, 3, `100 users`),
             ...Re({ cpu: 0.01, tags: [{ text: `4 vCPU · 16 GB` }] }),
           },
-          links: { ua: h(`users`, `a`, [`users`, `a`]) },
+          links: { ua: makeLink(`users`, `a`, [`users`, `a`]) },
           flows: [{ route: [`ua`], rate: 1.2 }],
         },
       },
@@ -103,10 +88,10 @@ export const verticalHorizontalLesson = {
         metrics: { users: 12e3, rps: 480, p95: 2400, errors: 17, cost: 150 },
         scene: {
           entities: {
-            users: p(Pe, 15, `12,000 users`),
-            ...Re({ ..._(1), tags: [{ text: `4 vCPU · 16 GB` }] }),
+            users: makeCrowd(Pe, 15, `12,000 users`),
+            ...Re({ ...makeHot(1), tags: [{ text: `4 vCPU · 16 GB` }] }),
           },
-          links: { ua: h(`users`, `a`, [`users`, `a`], { fail: 0.3 }) },
+          links: { ua: makeLink(`users`, `a`, [`users`, `a`], { fail: 0.3 }) },
           flows: [{ route: [`ua`], rate: 6 }],
         },
       },
@@ -126,10 +111,10 @@ export const verticalHorizontalLesson = {
         metrics: { users: 12e3, rps: 480, p95: 110, errors: 0, cost: 600 },
         scene: {
           entities: {
-            users: p(Pe, 15, `12,000 users`),
-            ...Re({ s: 6, h: 84, ...v(0.3), tags: [{ text: `16 vCPU · 64 GB`, tone: `violet` }] }),
+            users: makeCrowd(Pe, 15, `12,000 users`),
+            ...Re({ s: 6, h: 84, ...makeCool(0.3), tags: [{ text: `16 vCPU · 64 GB`, tone: `violet` }] }),
           },
-          links: { ua: h(`users`, `a`, [`users`, `a`]) },
+          links: { ua: makeLink(`users`, `a`, [`users`, `a`]) },
           flows: [{ route: [`ua`], rate: 6 }],
         },
       },
@@ -153,11 +138,11 @@ export const verticalHorizontalLesson = {
         metrics: { users: 5e5, rps: 2e4, p95: 3100, errors: 12, cost: 7200 },
         scene: {
           entities: {
-            users: p(Pe, 15, `500,000 users`),
-            max: m(0, 0, 7.6, 124, `largest machine you can buy`),
-            ...Re({ s: 7, h: 116, ..._(1), tags: [{ text: `192 vCPU · 768 GB`, tone: `violet` }] }),
+            users: makeCrowd(Pe, 15, `500,000 users`),
+            max: makeGhost(0, 0, 7.6, 124, `largest machine you can buy`),
+            ...Re({ s: 7, h: 116, ...makeHot(1), tags: [{ text: `192 vCPU · 768 GB`, tone: `violet` }] }),
           },
-          links: { ua: h(`users`, `a`, [`users`, `a`], { fail: 0.28 }) },
+          links: { ua: makeLink(`users`, `a`, [`users`, `a`], { fail: 0.28 }) },
           flows: [{ route: [`ua`], rate: 7 }],
         },
       },
@@ -176,8 +161,8 @@ export const verticalHorizontalLesson = {
         changes: [`− App server down`, `~ Errors 12% → 100%`],
         metrics: { users: 5e5, rps: 2e4, p95: null, errors: 100, cost: 7200 },
         scene: {
-          entities: { users: p(Pe, 15, `500,000 users`), ...Re({ s: 7, h: 116, ...g }) },
-          links: { ua: h(`users`, `a`, [`users`, `a`], { fail: 1 }) },
+          entities: { users: makeCrowd(Pe, 15, `500,000 users`), ...Re({ s: 7, h: 116, ...DEAD_STATE }) },
+          links: { ua: makeLink(`users`, `a`, [`users`, `a`], { fail: 1 }) },
           flows: [{ route: [`ua`], rate: 6 }],
         },
       },
@@ -201,7 +186,7 @@ export const verticalHorizontalLesson = {
         ],
         metrics: { users: 5e5, rps: 2e4, p95: 95, errors: 0, cost: 14400 },
         scene: {
-          entities: { users: p(Fe, 30, `500,000 users`), ...ze() },
+          entities: { users: makeCrowd(Fe, 30, `500,000 users`), ...ze() },
           links: Be(),
           flows: Ve(),
         },
@@ -222,8 +207,8 @@ export const verticalHorizontalLesson = {
         metrics: { users: 5e4, rps: 2e3, p95: 90, errors: 0, cost: 14400 },
         scene: {
           entities: {
-            users: p(Fe, 8, `4 a.m. · 50,000 users`),
-            ...ze({ a: v(0.05), b: v(0.05), c: v(0.06), d: v(0.05) }),
+            users: makeCrowd(Fe, 8, `4 a.m. · 50,000 users`),
+            ...ze({ a: makeCool(0.05), b: makeCool(0.05), c: makeCool(0.06), d: makeCool(0.05) }),
           },
           links: Be(),
           flows: `abcd`.split(``).map((e) => ({ route: [`u${e}`], rate: 0.3 })),
@@ -249,17 +234,17 @@ export const verticalHorizontalLesson = {
         metrics: { users: 5e4, rps: 2e3, p95: 90, errors: 0, cost: 10800 },
         scene: {
           entities: {
-            users: p({ x0: -13.5, x1: -0.5, y0: -15, y1: -9 }, 8, `4 a.m. · 50,000 users`),
-            a: d(-10.5, 0, { label: [`Server A`], ...v(0.11) }),
-            b: d(-3.5, 0, {
+            users: makeCrowd({ x0: -13.5, x1: -0.5, y0: -15, y1: -9 }, 8, `4 a.m. · 50,000 users`),
+            a: makeBlock(-10.5, 0, { label: [`Server A`], ...makeCool(0.11) }),
+            b: makeBlock(-3.5, 0, {
               label: [`Server B`],
-              ...v(0.1),
+              ...makeCool(0.1),
               tags: [{ text: `autoscaled: 2 of 2–8`, icon: `gauge` }],
             }),
           },
           links: {
-            ua: h(`users`, `a`, [[`a`, `users`], `a`]),
-            ub: h(`users`, `b`, [[`b`, `users`], `b`]),
+            ua: makeLink(`users`, `a`, [[`a`, `users`], `a`]),
+            ub: makeLink(`users`, `b`, [[`b`, `users`], `b`]),
           },
           flows: [
             { route: [`ua`], rate: 1.4 },
@@ -287,25 +272,25 @@ export const verticalHorizontalLesson = {
         metrics: { users: 75e4, rps: 3e4, p95: 2800, errors: 36, cost: 21600 },
         scene: {
           entities: {
-            users: p({ x0: -20.5, x1: 20.5, y0: -15, y1: -9 }, 30, `noon · 750,000 users`),
-            e: d(-16, 9, {
+            users: makeCrowd({ x0: -20.5, x1: 20.5, y0: -15, y1: -9 }, 30, `noon · 750,000 users`),
+            e: makeBlock(-16, 9, {
               label: [`booting`],
               dim: 1,
               tags: [{ text: `≈ 3 min`, tone: `amber`, icon: `hourglass` }],
             }),
-            a: d(-10.5, 0, { label: [`Server A`], ..._(0.99) }),
-            b: d(-3.5, 0, { label: [`Server B`], ..._(0.99) }),
-            c: d(3.5, 0, { label: [`booting`], dim: 1 }),
-            d: d(10.5, 0, { label: [`booting`], dim: 1 }),
-            f: d(16, 9, { label: [`booting`], dim: 1 }),
+            a: makeBlock(-10.5, 0, { label: [`Server A`], ...makeHot(0.99) }),
+            b: makeBlock(-3.5, 0, { label: [`Server B`], ...makeHot(0.99) }),
+            c: makeBlock(3.5, 0, { label: [`booting`], dim: 1 }),
+            d: makeBlock(10.5, 0, { label: [`booting`], dim: 1 }),
+            f: makeBlock(16, 9, { label: [`booting`], dim: 1 }),
           },
           links: {
-            ua: h(`users`, `a`, [[`a`, `users`], `a`], { fail: 0.2 }),
-            ub: h(`users`, `b`, [[`b`, `users`], `b`], { fail: 0.2 }),
-            uc: h(`users`, `c`, [[`c`, `users`], `c`], { style: `off` }),
-            ud: h(`users`, `d`, [[`d`, `users`], `d`], { style: `off` }),
-            ue: h(`users`, `e`, [[`e`, `users`], `e`], { style: `off` }),
-            uf: h(`users`, `f`, [[`f`, `users`], `f`], { style: `off` }),
+            ua: makeLink(`users`, `a`, [[`a`, `users`], `a`], { fail: 0.2 }),
+            ub: makeLink(`users`, `b`, [[`b`, `users`], `b`], { fail: 0.2 }),
+            uc: makeLink(`users`, `c`, [[`c`, `users`], `c`], { style: `off` }),
+            ud: makeLink(`users`, `d`, [[`d`, `users`], `d`], { style: `off` }),
+            ue: makeLink(`users`, `e`, [[`e`, `users`], `e`], { style: `off` }),
+            uf: makeLink(`users`, `f`, [[`f`, `users`], `f`], { style: `off` }),
           },
           flows: [
             { route: [`ua`], rate: 4 },
@@ -328,7 +313,7 @@ export const verticalHorizontalLesson = {
         changes: [`− Server B down`, `~ Errors 0% → 25%`],
         metrics: { users: 5e5, rps: 2e4, p95: 95, errors: 25, cost: 14400 },
         scene: {
-          entities: { users: p(Fe, 30, `500,000 users`), ...ze({ b: g }) },
+          entities: { users: makeCrowd(Fe, 30, `500,000 users`), ...ze({ b: DEAD_STATE }) },
           links: Be({ b: 1 }),
           flows: Ve(),
         },
@@ -358,7 +343,7 @@ export const verticalHorizontalLesson = {
         },
         metrics: { users: 5e5, rps: 2e4, p95: 95, errors: 0, cost: 14400 },
         scene: {
-          entities: { users: p(Fe, 30, `500,000 users`), ...ze() },
+          entities: { users: makeCrowd(Fe, 30, `500,000 users`), ...ze() },
           links: Be(),
           flows: Ve(),
         },

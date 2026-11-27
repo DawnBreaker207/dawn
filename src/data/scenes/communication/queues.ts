@@ -1,27 +1,15 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  DEAD_STATE,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeHot,
+  makeLink,
+  makePanel,
+  makeQueue,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const To = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
@@ -32,29 +20,29 @@ const Do = { w1: -4, w2: 4 };
 
 const Oo = { w4: -12, w1: -6, w3: 0, w2: 6, w5: 12 };
 
-const ko = (e = 11, t = `creators uploading`) => p(To, e, t);
+const ko = (e = 11, t = `creators uploading`) => makeCrowd(To, e, t);
 
-const Ao = (e = {}) => d(0, -9, { label: [`Web`, `Server`], ...e });
+const Ao = (e = {}) => makeBlock(0, -9, { label: [`Web`, `Server`], ...e });
 
-const jo = (e = `QUEUE · VIDEO JOBS`) => x(Eo, e);
+const jo = (e = `QUEUE · VIDEO JOBS`) => makeZone(Eo, e);
 
-const Mo = (e) => ee(5.6, 1, e, [-1, 0]);
+const Mo = (e) => makeQueue(5.6, 1, e, [-1, 0]);
 
-const No = (e, t = {}) => d(e, 9, { color: `green`, glyph: `video`, label: [`Worker`], ...t });
+const No = (e, t = {}) => makeBlock(e, 9, { color: `green`, glyph: `video`, label: [`Worker`], ...t });
 
 const Po = (e, t = {}) =>
     Object.fromEntries(
-      Object.entries(e).map(([e, n]) => [e, No(n, { ...v(-1), ...(t[e] || {}) })]),
+      Object.entries(e).map(([e, n]) => [e, No(n, { ...makeCool(-1), ...(t[e] || {}) })]),
     );
 
 const F = {
-    uw: (e = {}) => ({ uw: h(`users`, `web`, [`users`, `web`], { heads: `both`, ...e }) }),
-    wq: { wq: h(`web`, `mq`, [`web`, `mq`], { label: `enqueue job` }) },
+    uw: (e = {}) => ({ uw: makeLink(`users`, `web`, [`users`, `web`], { heads: `both`, ...e }) }),
+    wq: { wq: makeLink(`web`, `mq`, [`web`, `mq`], { label: `enqueue job` }) },
     pull: (e, t = {}) =>
       Object.fromEntries(
         e.map((e, n) => [
           `q${e}`,
-          h(`mq`, e, [`mq`, [e, `mq`], e], {
+          makeLink(`mq`, e, [`mq`, [e, `mq`], e], {
             ...(n === 0 ? { label: `pull` } : {}),
             ...(t[e] || {}),
           }),
@@ -73,7 +61,7 @@ const Lo = (e, t = 1.4) => ({
     speed: 0.6,
   });
 
-const Ro = (e, t, n) => S({ x: 6.5, y: 2.5, z: 0, dx: 80, dy: -240 }, e, t, { icon: n });
+const Ro = (e, t, n) => makePanel({ x: 6.5, y: 2.5, z: 0, dx: 80, dy: -240 }, e, t, { icon: n });
 
 const zo = {
     id: `queues`,
@@ -108,7 +96,7 @@ const zo = {
           entities: {
             users: ko(),
             web: Ao({
-              ..._(0.96),
+              ...makeHot(0.96),
               tags: [{ text: `transcoding · 30 s`, tone: `red`, icon: `video` }],
             }),
           },
@@ -218,7 +206,7 @@ const zo = {
             web: Ao(),
             mq: jo(`QUEUE · DRAINING`),
             q: Mo(4),
-            ...Po(Oo, { w3: g }),
+            ...Po(Oo, { w3: DEAD_STATE }),
           },
           links: {
             ...F.uw(),
@@ -252,7 +240,7 @@ const zo = {
             web: Ao(),
             mq: jo(`QUEUE · DRAINING`),
             q: Mo(4),
-            ...Po(Oo, { w3: g }),
+            ...Po(Oo, { w3: DEAD_STATE }),
           },
           links: {
             ...F.uw(),
@@ -287,13 +275,13 @@ const zo = {
             mq: jo(),
             q: Mo(2),
             ...Po({ w4: -12, w1: -6, w2: 6, w5: 12 }),
-            dlq: b(-15, 0.5, { r: 1.6, h: 32, glyph: `skull`, label: `dead letters` }),
+            dlq: makeDb(-15, 0.5, { r: 1.6, h: 32, glyph: `skull`, label: `dead letters` }),
           },
           links: {
             ...F.uw(),
             ...F.wq,
             ...F.pull([`w4`, `w1`, `w2`, `w5`]),
-            dl: h(`mq`, `dlq`, [`mq`, `dlq`], {
+            dl: makeLink(`mq`, `dlq`, [`mq`, `dlq`], {
               style: `dashed`,
               label: `after 3 failures`,
               labelAt: 0.35,
@@ -403,7 +391,7 @@ const zo = {
             web: Ao({ tags: [{ text: `503 · try again in 60 s`, tone: `amber`, icon: `clock` }] }),
             mq: jo(`QUEUE · 50,000 JOBS · OLDEST 25 MIN`),
             q: Mo(12),
-            ...Po({ w4: -12, w1: -6, w2: 6, w5: 12 }, { w4: _(1), w1: _(1), w2: _(1), w5: _(1) }),
+            ...Po({ w4: -12, w1: -6, w2: 6, w5: 12 }, { w4: makeHot(1), w1: makeHot(1), w2: makeHot(1), w5: makeHot(1) }),
           },
           links: { ...F.uw({ fail: 0.25 }), ...F.wq, ...F.pull([`w4`, `w1`, `w2`, `w5`]) },
           flows: [Fo(6), Io(4), Lo([`w4`, `w1`, `w2`, `w5`], 1.6)],
@@ -434,13 +422,13 @@ const zo = {
             mq: jo(),
             q: Mo(2),
             ...Po({ w4: -12, w1: -6, w2: 6, w5: 12 }),
-            dlq: b(-15, 0.5, { r: 1.6, h: 32, glyph: `skull`, label: `dead letters` }),
+            dlq: makeDb(-15, 0.5, { r: 1.6, h: 32, glyph: `skull`, label: `dead letters` }),
           },
           links: {
             ...F.uw(),
             ...F.wq,
             ...F.pull([`w4`, `w1`, `w2`, `w5`]),
-            dl: h(`mq`, `dlq`, [`mq`, `dlq`], { style: `dashed` }),
+            dl: makeLink(`mq`, `dlq`, [`mq`, `dlq`], { style: `dashed` }),
           },
           flows: [Fo(3), Io(1.6), Lo([`w4`, `w1`, `w2`, `w5`], 1.6)],
         },

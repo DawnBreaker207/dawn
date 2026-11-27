@@ -1,6 +1,4 @@
-// @ts-nocheck
-/* eslint-disable */
-import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock,makeLink,makePanel } from '@/lib/simulator/scene-builders';
 
 export const k8sAutoscalingHpaLesson = {
   id: 'k8s-autoscaling-hpa',

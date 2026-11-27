@@ -1,41 +1,24 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
-const Sl = (e = []) => y(-12, -6, { label: `Alice · Acme`, tags: e });
+const Sl = (e = []) => makeDevice(-12, -6, { label: `Alice · Acme`, tags: e });
 
-const Cl = (e = []) => y(12, -6, { label: `Eve · Globex`, tags: e });
+const Cl = (e = []) => makeDevice(12, -6, { label: `Eve · Globex`, tags: e });
 
 const wl = (e = []) =>
-    d(0, -6, { color: `blue`, glyph: `file`, label: [`Invoices`, `API`], tags: e, pills: `below` });
+    makeBlock(0, -6, { color: `blue`, glyph: `file`, label: [`Invoices`, `API`], tags: e, pills: `below` });
 
 const Tl = (e = [], t = {}) =>
-    b(0, 6, { r: 2, h: 42, glyph: `file`, label: `invoices`, tags: e, ...t });
+    makeDb(0, 6, { r: 2, h: 42, glyph: `file`, label: `invoices`, tags: e, ...t });
 
 const El = (e = []) =>
-    d(0, -18, {
+    makeBlock(0, -18, {
       color: `yellow`,
       glyph: `shield`,
       label: [`Policy`, `Service`],
@@ -44,26 +27,26 @@ const El = (e = []) =>
     });
 
 const Dl = (e = [], t = {}) =>
-    d(12, 6, { color: `green`, glyph: `chart`, label: [`Reports`], tags: e, ...t });
+    makeBlock(12, 6, { color: `green`, glyph: `chart`, label: [`Reports`], tags: e, ...t });
 
-const Ol = (e = []) => b(-12, 6, { r: 1.7, h: 36, glyph: `clipboard`, label: `audit log`, tags: e });
+const Ol = (e = []) => makeDb(-12, 6, { r: 1.7, h: 36, glyph: `clipboard`, label: `audit log`, tags: e });
 
 const H = {
     base: (e = {}) => ({
-      aa: h(`alice`, `api`, [`alice`, `api`], { heads: `both` }),
-      ea: h(`eve`, `api`, [`eve`, `api`], { heads: `both`, ...e }),
-      ad: h(`api`, `db`, [`api`, `db`], { heads: `both` }),
+      aa: makeLink(`alice`, `api`, [`alice`, `api`], { heads: `both` }),
+      ea: makeLink(`eve`, `api`, [`eve`, `api`], { heads: `both`, ...e }),
+      ad: makeLink(`api`, `db`, [`api`, `db`], { heads: `both` }),
     }),
     policy: {
-      ap: h(`api`, `policy`, [`api`, `policy`], {
+      ap: makeLink(`api`, `policy`, [`api`, `policy`], {
         heads: `both`,
         label: `can Alice edit 1042?`,
         labelAt: 0.55,
       }),
     },
-    reports: (e = {}) => ({ rd: h(`reports`, `db`, [`reports`, `db`], { heads: `both`, ...e }) }),
+    reports: (e = {}) => ({ rd: makeLink(`reports`, `db`, [`reports`, `db`], { heads: `both`, ...e }) }),
     audit: {
-      dau: h(`db`, `audit`, [`db`, `audit`], { label: `every access recorded`, labelAt: 0.5 }),
+      dau: makeLink(`db`, `audit`, [`db`, `audit`], { label: `every access recorded`, labelAt: 0.5 }),
     },
   };
 
@@ -74,9 +57,9 @@ const U = {
     eveOwn: { route: [`ea`, `ad`], rate: 0.6, bounce: !0 },
   };
 
-const kl = (e, t, n) => S({ x: 0, y: 6, z: 0, dx: 95, dy: -175 }, e, t, { icon: n });
+const kl = (e, t, n) => makePanel({ x: 0, y: 6, z: 0, dx: 95, dy: -175 }, e, t, { icon: n });
 
-const Al = (e, t, n) => S({ x: 0, y: 6, z: 0, dx: 105, dy: 28 }, e, t, { icon: n });
+const Al = (e, t, n) => makePanel({ x: 0, y: 6, z: 0, dx: 105, dy: 28 }, e, t, { icon: n });
 
 const jl = {
     id: `authorization`,
@@ -411,7 +394,7 @@ const jl = {
             aa: H.base().aa,
             ad: H.base().ad,
             ...H.policy,
-            ar: h(`api`, `reports`, [`api`, [`reports`, `api`], `reports`], {
+            ar: makeLink(`api`, `reports`, [`api`, [`reports`, `api`], `reports`], {
               heads: `both`,
               label: `run report`,
               labelAt: 0.4,
@@ -451,7 +434,7 @@ const jl = {
             aa: H.base().aa,
             ad: H.base().ad,
             ...H.policy,
-            ar: h(`api`, `reports`, [`api`, [`reports`, `api`], `reports`], {
+            ar: makeLink(`api`, `reports`, [`api`, [`reports`, `api`], `reports`], {
               heads: `both`,
               label: `Alice’s token`,
               labelAt: 0.4,

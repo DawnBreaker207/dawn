@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const angularArchitectureOverviewLesson = {
@@ -42,10 +40,10 @@ export const angularArchitectureOverviewLesson = {
       metrics: { architectureModel: 'NgModule (Legacy)', bootstrapPhase: 'Compile Bubble', bundleSize: '2.8 MB (Bloated)', componentTreeDepth: '0' },
       scene: {
         entities: {
-          mainTs: y(-16, -10, { label: 'AppModule', tags: [{ text: '@NgModule', tone: 'purple', icon: 'boxes' }] }),
-          platInj: d(-4, -8, { s: 4.8, h: 52, color: 'rose', glyph: 'boxes', label: ['SharedModule'], sub: 'mega container' }),
-          envInj: d(8, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'package', label: ['HeavyChart'], sub: 'leaked 1.2MB' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Legacy NgModule Monolith', [
+          mainTs: makeDevice(-16, -10, { label: 'AppModule', tags: [{ text: '@NgModule', tone: 'purple', icon: 'boxes' }] }),
+          platInj: makeBlock(-4, -8, { s: 4.8, h: 52, color: 'rose', glyph: 'boxes', label: ['SharedModule'], sub: 'mega container' }),
+          envInj: makeBlock(8, -6, { s: 4.8, h: 52, color: 'rose', glyph: 'package', label: ['HeavyChart'], sub: 'leaked 1.2MB' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Legacy NgModule Monolith', [
             `@NgModule({`,
             `  declarations: [UserComponent, ButtonComponent],`,
             `  imports: [CommonModule, HeavyChartModule]`,
@@ -54,8 +52,8 @@ export const angularArchitectureOverviewLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ms: h('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'imports shared' }),
-          sh: h('platInj', 'envInj', ['platInj', 'envInj'], { label: 'leaks unused' }),
+          ms: makeLink('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'imports shared' }),
+          sh: makeLink('platInj', 'envInj', ['platInj', 'envInj'], { label: 'leaks unused' }),
         },
         flows: [{ route: ['ms', 'sh'], kind: 'module', rate: 1.4 }],
       },
@@ -76,10 +74,10 @@ export const angularArchitectureOverviewLesson = {
       metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Tree-Shaken', bundleSize: '450 KB (-64%)', componentTreeDepth: '0' },
       scene: {
         entities: {
-          mainTs: y(-16, -10, { label: 'UserComp', tags: [{ text: 'standalone', tone: 'green', icon: 'zap' }] }),
-          platInj: d(-4, -8, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['Direct Imports'], sub: 'Button only' }),
-          envInj: d(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['ESBuild Shaker'], sub: '450KB lean' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Standalone Component', [
+          mainTs: makeDevice(-16, -10, { label: 'UserComp', tags: [{ text: 'standalone', tone: 'green', icon: 'zap' }] }),
+          platInj: makeBlock(-4, -8, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['Direct Imports'], sub: 'Button only' }),
+          envInj: makeBlock(8, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['ESBuild Shaker'], sub: '450KB lean' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Standalone Component', [
             `@Component({`,
             `  selector: 'app-user',`,
             `  standalone: true,`,
@@ -90,8 +88,8 @@ export const angularArchitectureOverviewLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ms: h('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'imports direct' }),
-          sh: h('platInj', 'envInj', ['platInj', 'envInj'], { label: 'prune dead code' }),
+          ms: makeLink('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'imports direct' }),
+          sh: makeLink('platInj', 'envInj', ['platInj', 'envInj'], { label: 'prune dead code' }),
         },
         flows: [{ route: ['ms', 'sh'], kind: 'boot', rate: 1.5 }],
       },
@@ -112,16 +110,16 @@ export const angularArchitectureOverviewLesson = {
       metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Platform Init', bundleSize: '450 KB', componentTreeDepth: '0' },
       scene: {
         entities: {
-          mainTs: y(-16, -10, { label: 'main.ts', tags: [{ text: 'bootstrapApp', tone: 'blue', icon: 'terminal' }] }),
-          platInj: d(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Bootstrap Entrypoint', [
+          mainTs: makeDevice(-16, -10, { label: 'main.ts', tags: [{ text: 'bootstrapApp', tone: 'blue', icon: 'terminal' }] }),
+          platInj: makeBlock(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Bootstrap Entrypoint', [
             `// src/main.ts`,
             `bootstrapApplication(AppComponent, appConfig)`,
             `  .catch((err) => console.error(err));`,
           ], { icon: 'terminal' }),
         },
         links: {
-          mp: h('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'init platform' }),
+          mp: makeLink('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'init platform' }),
         },
         flows: [{ route: ['mp'], kind: 'boot', rate: 1.5 }],
       },
@@ -142,10 +140,10 @@ export const angularArchitectureOverviewLesson = {
       metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Providers Loaded', bundleSize: '450 KB', componentTreeDepth: '0' },
       scene: {
         entities: {
-          mainTs: y(-16, -10, { label: 'main.ts', tags: [{ text: 'bootstrapApp', tone: 'blue', icon: 'terminal' }] }),
-          platInj: d(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
-          envInj: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Application Config', [
+          mainTs: makeDevice(-16, -10, { label: 'main.ts', tags: [{ text: 'bootstrapApp', tone: 'blue', icon: 'terminal' }] }),
+          platInj: makeBlock(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
+          envInj: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Application Config', [
             `export const appConfig: ApplicationConfig = {`,
             `  providers: [`,
             `    provideRouter(routes, withComponentInputBinding()),`,
@@ -156,8 +154,8 @@ export const angularArchitectureOverviewLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          mp: h('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'init platform' }),
-          pe: h('platInj', 'envInj', ['platInj', 'envInj'], { label: 'create env' }),
+          mp: makeLink('mainTs', 'platInj', ['mainTs', 'platInj'], { label: 'init platform' }),
+          pe: makeLink('platInj', 'envInj', ['platInj', 'envInj'], { label: 'create env' }),
         },
         flows: [{ route: ['mp', 'pe'], kind: 'boot', rate: 1.5 }],
       },
@@ -178,11 +176,11 @@ export const angularArchitectureOverviewLesson = {
       metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Root Mounted', bundleSize: '450 KB', componentTreeDepth: '1' },
       scene: {
         entities: {
-          platInj: d(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
-          envInj: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
-          appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
-          appComp: d(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', 'Instance'], sub: 'root component' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Root Component', [
+          platInj: makeBlock(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
+          envInj: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
+          appRef: makeBlock(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
+          appComp: makeBlock(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', 'Instance'], sub: 'root component' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Root Component', [
             `@Component({`,
             `  selector: 'app-root',`,
             `  standalone: true,`,
@@ -193,9 +191,9 @@ export const angularArchitectureOverviewLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pe: h('platInj', 'envInj', ['platInj', 'envInj'], { label: 'create env' }),
-          ea: h('envInj', 'appRef', ['envInj', 'appRef'], { label: 'init appRef' }),
-          ar: h('appRef', 'appComp', ['appRef', 'appComp'], { label: 'mount app-root' }),
+          pe: makeLink('platInj', 'envInj', ['platInj', 'envInj'], { label: 'create env' }),
+          ea: makeLink('envInj', 'appRef', ['envInj', 'appRef'], { label: 'init appRef' }),
+          ar: makeLink('appRef', 'appComp', ['appRef', 'appComp'], { label: 'mount app-root' }),
         },
         flows: [{ route: ['ea', 'ar'], kind: 'view', rate: 1.5 }],
       },
@@ -216,11 +214,11 @@ export const angularArchitectureOverviewLesson = {
       metrics: { architectureModel: 'Standalone', bootstrapPhase: 'Tree Assembled', bundleSize: '450 KB', componentTreeDepth: '3' },
       scene: {
         entities: {
-          appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
-          appComp: d(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
-          navComp: d(-18, 4, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['NavComponent', '(Child)'], sub: 'header view' }),
-          feedComp: d(-6, 20, { s: 4.4, h: 50, color: 'amber', glyph: 'boxes', label: ['FeedComponent', '(Outlet)'], sub: 'outlet child' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Hierarchical View Tree', [
+          appRef: makeBlock(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
+          appComp: makeBlock(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
+          navComp: makeBlock(-18, 4, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['NavComponent', '(Child)'], sub: 'header view' }),
+          feedComp: makeBlock(-6, 20, { s: 4.4, h: 50, color: 'amber', glyph: 'boxes', label: ['FeedComponent', '(Outlet)'], sub: 'outlet child' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Hierarchical View Tree', [
             `AppComponent (Root View)`,
             `  ├── NavComponent (Header / Logo)`,
             `  └── RouterOutlet (Viewport)`,
@@ -228,9 +226,9 @@ export const angularArchitectureOverviewLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ar: h('appRef', 'appComp', ['appRef', 'appComp'], { label: 'mount app-root' }),
-          an: h('appComp', 'navComp', ['appComp', 'navComp'], { label: 'render header' }),
-          af: h('appComp', 'feedComp', ['appComp', 'feedComp'], { label: 'render feed' }),
+          ar: makeLink('appRef', 'appComp', ['appRef', 'appComp'], { label: 'mount app-root' }),
+          an: makeLink('appComp', 'navComp', ['appComp', 'navComp'], { label: 'render header' }),
+          af: makeLink('appComp', 'feedComp', ['appComp', 'feedComp'], { label: 'render feed' }),
         },
         flows: [{ route: ['ar', 'an'], kind: 'view', rate: 1.5 }],
       },
@@ -251,12 +249,12 @@ export const angularArchitectureOverviewLesson = {
       metrics: { architectureModel: 'Standalone', bootstrapPhase: 'CD Armed', bundleSize: '450 KB', componentTreeDepth: '3' },
       scene: {
         entities: {
-          appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
-          appComp: d(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
-          navComp: d(-18, 4, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['NavComponent', '(Child)'], sub: 'header view' }),
-          feedComp: d(-6, 20, { s: 4.4, h: 50, color: 'amber', glyph: 'boxes', label: ['FeedComponent', '(Outlet)'], sub: 'outlet child' }),
-          realDom: b(16, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Browser DOM'], sub: 'DOM mutations' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Change Detection Loop', [
+          appRef: makeBlock(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
+          appComp: makeBlock(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
+          navComp: makeBlock(-18, 4, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['NavComponent', '(Child)'], sub: 'header view' }),
+          feedComp: makeBlock(-6, 20, { s: 4.4, h: 50, color: 'amber', glyph: 'boxes', label: ['FeedComponent', '(Outlet)'], sub: 'outlet child' }),
+          realDom: makeDb(16, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Browser DOM'], sub: 'DOM mutations' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Change Detection Loop', [
             `scheduler.schedule({`,
             `  priority: Priority.Render,`,
             `  run: () => appRef.tick()`,
@@ -264,10 +262,10 @@ export const angularArchitectureOverviewLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ar: h('appRef', 'appComp', ['appRef', 'appComp'], { label: 'mount app-root' }),
-          an: h('appComp', 'navComp', ['appComp', 'navComp'], { label: 'render header' }),
-          af: h('appComp', 'feedComp', ['appComp', 'feedComp'], { label: 'render feed' }),
-          cd: h('appRef', 'realDom', ['appRef', 'realDom'], { label: 'schedule tick' }),
+          ar: makeLink('appRef', 'appComp', ['appRef', 'appComp'], { label: 'mount app-root' }),
+          an: makeLink('appComp', 'navComp', ['appComp', 'navComp'], { label: 'render header' }),
+          af: makeLink('appComp', 'feedComp', ['appComp', 'feedComp'], { label: 'render feed' }),
+          cd: makeLink('appRef', 'realDom', ['appRef', 'realDom'], { label: 'schedule tick' }),
         },
         flows: [{ route: ['cd'], kind: 'render', rate: 1.5 }],
       },
@@ -288,12 +286,12 @@ export const angularArchitectureOverviewLesson = {
       metrics: { architectureModel: 'Modern Standalone', bootstrapPhase: 'isStable = true', bundleSize: '450 KB', componentTreeDepth: '3' },
       scene: {
         entities: {
-          platInj: d(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
-          envInj: d(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
-          appRef: d(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'isStable=true' }),
-          appComp: d(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
-          realDom: b(16, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Browser DOM'], sub: 'DOM mutations' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Stability Observable', [
+          platInj: makeBlock(-4, -8, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Platform', 'Injector'], sub: 'platform root' }),
+          envInj: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Environment', 'Injector'], sub: 'app config' }),
+          appRef: makeBlock(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'isStable=true' }),
+          appComp: makeBlock(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
+          realDom: makeDb(16, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Browser DOM'], sub: 'DOM mutations' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Stability Observable', [
             `appRef.isStable.pipe(`,
             `  first((stable) => stable === true)`,
             `).subscribe(() => {`,
@@ -302,10 +300,10 @@ export const angularArchitectureOverviewLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          pe: h('platInj', 'envInj', ['platInj', 'envInj'], { label: 'create env' }),
-          ea: h('envInj', 'appRef', ['envInj', 'appRef'], { label: 'init appRef' }),
-          ar: h('appRef', 'appComp', ['appRef', 'appComp'], { label: 'mount app-root' }),
-          cd: h('appRef', 'realDom', ['appRef', 'realDom'], { label: 'schedule tick' }),
+          pe: makeLink('platInj', 'envInj', ['platInj', 'envInj'], { label: 'create env' }),
+          ea: makeLink('envInj', 'appRef', ['envInj', 'appRef'], { label: 'init appRef' }),
+          ar: makeLink('appRef', 'appComp', ['appRef', 'appComp'], { label: 'mount app-root' }),
+          cd: makeLink('appRef', 'realDom', ['appRef', 'realDom'], { label: 'schedule tick' }),
         },
         flows: [{ route: ['ea', 'ar', 'cd'], kind: 'boot', rate: 1.6 }],
       },

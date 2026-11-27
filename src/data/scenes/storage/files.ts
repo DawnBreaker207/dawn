@@ -1,41 +1,28 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCool,
+  makeCrowd,
+  makeDb,
+  makeDevice,
+  makeHot,
+  makeLink,
+  makePanel,
+  makeQueue
 } from '@/lib/simulator/scene-builders';
 
 const eo = { x0: -4.5, x1: 4.5, y0: -22, y1: -16 };
 
-const to = (e = `people sharing photos`) => p(eo, 11, e);
+const to = (e = `people sharing photos`) => makeCrowd(eo, 11, e);
 
-const no = (e = {}) => d(0, -6, { label: [`App`, `Servers`], ...e });
+const no = (e = {}) => makeBlock(0, -6, { label: [`App`, `Servers`], ...e });
 
-const ro = (e = {}) => b(0, 6, { r: 2.1, h: 44, label: `database`, ...e });
+const ro = (e = {}) => makeDb(0, 6, { r: 2.1, h: 44, label: `database`, ...e });
 
-const io = (e = {}) => b(-10, 6, { label: `metadata`, ...e });
+const io = (e = {}) => makeDb(-10, 6, { label: `metadata`, ...e });
 
 const ao = (e = {}) =>
-    d(10, 6, {
+    makeBlock(10, 6, {
       s: 5,
       h: 48,
       color: `yellow`,
@@ -45,25 +32,25 @@ const ao = (e = {}) =>
     });
 
 const oo = (e = {}) =>
-  d(16, 12, { s: 3.8, h: 30, color: `green`, glyph: `workflow`, label: [`Workers`], ...e });
+  makeBlock(16, 12, { s: 3.8, h: 30, color: `green`, glyph: `workflow`, label: [`Workers`], ...e });
 
-const so = (e = {}) => d(10, -8, { color: `orange`, glyph: `globe`, label: [`CDN`], ...e });
+const so = (e = {}) => makeBlock(10, -8, { color: `orange`, glyph: `globe`, label: [`CDN`], ...e });
 
 const P = {
-    ua: (e = {}) => h(`users`, `app`, [`users`, `app`], { heads: `both`, ...e }),
-    ab: (e = {}) => h(`app`, `blob`, [`app`, `blob`], { heads: `both`, ...e }),
-    ad: (e = {}) => h(`app`, `db`, [`app`, [`app`, 0], [`db`, 0], `db`], { heads: `both`, ...e }),
+    ua: (e = {}) => makeLink(`users`, `app`, [`users`, `app`], { heads: `both`, ...e }),
+    ab: (e = {}) => makeLink(`app`, `blob`, [`app`, `blob`], { heads: `both`, ...e }),
+    ad: (e = {}) => makeLink(`app`, `db`, [`app`, [`app`, 0], [`db`, 0], `db`], { heads: `both`, ...e }),
     ao: (e = {}) =>
-      h(`app`, `obj`, [`app`, [`app`, 0], [`obj`, 0], `obj`], { heads: `both`, ...e }),
-    uo: (e = {}) => h(`users`, `obj`, [`users`, [7, `users`], [7, `obj`], `obj`], e),
+      makeLink(`app`, `obj`, [`app`, [`app`, 0], [`obj`, 0], `obj`], { heads: `both`, ...e }),
+    uo: (e = {}) => makeLink(`users`, `obj`, [`users`, [7, `users`], [7, `obj`], `obj`], e),
     oa: (e = {}) =>
-      h(`obj`, `app`, [`obj`, [`obj`, 0], [`app`, 0], `app`], { style: `dashed`, ...e }),
-    ow: (e = {}) => h(`obj`, `workers`, [`obj`, `workers`], { heads: `both`, ...e }),
-    uc: (e = {}) => h(`users`, `cdn`, [`users`, [10, `users`], `cdn`], { heads: `both`, ...e }),
-    co: (e = {}) => h(`cdn`, `obj`, [`cdn`, `obj`], { heads: `both`, ...e }),
+      makeLink(`obj`, `app`, [`obj`, [`obj`, 0], [`app`, 0], `app`], { style: `dashed`, ...e }),
+    ow: (e = {}) => makeLink(`obj`, `workers`, [`obj`, `workers`], { heads: `both`, ...e }),
+    uc: (e = {}) => makeLink(`users`, `cdn`, [`users`, [10, `users`], `cdn`], { heads: `both`, ...e }),
+    co: (e = {}) => makeLink(`cdn`, `obj`, [`cdn`, `obj`], { heads: `both`, ...e }),
   };
 
-const co = (e, t, n) => S({ x: 0, y: 4, z: 0 }, e, t, { icon: n });
+const co = (e, t, n) => makePanel({ x: 0, y: 4, z: 0 }, e, t, { icon: n });
 
 const lo = (e = {}) => ({
     users: to(),
@@ -71,7 +58,7 @@ const lo = (e = {}) => ({
     db: io(),
     obj: ao(),
     workers: oo(),
-    jq: ee(19, 6, 3, [-1, 0]),
+    jq: makeQueue(19, 6, 3, [-1, 0]),
     cdn: so(),
     ...e,
   });
@@ -178,8 +165,8 @@ const mo = {
         scene: {
           entities: {
             users: to(),
-            app: no(_(0.85)),
-            blob: ro({ ..._(0.95), tags: [{ text: `+2 TB / day`, tone: `red`, icon: `alert` }] }),
+            app: no(makeHot(0.85)),
+            blob: ro({ ...makeHot(0.95), tags: [{ text: `+2 TB / day`, tone: `red`, icon: `alert` }] }),
           },
           links: { ua: P.ua(), ab: P.ab() },
           flows: [{ route: [`ua`, `ab`], kind: `heavy`, rate: 3.4, bounce: !0 }],
@@ -245,7 +232,7 @@ const mo = {
           entities: {
             users: to(`people uploading videos`),
             app: no({
-              ..._(0.9),
+              ...makeHot(0.9),
               tags: [{ text: `relaying 2 GB uploads`, tone: `red`, icon: `hourglass` }],
             }),
             db: io(),
@@ -281,7 +268,7 @@ const mo = {
         scene: {
           entities: {
             users: to(`people uploading videos`),
-            app: no(v(0.2)),
+            app: no(makeCool(0.2)),
             db: io({ tags: [{ text: `status: pending → uploaded`, icon: `refresh` }] }),
             obj: ao(),
             card: co(
@@ -334,7 +321,7 @@ const mo = {
         scene: {
           entities: {
             users: to(`people uploading videos`),
-            app: no(v(0.2)),
+            app: no(makeCool(0.2)),
             db: io(),
             obj: ao({ tags: [{ text: `parts 1–200 → one object`, icon: `merge` }] }),
             card: co(
@@ -381,10 +368,10 @@ const mo = {
         scene: {
           entities: {
             users: to(),
-            app: no(v(0.2)),
+            app: no(makeCool(0.2)),
             db: io({ tags: [{ text: `status: ready`, tone: `green`, icon: `check` }] }),
             obj: ao(),
-            jq: ee(19, 6, 3, [-1, 0]),
+            jq: makeQueue(19, 6, 3, [-1, 0]),
             workers: oo({ tags: [{ text: `resize · strip GPS · transcode`, icon: `workflow` }] }),
           },
           links: {
@@ -470,7 +457,7 @@ const mo = {
         scene: {
           entities: lo({
             db: io({ tags: [{ text: `312 pending > 1 day`, tone: `amber`, icon: `hourglass` }] }),
-            sweep: d(-10, -6, {
+            sweep: makeBlock(-10, -6, {
               s: 4.2,
               h: 46,
               color: `slab`,
@@ -480,8 +467,8 @@ const mo = {
             }),
           }),
           links: uo({
-            sd: h(`sweep`, `db`, [`sweep`, `db`], { heads: `both` }),
-            so: h(`sweep`, `obj`, [`sweep`, [`sweep`, -2], [`obj`, -2], `obj`], {
+            sd: makeLink(`sweep`, `db`, [`sweep`, `db`], { heads: `both` }),
+            so: makeLink(`sweep`, `obj`, [`sweep`, [`sweep`, -2], [`obj`, -2], `obj`], {
               style: `dashed`,
               label: `delete orphans`,
               labelAt: 0.35,
@@ -551,11 +538,11 @@ const mo = {
         metrics: { ...po, storeCost: `≈ $6,300` },
         scene: {
           entities: lo({
-            spy: y(18, -8, { label: `anyone` }),
+            spy: makeDevice(18, -8, { label: `anyone` }),
             obj: ao({ tags: [{ text: `public access blocked`, tone: `green`, icon: `lock` }] }),
           }),
           links: uo({
-            so: h(`spy`, `obj`, [`spy`, [20, `obj`], `obj`], {
+            so: makeLink(`spy`, `obj`, [`spy`, [20, `obj`], `obj`], {
               fail: 1,
               label: `GET /?list`,
               labelTone: `red`,

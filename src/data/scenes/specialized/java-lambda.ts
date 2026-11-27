@@ -1,9 +1,8 @@
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
@@ -29,7 +28,7 @@ export const javaLambdaLesson: Lesson = {
     {
       short: 'Anon Class',
       chapter: 'lambda',
-      title: '1. Anonymous Inner Class Bloat vs Lambda',
+      title: 'Anonymous Inner Class Bloat vs Lambda',
       body: [
         'Before Java 8, passing behavior required an anonymous inner class, forcing <code>javac</code> to emit extra <code>MyClass$1.class</code> files and allocate a new object per call.',
         'Java 8 replaced that with <code>invokedynamic</code>: no extra <code>.class</code> files on disk and stateless lambdas become a single cached singleton.',
@@ -41,9 +40,9 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'new $1.class', evaluation: 'Eager alloc', allocations: '1 obj / call', execution: 'Disk bloat' },
       scene: {
         entities: {
-          caller: d(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Caller Method'], sub: 'new Runnable()' }),
-          anon: b(2, -6, { r: 2.2, h: 48, color: 'red', label: ['Outer$1.class'], sub: 'extra .class' }),
-          card: S({ x: -12, y: 12 }, '1. Anonymous Class Cost vs Lambda', [
+          caller: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Caller Method'], sub: 'new Runnable()' }),
+          anon: makeDb(2, -6, { r: 2.2, h: 48, color: 'red', label: ['Outer$1.class'], sub: 'extra .class' }),
+          card: makePanel({ x: -12, y: 12 }, 'Anonymous Class Cost vs Lambda', [
             '// Old: compiles to Outer$1.class on disk',
             'list.forEach(new Consumer<String>() {',
             '  public void accept(String s) { log(s); }',
@@ -51,7 +50,7 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          anon_alloc: h('caller', 'anon', ['caller', 'anon'], { heads: 'end', label: 'loads $1' }),
+          anon_alloc: makeLink('caller', 'anon', ['caller', 'anon'], { heads: 'end', label: 'loads $1' }),
         },
         flows: [{ route: ['anon_alloc'], kind: 'fail', rate: 1.6 }],
       },
@@ -59,7 +58,7 @@ export const javaLambdaLesson: Lesson = {
     {
       short: 'invokedynamic',
       chapter: 'lambda',
-      title: '2. invokedynamic & LambdaMetafactory Bootstrap',
+      title: 'invokedynamic & LambdaMetafactory Bootstrap',
       body: [
         'On first execution of an <code>invokedynamic</code> callsite, the JVM invokes <code>LambdaMetafactory.metafactory()</code> once to spin an in-memory stub implementing the functional interface.',
         'Future calls invoke the linked <code>CallSite</code> directly — if the lambda captures no local variables, the JVM reuses a single singleton instance.',
@@ -72,10 +71,10 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'invokedynamic', evaluation: 'Link once', allocations: '0 (stateless)', execution: 'Direct call' },
       scene: {
         entities: {
-          caller: d(-12, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['invoke dyn'], sub: 'CallSite' }),
-          lmf: d(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Metafactory'], sub: 'links once' }),
-          target: b(0, 0, { r: 2.2, h: 48, color: 'green', label: ['lambda$0()'], sub: 'static method' }),
-          card: S({ x: -12, y: 12 }, '2. Bytecode Linkage via LambdaMetafactory', [
+          caller: makeBlock(-12, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'code', label: ['invoke dyn'], sub: 'CallSite' }),
+          lmf: makeBlock(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['Metafactory'], sub: 'links once' }),
+          target: makeDb(0, 0, { r: 2.2, h: 48, color: 'green', label: ['lambda$0()'], sub: 'static method' }),
+          card: makePanel({ x: -12, y: 12 }, 'Bytecode Linkage via LambdaMetafactory', [
             '// 1. First hit invokes Bootstrap Method (BSM):',
             'CallSite cs = LambdaMetafactory.metafactory(...);',
             '// 2. Subsequent hits jump directly to:',
@@ -83,8 +82,8 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          c_lmf: h('caller', 'lmf', ['caller', 'lmf'], { heads: 'end', label: '1st call' }),
-          lmf_tgt: h('lmf', 'target', ['lmf', 'target'], { heads: 'end', label: 'bind stub' }),
+          c_lmf: makeLink('caller', 'lmf', ['caller', 'lmf'], { heads: 'end', label: '1st call' }),
+          lmf_tgt: makeLink('lmf', 'target', ['lmf', 'target'], { heads: 'end', label: 'bind stub' }),
         },
         flows: [{ route: ['c_lmf', 'lmf_tgt'], kind: 'req', rate: 1.8 }],
       },
@@ -92,7 +91,7 @@ export const javaLambdaLesson: Lesson = {
     {
       short: 'Stream Source',
       chapter: 'streams',
-      title: '3. Lazy Stream Source & Spliterator',
+      title: 'Lazy Stream Source & Spliterator',
       body: [
         'Calling <code>list.stream()</code> does NOT copy data or start iterating. It creates a lightweight <code>Head</code> stage wrapping the collection’s <code>Spliterator</code>.',
         'Streams describe a computation pipeline over data rather than storing elements themselves.',
@@ -105,16 +104,16 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'Head Stage', evaluation: 'Lazy (0 work)', allocations: '1 pipeline node', execution: 'Idle' },
       scene: {
         entities: {
-          list: b(-14, -14, { r: 2.2, h: 48, color: 'sky', label: ['List<Order>'], sub: 'source data' }),
-          head: d(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'Spliterator' }),
-          card: S({ x: -12, y: 12 }, '3. Creating a Stream Pipeline', [
+          list: makeDb(-14, -14, { r: 2.2, h: 48, color: 'sky', label: ['List<Order>'], sub: 'source data' }),
+          head: makeBlock(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'Spliterator' }),
+          card: makePanel({ x: -12, y: 12 }, 'Creating a Stream Pipeline', [
             'Stream<Order> s = orders.stream();',
             '// Allocates Head(Spliterator) only',
             '// 0 elements read, 0 predicates executed',
           ], { icon: 'terminal' }),
         },
         links: {
-          src_head: h('list', 'head', ['list', 'head'], { heads: 'end', label: 'Spliterator' }),
+          src_head: makeLink('list', 'head', ['list', 'head'], { heads: 'end', label: 'Spliterator' }),
         },
         flows: [{ route: ['src_head'], kind: 'res', rate: 1.2 }],
       },
@@ -122,7 +121,7 @@ export const javaLambdaLesson: Lesson = {
     {
       short: 'Stage Fusion',
       chapter: 'streams',
-      title: '4. Chaining Lazy Intermediate Ops (filter + map)',
+      title: 'Chaining Lazy Intermediate Ops (filter + map)',
       body: [
         'Each intermediate operation (<code>filter()</code>, <code>map()</code>) simply appends a stateless <code>Sink</code> stage linked to its upstream stage.',
         'Nothing runs yet! If you forget a terminal operation, neither <code>filter</code> nor <code>map</code> will ever execute.',
@@ -135,11 +134,11 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'StatelessOp', evaluation: 'Lazy (0 work)', allocations: 'No temp lists', execution: 'Pipeline built' },
       scene: {
         entities: {
-          list: b(-14, -14, { r: 2.2, h: 48, color: 'sky', label: ['List<Order>'], sub: 'source data' }),
-          head: d(-2, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'Spliterator' }),
-          flt: d(12, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: 'lazy stage' }),
-          mp: d(12, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'lazy stage' }),
-          card: S({ x: -12, y: 12 }, '4. Intermediate Stages Only Wire Sinks', [
+          list: makeDb(-14, -14, { r: 2.2, h: 48, color: 'sky', label: ['List<Order>'], sub: 'source data' }),
+          head: makeBlock(-2, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'Spliterator' }),
+          flt: makeBlock(12, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: 'lazy stage' }),
+          mp: makeBlock(12, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'lazy stage' }),
+          card: makePanel({ x: -12, y: 12 }, 'Intermediate Stages Only Wire Sinks', [
             'var pipe = orders.stream()',
             '  .filter(o -> o.amount() > 100) // Sink 1',
             '  .map(Order::id);               // Sink 2',
@@ -147,9 +146,9 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ls_hd: h('list', 'head', ['list', 'head'], { heads: 'end', label: 'wrap' }),
-          h_f: h('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'sink' }),
-          f_m: h('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'sink' }),
+          ls_hd: makeLink('list', 'head', ['list', 'head'], { heads: 'end', label: 'wrap' }),
+          h_f: makeLink('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'sink' }),
+          f_m: makeLink('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'sink' }),
         },
         flows: [{ route: ['ls_hd', 'h_f', 'f_m'], kind: 'res', rate: 1.4 }],
       },
@@ -157,7 +156,7 @@ export const javaLambdaLesson: Lesson = {
     {
       short: 'Terminal Pull',
       chapter: 'streams',
-      title: '5. Terminal Operation & Vertical Loop Fusion',
+      title: 'Terminal Operation & Vertical Loop Fusion',
       body: [
         'Calling a terminal operation like <code>.toList()</code> or <code>.collect()</code> wraps the chain in a single fused loop.',
         'Instead of allocating intermediate lists per step, each element flows <strong>vertically</strong> through <code>filter → map → collect</code> before the next element starts.',
@@ -170,11 +169,11 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'Terminal Op', evaluation: 'Fused 1-pass', allocations: 'Result only', execution: 'Active pull' },
       scene: {
         entities: {
-          head: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'item #1' }),
-          flt: d(-2, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: 'item #1 pass' }),
-          mp: d(-2, -2, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'transform #1' }),
-          col: b(12, -2, { r: 2.2, h: 48, color: 'green', label: ['toList()'], sub: 'terminal sink' }),
-          card: S({ x: -12, y: 12 }, '5. Vertical Loop Fusion on Terminal Op', [
+          head: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Stream Head'], sub: 'item #1' }),
+          flt: makeBlock(-2, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: 'item #1 pass' }),
+          mp: makeBlock(-2, -2, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'transform #1' }),
+          col: makeDb(12, -2, { r: 2.2, h: 48, color: 'green', label: ['toList()'], sub: 'terminal sink' }),
+          card: makePanel({ x: -12, y: 12 }, 'Vertical Loop Fusion on Terminal Op', [
             'List<Long> ids = orders.stream()',
             '  .filter(o -> o.amount() > 100)',
             '  .map(Order::id)',
@@ -182,9 +181,9 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          hd_fl: h('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'pull #1' }),
-          f_m_run: h('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'push' }),
-          m_col: h('mp', 'col', ['mp', 'col'], { heads: 'end', label: 'collect' }),
+          hd_fl: makeLink('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'pull #1' }),
+          f_m_run: makeLink('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'push' }),
+          m_col: makeLink('mp', 'col', ['mp', 'col'], { heads: 'end', label: 'collect' }),
         },
         flows: [{ route: ['hd_fl', 'f_m_run', 'm_col'], kind: 'res', rate: 2.2 }],
       },
@@ -192,7 +191,7 @@ export const javaLambdaLesson: Lesson = {
     {
       short: 'Short-Circuit',
       chapter: 'streams',
-      title: '6. Short-Circuiting (findFirst / anyMatch / limit)',
+      title: 'Short-Circuiting (findFirst / anyMatch / limit)',
       body: [
         'Because elements move vertically one at a time, short-circuiting terminal ops (<code>findFirst()</code>, <code>anyMatch()</code>) or <code>limit(n)</code> call <code>cancellationRequested()</code> immediately on match.',
         'Even an infinite <code>Stream.iterate(...)</code> terminates cleanly as soon as the first match reaches the sink.',
@@ -205,11 +204,11 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'Short-Circuit', evaluation: 'Early halt', allocations: 'Minimal', execution: 'Stopped early' },
       scene: {
         entities: {
-          head: d(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Spliterator'], sub: 'stops early' }),
-          flt: d(-2, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: '1 match' }),
-          mp: d(-2, -2, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'transform #1' }),
-          term: d(12, -2, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['findFirst()'], sub: 'cancel flag' }),
-          card: S({ x: -12, y: 12 }, '6. Short-Circuiting Halts Upstream', [
+          head: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Spliterator'], sub: 'stops early' }),
+          flt: makeBlock(-2, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['filter()'], sub: '1 match' }),
+          mp: makeBlock(-2, -2, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['map()'], sub: 'transform #1' }),
+          term: makeBlock(12, -2, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['findFirst()'], sub: 'cancel flag' }),
+          card: makePanel({ x: -12, y: 12 }, 'Short-Circuiting Halts Upstream', [
             'Optional<Long> hit = orders.stream()',
             '  .filter(o -> o.amount() > 100)',
             '  .map(Order::id)',
@@ -217,9 +216,9 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          hd_f2: h('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'item #1' }),
-          f2_m2: h('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'match' }),
-          m_t: h('mp', 'term', ['mp', 'term'], { heads: 'end', label: 'halt!' }),
+          hd_f2: makeLink('head', 'flt', ['head', 'flt'], { heads: 'end', label: 'item #1' }),
+          f2_m2: makeLink('flt', 'mp', ['flt', 'mp'], { heads: 'end', label: 'match' }),
+          m_t: makeLink('mp', 'term', ['mp', 'term'], { heads: 'end', label: 'halt!' }),
         },
         flows: [{ route: ['hd_f2', 'f2_m2', 'm_t'], kind: 'res', rate: 1.6 }],
       },
@@ -227,7 +226,7 @@ export const javaLambdaLesson: Lesson = {
     {
       short: 'Collectors Trap',
       chapter: 'streams',
-      title: '7. Collectors.toMap() Duplicate Trap & groupingBy',
+      title: 'Collectors.toMap() Duplicate Trap & groupingBy',
       body: [
         '<code>Collectors.toMap(User::id, u -> u)</code> throws <code>IllegalStateException: Duplicate key</code> the moment two items share a key! Always pass a 3rd merge function: <code>(oldV, newV) -> newV</code>.',
         'For grouping, use <code>Collectors.groupingBy(Order::status, Collectors.counting())</code> or <code>partitioningBy(predicate)</code> for fast boolean splits.',
@@ -240,10 +239,10 @@ export const javaLambdaLesson: Lesson = {
       metrics: { bytecode_op: 'Collector', evaluation: 'Terminal', allocations: 'Map result', execution: 'Safe merge' },
       scene: {
         entities: {
-          dup: d(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Duplicate Key'], sub: 'toMap 2-arg' }),
-          mrg: d(1, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Merge (a,b)->b'], sub: 'safe 3-arg' }),
-          grp: b(15, -10, { r: 2.2, h: 48, color: 'purple', label: ['groupingBy'], sub: 'Map<K, List>' }),
-          card: S({ x: -12, y: 12 }, '7. Safe Collectors.toMap & groupingBy', [
+          dup: makeBlock(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Duplicate Key'], sub: 'toMap 2-arg' }),
+          mrg: makeBlock(1, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['Merge (a,b)->b'], sub: 'safe 3-arg' }),
+          grp: makeDb(15, -10, { r: 2.2, h: 48, color: 'purple', label: ['groupingBy'], sub: 'Map<K, List>' }),
+          card: makePanel({ x: -12, y: 12 }, 'Safe Collectors.toMap & groupingBy', [
             '// BUG: explodes with IllegalStateException on duplicate id!',
             'users.stream().collect(Collectors.toMap(User::id, u -> u));',
             '// FIX: provide merge function (a, b) -> b:',
@@ -252,8 +251,8 @@ export const javaLambdaLesson: Lesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          dp_mg: h('dup', 'mrg', ['dup', 'mrg'], { heads: 'end', label: 'add merge' }),
-          mg_gp: h('mrg', 'grp', ['mrg', 'grp'], { heads: 'end', label: 'group/count' }),
+          dp_mg: makeLink('dup', 'mrg', ['dup', 'mrg'], { heads: 'end', label: 'add merge' }),
+          mg_gp: makeLink('mrg', 'grp', ['mrg', 'grp'], { heads: 'end', label: 'group/count' }),
         },
         flows: [{ route: ['dp_mg', 'mg_gp'], kind: 'res', rate: 1.8 }],
       },

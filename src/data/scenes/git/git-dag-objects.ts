@@ -1,248 +1,198 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+
+// One fixed stage: the four object types laid out as the pointer chain they form.
+// Arrows point the way Git stores them — from the object that names a hash to the
+// object with that hash.
+//
+//   v1.0.0 ── commit ── root tree ── src/ tree ── blob
+//                              └──────── pack ────┘   (git gc)
+//
+// Git colours: commit = purple, tree = green, tag/ref = yellow, blob/pack = db.
+
+type Tag = { text: string; tone?: string; icon?: string };
+
+const at = (sx: number, sy: number): [number, number] => [
+  Math.round((sx / 28 + sy / 14) * 100) / 100,
+  Math.round((sx / 28 - sy / 14) * 100) / 100,
+];
+
+const blob = (sha: string, tags: Tag[] = []) => makeDb(...at(400, 20), { r: 2.2, h: 46, glyph: `file`, label: `blob ${sha}`, tags });
+const srcTree = (sha: string, tags: Tag[] = []) =>
+  makeBlock(...at(200, -60), { s: 4.4, h: 50, color: `green`, glyph: `boxes`, label: [`tree ${sha}`], sub: `src/`, tags });
+const rootTree = (sha: string, tags: Tag[] = []) =>
+  makeBlock(...at(0, 20), { s: 4.4, h: 50, color: `green`, glyph: `boxes`, label: [`tree ${sha}`], sub: `/ (root)`, tags });
+const commit = (sha: string, tags: Tag[] = []) =>
+  makeBlock(...at(-200, -60), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`commit ${sha}`], sub: `feat: add app`, tags });
+const tag = (tags: Tag[] = []) =>
+  makeBlock(...at(-400, 20), { s: 4.4, h: 50, color: `yellow`, glyph: `bookmark`, label: [`tag v1.0.0`], sub: `annotated`, tags });
+const pack = () =>
+  makeDb(...at(100, 150), { r: 2.4, h: 48, glyph: `package`, label: `pack-7f8a.pack`, tags: [{ text: `120 objects · 1.1 MB`, tone: `green` }] });
+
+const L = {
+  name: makeLink(`srcTree`, `blob`, [`srcTree`, `blob`], { label: `app.ts` }),
+  dir: makeLink(`rootTree`, `srcTree`, [`rootTree`, `srcTree`], { label: `src/` }),
+  snapshot: makeLink(`commit`, `rootTree`, [`commit`, `rootTree`], { label: `tree` }),
+  release: makeLink(`tag`, `commit`, [`tag`, `commit`], { label: `object` }),
+  packBlob: makeLink(`blob`, `pack`, [`blob`, `pack`]),
+  packSrc: makeLink(`srcTree`, `pack`, [`srcTree`, `pack`]),
+  packRoot: makeLink(`rootTree`, `pack`, [`rootTree`, `pack`]),
+};
+
+const card = (title: string, lines: string[]) =>
+  makePanel({ x: 0, y: 0, z: 0, dx: -440, dy: 80 }, title, lines, { icon: `keyboard` });
+
+const changed: Tag = { text: `new hash`, tone: `amber` };
 
 export const gitDagObjectsLesson = {
-  id: 'git-dag-objects',
-  title: 'Git Under the Hood: The Object DAG',
-  summary: 'Deconstruct Git internal object store: Blobs, Trees, Commits, and Annotated Tags. Understand content-addressable storage, zlib compression, and Merkle tree immutability.',
-  minutes: 25,
-  level: 'intermediate',
-  metrics: ['objectType', 'contentAddress', 'compression', 'immutability'],
-  legend: ['flow', ['blob', 'blob object'], ['tree', 'tree manifest'], ['commit', 'commit node'], ['pack', 'packed object']],
+  id: `git-dag-objects`,
+  title: `Git Under the Hood: The Object DAG`,
+  summary: `Build a commit object by object — blob, trees, commit, annotated tag — and see why changing one byte changes every hash above it.`,
+  minutes: 16,
+  level: `intermediate`,
+  metrics: [`objects`, `lastSha`, `diskSize`, `packfiles`],
+  legend: [`req`, [`write`, `object write`], [`msg`, `hash lookup`]],
   goals: [
-    { text: 'The Blob: Raw byte storage with zlib compression', step: 1 },
-    { text: 'The Tree: Hierarchical directory manifests and file permissions', step: 2 },
-    { text: 'The Commit: Cryptographic snapshot with author metadata and parent hashes', step: 3 },
-    { text: 'The Annotated Tag: GPG-signed release references', step: 4 },
-    { text: 'Merkle tree cascade: Why modifying one byte ripples all upstream hashes', step: 5 },
-    { text: 'Packfile optimization: Sliding-window delta compression and git gc', step: 6 },
+    { text: `The blob: raw bytes, no filename`, step: 1 },
+    { text: `The tree: names, modes and hashes`, step: 2 },
+    { text: `The commit: a snapshot with author and parents`, step: 3 },
+    { text: `The annotated tag: a signed name for a commit`, step: 4 },
+    { text: `The Merkle cascade: one byte changes every hash above it`, step: 5 },
+    { text: `Packfiles: git gc stores deltas`, step: 6 },
   ],
   steps: [
     {
-      short: 'Blob Object',
-      chapter: 'setup',
-      title: 'The Blob Object (Binary Large Object)',
+      short: `Blob`,
+      chapter: `setup`,
+      title: `A blob is only the bytes`,
       body: [
-        'A <b>Blob</b> stores only raw file bytes. It does NOT store the filename, file creation date, or UNIX executable permissions.',
-        'Header: <code>blob <size>\\0<content></code>. Git hashes this string using SHA-1 (or SHA-256) to produce a 40-character hex string (e.g. <code>4b825dc6...</code>), and compresses it with zlib into <code>.git/objects/4b/825dc6...</code>.',
+        `Git stores file content as a <span class="term">blob</span>: the bytes, with a short header, compressed with zlib. No filename, no permissions, no date.`,
+        `Its name is the SHA-1 of that content, so two identical files anywhere in history share one blob.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'If two different files across your repo have identical contents, Git stores only ONE blob object. Content is deduplicated automatically.',
-      },
-      metrics: { objectType: 'blob', contentAddress: 'SHA-1 (40 hex)', compression: 'zlib level 6', immutability: '100% frozen' },
+      metrics: { objects: 1, lastSha: `4b825d`, diskSize: `4 KB`, packfiles: 0 },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Developer', tags: [{ text: 'src/app.ts', tone: 'blue', icon: 'terminal' }] }),
-          blobApp: b(-6, -2, { s: 4.4, h: 50, color: 'purple', glyph: 'database', label: ['Blob 4b825d'], sub: 'raw file bytes' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Low-Level Blob Plumbing', [
-            `$ echo "console.log()" | git hash-object -w --stdin`,
-            `4b825dc642cb6eb9a060e54bf8d69288fbee4904`,
-            `$ git cat-file -p 4b825d`,
-            `console.log()`,
-            `$ git cat-file -t 4b825d  # => blob`,
-          ], { icon: 'terminal' }),
+          blob: blob(`4b825d`, [{ text: `app.ts content`, tone: `violet` }]),
+          card: card(`blob`, [`$ git hash-object -w src/app.ts`, `4b825dc642cb6eb9a060e54bf8d69288fbee4904`, `$ git cat-file -t 4b825d`, `blob`]),
         },
-        links: {
-          db: h('devWorkspace', 'blobApp', ['devWorkspace', 'blobApp'], { label: 'write blob' }),
-        },
-        flows: [{ route: ['db'], kind: 'blob', rate: 1.5 }],
+        links: {},
+        flows: [],
       },
     },
     {
-      short: 'Tree Object',
-      chapter: 'setup',
-      title: 'The Tree Object (Directory Manifest)',
+      short: `Tree`,
+      chapter: `technique`,
+      title: `Trees add names and folders`,
       body: [
-        'A <b>Tree</b> object solves the question: <em>What was the filename and file permission?</em>',
-        'Each tree entry contains file mode (<code>100644</code> normal, <code>100755</code> executable), type (<code>blob</code> or <code>tree</code> for subdirectories), filename, and the 20-byte binary SHA pointer to that object.',
+        `A <span class="term">tree</span> is a directory listing: one row per entry with mode (<code>100644</code>, <code>100755</code>…), type, hash and name.`,
+        `Folders are trees that point to other trees. The root tree <code>8a3f91</code> lists <code>src/</code>, which lists <code>app.ts</code>.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Subdirectories are simply nested Tree objects pointing to child trees. Changing 1 character in 1 file changes its blob SHA, which cascades up to a new root Tree SHA.',
-      },
-      changes: ['+ Subtree 1f2c4a connects app.ts to src/ folder', '+ Root Tree 8a3f91 connects root directory to src/'],
-      metrics: { objectType: 'tree', contentAddress: 'SHA-1 (40 hex)', compression: 'zlib manifest', immutability: 'Deterministic' },
+      changes: [`+ tree 1f2c4a (src/)`, `+ tree 8a3f91 (root)`],
+      metrics: { objects: 3, lastSha: `8a3f91`, diskSize: `12 KB`, packfiles: 0 },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Developer', tags: [{ text: 'git add', tone: 'blue', icon: 'terminal' }] }),
-          blobApp: b(-6, -2, { s: 4.4, h: 50, color: 'purple', glyph: 'database', label: ['Blob 4b825d'], sub: 'src/app.ts' }),
-          srcTree: d(-4, 16, { s: 4.4, h: 54, color: 'purple', glyph: 'package', label: ['Tree 1f2c4a'], sub: 'src/ manifest' }),
-          rootTree: d(6, 0, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Root 8a3f91'], sub: 'repo root tree' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Tree Manifest Inspection', [
-            `$ git cat-file -p 8a3f91`,
-            `040000 tree 1f2c4a... src`,
-            `$ git cat-file -p 1f2c4a`,
-            `100644 blob 4b825d... app.ts`,
-            `= Filename and permissions restored`,
-          ], { icon: 'terminal' }),
+          blob: blob(`4b825d`),
+          srcTree: srcTree(`1f2c4a`),
+          rootTree: rootTree(`8a3f91`),
+          card: card(`trees`, [`$ git cat-file -p 8a3f91`, `040000 tree 1f2c4a…    src`, `$ git cat-file -p 1f2c4a`, `100644 blob 4b825d…    app.ts`]),
         },
-        links: {
-          sb: h('srcTree', 'blobApp', ['srcTree', 'blobApp'], { label: 'app.ts' }),
-          rs: h('rootTree', 'srcTree', ['rootTree', 'srcTree'], { label: 'src/' }),
-        },
-        flows: [{ route: ['rs', 'sb'], kind: 'tree', rate: 1.5 }],
+        links: { name: L.name, dir: L.dir },
+        flows: [{ route: [`dir`, `name`], kind: `msg`, rate: 1.2 }],
       },
     },
     {
-      short: 'Commit Object',
-      chapter: 'execution',
-      title: 'The Commit Object (Snapshot Header)',
+      short: `Commit`,
+      chapter: `technique`,
+      title: `A commit points at one root tree`,
       body: [
-        'A <b>Commit</b> object glues everything together: it points to the top-level <b>Root Tree</b> SHA, zero or more <b>Parent Commit</b> SHAs, an author timestamp, committer timestamp, and the commit message.',
-        'Because the commit points directly to the root tree, checking out a commit restores the exact repository state in an instant.',
+        `A <span class="term">commit</span> is small: the hash of the root tree, the hashes of its parent commits, author, committer, time and message.`,
+        `Because it names the whole tree, checking out a commit restores the exact project state. Parent hashes chain commits into a graph that points back in time.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Commits form a Directed Acyclic Graph (DAG) pointing BACKWARDS in time toward their parent ancestors.',
-      },
-      changes: ['+ Commit object 7f8a9b sealed with author metadata', '+ Bound to Root Tree 8a3f91 as snapshot root'],
-      metrics: { objectType: 'commit', contentAddress: 'SHA-1 (40 hex)', compression: 'zlib header', immutability: '100% frozen' },
+      changes: [`+ commit 7f8a9b`],
+      metrics: { objects: 4, lastSha: `7f8a9b`, diskSize: `16 KB`, packfiles: 0 },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Developer', tags: [{ text: 'git commit', tone: 'blue', icon: 'terminal' }] }),
-          blobApp: b(-6, -2, { s: 4.4, h: 50, color: 'purple', glyph: 'database', label: ['Blob 4b825d'], sub: 'src/app.ts' }),
-          srcTree: d(-4, 16, { s: 4.4, h: 54, color: 'purple', glyph: 'package', label: ['Tree 1f2c4a'], sub: 'src/ manifest' }),
-          rootTree: d(6, 0, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Root 8a3f91'], sub: 'repo root tree' }),
-          commitObj: d(18, 4, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Commit 7f8a9b'], sub: 'feat: add app' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Commit Header Fields', [
-            `$ git cat-file -p 7f8a9b`,
-            `tree 8a3f91b2c4...`,
-            `author Developer <dev@org.com> 1700000000 +0000`,
-            `committer Developer <dev@org.com> 1700000000 +0000`,
-            `feat: add app`,
-          ], { icon: 'terminal' }),
+          blob: blob(`4b825d`),
+          srcTree: srcTree(`1f2c4a`),
+          rootTree: rootTree(`8a3f91`),
+          commit: commit(`7f8a9b`),
+          card: card(`commit`, [`$ git cat-file -p 7f8a9b`, `tree 8a3f91b2c4…`, `parent e8d9c2a1…`, `author Dev <dev@org.com> 1700000000 +0000`, `feat: add app`]),
         },
-        links: {
-          sb: h('srcTree', 'blobApp', ['srcTree', 'blobApp'], { label: 'app.ts' }),
-          rs: h('rootTree', 'srcTree', ['rootTree', 'srcTree'], { label: 'src/' }),
-          cr: h('commitObj', 'rootTree', ['commitObj', 'rootTree'], { label: 'tree pointer' }),
-        },
-        flows: [{ route: ['cr', 'rs', 'sb'], kind: 'commit', rate: 1.6 }],
+        links: { name: L.name, dir: L.dir, snapshot: L.snapshot },
+        flows: [{ route: [`snapshot`, `dir`, `name`], kind: `msg`, rate: 1.2 }],
       },
     },
     {
-      short: 'Annotated Tag',
-      chapter: 'execution',
-      title: 'The Annotated Tag (Signed Release Pointer)',
+      short: `Tag`,
+      chapter: `technique`,
+      title: `An annotated tag names a release`,
       body: [
-        'A lightweight tag is just a text pointer. An <b>Annotated Tag</b> is a full cryptographic Git object stored in <code>.git/objects/</code>.',
-        'It points directly to a commit SHA, stores the tagger identity, date, tagging message, and optional GPG cryptographic signature.',
+        `A lightweight tag is just a ref file. An <span class="term">annotated tag</span> is a real object: it points to a commit and records tagger, date, message and an optional GPG signature.`,
+        `Use <code>git tag -a</code> (or <code>-s</code> to sign) for releases, so the release itself is part of history.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Always use git tag -a v1.0.0 for production releases so the release metadata is permanently recorded and signable.',
-      },
-      changes: ['+ Annotated Tag v1.0.0 created as 4th object type', '+ Cryptographically bound to Commit 7f8a9b'],
-      metrics: { objectType: 'tag', contentAddress: 'SHA-1 (40 hex)', compression: 'zlib signed', immutability: 'GPG signed' },
+      changes: [`+ tag v1.0.0 → 7f8a9b`],
+      metrics: { objects: 5, lastSha: `v1.0.0`, diskSize: `20 KB`, packfiles: 0 },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Developer', tags: [{ text: 'git tag -a', tone: 'blue', icon: 'terminal' }] }),
-          blobApp: b(-6, -2, { s: 4.4, h: 50, color: 'purple', glyph: 'database', label: ['Blob 4b825d'], sub: 'src/app.ts' }),
-          srcTree: d(-4, 16, { s: 4.4, h: 54, color: 'purple', glyph: 'package', label: ['Tree 1f2c4a'], sub: 'src/ manifest' }),
-          rootTree: d(6, 0, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Root 8a3f91'], sub: 'repo root tree' }),
-          commitObj: d(18, 4, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Commit 7f8a9b'], sub: 'feat: add app' }),
-          tagObj: d(12, 20, { s: 4.4, h: 54, color: 'amber', glyph: 'shield', label: ['Tag v1.0.0'], sub: 'GPG release' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Annotated Tag Object', [
-            `$ git cat-file -p v1.0.0`,
-            `object 7f8a9b2c4e...`,
-            `type commit`,
-            `tag v1.0.0`,
-            `tagger Dev <dev@org.com> 1700000000 +0000`,
-            `Release version 1.0.0`,
-          ], { icon: 'terminal' }),
+          blob: blob(`4b825d`),
+          srcTree: srcTree(`1f2c4a`),
+          rootTree: rootTree(`8a3f91`),
+          commit: commit(`7f8a9b`),
+          tag: tag([{ text: `signed`, tone: `green`, icon: `key` }]),
+          card: card(`tag`, [`$ git tag -s v1.0.0 -m "Release 1.0.0"`, `$ git cat-file -p v1.0.0`, `object 7f8a9b2c4e…`, `type commit`, `tagger Dev <dev@org.com> 1700000000 +0000`]),
         },
-        links: {
-          sb: h('srcTree', 'blobApp', ['srcTree', 'blobApp'], { label: 'app.ts' }),
-          rs: h('rootTree', 'srcTree', ['rootTree', 'srcTree'], { label: 'src/' }),
-          cr: h('commitObj', 'rootTree', ['commitObj', 'rootTree'], { label: 'tree pointer' }),
-          tc: h('tagObj', 'commitObj', ['tagObj', 'commitObj'], { label: 'points to' }),
-        },
-        flows: [{ route: ['tc', 'cr'], kind: 'commit', rate: 1.5 }],
+        links: { name: L.name, dir: L.dir, snapshot: L.snapshot, release: L.release },
+        flows: [{ route: [`release`, `snapshot`, `dir`, `name`], kind: `msg`, rate: 1.2 }],
       },
     },
     {
-      short: 'Merkle Cascade',
-      chapter: 'technique',
-      title: 'Merkle Tree Cascade: The Immutability Guarantee',
+      short: `Cascade`,
+      chapter: `insight`,
+      title: `Change one byte, every hash above changes`,
       body: [
-        'What happens if you modify 1 character in <code>src/app.ts</code>? The SHA-1 hash changes to <code>9e1f2a...</code>.',
-        'Because <code>src/ Tree</code> stores the old hash, it MUST recalculate to a new hash. That forces the <code>Root Tree</code> to change, which forces the <code>Commit</code> hash to change. This is the <b>Merkle cascade</b>.',
+        `Edit one character of <code>app.ts</code> and commit. The new content is a new blob <code>9e1f2a</code>. The <code>src/</code> tree stored the old hash, so it becomes a new tree; so does the root; so does the commit. This is a <span class="term">Merkle</span> chain.`,
+        `Nothing old is modified — new objects are added. <code>v1.0.0</code> still names <code>7f8a9b</code>, so a signed release can never silently change underneath you.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'It is mathematically impossible to alter 1 byte of Git history without altering every subsequent commit hash in the entire branch.',
-      },
-      changes: ['~ Modified 1 byte in src/app.ts', '~ Blob hash altered: 4b825d -> 9e1f2a', '~ Upstream hashes invalidated & recalculated'],
-      metrics: { objectType: 'Merkle DAG', contentAddress: 'Cascade Alert', compression: 'Deterministic', immutability: 'Tamper proof' },
+      changes: [`+ blob 9e1f2a`, `+ trees 3c4d5e, 6f7a8b`, `+ commit 2b3c4d`, `= v1.0.0 still → 7f8a9b`],
+      metrics: { objects: 9, lastSha: `2b3c4d`, diskSize: `36 KB`, packfiles: 0 },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Developer', tags: [{ text: 'edit 1 byte', tone: 'rose', icon: 'terminal' }] }),
-          blobApp: b(-6, -2, { s: 4.4, h: 50, color: 'rose', glyph: 'database', label: ['Blob 9e1f2a'], sub: 'hash changed' }),
-          srcTree: d(-4, 16, { s: 4.4, h: 54, color: 'amber', glyph: 'package', label: ['Tree 3c4d5e'], sub: 'new SHA-1' }),
-          rootTree: d(6, 0, { s: 4.4, h: 56, color: 'amber', glyph: 'boxes', label: ['Root 6f7a8b'], sub: 'new SHA-1' }),
-          commitObj: d(18, 4, { s: 4.4, h: 56, color: 'amber', glyph: 'gitBranch', label: ['Commit 2b3c4d'], sub: 'new commit SHA' }),
-          tagObj: d(12, 20, { s: 4.4, h: 54, color: 'rose', glyph: 'shield', label: ['Tag Broken'], sub: 'signature void' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merkle Ripple Cascade', [
-            `1. Byte change -> New Blob: 9e1f2a`,
-            `2. Parent Tree recalculated -> 3c4d5e`,
-            `3. Root Tree recalculated   -> 6f7a8b`,
-            `4. Commit SHA recalculated  -> 2b3c4d`,
-            `= Old GPG signature is immediately void!`,
-          ], { icon: 'terminal' }),
+          blob: blob(`9e1f2a`, [changed]),
+          srcTree: srcTree(`3c4d5e`, [changed]),
+          rootTree: rootTree(`6f7a8b`, [changed]),
+          commit: commit(`2b3c4d`, [changed]),
+          tag: tag([{ text: `→ old 7f8a9b`, tone: `gray` }]),
+          card: card(`one byte later`, [`$ git commit -am "fix: typo"`, `[main 2b3c4d] fix: typo`, `$ git rev-parse HEAD^{tree} v1.0.0^{tree}`, `6f7a8b…   # new root`, `8a3f91…   # release root, unchanged`]),
         },
-        links: {
-          sb: h('srcTree', 'blobApp', ['srcTree', 'blobApp'], { label: 'hash altered' }),
-          rs: h('rootTree', 'srcTree', ['rootTree', 'srcTree'], { label: 'recalculated' }),
-          cr: h('commitObj', 'rootTree', ['commitObj', 'rootTree'], { label: 'cascaded' }),
-          tc: h('tagObj', 'commitObj', ['tagObj', 'commitObj'], { label: 'invalidated' }),
-        },
-        flows: [{ route: ['sb', 'rs', 'cr', 'tc'], kind: 'blob', rate: 1.8 }],
+        links: { name: L.name, dir: L.dir, snapshot: L.snapshot, release: L.release },
+        flows: [{ route: [`snapshot`, `dir`, `name`], kind: `write`, rate: 1.4, bounce: true }],
       },
     },
     {
-      short: 'Packfiles & GC',
-      chapter: 'solution',
-      title: 'Packfile Optimization: git gc & Sliding Delta Compression',
+      short: `Packfile`,
+      chapter: `solution`,
+      title: `git gc packs objects as deltas`,
       body: [
-        'Storing every version as an individual loose file wastes inodes and disk space. <code>git gc</code> (garbage collect) bundles loose objects into a single binary <b>packfile</b> (<code>.pack</code>) indexed by <code>.idx</code>.',
-        'Git sorts objects by filename and size, uses a sliding window to compute byte-level deltas, storing only the differences between revisions.',
+        `Every version is a full object, which is simple but wasteful. <span class="term">git gc</span> rolls loose objects into a <span class="term">packfile</span>: similar objects are stored as a base plus small deltas, with an <code>.idx</code> for fast lookup.`,
+        `Two versions of <code>app.ts</code> that differ by one byte cost almost nothing extra once packed.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'A Git packfile achieves extreme compression (often 10x smaller than raw zlib) because revisions of the same file share 99% of identical bytes.',
-      },
-      changes: ['+ Packed 100+ loose objects into .git/objects/pack/*.pack', '+ Sliding window delta compression applied (10x smaller)'],
-      metrics: { objectType: 'packfile', contentAddress: 'Index (.idx)', compression: 'Sliding delta', immutability: '100% frozen' },
+      changes: [`+ pack-7f8a.pack (+ .idx)`, `~ 14 MB → 1.1 MB`],
+      metrics: { objects: 120, lastSha: `2b3c4d`, diskSize: `1.1 MB`, packfiles: 1 },
       scene: {
         entities: {
-          devWorkspace: y(-18, -6, { label: 'Developer', tags: [{ text: 'git gc', tone: 'blue', icon: 'terminal' }] }),
-          blobApp: b(-6, -2, { s: 4.4, h: 50, color: 'blue', glyph: 'boxes', label: ['.git/objects'], sub: 'loose objects' }),
-          srcTree: d(-4, 16, { s: 4.4, h: 54, color: 'blue', glyph: 'shield', label: ['Delta Engine'], sub: 'sliding window' }),
-          rootTree: b(6, 0, { s: 4.4, h: 56, color: 'green', glyph: 'database', label: ['pack-7f8a9b'], sub: '10x compressed' }),
-          commitObj: d(18, 4, { s: 4.4, h: 54, color: 'cyan', glyph: 'boxes', label: ['Index .idx'], sub: 'O(logN) lookup' }),
-          card: S({ x: -14, y: 0, dx: -20, dy: -180 }, 'Git Garbage Collection', [
-            `$ git gc --aggressive --prune=now`,
-            `Counting objects: 120, done.`,
-            `Compressing objects: 100% (112/112), done.`,
-            `Writing objects: 100% (120/120), done.`,
-            `Total 120 (delta 84), reused 0`,
-            `= Size reduced from 14MB to 1.1MB`,
-          ], { icon: 'terminal' }),
+          blob: blob(`9e1f2a`),
+          srcTree: srcTree(`3c4d5e`),
+          rootTree: rootTree(`6f7a8b`),
+          commit: commit(`2b3c4d`),
+          tag: tag(),
+          pack: pack(),
+          card: card(`git gc`, [`$ git count-objects -vH`, `size: 14.0 MiB    size-pack: 0`, `$ git gc`, `Total 120 (delta 84), reused 0`, `$ git count-objects -vH`, `size: 0    size-pack: 1.1 MiB`]),
         },
-        links: {
-          bs: h('blobApp', 'srcTree', ['blobApp', 'srcTree'], { label: 'pack delta' }),
-          sr: h('srcTree', 'rootTree', ['srcTree', 'rootTree'], { label: 'write .pack' }),
-          rc: h('rootTree', 'commitObj', ['rootTree', 'commitObj'], { label: 'build .idx' }),
-        },
-        flows: [{ route: ['bs', 'sr', 'rc'], kind: 'pack', rate: 1.8 }],
+        links: { name: L.name, dir: L.dir, snapshot: L.snapshot, release: L.release, packBlob: L.packBlob, packSrc: L.packSrc, packRoot: L.packRoot },
+        flows: [
+          { route: [`packBlob`], kind: `write`, rate: 1.2 },
+          { route: [`packSrc`], kind: `write`, rate: 1.2 },
+          { route: [`packRoot`], kind: `write`, rate: 1.2 },
+        ],
       },
     },
   ],

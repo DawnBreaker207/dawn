@@ -1,52 +1,36 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const Zi = -3;
 
-const Qi = (e = [], t = {}) => d(-7, -12, { label: [`App`, `Server 1`], tags: e, ...t });
+const Qi = (e = [], t = {}) => makeBlock(-7, -12, { label: [`App`, `Server 1`], tags: e, ...t });
 
-const $i = (e = [], t = {}) => d(7, -12, { label: [`App`, `Server 2`], tags: e, ...t });
+const $i = (e = [], t = {}) => makeBlock(7, -12, { label: [`App`, `Server 2`], tags: e, ...t });
 
-const ea = (e = [], t = {}) => b(-7, 6, { r: 1.9, glyph: `database`, label: `shard A`, tags: e, ...t });
+const ea = (e = [], t = {}) => makeDb(-7, 6, { r: 1.9, glyph: `database`, label: `shard A`, tags: e, ...t });
 
-const ta = (e = [], t = {}) => b(7, 6, { r: 1.9, glyph: `database`, label: `shard B`, tags: e, ...t });
+const ta = (e = [], t = {}) => makeDb(7, 6, { r: 1.9, glyph: `database`, label: `shard B`, tags: e, ...t });
 
 const na = (e = []) =>
-    d(0, -22, { color: `yellow`, glyph: `ticket`, label: [`Ticket`, `Server`], tags: e });
+    makeBlock(0, -22, { color: `yellow`, glyph: `ticket`, label: [`Ticket`, `Server`], tags: e });
 
 const ra = {
-    a1: h(`s1`, `dA`, [`s1`, `dA`]),
-    b1: h(`s1`, `dB`, [`s1`, [`s1`, Zi], [`dB`, Zi], `dB`]),
-    a2: h(`s2`, `dA`, [`s2`, [`s2`, Zi], [`dA`, Zi], `dA`]),
-    b2: h(`s2`, `dB`, [`s2`, `dB`]),
+    a1: makeLink(`s1`, `dA`, [`s1`, `dA`]),
+    b1: makeLink(`s1`, `dB`, [`s1`, [`s1`, Zi], [`dB`, Zi], `dB`]),
+    a2: makeLink(`s2`, `dA`, [`s2`, [`s2`, Zi], [`dA`, Zi], `dA`]),
+    b2: makeLink(`s2`, `dB`, [`s2`, `dB`]),
   };
 
 const ia = (e = {}) => ({
-    t1: h(`s1`, `tk`, [`s1`, [`s1`, `tk`], `tk`], { heads: `both`, ...e }),
-    t2: h(`s2`, `tk`, [`s2`, [`s2`, `tk`], `tk`], { heads: `both`, ...e }),
+    t1: makeLink(`s1`, `tk`, [`s1`, [`s1`, `tk`], `tk`], { heads: `both`, ...e }),
+    t2: makeLink(`s2`, `tk`, [`s2`, [`s2`, `tk`], `tk`], { heads: `both`, ...e }),
   });
 
 const aa = (e = 1.6) => ({
@@ -55,15 +39,15 @@ const aa = (e = 1.6) => ({
     rate: e,
   });
 
-const oa = (e, t, n, r = {}) => S({ x: 7, y: -12, z: 0, dx: 104, dy: -22, ...r }, e, t, { icon: n });
+const oa = (e, t, n, r = {}) => makePanel({ x: 7, y: -12, z: 0, dx: 104, dy: -22, ...r }, e, t, { icon: n });
 
 const sa = Array.from({ length: 10 }, (e, t) => -9.45 + t * 2.1);
 
 const ca = (e = []) => {
-    let t = { idx: x({ x0: -11, x1: 11, y0: 4.5, y1: 7.5 }, ``) };
+    let t = { idx: makeZone({ x0: -11, x1: 11, y0: 4.5, y1: 7.5 }, ``) };
     return (
       sa.forEach((n, r) => {
-        t[`p${r}`] = d(n, 6, {
+        t[`p${r}`] = makeBlock(n, 6, {
           s: 1.7,
           h: 11,
           radius: 3,
@@ -81,7 +65,7 @@ const ca = (e = []) => {
     );
   };
 
-const la = (e, t) => h(e, `p${t}`, [e, [e, Zi], [sa[t], Zi], `p${t}`]);
+const la = (e, t) => makeLink(e, `p${t}`, [e, [e, Zi], [sa[t], Zi], `p${t}`]);
 
 const ua = {
     id: `unique-ids`,
@@ -429,7 +413,7 @@ const ua = {
             s2: $i([{ text: `machine 2`, tone: `green`, icon: `idCard` }]),
             dA: ea(),
             dB: ta(),
-            spy: y(-7, -22, { label: `competitor` }),
+            spy: makeDevice(-7, -22, { label: `competitor` }),
             card: oa(
               `Reading the ids`,
               [
@@ -441,7 +425,7 @@ const ua = {
               `eye`,
             ),
           },
-          links: { ...ra, sp: h(`spy`, `s1`, [`spy`, `s1`], { heads: `both` }) },
+          links: { ...ra, sp: makeLink(`spy`, `s1`, [`spy`, `s1`], { heads: `both` }) },
           flows: [aa(2), { route: [`sp`], rate: 0.6, bounce: !0 }],
         },
       },

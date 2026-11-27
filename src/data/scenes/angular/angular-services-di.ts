@@ -1,12 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makeZone as x,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel
 } from '@/lib/simulator/scene-builders';
 
 export const angularServicesDiLesson = {
@@ -43,10 +40,10 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Dual Tree (Env + Node)', scopeLevel: 'Root + Component', lookupStrategy: 'Upward bubble', injectionContext: 'Active' },
       scene: {
         entities: {
-          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
-          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Route Injector'], sub: 'route scope' }),
-          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'boxes', label: ['Node Injector'], sub: 'view scope' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dual Tree Resolution Flow', [
+          rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          routeInj: makeBlock(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Route Injector'], sub: 'route scope' }),
+          compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'boxes', label: ['Node Injector'], sub: 'view scope' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dual Tree Resolution Flow', [
             `Component requests AuthStateService:`,
             `1. Search Child Component NodeInjector (Not found)`,
             `2. Search Parent Component NodeInjector (Not found)`,
@@ -56,8 +53,8 @@ export const angularServicesDiLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          cn: h('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'bubble upwards' }),
-          nr: h('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'fallback to root' }),
+          cn: makeLink('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'bubble upwards' }),
+          nr: makeLink('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'fallback to root' }),
         },
         flows: [{ route: ['cn', 'nr'], kind: 'node', rate: 1.5 }],
       },
@@ -78,11 +75,11 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Root vs Component', scopeLevel: 'Singleton & Scoped', lookupStrategy: 'Direct cache hit', injectionContext: 'Active' },
       scene: {
         entities: {
-          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
-          authSvc: b(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['AuthService'], sub: 'app singleton' }),
-          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget A'], sub: 'inst 1' }),
-          sibInj: d(12, 12, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget B'], sub: 'inst 2' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Scoped Service Definition', [
+          rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          authSvc: makeDb(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['AuthService'], sub: 'app singleton' }),
+          compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget A'], sub: 'inst 1' }),
+          sibInj: makeBlock(12, 12, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget B'], sub: 'inst 2' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Scoped Service Definition', [
             `// Global singleton:`,
             `@Injectable({ providedIn: 'root' })`,
             `export class AuthService {}`,
@@ -96,9 +93,9 @@ export const angularServicesDiLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ra: h('rootInj', 'authSvc', ['rootInj', 'authSvc'], { label: 'binds singleton' }),
-          ac: h('authSvc', 'compInj', ['authSvc', 'compInj'], { label: 'shared instance' }),
-          as: h('authSvc', 'sibInj', ['authSvc', 'sibInj'], { label: 'shared instance' }),
+          ra: makeLink('rootInj', 'authSvc', ['rootInj', 'authSvc'], { label: 'binds singleton' }),
+          ac: makeLink('authSvc', 'compInj', ['authSvc', 'compInj'], { label: 'shared instance' }),
+          as: makeLink('authSvc', 'sibInj', ['authSvc', 'sibInj'], { label: 'shared instance' }),
         },
         flows: [{ route: ['ac', 'as'], kind: 'env', rate: 1.5 }],
       },
@@ -122,11 +119,11 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Controlled Bubble', scopeLevel: 'Constrained', lookupStrategy: '@SkipSelf / @Host', injectionContext: 'Active' },
       scene: {
         entities: {
-          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
-          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Parent Host'], sub: 'host boundary' }),
-          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'boxes', label: ['Child Node'], sub: 'skip self' }),
-          childComp: y(-12, 24, { label: 'leaf-view', tags: [{ text: '@SkipSelf()', tone: 'amber', icon: 'zap' }] }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Resolution Flags in Action', [
+          rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          routeInj: makeBlock(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Parent Host'], sub: 'host boundary' }),
+          compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'boxes', label: ['Child Node'], sub: 'skip self' }),
+          childComp: makeDevice(-12, 24, { label: 'leaf-view', tags: [{ text: '@SkipSelf()', tone: 'amber', icon: 'zap' }] }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Resolution Flags in Action', [
             `constructor(`,
             `  // Start search from parent, not self:`,
             `  @SkipSelf() private parentNode: TreeNodeComponent,`,
@@ -138,9 +135,9 @@ export const angularServicesDiLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          lc: h('childComp', 'compInj', ['childComp', 'compInj'], { label: 'lookup start' }),
-          cr: h('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'skip self -> parent' }),
-          rn: h('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'host check' }),
+          lc: makeLink('childComp', 'compInj', ['childComp', 'compInj'], { label: 'lookup start' }),
+          cr: makeLink('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'skip self -> parent' }),
+          rn: makeLink('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'host check' }),
         },
         flows: [{ route: ['lc', 'cr'], kind: 'resolve', rate: 1.5 }],
       },
@@ -161,11 +158,11 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Functional DI', scopeLevel: 'Clean', lookupStrategy: 'inject(Token)', injectionContext: 'Valid context' },
       scene: {
         entities: {
-          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
-          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['Injection Context'], sub: 'assert context' }),
-          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'green', glyph: 'terminal', label: ['UserComponent'], sub: 'inject(Http)' }),
-          authSvc: b(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['HttpClient'], sub: 'resolved token' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional inject() Pattern', [
+          rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          routeInj: makeBlock(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['Injection Context'], sub: 'assert context' }),
+          compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'green', glyph: 'terminal', label: ['UserComponent'], sub: 'inject(Http)' }),
+          authSvc: makeDb(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['HttpClient'], sub: 'resolved token' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Functional inject() Pattern', [
             `export class UserComponent {`,
             `  // Direct property initialization:`,
             `  private http = inject(HttpClient);`,
@@ -176,9 +173,9 @@ export const angularServicesDiLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ci: h('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'run inject()' }),
-          ir: h('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'fetch token' }),
-          ra: h('rootInj', 'authSvc', ['rootInj', 'authSvc'], { label: 'return singleton' }),
+          ci: makeLink('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'run inject()' }),
+          ir: makeLink('routeInj', 'rootInj', ['routeInj', 'rootInj'], { label: 'fetch token' }),
+          ra: makeLink('rootInj', 'authSvc', ['rootInj', 'authSvc'], { label: 'return singleton' }),
         },
         flows: [{ route: ['ci', 'ir', 'ra'], kind: 'resolve', rate: 1.5 }],
       },
@@ -199,11 +196,11 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Token Registry', scopeLevel: 'Config', lookupStrategy: 'Token key', injectionContext: 'Active' },
       scene: {
         entities: {
-          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
-          authSvc: b(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['API_URL Token'], sub: 'factory token' }),
-          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Factory Provider'], sub: 'useFactory' }),
-          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'terminal', label: ['Consumer View'], sub: 'inject token' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'InjectionToken Factory', [
+          rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
+          authSvc: makeDb(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['API_URL Token'], sub: 'factory token' }),
+          routeInj: makeBlock(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Factory Provider'], sub: 'useFactory' }),
+          compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'terminal', label: ['Consumer View'], sub: 'inject token' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'InjectionToken Factory', [
             `export const API_URL = new InjectionToken<string>('API_URL', {`,
             `  providedIn: 'root',`,
             `  factory: () => environment.apiUrl`,
@@ -214,8 +211,8 @@ export const angularServicesDiLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          cr: h('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'request token' }),
-          rt: h('routeInj', 'authSvc', ['routeInj', 'authSvc'], { label: 'execute factory' }),
+          cr: makeLink('compInj', 'routeInj', ['compInj', 'routeInj'], { label: 'request token' }),
+          rt: makeLink('routeInj', 'authSvc', ['routeInj', 'authSvc'], { label: 'execute factory' }),
         },
         flows: [{ route: ['cr', 'rt'], kind: 'resolve', rate: 1.5 }],
       },
@@ -236,11 +233,11 @@ export const angularServicesDiLesson = {
       metrics: { injectorTree: 'Dynamic Runtime Scope', scopeLevel: 'Dynamic', lookupStrategy: 'Custom child', injectionContext: 'Scoped' },
       scene: {
         entities: {
-          rootInj: d(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Parent Injector'], sub: 'root env' }),
-          routeInj: d(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['createEnvInj'], sub: 'spawns scope' }),
-          compInj: d(-12, 12, { s: 4.6, h: 50, color: 'green', glyph: 'terminal', label: ['Modal Scope'], sub: 'DialogRef' }),
-          sibInj: d(12, 12, { s: 4.6, h: 50, color: 'purple', glyph: 'package', label: ['Dynamic Component'], sub: 'mounted modal' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dynamic Environment Injector Creation', [
+          rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Parent Injector'], sub: 'root env' }),
+          routeInj: makeBlock(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['createEnvInj'], sub: 'spawns scope' }),
+          compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'green', glyph: 'terminal', label: ['Modal Scope'], sub: 'DialogRef' }),
+          sibInj: makeBlock(12, 12, { s: 4.6, h: 50, color: 'purple', glyph: 'package', label: ['Dynamic Component'], sub: 'mounted modal' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dynamic Environment Injector Creation', [
             `const modalInjector = createEnvironmentInjector(`,
             `  [{ provide: DIALOG_DATA, useValue: data }],`,
             `  parentInjector`,
@@ -252,9 +249,9 @@ export const angularServicesDiLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          rp: h('rootInj', 'routeInj', ['rootInj', 'routeInj'], { label: 'parent injector' }),
-          rc: h('routeInj', 'compInj', ['routeInj', 'compInj'], { label: 'create scope' }),
-          cs: h('compInj', 'sibInj', ['compInj', 'sibInj'], { label: 'mount modal' }),
+          rp: makeLink('rootInj', 'routeInj', ['rootInj', 'routeInj'], { label: 'parent injector' }),
+          rc: makeLink('routeInj', 'compInj', ['routeInj', 'compInj'], { label: 'create scope' }),
+          cs: makeLink('compInj', 'sibInj', ['compInj', 'sibInj'], { label: 'mount modal' }),
         },
         flows: [{ route: ['rp', 'rc', 'cs'], kind: 'env', rate: 1.6 }],
       },

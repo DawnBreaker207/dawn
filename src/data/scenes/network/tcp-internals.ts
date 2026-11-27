@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const tcpInternalsLesson = {
@@ -38,9 +36,9 @@ export const tcpInternalsLesson = {
       metrics: { rtt_ms: '45ms', cwnd_pkts: '10', state: 'ESTABLISHED', throughput_mbps: '0' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client (192.168.1.5)', tags: [{ text: 'ISN=1000', icon: 'zap' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['TCP Server', 'Port 443'], sub: 'LISTEN → ESTAB' }),
-          card: S({ x: -2, y: 14 }, 'Handshake Packet Sequence', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client (192.168.1.5)', tags: [{ text: 'ISN=1000', icon: 'zap' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['TCP Server', 'Port 443'], sub: 'LISTEN → ESTAB' }),
+          card: makePanel({ x: -2, y: 14 }, 'Handshake Packet Sequence', [
             '1. Client -> Server [SYN] Seq=1000 Win=65535',
             '2. Server -> Client [SYN, ACK] Seq=5000 Ack=1001',
             '3. Client -> Server [ACK] Seq=1001 Ack=5001',
@@ -48,7 +46,7 @@ export const tcpInternalsLesson = {
           ], { icon: 'network' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'SYN / SYN-ACK' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'SYN / SYN-ACK' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.0 }]
       }
@@ -68,9 +66,9 @@ export const tcpInternalsLesson = {
       metrics: { rtt_ms: '45ms', cwnd_pkts: '32', state: 'STREAMING', throughput_mbps: '85' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Sender', tags: [{ text: 'Window [1001..1048]', icon: 'layers' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Receiver', 'Buffer: 64KB'], sub: 'rwnd=65535' }),
-          card: S({ x: -2, y: 14 }, 'Sliding Window Buffer', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Sender', tags: [{ text: 'Window [1001..1048]', icon: 'layers' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Receiver', 'Buffer: 64KB'], sub: 'rwnd=65535' }),
+          card: makePanel({ x: -2, y: 14 }, 'Sliding Window Buffer', [
             '[Bytes Acked] [Sent, unacked] [Usable Window] [Can\'t send]',
             'Byte 1..1000: ACKed by receiver',
             'Byte 1001..1032: In-flight on wire (unacked)',
@@ -78,7 +76,7 @@ export const tcpInternalsLesson = {
           ], { icon: 'layers' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'Data Packets / ACKs' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'Data Packets / ACKs' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.8 }]
       }
@@ -98,9 +96,9 @@ export const tcpInternalsLesson = {
       metrics: { rtt_ms: '45ms', cwnd_pkts: '64', state: 'EXPONENTIAL', throughput_mbps: '240' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Sender', tags: [{ text: 'cwnd: 10 → 64 MSS', tone: 'green', icon: 'trendingUp' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Receiver', 'Port 443'], sub: 'ssthresh=64' }),
-          card: S({ x: -2, y: 14 }, 'Slow Start Math', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Sender', tags: [{ text: 'cwnd: 10 → 64 MSS', tone: 'green', icon: 'trendingUp' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Receiver', 'Port 443'], sub: 'ssthresh=64' }),
+          card: makePanel({ x: -2, y: 14 }, 'Slow Start Math', [
             'Round 1: cwnd = 10 packets  (15 KB)',
             'Round 2: cwnd = 20 packets  (30 KB)',
             'Round 3: cwnd = 40 packets  (60 KB)',
@@ -108,7 +106,7 @@ export const tcpInternalsLesson = {
           ], { icon: 'trendingUp' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'Burst Window' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'Burst Window' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 3.5 }]
       }
@@ -128,9 +126,9 @@ export const tcpInternalsLesson = {
       metrics: { rtt_ms: '48ms', cwnd_pkts: '32', state: 'FAST RETRANSMIT', throughput_mbps: '110' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Sender', tags: [{ text: 'DupAck #3 -> Retransmit', tone: 'amber', icon: 'refresh' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Receiver', 'Out-of-order'], sub: 'Acking #2 repeatedly' }),
-          card: S({ x: -2, y: 14 }, 'Fast Recovery Event', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Sender', tags: [{ text: 'DupAck #3 -> Retransmit', tone: 'amber', icon: 'refresh' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Receiver', 'Out-of-order'], sub: 'Acking #2 repeatedly' }),
+          card: makePanel({ x: -2, y: 14 }, 'Fast Recovery Event', [
             'Packet #3: DROPPED BY ROUTER',
             'Packet #4 arrives -> ACK #2 (Dup 1)',
             'Packet #5 arrives -> ACK #2 (Dup 2)',
@@ -139,7 +137,7 @@ export const tcpInternalsLesson = {
           ], { icon: 'alert' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'Duplicate ACKs' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'Duplicate ACKs' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 2.2 }]
       }
@@ -159,9 +157,9 @@ export const tcpInternalsLesson = {
       metrics: { rtt_ms: '45ms', cwnd_pkts: 'BDP Model', state: 'BBR PACING', throughput_mbps: '480' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'BBR Sender', tags: [{ text: 'Pacing Rate = Bw x RTT', tone: 'green', icon: 'zap' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['BBR Receiver', 'Zero Bufferbloat'], sub: 'pacing_gain=1.25' }),
-          card: S({ x: -2, y: 14 }, 'BBR vs Cubic Comparison', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'BBR Sender', tags: [{ text: 'Pacing Rate = Bw x RTT', tone: 'green', icon: 'zap' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['BBR Receiver', 'Zero Bufferbloat'], sub: 'pacing_gain=1.25' }),
+          card: makePanel({ x: -2, y: 14 }, 'BBR vs Cubic Comparison', [
             'Cubic: Fills buffer until drop -> High latency + Jitter',
             'BBR: Measures BtlBw (Bandwidth) & RTprop (Round Trip)',
             'Target Inflight = BtlBw * RTprop (Bandwidth Delay Product)',
@@ -169,7 +167,7 @@ export const tcpInternalsLesson = {
           ], { icon: 'trendingUp' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'Paced Stream' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'Paced Stream' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 3.2 }]
       }
@@ -189,9 +187,9 @@ export const tcpInternalsLesson = {
       metrics: { rtt_ms: '45ms', cwnd_pkts: '0', state: 'FIN_WAIT_2', throughput_mbps: '0' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'FIN_WAIT_2', icon: 'clock' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'Port 443'], sub: 'LAST_ACK' }),
-          card: S({ x: -2, y: 14 }, 'Teardown Packet Sequence', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'FIN_WAIT_2', icon: 'clock' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'Port 443'], sub: 'LAST_ACK' }),
+          card: makePanel({ x: -2, y: 14 }, 'Teardown Packet Sequence', [
             '1. Client -> Server [FIN] Seq=2000 (FIN_WAIT_1)',
             '2. Server -> Client [ACK] Ack=2001 (CLOSE_WAIT)',
             '3. Server -> Client [FIN] Seq=8000 (LAST_ACK)',
@@ -199,7 +197,7 @@ export const tcpInternalsLesson = {
           ], { icon: 'network' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'both', label: 'FIN / ACK' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'both', label: 'FIN / ACK' })
         },
         flows: [{ route: ['cs'], bounce: true, rate: 1.5 }]
       }
@@ -219,9 +217,9 @@ export const tcpInternalsLesson = {
       metrics: { rtt_ms: '—', cwnd_pkts: '0', state: 'TIME_WAIT (60s)', throughput_mbps: '0' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'TIME_WAIT 2MSL', tone: 'amber', icon: 'hourglass' }] }),
-          server: d(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'Socket Closed'], sub: 'CLOSED' }),
-          card: S({ x: -2, y: 14 }, 'Why 2MSL is Critical', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'TIME_WAIT 2MSL', tone: 'amber', icon: 'hourglass' }] }),
+          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'Socket Closed'], sub: 'CLOSED' }),
+          card: makePanel({ x: -2, y: 14 }, 'Why 2MSL is Critical', [
             '1. Reliable ACK: If final ACK lost, server re-sends FIN',
             '2. Packet drain: Old duplicate packets cannot corrupt new sockets',
             'Danger: 50,000 requests/s with no keep-alive exhausts all ephemeral ports',
@@ -229,7 +227,7 @@ export const tcpInternalsLesson = {
           ], { icon: 'hourglass' })
         },
         links: {
-          cs: h('client', 'server', ['client', 'server'], { heads: 'end', label: 'Socket Draining' })
+          cs: makeLink('client', 'server', ['client', 'server'], { heads: 'end', label: 'Socket Draining' })
         },
         flows: [{ route: ['cs'], bounce: false, rate: 0.8 }]
       }

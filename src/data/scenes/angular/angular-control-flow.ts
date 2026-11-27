@@ -1,11 +1,9 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeLink as h,
-  makePanel as S,
-  makeDevice as y,
-  makeDb as b,
+  makeBlock,
+  makeDb,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const angularControlFlowLesson = {
@@ -30,7 +28,7 @@ export const angularControlFlowLesson = {
     {
       short: '@if & Narrowing',
       chapter: 'concept',
-      title: '1. Built-in @if & Template Type Narrowing',
+      title: 'Built-in @if & Template Type Narrowing',
       body: [
         'Built-in <code>@if</code> replaces <code>*ngIf</code> without importing <code>CommonModule</code> or creating <code>&lt;ng-template&gt;</code> wrappers—compiling straight into lightweight <code>ɵɵconditional</code> Ivy instructions.',
         'With <code>@if (user(); as u)</code>, TypeScript automatically narrows <code>User | null</code> to non-null <code>User</code> inside the block.',
@@ -42,10 +40,10 @@ export const angularControlFlowLesson = {
       metrics: { templateFeature: '@if Narrowing', directiveOverhead: '0 (Built-in)', memoization: 'Type Safe', chunkStrategy: 'Inline' },
       scene: {
         entities: {
-          templateSrc: y(-16, -6, { label: '@if (user())', tags: [{ text: 'User | null', tone: 'blue', icon: 'zap' }] }),
-          ivyCompiler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'type narrowing' }),
-          domTarget: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Safe u.email'], sub: 'narrowed User' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Built-in @if & Type Narrowing', [
+          templateSrc: makeDevice(-16, -6, { label: '@if (user())', tags: [{ text: 'User | null', tone: 'blue', icon: 'zap' }] }),
+          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'type narrowing' }),
+          domTarget: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Safe u.email'], sub: 'narrowed User' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Built-in @if & Type Narrowing', [
             `@if (currentUser(); as u) {`,
             `  <h1>{{ u.name }}</h1> // Narrowed to User!`,
             `} @else {`,
@@ -54,8 +52,8 @@ export const angularControlFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ti: h('templateSrc', 'ivyCompiler', ['templateSrc', 'ivyCompiler'], { label: 'compile @if' }),
-          id: h('ivyCompiler', 'domTarget', ['ivyCompiler', 'domTarget'], { label: 'render branch' }),
+          ti: makeLink('templateSrc', 'ivyCompiler', ['templateSrc', 'ivyCompiler'], { label: 'compile @if' }),
+          id: makeLink('ivyCompiler', 'domTarget', ['ivyCompiler', 'domTarget'], { label: 'render branch' }),
         },
         flows: [{ route: ['ti', 'id'], kind: 'template', rate: 1.5 }],
       },
@@ -63,7 +61,7 @@ export const angularControlFlowLesson = {
     {
       short: '@for track & @empty',
       chapter: 'execution',
-      title: '2. Built-in @for Mandatory track & @empty Block',
+      title: 'Built-in @for Mandatory track & @empty Block',
       body: [
         'In <code>@for (item of items(); track item.id)</code>, the <code>track</code> expression is <b>mandatory</b>! Angular matches keys by identity to move and reuse existing DOM elements instead of destroying/recreating them.',
         'The integrated <code>@empty</code> block declaratively renders empty states without extra <code>*ngIf="items.length === 0"</code> checks.',
@@ -76,10 +74,10 @@ export const angularControlFlowLesson = {
       metrics: { templateFeature: '@for + @empty', directiveOverhead: '0', memoization: 'track item.id', chunkStrategy: 'DOM Recycled' },
       scene: {
         entities: {
-          templateSrc: y(-16, -6, { label: 'items()', tags: [{ text: 'track item.id', tone: 'amber', icon: 'zap' }] }),
-          ivyCompiler: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['@for Diff'], sub: 'key matching' }),
-          domTarget: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Recycled DOM'], sub: 'moved in place' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '@for track & @empty', [
+          templateSrc: makeDevice(-16, -6, { label: 'items()', tags: [{ text: 'track item.id', tone: 'amber', icon: 'zap' }] }),
+          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['@for Diff'], sub: 'key matching' }),
+          domTarget: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Recycled DOM'], sub: 'moved in place' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, '@for track & @empty', [
             `@for (item of items(); track item.id) {`,
             `  <app-row [item]="item" />`,
             `} @empty {`,
@@ -88,8 +86,8 @@ export const angularControlFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ti: h('templateSrc', 'ivyCompiler', ['templateSrc', 'ivyCompiler'], { label: 'diff keys' }),
-          id: h('ivyCompiler', 'domTarget', ['ivyCompiler', 'domTarget'], { label: 'reuse DOM' }),
+          ti: makeLink('templateSrc', 'ivyCompiler', ['templateSrc', 'ivyCompiler'], { label: 'diff keys' }),
+          id: makeLink('ivyCompiler', 'domTarget', ['ivyCompiler', 'domTarget'], { label: 'reuse DOM' }),
         },
         flows: [{ route: ['ti', 'id'], kind: 'track', rate: 1.5 }],
       },
@@ -97,7 +95,7 @@ export const angularControlFlowLesson = {
     {
       short: '@switch & CLI',
       chapter: 'execution',
-      title: '3. @switch Jump Table & CLI Control-Flow Migration',
+      title: '@switch Jump Table & CLI Control-Flow Migration',
       body: [
         'Built-in <code>@switch</code> / <code>@case</code> / <code>@default</code> compiles into a fast indexed jump table with strict type checking.',
         'Migrate entire legacy codebases automatically via <code>ng generate @angular/core:control-flow</code>.',
@@ -110,10 +108,10 @@ export const angularControlFlowLesson = {
       metrics: { templateFeature: '@switch', directiveOverhead: '0', memoization: 'Jump Table', chunkStrategy: 'CLI Migrated' },
       scene: {
         entities: {
-          templateSrc: y(-16, -6, { label: 'status()', tags: [{ text: '@switch', tone: 'cyan', icon: 'zap' }] }),
-          ivyCompiler: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Jump Table'], sub: '@case match' }),
-          domTarget: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Active Badge'], sub: '0 wrapper DOM' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '@switch Syntax & CLI', [
+          templateSrc: makeDevice(-16, -6, { label: 'status()', tags: [{ text: '@switch', tone: 'cyan', icon: 'zap' }] }),
+          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Jump Table'], sub: '@case match' }),
+          domTarget: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Active Badge'], sub: '0 wrapper DOM' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, '@switch Syntax & CLI', [
             `@switch (status()) {`,
             `  @case ('active') { <badge color="green" /> }`,
             `  @default         { <badge color="gray" /> }`,
@@ -122,8 +120,8 @@ export const angularControlFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          ti: h('templateSrc', 'ivyCompiler', ['templateSrc', 'ivyCompiler'], { label: 'eval switch' }),
-          id: h('ivyCompiler', 'domTarget', ['ivyCompiler', 'domTarget'], { label: 'mount @case' }),
+          ti: makeLink('templateSrc', 'ivyCompiler', ['templateSrc', 'ivyCompiler'], { label: 'eval switch' }),
+          id: makeLink('ivyCompiler', 'domTarget', ['ivyCompiler', 'domTarget'], { label: 'mount @case' }),
         },
         flows: [{ route: ['ti', 'id'], kind: 'template', rate: 1.5 }],
       },
@@ -131,7 +129,7 @@ export const angularControlFlowLesson = {
     {
       short: 'Pure Pipes & ===',
       chapter: 'technique',
-      title: '4. Pure Pipes (=== Memoization) & Array Mutation Trap',
+      title: 'Pure Pipes (=== Memoization) & Array Mutation Trap',
       body: [
         'By default, <code>@Pipe({ pure: true })</code> memoizes results by <b>reference identity</b> (<code>===</code>). If inputs don’t change, <code>transform()</code> is skipped completely.',
         '<b>The Mutation Trap:</b> Calling <code>items.push(x)</code> keeps the same array pointer, so a pure pipe won’t update! Always create a new reference: <code>items = [...items, x]</code>.',
@@ -144,10 +142,10 @@ export const angularControlFlowLesson = {
       metrics: { templateFeature: 'Pure Pipe', directiveOverhead: '0 (Cached)', memoization: '=== Identity', chunkStrategy: 'Cache Hit' },
       scene: {
         entities: {
-          templateSrc: y(-16, -6, { label: 'price: 150', tags: [{ text: '=== Check', tone: 'blue', icon: 'zap' }] }),
-          pipeEngine: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Pure Pipe'], sub: '=== identity' }),
-          memoCache: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['$150.00 Cache'], sub: 'memo hit' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Pure Pipe & Immutability', [
+          templateSrc: makeDevice(-16, -6, { label: 'price: 150', tags: [{ text: '=== Check', tone: 'blue', icon: 'zap' }] }),
+          pipeEngine: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Pure Pipe'], sub: '=== identity' }),
+          memoCache: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['$150.00 Cache'], sub: 'memo hit' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Pure Pipe & Immutability', [
             `// ❌ In-place mutation: pure pipe skips!`,
             `this.items.push(newItem);`,
             `// ✅ New reference: pure pipe re-runs!`,
@@ -155,8 +153,8 @@ export const angularControlFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          tp: h('templateSrc', 'pipeEngine', ['templateSrc', 'pipeEngine'], { label: 'compare ===' }),
-          pm: h('pipeEngine', 'memoCache', ['pipeEngine', 'memoCache'], { label: 'return cached' }),
+          tp: makeLink('templateSrc', 'pipeEngine', ['templateSrc', 'pipeEngine'], { label: 'compare ===' }),
+          pm: makeLink('pipeEngine', 'memoCache', ['pipeEngine', 'memoCache'], { label: 'return cached' }),
         },
         flows: [{ route: ['tp', 'pm'], kind: 'track', rate: 1.5 }],
       },
@@ -164,7 +162,7 @@ export const angularControlFlowLesson = {
     {
       short: 'Impure vs AsyncPipe',
       chapter: 'technique',
-      title: '5. Impure Pipes Cost vs AsyncPipe & computed()',
+      title: 'Impure Pipes Cost vs AsyncPipe & computed()',
       body: [
         'Setting <code>pure: false</code> disables caching—executing <code>transform()</code> on <b>every tick</b> for every list item (severe FPS drop).',
         'Reserve stateful pipes for <code>AsyncPipe</code> (auto-subscribes, calls <code>markForCheck()</code>, auto-unsubscribes on destroy), and move heavy filtering/sorting into <code>computed()</code> Signals!',
@@ -177,18 +175,18 @@ export const angularControlFlowLesson = {
       metrics: { templateFeature: 'AsyncPipe / computed', directiveOverhead: 'Minimal', memoization: 'DAG Memoized', chunkStrategy: '60 FPS Clean' },
       scene: {
         entities: {
-          templateSrc: y(-16, -6, { label: 'user$ / sig', tags: [{ text: 'Reactive', tone: 'purple', icon: 'zap' }] }),
-          pipeEngine: d(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['AsyncPipe /', 'computed()'], sub: 'lazy + cleanup' }),
-          domTarget: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['60 FPS DOM'], sub: 'zero leak' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'AsyncPipe & computed()', [
+          templateSrc: makeDevice(-16, -6, { label: 'user$ / sig', tags: [{ text: 'Reactive', tone: 'purple', icon: 'zap' }] }),
+          pipeEngine: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['AsyncPipe /', 'computed()'], sub: 'lazy + cleanup' }),
+          domTarget: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['60 FPS DOM'], sub: 'zero leak' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'AsyncPipe & computed()', [
             `@if (user$ | async; as u) { <h1>{{ u.name }}</h1> }`,
             `// Or with Signals:`,
             `filtered = computed(() => items().filter(i => i.active));`,
           ], { icon: 'terminal' }),
         },
         links: {
-          tp: h('templateSrc', 'pipeEngine', ['templateSrc', 'pipeEngine'], { label: 'emit / pull' }),
-          pd: h('pipeEngine', 'domTarget', ['pipeEngine', 'domTarget'], { label: 'update view' }),
+          tp: makeLink('templateSrc', 'pipeEngine', ['templateSrc', 'pipeEngine'], { label: 'emit / pull' }),
+          pd: makeLink('pipeEngine', 'domTarget', ['pipeEngine', 'domTarget'], { label: 'update view' }),
         },
         flows: [{ route: ['tp', 'pd'], kind: 'track', rate: 1.5 }],
       },
@@ -196,7 +194,7 @@ export const angularControlFlowLesson = {
     {
       short: '@defer & Timers',
       chapter: 'execution',
-      title: '6. @defer Code-Splitting, @placeholder & @loading Timers',
+      title: '@defer Code-Splitting, @placeholder & @loading Timers',
       body: [
         '<code>@defer</code> automatically extracts heavy child components into separate lazy JS chunks right from the HTML template.',
         'Pair with <code>@placeholder (minimum 300ms)</code> (prevents CLS layout shift) and <code>@loading (after 100ms; minimum 500ms)</code> so fast loads never flash a spinner.',
@@ -209,10 +207,10 @@ export const angularControlFlowLesson = {
       metrics: { templateFeature: '@defer Split', directiveOverhead: '0', memoization: 'CLS Protected', chunkStrategy: 'Code-Split' },
       scene: {
         entities: {
-          templateSrc: y(-16, -6, { label: 'main.js', tags: [{ text: '@placeholder', tone: 'slab', icon: 'zap' }] }),
-          deferHub: d(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['@defer Guard'], sub: 'after 100ms' }),
-          lazyChunk: b(8, -6, { s: 4.6, h: 48, color: 'cyan', glyph: 'database', label: ['chart.chunk.js'], sub: 'lazy chunk' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, '@defer + Flicker Guards', [
+          templateSrc: makeDevice(-16, -6, { label: 'main.js', tags: [{ text: '@placeholder', tone: 'slab', icon: 'zap' }] }),
+          deferHub: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['@defer Guard'], sub: 'after 100ms' }),
+          lazyChunk: makeDb(8, -6, { s: 4.6, h: 48, color: 'cyan', glyph: 'database', label: ['chart.chunk.js'], sub: 'lazy chunk' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, '@defer + Flicker Guards', [
             `@defer {`,
             `  <app-heavy-chart />`,
             `} @loading (after 100ms; minimum 500ms) {`,
@@ -221,8 +219,8 @@ export const angularControlFlowLesson = {
           ], { icon: 'terminal' }),
         },
         links: {
-          td: h('templateSrc', 'deferHub', ['templateSrc', 'deferHub'], { label: 'render skeleton' }),
-          dl: h('deferHub', 'lazyChunk', ['deferHub', 'lazyChunk'], { label: 'emit chunk' }),
+          td: makeLink('templateSrc', 'deferHub', ['templateSrc', 'deferHub'], { label: 'render skeleton' }),
+          dl: makeLink('deferHub', 'lazyChunk', ['deferHub', 'lazyChunk'], { label: 'emit chunk' }),
         },
         flows: [{ route: ['td', 'dl'], kind: 'chunk', rate: 1.5 }],
       },
@@ -230,7 +228,7 @@ export const angularControlFlowLesson = {
     {
       short: '@defer Triggers',
       chapter: 'execution',
-      title: '7. Triggers: on viewport, on interaction, on hover & on idle',
+      title: 'Triggers: on viewport, on interaction, on hover & on idle',
       body: [
         '• <b><code>on viewport</code></b>: Attaches <code>IntersectionObserver</code>—loads when scrolled into view.<br>' +
         '• <b><code>on interaction</code> / <code>on hover(btn)</code></b>: Loads on user intent.<br>' +
@@ -244,18 +242,18 @@ export const angularControlFlowLesson = {
       metrics: { templateFeature: '@defer Triggers', directiveOverhead: '0', memoization: 'Intent-Driven', chunkStrategy: 'On-Demand' },
       scene: {
         entities: {
-          templateSrc: y(-16, -6, { label: 'User Scroll', tags: [{ text: 'on viewport', tone: 'blue', icon: 'zap' }] }),
-          deferHub: d(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Observer /', 'Idle Trigger'], sub: 'trigger fired' }),
-          lazyChunk: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Fetch Chunk'], sub: 'downloading' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Declarative @defer Triggers', [
+          templateSrc: makeDevice(-16, -6, { label: 'User Scroll', tags: [{ text: 'on viewport', tone: 'blue', icon: 'zap' }] }),
+          deferHub: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Observer /', 'Idle Trigger'], sub: 'trigger fired' }),
+          lazyChunk: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Fetch Chunk'], sub: 'downloading' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Declarative @defer Triggers', [
             `@defer (on viewport)         { <app-comments /> }`,
             `@defer (on hover(infoBtn))   { <app-tooltip /> }`,
             `@defer (on idle)             { <app-analytics /> }`,
           ], { icon: 'terminal' }),
         },
         links: {
-          td: h('templateSrc', 'deferHub', ['templateSrc', 'deferHub'], { label: 'trigger event' }),
-          dl: h('deferHub', 'lazyChunk', ['deferHub', 'lazyChunk'], { label: 'fetch chunk' }),
+          td: makeLink('templateSrc', 'deferHub', ['templateSrc', 'deferHub'], { label: 'trigger event' }),
+          dl: makeLink('deferHub', 'lazyChunk', ['deferHub', 'lazyChunk'], { label: 'fetch chunk' }),
         },
         flows: [{ route: ['td', 'dl'], kind: 'chunk', rate: 1.5 }],
       },
@@ -263,7 +261,7 @@ export const angularControlFlowLesson = {
     {
       short: 'Optimistic Prefetch',
       chapter: 'scaling',
-      title: '8. Optimistic Prefetching: prefetch on idle; on interaction',
+      title: 'Optimistic Prefetching: prefetch on idle; on interaction',
       body: [
         'Combine lazy instantiation with background prefetching: <code>@defer (on interaction; prefetch on idle)</code>.',
         'The browser silently caches the JS chunk during idle time, so when the user clicks, the component mounts in <b>0ms</b> with zero loading spinner!',
@@ -276,18 +274,18 @@ export const angularControlFlowLesson = {
       metrics: { templateFeature: 'Prefetch + @defer', directiveOverhead: '0', memoization: 'HTTP Cached', chunkStrategy: '0ms Instant' },
       scene: {
         entities: {
-          templateSrc: y(-16, -6, { label: 'prefetch idle', tags: [{ text: 'Pre-cache', tone: 'cyan', icon: 'zap' }] }),
-          deferHub: d(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['Memory Cache'], sub: 'HTTP cached' }),
-          domTarget: b(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['0ms Dialog'], sub: 'instant mount' }),
-          card: S({ x: -14, y: 4, dx: -20, dy: -180 }, 'Optimistic Prefetch Pattern', [
+          templateSrc: makeDevice(-16, -6, { label: 'prefetch idle', tags: [{ text: 'Pre-cache', tone: 'cyan', icon: 'zap' }] }),
+          deferHub: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'green', glyph: 'boxes', label: ['Memory Cache'], sub: 'HTTP cached' }),
+          domTarget: makeDb(8, -6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['0ms Dialog'], sub: 'instant mount' }),
+          card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Optimistic Prefetch Pattern', [
             `@defer (on interaction; prefetch on idle) {`,
             `  <app-dialog-content />`,
             `} @placeholder { <button>Open Dialog</button> }`,
           ], { icon: 'terminal' }),
         },
         links: {
-          td: h('templateSrc', 'deferHub', ['templateSrc', 'deferHub'], { label: 'prefetch JS' }),
-          do: h('deferHub', 'domTarget', ['deferHub', 'domTarget'], { label: '0ms mount' }),
+          td: makeLink('templateSrc', 'deferHub', ['templateSrc', 'deferHub'], { label: 'prefetch JS' }),
+          do: makeLink('deferHub', 'domTarget', ['deferHub', 'domTarget'], { label: '0ms mount' }),
         },
         flows: [{ route: ['td', 'do'], kind: 'chunk', rate: 1.6 }],
       },

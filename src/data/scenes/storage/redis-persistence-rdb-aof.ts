@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const redisPersistenceRdbAofLesson = {
@@ -38,9 +36,9 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'Pure RAM (None)', data_loss_window: '100% on Crash', io_overhead: 'Zero', recovery_speed: 'Instant (Empty)' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET account:1 500', icon: 'zap' }] }),
-          redis: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis RAM Core', 'Volatile Memory'], sub: 'Data lost on power failure' }),
-          card: S({ x: -2, y: 14 }, 'Persistence Trade-offs', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET account:1 500', icon: 'zap' }] }),
+          redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis RAM Core', 'Volatile Memory'], sub: 'Data lost on power failure' }),
+          card: makePanel({ x: -2, y: 14 }, 'Persistence Trade-offs', [
             'RDB Snapshot (dump.rdb):',
             '  - Compact single-file backup, fast restart recovery',
             '  - Risk: Loses minutes of data created since last snapshot',
@@ -50,7 +48,7 @@ export const redisPersistenceRdbAofLesson = {
           ], { icon: 'database' })
         },
         links: {
-          cr: h('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'In-Memory Writes' })
+          cr: makeLink('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'In-Memory Writes' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 2.2 }]
       }
@@ -70,10 +68,10 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'RDB (bgsave)', data_loss_window: 'Up to 5–15 min', io_overhead: 'Periodic High', recovery_speed: 'Very Fast' },
       scene: {
         entities: {
-          mainProc: d(-8, -4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Main Process', 'PID 1001 (Serving)'], sub: 'Mutates pages via COW' }),
-          childProc: d(8, -4, { s: 4.6, h: 52, color: 'purple', glyph: 'workflow', label: ['Child bgsave', 'PID 1002 (Forked)'], sub: 'Iterates frozen RAM' }),
-          diskRdb: d(8, 8, { s: 4.6, h: 52, color: 'blue', glyph: 'folder', label: ['Disk: dump.rdb', 'Compressed Binary'], sub: 'LZF Compressed Image' }),
-          card: S({ x: -2, y: 16 }, 'Linux Copy-on-Write (COW)', [
+          mainProc: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Main Process', 'PID 1001 (Serving)'], sub: 'Mutates pages via COW' }),
+          childProc: makeBlock(8, -4, { s: 4.6, h: 52, color: 'purple', glyph: 'workflow', label: ['Child bgsave', 'PID 1002 (Forked)'], sub: 'Iterates frozen RAM' }),
+          diskRdb: makeBlock(8, 8, { s: 4.6, h: 52, color: 'blue', glyph: 'folder', label: ['Disk: dump.rdb', 'Compressed Binary'], sub: 'LZF Compressed Image' }),
+          card: makePanel({ x: -2, y: 16 }, 'Linux Copy-on-Write (COW)', [
             '1. fork() copies page table pointers (takes ~10ms for 10GB)',
             '2. Child process reads read-only shared pages -> writes dump.rdb',
             '3. When client updates a key: OS creates private copy of that 4KB page',
@@ -81,8 +79,8 @@ export const redisPersistenceRdbAofLesson = {
           ], { icon: 'layers' })
         },
         links: {
-          mc: h('mainProc', 'childProc', ['mainProc', 'childProc'], { heads: 'end', label: 'fork()' }),
-          cd: h('childProc', 'diskRdb', ['childProc', 'diskRdb'], { heads: 'end', label: 'Stream to Disk' })
+          mc: makeLink('mainProc', 'childProc', ['mainProc', 'childProc'], { heads: 'end', label: 'fork()' }),
+          cd: makeLink('childProc', 'diskRdb', ['childProc', 'diskRdb'], { heads: 'end', label: 'Stream to Disk' })
         },
         flows: [
           { route: ['mc'], bounce: false, rate: 1.0 },
@@ -105,9 +103,9 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'RDB Window', data_loss_window: '4 Minutes Lost!', io_overhead: 'Burst', recovery_speed: 'Fast' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Clients', tags: [{ text: '12:00 - 12:04 writes', tone: 'amber', icon: 'clock' }] }),
-          crash: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Server Crashed at 12:04', 'Power Failure'], sub: 'Restores 12:00 snapshot only' }),
-          card: S({ x: -2, y: 14 }, 'The RDB Data Loss Gap', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Clients', tags: [{ text: '12:00 - 12:04 writes', tone: 'amber', icon: 'clock' }] }),
+          crash: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Server Crashed at 12:04', 'Power Failure'], sub: 'Restores 12:00 snapshot only' }),
+          card: makePanel({ x: -2, y: 14 }, 'The RDB Data Loss Gap', [
             '12:00:00 -> dump.rdb saved successfully',
             '12:01:15 -> Order #8821 paid ($150) - In RAM only',
             '12:03:40 -> Order #8822 paid ($300) - In RAM only',
@@ -116,7 +114,7 @@ export const redisPersistenceRdbAofLesson = {
           ], { icon: 'alert' })
         },
         links: {
-          cc: h('client', 'crash', ['client', 'crash'], { heads: 'both', label: 'Lost in Volatile RAM' })
+          cc: makeLink('client', 'crash', ['client', 'crash'], { heads: 'both', label: 'Lost in Volatile RAM' })
         },
         flows: [{ route: ['cc'], bounce: true, rate: 1.4 }]
       }
@@ -136,13 +134,13 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'AOF Enabled', data_loss_window: '≤ 1 Second', io_overhead: 'Continuous', recovery_speed: 'Moderate' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET k v', icon: 'zap' }] }),
-          redis: d(0, 0, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Engine', 'aof_buf Buffer'], sub: 'In-Memory + Log Append' }),
-          aofFile: d(10, 8, { s: 4.6, h: 52, color: 'teal', glyph: 'folder', label: ['appendonly.aof', 'RESP Command Log'], sub: '*3\\r\\n$3\\r\\nSET...' }),
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET k v', icon: 'zap' }] }),
+          redis: makeBlock(0, 0, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Engine', 'aof_buf Buffer'], sub: 'In-Memory + Log Append' }),
+          aofFile: makeBlock(10, 8, { s: 4.6, h: 52, color: 'teal', glyph: 'folder', label: ['appendonly.aof', 'RESP Command Log'], sub: '*3\\r\\n$3\\r\\nSET...' }),
         },
         links: {
-          cr: h('client', 'redis', ['client', 'redis'], { heads: 'both' }),
-          ra: h('redis', 'aofFile', ['redis', 'aofFile'], { heads: 'end', label: 'write(aof_fd)' })
+          cr: makeLink('client', 'redis', ['client', 'redis'], { heads: 'both' }),
+          ra: makeLink('redis', 'aofFile', ['redis', 'aofFile'], { heads: 'end', label: 'write(aof_fd)' })
         },
         flows: [
           { route: ['cr'], bounce: true, rate: 2.4 },
@@ -165,16 +163,16 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'appendfsync everysec', data_loss_window: 'Max 1.0s', io_overhead: 'Balanced (100k QPS)', recovery_speed: 'Full' },
       scene: {
         entities: {
-          mainThread: d(-8, -4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Main Thread', 'write() to OS PageCache'], sub: 'Zero Disk Stall' }),
-          bioFsync: d(8, 4, { s: 4.6, h: 52, color: 'blue', glyph: 'clock', label: ['Background BIO Thread', 'fsync() Every 1 Second'], sub: 'Flushes OS Cache to Disk' }),
-          card: S({ x: 0, y: 14 }, 'Fsync Policy Comparison', [
+          mainThread: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Main Thread', 'write() to OS PageCache'], sub: 'Zero Disk Stall' }),
+          bioFsync: makeBlock(8, 4, { s: 4.6, h: 52, color: 'blue', glyph: 'clock', label: ['Background BIO Thread', 'fsync() Every 1 Second'], sub: 'Flushes OS Cache to Disk' }),
+          card: makePanel({ x: 0, y: 14 }, 'Fsync Policy Comparison', [
             'always:   fsync on every write -> 2,000 QPS max (Disk bound)',
             'everysec: fsync once per second in BIO thread -> 100,000+ QPS',
             'no:       OS decides flush timing (~30s) -> High data loss risk'
           ], { icon: 'clock' })
         },
         links: {
-          mb: h('mainThread', 'bioFsync', ['mainThread', 'bioFsync'], { heads: 'end', label: '1s Timer Queue' })
+          mb: makeLink('mainThread', 'bioFsync', ['mainThread', 'bioFsync'], { heads: 'end', label: '1s Timer Queue' })
         },
         flows: [{ route: ['mb'], bounce: false, rate: 2.0 }]
       }
@@ -194,9 +192,9 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'BGREWRITEAOF', data_loss_window: 'None', io_overhead: 'Background Fork', recovery_speed: 'Greatly Sped Up' },
       scene: {
         entities: {
-          bloated: d(-8, -4, { s: 4.4, h: 52, color: 'amber', glyph: 'folder', label: ['Old AOF File', '500 MB (1M INCRs)'], sub: 'Full of redundant writes' }),
-          compact: d(8, 4, { s: 4.8, h: 50, color: 'green', glyph: 'folder', label: ['Rewritten AOF', '12 MB (SET count 1M)'], sub: '95% Size Reduction' }),
-          card: S({ x: 0, y: 14 }, 'Log Compaction Effect', [
+          bloated: makeBlock(-8, -4, { s: 4.4, h: 52, color: 'amber', glyph: 'folder', label: ['Old AOF File', '500 MB (1M INCRs)'], sub: 'Full of redundant writes' }),
+          compact: makeBlock(8, 4, { s: 4.8, h: 50, color: 'green', glyph: 'folder', label: ['Rewritten AOF', '12 MB (SET count 1M)'], sub: '95% Size Reduction' }),
+          card: makePanel({ x: 0, y: 14 }, 'Log Compaction Effect', [
             'Old log contains history: SET a 1, SET a 2, SET a 3, DEL a...',
             'New rewritten file contains final reality only:',
             '1 million increments -> 1 single line: SET count 1000000',
@@ -204,7 +202,7 @@ export const redisPersistenceRdbAofLesson = {
           ], { icon: 'refresh' })
         },
         links: {
-          bc: h('bloated', 'compact', ['bloated', 'compact'], { heads: 'end', label: 'BGREWRITEAOF' })
+          bc: makeLink('bloated', 'compact', ['bloated', 'compact'], { heads: 'end', label: 'BGREWRITEAOF' })
         },
         flows: [{ route: ['bc'], bounce: false, rate: 2.2 }]
       }
@@ -224,8 +222,8 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'Hybrid (RDB + AOF)', data_loss_window: 'Max 1.0s', io_overhead: 'Low', recovery_speed: 'Sub-Second' },
       scene: {
         entities: {
-          hybridFile: d(0, 0, { s: 5.2, h: 52, color: 'teal', glyph: 'database', label: ['Hybrid AOF File', 'RDB Header + AOF Tail'], sub: '[REDIS RDB Binary] + [RESP Stream]' }),
-          card: S({ x: -2, y: 14 }, 'Hybrid File Layout (aof-use-rdb-preamble)', [
+          hybridFile: makeBlock(0, 0, { s: 5.2, h: 52, color: 'teal', glyph: 'database', label: ['Hybrid AOF File', 'RDB Header + AOF Tail'], sub: '[REDIS RDB Binary] + [RESP Stream]' }),
+          card: makePanel({ x: -2, y: 14 }, 'Hybrid File Layout (aof-use-rdb-preamble)', [
             '+----------------------------------------------------------+',
             '| RDB Preamble (Binary Image): Loads 10GB in 1.2 seconds   |',
             '+----------------------------------------------------------+',

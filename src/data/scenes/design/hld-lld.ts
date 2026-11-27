@@ -1,50 +1,34 @@
 // @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeCrowd,
+  makeDb,
+  makeLink,
+  makePanel,
+  makeZone
 } from '@/lib/simulator/scene-builders';
 
 const wu = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
 
-const Tu = (e = `customers`) => p(wu, 12, e);
+const Tu = (e = `customers`) => makeCrowd(wu, 12, e);
 
 const Eu = { ord: -10, cou: 0, pay: 10 };
 
 const Du = (e = {}) =>
-    d(0, -10, { color: `orange`, glyph: `signpost`, label: [`API`, `Gateway`], ...e });
+    makeBlock(0, -10, { color: `orange`, glyph: `signpost`, label: [`API`, `Gateway`], ...e });
 
-const Ou = (e = {}) => d(Eu.ord, 2, { glyph: `cart`, label: [`Orders`], ...e });
+const Ou = (e = {}) => makeBlock(Eu.ord, 2, { glyph: `cart`, label: [`Orders`], ...e });
 
-const ku = (e = {}) => d(Eu.cou, 2, { color: `green`, glyph: `car`, label: [`Couriers`], ...e });
+const ku = (e = {}) => makeBlock(Eu.cou, 2, { color: `green`, glyph: `car`, label: [`Couriers`], ...e });
 
 const Au = (e = {}) =>
-    d(Eu.pay, 2, { color: `purple`, glyph: `creditCard`, label: [`Payments`], ...e });
+    makeBlock(Eu.pay, 2, { color: `purple`, glyph: `creditCard`, label: [`Payments`], ...e });
 
-const ju = (e = {}) => b(Eu.ord, 12, { label: `orders`, ...e });
+const ju = (e = {}) => makeDb(Eu.ord, 12, { label: `orders`, ...e });
 
-const Mu = (e = {}) => b(Eu.cou, 12, { label: `locations`, ...e });
+const Mu = (e = {}) => makeDb(Eu.cou, 12, { label: `locations`, ...e });
 
-const Nu = (e = {}) => b(Eu.pay, 12, { label: `payments`, ...e });
+const Nu = (e = {}) => makeDb(Eu.pay, 12, { label: `payments`, ...e });
 
 const Pu = (e = {}) => ({
     users: Tu(),
@@ -59,17 +43,17 @@ const Pu = (e = {}) => ({
   });
 
 const Fu = (e) =>
-    h(`gw`, e, e === `cou` ? [`gw`, e] : [`gw`, [`gw`, -4], [e, -4], e], { heads: `both` });
+    makeLink(`gw`, e, e === `cou` ? [`gw`, e] : [`gw`, [`gw`, -4], [e, -4], e], { heads: `both` });
 
 const Iu = (e = {}) => ({
-    ug: h(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
+    ug: makeLink(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
     go: Fu(`ord`),
     gc: Fu(`cou`),
     gp: Fu(`pay`),
-    oo: h(`ord`, `odb`, [`ord`, `odb`], { heads: `both` }),
-    cc: h(`cou`, `cdb`, [`cou`, `cdb`], { heads: `both` }),
-    pp: h(`pay`, `pdb`, [`pay`, `pdb`], { heads: `both` }),
-    ev: h(`ord`, `cou`, [`ord`, `cou`], { style: `dashed` }),
+    oo: makeLink(`ord`, `odb`, [`ord`, `odb`], { heads: `both` }),
+    cc: makeLink(`cou`, `cdb`, [`cou`, `cdb`], { heads: `both` }),
+    pp: makeLink(`pay`, `pdb`, [`pay`, `pdb`], { heads: `both` }),
+    ev: makeLink(`ord`, `cou`, [`ord`, `cou`], { style: `dashed` }),
     ...e,
   });
 
@@ -85,17 +69,17 @@ const Lu = () => [
 
 const Ru = { x0: -17.5, x1: 5.5, y0: -8.5, y1: 16.5 };
 
-const zu = (e, t, n, r, i = {}) => d(e, t, { s: 4.2, h: 46, glyph: n, label: r, ...i });
+const zu = (e, t, n, r, i = {}) => makeBlock(e, t, { s: 4.2, h: 46, glyph: n, label: r, ...i });
 
 const Bu = (e = {}) => ({
-    oz: x(Ru, `ORDERS SERVICE · INSIDE`),
+    oz: makeZone(Ru, `ORDERS SERVICE · INSIDE`),
     gw: Du({ x: -6, y: -12 }),
     ctl: zu(-6, -3, `braces`, [`Controller`], { sub: `HTTP in` }),
     svc: zu(-6, 5, `workflow`, [`Order`, `Service`]),
     repo: zu(-14, 13, `database`, [`Repository`], { color: `yellow` }),
     payc: zu(2, 13, `creditCard`, [`Payment`, `Client`], { color: `yellow` }),
-    odb: b(-14, 22, { label: `orders table` }),
-    pay: d(2, 22, {
+    odb: makeDb(-14, 22, { label: `orders table` }),
+    pay: makeBlock(2, 22, {
       color: `purple`,
       glyph: `creditCard`,
       label: [`Payments`],
@@ -106,12 +90,12 @@ const Bu = (e = {}) => ({
   });
 
 const Vu = (e = {}) => ({
-    gc_ctl: h(`gw`, `ctl`, [`gw`, `ctl`], { heads: `both` }),
-    cs: h(`ctl`, `svc`, [`ctl`, `svc`], { heads: `both` }),
-    sr: h(`svc`, `repo`, [`svc`, [`svc`, 9], [`repo`, 9], `repo`], { heads: `both` }),
-    sp: h(`svc`, `payc`, [`svc`, [`svc`, 9], [`payc`, 9], `payc`], { heads: `both` }),
-    ro: h(`repo`, `odb`, [`repo`, `odb`], { heads: `both` }),
-    pp_client: h(`payc`, `pay`, [`payc`, `pay`], { heads: `both` }),
+    gc_ctl: makeLink(`gw`, `ctl`, [`gw`, `ctl`], { heads: `both` }),
+    cs: makeLink(`ctl`, `svc`, [`ctl`, `svc`], { heads: `both` }),
+    sr: makeLink(`svc`, `repo`, [`svc`, [`svc`, 9], [`repo`, 9], `repo`], { heads: `both` }),
+    sp: makeLink(`svc`, `payc`, [`svc`, [`svc`, 9], [`payc`, 9], `payc`], { heads: `both` }),
+    ro: makeLink(`repo`, `odb`, [`repo`, `odb`], { heads: `both` }),
+    pp_client: makeLink(`payc`, `pay`, [`payc`, `pay`], { heads: `both` }),
     ...e,
   });
 
@@ -123,7 +107,7 @@ const Hu = () => [
     },
   ];
 
-const Uu = (e, t, n) => S({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
+const Uu = (e, t, n) => makePanel({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
 
 const Wu = { zoom: `whole system`, unit: `services · stores · queues`, output: `architecture diagram` };
 
@@ -176,7 +160,7 @@ const Ku = {
         metrics: Wu,
         scene: {
           entities: Pu({
-            sz: x({ x0: -14, x1: 14, y0: -14, y1: 16 }, `HLD · THE WHOLE SYSTEM`),
+            sz: makeZone({ x0: -14, x1: 14, y0: -14, y1: 16 }, `HLD · THE WHOLE SYSTEM`),
           }),
           links: Iu(),
           flows: Lu(),
@@ -215,7 +199,7 @@ const Ku = {
             ),
           }),
           links: Iu({
-            ev: h(`ord`, `cou`, [`ord`, `cou`], { style: `dashed`, label: `OrderPlaced event` }),
+            ev: makeLink(`ord`, `cou`, [`ord`, `cou`], { style: `dashed`, label: `OrderPlaced event` }),
           }),
           flows: Lu(),
         },
@@ -262,7 +246,7 @@ const Ku = {
             svc: zu(-6, 5, `workflow`, [`Order`, `Service`], {
               tags: [{ text: `state machine`, icon: `flow` }],
             }),
-            odb: b(-14, 22, {
+            odb: makeDb(-14, 22, {
               label: `orders table`,
               tags: [{ text: `index (user_id, created_at)`, icon: `listOrdered` }],
             }),
@@ -309,7 +293,7 @@ const Ku = {
             ),
           }),
           links: Vu({
-            gc_ctl: h(`gw`, `ctl`, [`gw`, `ctl`], {
+            gc_ctl: makeLink(`gw`, `ctl`, [`gw`, `ctl`], {
               heads: `both`,
               label: `the contract`,
               labelTone: `green`,
@@ -353,7 +337,7 @@ const Ku = {
               `listOrdered`,
             ),
           }),
-          links: Iu({ ev: h(`ord`, `cou`, [`ord`, `cou`], { style: `dashed` }) }),
+          links: Iu({ ev: makeLink(`ord`, `cou`, [`ord`, `cou`], { style: `dashed` }) }),
           flows: Lu(),
         },
       },

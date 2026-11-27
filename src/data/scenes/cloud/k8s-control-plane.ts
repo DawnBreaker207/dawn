@@ -1,166 +1,316 @@
-// @ts-nocheck
-/* eslint-disable */
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+
+// One fixed stage for the whole lesson: kube-apiserver is the hub, and every other
+// component only ever talks to it (hub-and-spoke). Steps add one actor at a time.
+//
+//   kubectl ─┐                 ┌─ etcd
+//            └── kube-apiserver ┤
+//   controller-manager ─┘      └─ scheduler
+//                 node-1 ─┘ └─ node-2
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+const dev = (o: Opts = {}) => makeDevice(-15.5, 3, { label: `kubectl`, ...o });
+const api = (o: Opts = {}) =>
+  makeBlock(-1.5, 1.5, { s: 5.2, h: 56, color: `blue`, glyph: `network`, label: [`API server`], sub: `kube-apiserver`, ...o });
+const etcd = (o: Opts = {}) => makeDb(-5, 18, { r: 2.2, h: 46, glyph: `database`, label: `etcd`, ...o });
+const ctrl = (o: Opts = {}) =>
+  makeBlock(-4.5, -13, { s: 4.4, h: 52, color: `orange`, glyph: `refresh`, label: [`Controller`, `manager`], ...o });
+const sched = (o: Opts = {}) =>
+  makeBlock(10, 10, { s: 4.4, h: 52, color: `orange`, glyph: `target`, label: [`Scheduler`], sub: `filter · score`, ...o });
+const node = (x: number, y: number, name: string, tags: Tag[] = []) =>
+  makeBlock(x, y, { s: 4.4, h: 50, color: `green`, glyph: `container`, label: [name], sub: `kubelet`, tags });
+const node1 = (tags: Tag[] = []) => node(9, -17, `node-1`, tags);
+const node2 = (tags: Tag[] = []) => node(15.5, -7.5, `node-2`, tags);
+
+const L = {
+  apply: makeLink(`dev`, `api`, [`dev`, `api`], { heads: `both`, label: `apply` }),
+  // after the request is in, the kubectl link stays as a quiet anchor
+  applyBusy: makeLink(`dev`, `api`, [`dev`, `api`], { heads: `both` }),
+  applyIdle: makeLink(`dev`, `api`, [`dev`, `api`], { heads: `both`, style: `off` }),
+  persist: makeLink(`api`, `etcd`, [`api`, `etcd`], { heads: `both`, label: `persist` }),
+  ctrlWatch: makeLink(`ctrl`, `api`, [`ctrl`, `api`], { heads: `both`, label: `watch` }),
+  schedWatch: makeLink(`sched`, `api`, [`sched`, `api`], { heads: `both`, label: `bind` }),
+  kubelet1: makeLink(`node1`, `api`, [`node1`, `api`], { heads: `both` }),
+  kubelet2: makeLink(`node2`, `api`, [`node2`, `api`], { heads: `both` }),
+};
+
+/** Code / output card, parked in the empty band above the hub. */
+const card = (title: string, lines: string[], icon: string) =>
+  makePanel({ x: -1.5, y: 1.5, z: 0, dx: -120, dy: -262 }, title, lines, { icon });
 
 export const k8sControlPlaneLesson = {
-  id: 'k8s-control-plane',
-  title: 'Kubernetes Control Plane: API Server, etcd & Controllers',
-  trackId: 'k8s',
-  badge: 'Advanced',
-  summary: 'Deconstruct the Kubernetes brain: kube-apiserver authentication and admission, distributed Raft storage in etcd, kube-scheduler filtering, and controller reconciliation loops.',
-  metrics: ['apiserver', 'etcd_raft', 'scheduler', 'reconciliation'],
+  id: `k8s-control-plane`,
+  title: `Kubernetes Control Plane: API Server, etcd & Controllers`,
+  trackId: `k8s`,
+  summary: `Follow one Deployment from kubectl apply to running Pods: the API server, etcd, controllers, scheduler and kubelets.`,
+  minutes: 14,
+  level: `advanced`,
+  metrics: [`desired`, `pending`, `running`, `revision`],
+  legend: [`req`, `res`, [`write`, `etcd write`], [`msg`, `watch event`]],
   goals: [
-    { text: 'Declarative State via kubectl', step: 1 },
-    { text: 'apiserver Pipeline & Webhooks', step: 2 },
-    { text: 'etcd Raft Consensus Store', step: 3 },
-    { text: 'K8s Controller Reconciliation', step: 4 },
-    { text: 'kube-scheduler Filter & Score', step: 5 },
+    { text: `Declarative state via kubectl`, step: 1 },
+    { text: `The API server request pipeline`, step: 2 },
+    { text: `etcd as the single source of truth`, step: 3 },
+    { text: `Controllers reconcile desired vs actual`, step: 4 },
+    { text: `The scheduler filters and scores nodes`, step: 6 },
   ],
   steps: [
     {
-      title: 'The Declaration: kubectl apply',
-      short: 'YAML Submission',
+      short: `Apply`,
+      chapter: `setup`,
+      title: `You declare what you want`,
       body: [
-        'Everything in Kubernetes is a declarative resource state. When a user runs `kubectl apply`, a JSON/YAML manifest is sent via HTTP POST to the API Server.',
-        'The developer defines the *desired state*, and Kubernetes works continuously to make the *current state* match it.',
+        `You never tell Kubernetes <em>how</em> to start containers. You send a manifest that describes the end state — “3 replicas of web:1.4” — and the cluster works out the rest.`,
+        `<code>kubectl apply</code> turns the YAML into an HTTPS request to the one component everything goes through: the <span class="term">API server</span>.`,
       ],
+      metrics: { desired: 3, pending: 0, running: 0, revision: 1041 },
       scene: {
         entities: {
-          clientDev: makeBlock(-2, -18, { s: 4.5, h: 42, color: 'blue', label: ['kubectl CLI', 'POST /apis/apps/v1'] }),
-          apiServer: makeBlock(-2, -4, { s: 5, h: 46, color: 'purple', label: ['kube-apiserver', 'REST API Gateway'] }),
-          etcdStore: makeDb(-2, 12, { r: 2.2, h: 36, color: 'store', label: 'etcd Key-Value Store' }),
-          card: makePanel({ x: -12, y: 4 }, 'Desired State', [
-            'apiVersion: apps/v1',
-            'kind: Deployment',
-            'spec: { replicas: 3 }',
-            'Declarative intent in YAML',
-          ]),
+          dev: dev(),
+          api: api(),
+          card: card(
+            `deployment.yaml`,
+            [`kind: Deployment`, `metadata: { name: web }`, `spec:`, `  replicas: 3`, `  image: web:1.4`],
+            `file`,
+          ),
         },
-        links: {
-          clientDev_apiServer: makeLink('clientDev', 'apiServer', ['clientDev', 'apiServer'], { label: 'TLS HTTPS request' }),
-          apiServer_etcdStore: makeLink('apiServer', 'etcdStore', ['apiServer', 'etcdStore'], { label: 'Raft consensus write' }),
-        },
+        links: { apply: L.apply },
+        flows: [{ route: [`apply`], rate: 1.2, bounce: true }],
       },
     },
     {
-      title: 'kube-apiserver Pipeline',
-      short: 'Auth, Admission & Validation',
+      short: `Admit`,
+      chapter: `technique`,
+      title: `Every request runs the same gauntlet`,
       body: [
-        'The API Server is the only component in the cluster that talks directly to etcd.',
-        'Every incoming request undergoes a strict pipeline: Authentication → RBAC Authorization → Mutating Webhooks → Schema Validation → Validating Webhooks.',
+        `Before anything is stored, the API server checks <b>who</b> you are (authentication), <b>whether</b> you may do this (RBAC), lets <span class="term">admission webhooks</span> rewrite or reject the object, and validates it against the schema.`,
+        `Only then is it written to <span class="term">etcd</span>. The API server is the <em>only</em> component allowed to talk to etcd.`,
       ],
+      changes: [`+ etcd`, `~ Deployment stored · revision 1042`],
+      metrics: { desired: 3, pending: 0, running: 0, revision: 1042 },
       scene: {
         entities: {
-          authModule: makeBlock(-12, -14, { s: 4, h: 42, color: 'blue', label: ['Authn & RBAC', 'Token & Role check'] }),
-          mutatingHook: makeBlock(4, -14, { s: 4, h: 42, color: 'orange', label: ['Mutating Webhook', 'Sidecar injection'] }),
-          validator: makeBlock(-12, 4, { s: 4, h: 42, color: 'purple', label: ['Validator', 'Schema & OPA rules'] }),
-          raftCommit: makeDb(4, 4, { r: 2.2, h: 36, color: 'store', label: 'etcd: /registry/pods' }),
-          card: makePanel({ x: -2, y: 14 }, 'apiserver Pipeline', [
-            '1. Authn (X509 / OIDC tokens)',
-            '2. Authz (RBAC ClusterRoles)',
-            '3. Mutate (Inject sidecars)',
-            '4. Validate (OpenAPI / OPA)',
-          ]),
+          dev: dev(),
+          api: api({
+            tags: [
+              { text: `authn ✓  rbac ✓`, tone: `green` },
+              { text: `admission ✓`, tone: `green` },
+            ],
+          }),
+          etcd: etcd(),
+          card: card(
+            `API server log`,
+            [
+              `POST /apis/apps/v1/namespaces/default/deployments`,
+              `authn   user=dev  (x509)`,
+              `authz   rbac: allowed  verb=create`,
+              `mutate  + default resources`,
+              `= 201 Created   resourceVersion=1042`,
+            ],
+            `scroll`,
+          ),
         },
-        links: {
-          authModule_mutatingHook: makeLink('authModule', 'mutatingHook', ['authModule', 'mutatingHook'], { label: 'authenticated' }),
-          mutatingHook_validator: makeLink('mutatingHook', 'validator', ['mutatingHook', 'validator'], { label: 'mutated spec' }),
-          validator_raftCommit: makeLink('validator', 'raftCommit', ['validator', 'raftCommit'], { label: 'passed: persist' }),
-        },
+        links: { apply: L.applyBusy, persist: L.persist },
+        flows: [
+          { route: [`apply`], rate: 1.2, bounce: true },
+          { route: [`persist`], kind: `write`, rate: 1 },
+        ],
       },
     },
     {
-      title: 'etcd: The Source of Truth',
-      short: 'Raft Consensus KV',
+      short: `etcd`,
+      chapter: `insight`,
+      title: `etcd is the cluster’s memory`,
       body: [
-        'etcd is a strongly consistent, distributed key-value store using the Raft consensus algorithm.',
-        'It maintains a monotonic revision counter (`resourceVersion`). Watch streams notify controllers whenever keys change, avoiding polling overhead.',
+        `etcd is a small, strongly consistent key-value store. In production it runs as 3 or 5 members that agree on every write with <span class="term">Raft</span>, so losing one machine loses nothing.`,
+        `Every change bumps a global <span class="term">revision</span>. Components never poll: they open a <b>watch</b> through the API server and get pushed each change after the revision they last saw.`,
       ],
+      changes: [`~ etcd: 3 members, leader etcd-0`],
+      metrics: { desired: 3, pending: 0, running: 0, revision: 1042 },
       scene: {
         entities: {
-          leaderEtcd: makeDb(-2, -14, { r: 2.4, h: 38, color: 'green', label: 'etcd Leader (Node 1)' }),
-          followerA: makeDb(-10, 4, { r: 2, h: 34, color: 'slab', label: 'etcd Follower (Node 2)' }),
-          followerB: makeDb(6, 4, { r: 2, h: 34, color: 'slab', label: 'etcd Follower (Node 3)' }),
-          card: makePanel({ x: -12, y: 14 }, 'Raft Consensus', [
-            'etcdctl get /registry/deployments',
-            'Strong Consistency (CP)',
-            'Quorum: (3/2) + 1 = 2 nodes',
-          ]),
+          dev: dev(),
+          api: api(),
+          etcd: etcd({
+            tags: [
+              { text: `3 members · Raft`, icon: `layers` },
+              { text: `quorum 2 of 3`, tone: `green` },
+            ],
+          }),
+          card: card(
+            `etcdctl`,
+            [
+              `$ etcdctl get /registry/deployments/default/web \\`,
+              `    --write-out=fields | grep Revision`,
+              `"ModRevision" : 1042`,
+              `# watchers resume from the revision they last saw`,
+            ],
+            `database`,
+          ),
         },
-        links: {
-          leaderEtcd_followerA: makeLink('leaderEtcd', 'followerA', ['leaderEtcd', 'followerA'], { label: 'Raft appendEntries' }),
-          leaderEtcd_followerB: makeLink('leaderEtcd', 'followerB', ['leaderEtcd', 'followerB'], { label: 'Raft appendEntries' }),
-        },
+        links: { apply: L.applyIdle, persist: L.persist },
+        flows: [{ route: [`persist`], kind: `write`, rate: 0.8, bounce: true }],
       },
     },
     {
-      title: 'kube-controller-manager (Reconciliation Loop)',
-      short: 'Deployment & ReplicaSet',
+      short: `Reconcile`,
+      chapter: `solution`,
+      title: `Controllers close the gap`,
       body: [
-        'kube-controller-manager embeds controllers (Deployment, ReplicaSet, Node, EndpointSlice).',
-        'The DeploymentController reacts to the new manifest, creates a ReplicaSet, which in turn creates 3 unbound Pod objects with `nodeName: ""` in etcd.',
+        `The <span class="term">controller manager</span> runs dozens of control loops. The Deployment controller is watching Deployments: it sees “want 3, have 0” and creates a ReplicaSet, whose controller creates 3 Pod objects.`,
+        `Those Pods exist only as records in etcd. Their <code>nodeName</code> is empty — nobody has decided where they run yet.`,
       ],
+      changes: [`+ Controller manager`, `+ ReplicaSet + 3 Pods (Pending)`],
+      metrics: { desired: 3, pending: 3, running: 0, revision: 1046 },
       scene: {
         entities: {
-          depCtrl: makeBlock(-10, -14, { s: 4, h: 42, color: 'purple', label: ['Deployment Controller', 'Reconciles Specs'] }),
-          rsCtrl: makeBlock(6, -14, { s: 4, h: 42, color: 'orange', label: ['ReplicaSet Controller', 'Desired: 3 Pods'] }),
-          unboundPods: makeBlock(-2, 4, { s: 4.5, h: 44, color: 'blue', label: ['3 Unbound Pods', 'nodeName: "" (Pending)'] }),
-          card: makePanel({ x: -12, y: 14 }, 'Reconciliation Loop', [
-            'for {',
-            '  if actual < desired: createPod()',
-            '  if actual > desired: deletePod()',
-            '}',
-          ]),
+          dev: dev(),
+          api: api(),
+          etcd: etcd({ tags: [{ text: `3 Pods · Pending`, tone: `amber`, icon: `hourglass` }] }),
+          ctrl: ctrl(),
+          card: card(
+            `reconcile loop`,
+            [
+              `for event := range watch("deployments") {`,
+              `  have := countPods(event.selector)`,
+              `  if have < event.replicas { createPods(want - have) }`,
+              `  if have > event.replicas { deletePods(have - want) }`,
+              `}`,
+            ],
+            `refresh`,
+          ),
         },
-        links: {
-          depCtrl_rsCtrl: makeLink('depCtrl', 'rsCtrl', ['depCtrl', 'rsCtrl'], { label: 'creates RS' }),
-          rsCtrl_unboundPods: makeLink('rsCtrl', 'unboundPods', ['rsCtrl', 'unboundPods'], { label: 'generates pod specs' }),
-        },
+        links: { apply: L.applyIdle, persist: L.persist, ctrlWatch: L.ctrlWatch },
+        flows: [
+          { route: [`ctrlWatch`], kind: `msg`, rate: 1.4, bounce: true },
+          { route: [`persist`], kind: `write`, rate: 1 },
+        ],
       },
     },
     {
-      title: 'kube-scheduler (Filtering & Scoring)',
-      short: 'Node Selection Algorithm',
+      short: `Nodes`,
+      chapter: `problem`,
+      title: `Machines report in — but Pods still wait`,
       body: [
-        'kube-scheduler watches for Pods with an empty `nodeName`.',
-        'It applies a two-step algorithm: Filtering (eliminates unsuitable nodes) followed by Scoring (ranks surviving nodes to choose the best host).',
+        `Each worker machine runs a <span class="term">kubelet</span>. It registers its node, reports free CPU and memory, and watches for Pods assigned to it.`,
+        `Our 3 Pods are still <b>Pending</b>: no kubelet will start a Pod until something writes its node name. That decision belongs to one component.`,
       ],
+      changes: [`+ node-1, node-2 (kubelets)`, `− Pods still unassigned`],
+      metrics: { desired: 3, pending: 3, running: 0, revision: 1046 },
       scene: {
         entities: {
-          scheduler: makeBlock(-2, -16, { s: 4.8, h: 44, color: 'blue', label: ['kube-scheduler', 'Filter & Score'] }),
-          workerNode1: makeBlock(-10, 2, { s: 4, h: 42, color: 'slab', label: ['Worker 1', 'Score: 62 (Loaded)'] }),
-          workerNode2: makeBlock(6, 2, { s: 4, h: 42, color: 'green', label: ['Worker 2', 'Score: 89 (Selected!)'] }),
-          card: makePanel({ x: -12, y: 14 }, 'Scheduler Two-Step', [
-            '1. Filter (NodeResourcesFit)',
-            '2. Score (ImageLocality / Spread)',
-            'Worker 2 wins -> binds pod',
-          ]),
+          dev: dev(),
+          api: api(),
+          etcd: etcd({ tags: [{ text: `3 Pods · Pending`, tone: `amber`, icon: `hourglass` }] }),
+          ctrl: ctrl(),
+          node1: node1([{ text: `cpu 70% used`, tone: `amber` }]),
+          node2: node2([{ text: `cpu 20% used`, tone: `green` }]),
         },
         links: {
-          scheduler_workerNode1: makeLink('scheduler', 'workerNode1', ['scheduler', 'workerNode1'], { label: 'filters pass' }),
-          scheduler_workerNode2: makeLink('scheduler', 'workerNode2', ['scheduler', 'workerNode2'], { label: 'highest rank: BIND' }),
+          apply: L.applyIdle,
+          persist: L.persist,
+          ctrlWatch: L.ctrlWatch,
+          kubelet1: L.kubelet1,
+          kubelet2: L.kubelet2,
         },
+        flows: [
+          { route: [`kubelet1`], kind: `msg`, rate: 0.8, bounce: true },
+          { route: [`kubelet2`], kind: `msg`, rate: 0.8, bounce: true },
+        ],
       },
     },
     {
-      title: 'Control Plane Convergence',
-      short: 'Complete Control Flow',
+      short: `Schedule`,
+      chapter: `solution`,
+      title: `The scheduler picks a node for each Pod`,
       body: [
-        'No component commands another directly. Every entity watches etcd via the API Server and reacts asynchronously to state changes.',
-        'This decoupled, event-driven reconciliation model makes Kubernetes extraordinarily resilient to network splits and node failures.',
+        `The <span class="term">scheduler</span> watches for Pods with no node. For each one it <b>filters</b> out nodes that can’t fit it (not enough CPU, wrong zone, taints), then <b>scores</b> the rest and writes a binding for the winner.`,
+        `It never contacts the node. It only updates the Pod through the API server — the kubelet on that node sees the change through its own watch.`,
       ],
+      changes: [`+ Scheduler`, `~ 3 Pods bound: node-2 ×2, node-1 ×1`],
+      metrics: { desired: 3, pending: 0, running: 0, revision: 1049 },
       scene: {
         entities: {
-          apiGateway: makeBlock(-2, -18, { s: 5, h: 44, color: 'purple', label: ['kube-apiserver', 'State Hub'] }),
-          etcdCentral: makeDb(-2, -4, { r: 2.2, h: 36, color: 'store', label: 'etcd Core DB' }),
-          ctrlMgr: makeBlock(-12, 12, { s: 4, h: 42, color: 'orange', label: ['Controllers', 'State Reconcilers'] }),
-          schedModule: makeBlock(8, 12, { s: 4, h: 42, color: 'blue', label: ['Scheduler', 'Placement Engine'] }),
+          dev: dev(),
+          api: api(),
+          etcd: etcd(),
+          ctrl: ctrl(),
+          sched: sched({ tags: [{ text: `3 bindings`, tone: `green`, icon: `check` }] }),
+          node1: node1([{ text: `score 62`, tone: `gray` }]),
+          node2: node2([{ text: `score 89 ✓`, tone: `green` }]),
+          card: card(
+            `scheduling web-7d9f-x2k`,
+            [
+              `filter  node-1  cpu 1.2/4 free   ok`,
+              `filter  node-2  cpu 3.2/4 free   ok`,
+              `score   node-1  62   (busy, image cached)`,
+              `= score   node-2  89   → bind`,
+            ],
+            `target`,
+          ),
         },
         links: {
-          apiGateway_etcdCentral: makeLink('apiGateway', 'etcdCentral', ['apiGateway', 'etcdCentral'], { label: 'consensus write' }),
-          ctrlMgr_apiGateway: makeLink('ctrlMgr', 'apiGateway', ['ctrlMgr', 'apiGateway'], { label: 'watch & mutate' }),
-          schedModule_apiGateway: makeLink('schedModule', 'apiGateway', ['schedModule', 'apiGateway'], { label: 'watch & bind' }),
+          apply: L.applyIdle,
+          persist: L.persist,
+          ctrlWatch: L.ctrlWatch,
+          schedWatch: L.schedWatch,
+          kubelet1: L.kubelet1,
+          kubelet2: L.kubelet2,
         },
+        flows: [
+          { route: [`schedWatch`], kind: `msg`, rate: 1.4, bounce: true },
+          { route: [`persist`], kind: `write`, rate: 1 },
+        ],
+      },
+    },
+    {
+      short: `Recap`,
+      chapter: `recap`,
+      title: `Nobody gives orders — everyone watches`,
+      body: [
+        `Each kubelet sees Pods bound to its node, pulls the image and starts the containers, then reports status back. Desired 3, running 3.`,
+        `No component calls another directly. They all watch the API server and push the world one step closer to what is stored in etcd. That is why a crashed controller or a lost node heals itself: the loop just runs again.`,
+      ],
+      changes: [`~ 3 Pods Running`],
+      metrics: { desired: 3, pending: 0, running: 3, revision: 1055 },
+      scene: {
+        entities: {
+          dev: dev(),
+          api: api(),
+          etcd: etcd(),
+          ctrl: ctrl(),
+          sched: sched(),
+          node1: node1([{ text: `1 Pod running`, tone: `green` }]),
+          node2: node2([{ text: `2 Pods running`, tone: `green` }]),
+          card: card(
+            `pods`,
+            [
+              `$ kubectl get pods -o wide`,
+              `NAME          STATUS    NODE`,
+              `web-7d9f-x2k  Running   node-2`,
+              `web-7d9f-m8q  Running   node-2`,
+              `web-7d9f-p4t  Running   node-1`,
+            ],
+            `listChecks`,
+          ),
+        },
+        links: {
+          apply: L.applyIdle,
+          persist: L.persist,
+          ctrlWatch: L.ctrlWatch,
+          schedWatch: L.schedWatch,
+          kubelet1: L.kubelet1,
+          kubelet2: L.kubelet2,
+        },
+        flows: [
+          { route: [`ctrlWatch`], kind: `msg`, rate: 0.7, bounce: true },
+          { route: [`schedWatch`], kind: `msg`, rate: 0.7, bounce: true },
+          { route: [`kubelet1`], kind: `msg`, rate: 0.9, bounce: true },
+          { route: [`kubelet2`], kind: `msg`, rate: 0.9, bounce: true },
+          { route: [`persist`], kind: `write`, rate: 0.8 },
+        ],
       },
     },
   ],

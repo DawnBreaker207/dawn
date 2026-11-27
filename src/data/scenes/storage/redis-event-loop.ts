@@ -1,10 +1,8 @@
-// @ts-nocheck
-/* eslint-disable */
 import {
-  makeBlock as d,
-  makeDevice as y,
-  makeLink as h,
-  makePanel as S,
+  makeBlock,
+  makeDevice,
+  makeLink,
+  makePanel,
 } from '@/lib/simulator/scene-builders';
 
 export const redisEventLoopLesson = {
@@ -38,9 +36,9 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'NO LOCKS', active_conns: '10,000', qps: '110,000', avg_latency_us: '150µs' },
       scene: {
         entities: {
-          clients: y(-10, -8, { form: 'phone', label: '10,000 App Clients', tags: [{ text: 'Concurrent GET/SET', icon: 'zap' }] }),
-          redis: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Server', 'Single Thread Core'], sub: '100% In-Memory RAM' }),
-          card: S({ x: -2, y: 14 }, 'Multi-Threaded vs Single-Threaded', [
+          clients: makeDevice(-10, -8, { form: 'phone', label: '10,000 App Clients', tags: [{ text: 'Concurrent GET/SET', icon: 'zap' }] }),
+          redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Server', 'Single Thread Core'], sub: '100% In-Memory RAM' }),
+          card: makePanel({ x: -2, y: 14 }, 'Multi-Threaded vs Single-Threaded', [
             'Multi-Threaded (Pthreads / Java):',
             '  - Mutex lock contention on shared hash buckets',
             '  - CPU context switches: 2–5 microseconds per switch',
@@ -50,7 +48,7 @@ export const redisEventLoopLesson = {
           ], { icon: 'zap' })
         },
         links: {
-          cr: h('clients', 'redis', ['clients', 'redis'], { heads: 'both', label: 'TCP Conns' })
+          cr: makeLink('clients', 'redis', ['clients', 'redis'], { heads: 'both', label: 'TCP Conns' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 2.8 }]
       }
@@ -70,10 +68,10 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'epoll_wait()', active_conns: '10,000 (12 Ready)', qps: '120,000', avg_latency_us: '120µs' },
       scene: {
         entities: {
-          clients: y(-10, -8, { form: 'phone', label: 'Clients', tags: [{ text: '12 Sockets Ready', tone: 'green', icon: 'zap' }] }),
-          epoll: d(0, 0, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Linux Kernel', 'epoll_wait Subsystem'], sub: 'Ready List: fd 4, 12, 88' }),
-          redis: d(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Event Loop', 'aeMain()'], sub: 'Dispatches Read Events' }),
-          card: S({ x: -2, y: 14 }, 'The Epoll Loop (ae_epoll.c)', [
+          clients: makeDevice(-10, -8, { form: 'phone', label: 'Clients', tags: [{ text: '12 Sockets Ready', tone: 'green', icon: 'zap' }] }),
+          epoll: makeBlock(0, 0, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Linux Kernel', 'epoll_wait Subsystem'], sub: 'Ready List: fd 4, 12, 88' }),
+          redis: makeBlock(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Event Loop', 'aeMain()'], sub: 'Dispatches Read Events' }),
+          card: makePanel({ x: -2, y: 14 }, 'The Epoll Loop (ae_epoll.c)', [
             '1. int numevents = epoll_wait(epfd, events, maxevents, timeout);',
             '2. Kernel returns ONLY file descriptors that have readable data',
             '3. Redis iterates through active events: O(Active) instead of O(Total)',
@@ -81,8 +79,8 @@ export const redisEventLoopLesson = {
           ], { icon: 'network' })
         },
         links: {
-          ce: h('clients', 'epoll', ['clients', 'epoll'], { heads: 'end' }),
-          er: h('epoll', 'redis', ['epoll', 'redis'], { heads: 'both', label: 'Ready FDs' })
+          ce: makeLink('clients', 'epoll', ['clients', 'epoll'], { heads: 'end' }),
+          er: makeLink('epoll', 'redis', ['epoll', 'redis'], { heads: 'both', label: 'Ready FDs' })
         },
         flows: [
           { route: ['ce', 'er'], bounce: false, rate: 2.5 }
@@ -104,10 +102,10 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'aeProcessEvents', active_conns: '10,000', qps: '115,000', avg_latency_us: '130µs' },
       scene: {
         entities: {
-          loop: d(-8, -4, { s: 4.8, h: 50, color: 'rose', glyph: 'refresh', label: ['aeMain() Loop', 'Reactor Core'], sub: 'Single Thread Loop' }),
-          fileEvents: d(6, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'network', label: ['File Events', 'Socket I/O'], sub: 'Read / Write Handlers' }),
-          timeEvents: d(6, 4, { s: 4.4, h: 52, color: 'purple', glyph: 'clock', label: ['Time Events', 'serverCron (100Hz)'], sub: 'TTL Expiry / Defra' }),
-          card: S({ x: -2, y: 14 }, 'The Unified Event Cycle', [
+          loop: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'rose', glyph: 'refresh', label: ['aeMain() Loop', 'Reactor Core'], sub: 'Single Thread Loop' }),
+          fileEvents: makeBlock(6, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'network', label: ['File Events', 'Socket I/O'], sub: 'Read / Write Handlers' }),
+          timeEvents: makeBlock(6, 4, { s: 4.4, h: 52, color: 'purple', glyph: 'clock', label: ['Time Events', 'serverCron (100Hz)'], sub: 'TTL Expiry / Defra' }),
+          card: makePanel({ x: -2, y: 14 }, 'The Unified Event Cycle', [
             'while (!server.shutdown) {',
             '  int timeout = shortestTimeEventTimeout();',
             '  aeApiPoll(eventLoop, timeout); // epoll_wait',
@@ -117,8 +115,8 @@ export const redisEventLoopLesson = {
           ], { icon: 'refresh' })
         },
         links: {
-          lf: h('loop', 'fileEvents', ['loop', 'fileEvents'], { heads: 'both' }),
-          lt: h('loop', 'timeEvents', ['loop', 'timeEvents'], { heads: 'both' })
+          lf: makeLink('loop', 'fileEvents', ['loop', 'fileEvents'], { heads: 'both' }),
+          lt: makeLink('loop', 'timeEvents', ['loop', 'timeEvents'], { heads: 'both' })
         },
         flows: [
           { route: ['lf'], bounce: true, rate: 2.2 },
@@ -141,9 +139,9 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'RESP Pipeline', active_conns: 'Active', qps: '130,000', avg_latency_us: '95µs' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET user:1 "John"', icon: 'zap' }] }),
-          redis: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Dict Engine', 'Hash Table O(1)'], sub: 'db[0].dict' }),
-          card: S({ x: -2, y: 14 }, 'Command Execution Pipeline', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET user:1 "John"', icon: 'zap' }] }),
+          redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Dict Engine', 'Hash Table O(1)'], sub: 'db[0].dict' }),
+          card: makePanel({ x: -2, y: 14 }, 'Command Execution Pipeline', [
             '1. readQueryFromClient(fd) -> querybuf',
             '2. processInputBuffer() -> parses RESP token array',
             '3. lookupCommand("SET") -> struct redisCommand *cmd',
@@ -152,7 +150,7 @@ export const redisEventLoopLesson = {
           ], { icon: 'listOrdered' })
         },
         links: {
-          cr: h('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'RESP Protocol' })
+          cr: makeLink('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'RESP Protocol' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 3.2 }]
       }
@@ -172,9 +170,9 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'Threaded I/O', active_conns: '100,000', qps: '260,000 (2x)', avg_latency_us: '80µs' },
       scene: {
         entities: {
-          ioThreads: d(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'workflow', label: ['I/O Thread Pool (4x)', 'Socket Read / Write'], sub: 'Parallel Parsing' }),
-          mainThread: d(8, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Main Worker Thread', 'Single-Thread Core'], sub: 'Executes Commands Lock-Free' }),
-          card: S({ x: 0, y: 14 }, 'Threaded I/O Architecture', [
+          ioThreads: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'workflow', label: ['I/O Thread Pool (4x)', 'Socket Read / Write'], sub: 'Parallel Parsing' }),
+          mainThread: makeBlock(8, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Main Worker Thread', 'Single-Thread Core'], sub: 'Executes Commands Lock-Free' }),
+          card: makePanel({ x: 0, y: 14 }, 'Threaded I/O Architecture', [
             'Stage 1: Helper threads read & parse socket buffers in parallel',
             'Stage 2: Main thread executes commands sequentially (Zero Locks)',
             'Stage 3: Helper threads write reply buffers back to network sockets',
@@ -182,7 +180,7 @@ export const redisEventLoopLesson = {
           ], { icon: 'zap' })
         },
         links: {
-          im: h('ioThreads', 'mainThread', ['ioThreads', 'mainThread'], { heads: 'both', label: 'Parsed Commands' })
+          im: makeLink('ioThreads', 'mainThread', ['ioThreads', 'mainThread'], { heads: 'both', label: 'Parsed Commands' })
         },
         flows: [{ route: ['im'], bounce: true, rate: 3.0 }]
       }
@@ -202,13 +200,13 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'BLOCKED (KEYS *)', active_conns: 'Frozen', qps: '0', avg_latency_us: '2,400,000µs (2.4s)' },
       scene: {
         entities: {
-          badClient: y(-12, -8, { form: 'phone', label: 'Admin Tool', tags: [{ text: 'KEYS * (10M keys)', tone: 'red', icon: 'alert' }] }),
-          goodClient: y(-12, 6, { form: 'phone', label: 'Normal User', tags: [{ text: 'GET user:42 (Blocked!)', tone: 'amber', icon: 'hourglass' }] }),
-          redis: d(6, -1, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Redis Server', 'Event Loop BLOCKED'], sub: 'Traversing 10M Dict Nodes' }),
+          badClient: makeDevice(-12, -8, { form: 'phone', label: 'Admin Tool', tags: [{ text: 'KEYS * (10M keys)', tone: 'red', icon: 'alert' }] }),
+          goodClient: makeDevice(-12, 6, { form: 'phone', label: 'Normal User', tags: [{ text: 'GET user:42 (Blocked!)', tone: 'amber', icon: 'hourglass' }] }),
+          redis: makeBlock(6, -1, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Redis Server', 'Event Loop BLOCKED'], sub: 'Traversing 10M Dict Nodes' }),
         },
         links: {
-          bc: h('badClient', 'redis', ['badClient', 'redis'], { heads: 'both', label: 'Blocking Query' }),
-          gc: h('goodClient', 'redis', ['goodClient', 'redis'], { heads: 'both', label: 'Frozen in Queue' })
+          bc: makeLink('badClient', 'redis', ['badClient', 'redis'], { heads: 'both', label: 'Blocking Query' }),
+          gc: makeLink('goodClient', 'redis', ['goodClient', 'redis'], { heads: 'both', label: 'Frozen in Queue' })
         },
         flows: [{ route: ['bc'], bounce: true, rate: 0.6 }]
       }
@@ -228,9 +226,9 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'Pipelined Burst', active_conns: 'Healthy', qps: '520,000', avg_latency_us: '65µs' },
       scene: {
         entities: {
-          client: y(-10, -8, { form: 'phone', label: 'Pipeline Client', tags: [{ text: 'Batch 50 cmds/packet', tone: 'green', icon: 'zap' }] }),
-          redis: d(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Server', 'High-Speed Reactor'], sub: 'P50: 65µs · P99: 180µs' }),
-          card: S({ x: -2, y: 14 }, 'Pipelining vs Sequential Commands', [
+          client: makeDevice(-10, -8, { form: 'phone', label: 'Pipeline Client', tags: [{ text: 'Batch 50 cmds/packet', tone: 'green', icon: 'zap' }] }),
+          redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Server', 'High-Speed Reactor'], sub: 'P50: 65µs · P99: 180µs' }),
+          card: makePanel({ x: -2, y: 14 }, 'Pipelining vs Sequential Commands', [
             'Sequential (50 cmds): 50 x 1ms RTT = 50ms total delay',
             'Pipelined (50 cmds): Pack 50 commands into 1 TCP buffer',
             'Redis executes all 50 in RAM in 30 microseconds',
@@ -238,7 +236,7 @@ export const redisEventLoopLesson = {
           ], { icon: 'zap' })
         },
         links: {
-          cr: h('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'Pipelined Stream' })
+          cr: makeLink('client', 'redis', ['client', 'redis'], { heads: 'both', label: 'Pipelined Stream' })
         },
         flows: [{ route: ['cr'], bounce: true, rate: 3.5 }]
       }

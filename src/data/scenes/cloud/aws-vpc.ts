@@ -1,301 +1,292 @@
-// @ts-nocheck
-/* eslint-disable */
-import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
-} from '@/lib/simulator/scene-builders';
+import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
 
-// ============================================================================
-// AWS SAA-C03: VPC & NETWORK SECURITY TOPOLOGY
-// ============================================================================
+// One VPC for the whole lesson. Two subnet strips (public, private) run along the
+// iso y-axis; each holds one node per AZ. Later steps only add gateways, rules,
+// endpoints and logs around the same app.
+//
+//   internet ─ IGW ─┬─ ALB  ─┬─ EC2 (AZ-a)
+//                   └─ NAT ──┴─ EC2 (AZ-b) ─ RDS
+//                                    └─ S3 (gateway endpoint)
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+// ---- colors by role (shared across AWS lessons): edge/DNS yellow · gateways orange · compute blue · data db · security purple
+const internet = () => makeDevice(-16, -16, { label: `internet` });
+const igw = (o: Opts = {}) => makeBlock(-13, -7, { s: 4.4, h: 50, color: `orange`, glyph: `globe`, label: [`Internet`, `Gateway`], ...o });
+const alb = (tags: Tag[] = []) => makeBalancer(-4, -6, { s: 4.4, h: 50, label: [`ALB`], sub: `public`, tags });
+const nat = (tags: Tag[] = []) => makeBlock(-4, 7, { s: 4.4, h: 50, color: `orange`, glyph: `route`, label: [`NAT GW`], sub: `elastic IP`, tags });
+const ec2 = (y: number, az: string, tags: Tag[] = []) =>
+  makeBlock(7, y, { s: 4.4, h: 50, color: `blue`, glyph: `server`, label: [`EC2 app`], sub: az, tags });
+const appA = (tags: Tag[] = []) => ec2(-6, `AZ-a`, tags);
+const appB = (tags: Tag[] = []) => ec2(6, `AZ-b`, tags);
+const rds = (tags: Tag[] = []) => makeDb(7, 17, { r: 2.1, h: 44, label: `RDS`, tags });
+const s3 = (tags: Tag[] = []) => makeDb(17, 6, { r: 2.1, h: 44, glyph: `package`, label: `S3`, tags });
+const logs = (tags: Tag[] = []) =>
+  makeBlock(-4, 18, { s: 4.2, h: 48, color: `slab`, glyph: `scroll`, label: [`CloudWatch`], sub: `flow logs`, tags });
+
+const publicNet = () => makeZone({ x0: -6.5, x1: -1.5, y0: -11.5, y1: 9.5 }, `PUBLIC`);
+const privateNet = () => makeZone({ x0: 4.5, x1: 9.5, y0: -11.5, y1: 19.5 }, `PRIVATE`);
+
+const L = {
+  inIgw: makeLink(`internet`, `igw`, [`internet`, `igw`], { heads: `both` }),
+  igwAlb: makeLink(`igw`, `alb`, [`igw`, `alb`], { heads: `both` }),
+  albA: makeLink(`alb`, `appA`, [`alb`, `appA`], { heads: `both` }),
+  albB: makeLink(`alb`, `appB`, [`alb`, `appB`], { heads: `both` }),
+  bRds: makeLink(`appB`, `rds`, [`appB`, `rds`], { heads: `both` }),
+  bNat: makeLink(`appB`, `nat`, [`appB`, `nat`], { label: `egress` }),
+  bNatQuiet: makeLink(`appB`, `nat`, [`appB`, `nat`]),
+  natIgw: makeLink(`nat`, `igw`, [`nat`, `igw`]),
+  bS3: makeLink(`appB`, `s3`, [`appB`, `s3`], { heads: `both`, label: `vpce` }),
+  bLogs: makeLink(`appB`, `logs`, [`appB`, `logs`], { style: `dashed` }),
+};
+
+const card = (title: string, lines: string[], icon: string) =>
+  makePanel({ x: -13, y: -7, z: 0, dx: -190, dy: -250 }, title, lines, { icon });
+
+const vpcCore = () => ({ publicNet: publicNet(), privateNet: privateNet() });
+
 export const awsVpcLesson = {
   id: `aws-vpc`,
   title: `AWS VPC & Network Security Topology`,
-  summary: `Design secure multi-tier VPC topologies with public & private subnets, NAT Gateway, Security Groups vs NACLs, and VPC Endpoints.`,
+  summary: `Build one VPC step by step: subnets in two AZs, an Internet Gateway, NAT, security groups vs NACLs, a gateway endpoint and flow logs.`,
   minutes: 14,
   level: `intermediate`,
-  metrics: [`cidr_block`, `igw_state`, `subnets`, `nat_gw`, `sec_groups`],
-  legend: [`req`, `res`, [`ping`, `private route`], `fail`],
+  metrics: [`vpcCidr`, `subnets`, `inbound`, `outbound`, `firewall`],
+  legend: [`req`, `res`, [`write`, `egress / logs`], `fail`],
   goals: [
-    { text: 'VPC CIDR block and multi-tier', step: 1 },
-    { text: 'Internet Gateway (IGW) and Public', step: 2 },
-    { text: 'NAT Gateway for secure outbound', step: 3 },
-    { text: 'Stateful Security Groups vs Stateless', step: 4 },
-    { text: 'VPC Endpoints & AWS PrivateLink', step: 5 },
-    { text: 'VPC Flow Logs & CIDR Design', step: 6 },
+    { text: `VPC CIDR and subnets across 2 AZs`, step: 1 },
+    { text: `Internet Gateway and public routing`, step: 2 },
+    { text: `NAT Gateway for private outbound`, step: 3 },
+    { text: `Security groups vs network ACLs`, step: 4 },
+    { text: `Gateway endpoints for S3`, step: 5 },
+    { text: `VPC Flow Logs for diagnosis`, step: 6 },
   ],
   steps: [
     {
-      short: `CIDR & Subnets`,
+      short: `Subnets`,
       chapter: `setup`,
-      title: `VPC CIDR Block & Multi-AZ Subnets`,
+      title: `A VPC is an address range you carve up`,
       body: [
-        `Every AWS Virtual Private Cloud (VPC) starts with an IPv4 CIDR block (e.g. <code>10.0.0.0/16</code>, giving 65,536 private IP addresses).`,
-        `We split the VPC into <strong>Public Subnets</strong> (for ALBs/Bastions) and <strong>Private Subnets</strong> (for App Compute & Databases) duplicated across 2 Availability Zones.`,
+        `A VPC starts as one private IPv4 block, e.g. <code>10.0.0.0/16</code> (65,536 addresses). You split it into <span class="term">subnets</span>, and every subnet lives in exactly one Availability Zone.`,
+        `The usual layout: a <b>public</b> and a <b>private</b> subnet in each of two AZs. The app servers and the database go private — nothing on the internet can reach them yet.`,
       ],
       callout: {
         kind: `insight`,
-        text: `AWS reserves the first 4 IP addresses and the last 1 IP address in every subnet (e.g. .0 Network, .1 Router, .2 DNS, .3 Future use, .255 Broadcast).`,
+        text: `AWS reserves 5 addresses in every subnet: .0 network, .1 router, .2 DNS, .3 future use and the last (broadcast). A /24 gives you 251 usable IPs.`,
       },
-      changes: [
-        `+ VPC 10.0.0.0/16 created in us-east-1`,
-        `+ Public Subnets: 10.0.1.0/24 & 10.0.2.0/24`,
-        `+ Private Subnets: 10.0.10.0/24 & 10.0.11.0/24`,
-      ],
-      metrics: {
-        cidr_block: `10.0.0.0/16`,
-        igw_state: `Detached`,
-        subnets: `4 Subnets`,
-        nat_gw: `—`,
-        sec_groups: `Default`,
-      },
+      changes: [`+ VPC 10.0.0.0/16`, `+ public + private subnets × 2 AZs`, `+ EC2 in each AZ, RDS`],
+      metrics: { vpcCidr: `10.0.0.0/16`, subnets: `4`, inbound: `none`, outbound: `none`, firewall: `default` },
       scene: {
         entities: {
-          client: y(-16, -4, { label: `External Internet`, tags: [{ text: `Public`, icon: `globe` }] }),
-          pub_sub: d(0, -4, { color: `orange`, glyph: `globe`, label: [`Public Subnet`, `AZ-1a /24`] }),
-          priv_app: d(9, -4, { color: `blue`, glyph: `server`, label: [`Private App`, `AZ-1a /24`] }),
-          priv_db: b(16, -4, { label: `Private DB (AZ-1a)`, color: `purple` }),
+          ...vpcCore(),
+          appA: appA(),
+          appB: appB(),
+          rds: rds(),
+          card: card(
+            `subnets`,
+            [`10.0.1.0/24   public-a    us-east-1a`, `10.0.2.0/24   public-b    us-east-1b`, `10.0.10.0/24  private-a   us-east-1a`, `10.0.11.0/24  private-b   us-east-1b`],
+            `listOrdered`,
+          ),
         },
-        links: {
-          c_pub: h(`client`, `pub_sub`, [`client`, `pub_sub`], { heads: `both`, label: `Ingress` }),
-          pub_app: h(`pub_sub`, `priv_app`, [`pub_sub`, `priv_app`], { heads: `both` }),
-          app_db: h(`priv_app`, `priv_db`, [`priv_app`, `priv_db`], { heads: `both` }),
-        },
+        links: { bRds: L.bRds },
+        flows: [{ route: [`bRds`], rate: 0.8, bounce: true }],
+      },
+    },
+    {
+      short: `IGW`,
+      chapter: `technique`,
+      title: `An Internet Gateway makes a subnet public`,
+      body: [
+        `Attach an <span class="term">Internet Gateway</span> to the VPC and add <code>0.0.0.0/0 → igw</code> to the <b>public</b> subnets’ route table. That route is the only thing that makes a subnet “public”.`,
+        `The ALB lives there with a public address. It forwards to the EC2 instances in the private subnets, which still have no route to the internet.`,
+      ],
+      callout: { kind: `tip`, text: `The IGW is managed for you: horizontally scaled, redundant and with no bandwidth limit. One per VPC.` },
+      changes: [`+ Internet Gateway`, `+ ALB in the public subnets`],
+      metrics: { vpcCidr: `10.0.0.0/16`, subnets: `4`, inbound: `ALB :443`, outbound: `none`, firewall: `default` },
+      scene: {
+        entities: { ...vpcCore(), internet: internet(), igw: igw(), alb: alb(), appA: appA(), appB: appB(), rds: rds() },
+        links: { inIgw: L.inIgw, igwAlb: L.igwAlb, albA: L.albA, albB: L.albB, bRds: L.bRds },
         flows: [
-          { route: [`c_pub`, `pub_app`, `app_db`], bounce: true, rate: 1.2 },
+          { route: [`inIgw`, `igwAlb`, `albA`], rate: 1, bounce: true },
+          { route: [`inIgw`, `igwAlb`, `albB`], rate: 1, bounce: true },
         ],
       },
     },
     {
-      short: `IGW Routing`,
+      short: `NAT`,
       chapter: `technique`,
-      title: `Internet Gateway (IGW) & Public Routing`,
+      title: `Private servers still need to reach out`,
       body: [
-        `To make a subnet "Public", we attach an <strong>Internet Gateway (IGW)</strong> to the VPC and add a default route (<code>0.0.0.0/0 → igw-xxxx</code>) to its route table.`,
-        `Only resources with Public IPv4 and an IGW route can receive traffic directly from the public Internet.`,
+        `The app must download packages and call external APIs, but must never accept connections from the internet. A <span class="term">NAT Gateway</span> in a public subnet does exactly that: outbound only, through its Elastic IP.`,
+        `The private route table gets <code>0.0.0.0/0 → nat</code>. Replies come back through the NAT; new inbound connections have nowhere to go.`,
       ],
-      callout: {
-        kind: `tip`,
-        text: `The Internet Gateway is horizontally scaled, redundant, and highly available by default with no bandwidth constraints.`,
-      },
-      changes: [
-        `+ Internet Gateway attached to VPC`,
-        `+ Public Route Table: 0.0.0.0/0 → igw`,
-        `+ ALB deployed in Public Subnet`,
-      ],
-      metrics: {
-        cidr_block: `10.0.0.0/16`,
-        igw_state: `Attached`,
-        subnets: `4 Subnets`,
-        nat_gw: `—`,
-        sec_groups: `ALB SG`,
-      },
+      callout: { kind: `warn`, text: `A NAT Gateway lives in one AZ. Run one per AZ so an AZ outage doesn’t cut outbound traffic for the other.` },
+      changes: [`+ NAT Gateway + Elastic IP`, `~ private route: 0.0.0.0/0 → nat`],
+      metrics: { vpcCidr: `10.0.0.0/16`, subnets: `4`, inbound: `ALB :443`, outbound: `via NAT`, firewall: `default` },
       scene: {
         entities: {
-          users: y(-14, -4, { label: `Global Users`, tags: [{ text: `HTTPS 443`, icon: `globe` }] }),
-          igw: d(-4, -4, { color: `orange`, glyph: `globe`, label: [`Internet Gateway`, `VPC Router`] }),
-          alb: f(6, -4, { color: `orange`, glyph: `balancer`, label: [`Public ALB`, `Multi-AZ`] }),
-          app1: d(16, -10, { color: `teal`, glyph: `server`, label: [`ECS Task (AZ-a)`] }),
-          app2: d(16, 2, { color: `teal`, glyph: `server`, label: [`ECS Task (AZ-b)`] }),
+          ...vpcCore(),
+          internet: internet(),
+          igw: igw(),
+          alb: alb(),
+          nat: nat([{ text: `1 per AZ`, tone: `amber` }]),
+          appA: appA(),
+          appB: appB(),
+          rds: rds(),
+          card: card(
+            `route tables`,
+            [`private-b   10.0.0.0/16 → local`, `= private-b   0.0.0.0/0   → nat-0abc`, `public-*    10.0.0.0/16 → local`, `public-*    0.0.0.0/0   → igw-0def`],
+            `route`,
+          ),
         },
-        links: {
-          u_igw: h(`users`, `igw`, [`users`, `igw`], { heads: `both` }),
-          igw_alb: h(`igw`, `alb`, [`igw`, `alb`], { heads: `both` }),
-          alb_1: h(`alb`, `app1`, [`alb`, `app1`], { heads: `both` }),
-          alb_2: h(`alb`, `app2`, [`alb`, `app2`], { heads: `both` }),
-        },
+        links: { inIgw: L.inIgw, igwAlb: L.igwAlb, albA: L.albA, albB: L.albB, bRds: L.bRds, bNat: L.bNat, natIgw: L.natIgw },
         flows: [
-          { route: [`u_igw`, `igw_alb`], bounce: true, rate: 2.0 },
-          { route: [`alb_1`], bounce: true, rate: 1.0 },
-          { route: [`alb_2`], bounce: true, rate: 1.0 },
-        ],
-      },
-    },
-    {
-      short: `NAT Gateway`,
-      chapter: `technique`,
-      title: `NAT Gateway for Private Outbound Access`,
-      body: [
-        `App instances in private subnets must never accept incoming connections from the Internet, but they still need to download OS updates, NPM packages, and external SaaS APIs.`,
-        `A <strong>Managed NAT Gateway</strong> is placed in the Public Subnet with an Elastic IP (EIP). Private route tables point <code>0.0.0.0/0 → nat-xxxx</code>. Unlike legacy NAT Instances, NAT Gateway requires <strong>no Security Group</strong> and scales automatically up to 100 Gbps.`,
-      ],
-      callout: {
-        kind: `warn`,
-        text: `NAT Gateways are AZ-specific. For high availability in production, deploy one NAT Gateway per Availability Zone so a single AZ failure does not kill outbound traffic.`,
-      },
-      changes: [
-        `+ NAT Gateway + EIP in Public Subnet`,
-        `+ Private Route Table: 0.0.0.0/0 → nat-gw`,
-        `+ Outbound HTTPS enabled, Zero Inbound exposure`,
-      ],
-      metrics: {
-        cidr_block: `10.0.0.0/16`,
-        igw_state: `Attached`,
-        subnets: `4 Subnets`,
-        nat_gw: `Active (EIP)`,
-        sec_groups: `Strict`,
-      },
-      scene: {
-        entities: {
-          app_priv: d(-16, -8, { s: 4.4, h: 50, color: `blue`, glyph: `cpu`, label: [`Backend App`, `10.0.10.x`] }),
-          nat: d(-2, -8, { s: 4.4, h: 50, color: `yellow`, glyph: `shield`, label: [`NAT Gateway`, `Elastic IP`] }),
-          igw: d(10, -8, { s: 4.4, h: 50, color: `orange`, glyph: `globe`, label: [`Internet GW`] }),
-          repos: y(15, 4, { label: `External Yum/GitHub` }),
-          card: S({ x: -12, y: 12 }, `3. Private vs Public Route Table`, [
-            `// Private Subnet Route Table (outbound via NAT GW):`,
-            `10.0.0.0/16 -> local | 0.0.0.0/0 -> nat-0abc123`,
-            `// Public Subnet Route Table (NAT GW -> Internet):`,
-            `10.0.0.0/16 -> local | 0.0.0.0/0 -> igw-0def456`,
-          ], { icon: `terminal` }),
-        },
-        links: {
-          app_nat: h(`app_priv`, `nat`, [`app_priv`, `nat`], { heads: `end`, label: `Outbound` }),
-          nat_igw: h(`nat`, `igw`, [`nat`, `igw`], { heads: `end`, label: `SNAT` }),
-          igw_ext: h(`igw`, `repos`, [`igw`, `repos`], { heads: `both` }),
-        },
-        flows: [
-          { route: [`app_nat`, `nat_igw`, `igw_ext`], bounce: true, rate: 1.8 },
+          { route: [`bNat`, `natIgw`, `inIgw`], kind: `write`, rate: 1.4, bounce: true },
+          { route: [`inIgw`, `igwAlb`, `albA`], rate: 0.8, bounce: true },
         ],
       },
     },
     {
       short: `SG vs NACL`,
       chapter: `insight`,
-      title: `Security Groups (Stateful) vs Network ACLs (Stateless)`,
+      title: `Two firewalls: security groups and NACLs`,
       body: [
-        `Security in AWS operates in depth on two distinct layers:`,
-        `1. <strong>Security Group (Instance Level, Stateful)</strong>: If inbound traffic is allowed on port 443, the response is automatically allowed outbound regardless of outbound rules.`,
-        `2. <strong>Network ACL (Subnet Level, Stateless)</strong>: Acts as a subnet firewall with numbered allow/deny rules evaluated in order. Return traffic must be explicitly allowed via ephemeral ports (1024–65535).`,
+        `A <span class="term">security group</span> sits on each instance’s network interface. It is <b>stateful</b> (replies are allowed automatically), has allow rules only, and can point at another group: the app accepts 8080 only from the ALB’s group.`,
+        `A <span class="term">network ACL</span> guards a whole subnet. It is <b>stateless</b> — you must allow return traffic on ephemeral ports 1024–65535 — and its numbered rules can <b>deny</b>, e.g. block one attacking IP.`,
       ],
-      callout: {
-        kind: `insight`,
-        text: `Security groups can reference other Security Groups! For example: App SG allows port 8080 ONLY from ALB SG, preventing direct bypass.`,
-      },
-      changes: [
-        `+ NACL rules evaluated at Subnet boundary`,
-        `+ Security Group attached directly to ENIs`,
-        `+ Chained SG: ALB_SG → App_SG → DB_SG`,
-      ],
-      metrics: {
-        cidr_block: `10.0.0.0/16`,
-        igw_state: `Attached`,
-        subnets: `4 Subnets`,
-        nat_gw: `Multi-AZ`,
-        sec_groups: `Chained SGs`,
-      },
+      callout: { kind: `insight`, text: `Need to block a specific IP? Only a NACL can deny. Security groups can only allow.` },
+      changes: [`+ SG chain ALB → app → RDS`, `+ NACL deny 203.0.113.99`],
+      metrics: { vpcCidr: `10.0.0.0/16`, subnets: `4`, inbound: `ALB :443`, outbound: `via NAT`, firewall: `SG + NACL` },
       scene: {
         entities: {
-          alb_sg: d(-10, -4, { color: `orange`, glyph: `balancer`, label: [`ALB SecGroup`, `In: 443`] }),
-          app_sg: d(0, 0, { color: `teal`, glyph: `server`, label: [`App SecGroup`, `In: From ALB_SG`] }),
-          db_sg: b(10, 4, { label: `DB SecGroup (In: 5432 App_SG)`, color: `purple` }),
+          ...vpcCore(),
+          internet: internet(),
+          igw: igw(),
+          alb: alb([{ text: `sg-alb :443`, tone: `violet`, icon: `shield` }]),
+          nat: nat(),
+          appA: appA(),
+          appB: appB([{ text: `sg-app ← sg-alb`, tone: `violet`, icon: `shield` }]),
+          rds: rds([{ text: `sg-db ← sg-app`, tone: `violet`, icon: `shield` }]),
+          card: card(
+            `network ACL · public`,
+            [`#100  ALLOW  tcp 443    0.0.0.0/0`, `! #90   DENY   all        203.0.113.99/32`, `#200  ALLOW  tcp 1024-65535 (return)`, `*     DENY   all`],
+            `shield`,
+          ),
         },
-        links: {
-          sg1: h(`alb_sg`, `app_sg`, [`alb_sg`, `app_sg`], { heads: `both`, label: `Port 8080` }),
-          sg2: h(`app_sg`, `db_sg`, [`app_sg`, `db_sg`], { heads: `both`, label: `Port 5432` }),
-        },
+        links: { inIgw: L.inIgw, igwAlb: L.igwAlb, albA: L.albA, albB: L.albB, bRds: L.bRds, bNat: L.bNatQuiet, natIgw: L.natIgw },
         flows: [
-          { route: [`sg1`, `sg2`], bounce: true, rate: 1.5 },
+          { route: [`inIgw`, `igwAlb`, `albA`], rate: 1, bounce: true },
+          { route: [`inIgw`], kind: `fail`, rate: 0.6 },
         ],
       },
     },
     {
-      short: `VPC Endpoints`,
-      chapter: `deep`,
-      title: `VPC Endpoints & AWS PrivateLink`,
+      short: `Endpoint`,
+      chapter: `solution`,
+      title: `Talk to S3 without the NAT`,
       body: [
-        `Sending gigabytes of S3 backups or DynamoDB queries through a NAT Gateway is expensive ($0.045/GB data processing).`,
-        `<strong>Gateway Endpoints</strong> (Free for S3 & DynamoDB) update route tables to keep all traffic entirely inside the AWS private backbone.`,
-        `<strong>Interface Endpoints (PrivateLink)</strong> deploy an Elastic Network Interface (ENI) with a private IP directly into your subnet for AWS services (Secrets Manager, SQS, Kinesis).`,
+        `Backups to S3 through the NAT cost NAT processing fees per GB and leave the VPC. A <span class="term">gateway endpoint</span> adds a prefix-list route to S3 in the route table, so the traffic stays on the AWS network — and it is free.`,
+        `Gateway endpoints exist only for S3 and DynamoDB. Other services (SQS, KMS, Secrets Manager) use <span class="term">interface endpoints</span> (PrivateLink): an ENI with a private IP in your subnet.`,
       ],
-      callout: {
-        kind: `tip`,
-        text: `Gateway Endpoints for Amazon S3 and DynamoDB are completely free and remove NAT Gateway data transfer bottlenecks.`,
-      },
-      changes: [
-        `+ S3 Gateway Endpoint attached to Route Table`,
-        `+ PrivateLink ENI deployed for Secrets Manager`,
-        `+ Zero NAT GW bandwidth costs for S3`,
-      ],
-      metrics: {
-        cidr_block: `10.0.0.0/16`,
-        igw_state: `Attached`,
-        subnets: `4 Subnets`,
-        nat_gw: `Bypassed for S3`,
-        sec_groups: `Enforced`,
-      },
+      callout: { kind: `tip`, text: `Exam pattern: “reduce NAT Gateway cost for S3 traffic” → S3 gateway endpoint.` },
+      changes: [`+ S3 gateway endpoint`, `~ S3 traffic skips the NAT`],
+      metrics: { vpcCidr: `10.0.0.0/16`, subnets: `4`, inbound: `ALB :443`, outbound: `NAT + vpce`, firewall: `SG + NACL` },
       scene: {
         entities: {
-          app: d(-14, -4, { color: `teal`, glyph: `server`, label: [`Private App Node`] }),
-          vpce: d(0, 0, { color: `green`, glyph: `shield`, label: [`S3 Gateway Endpoint`, `Route Table Entry`] }),
-          s3: b(14, 4, { label: `Amazon S3 Storage`, color: `green` }),
+          ...vpcCore(),
+          internet: internet(),
+          igw: igw(),
+          alb: alb(),
+          nat: nat(),
+          appA: appA(),
+          appB: appB(),
+          rds: rds(),
+          s3: s3([{ text: `$0 / GB`, tone: `green` }]),
+          card: card(`route table · private-b`, [`10.0.0.0/16        → local`, `0.0.0.0/0          → nat-0abc`, `= pl-63a5400a (s3)  → vpce-0a1b`], `route`),
         },
-        links: {
-          app_vpce: h(`app`, `vpce`, [`app`, `vpce`], { heads: `both`, label: `AWS Backbone` }),
-          vpce_s3: h(`vpce`, `s3`, [`vpce`, `s3`], { heads: `both` }),
-        },
+        links: { inIgw: L.inIgw, igwAlb: L.igwAlb, albA: L.albA, albB: L.albB, bRds: L.bRds, bNat: L.bNatQuiet, natIgw: L.natIgw, bS3: L.bS3 },
         flows: [
-          { route: [`app_vpce`, `vpce_s3`], bounce: true, rate: 2.2 },
+          { route: [`bS3`], kind: `write`, rate: 2, bounce: true },
+          { route: [`inIgw`, `igwAlb`, `albB`], rate: 0.8, bounce: true },
         ],
       },
     },
     {
-      short: `Flow Logs`,
-      chapter: `deep`,
-      title: `VPC Flow Logs & CIDR Diagnostics`,
+      short: `Flow logs`,
+      chapter: `technique`,
+      title: `Flow logs show what was accepted or rejected`,
       body: [
-        `<strong>VPC Flow Logs</strong> capture IP traffic metadata (<code>ACCEPT</code> / <code>REJECT</code>) at the VPC, Subnet, or ENI level and publish to CloudWatch Logs or Amazon S3.`,
-        `They are essential in SAA-C03 for diagnosing dropped packets caused by Security Groups or Network ACLs without touching packet payloads.`,
+        `<span class="term">VPC Flow Logs</span> record metadata for every connection — source, destination, ports, bytes, <code>ACCEPT</code> or <code>REJECT</code> — at VPC, subnet or ENI level, into CloudWatch Logs or S3.`,
+        `When a request silently fails, a REJECT line tells you a security group or NACL dropped it. Payloads are never captured.`,
       ],
-      callout: {
-        kind: `insight`,
-        text: `VPC Flow Logs do NOT log traffic to Amazon DNS (169.254.169.253), Instance Metadata (169.254.169.254), or DHCP.`,
-      },
-      changes: [
-        `+ VPC Flow Logs enabled on Prod VPC`,
-        `+ Streaming ACCEPT/REJECT records to CloudWatch & S3`,
-      ],
-      metrics: {
-        cidr_block: `10.0.0.0/16`,
-        igw_state: `Attached`,
-        subnets: `4 Subnets`,
-        nat_gw: `Multi-AZ`,
-        sec_groups: `Flow Audited`,
-      },
+      callout: { kind: `insight`, text: `Flow logs skip traffic to the Amazon DNS server, instance metadata (169.254.169.254) and DHCP.` },
+      changes: [`+ flow logs → CloudWatch`],
+      metrics: { vpcCidr: `10.0.0.0/16`, subnets: `4`, inbound: `ALB :443`, outbound: `NAT + vpce`, firewall: `audited` },
       scene: {
         entities: {
-          eni: d(-14, -8, { s: 4.4, h: 50, color: `blue`, glyph: `server`, label: [`VPC ENI`], sub: `10.0.10.25` }),
-          flow: d(0, -8, { s: 4.4, h: 50, color: `purple`, glyph: `cpu`, label: [`VPC Flow Logs`], sub: `ACCEPT/REJECT` }),
-          s3: b(15, -8, { r: 2.2, h: 48, color: `orange`, label: [`S3 / CloudWatch`], sub: `Athena Query` }),
-          card: S({ x: -12, y: 12 }, `6. VPC Flow Log Record Format`, [
-            `2 111122223333 eni-0a1b 198.51.100.2 10.0.10.25 443 51200 6 12 4200 ACCEPT OK`,
-            `2 111122223333 eni-0a1b 203.0.113.99 10.0.10.25 22  49152 6 1  40   REJECT OK`,
-          ], { icon: `terminal` }),
+          ...vpcCore(),
+          internet: internet(),
+          igw: igw(),
+          alb: alb(),
+          nat: nat(),
+          appA: appA(),
+          appB: appB(),
+          rds: rds(),
+          s3: s3(),
+          logs: logs([{ text: `1 REJECT`, tone: `red`, icon: `alert` }]),
+          card: card(
+            `flow log records`,
+            [`eni-0a1b 198.51.100.2 → 10.0.11.25 :443  ACCEPT`, `! eni-0a1b 203.0.113.99 → 10.0.11.25 :22   REJECT`],
+            `scroll`,
+          ),
         },
         links: {
-          eni_fl: h(`eni`, `flow`, [`eni`, `flow`], { heads: `end`, label: `capture meta` }),
-          fl_s3: h(`flow`, `s3`, [`flow`, `s3`], { heads: `end`, label: `archive` }),
+          inIgw: L.inIgw,
+          igwAlb: L.igwAlb,
+          albA: L.albA,
+          albB: L.albB,
+          bRds: L.bRds,
+          bNat: L.bNatQuiet,
+          natIgw: L.natIgw,
+          bS3: L.bS3,
+          bLogs: L.bLogs,
         },
         flows: [
-          { route: [`eni_fl`, `fl_s3`], bounce: false, rate: 1.8 },
+          { route: [`bLogs`], kind: `write`, rate: 1.4 },
+          { route: [`inIgw`, `igwAlb`, `albB`], rate: 1, bounce: true },
+        ],
+      },
+    },
+    {
+      short: `Recap`,
+      chapter: `recap`,
+      title: `The whole VPC`,
+      body: [
+        `Inbound reaches only the ALB through the IGW. Private instances go out through a NAT per AZ, and reach S3 through a free gateway endpoint.`,
+        `Security groups chain ALB → app → database; a NACL can deny addresses at the subnet edge; flow logs record every decision.`,
+      ],
+      changes: [`~ all paths active`],
+      metrics: { vpcCidr: `10.0.0.0/16`, subnets: `4`, inbound: `ALB :443`, outbound: `NAT + vpce`, firewall: `audited` },
+      scene: {
+        entities: { ...vpcCore(), internet: internet(), igw: igw(), alb: alb(), nat: nat(), appA: appA(), appB: appB(), rds: rds(), s3: s3(), logs: logs() },
+        links: {
+          inIgw: L.inIgw,
+          igwAlb: L.igwAlb,
+          albA: L.albA,
+          albB: L.albB,
+          bRds: L.bRds,
+          bNat: L.bNatQuiet,
+          natIgw: L.natIgw,
+          bS3: L.bS3,
+          bLogs: L.bLogs,
+        },
+        flows: [
+          { route: [`inIgw`, `igwAlb`, `albA`], rate: 1, bounce: true },
+          { route: [`inIgw`, `igwAlb`, `albB`], rate: 1, bounce: true },
+          { route: [`bNat`, `natIgw`], kind: `write`, rate: 0.6 },
+          { route: [`bS3`], kind: `write`, rate: 0.8, bounce: true },
+          { route: [`bRds`], rate: 1, bounce: true },
         ],
       },
     },
