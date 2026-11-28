@@ -1794,7 +1794,7 @@ or vanilla TS, never an iframe.
 ### Where things live
 
 ```
-src/data/scenes/<domain>/<lesson>.ts   lesson data: steps, entities, links, flows, cards
+src/data/scenes/<domain>/[<module>/]<lesson>.ts   lesson data: steps, entities, links, flows, cards
 src/data/scenes/index.ts               ALL_SCENES registry (add new lessons here)
 src/data/curriculum.ts                 track / module / lesson ids and titles
 src/lib/simulator/scene-builders.ts    makeBlock, makeDb, makeLink, makePanel… used by scenes
@@ -1807,8 +1807,10 @@ src/pages/lab/[lesson].astro           renders /lab/<lessonId> and the track pag
 
 ### Adding a lesson
 
-1. Create `src/data/scenes/<domain>/<lesson>.ts` using the scene builders.
-2. Register it in `src/data/scenes/index.ts` and add it to `src/data/curriculum.ts`.
+1. Create the lesson file using the scene builders. A `<domain>` folder that spans more than one curriculum module
+   groups its lessons in `<module-id>/` subfolders, the same grouping the chapter dropdown shows (e.g.
+   `src/data/scenes/git/git-core/git-dag-objects.ts`); a folder with a single module stays flat.
+2. Register it in `src/data/scenes/index.ts` and add it to `src/data/curriculum.ts` under its module.
 3. Follow the diagram rules in §8, then verify (below).
 
 ### Changing the engine

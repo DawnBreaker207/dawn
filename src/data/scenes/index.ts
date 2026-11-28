@@ -4,43 +4,43 @@
  * Re-exports all domain simulation scenes and provides ALL_SCENES map.
  */
 
-import { requestLifecycleLesson } from './network/request-lifecycle';
-import { latencyThroughputLesson } from './network/latency-throughput';
-import { napkinMathLesson } from './network/napkin-math';
+import { requestLifecycleLesson } from './network/foundations/request-lifecycle';
+import { latencyThroughputLesson } from './network/foundations/latency-throughput';
+import { napkinMathLesson } from './network/foundations/napkin-math';
 import { verticalHorizontalLesson } from './scaling/vertical-horizontal';
 import { loadBalancingLesson } from './scaling/load-balancing';
 import { statelessLesson } from './scaling/stateless';
 import { cachingLesson } from './scaling/caching';
 import { cdnLesson } from './scaling/cdn';
-import { sqlNosqlLesson } from './storage/sql-nosql';
-import { indexesLesson } from './storage/indexes';
-import { storageEnginesLesson } from './storage/storage-engines';
-import { replicationLesson } from './storage/replication';
-import { shardingLesson } from './storage/sharding';
-import { javaVirtualThreadsLesson } from './specialized/java-virtual-threads';
-import { javaJvmMemoryLesson } from './specialized/java-jvm-memory';
-import { javaSpringIocLesson } from './specialized/java-spring-ioc';
-import { javaSpringAopLesson } from './specialized/java-spring-aop';
-import { javaSpringJpaLesson } from './specialized/java-spring-jpa';
-import { javaSpringSecurityLesson } from './specialized/java-spring-security';
-import { sqlEngineLesson } from './specialized/sql-engine';
-import { microservicesLesson } from './architecture/microservices';
-import { awsCloudLesson } from './cloud/aws-cloud';
-import { awsVpcLesson } from './cloud/aws-vpc';
-import { awsHaLesson } from './cloud/aws-ha';
-import { awsStorageDbLesson } from './cloud/aws-storage-db';
-import { awsServerlessLesson } from './cloud/aws-serverless';
-import { awsIamKmsLesson } from './cloud/aws-iam-kms';
-import { awsHybridNetworkLesson } from './cloud/aws-hybrid-network';
-import { awsEdgeSecurityLesson } from './cloud/aws-edge-security';
-import { awsComputeMigrationLesson } from './cloud/aws-compute-migration';
+import { sqlNosqlLesson } from './storage/storage/sql-nosql';
+import { indexesLesson } from './storage/storage/indexes';
+import { storageEnginesLesson } from './storage/storage/storage-engines';
+import { replicationLesson } from './storage/distributed/replication';
+import { shardingLesson } from './storage/distributed/sharding';
+import { javaVirtualThreadsLesson } from './specialized/java-runtime/java-virtual-threads';
+import { javaJvmMemoryLesson } from './specialized/java-runtime/java-jvm-memory';
+import { javaSpringIocLesson } from './specialized/java-enterprise/java-spring-ioc';
+import { javaSpringAopLesson } from './specialized/java-enterprise/java-spring-aop';
+import { javaSpringJpaLesson } from './specialized/java-enterprise/java-spring-jpa';
+import { javaSpringSecurityLesson } from './specialized/java-enterprise/java-spring-security';
+import { sqlEngineLesson } from './specialized/storage/sql-engine';
+import { microservicesLesson } from './architecture/microservices/microservices';
+import { awsCloudLesson } from './cloud/cloud/aws-cloud';
+import { awsVpcLesson } from './cloud/cloud/aws-vpc';
+import { awsHaLesson } from './cloud/cloud/aws-ha';
+import { awsStorageDbLesson } from './cloud/cloud/aws-storage-db';
+import { awsServerlessLesson } from './cloud/cloud/aws-serverless';
+import { awsIamKmsLesson } from './cloud/cloud/aws-iam-kms';
+import { awsHybridNetworkLesson } from './cloud/cloud/aws-hybrid-network';
+import { awsEdgeSecurityLesson } from './cloud/cloud/aws-edge-security';
+import { awsComputeMigrationLesson } from './cloud/cloud/aws-compute-migration';
 import { systemDesignLesson } from './cloud/system-design';
-import { consistentHashingLesson } from './storage/consistent-hashing';
-import { uniqueIdsLesson } from './storage/unique-ids';
-import { capLesson } from './storage/cap';
-import { consensusLesson } from './storage/consensus';
-import { transactionsLesson } from './storage/transactions';
-import { filesLesson } from './storage/files';
+import { consistentHashingLesson } from './storage/distributed/consistent-hashing';
+import { uniqueIdsLesson } from './storage/distributed/unique-ids';
+import { capLesson } from './storage/distributed/cap';
+import { consensusLesson } from './storage/distributed/consensus';
+import { transactionsLesson } from './storage/storage/transactions';
+import { filesLesson } from './storage/cloud/files';
 import { apisLesson } from './communication/apis';
 import { queuesLesson } from './communication/queues';
 import { pubsubLesson } from './communication/pubsub';
@@ -49,9 +49,9 @@ import { redundancyLesson } from './reliability/redundancy';
 import { rateLimitingLesson } from './reliability/rate-limiting';
 import { timeoutsRetriesLesson } from './reliability/timeouts-retries';
 import { observabilityLesson } from './reliability/observability';
-import { serviceDiscoveryLesson } from './architecture/service-discovery';
-import { sagasLesson } from './architecture/sagas';
-import { batchStreamLesson } from './architecture/batch-stream';
+import { serviceDiscoveryLesson } from './architecture/microservices/service-discovery';
+import { sagasLesson } from './architecture/microservices/sagas';
+import { batchStreamLesson } from './architecture/system-design/batch-stream';
 import { authenticationLesson } from './security/authentication';
 import { authorizationLesson } from './security/authorization';
 import { encryptionLesson } from './security/encryption';
@@ -67,54 +67,54 @@ import { designSearchAutocompleteLesson } from './design/design-search-autocompl
 
 
 // SQL deep-dive concepts
-import { sqlExecutionOrderLesson } from './storage/sql-execution-order';
-import { sqlComplexQueriesLesson } from './storage/sql-complex-queries';
-import { mysqlInnodbLesson } from './storage/mysql-innodb';
-import { sqlFootprintLesson } from './storage/sql-footprint';
-import { sqlConnectionPoolLesson } from './storage/sql-connection-pool';
+import { sqlExecutionOrderLesson } from './storage/storage/sql-execution-order';
+import { sqlComplexQueriesLesson } from './storage/storage/sql-complex-queries';
+import { mysqlInnodbLesson } from './storage/storage/mysql-innodb';
+import { sqlFootprintLesson } from './storage/storage/sql-footprint';
+import { sqlConnectionPoolLesson } from './storage/storage/sql-connection-pool';
 
 // Java Core & JVM deep-dive concepts
-import { javaTypesBoxingLesson } from './specialized/java-types-boxing';
-import { javaStringInternalsLesson } from './specialized/java-string-internals';
-import { javaCollectionsLesson } from './specialized/java-collections';
-import { javaIoNioLesson } from './specialized/java-io-nio';
-import { javaJdbcLesson } from './specialized/java-jdbc';
-import { javaLambdaLesson } from './specialized/java-lambda';
-import { javaMetaprogrammingLesson } from './specialized/java-metaprogramming';
-import { javaJmmCasAqsLesson } from './specialized/java-jmm-cas-aqs';
-import { javaClassloaderLesson } from './specialized/java-classloader';
-import { javaCoreApisLesson } from './specialized/java-core-apis';
+import { javaTypesBoxingLesson } from './specialized/java-runtime/java-types-boxing';
+import { javaStringInternalsLesson } from './specialized/java-runtime/java-string-internals';
+import { javaCollectionsLesson } from './specialized/java-runtime/java-collections';
+import { javaIoNioLesson } from './specialized/java-runtime/java-io-nio';
+import { javaJdbcLesson } from './specialized/java-runtime/java-jdbc';
+import { javaLambdaLesson } from './specialized/java-runtime/java-lambda';
+import { javaMetaprogrammingLesson } from './specialized/java-runtime/java-metaprogramming';
+import { javaJmmCasAqsLesson } from './specialized/java-runtime/java-jmm-cas-aqs';
+import { javaClassloaderLesson } from './specialized/java-runtime/java-classloader';
+import { javaCoreApisLesson } from './specialized/java-runtime/java-core-apis';
 
 // Spring Enterprise concepts
-import { javaSpringMvcLesson } from './specialized/java-spring-mvc';
-import { javaSpringActuatorTestingLesson } from './specialized/java-spring-actuator-testing';
+import { javaSpringMvcLesson } from './specialized/java-enterprise/java-spring-mvc';
+import { javaSpringActuatorTestingLesson } from './specialized/java-enterprise/java-spring-actuator-testing';
 
 // Containers & Kubernetes (k8s.sim)
-import { dockerInternalsLesson } from './cloud/docker-internals';
-import { dockerImagesStorageLesson } from './cloud/docker-images-storage';
-import { k8sControlPlaneLesson } from './cloud/k8s-control-plane';
-import { k8sWorkerNodeLesson } from './cloud/k8s-worker-node';
-import { k8sNetworkingCniLesson } from './cloud/k8s-networking-cni';
-import { k8sServicesIngressLesson } from './cloud/k8s-services-ingress';
-import { k8sStorageCsiLesson } from './cloud/k8s-storage-csi';
-import { k8sAutoscalingHpaLesson } from './cloud/k8s-autoscaling-hpa';
+import { dockerInternalsLesson } from './cloud/k8s/docker-internals';
+import { dockerImagesStorageLesson } from './cloud/k8s/docker-images-storage';
+import { k8sControlPlaneLesson } from './cloud/k8s/k8s-control-plane';
+import { k8sWorkerNodeLesson } from './cloud/k8s/k8s-worker-node';
+import { k8sNetworkingCniLesson } from './cloud/k8s/k8s-networking-cni';
+import { k8sServicesIngressLesson } from './cloud/k8s/k8s-services-ingress';
+import { k8sStorageCsiLesson } from './cloud/k8s/k8s-storage-csi';
+import { k8sAutoscalingHpaLesson } from './cloud/k8s/k8s-autoscaling-hpa';
 
 // Network & Web Scale Deep-Dive
-import { tcpInternalsLesson } from './network/tcp-internals';
-import { tlsHandshakeLesson } from './network/tls-handshake';
-import { httpEvolutionLesson } from './network/http-evolution';
-import { dnsAnycastLesson } from './network/dns-anycast';
-import { websocketRealtimeProtocolsLesson } from './network/websocket-realtime-protocols';
-import { reverseProxyL4L7Lesson } from './network/reverse-proxy-l4-l7';
-import { networkSecurityDdosLesson } from './network/network-security-ddos';
+import { tcpInternalsLesson } from './network/foundations/tcp-internals';
+import { tlsHandshakeLesson } from './network/foundations/tls-handshake';
+import { httpEvolutionLesson } from './network/foundations/http-evolution';
+import { dnsAnycastLesson } from './network/foundations/dns-anycast';
+import { websocketRealtimeProtocolsLesson } from './network/scaling/websocket-realtime-protocols';
+import { reverseProxyL4L7Lesson } from './network/scaling/reverse-proxy-l4-l7';
+import { networkSecurityDdosLesson } from './network/scaling/network-security-ddos';
 
 // Redis In-Memory & Caching Internals
-import { redisEventLoopLesson } from './storage/redis-event-loop';
-import { redisDataStructuresLesson } from './storage/redis-data-structures';
-import { redisSortedSetsLesson } from './storage/redis-sorted-sets';
-import { redisPersistenceRdbAofLesson } from './storage/redis-persistence-rdb-aof';
-import { redisMemoryEvictionLesson } from './storage/redis-memory-eviction';
-import { redisClusterShardingLesson } from './storage/redis-cluster-sharding';
+import { redisEventLoopLesson } from './storage/storage/redis-event-loop';
+import { redisDataStructuresLesson } from './storage/storage/redis-data-structures';
+import { redisSortedSetsLesson } from './storage/storage/redis-sorted-sets';
+import { redisPersistenceRdbAofLesson } from './storage/storage/redis-persistence-rdb-aof';
+import { redisMemoryEvictionLesson } from './storage/storage/redis-memory-eviction';
+import { redisClusterShardingLesson } from './storage/storage/redis-cluster-sharding';
 
 // Message Brokers & Event Streams (Kafka & RabbitMQ)
 import { kafkaClusterKraftLesson } from './communication/kafka-cluster-kraft';
@@ -128,43 +128,43 @@ import { rabbitmqReliabilityDlxLesson } from './communication/rabbitmq-reliabili
 import { aiAgentArchitectureLesson } from './design/ai-agent-architecture';
 
 // Git Simulation Tracks (Track 10)
-import { gitEnvironmentsLifecycleLesson } from './git/git-environments-lifecycle';
-import { gitCommandsTaxonomyLesson } from './git/git-commands-taxonomy';
-import { gitBranchingWorkflowsLesson } from './git/git-branching-workflows';
-import { gitDagObjectsLesson } from './git/git-dag-objects';
-import { gitRefsSymbolicLesson } from './git/git-refs-symbolic';
-import { gitDetachedHeadReflogLesson } from './git/git-detached-head-reflog';
-import { gitWorktreesConcurrencyLesson } from './git/git-worktrees-concurrency';
-import { gitThreeWayDiff3Lesson } from './git/git-three-way-diff3';
-import { gitRerereEngineLesson } from './git/git-rerere-engine';
-import { gitRebaseOntoSurgeryLesson } from './git/git-rebase-onto-surgery';
-import { gitCrlfLineEndingsLesson } from './git/git-crlf-line-endings';
-import { gitIndexLockStashLesson } from './git/git-index-lock-stash';
-import { gitBisectAutomationLesson } from './git/git-bisect-automation';
-import { gitSubmoduleSubtreeLesson } from './git/git-submodule-subtree';
+import { gitEnvironmentsLifecycleLesson } from './git/git-core/git-environments-lifecycle';
+import { gitCommandsTaxonomyLesson } from './git/git-core/git-commands-taxonomy';
+import { gitBranchingWorkflowsLesson } from './git/git-core/git-branching-workflows';
+import { gitDagObjectsLesson } from './git/git-core/git-dag-objects';
+import { gitRefsSymbolicLesson } from './git/git-core/git-refs-symbolic';
+import { gitDetachedHeadReflogLesson } from './git/git-cases/git-detached-head-reflog';
+import { gitWorktreesConcurrencyLesson } from './git/git-cases/git-worktrees-concurrency';
+import { gitThreeWayDiff3Lesson } from './git/git-cases/git-three-way-diff3';
+import { gitRerereEngineLesson } from './git/git-cases/git-rerere-engine';
+import { gitRebaseOntoSurgeryLesson } from './git/git-cases/git-rebase-onto-surgery';
+import { gitCrlfLineEndingsLesson } from './git/git-cases/git-crlf-line-endings';
+import { gitIndexLockStashLesson } from './git/git-cases/git-index-lock-stash';
+import { gitBisectAutomationLesson } from './git/git-cases/git-bisect-automation';
+import { gitSubmoduleSubtreeLesson } from './git/git-cases/git-submodule-subtree';
 
 // Angular Simulation Tracks (Track 11 - 12 Canonical Lessons)
-import { angularFlowLesson } from './angular/angular-flow';
-import { angularArchitectureOverviewLesson } from './angular/angular-architecture-overview';
-import { angularComponentLifecycleLesson } from './angular/angular-component-lifecycle';
-import { angularServicesDiLesson } from './angular/angular-services-di';
-import { angularHttpInterceptorsLesson } from './angular/angular-http-interceptors';
-import { angularReactiveFormsLesson } from './angular/angular-reactive-forms';
-import { angularRouterPipelineLesson } from './angular/angular-router-pipeline';
-import { angularIvyIncrementalDomLesson } from './angular/angular-ivy-incremental-dom';
-import { angularZonejsDirtyCheckingLesson } from './angular/angular-zonejs-dirty-checking';
-import { angularRxjsReactivityLesson } from './angular/angular-rxjs-reactivity';
-import { angularSignalsDagLesson } from './angular/angular-signals-dag';
-import { angularNgrxStateLesson } from './angular/angular-ngrx-state';
-import { angularControlFlowLesson } from './angular/angular-control-flow';
-import { angularHydrationReplayLesson } from './angular/angular-hydration-replay';
+import { angularFlowLesson } from './angular/angular-core/angular-flow';
+import { angularArchitectureOverviewLesson } from './angular/angular-core/angular-architecture-overview';
+import { angularComponentLifecycleLesson } from './angular/angular-core/angular-component-lifecycle';
+import { angularServicesDiLesson } from './angular/angular-core/angular-services-di';
+import { angularHttpInterceptorsLesson } from './angular/angular-core/angular-http-interceptors';
+import { angularReactiveFormsLesson } from './angular/angular-core/angular-reactive-forms';
+import { angularRouterPipelineLesson } from './angular/angular-core/angular-router-pipeline';
+import { angularIvyIncrementalDomLesson } from './angular/angular-reactivity/angular-ivy-incremental-dom';
+import { angularZonejsDirtyCheckingLesson } from './angular/angular-reactivity/angular-zonejs-dirty-checking';
+import { angularRxjsReactivityLesson } from './angular/angular-reactivity/angular-rxjs-reactivity';
+import { angularSignalsDagLesson } from './angular/angular-reactivity/angular-signals-dag';
+import { angularNgrxStateLesson } from './angular/angular-reactivity/angular-ngrx-state';
+import { angularControlFlowLesson } from './angular/angular-modern/angular-control-flow';
+import { angularHydrationReplayLesson } from './angular/angular-modern/angular-hydration-replay';
 
 // DevOps Simulation Tracks (Track 12)
-import { devopsCultureSilosLesson } from './devops/devops-culture-silos';
-import { cicdToolsEvolutionLesson } from './devops/cicd-tools-evolution';
-import { cicdPipelineInternalsLesson } from './devops/cicd-pipeline-internals';
-import { gitopsArgocdLesson } from './devops/gitops-argocd';
-import { devopsDoraMetricsLesson } from './devops/devops-dora-metrics';
+import { devopsCultureSilosLesson } from './devops/devops-core/devops-culture-silos';
+import { cicdToolsEvolutionLesson } from './devops/devops-core/cicd-tools-evolution';
+import { cicdPipelineInternalsLesson } from './devops/devops-core/cicd-pipeline-internals';
+import { gitopsArgocdLesson } from './devops/devops-delivery/gitops-argocd';
+import { devopsDoraMetricsLesson } from './devops/devops-delivery/devops-dora-metrics';
 
 export {
   requestLifecycleLesson,
