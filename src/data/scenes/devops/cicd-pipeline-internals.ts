@@ -38,7 +38,7 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Job Queued', webhookAuth: 'HMAC Validated', cacheMatch: 'Pending', artifactStore: 'Idle' },
       scene: {
         entities: {
-          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          devLaptop: makeDevice(-16, -8, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
           webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'HTTP POST /api/webhook', [
             `POST /api/webhook/github HTTP/1.1`,
@@ -71,7 +71,7 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Scaling Pool', webhookAuth: 'Verified (200)', cacheMatch: 'Pending', artifactStore: 'Idle' },
       scene: {
         entities: {
-          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          devLaptop: makeDevice(-16, -8, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
           webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
           ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'purple', glyph: 'cpu', label: ['Runner Pool'], sub: 'spawn workers' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Autoscaler Metrics', [
@@ -105,7 +105,7 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Running (KVM)', webhookAuth: 'Verified', cacheMatch: 'Calculating', artifactStore: 'Idle' },
       scene: {
         entities: {
-          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          devLaptop: makeDevice(-16, -8, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
           webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
           ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['MicroVM Runner'], sub: 'boot 38ms KVM' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Shallow Git Clone Command', [
@@ -139,7 +139,7 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Dependencies Ready', webhookAuth: 'Verified', cacheMatch: 'Cache HIT (2.1s)', artifactStore: 'Idle' },
       scene: {
         entities: {
-          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          devLaptop: makeDevice(-16, -8, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
           webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
           ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['MicroVM Runner'], sub: 'cached 2.1s' }),
           s3Cache: makeDb(-4, 16, { s: 4.6, h: 48, color: 'orange', glyph: 'database', label: ['S3 CAS Cache'], sub: 'S3 CAS store' }),
@@ -173,7 +173,7 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: '4 Shards Running', webhookAuth: 'Verified', cacheMatch: 'Cache HIT', artifactStore: 'Building' },
       scene: {
         entities: {
-          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          devLaptop: makeDevice(-16, -8, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
           webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
           ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['Active Runner'], sub: '4 test shards' }),
           s3Cache: makeDb(-4, 16, { s: 4.6, h: 48, color: 'orange', glyph: 'database', label: ['S3 CAS Cache'], sub: 'S3 CAS store' }),
@@ -208,7 +208,7 @@ export const cicdPipelineInternalsLesson = {
       metrics: { runnerState: 'Wiped & Clean', webhookAuth: 'Verified', cacheMatch: 'Cache HIT', artifactStore: 'Exported (S3)' },
       scene: {
         entities: {
-          devLaptop: makeDevice(-18, -6, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
+          devLaptop: makeDevice(-16, -8, { label: 'dev-laptop', tags: [{ text: 'git push', tone: 'blue', icon: 'zap' }] }),
           webhookGate: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Webhook Gateway'], sub: 'HMAC verify' }),
           ephemeralRunner: makeBlock(6, 0, { s: 4.8, h: 50, color: 'gray', glyph: 'cpu', label: ['Ephemeral Host'], sub: 'zeroed in 15ms' }),
           artifactStore: makeDb(14, 6, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Artifact Store'], sub: 'S3 CAS store' }),

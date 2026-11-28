@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   makeBlock,
   makeDb,
@@ -40,11 +39,11 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Opposed (0%)', wallOfConfusion: 'Fortified Wall', feedbackLatency: 'Weeks (Late Ticket)', deploymentFriction: 'Severe (Weekend War-room)' },
       scene: {
         entities: {
-          devTeam: makeDevice(-18, -6, { label: 'dev-team', tags: [{ text: 'Ship 10 Features', tone: 'blue', icon: 'zap' }] }),
+          devTeam: makeDevice(-16, -8, { label: 'dev-team', tags: [{ text: 'Ship 10 Features', tone: 'blue', icon: 'zap' }] }),
           wall: makeBlock(-6, -2, { s: 4.8, h: 54, color: 'red', glyph: 'shield', label: ['Wall of Confusion'], sub: 'ticket silos' }),
           opsTeam: makeDb(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['Ops Team'], sub: '99.9% target' }),
-          zDev: makeZone({ x0: -22, x1: -14, y0: -10, y1: -2 }),
-          zOps: makeZone({ x0: 2, x1: 10, y0: -4, y1: 4 }),
+          zDev: makeZone({ x0: -22, x1: -14, y0: -10, y1: -2 }, ''),
+          zOps: makeZone({ x0: 2, x1: 10, y0: -4, y1: 4 }, ''),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Incident Ticket: PROD-892', [
             `Ticket: PROD-892 · Priority: Blocker`,
             `Status: OPEN · Assignee: sysadmin`,
@@ -79,7 +78,7 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Unified (100%)', wallOfConfusion: 'Demolished', feedbackLatency: 'Minutes (Automated CI)', deploymentFriction: 'Low (Self-service)' },
       scene: {
         entities: {
-          devTeam: makeDevice(-18, -6, { label: 'dev-team', tags: [{ text: 'Cross-Team Dev', tone: 'green', icon: 'shield' }] }),
+          devTeam: makeDevice(-16, -8, { label: 'dev-team', tags: [{ text: 'Cross-Team Dev', tone: 'green', icon: 'shield' }] }),
           ciPipeline: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Automated CI/CD'], sub: 'pipeline CI' }),
           stableFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Shared Fleet'], sub: 'APM & traces' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'CAMS Framework Contract', [
@@ -113,7 +112,7 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Shift-Left Active', wallOfConfusion: '0', feedbackLatency: '3m 12s (Fast PR Check)', deploymentFriction: 'Automated Gate' },
       scene: {
         entities: {
-          devTeam: makeDevice(-18, -6, { label: 'dev-team', tags: [{ text: 'PR #104: feat/auth', tone: 'blue', icon: 'gitBranch' }] }),
+          devTeam: makeDevice(-16, -8, { label: 'dev-team', tags: [{ text: 'PR #104: feat/auth', tone: 'blue', icon: 'gitBranch' }] }),
           ciPipeline: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Shift-Left Gates'], sub: 'SAST & unit' }),
           stableFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['main Trunk'], sub: 'main trunk' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'GitHub Actions PR Matrix', [
@@ -147,7 +146,7 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Shift-Right Active', wallOfConfusion: '0', feedbackLatency: 'Realtime (APM stream)', deploymentFriction: '5% Canary Split' },
       scene: {
         entities: {
-          devTeam: makeDevice(-18, -6, { label: 'dev-team', tags: [{ text: 'Live Traffic', icon: 'globe' }] }),
+          devTeam: makeDevice(-16, -8, { label: 'dev-team', tags: [{ text: 'Live Traffic', icon: 'globe' }] }),
           ciPipeline: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['Canary Router'], sub: 'canary split' }),
           stableFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Stable Fleet v1.8'], sub: '95% traffic' }),
           canaryPod: makeBlock(-4, 16, { s: 4.4, h: 48, color: 'cyan', glyph: 'zap', label: ['Canary Pod v1.9'], sub: '5% canary' }),
@@ -187,7 +186,7 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'Psychological Safety', wallOfConfusion: '0', feedbackLatency: 'Postmortem in 24h', deploymentFriction: 'Continuous Learning' },
       scene: {
         entities: {
-          devTeam: makeDevice(-18, -6, { label: 'dev-team', tags: [{ text: 'Incident Review', tone: 'red', icon: 'alert' }] }),
+          devTeam: makeDevice(-16, -8, { label: 'dev-team', tags: [{ text: 'Incident Review', tone: 'red', icon: 'alert' }] }),
           ciPipeline: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'purple', glyph: 'terminal', label: ['Blameless Retro'], sub: '5 whys root' }),
           stableFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'shield', label: ['Hardened CI'], sub: 'auto guard' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Postmortem Action Items', [
@@ -221,7 +220,7 @@ export const devopsCultureSilosLesson = {
       metrics: { incentiveAlignment: 'SRE Mathematical SLA', wallOfConfusion: '0', feedbackLatency: 'Continuous SLI', deploymentFriction: 'Autonomous Release' },
       scene: {
         entities: {
-          devTeam: makeDevice(-18, -6, { label: 'dev-team', tags: [{ text: 'SLO 99.95% Active', tone: 'green', icon: 'clock' }] }),
+          devTeam: makeDevice(-16, -8, { label: 'dev-team', tags: [{ text: 'SLO 99.95% Active', tone: 'green', icon: 'clock' }] }),
           ciPipeline: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Policy Gate'], sub: '82% budget' }),
           stableFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['Production Fleet'], sub: 'continuous CD' }),
           sreGovernance: makeDb(14, 6, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['SLO Registry'], sub: 'CFR < 5%' }),
