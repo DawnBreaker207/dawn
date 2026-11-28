@@ -491,3 +491,54 @@ export function getNextLessonInTrack(lessonId: string, trackId?: string): { id: 
   return null;
 }
 
+export interface CurriculumContext {
+  module: Module | undefined;
+  track: Track | undefined;
+  /** Every module of `track`, in curriculum order (empty when there is no track). */
+  trackModules: Module[];
+  /** Two-digit position of `module` inside its track, e.g. '01'. */
+  moduleNum: string;
+  /** 1-based position of the lesson inside `module`. */
+  lessonIndex: number;
+  lessonCount: number;
+}
+
+/**
+ * Resolves where a lesson sits in the curriculum (module, track, numbering).
+ * `moduleId` / `trackId` hints win over a lookup by lesson id; with `fallbackToFirst`
+ * an unknown lesson resolves to the first module / track instead of `undefined`.
+ */
+export function resolveCurriculumContext(
+  lessonId: string,
+  hint: { moduleId?: string; trackId?: string; fallbackToFirst?: boolean } = {},
+): CurriculumContext {
+  let module =
+    (hint.moduleId ? CURRICULUM_MODULES.find((m) => m.id === hint.moduleId) : undefined) ??
+    CURRICULUM_MODULES.find((m) => m.lessons.some((l) => l.id === lessonId));
+  if (!module && hint.fallbackToFirst) module = CURRICULUM_MODULES[0];
+
+  const mod = module;
+  let track =
+    (hint.trackId ? CURRICULUM_TRACKS.find((t) => t.id === hint.trackId) : undefined) ??
+    (mod ? CURRICULUM_TRACKS.find((t) => t.moduleIds.includes(mod.id) || t.id === mod.trackId) : undefined);
+  if (!track && hint.fallbackToFirst) track = CURRICULUM_TRACKS[0];
+
+  const trk = track;
+  const trackModules = trk
+    ? CURRICULUM_MODULES.filter((m) => trk.moduleIds.includes(m.id) || m.trackId === trk.id)
+    : [];
+  const modIdx = mod ? trackModules.findIndex((m) => m.id === mod.id) : -1;
+  const moduleNum = trk
+    ? String((modIdx !== -1 ? modIdx : 0) + 1).padStart(2, '0')
+    : mod?.num || '01';
+  const lessonIdx = mod ? mod.lessons.findIndex((l) => l.id === lessonId) : -1;
+
+  return {
+    module: mod,
+    track: trk,
+    trackModules,
+    moduleNum,
+    lessonIndex: lessonIdx !== -1 ? lessonIdx + 1 : 1,
+    lessonCount: mod?.lessons.length ?? 0,
+  };
+}

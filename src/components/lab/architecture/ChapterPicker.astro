@@ -1,5 +1,5 @@
 ---
-import { CURRICULUM_MODULES, CURRICULUM_TRACKS, type Module, type Lesson, getLessonHref } from '@/data/curriculum';
+import { CURRICULUM_MODULES, CURRICULUM_TRACKS, type Module, type Lesson, getLessonHref, resolveCurriculumContext } from '@/data/curriculum';
 
 interface Props {
   currentLessonId: string;
@@ -9,30 +9,17 @@ interface Props {
 
 const { currentLessonId, trackId: propTrackId, moduleId: propModuleId } = Astro.props;
 
-// 1. Resolve active module
-let activeModule = propModuleId ? CURRICULUM_MODULES.find((m) => m.id === propModuleId) : undefined;
-if (!activeModule) {
-  activeModule = CURRICULUM_MODULES.find((m) => m.lessons.some((l) => l.id === currentLessonId));
-}
-if (!activeModule) {
-  activeModule = CURRICULUM_MODULES[0];
-}
+// Active module + track (e.g. Java Runtime + Spring Framework) and every module in that track
+const curriculum = resolveCurriculumContext(currentLessonId, {
+  moduleId: propModuleId,
+  trackId: propTrackId,
+  fallbackToFirst: true,
+});
+const activeModule = curriculum.module ?? CURRICULUM_MODULES[0];
+const activeTrack = curriculum.track ?? CURRICULUM_TRACKS[0];
+const visibleModules = curriculum.trackModules;
 
-// 2. Resolve active track encompassing related modules (e.g. Java Runtime + Spring Framework)
-let activeTrack = propTrackId ? CURRICULUM_TRACKS.find((t) => t.id === propTrackId) : undefined;
-if (!activeTrack) {
-  activeTrack = CURRICULUM_TRACKS.find((t) => t.moduleIds.includes(activeModule.id) || t.id === activeModule.trackId);
-}
-if (!activeTrack) {
-  activeTrack = CURRICULUM_TRACKS[0];
-}
-
-// 3. Resolve all modules in this track
-const visibleModules = CURRICULUM_MODULES.filter((m) => activeTrack.moduleIds.includes(m.id) || m.trackId === activeTrack.id);
-const totalVisibleLessons = visibleModules.reduce((acc, m) => acc + m.lessons.length, 0);
-
-const activeModIdx = visibleModules.findIndex((m) => m.id === activeModule.id);
-const initialModNum = String((activeModIdx !== -1 ? activeModIdx : 0) + 1).padStart(2, '0');
+const initialModNum = curriculum.moduleNum;
 let activeLessonTitle = `${initialModNum} · ${activeModule.lessons[0]?.title || activeModule.title}`;
 for (let i = 0; i < visibleModules.length; i++) {
   const mod = visibleModules[i];
@@ -476,7 +463,7 @@ interface SectionGroup {
           }
 
           // Navigate to the target page
-          (window as any).umami?.track('lab-chapter-select', { lesson: lessonId, title: lessonTitle || '' });
+          window.umami?.track('lab-chapter-select', { lesson: lessonId, title: lessonTitle || '' });
           if (window.location.pathname !== targetHref) {
             window.location.href = targetHref;
             return;

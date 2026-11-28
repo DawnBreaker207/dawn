@@ -2,7 +2,7 @@
 import type { Lesson } from '@/lib/simulator/types';
 import { CHAPTER_KINDS } from '@/lib/simulator/chapter-kinds';
 import { formatMetric } from '@/lib/simulator/metric-format';
-import { CURRICULUM_MODULES, CURRICULUM_TRACKS, getNextLessonInTrack } from '@/data/curriculum';
+import { getNextLessonInTrack, resolveCurriculumContext } from '@/data/curriculum';
 
 interface Props {
   lesson: Lesson;
@@ -11,29 +11,11 @@ interface Props {
 const { lesson } = Astro.props;
 
 // Locate curriculum module info for crumb
-let moduleNum = '01';
-let moduleTitle = 'Foundations';
-let lessonIdxInMod = 1;
-let totalLessonsInMod = 3;
-let currentTrackId: string | undefined;
-
-// Resolve module and track from single source of truth
-const activeModule = CURRICULUM_MODULES.find((m) => m.lessons.some((l) => l.id === lesson.id));
-if (activeModule) {
-  moduleTitle = activeModule.title;
-  currentTrackId = activeModule.trackId;
-  const activeTrack = CURRICULUM_TRACKS.find((t) => t.id === activeModule.trackId || t.moduleIds.includes(activeModule.id));
-  if (activeTrack) {
-    const trackModules = CURRICULUM_MODULES.filter((m) => activeTrack.moduleIds.includes(m.id) || m.trackId === activeTrack.id);
-    const modIdx = trackModules.findIndex((m) => m.id === activeModule.id);
-    moduleNum = String((modIdx !== -1 ? modIdx : 0) + 1).padStart(2, '0');
-  } else {
-    moduleNum = activeModule.num || '01';
-  }
-  const idx = activeModule.lessons.findIndex((l) => l.id === lesson.id);
-  lessonIdxInMod = idx !== -1 ? idx + 1 : 1;
-  totalLessonsInMod = activeModule.lessons.length;
-}
+const curriculum = resolveCurriculumContext(lesson.id);
+const { moduleNum, lessonIndex: lessonIdxInMod } = curriculum;
+const moduleTitle = curriculum.module?.title ?? 'Foundations';
+const totalLessonsInMod = curriculum.module ? curriculum.lessonCount : 3;
+const currentTrackId = curriculum.module?.trackId;
 
 const nextLessonInfo = getNextLessonInTrack(lesson.id, currentTrackId);
 
@@ -437,7 +419,6 @@ const humanizeMetricKey = (k: string) => {
         <button
           type="button"
           id="wb-random-lab"
-          data-labs={JSON.stringify(CURRICULUM_MODULES.flatMap((m) => m.lessons.map((l) => `/lab/${l.id}`)).filter((h) => h !== `/lab/${lesson.id}`))}
           class="inline-flex cursor-pointer items-center gap-1 text-(--fg-dim) hover:text-(--accent) transition-colors"
         >
           <span>🎲 Random lab</span>
