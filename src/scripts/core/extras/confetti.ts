@@ -2,7 +2,7 @@
 
 function playVictoryChime(): void {
   try {
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
     const ctx = new Ctx();
     const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
@@ -25,7 +25,7 @@ function playVictoryChime(): void {
 
 export function launchConfetti(): void {
   try {
-    (window as any).umami?.track('easter-egg-unlocked');
+    window.umami?.track('easter-egg-unlocked');
   } catch {}
   playVictoryChime();
 

@@ -200,7 +200,7 @@ function initNonBlockingTelemetry() {
       const el = (e.target as Element)?.closest?.('[data-track-event]');
       if (!el) return;
       const eventName = el.getAttribute('data-track-event');
-      if (eventName && (window as any).umami?.track) {
+      if (eventName && window.umami?.track) {
         const data: Record<string, string> = {};
         if (el instanceof HTMLElement) {
           for (const [key, val] of Object.entries(el.dataset)) {
@@ -213,7 +213,7 @@ function initNonBlockingTelemetry() {
             }
           }
         }
-        (window as any).umami.track(eventName, Object.keys(data).length > 0 ? data : undefined);
+        window.umami.track(eventName, Object.keys(data).length > 0 ? data : undefined);
       }
     },
     { capture: true, passive: true }

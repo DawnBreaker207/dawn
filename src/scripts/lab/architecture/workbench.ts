@@ -1,5 +1,9 @@
 import { CHAPTER_KINDS } from '@/lib/simulator/chapter-kinds';
 import { formatMetric } from '@/lib/simulator/metric-format';
+import { CURRICULUM_MODULES } from '@/data/curriculum';
+
+/** Latest metric-count animation per chip, so a newer step cancels an older one. */
+const chipAnimations = new WeakMap<HTMLElement, object>();
 
 function initSimWorkbench() {
   const root = document.getElementById('sim-body');
@@ -81,14 +85,14 @@ function initSimWorkbench() {
     document.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail }));
 
     if (isInitialized) {
-      (window as any).umami?.track('workbench-step-change', { lesson: lesson.id, step: idx + 1 });
+      window.umami?.track('workbench-step-change', { lesson: lesson.id, step: idx + 1 });
     }
 
     // Guide meta
     if (elStepLabel) elStepLabel.textContent = `Step ${idx + 1} / ${total}`;
-    const chp = s.chapter && (CHAPTER_KINDS as any)[s.chapter]
-      ? (CHAPTER_KINDS as any)[s.chapter]
-      : { label: s.chapter ? s.chapter.toUpperCase() : 'STEP', tone: 'sand' };
+    // Chapter ids are authored in the scene data; an unknown id falls back to a plain badge.
+    const knownChapter = s.chapter ? CHAPTER_KINDS[s.chapter as keyof typeof CHAPTER_KINDS] : undefined;
+    const chp = knownChapter ?? { label: s.chapter ? s.chapter.toUpperCase() : 'STEP', tone: 'sand' };
     if (elChapterBadge) {
       elChapterBadge.textContent = chp.label;
       elChapterBadge.className = `chapter chapter--${chp.tone}`;
@@ -253,10 +257,10 @@ function initSimWorkbench() {
           const startTime = performance.now();
           const duration = 900;
           const animId = {};
-          (chipEl as any)._anim = animId;
+          chipAnimations.set(chipEl, animId);
 
           const stepAnim = (now: number) => {
-            if ((chipEl as any)._anim !== animId) return;
+            if (chipAnimations.get(chipEl) !== animId) return;
             const p = Math.min(1, (now - startTime) / duration);
             const ease = 1 - (1 - p) ** 3;
             const raw = Number(oldVal) + (Number(newVal) - Number(oldVal)) * ease;
@@ -280,7 +284,7 @@ function initSimWorkbench() {
 
   // Button event handlers
   elBtnBack?.addEventListener('click', () => {
-    (window as any).umami?.track('workbench-nav', {
+    window.umami?.track('workbench-nav', {
       lesson: lesson.id,
       dir: 'prev',
       fromStep: curIdx + 1,
@@ -291,11 +295,11 @@ function initSimWorkbench() {
 
   elBtnNext?.addEventListener('click', () => {
     if (curIdx === total - 1 && nextLesson?.href) {
-      (window as any).umami?.track('workbench-lesson-complete', { lesson: lesson.id, next: nextLesson.title });
+      window.umami?.track('workbench-lesson-complete', { lesson: lesson.id, next: nextLesson.title });
       window.location.href = nextLesson.href;
       return;
     }
-    (window as any).umami?.track('workbench-nav', {
+    window.umami?.track('workbench-nav', {
       lesson: lesson.id,
       dir: 'next',
       fromStep: curIdx + 1,
@@ -308,7 +312,8 @@ function initSimWorkbench() {
   const elRandomLab = document.getElementById('wb-random-lab');
   elRandomLab?.addEventListener('click', () => {
     try {
-      const urls = JSON.parse(elRandomLab.getAttribute('data-labs') || '[]');
+      // Every other lesson, taken from the curriculum bundle instead of a per-page data attribute.
+      const urls = CURRICULUM_MODULES.flatMap((m) => m.lessons.map((l) => `/lab/${l.id}`)).filter((h) => h !== `/lab/${lesson.id}`);
       if (urls.length > 0) {
         const pick = urls[Math.floor(Math.random() * urls.length)];
         window.location.assign(pick);
@@ -323,7 +328,7 @@ function initSimWorkbench() {
     const btn = (e.target as HTMLElement).closest('[data-step]') as HTMLElement | null;
     if (btn) {
       const step = parseInt(btn.getAttribute('data-step') || '0', 10);
-      (window as any).umami?.track('workbench-step-select', {
+      window.umami?.track('workbench-step-select', {
         lesson: lesson.id,
         step: step + 1,
         total,
@@ -337,7 +342,7 @@ function initSimWorkbench() {
     const li = (e.target as HTMLElement).closest('li[data-goal-step]');
     if (li) {
       const goalStep = parseInt(li.getAttribute('data-goal-step') || '1', 10);
-      (window as any).umami?.track('workbench-goal-jump', {
+      window.umami?.track('workbench-goal-jump', {
         lesson: lesson.id,
         goalStep,
         text: (li.textContent || '').trim().slice(0, 60),
@@ -352,7 +357,7 @@ function initSimWorkbench() {
     if (chip) {
       const k = chip.dataset.k || '';
       const val = chip.querySelector('.chip__value')?.textContent?.trim() || '';
-      (window as any).umami?.track('workbench-metric-click', {
+      window.umami?.track('workbench-metric-click', {
         lesson: lesson.id,
         metric: k,
         value: val,
@@ -362,24 +367,24 @@ function initSimWorkbench() {
 
   // Stage Tools click tracking
   document.getElementById('expand')?.addEventListener('click', () => {
-    (window as any).umami?.track('workbench-fullscreen', { lesson: lesson.id });
+    window.umami?.track('workbench-fullscreen', { lesson: lesson.id });
   });
   document.getElementById('replay')?.addEventListener('click', () => {
-    (window as any).umami?.track('workbench-replay', { lesson: lesson.id, step: curIdx + 1 });
+    window.umami?.track('workbench-replay', { lesson: lesson.id, step: curIdx + 1 });
   });
   document.getElementById('fit')?.addEventListener('click', () => {
-    (window as any).umami?.track('workbench-fit', { lesson: lesson.id });
+    window.umami?.track('workbench-fit', { lesson: lesson.id });
   });
   document.getElementById('pause')?.addEventListener('click', () => {
-    (window as any).umami?.track('workbench-pause', { lesson: lesson.id, step: curIdx + 1 });
+    window.umami?.track('workbench-pause', { lesson: lesson.id, step: curIdx + 1 });
   });
 
   // Window event listeners with cleanup
-  if ((window as any).__sim_wb_controller) {
-    (window as any).__sim_wb_controller.abort();
+  if (window.__sim_wb_controller) {
+    window.__sim_wb_controller.abort();
   }
   const controller = new AbortController();
-  (window as any).__sim_wb_controller = controller;
+  window.__sim_wb_controller = controller;
 
   // Recalculate timeline tightness on window resize
   window.addEventListener('resize', () => {
@@ -400,15 +405,15 @@ function initSimWorkbench() {
     if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
     if (e.key === 'ArrowRight') {
       if (curIdx === total - 1 && nextLesson?.href) {
-        (window as any).umami?.track('workbench-lesson-complete', { lesson: lesson.id, next: nextLesson.title });
+        window.umami?.track('workbench-lesson-complete', { lesson: lesson.id, next: nextLesson.title });
         window.location.href = nextLesson.href;
         return;
       }
-      (window as any).umami?.track('workbench-step-change', { lesson: lesson.id, step: curIdx + 2, trigger: 'key' });
+      window.umami?.track('workbench-step-change', { lesson: lesson.id, step: curIdx + 2, trigger: 'key' });
       renderStep(curIdx + 1);
     }
     if (e.key === 'ArrowLeft') {
-      (window as any).umami?.track('workbench-step-change', { lesson: lesson.id, step: curIdx, trigger: 'key' });
+      window.umami?.track('workbench-step-change', { lesson: lesson.id, step: curIdx, trigger: 'key' });
       renderStep(curIdx - 1);
     }
     if (e.key === 'r' || e.key === 'R') {

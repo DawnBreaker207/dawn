@@ -39,13 +39,13 @@ export function setupReadingProgress(): void {
       if (!milestone50Fired && ratio >= 0.5) {
         milestone50Fired = true;
         try {
-          (window as any).umami?.track('reading-milestone', { depth: '50%', path: window.location.pathname });
+          window.umami?.track('reading-milestone', { depth: '50%', path: window.location.pathname });
         } catch {}
       }
       if (!milestone100Fired && ratio >= 0.9) {
         milestone100Fired = true;
         try {
-          (window as any).umami?.track('reading-milestone', { depth: '100%', path: window.location.pathname });
+          window.umami?.track('reading-milestone', { depth: '100%', path: window.location.pathname });
         } catch {}
       }
     }

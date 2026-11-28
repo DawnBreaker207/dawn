@@ -6,7 +6,7 @@ let masterAudioCtx: AudioContext | null = null;
 export function getDawnAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   if (!masterAudioCtx) {
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
     if (Ctx) {
       masterAudioCtx = new Ctx();
     }
@@ -316,7 +316,7 @@ export function setupMechanicalKeyboardSound(): void {
     playKeystrokeSound(e.key);
   };
 
-  window.removeEventListener('keydown', (window as any).__dawn_thock_listener);
-  (window as any).__dawn_thock_listener = handleKeydown;
+  if (window.__dawn_thock_listener) window.removeEventListener('keydown', window.__dawn_thock_listener);
+  window.__dawn_thock_listener = handleKeydown;
   window.addEventListener('keydown', handleKeydown, { passive: true });
 }

@@ -5,7 +5,7 @@
 
 interface GlobalHandlers {
   progressWin: null | (() => void);
-  keydoc: null | (() => void);
+  keydoc: null | ((e: KeyboardEvent) => void);
 }
 
 const state: GlobalHandlers = { progressWin: null, keydoc: null };
@@ -124,7 +124,7 @@ export function launchConfetti(): void {
 
 // Global debug helper for dev console
 if (typeof window !== 'undefined') {
-  (window as any).__dawn_easter_egg = launchConfetti;
+  window.__dawn_easter_egg = launchConfetti;
 }
 
 let lastRecordedTime = 0;
@@ -308,7 +308,7 @@ function updateFooterTokens(): void {
 function setupKeymap(): void {
   if (state.keydoc) {
     try {
-      window.removeEventListener('keydown', state.keydoc as any);
+      window.removeEventListener('keydown', state.keydoc);
     } catch {}
   }
   state.keydoc = null;
@@ -385,8 +385,8 @@ function setupKeymap(): void {
   };
 
   // Sync when user exits browser native fullscreen (F11 / browser Esc)
-  if (!(window as any).__dawn_fullscreen_bound) {
-    (window as any).__dawn_fullscreen_bound = true;
+  if (!window.__dawn_fullscreen_bound) {
+    window.__dawn_fullscreen_bound = true;
     document.addEventListener('fullscreenchange', () => {
       if (!document.fullscreenElement && document.documentElement.classList.contains('zen-mode')) {
         toggleZenMode(false);
@@ -438,7 +438,7 @@ function setupKeymap(): void {
   };
 
   let vimClickCount = 0;
-  let vimClickTimer: any = null;
+  let vimClickTimer: ReturnType<typeof setTimeout> | undefined;
   document.getElementById('statusbar-vim-mode')?.addEventListener('click', () => {
     vimClickCount++;
     clearTimeout(vimClickTimer);
@@ -455,7 +455,7 @@ function setupKeymap(): void {
 
     const key = e.key || '';
     const code = e.code || '';
-    const keyCode = e.keyCode || (e as any).which || 0;
+    const keyCode = e.keyCode || e.which || 0;
     const kLower = key.toLowerCase();
 
     // Don't let pure modifiers break sequence
@@ -485,26 +485,26 @@ function setupKeymap(): void {
 
     if (e.key === '?') {
       e.preventDefault();
-      try { (window as any).umami?.track('shortcut-press', { key: '?' }); } catch {}
+      try { window.umami?.track('shortcut-press', { key: '?' }); } catch {}
       showKeyboardHelpModal(true);
       return;
     }
 
     if (kLower === '/') {
       e.preventDefault();
-      try { (window as any).umami?.track('shortcut-press', { key: '/' }); } catch {}
+      try { window.umami?.track('shortcut-press', { key: '/' }); } catch {}
       document.dispatchEvent(new CustomEvent('dawn:open-search'));
       return;
     }
     if (kLower === 't') {
       e.preventDefault();
-      try { (window as any).umami?.track('shortcut-press', { key: 't' }); } catch {}
+      try { window.umami?.track('shortcut-press', { key: 't' }); } catch {}
       document.querySelector<HTMLElement>('[data-theme-toggle]')?.click();
       return;
     }
     if (kLower === 'z') {
       e.preventDefault();
-      try { (window as any).umami?.track('shortcut-press', { key: 'z' }); } catch {}
+      try { window.umami?.track('shortcut-press', { key: 'z' }); } catch {}
       toggleZenMode();
       return;
     }
@@ -563,7 +563,7 @@ function setupKeymap(): void {
     // Two-key quick navigation
     if (gAt && Date.now() - gAt <= 900) {
       gAt = 0;
-      try { (window as any).umami?.track('shortcut-jump', { target: kLower }); } catch {}
+      try { window.umami?.track('shortcut-jump', { target: kLower }); } catch {}
       if (kLower === 'h') location.assign('/');
       else if (kLower === 'b') location.assign('/blog');
       else if (kLower === 'p') location.assign('/projects');

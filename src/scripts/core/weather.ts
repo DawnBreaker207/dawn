@@ -8,7 +8,7 @@ let weatherAnimId = 0;
 let activeWeatherModeRunning: WeatherMode = 'off';
 let weatherResizeHandler: (() => void) | null = null;
 let weatherMouseHandler: ((e: MouseEvent) => void) | null = null;
-let stormLightningTimer: any = null;
+let stormLightningTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Master output bus for all weather audio (thunder + rain bed) — the volume
 // setting controls this one node; every effect routes through it.
@@ -588,13 +588,13 @@ export function setupWeatherEngine(): void {
       }, 90);
 
       // Schedule next lightning strike in 4.5 - 8.5 seconds
-      clearTimeout(stormLightningTimer);
+      clearTimeout(stormLightningTimer ?? undefined);
       const nextDelay = 4500 + Math.random() * 4000;
       stormLightningTimer = setTimeout(triggerLightning, nextDelay);
     }
 
     if (mode === 'storm') {
-      clearTimeout(stormLightningTimer);
+      clearTimeout(stormLightningTimer ?? undefined);
       stormLightningTimer = setTimeout(triggerLightning, 1200);
     }
 
@@ -858,7 +858,7 @@ export function setupWeatherEngine(): void {
     activeWeatherModeRunning = 'off';
     cancelAnimationFrame(weatherAnimId);
     weatherAnimId = 0;
-    clearTimeout(stormLightningTimer);
+    clearTimeout(stormLightningTimer ?? undefined);
     if (weatherResizeHandler) {
       window.removeEventListener('resize', weatherResizeHandler);
       weatherResizeHandler = null;
@@ -925,22 +925,22 @@ export function setupWeatherEngine(): void {
   }
 
   // Event bus listeners
-  window.removeEventListener('dawn:toggle-weather', (window as any).__dawn_weather_toggle_listener);
-  (window as any).__dawn_weather_toggle_listener = () => cycleWeather();
-  window.addEventListener('dawn:toggle-weather', (window as any).__dawn_weather_toggle_listener);
+  if (window.__dawn_weather_toggle_listener) window.removeEventListener('dawn:toggle-weather', window.__dawn_weather_toggle_listener);
+  window.__dawn_weather_toggle_listener = () => cycleWeather();
+  window.addEventListener('dawn:toggle-weather', window.__dawn_weather_toggle_listener);
 
-  window.removeEventListener('dawn:set-weather', (window as any).__dawn_weather_set_listener);
-  (window as any).__dawn_weather_set_listener = (e: CustomEvent<{ mode: WeatherMode }>) => {
+  if (window.__dawn_weather_set_listener) window.removeEventListener('dawn:set-weather', window.__dawn_weather_set_listener as EventListener); // custom event name is not in WindowEventMap; the handler only reads e.detail
+  window.__dawn_weather_set_listener = (e: CustomEvent<{ mode: WeatherMode }>) => {
     if (e.detail?.mode) setWeather(e.detail.mode);
   };
-  window.addEventListener('dawn:set-weather', (window as any).__dawn_weather_set_listener as any);
+  window.addEventListener('dawn:set-weather', window.__dawn_weather_set_listener as EventListener); // same reason as above
 
   // Backward-compatibility with legacy rain toggle event
-  window.removeEventListener('dawn:toggle-rain', (window as any).__dawn_rain_toggle_listener);
-  (window as any).__dawn_rain_toggle_listener = () => {
+  if (window.__dawn_rain_toggle_listener) window.removeEventListener('dawn:toggle-rain', window.__dawn_rain_toggle_listener);
+  window.__dawn_rain_toggle_listener = () => {
     setWeather(currentMode === 'rain' ? 'off' : 'rain');
   };
-  window.addEventListener('dawn:toggle-rain', (window as any).__dawn_rain_toggle_listener);
+  window.addEventListener('dawn:toggle-rain', window.__dawn_rain_toggle_listener);
 
   if (currentMode !== 'off') {
     if (activeWeatherModeRunning !== currentMode || weatherAnimId === 0) {
