@@ -813,7 +813,11 @@ A floating panel provides high pedagogical value when it presents a **concrete t
   ```bash
   node scripts/audit-all-diagrams.mjs
   ```
-  Then open the lesson in the dev server and step through every step (light + dark): 0 console errors, nothing overlapping or clipped, goals light up on the step that teaches them.
+  Then check the geometry rules (world bounds, node spacing, block sizes) and the camera zoom the engine picks:
+  ```bash
+  node scripts/check-diagram-geometry.mjs <lesson-id>     # exits 1 when a hard rule is broken
+  ```
+  (`npm run check:diagrams` runs both checkers.) Then open the lesson in the dev server and step through every step (light + dark): 0 console errors, nothing overlapping or clipped, goals light up on the step that teaches them.
 - **Goals:** `goals[].step` is **1-based** (the goal is checked when the learner reaches that step). When inserting or removing steps, re-point every goal at or after the change.
 - **Pre-Commit Validation:**
   ```bash
@@ -1244,6 +1248,7 @@ scripts/             AGENTS.md        README.md   LICENSE
 build-books.mjs      build-og.mjs       build-stats.mjs
 sync-notion.mjs      sync-now.mjs       token-burn.mjs
 check-db.mjs         audit-all-diagrams.mjs   ← scene auditor, required by §8
+check-diagram-geometry.mjs               ← framing/zoom checker, required by §8
 ```
 
 One-off audit/debug scripts should be deleted after use, not committed:

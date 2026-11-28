@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "sync:notion": "node scripts/sync-notion.mjs",
-    "check:db": "node scripts/check-db.mjs"
+    "check:db": "node scripts/check-db.mjs",
+    "check:diagrams": "node scripts/audit-all-diagrams.mjs && node scripts/check-diagram-geometry.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",
