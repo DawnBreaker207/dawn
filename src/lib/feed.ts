@@ -1,12 +1,12 @@
 import { SITE } from '@/lib/site';
 
-export function escapeXml(value: string): string {
+function escapeXml(value: string): string {
   return value.replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]!
   );
 }
 
-export function getAuthor(): string {
+function getAuthor(): string {
   return `${SITE.email} (${SITE.author})`;
 }
 

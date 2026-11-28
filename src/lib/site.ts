@@ -1,9 +1,8 @@
 export const GITHUB_USERNAME = 'DawnBreaker207';
-export const GITHUB_OWNER = 'DawnBreaker207';
-export const GITHUB_REPO = 'dawn';
+const GITHUB_OWNER = 'DawnBreaker207';
+const GITHUB_REPO = 'dawn';
 export const GITHUB_REPO_PATH = `${GITHUB_OWNER}/${GITHUB_REPO}`;
 export const HOST = 'dawn';
-export const REPO_DIR = `~/${GITHUB_REPO_PATH}`;
 
 export interface SiteVersion {
   branch: string;
@@ -100,7 +99,6 @@ export const SITE = {
   },
 } as const;
 
-export const siteMetadata = SITE;
 export default SITE;
 
 export const SITE_URL =
