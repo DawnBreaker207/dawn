@@ -798,6 +798,15 @@ p {
   inset-inline-end: 12px;
 }
 
+/* Below 1600px the stage is too narrow for five stat chips plus labelled buttons, so Replay and Pause keep
+   only their icons (the title tooltip still names them). */
+@media (max-width: 1599px) {
+  :root[data-layout="desktop"] .stage__tools #replay > span,
+  :root[data-layout="desktop"] .stage__tools #pause > span {
+    display: none;
+  }
+}
+
 .tool {
   border: 1.3px solid var(--ink-2);
   background: var(--c-fbf7f1);
