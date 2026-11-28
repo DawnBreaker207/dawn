@@ -1,54 +1,44 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBalancer,
-  makeBlock,
-  makeCrowd,
-  makeDb,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBalancer, makeBlock, makeCrowd, makeDb, makeLink, makePanel, makeZone, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const ps = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
 
-const ms = { x0: -9.5, x1: 9.5, y0: -14, y1: 13.8 };
+const systemArea = { x0: -9.5, x1: 9.5, y0: -14, y1: 13.8 };
 
-const hs = { x0: -15, x1: -1.2, y0: -3.6, y1: 13.8 };
+const zoneAArea = { x0: -15, x1: -1.2, y0: -3.6, y1: 13.8 };
 
-const gs = { x0: 1.2, x1: 15, y0: -3.6, y1: 13.8 };
+const zoneBArea = { x0: 1.2, x1: 15, y0: -3.6, y1: 13.8 };
 
-const _s = () => makeCrowd(ps, 12, `1M users`);
+const users = () => makeCrowd(usersArea, 12, `1M users`);
 
-const vs = (e = {}) => makeBalancer(0, -10, e);
+const balancer = (e: Bag = {}) => makeBalancer(0, -10, e);
 
-const ys = (e, t, n = {}) => ({ [e]: makeBlock(t, 0, { label: [`App`], ...n }) });
+const appBlock = (e: string, t: number, n: Bag = {}) => ({ [e]: makeBlock(t, 0, { label: [`App`], ...n }) });
 
-const bs = (e, t, n = {}) => ({ [e]: makeDb(t, 10, { r: 1.8, glyph: `database`, ...n }) });
+const dbBlock = (e: string, t: number, n: Bag = {}) => ({ [e]: makeDb(t, 10, { r: 1.8, glyph: `database`, ...n }) });
 
-const xs = { tags: [{ text: `single point of failure`, tone: `red`, icon: `alert` }] };
+const spofTags = { tags: [{ text: `single point of failure`, tone: `red`, icon: `alert` }] };
 
-const Ss = (e = {}) => ({
-    users: _s(),
-    lb: vs(e.lb),
-    ...ys(`a1`, 0, e.a1),
-    ...bs(`db`, 0, { label: `database`, ...(e.db || {}) }),
+const singleScene = (e: Bag = {}) => ({
+    users: users(),
+    lb: balancer(e.lb),
+    ...appBlock(`a1`, 0, e.a1),
+    ...dbBlock(`db`, 0, { label: `database`, ...(e.db || {}) }),
   });
 
-const Cs = (e = {}) => ({
+const singleLinks = (e: Bag = {}) => ({
     ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both`, ...e }),
     la1: makeLink(`lb`, `a1`, [`lb`, `a1`]),
     adb: makeLink(`a1`, `db`, [`a1`, `db`], { heads: `both` }),
   });
 
-const ws = (e, t = {}) => ({
-    ...ys(`a1`, -e, t.a1),
-    ...ys(`a2`, e, t.a2),
-    ...bs(`db`, -e, { label: `leader`, ...(t.db || {}) }),
-    ...bs(`db2`, e, { label: `follower`, ...(t.db2 || {}) }),
+const replicatedScene = (e: number, t: Bag = {}) => ({
+    ...appBlock(`a1`, -e, t.a1),
+    ...appBlock(`a2`, e, t.a2),
+    ...dbBlock(`db`, -e, { label: `leader`, ...(t.db || {}) }),
+    ...dbBlock(`db2`, e, { label: `follower`, ...(t.db2 || {}) }),
   });
 
-const Ts = (e = {}) => ({
+const replicatedLinks = (e: Bag = {}) => ({
     ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both`, ...(e.ul || {}) }),
     la1: makeLink(`lb`, `a1`, [`lb`, [`a1`, `lb`], `a1`], e.la1),
     la2: makeLink(`lb`, `a2`, [`lb`, [`a2`, `lb`], `a2`], e.la2),
@@ -60,7 +50,7 @@ const Ts = (e = {}) => ({
     rep: makeLink(`db`, `db2`, [`db`, `db2`], { label: `replication`, ...(e.rep || {}) }),
   });
 
-const Es = [
+const replicatedFlows = [
     {
       routes: [{ path: [`ul`, `la1`, `adb`] }, { path: [`ul`, `la2`, `a2db`] }],
       rate: 2.6,
@@ -69,12 +59,12 @@ const Es = [
     { route: [`rep`], kind: `write`, rate: 0.6 },
   ];
 
-const Ds = (e = {}) => ({
-    users: _s(),
-    lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-    za: makeZone(hs, `ZONE A · OFFLINE`),
-    zb: makeZone(gs, `ZONE B`),
-    ...ws(8, {
+const zoneScene = (e: Bag = {}) => ({
+    users: users(),
+    lb: balancer({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
+    za: makeZone(zoneAArea, `ZONE A · OFFLINE`),
+    zb: makeZone(zoneBArea, `ZONE B`),
+    ...replicatedScene(8, {
       a1: DEAD_STATE,
       db: { ...DEAD_STATE, label: `leader` },
       db2: { label: `leader`, tags: [{ text: `promoted`, tone: `green`, icon: `check` }] },
@@ -82,19 +72,19 @@ const Ds = (e = {}) => ({
     ...e,
   });
 
-const Os = {
+const zoneLinks = {
     ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both` }),
     la1: makeLink(`lb`, `a1`, [`lb`, [`a1`, `lb`], `a1`], { style: `off` }),
     la2: makeLink(`lb`, `a2`, [`lb`, [`a2`, `lb`], `a2`]),
     a2d2: makeLink(`a2`, `db2`, [`a2`, `db2`], { heads: `both` }),
   };
 
-const ks = [{ route: [`ul`, `la2`, `a2d2`], rate: 2.6, bounce: !0 }];
+const failoverFlows = [{ route: [`ul`, `la2`, `a2d2`], rate: 2.6, bounce: !0 }];
 
-const As = (e, t, n) => makePanel({ x: 15, y: 13.8, z: 0, dx: -130, dy: -240 }, e, t, { icon: n });
+const card = cardAt({ x: 15, y: 13.8, dx: -130, dy: -240 });
 
 // --- reliability ---
-const js = {
+const redundancyLesson = {
     id: `redundancy`,
     title: `Redundancy & Failover`,
     summary: `Everything fails eventually. Design so that no single failure takes you down.`,
@@ -125,8 +115,8 @@ const js = {
         metrics: { avail: `99.7%`, downtime: `26 h`, spofs: 3, survives: `nothing` },
         scene: {
           entities: {
-            ...Ss(),
-            card: As(
+            ...singleScene(),
+            card: card(
               `The nines`,
               [
                 `99%     → 3.7 days down / year`,
@@ -138,7 +128,7 @@ const js = {
               `heartPulse`,
             ),
           },
-          links: Cs(),
+          links: singleLinks(),
           flows: [{ route: [`ul`, `la1`, `adb`], rate: 2, bounce: !0 }],
         },
       },
@@ -157,8 +147,8 @@ const js = {
         changes: [`+ 3 single points of failure marked`],
         metrics: { avail: `99.7%`, downtime: `26 h`, spofs: 3, survives: `nothing` },
         scene: {
-          entities: Ss({ lb: xs, a1: xs, db: { ...xs, label: `database` } }),
-          links: Cs(),
+          entities: singleScene({ lb: spofTags, a1: spofTags, db: { ...spofTags, label: `database` } }),
+          links: singleLinks(),
           flows: [{ route: [`ul`, `la1`, `adb`], rate: 2, bounce: !0 }],
         },
       },
@@ -183,12 +173,12 @@ const js = {
         metrics: { avail: `99.95%`, downtime: `4 h`, spofs: 0, survives: `a server` },
         scene: {
           entities: {
-            users: _s(),
-            lb: vs({ tags: [{ text: `active–passive pair`, icon: `replay` }] }),
-            ...ws(5),
+            users: users(),
+            lb: balancer({ tags: [{ text: `active–passive pair`, icon: `replay` }] }),
+            ...replicatedScene(5),
           },
-          links: Ts(),
-          flows: Es,
+          links: replicatedLinks(),
+          flows: replicatedFlows,
         },
       },
       {
@@ -211,17 +201,17 @@ const js = {
         metrics: { avail: `99.95%`, downtime: `+ 6 h outage`, spofs: 1, survives: `a server` },
         scene: {
           entities: {
-            users: _s(),
-            dc: makeZone(ms, `ONE DATA CENTER · POWER LOST`),
-            lb: vs(DEAD_STATE),
-            ...ws(5, {
+            users: users(),
+            dc: makeZone(systemArea, `ONE DATA CENTER · POWER LOST`),
+            lb: balancer(DEAD_STATE),
+            ...replicatedScene(5, {
               a1: DEAD_STATE,
               a2: DEAD_STATE,
               db: { ...DEAD_STATE, label: `leader` },
               db2: { ...DEAD_STATE, label: `follower` },
             }),
           },
-          links: Ts({
+          links: replicatedLinks({
             ul: { fail: 1 },
             la1: { style: `off` },
             la2: { style: `off` },
@@ -252,14 +242,14 @@ const js = {
         metrics: { avail: `99.99%`, downtime: `53 min`, spofs: 0, survives: `a zone` },
         scene: {
           entities: {
-            users: _s(),
-            lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-            za: makeZone(hs, `ZONE A`),
-            zb: makeZone(gs, `ZONE B`),
-            ...ws(8),
+            users: users(),
+            lb: balancer({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
+            za: makeZone(zoneAArea, `ZONE A`),
+            zb: makeZone(zoneBArea, `ZONE B`),
+            ...replicatedScene(8),
           },
-          links: Ts({ rep: { label: `cross-zone replication` } }),
-          flows: Es,
+          links: replicatedLinks({ rep: { label: `cross-zone replication` } }),
+          flows: replicatedFlows,
         },
       },
       {
@@ -276,7 +266,7 @@ const js = {
         },
         changes: [`− Zone A offline`, `~ Traffic → zone B only`, `~ Follower promoted to leader`],
         metrics: { avail: `99.99%`, downtime: `53 min`, spofs: 0, survives: `a zone` },
-        scene: { entities: Ds(), links: Os, flows: ks },
+        scene: { entities: zoneScene(), links: zoneLinks, flows: failoverFlows },
       },
       {
         short: `RTO & RPO`,
@@ -292,10 +282,10 @@ const js = {
         },
         metrics: { avail: `99.99%`, downtime: `53 min`, spofs: 0, survives: `a zone` },
         scene: {
-          entities: Ds({
+          entities: zoneScene({
           }),
-          links: Os,
-          flows: ks,
+          links: zoneLinks,
+          flows: failoverFlows,
         },
       },
       {
@@ -318,15 +308,15 @@ const js = {
         metrics: { avail: `99.99%`, downtime: `53 min`, spofs: 0, survives: `a zone` },
         scene: {
           entities: {
-            users: _s(),
-            lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-            za: makeZone(hs, `ZONE A`),
-            zb: makeZone(gs, `ZONE B`),
-            ...ws(8, {
+            users: users(),
+            lb: balancer({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
+            za: makeZone(zoneAArea, `ZONE A`),
+            zb: makeZone(zoneBArea, `ZONE B`),
+            ...replicatedScene(8, {
               a1: { ...DEAD_STATE, tags: [{ text: `killed by chaos test`, tone: `amber`, icon: `bug` }] },
             }),
           },
-          links: Ts({ la1: { style: `off` }, adb: { style: `off` } }),
+          links: replicatedLinks({ la1: { style: `off` }, adb: { style: `off` } }),
           flows: [
             { route: [`ul`, `la2`, `a2db`], rate: 2.6, bounce: !0 },
             { route: [`rep`], kind: `write`, rate: 0.6 },
@@ -349,16 +339,16 @@ const js = {
         metrics: { avail: `99.99%`, downtime: `+ 40 min outage`, spofs: 0, survives: `a zone` },
         scene: {
           entities: {
-            users: _s(),
-            lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-            za: makeZone(hs, `ZONE A`),
-            zb: makeZone(gs, `ZONE B`),
-            ...ws(8, {
+            users: users(),
+            lb: balancer({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
+            za: makeZone(zoneAArea, `ZONE A`),
+            zb: makeZone(zoneBArea, `ZONE B`),
+            ...replicatedScene(8, {
               a1: { ...DEAD_STATE, tags: [{ text: `v2.4 · crashing`, tone: `red`, icon: `bug` }] },
               a2: { ...DEAD_STATE, tags: [{ text: `v2.4 · crashing`, tone: `red`, icon: `bug` }] },
             }),
           },
-          links: Ts({
+          links: replicatedLinks({
             ul: { fail: 1 },
             la1: { style: `off` },
             la2: { style: `off` },
@@ -387,16 +377,16 @@ const js = {
         metrics: { avail: `99.99%`, downtime: `53 min`, spofs: 0, survives: `a zone` },
         scene: {
           entities: {
-            users: _s(),
-            lb: vs({ tags: [{ text: `1% → canary`, tone: `amber`, icon: `split` }] }),
-            za: makeZone(hs, `ZONE A`),
-            zb: makeZone(gs, `ZONE B`),
-            ...ws(8, {
+            users: users(),
+            lb: balancer({ tags: [{ text: `1% → canary`, tone: `amber`, icon: `split` }] }),
+            za: makeZone(zoneAArea, `ZONE A`),
+            zb: makeZone(zoneBArea, `ZONE B`),
+            ...replicatedScene(8, {
               a1: { tags: [{ text: `v2.3 · 99%`, tone: `green` }] },
               a2: { tags: [{ text: `v2.4 canary · 1%`, tone: `amber`, icon: `bug` }] },
             }),
           },
-          links: Ts({ la2: { style: `dashed` } }),
+          links: replicatedLinks({ la2: { style: `dashed` } }),
           flows: [
             {
               routes: [
@@ -431,19 +421,19 @@ const js = {
         metrics: { avail: `99.995%`, downtime: `26 min`, spofs: 0, survives: `a region` },
         scene: {
           entities: {
-            users: _s(),
+            users: users(),
             lb: makeBlock(0, -10, {
               color: `orange`,
               glyph: `globe`,
               label: [`Global`, `DNS`],
               tags: [{ text: `nearest healthy region`, icon: `globe` }],
             }),
-            za: makeZone(hs, `REGION · EU`),
-            zb: makeZone(gs, `REGION · US`),
-            ...ws(8, { db: { label: `EU primary` }, db2: { label: `US replica` } }),
+            za: makeZone(zoneAArea, `REGION · EU`),
+            zb: makeZone(zoneBArea, `REGION · US`),
+            ...replicatedScene(8, { db: { label: `EU primary` }, db2: { label: `US replica` } }),
           },
-          links: Ts({ rep: { label: `cross-region · ~100 ms lag` } }),
-          flows: Es,
+          links: replicatedLinks({ rep: { label: `cross-region · ~100 ms lag` } }),
+          flows: replicatedFlows,
         },
       },
       {
@@ -466,18 +456,18 @@ const js = {
         metrics: { avail: `99.99%`, downtime: `53 min`, spofs: 0, survives: `a zone` },
         scene: {
           entities: {
-            users: _s(),
-            lb: vs({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
-            za: makeZone(hs, `ZONE A`),
-            zb: makeZone(gs, `ZONE B`),
-            ...ws(8),
+            users: users(),
+            lb: balancer({ tags: [{ text: `regional · spans zones`, icon: `globe` }] }),
+            za: makeZone(zoneAArea, `ZONE A`),
+            zb: makeZone(zoneBArea, `ZONE B`),
+            ...replicatedScene(8),
           },
-          links: Ts({ rep: { label: `cross-zone replication` } }),
-          flows: Es,
+          links: replicatedLinks({ rep: { label: `cross-zone replication` } }),
+          flows: replicatedFlows,
         },
       },
     ],
   };
 
-export { js as redundancyLesson };
-export default js;
+export { redundancyLesson as redundancyLesson };
+export default redundancyLesson;

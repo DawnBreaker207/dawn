@@ -1,23 +1,14 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeHot,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeCool, makeCrowd, makeHot, makeLink, makePanel, type Bag, cardAt } from '@/lib/simulator/scene-builders';
 
-const qs = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
+const shoppersArea = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
 
-const Js = (e = `shoppers`) => makeCrowd(qs, 11, e);
+const shoppers = (e = `shoppers`) => makeCrowd(shoppersArea, 11, e);
 
-const Ys = (e = {}) => makeBlock(0, -10, { color: `orange`, glyph: `cart`, label: [`Order`, `Service`], ...e });
+const orderService = (e: Bag = {}) => makeBlock(0, -10, { color: `orange`, glyph: `cart`, label: [`Order`, `Service`], ...e });
 
-const Xs = (e = {}) => makeBlock(0, 4, { color: `purple`, glyph: `creditCard`, label: [`Payments`], ...e });
+const paymentsService = (e: Bag = {}) => makeBlock(0, 4, { color: `purple`, glyph: `creditCard`, label: [`Payments`], ...e });
 
-const Zs = (e) =>
+const breakerBlock = (e: Bag) =>
     makeBlock(0, -3, {
       s: 3.2,
       h: 34,
@@ -28,11 +19,11 @@ const Zs = (e) =>
       pills: `below`,
     });
 
-const Qs = {
-    uo: (e = {}) => ({
+const links = {
+    uo: (e: Bag = {}) => ({
       uo: makeLink(`shoppers`, `order`, [`shoppers`, `order`], { heads: `both`, ...e }),
     }),
-    op: (e = {}) => ({ op: makeLink(`order`, `pay`, [`order`, `pay`], { heads: `both`, ...e }) }),
+    op: (e: Bag = {}) => ({ op: makeLink(`order`, `pay`, [`order`, `pay`], { heads: `both`, ...e }) }),
     viaBreaker: (e = {}, t = {}) => ({
       ob: makeLink(
         `order`,
@@ -55,11 +46,11 @@ const Qs = {
     }),
   };
 
-const $s = { text: `200 / 200 threads waiting`, tone: `red`, icon: `hourglass` };
+const threadsTag = { text: `200 / 200 threads waiting`, tone: `red`, icon: `hourglass` };
 
-const ec = (e, t, n, r = {}) => makePanel({ x: 0, y: 4, z: 0, dx: 95, dy: -175 }, e, t, { icon: n, ...r });
+const card = cardAt({ x: 0, y: 4, dx: 95, dy: -175 });
 
-const tc = {
+const timeoutsRetriesLesson = {
     id: `timeouts-retries`,
     title: `Timeouts & Retries`,
     summary: `Calling a struggling service safely: give up in time, retry carefully, and know when to stop.`,
@@ -90,14 +81,14 @@ const tc = {
         metrics: { success: 40, p99: 3e4, payLoad: `1×`, threads: `200 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys({ ...makeHot(0.98), tags: [$s] }),
-            pay: Xs({
+            shoppers: shoppers(),
+            order: orderService({ ...makeHot(0.98), tags: [threadsTag] }),
+            pay: paymentsService({
               heat: 0.4,
               tags: [{ text: `answering in 30 s`, tone: `amber`, icon: `hourglass` }],
             }),
           },
-          links: { ...Qs.uo({ fail: 0.5 }), ...Qs.op({ label: `no timeout`, labelTone: `red` }) },
+          links: { ...links.uo({ fail: 0.5 }), ...links.op({ label: `no timeout`, labelTone: `red` }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`op`], rate: 1.2, bounce: !0, hold: 2.4, kind: `slow` },
@@ -124,17 +115,17 @@ const tc = {
         metrics: { success: 72, p99: 820, payLoad: `1×`, threads: `35 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys({
+            shoppers: shoppers(),
+            order: orderService({
               ...makeCool(0.4),
               tags: [{ text: `fallback: payment pending`, tone: `amber`, icon: `clock` }],
             }),
-            pay: Xs({
+            pay: paymentsService({
               heat: 0.4,
               tags: [{ text: `often slow`, tone: `amber`, icon: `hourglass` }],
             }),
           },
-          links: { ...Qs.uo(), ...Qs.op({ label: `timeout 800 ms`, fail: 0.3 }) },
+          links: { ...links.uo(), ...links.op({ label: `timeout 800 ms`, fail: 0.3 }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`op`], rate: 1.6, bounce: !0 },
@@ -156,8 +147,8 @@ const tc = {
         changes: [`+ One retry on timeouts and 503s`, `~ Checkouts OK 72% → 97%`],
         metrics: { success: 97, p99: 950, payLoad: `1.1×`, threads: `38 / 200 busy` },
         scene: {
-          entities: { shoppers: Js(), order: Ys(makeCool(0.4)), pay: Xs(makeCool(0.5)) },
-          links: { ...Qs.uo(), ...Qs.op({ label: `timeout 800 ms · 1 retry`, fail: 0.08 }) },
+          entities: { shoppers: shoppers(), order: orderService(makeCool(0.4)), pay: paymentsService(makeCool(0.5)) },
+          links: { ...links.uo(), ...links.op({ label: `timeout 800 ms · 1 retry`, fail: 0.08 }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`op`], rate: 1.8, bounce: !0, pattern: [`req`, `req`, `req`, `req`, `slow`] },
@@ -184,13 +175,13 @@ const tc = {
         metrics: { success: 18, p99: 2400, payLoad: `4×`, threads: `200 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys({ ...makeHot(0.95), tags: [$s] }),
-            pay: Xs({ ...makeHot(1), tags: [{ text: `4× normal load`, tone: `red`, icon: `alert` }] }),
+            shoppers: shoppers(),
+            order: orderService({ ...makeHot(0.95), tags: [threadsTag] }),
+            pay: paymentsService({ ...makeHot(1), tags: [{ text: `4× normal load`, tone: `red`, icon: `alert` }] }),
           },
           links: {
-            ...Qs.uo({ fail: 0.6 }),
-            ...Qs.op({ label: `3 retries, immediately`, labelTone: `red`, fail: 0.75 }),
+            ...links.uo({ fail: 0.6 }),
+            ...links.op({ label: `3 retries, immediately`, labelTone: `red`, fail: 0.75 }),
           },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
@@ -218,14 +209,14 @@ const tc = {
         metrics: { success: 96, p99: 1300, payLoad: `1.2×`, threads: `45 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys(makeCool(0.45)),
-            pay: Xs({
+            shoppers: shoppers(),
+            order: orderService(makeCool(0.45)),
+            pay: paymentsService({
               ...makeCool(0.62),
               tags: [{ text: `recovering`, tone: `green`, icon: `heartPulse` }],
             }),
           },
-          links: { ...Qs.uo(), ...Qs.op({ label: `backoff + jitter`, fail: 0.1 }) },
+          links: { ...links.uo(), ...links.op({ label: `backoff + jitter`, fail: 0.1 }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             {
@@ -257,15 +248,15 @@ const tc = {
         metrics: { success: 88, p99: 25, payLoad: `resting`, threads: `6 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys({
+            shoppers: shoppers(),
+            order: orderService({
               ...makeCool(0.25),
               tags: [{ text: `fallback: payment pending`, tone: `amber`, icon: `clock` }],
             }),
-            br: Zs([{ text: `OPEN · fails in 1 ms`, tone: `red`, icon: `unplug` }]),
-            pay: Xs(DEAD_STATE),
+            br: breakerBlock([{ text: `OPEN · fails in 1 ms`, tone: `red`, icon: `unplug` }]),
+            pay: paymentsService(DEAD_STATE),
           },
-          links: Qs.viaBreaker({ fail: 1 }, { style: `off`, fail: 1 }),
+          links: links.viaBreaker({ fail: 1 }, { style: `off`, fail: 1 }),
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`], rate: 1.6 },
@@ -293,12 +284,12 @@ const tc = {
         metrics: { success: 99, p99: 180, payLoad: `1×`, threads: `30 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys(makeCool(0.35)),
-            br: Zs([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
-            pay: Xs(makeCool(0.5)),
+            shoppers: shoppers(),
+            order: orderService(makeCool(0.35)),
+            br: breakerBlock([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
+            pay: paymentsService(makeCool(0.5)),
           },
-          links: Qs.viaBreaker(),
+          links: links.viaBreaker(),
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`, `bp`], rate: 1.8, bounce: !0 },
@@ -324,11 +315,11 @@ const tc = {
         metrics: { success: 99, p99: 180, payLoad: `1×`, threads: `30 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys(makeCool(0.35)),
-            br: Zs([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
-            pay: Xs({ ...makeCool(0.5), tags: [{ text: `charged once`, tone: `green`, icon: `check` }] }),
-            card: ec(
+            shoppers: shoppers(),
+            order: orderService(makeCool(0.35)),
+            br: breakerBlock([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
+            pay: paymentsService({ ...makeCool(0.5), tags: [{ text: `charged once`, tone: `green`, icon: `check` }] }),
+            card: card(
               `Idempotency-Key: 7f3a`,
               [
                 `attempt 1 → charge $40, store result as 7f3a`,
@@ -339,7 +330,7 @@ const tc = {
               `key`,
             ),
           },
-          links: Qs.viaBreaker({}, { label: `Idempotency-Key: 7f3a`, labelAt: 0.5 }),
+          links: links.viaBreaker({}, { label: `Idempotency-Key: 7f3a`, labelAt: 0.5 }),
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`, `bp`], rate: 1.8, bounce: !0, pattern: [`req`, `req`, `req`, `slow`] },
@@ -365,15 +356,15 @@ const tc = {
         metrics: { success: 99, p99: 180, payLoad: `1×`, threads: `28 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys({
+            shoppers: shoppers(),
+            order: orderService({
               ...makeCool(0.35),
               tags: [{ text: `deadline: 2 s · 1.4 s left`, icon: `timer` }],
             }),
-            br: Zs([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
-            pay: Xs({ ...makeCool(0.45), tags: [{ text: `budget: 1.4 s`, icon: `timer` }] }),
+            br: breakerBlock([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
+            pay: paymentsService({ ...makeCool(0.45), tags: [{ text: `budget: 1.4 s`, icon: `timer` }] }),
           },
-          links: Qs.viaBreaker({}, { label: `deadline: 12:00:02.000`, labelAt: 0.5 }),
+          links: links.viaBreaker({}, { label: `deadline: 12:00:02.000`, labelAt: 0.5 }),
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`, `bp`], rate: 1.8, bounce: !0 },
@@ -400,19 +391,19 @@ const tc = {
         metrics: { success: 92, p99: 820, payLoad: `1×`, threads: `40 / 40 payments · rest free` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys({
+            shoppers: shoppers(),
+            order: orderService({
               ...makeCool(0.4),
               tags: [
                 { text: `payments pool 40 / 40 · others free`, tone: `amber`, icon: `layers` },
               ],
             }),
-            pay: Xs({
+            pay: paymentsService({
               heat: 0.4,
               tags: [{ text: `slow again`, tone: `amber`, icon: `hourglass` }],
             }),
           },
-          links: { ...Qs.uo(), ...Qs.op({ label: `payments pool · 40 threads` }) },
+          links: { ...links.uo(), ...links.op({ label: `payments pool · 40 threads` }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`op`], rate: 1.2, bounce: !0, hold: 1.2, kind: `slow` },
@@ -439,12 +430,12 @@ const tc = {
         metrics: { success: 99, p99: 180, payLoad: `1×`, threads: `30 / 200 busy` },
         scene: {
           entities: {
-            shoppers: Js(),
-            order: Ys(makeCool(0.35)),
-            br: Zs([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
-            pay: Xs(makeCool(0.5)),
+            shoppers: shoppers(),
+            order: orderService(makeCool(0.35)),
+            br: breakerBlock([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
+            pay: paymentsService(makeCool(0.5)),
           },
-          links: Qs.viaBreaker(),
+          links: links.viaBreaker(),
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`, `bp`], rate: 1.8, bounce: !0 },
@@ -454,5 +445,5 @@ const tc = {
     ],
   };
 
-export { tc as timeoutsRetriesLesson };
-export default tc;
+export { timeoutsRetriesLesson as timeoutsRetriesLesson };
+export default timeoutsRetriesLesson;

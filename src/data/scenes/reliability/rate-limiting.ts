@@ -1,42 +1,30 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeDb,
-  makeDevice,
-  makeHot,
-  makeLink,
-  makePanel,
-  makeQueue,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeCrowd, makeDb, makeDevice, makeHot, makeLink, makePanel, makeQueue, makeZone, cardAt, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const Ms = { x0: -10, x1: -2, y0: -23, y1: -17 };
+const usersArea = { x0: -10, x1: -2, y0: -23, y1: -17 };
 
-const Ns = { x0: -17.5, x1: -7.6, y0: -12.6, y1: -9.4 };
+const userBucketArea = { x0: -17.5, x1: -7.6, y0: -12.6, y1: -9.4 };
 
-const Ps = { x0: 10.6, x1: 20.5, y0: -12.6, y1: -9.4 };
+const scriptBucketArea = { x0: 10.6, x1: 20.5, y0: -12.6, y1: -9.4 };
 
-const Fs = (e = 11, t = `real users`) => makeCrowd(Ms, e, t);
+const users = (e = 11, t = `real users`) => makeCrowd(usersArea, e, t);
 
-const Is = (e = []) => makeDevice(8, -20, { label: `runaway script`, tags: e });
+const bot = (e: Tag[] = []) => makeDevice(8, -20, { label: `runaway script`, tags: e });
 
-const Ls = (e = {}) => makeBlock(0, 3, { label: [`API`], ...e });
+const apiServer = (e: Bag = {}) => makeBlock(0, 3, { label: [`API`], ...e });
 
-const Rs = (e = 0, t = {}) =>
+const gateway = (e = 0, t = {}) =>
     makeBlock(e, -9, { color: `orange`, glyph: `gauge`, label: [`Gateway`], sub: `rate limiter`, ...t });
 
-const zs = { text: `5,000 req/s`, tone: `red`, icon: `bot` };
+const burstTag = { text: `5,000 req/s`, tone: `red`, icon: `bot` };
 
-const Bs = { text: `limit: 10 req/s per client`, icon: `gauge` };
+const limitTag = { text: `limit: 10 req/s per client`, icon: `gauge` };
 
-const Vs = {
-    direct: (e = {}) => ({
+const directLinks = {
+    direct: (e: Bag = {}) => ({
       ua: makeLink(`users`, `api`, [`users`, [`users`, `api`], `api`], { heads: `both`, ...(e.ua || {}) }),
       ba: makeLink(`bot`, `api`, [`bot`, [`bot`, `api`], `api`], e.ba),
     }),
-    edge: (e = `gw`, t = {}) => ({
+    edge: (e = `gw`, t: Bag = {}) => ({
       ug: makeLink(`users`, e, [`users`, [`users`, e], e], { heads: `both`, ...(t.ug || {}) }),
       bg: makeLink(`bot`, e, [`bot`, [`bot`, e], e], {
         label: `429 Too Many Requests`,
@@ -51,24 +39,24 @@ const Vs = {
     }),
   };
 
-const Hs = (e = 8) => ({
-    ubz: makeZone(Ns, `USER · ${e} TOKENS`),
+const bucketScene = (e = 8) => ({
+    ubz: makeZone(userBucketArea, `USER · ${e} TOKENS`),
     ubt: makeQueue(-16.8, -10.4, e, [1, 0], { gap: 1.1, color: `#9fd28f` }),
-    bbz: makeZone(Ps, `SCRIPT · EMPTY`),
+    bbz: makeZone(scriptBucketArea, `SCRIPT · EMPTY`),
   });
 
-const Us = (e, t, n) => makePanel({ x: 12.5, y: 3, z: 0, dx: 20, dy: -260 }, e, t, { icon: n });
+const card = cardAt({ x: 12.5, y: 3, dx: 20, dy: -260 });
 
-const Ws = (e = [zs], t = {}) => ({
-    users: Fs(),
-    bot: Is(e),
-    api: Ls(makeCool(0.42)),
-    gw: Rs(-6, { tags: [] }),
-    gw2: Rs(8, t),
+const baseEntities = (e = [burstTag], t = {}) => ({
+    users: users(),
+    bot: bot(e),
+    api: apiServer(makeCool(0.42)),
+    gw: gateway(-6, { tags: [] }),
+    gw2: gateway(8, t),
     redis: makeDb(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
   });
 
-const Gs = (e = {}) => ({
+const limiterLinks = (e: Bag = {}) => ({
     ug: makeLink(`users`, `gw`, [`users`, [`users`, `gw`], `gw`], { heads: `both` }),
     bg2: makeLink(`bot`, `gw2`, [`bot`, `gw2`], {
       label: `429 Too Many Requests`,
@@ -83,7 +71,7 @@ const Gs = (e = {}) => ({
     g2r: makeLink(`gw2`, `redis`, [`gw2`, `redis`], { heads: `both` }),
   });
 
-const Ks = {
+const rateLimitingLesson = {
     id: `rate-limiting`,
     title: `Rate Limiting`,
     summary: `Give every client a fair budget, so one runaway script can’t take everyone down.`,
@@ -114,14 +102,14 @@ const Ks = {
         metrics: { abuser: 5e3, served: 61, apiCpu: 99, limited: 0 },
         scene: {
           entities: {
-            users: Fs(),
-            bot: Is([zs]),
-            api: Ls({
+            users: users(),
+            bot: bot([burstTag]),
+            api: apiServer({
               ...makeHot(0.99),
               tags: [{ text: `mostly serving one client`, tone: `red`, icon: `alert` }],
             }),
           },
-          links: Vs.direct({ ua: { fail: 0.35 } }),
+          links: directLinks.direct({ ua: { fail: 0.35 } }),
           flows: [
             { route: [`ua`], rate: 1.6, bounce: !0 },
             { route: [`ba`], rate: 7, kind: `heavy`, speed: 1.2 },
@@ -147,8 +135,8 @@ const Ks = {
         ],
         metrics: { abuser: 5e3, served: 99, apiCpu: 45, limited: 4990 },
         scene: {
-          entities: { users: Fs(), bot: Is([zs]), api: Ls(makeCool(0.45)), gw: Rs(0, { tags: [Bs] }) },
-          links: { ...Vs.edge(), ...Vs.toApi() },
+          entities: { users: users(), bot: bot([burstTag]), api: apiServer(makeCool(0.45)), gw: gateway(0, { tags: [limitTag] }) },
+          links: { ...directLinks.edge(), ...directLinks.toApi() },
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
             { route: [`bg`, `ga`], rate: 7, kind: `heavy`, speed: 1.2 },
@@ -171,13 +159,13 @@ const Ks = {
         metrics: { abuser: 5e3, served: 99, apiCpu: 45, limited: 4990 },
         scene: {
           entities: {
-            users: Fs(),
-            bot: Is([zs]),
-            api: Ls(makeCool(0.45)),
-            gw: Rs(0, { tags: [Bs] }),
-            ...Hs(8),
+            users: users(),
+            bot: bot([burstTag]),
+            api: apiServer(makeCool(0.45)),
+            gw: gateway(0, { tags: [limitTag] }),
+            ...bucketScene(8),
           },
-          links: { ...Vs.edge(), ...Vs.toApi() },
+          links: { ...directLinks.edge(), ...directLinks.toApi() },
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
             { route: [`bg`, `ga`], rate: 7, kind: `heavy`, speed: 1.2 },
@@ -199,12 +187,12 @@ const Ks = {
         metrics: { abuser: 5e3, served: 99, apiCpu: 45, limited: 4990 },
         scene: {
           entities: {
-            users: Fs(),
-            bot: Is([zs]),
-            api: Ls(makeCool(0.45)),
-            gw: Rs(0, { tags: [Bs] }),
-            ...Hs(8),
-            card: Us(
+            users: users(),
+            bot: bot([burstTag]),
+            api: apiServer(makeCool(0.45)),
+            gw: gateway(0, { tags: [limitTag] }),
+            ...bucketScene(8),
+            card: card(
               `Limit: 100 per minute`,
               [
                 `fixed window     resets at :00`,
@@ -216,7 +204,7 @@ const Ks = {
               `clock`,
             ),
           },
-          links: { ...Vs.edge(), ...Vs.toApi() },
+          links: { ...directLinks.edge(), ...directLinks.toApi() },
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
             { route: [`bg`, `ga`], rate: 7, kind: `heavy`, speed: 1.2 },
@@ -242,8 +230,8 @@ const Ks = {
         ],
         metrics: { abuser: 5e3, served: 99, apiCpu: 45, limited: 4990 },
         scene: {
-          entities: Ws([zs], { tags: [Bs] }),
-          links: Gs(),
+          entities: baseEntities([burstTag], { tags: [limitTag] }),
+          links: limiterLinks(),
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
             { route: [`bg2`, `ga2`], rate: 7, kind: `heavy`, speed: 1.2 },
@@ -266,10 +254,10 @@ const Ks = {
         changes: [`+ Retry-After and RateLimit headers`, `~ Script backs off to 10 req/s`],
         metrics: { abuser: 10, served: 100, apiCpu: 38, limited: 0 },
         scene: {
-          entities: Ws([{ text: `backing off · 10 req/s`, tone: `green`, icon: `check` }], {
+          entities: baseEntities([{ text: `backing off · 10 req/s`, tone: `green`, icon: `check` }], {
             tags: [{ text: `Retry-After: 30`, icon: `clock` }],
           }),
-          links: Gs({ fail: 0, label: `within limit`, labelTone: `green` }),
+          links: limiterLinks({ fail: 0, label: `within limit`, labelTone: `green` }),
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
             { route: [`bg2`, `ga2`], rate: 0.6, bounce: !0 },
@@ -293,17 +281,17 @@ const Ks = {
         metrics: { abuser: `—`, served: 99, apiCpu: 55, limited: `1,200/s` },
         scene: {
           entities: {
-            users: Fs(15, `Acme Corp · 10,000 users`),
-            bot: Is(),
-            api: Ls(makeCool(0.55)),
-            gw: Rs(-6, {
+            users: users(15, `Acme Corp · 10,000 users`),
+            bot: bot(),
+            api: apiServer(makeCool(0.55)),
+            gw: gateway(-6, {
               tags: [{ text: `tenant Acme: 2,000 req/s`, tone: `amber`, icon: `building` }],
             }),
-            gw2: Rs(8, { tags: [Bs] }),
+            gw2: gateway(8, { tags: [limitTag] }),
             redis: makeDb(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
           },
           links: {
-            ...Gs({ fail: 0, label: `within limit`, labelTone: `green` }),
+            ...limiterLinks({ fail: 0, label: `within limit`, labelTone: `green` }),
             ug: makeLink(`users`, `gw`, [`users`, [`users`, `gw`], `gw`], {
               heads: `both`,
               fail: 0.3,
@@ -339,17 +327,17 @@ const Ks = {
         metrics: { abuser: `—`, served: 100, apiCpu: 82, limited: `2,000 shed/s` },
         scene: {
           entities: {
-            users: Fs(15, `launch day · ×5`),
-            bot: Is(),
-            api: Ls({ cpu: 0.82 }),
-            gw: Rs(-6, {
+            users: users(15, `launch day · ×5`),
+            bot: bot(),
+            api: apiServer({ cpu: 0.82 }),
+            gw: gateway(-6, {
               tags: [{ text: `shedding background work`, tone: `amber`, icon: `layers` }],
             }),
-            gw2: Rs(8),
+            gw2: gateway(8),
             redis: makeDb(1, -9, { r: 1.5, h: 32, glyph: `zap`, label: `counters` }),
           },
           links: {
-            ...Gs({ fail: 0, label: `within limit`, labelTone: `green` }),
+            ...limiterLinks({ fail: 0, label: `within limit`, labelTone: `green` }),
             ul2: makeLink(`users`, `gw`, [[`users+1.6`, `users`], [`users+1.6`, `gw`], `gw`], {
               style: `dashed`,
               fail: 0.85,
@@ -384,10 +372,10 @@ const Ks = {
         },
         metrics: { abuser: 10, served: 100, apiCpu: 38, limited: 0 },
         scene: {
-          entities: Ws([{ text: `backing off · 10 req/s`, tone: `green`, icon: `check` }], {
-            tags: [Bs],
+          entities: baseEntities([{ text: `backing off · 10 req/s`, tone: `green`, icon: `check` }], {
+            tags: [limitTag],
           }),
-          links: Gs({ fail: 0, label: `within limit`, labelTone: `green` }),
+          links: limiterLinks({ fail: 0, label: `within limit`, labelTone: `green` }),
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
             { route: [`bg`, `ga2`], rate: 0.6, bounce: !0 },
@@ -398,5 +386,5 @@ const Ks = {
     ],
   };
 
-export { Ks as rateLimitingLesson };
-export default Ks;
+export { rateLimitingLesson as rateLimitingLesson };
+export default rateLimitingLesson;

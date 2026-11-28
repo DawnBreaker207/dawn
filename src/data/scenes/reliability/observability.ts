@@ -1,30 +1,23 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCrowd,
-  makeDb,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, type Bag, cardAt } from '@/lib/simulator/scene-builders';
 
-const nc = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
+const shoppersArea = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
 
-const rc = (e = `shoppers`) => makeCrowd(nc, 11, e);
+const shoppers = (e = `shoppers`) => makeCrowd(shoppersArea, 11, e);
 
-const ic = (e, t, n) => makeBlock(e, t, n);
+const nodeBlock = (e: number, t: number, n: Bag) => makeBlock(e, t, n);
 
-const ac = (e = {}) => ({
-    gw: ic(0, -11, { color: `orange`, glyph: `globe`, label: [`Gateway`], tags: e.gw || [] }),
-    orders: ic(0, 0, { color: `blue`, glyph: `cart`, label: [`Orders`], tags: e.orders || [] }),
-    inv: ic(-10, 0, { color: `yellow`, glyph: `package`, label: [`Inventory`], tags: e.inv || [] }),
-    pay: ic(10, 0, {
+const serviceNodes = (e: Bag = {}) => ({
+    gw: nodeBlock(0, -11, { color: `orange`, glyph: `globe`, label: [`Gateway`], tags: e.gw || [] }),
+    orders: nodeBlock(0, 0, { color: `blue`, glyph: `cart`, label: [`Orders`], tags: e.orders || [] }),
+    inv: nodeBlock(-10, 0, { color: `yellow`, glyph: `package`, label: [`Inventory`], tags: e.inv || [] }),
+    pay: nodeBlock(10, 0, {
       color: `purple`,
       glyph: `creditCard`,
       label: [`Payments`],
       tags: e.pay || [],
     }),
     db: makeDb(0, 11, { r: 1.7, glyph: `database`, label: `orders DB`, tags: e.db || [] }),
-    fraud: ic(10, 11, {
+    fraud: nodeBlock(10, 11, {
       color: `slab`,
       glyph: `shield`,
       label: [`Fraud API`],
@@ -33,7 +26,7 @@ const ac = (e = {}) => ({
     }),
   });
 
-const oc = (e = {}) => ({
+const serviceLinks = (e: Bag = {}) => ({
     ug: makeLink(`shoppers`, `gw`, [`shoppers`, `gw`], { heads: `both` }),
     go: makeLink(`gw`, `orders`, [`gw`, `orders`], { heads: `both` }),
     oi: makeLink(`orders`, `inv`, [`orders`, `inv`], { heads: `both` }),
@@ -42,24 +35,24 @@ const oc = (e = {}) => ({
     pf: makeLink(`pay`, `fraud`, [`pay`, `fraud`], { heads: `both`, ...(e.pf || {}) }),
   });
 
-const sc = (e = 1.6, t) => [
+const requestFlows = (e = 1.6, t?: string) => [
     { routes: [{ path: [`ug`, `go`, `oi`] }, { path: [`ug`, `go`, `od`] }], rate: 1.4, bounce: !0 },
     { route: [`ug`, `go`, `op`, `pf`], rate: 0.7, bounce: !0, hold: e, kind: t },
   ];
 
-const cc = (e, t = `paper`, n) => ({ text: e, tone: t, icon: n });
+const tag = (e: string, t = `paper`, n?: string) => ({ text: e, tone: t, icon: n });
 
-const lc = (e, t, n, r = {}) => makePanel({ x: -10, y: 0, z: 0, dx: -400, dy: -110 }, e, t, { icon: n, ...r });
+const card = cardAt({ x: -10, y: 0, dx: -400, dy: -110 });
 
-const uc = {
-    gw: [cc(`p99 2.4 s`, `red`, `timer`)],
-    orders: [cc(`p99 2.3 s`, `red`, `timer`)],
-    inv: [cc(`p99 30 ms`, `green`, `timer`)],
-    pay: [cc(`p99 2.2 s`, `red`, `timer`)],
-    db: [cc(`p99 8 ms`, `green`, `timer`)],
+const latencyTags = {
+    gw: [tag(`p99 2.4 s`, `red`, `timer`)],
+    orders: [tag(`p99 2.3 s`, `red`, `timer`)],
+    inv: [tag(`p99 30 ms`, `green`, `timer`)],
+    pay: [tag(`p99 2.2 s`, `red`, `timer`)],
+    db: [tag(`p99 8 ms`, `green`, `timer`)],
   };
 
-const dc = {
+const observabilityLesson = {
     id: `observability`,
     title: `Observability`,
     summary: `Metrics, logs and traces: how to find out what’s wrong, where, and why — fast.`,
@@ -90,11 +83,11 @@ const dc = {
         metrics: { detect: `2 h (support tickets)`, locate: `—`, p99: 2400, signals: `none` },
         scene: {
           entities: {
-            shoppers: rc(),
-            ...ac({ gw: [cc(`?`)], orders: [cc(`?`)], inv: [cc(`?`)], pay: [cc(`?`)] }),
+            shoppers: shoppers(),
+            ...serviceNodes({ gw: [tag(`?`)], orders: [tag(`?`)], inv: [tag(`?`)], pay: [tag(`?`)] }),
           },
-          links: oc(),
-          flows: sc(),
+          links: serviceLinks(),
+          flows: requestFlows(),
         },
       },
       {
@@ -113,11 +106,11 @@ const dc = {
         metrics: { detect: `5 min`, locate: `payments path`, p99: 2400, signals: `metrics` },
         scene: {
           entities: {
-            shoppers: rc(),
-            ...ac(uc),
+            shoppers: shoppers(),
+            ...serviceNodes(latencyTags),
           },
-          links: oc(),
-          flows: sc(),
+          links: serviceLinks(),
+          flows: requestFlows(),
         },
       },
       {
@@ -141,9 +134,9 @@ const dc = {
         },
         scene: {
           entities: {
-            shoppers: rc(),
-            ...ac({ ...uc, gw: [cc(`SLO burning 14× too fast`, `red`, `siren`)] }),
-            card: lc(
+            shoppers: shoppers(),
+            ...serviceNodes({ ...latencyTags, gw: [tag(`SLO burning 14× too fast`, `red`, `siren`)] }),
+            card: card(
               `Checkout SLO`,
               [
                 `SLI: checkouts faster than 1 s`,
@@ -154,8 +147,8 @@ const dc = {
               `siren`,
             ),
           },
-          links: oc(),
-          flows: sc(),
+          links: serviceLinks(),
+          flows: requestFlows(),
         },
       },
       {
@@ -179,9 +172,9 @@ const dc = {
         },
         scene: {
           entities: {
-            shoppers: rc(),
-            ...ac({ ...uc, gw: [cc(`req=a91`, `violet`, `key`)] }),
-            card: lc(
+            shoppers: shoppers(),
+            ...serviceNodes({ ...latencyTags, gw: [tag(`req=a91`, `violet`, `key`)] }),
+            card: card(
               `Logs · filtered by req=a91`,
               [
                 `07.112 gateway  req=a91 POST /checkout`,
@@ -193,9 +186,9 @@ const dc = {
               `scroll`,
             ),
           },
-          links: oc(),
+          links: serviceLinks(),
           flows: [
-            ...sc(1.6),
+            ...requestFlows(1.6),
             { route: [`ug`, `go`, `op`, `pf`], rate: 0.35, bounce: !0, hold: 1.6, kind: `mine` },
           ],
         },
@@ -224,9 +217,9 @@ const dc = {
         },
         scene: {
           entities: {
-            shoppers: rc(),
-            ...ac({ fraud: [] }),
-            card: lc(`Trace a91 · 2.4 s`, [], `waypoints`, {
+            shoppers: shoppers(),
+            ...serviceNodes({ fraud: [] }),
+            card: card(`Trace a91 · 2.4 s`, [], `waypoints`, {
               chart: `bars`,
               bars: [
                 { label: `gateway`, from: 0, to: 1, tone: `gray`, note: `2.4 s` },
@@ -244,9 +237,9 @@ const dc = {
               ],
             }),
           },
-          links: oc({ pf: { label: `2.1 s`, labelTone: `red` } }),
+          links: serviceLinks({ pf: { label: `2.1 s`, labelTone: `red` } }),
           flows: [
-            ...sc(1.6),
+            ...requestFlows(1.6),
             { route: [`ug`, `go`, `op`, `pf`], rate: 0.45, bounce: !0, hold: 1.6, kind: `mine` },
           ],
         },
@@ -267,12 +260,12 @@ const dc = {
         metrics: { detect: `2 min`, locate: `5 min`, p99: 310, signals: `metrics + logs + traces` },
         scene: {
           entities: {
-            shoppers: rc(),
-            ...ac({
-              gw: [cc(`p99 310 ms`, `green`, `timer`)],
-              pay: [cc(`timeout 300 ms + cache`, `green`, `check`)],
+            shoppers: shoppers(),
+            ...serviceNodes({
+              gw: [tag(`p99 310 ms`, `green`, `timer`)],
+              pay: [tag(`timeout 300 ms + cache`, `green`, `check`)],
             }),
-            card: lc(`Trace b17 · 310 ms`, [], `waypoints`, {
+            card: card(`Trace b17 · 310 ms`, [], `waypoints`, {
               chart: `bars`,
               bars: [
                 { label: `gateway`, from: 0, to: 1, tone: `gray`, note: `310 ms` },
@@ -289,8 +282,8 @@ const dc = {
               ],
             }),
           },
-          links: oc({ pf: { label: `timeout 300 ms · cached` } }),
-          flows: sc(0),
+          links: serviceLinks({ pf: { label: `timeout 300 ms · cached` } }),
+          flows: requestFlows(0),
         },
       },
       {
@@ -313,12 +306,12 @@ const dc = {
         metrics: { detect: `1 min`, locate: `4 min`, p99: 900, signals: `metrics + logs + traces` },
         scene: {
           entities: {
-            shoppers: rc(),
-            ...ac({
-              gw: [cc(`errors 6%`, `red`, `siren`)],
-              inv: [cc(`config change 03:10`, `red`, `alert`)],
+            shoppers: shoppers(),
+            ...serviceNodes({
+              gw: [tag(`errors 6%`, `red`, `siren`)],
+              inv: [tag(`config change 03:10`, `red`, `alert`)],
             }),
-            card: lc(`Checkout errors · last hour`, [], `chartLine`, {
+            card: card(`Checkout errors · last hour`, [], `chartLine`, {
               chart: `bars`,
               bars: [
                 { label: `02:50`, to: 0.02, tone: `green`, note: `0.1%` },
@@ -330,10 +323,10 @@ const dc = {
             }),
           },
           links: {
-            ...oc(),
+            ...serviceLinks(),
             oi: makeLink(`orders`, `inv`, [`orders`, `inv`], { heads: `both`, fail: 0.35 }),
           },
-          flows: sc(0),
+          flows: requestFlows(0),
         },
       },
       {
@@ -352,9 +345,9 @@ const dc = {
         metrics: { detect: `1 min`, locate: `4 min`, p99: 310, signals: `metrics + logs + traces` },
         scene: {
           entities: {
-            shoppers: rc(),
-            ...ac({ gw: [cc(`p99 310 ms`, `green`, `timer`)] }),
-            card: lc(
+            shoppers: shoppers(),
+            ...serviceNodes({ gw: [tag(`p99 310 ms`, `green`, `timer`)] }),
+            card: card(
               `Post-mortem · checkout errors`,
               [
                 `impact: 6% of checkouts failed, 4 min`,
@@ -366,8 +359,8 @@ const dc = {
               `scroll`,
             ),
           },
-          links: oc(),
-          flows: sc(0),
+          links: serviceLinks(),
+          flows: requestFlows(0),
         },
       },
       {
@@ -390,13 +383,13 @@ const dc = {
         },
         metrics: { detect: `2 min`, locate: `5 min`, p99: 310, signals: `metrics + logs + traces` },
         scene: {
-          entities: { shoppers: rc(), ...ac({ gw: [cc(`p99 310 ms`, `green`, `timer`)] }) },
-          links: oc(),
-          flows: sc(0),
+          entities: { shoppers: shoppers(), ...serviceNodes({ gw: [tag(`p99 310 ms`, `green`, `timer`)] }) },
+          links: serviceLinks(),
+          flows: requestFlows(0),
         },
       },
     ],
   };
 
-export { dc as observabilityLesson };
-export default dc;
+export { observabilityLesson as observabilityLesson };
+export default observabilityLesson;
