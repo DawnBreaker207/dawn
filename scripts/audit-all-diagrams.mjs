@@ -127,6 +127,7 @@ const issues = {
   crowdedPairs: [],
   outOfBounds: [],
   brokenLinks: [],
+  danglingFlows: [], // flow routes naming a link the step does not define (the engine skips them)
   goalErrors: [],
   glyphHazards: [],
   textOverflowHazards: [],
@@ -172,6 +173,16 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
     const ents = step.scene.entities || {};
     const links = step.scene.links || {};
 
+    // Flow routes must name links of this step
+    for (const flow of step.scene.flows || []) {
+      const names = [...(flow.route || []).flat(), ...(flow.routes || []).flatMap((r) => r.path || [])];
+      for (const name of names) {
+        if (typeof name === 'string' && !links[name]) {
+          issues.danglingFlows.push({ sceneId, step: sIdx + 1, missing: name });
+        }
+      }
+    }
+
     // Check Broken Links & Labeled Link Fitness
     for (const [linkId, link] of Object.entries(links)) {
       if (!link) continue;
@@ -182,6 +193,17 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
       }
       if (to && !ents[to] && to !== 'users' && to !== 'you' && to !== 'client') {
         issues.brokenLinks.push({ sceneId, step: sIdx + 1, linkId, missing: to, role: 'to' });
+      }
+      // Waypoints: an entity id, or an [x, y] pair where either half may be an entity id.
+      for (const p of link.pts || []) {
+        for (const v of Array.isArray(p) ? p : [p]) {
+          if (typeof v !== 'string' || ents[v] || ['users', 'you', 'client'].includes(v)) continue;
+          // `'id+1.5'` / `'id-2'` is an entity id plus an offset
+          const base = v.replace(/[+-]\d+(?:\.\d+)?$/, '');
+          if (!ents[base] && !['users', 'you', 'client'].includes(base)) {
+            issues.brokenLinks.push({ sceneId, step: sIdx + 1, linkId, missing: v, role: 'waypoint' });
+          }
+        }
       }
 
       // Labeled Link Clearance and Detached Risk
@@ -428,6 +450,7 @@ for (const [sceneId, scene] of Object.entries(scenes)) {
 console.log('--- AUDIT FINDINGS ---');
 console.log(`1. Goal Alignment Errors:          ${issues.goalErrors.length}`);
 console.log(`2. Broken Link References:         ${issues.brokenLinks.length}`);
+console.log(`   (dangling flow routes, not counted above: ${issues.danglingFlows.length})`);
 console.log(`3. Out of Viewport Bounds:         ${issues.outOfBounds.length}`);
 console.log(`4. Critical Overlaps (<90px):      ${issues.criticalOverlaps.length}`);
 console.log(`5. Expansion Rule Violations:      ${issues.expansionViolations.length}`);
@@ -551,6 +574,13 @@ if (issues.brokenLinks.length > 0) {
   console.log('\n[BROKEN LINKS DETECTED]:');
   issues.brokenLinks.slice(0, 10).forEach(b => {
     console.log(`  - ${b.sceneId} Step ${b.step}: Link "${b.linkId}" references missing ${b.role}="${b.missing}"`);
+  });
+}
+
+if (issues.danglingFlows.length > 0) {
+  console.log('\n[DANGLING FLOW ROUTES (flow names a link missing from that step)]:');
+  issues.danglingFlows.slice(0, 12).forEach((d) => {
+    console.log(`  - ${d.sceneId} Step ${d.step}: flow route "${d.missing}" has no link`);
   });
 }
 
