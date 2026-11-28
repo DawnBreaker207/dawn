@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // A line-ending pipeline: Windows working tree → index (where git add converts) →
 // object store → Linux working tree. The fix lives in the middle of the pipe
@@ -11,19 +11,19 @@ import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-bu
 type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen position (px) → world grid coordinates. */
-const at = (sx: number, sy: number) => ({ x: +((sx / 14 + sy / 7) / 2).toFixed(2), y: +((sx / 14 - sy / 7) / 2).toFixed(2) });
-const P = { win: at(-280, -50), index: at(-40, 40), store: at(180, -110), linux: at(240, 100), hook: at(-130, 240) };
+const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
+const positions = { win: toIso(-280, -50), index: toIso(-40, 40), store: toIso(180, -110), linux: toIso(240, 100), hook: toIso(-130, 240) };
 
 const tree = (p: { x: number; y: number }, os: string, tags: Tag[]) =>
   makeBlock(p.x, p.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [os], sub: `working tree`, tags });
-const win = (tags: Tag[]) => tree(P.win, `Windows`, tags);
-const linux = (tags: Tag[]) => tree(P.linux, `Linux`, tags);
+const win = (tags: Tag[]) => tree(positions.win, `Windows`, tags);
+const linux = (tags: Tag[]) => tree(positions.linux, `Linux`, tags);
 const index = (tags: Tag[] = []) =>
-  makeBlock(P.index.x, P.index.y, { s: 4.4, h: 52, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `normalizes`, tags });
-const store = (tags: Tag[] = []) => makeDb(P.store.x, P.store.y, { r: 2.2, h: 46, glyph: `database`, label: `.git/objects`, tags });
-const hook = () => makeBlock(P.hook.x, P.hook.y, { s: 4.2, h: 50, color: `slab`, glyph: `shield`, label: [`pre-commit`], sub: `hook` });
+  makeBlock(positions.index.x, positions.index.y, { s: 4.4, h: 52, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `normalizes`, tags });
+const store = (tags: Tag[] = []) => makeDb(positions.store.x, positions.store.y, { r: 2.2, h: 46, glyph: `database`, label: `.git/objects`, tags });
+const hook = () => makeBlock(positions.hook.x, positions.hook.y, { s: 4.2, h: 50, color: `slab`, glyph: `shield`, label: [`pre-commit`], sub: `hook` });
 
-const L = {
+const links = {
   add: makeLink(`win`, `index`, [`win`, `index`], { label: `git add` }),
   addQuiet: makeLink(`win`, `index`, [`win`, `index`]),
   commit: makeLink(`index`, `store`, [`index`, `store`], { label: `commit` }),
@@ -33,8 +33,7 @@ const L = {
   guard: makeLink(`hook`, `index`, [`hook`, `index`], { label: `check` }),
 };
 
-const card = (title: string, lines: string[], icon = `keyboard`) =>
-  makePanel({ x: P.win.x, y: P.win.y, z: 0, dx: -40, dy: -250 }, title, lines, { icon });
+const card = cardAt({ x: positions.win.x, y: positions.win.y, dx: -40, dy: -250 }, `keyboard`);
 
 export const gitCrlfLineEndingsLesson = {
   id: `git-crlf-line-endings`,
@@ -69,7 +68,7 @@ export const gitCrlfLineEndingsLesson = {
           store: store([{ text: `LF blobs`, tone: `green` }]),
           card: card(`terminal`, [`$ git status --short | wc -l`, `10000`, `$ git diff src/app.ts`, `-const port = 3000;`, `! +const port = 3000;^M`]),
         },
-        links: { add: L.add, commit: L.commit },
+        links: { add: links.add, commit: links.commit },
         flows: [{ route: [`add`], kind: `fail`, rate: 1.4 }],
       },
     },
@@ -91,7 +90,7 @@ export const gitCrlfLineEndingsLesson = {
           linux: linux([{ text: `autocrlf unset`, tone: `amber` }]),
           card: card(`terminal`, [`# on the Windows laptop`, `$ git config core.autocrlf`, `true`, `# on the Linux laptop`, `$ git config core.autocrlf`, `! (unset)`]),
         },
-        links: { add: L.addQuiet, commit: L.commit, checkout: L.checkout },
+        links: { add: links.addQuiet, commit: links.commit, checkout: links.checkout },
         flows: [
           { route: [`commit`], kind: `fail`, rate: 1 },
           { route: [`checkout`], kind: `fail`, rate: 1 },
@@ -116,7 +115,7 @@ export const gitCrlfLineEndingsLesson = {
           linux: linux([{ text: `gets LF`, tone: `green` }]),
           card: card(`.gitattributes`, [`$ cat .gitattributes`, `* text=auto eol=lf`, `*.bat  text eol=crlf`, `*.png  binary`], `file`),
         },
-        links: { add: L.add, commit: L.commitQuiet, checkout: L.checkoutQuiet },
+        links: { add: links.add, commit: links.commitQuiet, checkout: links.checkoutQuiet },
         flows: [{ route: [`add`], kind: `write`, rate: 1.2 }],
       },
     },
@@ -138,7 +137,7 @@ export const gitCrlfLineEndingsLesson = {
           linux: linux([{ text: `gets LF`, tone: `green` }]),
           card: card(`terminal`, [`$ git add --renormalize .`, `$ git commit -m "Normalize line endings"`, `[main 5e1f00] Normalize line endings`, `= 214 files changed`]),
         },
-        links: { add: L.addQuiet, commit: L.commit, checkout: L.checkoutQuiet },
+        links: { add: links.addQuiet, commit: links.commit, checkout: links.checkoutQuiet },
         flows: [{ route: [`commit`], kind: `write`, rate: 1.4 }],
       },
     },
@@ -161,7 +160,7 @@ export const gitCrlfLineEndingsLesson = {
           hook: hook(),
           card: card(`terminal`, [`$ git ls-files --eol | grep "i/crlf"`, `# (no output: no CRLF in the index)`, `# .pre-commit-config.yaml`, `- id: mixed-line-ending`, `  args: [--fix=lf]`]),
         },
-        links: { add: L.addQuiet, commit: L.commitQuiet, checkout: L.checkoutQuiet, guard: L.guard },
+        links: { add: links.addQuiet, commit: links.commitQuiet, checkout: links.checkoutQuiet, guard: links.guard },
         flows: [{ route: [`guard`], kind: `ping`, rate: 1 }],
       },
     },
@@ -184,7 +183,7 @@ export const gitCrlfLineEndingsLesson = {
           hook: hook(),
           card: card(`.git-blame-ignore-revs`, [`# Normalize line endings`, `5e1f00a3c9d27b4e8f106a1d2c3b4a5968e7f0d1`, `$ git config blame.ignoreRevsFile .git-blame-ignore-revs`], `file`),
         },
-        links: { add: L.addQuiet, commit: L.commitQuiet, checkout: L.checkout, guard: L.guard },
+        links: { add: links.addQuiet, commit: links.commitQuiet, checkout: links.checkout, guard: links.guard },
         flows: [
           { route: [`checkout`], rate: 1 },
           { route: [`guard`], kind: `ping`, rate: 0.6 },

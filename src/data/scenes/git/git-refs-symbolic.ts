@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: refs on the right, the commits they name on the left.
 //
@@ -10,23 +10,23 @@ import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-bu
 
 type Tag = { text: string; tone?: string; icon?: string };
 
-const at = (sx: number, sy: number): [number, number] => [
-  Math.round((sx / 28 + sy / 14) * 100) / 100,
-  Math.round((sx / 28 - sy / 14) * 100) / 100,
-];
+const toIso = (sx: number, sy: number): [number, number] => {
+  const p = fromScreen(sx, sy, 2);
+  return [p.x, p.y];
+};
 
-const head = () => makeBlock(...at(315, -105), { s: 4.4, h: 50, color: `yellow`, glyph: `target`, label: [`HEAD`], sub: `.git/HEAD` });
+const head = () => makeBlock(...toIso(315, -105), { s: 4.4, h: 50, color: `yellow`, glyph: `target`, label: [`HEAD`], sub: `.git/HEAD` });
 const main = (tags: Tag[] = []) =>
-  makeBlock(...at(110, -40), { s: 4.4, h: 50, color: `yellow`, glyph: `gitBranch`, label: [`main`], sub: `refs/heads`, tags });
+  makeBlock(...toIso(110, -40), { s: 4.4, h: 50, color: `yellow`, glyph: `gitBranch`, label: [`main`], sub: `refs/heads`, tags });
 const origin = () =>
-  makeBlock(...at(110, 150), { s: 4.4, h: 50, color: `yellow`, glyph: `globe`, label: [`origin/main`], sub: `refs/remotes` });
+  makeBlock(...toIso(110, 150), { s: 4.4, h: 50, color: `yellow`, glyph: `globe`, label: [`origin/main`], sub: `refs/remotes` });
 const commitA = () =>
-  makeBlock(...at(-120, -110), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`3f8a12`], sub: `feat: auth` });
+  makeBlock(...toIso(-120, -110), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`3f8a12`], sub: `feat: auth` });
 const commitB = () =>
-  makeBlock(...at(-150, 90), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`9c1d22`], sub: `fix: login` });
-const packed = () => makeDb(...at(300, 60), { r: 2.2, h: 46, glyph: `listOrdered`, label: `packed-refs` });
+  makeBlock(...toIso(-150, 90), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`9c1d22`], sub: `fix: login` });
+const packed = () => makeDb(...toIso(300, 60), { r: 2.2, h: 46, glyph: `listOrdered`, label: `packed-refs` });
 
-const L = {
+const links = {
   mainA: makeLink(`main`, `commitA`, [`main`, `commitA`], { label: `target` }),
   sym: makeLink(`head`, `main`, [`head`, `main`], { style: `dash`, label: `ref:` }),
   originA: makeLink(`origin`, `commitA`, [`origin`, `commitA`]),
@@ -36,8 +36,7 @@ const L = {
   packOrigin: makeLink(`origin`, `packed`, [`origin`, `packed`]),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: 0, y: 0, z: 0, dx: -450, dy: 150 }, title, lines, { icon: `keyboard` });
+const card = cardAt({ x: 0, y: 0, dx: -450, dy: 150 }, `keyboard`);
 
 export const gitRefsSymbolicLesson = {
   id: `git-refs-symbolic`,
@@ -71,7 +70,7 @@ export const gitRefsSymbolicLesson = {
           commitA: commitA(),
           card: card(`refs/heads/main`, [`$ cat .git/refs/heads/main`, `3f8a12c49b56f890e123456789abcdef01234567`, `$ wc -c .git/refs/heads/main`, `41 .git/refs/heads/main`]),
         },
-        links: { mainA: L.mainA },
+        links: { mainA: links.mainA },
         flows: [{ route: [`mainA`], kind: `msg`, rate: 1.2 }],
       },
     },
@@ -92,7 +91,7 @@ export const gitRefsSymbolicLesson = {
           commitA: commitA(),
           card: card(`.git/HEAD`, [`$ cat .git/HEAD`, `ref: refs/heads/main`, `$ git rev-parse HEAD`, `3f8a12c49b56f890e123456789abcdef01234567`]),
         },
-        links: { sym: L.sym, mainA: L.mainA },
+        links: { sym: links.sym, mainA: links.mainA },
         flows: [{ route: [`sym`, `mainA`], kind: `msg`, rate: 1.2 }],
       },
     },
@@ -114,7 +113,7 @@ export const gitRefsSymbolicLesson = {
           commitA: commitA(),
           card: card(`remote refs`, [`$ git branch -r`, `  origin/HEAD -> origin/main`, `  origin/main`, `$ git rev-parse --short origin/main`, `3f8a12`]),
         },
-        links: { sym: L.sym, mainA: L.mainA, originA: L.originA },
+        links: { sym: links.sym, mainA: links.mainA, originA: links.originA },
         flows: [{ route: [`originA`], kind: `msg`, rate: 1 }],
       },
     },
@@ -137,7 +136,7 @@ export const gitRefsSymbolicLesson = {
           commitB: commitB(),
           card: card(`upstream`, [`$ git branch -vv`, `* main 9c1d22 [origin/main: ahead 1] fix: login`, `$ git config --get-regexp '^branch\\.main'`, `branch.main.remote origin`, `branch.main.merge refs/heads/main`]),
         },
-        links: { sym: L.sym, mainB: L.mainB, parent: L.parent, originA: L.originA },
+        links: { sym: links.sym, mainB: links.mainB, parent: links.parent, originA: links.originA },
         flows: [
           { route: [`mainB`, `parent`], kind: `msg`, rate: 1 },
           { route: [`originA`], kind: `msg`, rate: 1 },
@@ -164,7 +163,7 @@ export const gitRefsSymbolicLesson = {
           packed: packed(),
           card: card(`packed-refs`, [`$ git pack-refs --all`, `$ cat .git/packed-refs`, `# pack-refs with: peeled fully-peeled sorted`, `9c1d22… refs/heads/main`, `3f8a12… refs/remotes/origin/main`]),
         },
-        links: { sym: L.sym, mainB: L.mainB, parent: L.parent, originA: L.originA, packMain: L.packMain, packOrigin: L.packOrigin },
+        links: { sym: links.sym, mainB: links.mainB, parent: links.parent, originA: links.originA, packMain: links.packMain, packOrigin: links.packOrigin },
         flows: [
           { route: [`packMain`], kind: `write`, rate: 1 },
           { route: [`packOrigin`], kind: `write`, rate: 1 },
@@ -191,7 +190,7 @@ export const gitRefsSymbolicLesson = {
           packed: packed(),
           card: card(`update-ref`, [`$ git update-ref refs/heads/main 9c1d22 3f8a12`, `# open(main.lock, O_CREAT|O_EXCL)`, `# write + fsync, then rename(main.lock, main)`, `$ git update-ref refs/heads/main 1111111 3f8a12`, `fatal: cannot lock ref 'refs/heads/main'`]),
         },
-        links: { sym: L.sym, mainB: L.mainB, parent: L.parent, originA: L.originA, packMain: L.packMain, packOrigin: L.packOrigin },
+        links: { sym: links.sym, mainB: links.mainB, parent: links.parent, originA: links.originA, packMain: links.packMain, packOrigin: links.packOrigin },
         flows: [{ route: [`mainB`], kind: `write`, rate: 1.2 }],
       },
     },

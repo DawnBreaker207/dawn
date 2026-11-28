@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: the four object types laid out as the pointer chain they form.
 // Arrows point the way Git stores them — from the object that names a hash to the
@@ -11,24 +11,24 @@ import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-bu
 
 type Tag = { text: string; tone?: string; icon?: string };
 
-const at = (sx: number, sy: number): [number, number] => [
-  Math.round((sx / 28 + sy / 14) * 100) / 100,
-  Math.round((sx / 28 - sy / 14) * 100) / 100,
-];
+const toIso = (sx: number, sy: number): [number, number] => {
+  const p = fromScreen(sx, sy, 2);
+  return [p.x, p.y];
+};
 
-const blob = (sha: string, tags: Tag[] = []) => makeDb(...at(400, 20), { r: 2.2, h: 46, glyph: `file`, label: `blob ${sha}`, tags });
+const blob = (sha: string, tags: Tag[] = []) => makeDb(...toIso(400, 20), { r: 2.2, h: 46, glyph: `file`, label: `blob ${sha}`, tags });
 const srcTree = (sha: string, tags: Tag[] = []) =>
-  makeBlock(...at(200, -60), { s: 4.4, h: 50, color: `green`, glyph: `boxes`, label: [`tree ${sha}`], sub: `src/`, tags });
+  makeBlock(...toIso(200, -60), { s: 4.4, h: 50, color: `green`, glyph: `boxes`, label: [`tree ${sha}`], sub: `src/`, tags });
 const rootTree = (sha: string, tags: Tag[] = []) =>
-  makeBlock(...at(0, 20), { s: 4.4, h: 50, color: `green`, glyph: `boxes`, label: [`tree ${sha}`], sub: `/ (root)`, tags });
+  makeBlock(...toIso(0, 20), { s: 4.4, h: 50, color: `green`, glyph: `boxes`, label: [`tree ${sha}`], sub: `/ (root)`, tags });
 const commit = (sha: string, tags: Tag[] = []) =>
-  makeBlock(...at(-200, -60), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`commit ${sha}`], sub: `feat: add app`, tags });
+  makeBlock(...toIso(-200, -60), { s: 4.4, h: 50, color: `purple`, glyph: `gitCommit`, label: [`commit ${sha}`], sub: `feat: add app`, tags });
 const tag = (tags: Tag[] = []) =>
-  makeBlock(...at(-400, 20), { s: 4.4, h: 50, color: `yellow`, glyph: `bookmark`, label: [`tag v1.0.0`], sub: `annotated`, tags });
+  makeBlock(...toIso(-400, 20), { s: 4.4, h: 50, color: `yellow`, glyph: `bookmark`, label: [`tag v1.0.0`], sub: `annotated`, tags });
 const pack = () =>
-  makeDb(...at(100, 150), { r: 2.4, h: 48, glyph: `package`, label: `pack-7f8a.pack`, tags: [{ text: `120 objects · 1.1 MB`, tone: `green` }] });
+  makeDb(...toIso(100, 150), { r: 2.4, h: 48, glyph: `package`, label: `pack-7f8a.pack`, tags: [{ text: `120 objects · 1.1 MB`, tone: `green` }] });
 
-const L = {
+const links = {
   name: makeLink(`srcTree`, `blob`, [`srcTree`, `blob`], { label: `app.ts` }),
   dir: makeLink(`rootTree`, `srcTree`, [`rootTree`, `srcTree`], { label: `src/` }),
   snapshot: makeLink(`commit`, `rootTree`, [`commit`, `rootTree`], { label: `tree` }),
@@ -38,8 +38,7 @@ const L = {
   packRoot: makeLink(`rootTree`, `pack`, [`rootTree`, `pack`]),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: 0, y: 0, z: 0, dx: -440, dy: 80 }, title, lines, { icon: `keyboard` });
+const card = cardAt({ x: 0, y: 0, dx: -440, dy: 80 }, `keyboard`);
 
 const changed: Tag = { text: `new hash`, tone: `amber` };
 
@@ -95,7 +94,7 @@ export const gitDagObjectsLesson = {
           rootTree: rootTree(`8a3f91`),
           card: card(`trees`, [`$ git cat-file -p 8a3f91`, `040000 tree 1f2c4a…    src`, `$ git cat-file -p 1f2c4a`, `100644 blob 4b825d…    app.ts`]),
         },
-        links: { name: L.name, dir: L.dir },
+        links: { name: links.name, dir: links.dir },
         flows: [{ route: [`dir`, `name`], kind: `msg`, rate: 1.2 }],
       },
     },
@@ -117,7 +116,7 @@ export const gitDagObjectsLesson = {
           commit: commit(`7f8a9b`),
           card: card(`commit`, [`$ git cat-file -p 7f8a9b`, `tree 8a3f91b2c4…`, `parent e8d9c2a1…`, `author Dev <dev@org.com> 1700000000 +0000`, `feat: add app`]),
         },
-        links: { name: L.name, dir: L.dir, snapshot: L.snapshot },
+        links: { name: links.name, dir: links.dir, snapshot: links.snapshot },
         flows: [{ route: [`snapshot`, `dir`, `name`], kind: `msg`, rate: 1.2 }],
       },
     },
@@ -140,7 +139,7 @@ export const gitDagObjectsLesson = {
           tag: tag([{ text: `signed`, tone: `green`, icon: `key` }]),
           card: card(`tag`, [`$ git tag -s v1.0.0 -m "Release 1.0.0"`, `$ git cat-file -p v1.0.0`, `object 7f8a9b2c4e…`, `type commit`, `tagger Dev <dev@org.com> 1700000000 +0000`]),
         },
-        links: { name: L.name, dir: L.dir, snapshot: L.snapshot, release: L.release },
+        links: { name: links.name, dir: links.dir, snapshot: links.snapshot, release: links.release },
         flows: [{ route: [`release`, `snapshot`, `dir`, `name`], kind: `msg`, rate: 1.2 }],
       },
     },
@@ -163,7 +162,7 @@ export const gitDagObjectsLesson = {
           tag: tag([{ text: `→ old 7f8a9b`, tone: `gray` }]),
           card: card(`one byte later`, [`$ git commit -am "fix: typo"`, `[main 2b3c4d] fix: typo`, `$ git rev-parse HEAD^{tree} v1.0.0^{tree}`, `6f7a8b…   # new root`, `8a3f91…   # release root, unchanged`]),
         },
-        links: { name: L.name, dir: L.dir, snapshot: L.snapshot, release: L.release },
+        links: { name: links.name, dir: links.dir, snapshot: links.snapshot, release: links.release },
         flows: [{ route: [`snapshot`, `dir`, `name`], kind: `write`, rate: 1.4, bounce: true }],
       },
     },
@@ -187,7 +186,7 @@ export const gitDagObjectsLesson = {
           pack: pack(),
           card: card(`git gc`, [`$ git count-objects -vH`, `size: 14.0 MiB    size-pack: 0`, `$ git gc`, `Total 120 (delta 84), reused 0`, `$ git count-objects -vH`, `size: 0    size-pack: 1.1 MiB`]),
         },
-        links: { name: L.name, dir: L.dir, snapshot: L.snapshot, release: L.release, packBlob: L.packBlob, packSrc: L.packSrc, packRoot: L.packRoot },
+        links: { name: links.name, dir: links.dir, snapshot: links.snapshot, release: links.release, packBlob: links.packBlob, packSrc: links.packSrc, packRoot: links.packRoot },
         flows: [
           { route: [`packBlob`], kind: `write`, rate: 1.2 },
           { route: [`packSrc`], kind: `write`, rate: 1.2 },

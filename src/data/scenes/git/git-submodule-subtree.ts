@@ -36,7 +36,7 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Submodule', pointerStyle: '160000 gitlink SHA', ciOverhead: 'Requires recursive init', repoAutonomy: 'Independent' },
       scene: {
         entities: {
-          parentRepo: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: '.gitmodules' }),
+          parentRepo: makeBlock(-16, -8, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: '.gitmodules' }),
           gitlinkNode: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'terminal', label: ['160000 Gitlink'], sub: 'gitlink SHA' }),
           externalRepo: makeBlock(6, 0, { s: 4.4, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'remote repo' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Submodule Manifest & Tree Entry', [
@@ -72,7 +72,7 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Submodule', pointerStyle: 'Uninitialized', ciOverhead: 'CRASH (empty folder)', repoAutonomy: 'Broken' },
       scene: {
         entities: {
-          parentRepo: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'rose', glyph: 'boxes', label: ['CI Workspace'], sub: 'empty dir' }),
+          parentRepo: makeBlock(-16, -8, { s: 4.4, h: 56, color: 'rose', glyph: 'boxes', label: ['CI Workspace'], sub: 'empty dir' }),
           gitlinkNode: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'rose', glyph: 'alert', label: ['Empty libs/common'], sub: 'missing code' }),
           externalRepo: makeBlock(6, 0, { s: 4.4, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'remote repo' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Empty Directory CI Crash', [
@@ -106,7 +106,7 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Submodule', pointerStyle: 'Pinned SHA', ciOverhead: 'Init complete', repoAutonomy: 'Initialized' },
       scene: {
         entities: {
-          parentRepo: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'populated' }),
+          parentRepo: makeBlock(-16, -8, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'populated' }),
           gitlinkNode: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'terminal', label: ['160000 Gitlink'], sub: 'pinned SHA' }),
           externalRepo: makeBlock(6, 0, { s: 4.4, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'remote repo' }),
           ciInitRunner: makeBlock(-4, 16, { s: 4.4, h: 56, color: 'green', glyph: 'shield', label: ['CI Runner'], sub: 'submodule init' }),
@@ -142,7 +142,7 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Subtree', pointerStyle: 'Inlined tree SHA', ciOverhead: 'Zero (regular clone)', repoAutonomy: '100% self-contained' },
       scene: {
         entities: {
-          parentRepo: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'monorepo root' }),
+          parentRepo: makeBlock(-16, -8, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'monorepo root' }),
           subtreeInlined: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Subtree Inlined'], sub: 'inlined tree' }),
           externalRepo: makeBlock(6, 0, { s: 4.4, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'upstream repo' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Subtree Addition Command', [
@@ -176,7 +176,7 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Subtree', pointerStyle: 'Bidirectional', ciOverhead: 'Zero', repoAutonomy: 'Synchronized' },
       scene: {
         entities: {
-          parentRepo: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'local changes' }),
+          parentRepo: makeBlock(-16, -8, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'local changes' }),
           subtreeInlined: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Subtree Inlined'], sub: 'inlined tree' }),
           externalRepo: makeBlock(6, 0, { s: 4.4, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'upstream repo' }),
           bidirectionalSync: makeBlock(-2, 16, { s: 4.4, h: 54, color: 'cyan', glyph: 'cpu', label: ['Subtree Push'], sub: 'upstream sync' }),
@@ -212,7 +212,7 @@ export const gitSubmoduleSubtreeLesson = {
       metrics: { embeddingType: 'Evaluated', pointerStyle: 'Matched', ciOverhead: 'Optimized', repoAutonomy: 'Standardized' },
       scene: {
         entities: {
-          parentRepo: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'monorepo root' }),
+          parentRepo: makeBlock(-16, -8, { s: 4.4, h: 56, color: 'blue', glyph: 'boxes', label: ['Parent Repo'], sub: 'monorepo root' }),
           subtreeInlined: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Subtree Inlined'], sub: 'chosen design' }),
           externalRepo: makeBlock(6, 0, { s: 4.4, h: 54, color: 'slab', glyph: 'cloud', label: ['External Repo'], sub: 'remote repo' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Architectural Decision Matrix', [

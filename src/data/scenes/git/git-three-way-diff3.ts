@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One diamond DAG for the whole lesson: the merge base on top, our commit on the left,
 // their commit on the right. The conflicted file sits where the merge commit will land,
@@ -13,21 +13,21 @@ import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
 type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen position (px) → world grid coordinates. */
-const at = (sx: number, sy: number) => ({ x: +((sx / 14 + sy / 7) / 2).toFixed(2), y: +((sx / 14 - sy / 7) / 2).toFixed(2) });
+const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
 
-const P = { base: at(0, -110), ours: at(-210, 0), theirs: at(210, 0), mid: at(0, 120) };
+const positions = { base: toIso(0, -110), ours: toIso(-210, 0), theirs: toIso(210, 0), mid: toIso(0, 120) };
 
 const commit = (p: { x: number; y: number }, sha: string, sub: string, tags: Tag[] = [], o: Record<string, unknown> = {}) =>
   makeBlock(p.x, p.y, { s: 4.4, h: 52, color: `purple`, glyph: `gitCommit`, label: [sha], sub, tags, ...o });
 const ref = (name: string): Tag => ({ text: name, tone: `amber`, icon: `gitBranch` });
 
-const base = (tags: Tag[] = [], o: Record<string, unknown> = {}) => commit(P.base, `1a2b3c`, `merge base`, tags, o);
-const ours = (tags: Tag[] = [ref(`main · HEAD`)]) => commit(P.ours, `4d5e6f`, `ours`, tags);
-const theirs = (tags: Tag[] = [ref(`feature`)]) => commit(P.theirs, `7a8b9c`, `theirs`, tags);
+const base = (tags: Tag[] = [], o: Record<string, unknown> = {}) => commit(positions.base, `1a2b3c`, `merge base`, tags, o);
+const ours = (tags: Tag[] = [ref(`main · HEAD`)]) => commit(positions.ours, `4d5e6f`, `ours`, tags);
+const theirs = (tags: Tag[] = [ref(`feature`)]) => commit(positions.theirs, `7a8b9c`, `theirs`, tags);
 const file = (tags: Tag[]) =>
-  makeBlock(P.mid.x, P.mid.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`tax.ts`], sub: `working tree`, tags });
+  makeBlock(positions.mid.x, positions.mid.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`tax.ts`], sub: `working tree`, tags });
 
-const L = {
+const links = {
   oursParent: makeLink(`ours`, `base`, [`ours`, `base`]),
   theirsParent: makeLink(`theirs`, `base`, [`theirs`, `base`]),
   fromOurs: makeLink(`ours`, `file`, [`ours`, `file`], { label: `ours` }),
@@ -40,8 +40,7 @@ const L = {
 };
 
 /** Terminal / file card, parked top-left in the empty corner above `ours`. */
-const card = (title: string, lines: string[], icon = `keyboard`) =>
-  makePanel({ x: P.ours.x, y: P.ours.y, z: 0, dx: -190, dy: -250 }, title, lines, { icon });
+const card = cardAt({ x: positions.ours.x, y: positions.ours.y, dx: -190, dy: -250 }, `keyboard`);
 
 export const gitThreeWayDiff3Lesson = {
   id: `git-three-way-diff3`,
@@ -76,7 +75,7 @@ export const gitThreeWayDiff3Lesson = {
           theirs: theirs(),
           card: card(`terminal`, [`$ git merge-base main feature`, `1a2b3c`, `$ git merge feature`]),
         },
-        links: { oursParent: L.oursParent, theirsParent: L.theirsParent },
+        links: { oursParent: links.oursParent, theirsParent: links.theirsParent },
         flows: [
           { route: [`oursParent`], rate: 0.8 },
           { route: [`theirsParent`], rate: 0.8 },
@@ -101,7 +100,7 @@ export const gitThreeWayDiff3Lesson = {
           file: file([{ text: `1 conflict`, tone: `red`, icon: `alert` }]),
           card: card(`tax.ts`, [`<<<<<<< HEAD`, `return (rate - disc) * 0.1;`, `=======`, `return rate * 0.15;`, `>>>>>>> feature`, `! which one is the change?`], `file`),
         },
-        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, fromOurs: L.fromOurs, fromTheirs: L.fromTheirs },
+        links: { oursParent: links.oursParent, theirsParent: links.theirsParent, fromOurs: links.fromOurs, fromTheirs: links.fromTheirs },
         flows: [
           { route: [`fromOurs`], kind: `fail`, rate: 1.2 },
           { route: [`fromTheirs`], kind: `fail`, rate: 1.2 },
@@ -126,7 +125,7 @@ export const gitThreeWayDiff3Lesson = {
           file: file([{ text: `1 conflict`, tone: `red`, icon: `alert` }]),
           card: card(`tax.ts`, [`$ git config --global merge.conflictstyle diff3`, `<<<<<<< HEAD`, `return (rate - disc) * 0.1;`, `||||||| 1a2b3c`, `return rate * 0.1;`, `=======`, `return rate * 0.15;`, `>>>>>>> feature`], `file`),
         },
-        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, fromOurs: L.fromOursQuiet, fromTheirs: L.fromTheirsQuiet, fromBase: L.fromBase },
+        links: { oursParent: links.oursParent, theirsParent: links.theirsParent, fromOurs: links.fromOursQuiet, fromTheirs: links.fromTheirsQuiet, fromBase: links.fromBase },
         flows: [{ route: [`fromBase`], rate: 1 }],
       },
     },
@@ -148,7 +147,7 @@ export const gitThreeWayDiff3Lesson = {
           file: file([{ text: `both kept`, tone: `green`, icon: `check` }]),
           card: card(`tax.ts (resolved)`, [`function calcTax(rate, disc) {`, `  return (rate - disc) * 0.15;`, `}`, `$ git add tax.ts`], `file`),
         },
-        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, fromOurs: L.fromOursQuiet, fromTheirs: L.fromTheirsQuiet, fromBase: L.fromBase },
+        links: { oursParent: links.oursParent, theirsParent: links.theirsParent, fromOurs: links.fromOursQuiet, fromTheirs: links.fromTheirsQuiet, fromBase: links.fromBase },
         flows: [
           { route: [`fromOurs`], kind: `write`, rate: 1 },
           { route: [`fromTheirs`], kind: `write`, rate: 1 },
@@ -173,7 +172,7 @@ export const gitThreeWayDiff3Lesson = {
           file: file([{ text: `all resolved`, tone: `green`, icon: `check` }]),
           card: card(`terminal`, [`$ git checkout --ours package-lock.json`, `$ git checkout --theirs docs/api.md`, `$ git add package-lock.json docs/api.md`, `# rebase: --ours = upstream, --theirs = yours`]),
         },
-        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, fromOurs: L.fromOurs, fromTheirs: L.fromTheirs },
+        links: { oursParent: links.oursParent, theirsParent: links.theirsParent, fromOurs: links.fromOurs, fromTheirs: links.fromTheirs },
         flows: [
           { route: [`fromOurs`], kind: `write`, rate: 1.1 },
           { route: [`fromTheirs`], kind: `write`, rate: 1.1 },
@@ -195,10 +194,10 @@ export const gitThreeWayDiff3Lesson = {
           base: base(),
           ours: ours([]),
           theirs: theirs(),
-          merge: commit(P.mid, `9a8b7c`, `2 parents`, [ref(`main · HEAD`)]),
+          merge: commit(positions.mid, `9a8b7c`, `2 parents`, [ref(`main · HEAD`)]),
           card: card(`terminal`, [`$ git cat-file -p 9a8b7c`, `tree   e8f2a1`, `parent 4d5e6f`, `parent 7a8b9c`, `= Merge branch 'feature'`]),
         },
-        links: { oursParent: L.oursParent, theirsParent: L.theirsParent, parent1: L.parent1, parent2: L.parent2 },
+        links: { oursParent: links.oursParent, theirsParent: links.theirsParent, parent1: links.parent1, parent2: links.parent2 },
         flows: [
           { route: [`parent1`], rate: 0.9 },
           { route: [`parent2`], rate: 0.9 },

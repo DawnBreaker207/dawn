@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: the same feature travels to production under two workflows.
 // Git Flow routes it through `develop`; trunk-based retires `develop` and adds a CI
@@ -11,23 +11,23 @@ import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
 
 type Tag = { text: string; tone?: string; icon?: string };
 
-const at = (sx: number, sy: number): [number, number] => [
-  Math.round((sx / 28 + sy / 14) * 100) / 100,
-  Math.round((sx / 28 - sy / 14) * 100) / 100,
-];
+const toIso = (sx: number, sy: number): [number, number] => {
+  const p = fromScreen(sx, sy, 2);
+  return [p.x, p.y];
+};
 
 const feature = (sub: string, tags: Tag[] = []) =>
-  makeBlock(...at(-170, 40), { s: 4.4, h: 50, color: `yellow`, glyph: `gitBranch`, label: [`feature/cart`], sub, tags });
+  makeBlock(...toIso(-170, 40), { s: 4.4, h: 50, color: `yellow`, glyph: `gitBranch`, label: [`feature/cart`], sub, tags });
 const develop = (tags: Tag[] = []) =>
-  makeBlock(...at(0, -150), { s: 4.4, h: 50, color: `yellow`, glyph: `merge`, label: [`develop`], sub: `integration`, tags });
+  makeBlock(...toIso(0, -150), { s: 4.4, h: 50, color: `yellow`, glyph: `merge`, label: [`develop`], sub: `integration`, tags });
 const main = (tags: Tag[] = []) =>
-  makeBlock(...at(170, 40), { s: 4.8, h: 54, color: `yellow`, glyph: `gitBranch`, label: [`main`], sub: `always green`, tags });
-const ci = (tags: Tag[] = []) =>
-  makeBlock(...at(0, 190), { s: 4.4, h: 50, color: `green`, glyph: `listChecks`, label: [`CI`], sub: `tests · lint`, tags });
+  makeBlock(...toIso(170, 40), { s: 4.8, h: 54, color: `yellow`, glyph: `gitBranch`, label: [`main`], sub: `always green`, tags });
+const commit = (tags: Tag[] = []) =>
+  makeBlock(...toIso(0, 190), { s: 4.4, h: 50, color: `green`, glyph: `listChecks`, label: [`CI`], sub: `tests · lint`, tags });
 const prod = (tags: Tag[] = []) =>
-  makeBlock(...at(370, -70), { s: 4.4, h: 50, color: `slab`, glyph: `server`, label: [`Production`], sub: `web servers`, tags });
+  makeBlock(...toIso(370, -70), { s: 4.4, h: 50, color: `slab`, glyph: `server`, label: [`Production`], sub: `web servers`, tags });
 
-const L = {
+const links = {
   toDevelop: makeLink(`feature`, `develop`, [`feature`, `develop`], { label: `merge` }),
   release: makeLink(`develop`, `main`, [`develop`, `main`], { label: `release` }),
   conflict: makeLink(`feature`, `develop`, [`feature`, `develop`], { style: `cut`, label: `✕ conflict`, labelTone: `red` }),
@@ -37,8 +37,7 @@ const L = {
   deploy: makeLink(`main`, `prod`, [`main`, `prod`], { label: `deploy` }),
 };
 
-const card = (title: string, lines: string[], icon = `keyboard`) =>
-  makePanel({ x: 0, y: 0, z: 0, dx: 90, dy: 110 }, title, lines, { icon });
+const card = cardAt({ x: 0, y: 0, dx: 90, dy: 110 }, `keyboard`);
 
 export const gitBranchingWorkflowsLesson = {
   id: `git-branching-workflows`,
@@ -73,7 +72,7 @@ export const gitBranchingWorkflowsLesson = {
           main: main(),
           card: card(`git log --graph`, [`$ git log --oneline --graph --all`, `* 9c1d (feature/cart) cart: totals`, `| * 41ab (develop) Merge feature/auth`, `|/`, `* 7d9e (main) release 1.4`]),
         },
-        links: { toDevelop: L.toDevelop, release: L.release },
+        links: { toDevelop: links.toDevelop, release: links.release },
         flows: [
           { route: [`toDevelop`], kind: `write`, rate: 0.5 },
           { route: [`release`], kind: `write`, rate: 0.3 },
@@ -97,7 +96,7 @@ export const gitBranchingWorkflowsLesson = {
           main: main(),
           card: card(`git merge`, [`$ git merge feature/cart`, `CONFLICT (content): Merge conflict in src/order.ts`, `CONFLICT (content): Merge conflict in src/cart.ts`, `Automatic merge failed; fix conflicts and then commit.`], `alertTriangle`),
         },
-        links: { toDevelop: L.conflict, release: L.release },
+        links: { toDevelop: links.conflict, release: links.release },
         flows: [{ route: [`toDevelop`], kind: `fail`, rate: 0.8 }],
       },
     },
@@ -117,7 +116,7 @@ export const gitBranchingWorkflowsLesson = {
           main: main(),
           card: card(`daily merge`, [`$ git switch -c feature/cart main`, `$ git commit -m "cart: totals"   # 40 lines`, `$ git push -u origin feature/cart`, `$ gh pr merge --squash   # same day`]),
         },
-        links: { direct: L.direct },
+        links: { direct: links.direct },
         flows: [{ route: [`direct`], kind: `write`, rate: 1.4 }],
       },
     },
@@ -135,10 +134,10 @@ export const gitBranchingWorkflowsLesson = {
         entities: {
           feature: feature(`< 1 day old`),
           main: main(),
-          ci: ci([{ text: `✓ 1,420 tests`, tone: `green` }]),
+          ci: commit([{ text: `✓ 1,420 tests`, tone: `green` }]),
           card: card(`checks`, [`$ gh pr checks 812`, `typecheck   pass   45s`, `unit        pass   1m12s`, `smoke       pass   2m05s`]),
         },
-        links: { pr: L.pr, gate: L.gate },
+        links: { pr: links.pr, gate: links.gate },
         flows: [
           { route: [`pr`], rate: 1.2 },
           { route: [`gate`], kind: `write`, rate: 1.2 },
@@ -159,11 +158,11 @@ export const gitBranchingWorkflowsLesson = {
         entities: {
           feature: feature(`4 hours old`),
           main: main(),
-          ci: ci(),
+          ci: commit(),
           prod: prod([{ text: `cart_v2: off`, tone: `gray`, icon: `toggle` }]),
           card: card(`checkout.ts`, [`const v2 = await flags.isOn("cart_v2", user);`, `return v2 ? renderCartV2() : renderCart();`], `code`),
         },
-        links: { pr: L.pr, gate: L.gate, deploy: L.deploy },
+        links: { pr: links.pr, gate: links.gate, deploy: links.deploy },
         flows: [
           { route: [`gate`], kind: `write`, rate: 1 },
           { route: [`deploy`], kind: `heavy`, rate: 0.6 },
@@ -184,11 +183,11 @@ export const gitBranchingWorkflowsLesson = {
         entities: {
           feature: feature(`4 hours old`),
           main: main([{ text: `deployable`, tone: `green` }]),
-          ci: ci(),
+          ci: commit(),
           prod: prod([{ text: `cart_v2: 10%`, tone: `green`, icon: `toggle` }]),
           card: card(`deploys`, [`$ gh run list --workflow deploy --limit 3`, `✓ deploy  main  cart: totals         12m ago`, `✓ deploy  main  flag cart_v2 → 10%   40m ago`, `✓ deploy  main  fix: rounding         1h ago`], `activity`),
         },
-        links: { pr: L.pr, gate: L.gate, deploy: L.deploy },
+        links: { pr: links.pr, gate: links.gate, deploy: links.deploy },
         flows: [
           { route: [`pr`], rate: 1.4 },
           { route: [`gate`], kind: `write`, rate: 1.4 },

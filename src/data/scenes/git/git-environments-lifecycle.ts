@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: the four places a change lives, left to right.
 //
@@ -11,20 +11,20 @@ import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-bu
 type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen-space placement (px from stage centre) → world (x, y). */
-const at = (sx: number, sy: number): [number, number] => [
-  Math.round((sx / 28 + sy / 14) * 100) / 100,
-  Math.round((sx / 28 - sy / 14) * 100) / 100,
-];
+const toIso = (sx: number, sy: number): [number, number] => {
+  const p = fromScreen(sx, sy, 2);
+  return [p.x, p.y];
+};
 
-const wt = (tags: Tag[] = []) =>
-  makeBlock(...at(-300, -20), { s: 4.4, h: 50, color: `blue`, glyph: `file`, label: [`Working tree`], sub: `src/app.ts`, tags });
+const worktree = (tags: Tag[] = []) =>
+  makeBlock(...toIso(-300, -20), { s: 4.4, h: 50, color: `blue`, glyph: `file`, label: [`Working tree`], sub: `src/app.ts`, tags });
 const idx = (tags: Tag[] = []) =>
-  makeBlock(...at(-100, 60), { s: 4.4, h: 50, color: `orange`, glyph: `listChecks`, label: [`Index`], sub: `.git/index`, tags });
-const repo = (tags: Tag[] = []) => makeDb(...at(100, -20), { r: 2.2, h: 46, glyph: `database`, label: `.git/objects`, tags });
+  makeBlock(...toIso(-100, 60), { s: 4.4, h: 50, color: `orange`, glyph: `listChecks`, label: [`Index`], sub: `.git/index`, tags });
+const repo = (tags: Tag[] = []) => makeDb(...toIso(100, -20), { r: 2.2, h: 46, glyph: `database`, label: `.git/objects`, tags });
 const origin = (tags: Tag[] = []) =>
-  makeBlock(...at(300, 60), { s: 4.4, h: 50, color: `slab`, glyph: `globe`, label: [`origin`], sub: `github.com`, tags });
+  makeBlock(...toIso(300, 60), { s: 4.4, h: 50, color: `slab`, glyph: `globe`, label: [`origin`], sub: `github.com`, tags });
 
-const L = {
+const links = {
   add: makeLink(`wt`, `idx`, [`wt`, `idx`], { label: `git add` }),
   addQuiet: makeLink(`wt`, `idx`, [`wt`, `idx`], { heads: `both`, style: `off` }),
   blob: makeLink(`idx`, `repo`, [`idx`, `repo`], { label: `blob` }),
@@ -35,8 +35,7 @@ const L = {
   sync: makeLink(`origin`, `repo`, [`origin`, `repo`], { heads: `both` }),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: 0, y: 0, z: 0, dx: -440, dy: 120 }, title, lines, { icon: `keyboard` });
+const card = cardAt({ x: 0, y: 0, dx: -440, dy: 120 }, `keyboard`);
 
 const ref = (text: string, tone = `amber`): Tag => ({ text, tone, icon: `gitBranch` });
 
@@ -68,7 +67,7 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { untracked: 1, staged: 0, commits: 0, vsOrigin: `—` },
       scene: {
         entities: {
-          wt: wt([{ text: `?? untracked`, tone: `red` }]),
+          wt: worktree([{ text: `?? untracked`, tone: `red` }]),
           card: card(`terminal`, [`$ echo "export const app = 1" > src/app.ts`, `$ git status -s`, `?? src/app.ts`]),
         },
         links: {},
@@ -87,12 +86,12 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { untracked: 0, staged: 1, commits: 0, vsOrigin: `—` },
       scene: {
         entities: {
-          wt: wt(),
+          wt: worktree(),
           idx: idx([{ text: `staged: app.ts`, tone: `green` }]),
           repo: repo([{ text: `blob 4b825d`, tone: `violet` }]),
           card: card(`git add`, [`$ git add src/app.ts`, `$ git ls-files --stage`, `100644 4b825dc6… 0  src/app.ts`]),
         },
-        links: { add: L.add, blob: L.blob },
+        links: { add: links.add, blob: links.blob },
         flows: [
           { route: [`add`], rate: 1.2 },
           { route: [`blob`], kind: `write`, rate: 1 },
@@ -111,12 +110,12 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { untracked: 0, staged: 0, commits: 1, vsOrigin: `—` },
       scene: {
         entities: {
-          wt: wt(),
+          wt: worktree(),
           idx: idx([{ text: `clean`, tone: `gray` }]),
           repo: repo([ref(`main → c4f1a2`)]),
           card: card(`git commit`, [`$ git commit -m "feat: add app"`, `[main c4f1a2] feat: add app`, ` 1 file changed, 1 insertion(+)`]),
         },
-        links: { add: L.addQuiet, commit: L.commit },
+        links: { add: links.addQuiet, commit: links.commit },
         flows: [{ route: [`commit`], kind: `write`, rate: 1.2 }],
       },
     },
@@ -132,13 +131,13 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { untracked: 0, staged: 0, commits: 1, vsOrigin: `in sync` },
       scene: {
         entities: {
-          wt: wt(),
+          wt: worktree(),
           idx: idx(),
           repo: repo([ref(`main → c4f1a2`)]),
           origin: origin([ref(`main → c4f1a2`)]),
           card: card(`git push`, [`$ git push origin main`, `Writing objects: 100% (3/3), 382 bytes`, `   e8d9c2..c4f1a2  main -> main`]),
         },
-        links: { add: L.addQuiet, commit: L.commitQuiet, push: L.push },
+        links: { add: links.addQuiet, commit: links.commitQuiet, push: links.push },
         flows: [{ route: [`push`], kind: `heavy`, rate: 0.9 }],
       },
     },
@@ -154,13 +153,13 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { untracked: 0, staged: 0, commits: 1, vsOrigin: `behind 3` },
       scene: {
         entities: {
-          wt: wt(),
+          wt: worktree(),
           idx: idx(),
           repo: repo([ref(`main → c4f1a2`), ref(`origin/main → 9f8a7b`, `violet`)]),
           origin: origin([ref(`main → 9f8a7b`)]),
           card: card(`git fetch`, [`$ git fetch origin`, `   c4f1a2..9f8a7b  main -> origin/main`, `$ git status -sb`, `## main...origin/main [behind 3]`]),
         },
-        links: { add: L.addQuiet, commit: L.commitQuiet, fetch: L.fetch },
+        links: { add: links.addQuiet, commit: links.commitQuiet, fetch: links.fetch },
         flows: [{ route: [`fetch`], kind: `heavy`, rate: 0.9 }],
       },
     },
@@ -176,13 +175,13 @@ export const gitEnvironmentsLifecycleLesson = {
       metrics: { untracked: 0, staged: 0, commits: 4, vsOrigin: `in sync` },
       scene: {
         entities: {
-          wt: wt([{ text: `updated`, tone: `green` }]),
+          wt: worktree([{ text: `updated`, tone: `green` }]),
           idx: idx(),
           repo: repo([ref(`main → 9f8a7b`)]),
           origin: origin([ref(`main → 9f8a7b`)]),
           card: card(`git pull`, [`$ git pull --ff-only`, `Updating c4f1a2..9f8a7b`, `Fast-forward`, ` src/app.ts | 42 +++++++++`]),
         },
-        links: { add: L.addQuiet, commit: L.commitQuiet, sync: L.sync },
+        links: { add: links.addQuiet, commit: links.commitQuiet, sync: links.sync },
         flows: [
           { route: [`sync`], kind: `heavy`, rate: 0.7 },
           { route: [`commit`], rate: 0.8, bounce: true },

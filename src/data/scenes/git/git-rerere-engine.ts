@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One rebase, one recurring conflict. The commit being replayed sits on the left, the
 // conflicted file in the middle, rerere's cache on the right and the index below.
@@ -11,18 +11,18 @@ import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-bu
 type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen position (px) → world grid coordinates. */
-const at = (sx: number, sy: number) => ({ x: +((sx / 14 + sy / 7) / 2).toFixed(2), y: +((sx / 14 - sy / 7) / 2).toFixed(2) });
-const P = { pick: at(-230, -60), file: at(20, 60), cache: at(250, -70), index: at(-200, 170) };
+const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
+const positions = { pick: toIso(-230, -60), file: toIso(20, 60), cache: toIso(250, -70), index: toIso(-200, 170) };
 
 const pick = (sha: string, sub: string, tags: Tag[] = []) =>
-  makeBlock(P.pick.x, P.pick.y, { s: 4.4, h: 52, color: `purple`, glyph: `gitCommit`, label: [sha], sub, tags });
+  makeBlock(positions.pick.x, positions.pick.y, { s: 4.4, h: 52, color: `purple`, glyph: `gitCommit`, label: [sha], sub, tags });
 const file = (tags: Tag[]) =>
-  makeBlock(P.file.x, P.file.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`auth.ts`], sub: `working tree`, tags });
-const cache = (tags: Tag[] = []) => makeDb(P.cache.x, P.cache.y, { r: 2.2, h: 46, glyph: `database`, label: `.git/rr-cache`, tags });
+  makeBlock(positions.file.x, positions.file.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`auth.ts`], sub: `working tree`, tags });
+const cache = (tags: Tag[] = []) => makeDb(positions.cache.x, positions.cache.y, { r: 2.2, h: 46, glyph: `database`, label: `.git/rr-cache`, tags });
 const index = (tags: Tag[] = []) =>
-  makeBlock(P.index.x, P.index.y, { s: 4.2, h: 48, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `staging`, tags });
+  makeBlock(positions.index.x, positions.index.y, { s: 4.2, h: 48, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `staging`, tags });
 
-const L = {
+const links = {
   apply: makeLink(`pick`, `file`, [`pick`, `file`], { label: `apply` }),
   applyQuiet: makeLink(`pick`, `file`, [`pick`, `file`]),
   record: makeLink(`file`, `cache`, [`file`, `cache`], { label: `record` }),
@@ -31,8 +31,7 @@ const L = {
   stage: makeLink(`file`, `index`, [`file`, `index`], { label: `git add` }),
 };
 
-const card = (title: string, lines: string[], icon = `keyboard`) =>
-  makePanel({ x: P.pick.x, y: P.pick.y, z: 0, dx: -60, dy: -250 }, title, lines, { icon });
+const card = cardAt({ x: positions.pick.x, y: positions.pick.y, dx: -60, dy: -250 }, `keyboard`);
 const stop = (n: string): Tag => ({ text: n, tone: `amber`, icon: `gitBranch` });
 
 export const gitRerereEngineLesson = {
@@ -67,7 +66,7 @@ export const gitRerereEngineLesson = {
           file: file([{ text: `CONFLICT`, tone: `red`, icon: `alert` }]),
           card: card(`terminal`, [`$ git rebase main`, `CONFLICT (content): Merge conflict in src/auth.ts`, `$ git rebase --continue`, `! CONFLICT … src/auth.ts  (again, commit 5)`]),
         },
-        links: { apply: L.apply },
+        links: { apply: links.apply },
         flows: [{ route: [`apply`], kind: `fail`, rate: 1.2 }],
       },
     },
@@ -88,7 +87,7 @@ export const gitRerereEngineLesson = {
           cache: cache([{ text: `empty`, tone: `gray` }]),
           card: card(`terminal`, [`$ git config --global rerere.enabled true`, `$ git rebase --abort && git rebase main`]),
         },
-        links: { apply: L.applyQuiet },
+        links: { apply: links.applyQuiet },
         flows: [{ route: [`apply`], kind: `fail`, rate: 0.8 }],
       },
     },
@@ -109,7 +108,7 @@ export const gitRerereEngineLesson = {
           cache: cache([{ text: `7d9e44 · preimage`, tone: `violet` }]),
           card: card(`terminal`, [`Recorded preimage for 'src/auth.ts'`, `$ ls .git/rr-cache/`, `7d9e44a1b2c3…/`, `$ ls .git/rr-cache/7d9e44a1b2c3…/`, `preimage`]),
         },
-        links: { apply: L.applyQuiet, record: L.record },
+        links: { apply: links.applyQuiet, record: links.record },
         flows: [{ route: [`record`], kind: `write`, rate: 1.2 }],
       },
     },
@@ -131,7 +130,7 @@ export const gitRerereEngineLesson = {
           index: index(),
           card: card(`terminal`, [`$ git add src/auth.ts`, `Recorded resolution for 'src/auth.ts'.`, `$ git rebase --continue`]),
         },
-        links: { apply: L.applyQuiet, record: L.record, stage: L.stage },
+        links: { apply: links.applyQuiet, record: links.record, stage: links.stage },
         flows: [
           { route: [`stage`], kind: `write`, rate: 1 },
           { route: [`record`], kind: `write`, rate: 1 },
@@ -156,7 +155,7 @@ export const gitRerereEngineLesson = {
           index: index(),
           card: card(`terminal`, [`CONFLICT (content): Merge conflict in src/auth.ts`, `= Resolved 'src/auth.ts' using previous resolution.`, `$ git add src/auth.ts && git rebase --continue`]),
         },
-        links: { apply: L.applyQuiet, replay: L.replay, stage: L.stage },
+        links: { apply: links.applyQuiet, replay: links.replay, stage: links.stage },
         flows: [{ route: [`replay`], kind: `push`, rate: 1.4 }],
       },
     },
@@ -178,7 +177,7 @@ export const gitRerereEngineLesson = {
           index: index([{ text: `auto-staged`, tone: `green` }]),
           card: card(`terminal`, [`$ git config --global rerere.autoupdate true`, `$ git rebase main`, `Resolved 'src/auth.ts' using previous resolution.`, `= Successfully rebased and updated refs/heads/feature.`]),
         },
-        links: { apply: L.applyQuiet, replay: L.replay, stage: L.stage },
+        links: { apply: links.applyQuiet, replay: links.replay, stage: links.stage },
         flows: [
           { route: [`replay`], kind: `push`, rate: 1.2 },
           { route: [`stage`], kind: `write`, rate: 1.2 },

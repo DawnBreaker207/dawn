@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeDevice, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: you type commands, one plumbing process does the work, and every
 // result lands in the same two places — the object store and a ref file.
@@ -12,23 +12,23 @@ import { makeBlock, makeDb, makeDevice, makeLink, makePanel } from '@/lib/simula
 
 type Tag = { text: string; tone?: string; icon?: string };
 
-const at = (sx: number, sy: number): [number, number] => [
-  Math.round((sx / 28 + sy / 14) * 100) / 100,
-  Math.round((sx / 28 - sy / 14) * 100) / 100,
-];
+const toIso = (sx: number, sy: number): [number, number] => {
+  const p = fromScreen(sx, sy, 2);
+  return [p.x, p.y];
+};
 
-const dev = (tags: Tag[] = []) => makeDevice(...at(-330, -40), { label: `you`, tags });
+const dev = (tags: Tag[] = []) => makeDevice(...toIso(-330, -40), { label: `you`, tags });
 const file = (tags: Tag[] = []) =>
-  makeBlock(...at(-300, 170), { s: 4.4, h: 50, color: `blue`, glyph: `file`, label: [`app.ts`], sub: `working tree`, tags });
+  makeBlock(...toIso(-300, 170), { s: 4.4, h: 50, color: `blue`, glyph: `file`, label: [`app.ts`], sub: `working tree`, tags });
 const git = (cmd: string, tags: Tag[] = []) =>
-  makeBlock(...at(-40, 40), { s: 4.8, h: 54, color: `green`, glyph: `cpu`, label: [`git plumbing`], sub: cmd, tags });
-const objects = (tags: Tag[] = []) => makeDb(...at(240, -120), { r: 2.2, h: 46, glyph: `database`, label: `.git/objects`, tags });
+  makeBlock(...toIso(-40, 40), { s: 4.8, h: 54, color: `green`, glyph: `cpu`, label: [`git plumbing`], sub: cmd, tags });
+const objects = (tags: Tag[] = []) => makeDb(...toIso(240, -120), { r: 2.2, h: 46, glyph: `database`, label: `.git/objects`, tags });
 const index = (tags: Tag[] = []) =>
-  makeBlock(...at(-80, 230), { s: 4.4, h: 50, color: `orange`, glyph: `listChecks`, label: [`Index`], sub: `.git/index`, tags });
+  makeBlock(...toIso(-80, 230), { s: 4.4, h: 50, color: `orange`, glyph: `listChecks`, label: [`Index`], sub: `.git/index`, tags });
 const ref = (tags: Tag[] = []) =>
-  makeBlock(...at(260, 60), { s: 4.4, h: 50, color: `yellow`, glyph: `gitBranch`, label: [`main`], sub: `refs/heads`, tags });
+  makeBlock(...toIso(260, 60), { s: 4.4, h: 50, color: `yellow`, glyph: `gitBranch`, label: [`main`], sub: `refs/heads`, tags });
 
-const L = {
+const links = {
   edit: makeLink(`dev`, `file`, [`dev`, `file`], { label: `edit` }),
   editQuiet: makeLink(`dev`, `file`, [`dev`, `file`], { style: `off` }),
   stdin: makeLink(`file`, `git`, [`file`, `git`], { label: `bytes` }),
@@ -40,8 +40,7 @@ const L = {
   setRef: makeLink(`git`, `ref`, [`git`, `ref`], { label: `update-ref` }),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: 0, y: 0, z: 0, dx: -360, dy: -290 }, title, lines, { icon: `keyboard` });
+const card = cardAt({ x: 0, y: 0, dx: -360, dy: -290 }, `keyboard`);
 
 const obj = (text: string): Tag => ({ text, tone: `violet` });
 
@@ -77,7 +76,7 @@ export const gitCommandsTaxonomyLesson = {
           file: file([{ text: `untracked`, tone: `red` }]),
           card: card(`terminal`, [`$ echo "export const app = 1" > app.ts`, `$ find .git/objects -type f | wc -l`, `0`]),
         },
-        links: { edit: L.edit },
+        links: { edit: links.edit },
         flows: [{ route: [`edit`], rate: 1 }],
       },
     },
@@ -99,7 +98,7 @@ export const gitCommandsTaxonomyLesson = {
           objects: objects([obj(`blob 3b18e5`)]),
           card: card(`hash-object`, [`$ git hash-object -w app.ts`, `3b18e512dba79e4c8300dd08aeb37f8e728b8dad`]),
         },
-        links: { edit: L.editQuiet, stdin: L.stdin, write: L.write },
+        links: { edit: links.editQuiet, stdin: links.stdin, write: links.write },
         flows: [
           { route: [`stdin`], rate: 1.2 },
           { route: [`write`], kind: `write`, rate: 1.2 },
@@ -124,7 +123,7 @@ export const gitCommandsTaxonomyLesson = {
           objects: objects([obj(`blob 3b18e5`)]),
           card: card(`cat-file`, [`$ git cat-file -t 3b18e5`, `blob`, `$ git cat-file -p 3b18e5`, `export const app = 1`]),
         },
-        links: { edit: L.editQuiet, read: L.read, print: L.print },
+        links: { edit: links.editQuiet, read: links.read, print: links.print },
         flows: [
           { route: [`read`], rate: 1.2 },
           { route: [`print`], rate: 1.2 },
@@ -150,7 +149,7 @@ export const gitCommandsTaxonomyLesson = {
           index: index([{ text: `app.ts → 3b18e5`, tone: `amber` }]),
           card: card(`write-tree`, [`$ git update-index --add app.ts`, `$ git write-tree`, `d8329fc1cc938780ffdd9f94e0d364e0ea74f579`, `$ git cat-file -p d8329f`, `100644 blob 3b18e5…    app.ts`]),
         },
-        links: { edit: L.editQuiet, readIndex: L.readIndex, write: L.write },
+        links: { edit: links.editQuiet, readIndex: links.readIndex, write: links.write },
         flows: [
           { route: [`readIndex`], rate: 1.2 },
           { route: [`write`], kind: `write`, rate: 1.2 },
@@ -176,7 +175,7 @@ export const gitCommandsTaxonomyLesson = {
           index: index(),
           card: card(`commit-tree`, [`$ echo "feat: add app" | git commit-tree d8329f -p a1b2c3`, `7f8a9b2c4e1a0d8e9f8a7b6c5d4e3f2a1b0c9d8e`, `$ git cat-file -p 7f8a9b`, `tree d8329fc1…`, `parent a1b2c3d4…`]),
         },
-        links: { edit: L.editQuiet, readIndex: L.readIndex, write: L.write },
+        links: { edit: links.editQuiet, readIndex: links.readIndex, write: links.write },
         flows: [{ route: [`write`], kind: `write`, rate: 1.2 }],
       },
     },
@@ -200,7 +199,7 @@ export const gitCommandsTaxonomyLesson = {
           ref: ref([{ text: `→ 7f8a9b`, tone: `amber`, icon: `gitCommit` }]),
           card: card(`update-ref`, [`$ git update-ref refs/heads/main 7f8a9b a1b2c3`, `$ cat .git/refs/heads/main`, `7f8a9b2c4e1a0d8e9f8a7b6c5d4e3f2a1b0c9d8e`, `$ git log --oneline -1`, `7f8a9b (HEAD -> main) feat: add app`]),
         },
-        links: { edit: L.editQuiet, write: L.writeQuiet, setRef: L.setRef },
+        links: { edit: links.editQuiet, write: links.writeQuiet, setRef: links.setRef },
         flows: [{ route: [`setRef`], kind: `msg`, rate: 1.2 }],
       },
     },

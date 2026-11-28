@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // Two commit trains on fixed rails. Top rail: main (M1, M2) — later B1', B2' are grafted
 // onto its tip. Bottom rail: feat-A (A1, A2) with feat-B (B1, B2) stacked on top of it.
@@ -27,7 +27,7 @@ const B2 = (t: Tag[] = [ref(`feat-B`)], o: Opts = {}) => commit(SIDE, 18, `b29c3
 const B1n = (t: Tag[] = []) => commit(TRUNK, 4, `c5e6f7`, `B1'`, t);
 const B2n = (t: Tag[] = [ref(`feat-B`)]) => commit(TRUNK, 16, `c8a9b0`, `B2'`, t);
 
-const L = {
+const links = {
   m2: makeLink(`M2`, `M1`, [`M2`, `M1`]),
   a1: makeLink(`A1`, `M1`, [`A1`, `M1`]),
   a2: makeLink(`A2`, `A1`, [`A2`, `A1`]),
@@ -39,11 +39,10 @@ const L = {
   b2n: makeLink(`B2n`, `B1n`, [`B2n`, `B1n`]),
   b1nQuiet: makeLink(`B1n`, `M2`, [`B1n`, `M2`]),
 };
-const sideLinks = { m2: L.m2, a1: L.a1, a2: L.a2 };
+const sideLinks = { m2: links.m2, a1: links.a1, a2: links.a2 };
 
 /** CLI card in the empty corner below the bottom rail. */
-const card = (title: string, lines: string[], icon = `keyboard`) =>
-  makePanel({ x: SIDE, y: 18, z: 0, dx: -40, dy: 70 }, title, lines, { icon });
+const card = cardAt({ x: SIDE, y: 18, dx: -40, dy: 70 }, `keyboard`);
 
 export const gitRebaseOntoSurgeryLesson = {
   id: `git-rebase-onto-surgery`,
@@ -80,7 +79,7 @@ export const gitRebaseOntoSurgeryLesson = {
           B2: B2(),
           card: card(`terminal`, [`$ git log --oneline --graph --all`, `* b29c31 (feat-B) B2`, `* b17f20 B1`, `* a4d5e6 (feat-A) A2`, `* a1b2c3 A1`, `* 3c1d00 (main) M1`]),
         },
-        links: { a1: L.a1, a2: L.a2, b1: L.b1, b2: L.b2 },
+        links: { a1: links.a1, a2: links.a2, b1: links.b1, b2: links.b2 },
         flows: [{ route: [`b2`, `b1`, `a2`, `a1`], rate: 0.7 }],
       },
     },
@@ -104,7 +103,7 @@ export const gitRebaseOntoSurgeryLesson = {
           B2: B2(),
           card: card(`terminal`, [`$ git log --oneline main..feat-B`, `b29c31 B2`, `b17f20 B1`, `! a4d5e6 A2`, `! a1b2c3 A1`, `# git rebase main would copy all four`], `alertTriangle`),
         },
-        links: { ...sideLinks, b1: L.b1, b2: L.b2 },
+        links: { ...sideLinks, b1: links.b1, b2: links.b2 },
         flows: [{ route: [`b2`, `b1`, `a2`, `a1`], kind: `fail`, rate: 0.8 }],
       },
     },
@@ -128,7 +127,7 @@ export const gitRebaseOntoSurgeryLesson = {
           B2: B2([ref(`feat-B`), { text: `to move`, tone: `violet` }]),
           card: card(`terminal`, [`$ git rebase --onto main feat-A feat-B`, `#              new base  old base  branch`, `# replays: feat-A..feat-B = B1, B2`]),
         },
-        links: { ...sideLinks, b1: L.b1, b2: L.b2 },
+        links: { ...sideLinks, b1: links.b1, b2: links.b2 },
         flows: [{ route: [`b2`, `b1`], rate: 1 }],
       },
     },
@@ -154,7 +153,7 @@ export const gitRebaseOntoSurgeryLesson = {
           B2n: B2n(),
           card: card(`terminal`, [`$ git rebase --onto main feat-A feat-B`, `= Successfully rebased and updated refs/heads/feat-B.`]),
         },
-        links: { ...sideLinks, b1: L.b1Old, b2: L.b2Old, b1n: L.b1n, b2n: L.b2n },
+        links: { ...sideLinks, b1: links.b1Old, b2: links.b2Old, b1n: links.b1n, b2n: links.b2n },
         flows: [
           { route: [`b1n`], kind: `write`, rate: 1 },
           { route: [`b2n`], kind: `write`, rate: 1 },
@@ -181,7 +180,7 @@ export const gitRebaseOntoSurgeryLesson = {
           B2n: B2n([ref(`feat-B`), { text: `2 commits ahead`, tone: `green` }]),
           card: card(`terminal`, [`$ git log --oneline --graph main..feat-B`, `* c8a9b0 (feat-B) B2'`, `* c5e6f7 B1'`, `= only B1', B2' — feat-A is gone`]),
         },
-        links: { ...sideLinks, b1n: L.b1nQuiet, b2n: L.b2n },
+        links: { ...sideLinks, b1n: links.b1nQuiet, b2n: links.b2n },
         flows: [{ route: [`b2n`, `b1n`, `m2`], rate: 0.8 }],
       },
     },
@@ -203,7 +202,7 @@ export const gitRebaseOntoSurgeryLesson = {
           B2n: B2n([ref(`main · feat-B`)]),
           card: card(`terminal`, [`$ git switch main`, `$ git merge --ff-only feat-B`, `Fast-forward  8f2e11..c8a9b0`, `$ git branch -D feat-A`]),
         },
-        links: { m2: L.m2, b1n: L.b1nQuiet, b2n: L.b2n },
+        links: { m2: links.m2, b1n: links.b1nQuiet, b2n: links.b2n },
         flows: [{ route: [`b2n`, `b1n`, `m2`], rate: 0.8 }],
       },
     },

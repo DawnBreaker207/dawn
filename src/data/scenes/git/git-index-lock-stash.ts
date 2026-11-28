@@ -1,4 +1,4 @@
-import { makeBlock, makeDevice, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDevice, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One repository on one laptop. First half: a crashed git process left `.git/index.lock`
 // behind. Second half: the same working tree and index, now with a stash — which is
@@ -12,20 +12,20 @@ type Tag = { text: string; tone?: string; icon?: string };
 type Opts = Record<string, unknown>;
 
 /** Screen position (px) → world grid coordinates. */
-const at = (sx: number, sy: number) => ({ x: +((sx / 14 + sy / 7) / 2).toFixed(2), y: +((sx / 14 - sy / 7) / 2).toFixed(2) });
-const P = { ide: at(-290, -40), index: at(-40, -110), tree: at(-20, 110), head: at(230, -120), stash: at(230, 90) };
+const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
+const positions = { ide: toIso(-290, -40), index: toIso(-40, -110), tree: toIso(-20, 110), head: toIso(230, -120), stash: toIso(230, 90) };
 
-const ide = (tags: Tag[] = [], o: Opts = {}) => makeDevice(P.ide.x, P.ide.y, { label: `IDE git`, tags, ...o });
+const ide = (tags: Tag[] = [], o: Opts = {}) => makeDevice(positions.ide.x, positions.ide.y, { label: `IDE git`, tags, ...o });
 const index = (tags: Tag[] = []) =>
-  makeBlock(P.index.x, P.index.y, { s: 4.4, h: 52, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `.git/index`, tags });
+  makeBlock(positions.index.x, positions.index.y, { s: 4.4, h: 52, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `.git/index`, tags });
 const tree = (tags: Tag[] = []) =>
-  makeBlock(P.tree.x, P.tree.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`working`, `tree`], tags });
+  makeBlock(positions.tree.x, positions.tree.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`working`, `tree`], tags });
 const head = () =>
-  makeBlock(P.head.x, P.head.y, { s: 4.2, h: 50, color: `purple`, glyph: `gitCommit`, label: [`4c2a91`], sub: `HEAD · main`, tags: [{ text: `main`, tone: `amber`, icon: `gitBranch` }] });
+  makeBlock(positions.head.x, positions.head.y, { s: 4.2, h: 50, color: `purple`, glyph: `gitCommit`, label: [`4c2a91`], sub: `HEAD · main`, tags: [{ text: `main`, tone: `amber`, icon: `gitBranch` }] });
 const stash = (tags: Tag[] = [], o: Opts = {}) =>
-  makeBlock(P.stash.x, P.stash.y, { s: 4.4, h: 52, color: `purple`, glyph: `layers`, label: [`stash@{0}`], sub: `WIP commit`, tags, ...o });
+  makeBlock(positions.stash.x, positions.stash.y, { s: 4.4, h: 52, color: `purple`, glyph: `layers`, label: [`stash@{0}`], sub: `WIP commit`, tags, ...o });
 
-const L = {
+const links = {
   lock: makeLink(`ide`, `index`, [`ide`, `index`], { label: `index.lock` }),
   lockQuiet: makeLink(`ide`, `index`, [`ide`, `index`]),
   add: makeLink(`tree`, `index`, [`tree`, `index`]),
@@ -34,8 +34,7 @@ const L = {
   parent: makeLink(`stash`, `head`, [`stash`, `head`]),
 };
 
-const card = (title: string, lines: string[], icon = `keyboard`) =>
-  makePanel({ x: P.ide.x, y: P.ide.y, z: 0, dx: -40, dy: -250 }, title, lines, { icon });
+const card = cardAt({ x: positions.ide.x, y: positions.ide.y, dx: -40, dy: -250 }, `keyboard`);
 
 export const gitIndexLockStashLesson = {
   id: `git-index-lock-stash`,
@@ -70,7 +69,7 @@ export const gitIndexLockStashLesson = {
           tree: tree([{ text: `3 changed`, tone: `amber` }]),
           card: card(`terminal`, [`$ git commit -am "wip"`, `! fatal: Unable to create '.git/index.lock': File exists.`, `# Another git process seems to be running…`]),
         },
-        links: { lock: L.lock, add: L.add },
+        links: { lock: links.lock, add: links.add },
         flows: [{ route: [`lock`], kind: `fail`, rate: 1.2 }],
       },
     },
@@ -91,7 +90,7 @@ export const gitIndexLockStashLesson = {
           tree: tree([{ text: `3 changed`, tone: `amber` }]),
           card: card(`terminal`, [`$ ps aux | grep "[g]it "`, `# (no output)`, `PS> Get-Process git -ErrorAction SilentlyContinue`, `# (no output) → the lock is stale`]),
         },
-        links: { lock: L.lockQuiet, add: L.add },
+        links: { lock: links.lockQuiet, add: links.add },
         flows: [],
       },
     },
@@ -112,7 +111,7 @@ export const gitIndexLockStashLesson = {
           tree: tree([{ text: `3 changed`, tone: `amber` }]),
           card: card(`terminal`, [`$ rm -f .git/index.lock`, `$ git status --short`, ` M src/app.ts`, ` M src/api.ts`, `?? notes.md`]),
         },
-        links: { lock: L.lockQuiet, add: L.add },
+        links: { lock: links.lockQuiet, add: links.add },
         flows: [{ route: [`lock`], rate: 1 }],
       },
     },
@@ -135,7 +134,7 @@ export const gitIndexLockStashLesson = {
           stash: stash([{ text: `parents: HEAD + i`, tone: `violet` }]),
           card: card(`terminal`, [`$ git stash push -m "wip"`, `$ git cat-file -p stash@{0}`, `tree   7e21c4`, `parent 4c2a91   # HEAD`, `parent 9b3e70   # i: the index`, `On main: wip`]),
         },
-        links: { lock: L.lockQuiet, add: L.add, save: L.save, parent: L.parent },
+        links: { lock: links.lockQuiet, add: links.add, save: links.save, parent: links.parent },
         flows: [{ route: [`save`], kind: `write`, rate: 1.2 }],
       },
     },
@@ -158,7 +157,7 @@ export const gitIndexLockStashLesson = {
           stash: stash([{ text: `dropped`, tone: `gray` }], { dim: 0.7 }),
           card: card(`terminal`, [`$ git stash pop`, `On branch main`, `  modified: src/app.ts`, `= Dropped refs/stash@{0} (b51f0e…)`]),
         },
-        links: { lock: L.lockQuiet, add: L.add, pop: L.pop, parent: L.parent },
+        links: { lock: links.lockQuiet, add: links.add, pop: links.pop, parent: links.parent },
         flows: [{ route: [`pop`], kind: `write`, rate: 1.2 }],
       },
     },
@@ -181,7 +180,7 @@ export const gitIndexLockStashLesson = {
           stash: stash([{ text: `kept`, tone: `amber` }]),
           card: card(`terminal`, [`$ git stash pop`, `! CONFLICT (content): Merge conflict in src/app.ts`, `The stash entry is kept in case you need it again.`, `$ git add src/app.ts && git stash drop`, `$ git stash -u   # also stash untracked files`]),
         },
-        links: { lock: L.lockQuiet, add: L.add, pop: L.pop, parent: L.parent },
+        links: { lock: links.lockQuiet, add: links.add, pop: links.pop, parent: links.parent },
         flows: [{ route: [`pop`], kind: `fail`, rate: 1 }],
       },
     },

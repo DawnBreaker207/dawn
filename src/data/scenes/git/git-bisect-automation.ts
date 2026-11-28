@@ -1,4 +1,5 @@
-import { makeBlock, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import type { LinkSpec } from '@/lib/simulator/stage/types';
 
 // One rail of history from v2.3.0 (good) to HEAD (bad), 1,024 commits apart. A single
 // "probe" commit slides along the rail as bisect halves the range; the dashed zone is
@@ -9,8 +10,8 @@ import { makeBlock, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-
 type Tag = { text: string; tone?: string; icon?: string };
 
 const RAIL = -2;
-const GOOD_Y = -21;
-const BAD_Y = 19;
+const GOOD_Y = -12;
+const BAD_Y = 12;
 /** Commit number (0…1024 after v2.3.0) → position on the rail. */
 const yOf = (n: number) => +(GOOD_Y + ((BAD_Y - GOOD_Y) * n) / 1024).toFixed(2);
 
@@ -25,16 +26,17 @@ const revert = () =>
 /** Range still in doubt, hugging the rail. */
 const range = (from: number, to: number) => makeZone({ x0: RAIL - 3, x1: RAIL + 3, y0: yOf(from) - 1.5, y1: yOf(to) + 1.5 }, ``);
 
-const L = {
+const links = {
   upper: makeLink(`bad`, `probe`, [`bad`, `probe`], { style: `off` }),
   lower: makeLink(`probe`, `good`, [`probe`, `good`], { style: `off` }),
-  whole: makeLink(`bad`, `good`, [`bad`, `good`], { style: `off` }),
+  // Invisible rail from HEAD to v2.3.0 that only carries the packets; it has no end node so that the
+  // 24-unit rail (so the 768th commit stays clear of HEAD) is not measured as one long node link.
+  whole: { from: `bad`, pts: [`bad`, `good`], heads: `end`, style: `off` } as LinkSpec, // same shape makeLink returns, minus the end node
   test: makeLink(`runner`, `probe`, [`runner`, `probe`]),
   revertParent: makeLink(`revert`, `bad`, [`revert`, `bad`], { label: `parent` }),
 };
 
-const card = (title: string, lines: string[], icon = `keyboard`) =>
-  makePanel({ x: RAIL, y: GOOD_Y, z: 0, dx: -60, dy: 70 }, title, lines, { icon });
+const card = cardAt({ x: RAIL, y: GOOD_Y, dx: -60, dy: 70 }, `keyboard`);
 
 export const gitBisectAutomationLesson = {
   id: `git-bisect-automation`,
@@ -69,7 +71,7 @@ export const gitBisectAutomationLesson = {
           bad: bad(),
           card: card(`terminal`, [`$ git rev-list --count v2.3.0..HEAD`, `1024`, `# one by one: up to 1,024 builds`]),
         },
-        links: { whole: L.whole },
+        links: { whole: links.whole },
         flows: [{ route: [`whole`], rate: 0.6 }],
       },
     },
@@ -91,7 +93,7 @@ export const gitBisectAutomationLesson = {
           probe: probe(512, `5a6b7c`, [{ text: `test the middle`, tone: `violet` }]),
           card: card(`math`, [`tests = log₂(1024) = 10`, `1024 → 512 → 256 → 128 → 64`, `  → 32 → 16 → 8 → 4 → 2 → 1`], `sigma`),
         },
-        links: { upper: L.upper, lower: L.lower },
+        links: { upper: links.upper, lower: links.lower },
         flows: [],
       },
     },
@@ -113,7 +115,7 @@ export const gitBisectAutomationLesson = {
           probe: probe(768, `e3f4a5`, [{ text: `checked out`, tone: `violet` }]),
           card: card(`terminal`, [`$ git bisect start`, `$ git bisect bad HEAD`, `$ git bisect good v2.3.0`, `Bisecting: 511 revisions left to test after this`, `$ git bisect good`, `Bisecting: 255 revisions left to test after this`]),
         },
-        links: { upper: L.upper, lower: L.lower },
+        links: { upper: links.upper, lower: links.lower },
         flows: [],
       },
     },
@@ -136,7 +138,7 @@ export const gitBisectAutomationLesson = {
           runner: runner(),
           card: card(`terminal`, [`$ git bisect run ./test.sh`, `running './test.sh'`, `Bisecting: 63 revisions left to test after this`, `…`, `Bisecting: 0 revisions left to test after this`]),
         },
-        links: { upper: L.upper, lower: L.lower, test: L.test },
+        links: { upper: links.upper, lower: links.lower, test: links.test },
         flows: [{ route: [`test`], kind: `fail`, rate: 1.4 }],
       },
     },
@@ -158,7 +160,7 @@ export const gitBisectAutomationLesson = {
           runner: runner(),
           card: card(`terminal`, [`$ git bisect log`, `! d4e5f6a is the first bad commit`, `    fix: round discounts per line`, `src/cart/total.ts | 4 ++--`]),
         },
-        links: { upper: L.upper, lower: L.lower, test: L.test },
+        links: { upper: links.upper, lower: links.lower, test: links.test },
         flows: [],
       },
     },
@@ -181,7 +183,7 @@ export const gitBisectAutomationLesson = {
           revert: revert(),
           card: card(`terminal`, [`$ git bisect reset`, `$ git revert d4e5f6`, `= [main 0f1e2d] Revert "fix: round discounts per line"`]),
         },
-        links: { upper: L.upper, lower: L.lower, revertParent: L.revertParent },
+        links: { upper: links.upper, lower: links.lower, revertParent: links.revertParent },
         flows: [{ route: [`revertParent`], kind: `write`, rate: 1 }],
       },
     },

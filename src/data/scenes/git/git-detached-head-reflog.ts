@@ -38,7 +38,7 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Detached (c4f1a2)', danglingCommits: '0', reflogEntries: '1 checkout', rescueBranch: 'None' },
       scene: {
         entities: {
-          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
+          mainBranch: makeBlock(-16, -8, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
           detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'raw commit SHA' }),
           headPointer: makeDevice(-10, 14, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> raw SHA', tone: 'rose', icon: 'terminal' }] }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Detached HEAD Status', [
@@ -72,7 +72,7 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Detached (e8a1b2)', danglingCommits: '1 vulnerable', reflogEntries: '2 commits', rescueBranch: 'None' },
       scene: {
         entities: {
-          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
+          mainBranch: makeBlock(-16, -8, { s: 4.4, h: 54, color: 'slab', glyph: 'gitBranch', label: ['Branch main'], sub: 'points 7d9e44' }),
           detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
           headPointer: makeDevice(-11, 15, { label: 'HEAD Ref', tags: [{ text: 'e8a1b2 (HEAD)', tone: 'amber', icon: 'terminal' }] }),
           newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'amber', glyph: 'package', label: ['Commit e8a1b2'], sub: 'unanchored fix' }),
@@ -106,9 +106,9 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Attached to main', danglingCommits: '1 orphaned (e8a1b2)', reflogEntries: '3 entries', rescueBranch: 'None' },
       scene: {
         entities: {
-          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'HEAD attached' }),
+          mainBranch: makeBlock(-16, -8, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'HEAD attached' }),
           detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
-          headPointer: makeDevice(-22, -18, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
+          headPointer: makeDevice(-16, -24, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
           newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'rose', glyph: 'alert', label: ['Commit e8a1b2'], sub: 'orphan commit' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Commit Dangling Orphaned', [
             `$ git checkout main`,
@@ -141,9 +141,9 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Attached to main', danglingCommits: 'Located via reflog', reflogEntries: 'e8a1b2 verified', rescueBranch: 'Pending' },
       scene: {
         entities: {
-          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active main' }),
+          mainBranch: makeBlock(-16, -8, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active main' }),
           detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
-          headPointer: makeDevice(-22, -18, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
+          headPointer: makeDevice(-16, -24, { label: 'HEAD Ref', tags: [{ text: 'HEAD -> main', tone: 'blue', icon: 'terminal' }] }),
           newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'amber', glyph: 'package', label: ['Commit e8a1b2'], sub: 'recovered SHA' }),
           reflogLedger: makeDb(0, 18, { r: 2.2, h: 52, color: 'cyan', label: ['.git/logs/HEAD'], sub: 'reflog ledger' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Reflog Ledger Query', [
@@ -177,7 +177,7 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'Attached to main', danglingCommits: '0 (anchored)', reflogEntries: 'Reflog safe', rescueBranch: 'Branch rescue' },
       scene: {
         entities: {
-          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active main' }),
+          mainBranch: makeBlock(-16, -8, { s: 4.4, h: 54, color: 'blue', glyph: 'gitBranch', label: ['Branch main'], sub: 'active main' }),
           detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'parent commit' }),
           newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Commit e8a1b2'], sub: 'anchored fix' }),
           rescueBranch: makeBlock(16, 6, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch rescue'], sub: 'anchored ref' }),
@@ -213,7 +213,7 @@ export const gitDetachedHeadReflogLesson = {
       metrics: { headStatus: 'main (merged)', danglingCommits: '0', reflogEntries: 'Complete', rescueBranch: 'Deleted' },
       scene: {
         entities: {
-          mainBranch: makeBlock(-18, -6, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: 'contains fix' }),
+          mainBranch: makeBlock(-16, -8, { s: 4.4, h: 56, color: 'green', glyph: 'gitBranch', label: ['Branch main'], sub: 'contains fix' }),
           detachedCommit: makeBlock(-6, -2, { s: 4.4, h: 56, color: 'purple', glyph: 'boxes', label: ['Commit c4f1a2'], sub: 'ancestor' }),
           newCommit: makeBlock(6, 2, { s: 4.4, h: 56, color: 'green', glyph: 'package', label: ['Commit e8a1b2'], sub: 'merged fix' }),
           card: makePanel({ x: -14, y: 0, dx: -20, dy: -180 }, 'Merge Completion', [
