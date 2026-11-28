@@ -302,7 +302,7 @@ const rateLimitingLesson = {
           },
           flows: [
             { route: [`ug`, `ga`], rate: 4.2, bounce: !0 },
-            { route: [`bg`, `ga2`], rate: 0.6, bounce: !0 },
+            { route: [`bg2`, `ga2`], rate: 0.6, bounce: !0 },
             { routes: [{ path: [`gr`] }, { path: [`g2r`] }], rate: 1.6, kind: `write`, bounce: !0 },
           ],
         },
@@ -349,7 +349,7 @@ const rateLimitingLesson = {
           flows: [
             { route: [`ug`, `ga`], rate: 3.2, bounce: !0 },
             { route: [`ul2`], rate: 2.6, kind: `slow` },
-            { route: [`bg`, `ga2`], rate: 0.6, bounce: !0 },
+            { route: [`bg2`, `ga2`], rate: 0.6, bounce: !0 },
           ],
         },
       },
@@ -378,7 +378,7 @@ const rateLimitingLesson = {
           links: limiterLinks({ fail: 0, label: `within limit`, labelTone: `green` }),
           flows: [
             { route: [`ug`, `ga`], rate: 1.8, bounce: !0 },
-            { route: [`bg`, `ga2`], rate: 0.6, bounce: !0 },
+            { route: [`bg2`, `ga2`], rate: 0.6, bounce: !0 },
             { routes: [{ path: [`gr`] }, { path: [`g2r`] }], rate: 1.2, kind: `write`, bounce: !0 },
           ],
         },

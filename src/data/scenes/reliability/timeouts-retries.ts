@@ -256,7 +256,7 @@ const timeoutsRetriesLesson = {
             br: breakerBlock([{ text: `OPEN · fails in 1 ms`, tone: `red`, icon: `unplug` }]),
             pay: paymentsService(DEAD_STATE),
           },
-          links: links.viaBreaker({ fail: 1 }, { style: `off`, fail: 1 }),
+          links: { ...links.uo(), ...links.viaBreaker({ fail: 1 }, { style: `off`, fail: 1 }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`], rate: 1.6 },
@@ -289,7 +289,7 @@ const timeoutsRetriesLesson = {
             br: breakerBlock([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
             pay: paymentsService(makeCool(0.5)),
           },
-          links: links.viaBreaker(),
+          links: { ...links.uo(), ...links.viaBreaker() },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`, `bp`], rate: 1.8, bounce: !0 },
@@ -330,7 +330,7 @@ const timeoutsRetriesLesson = {
               `key`,
             ),
           },
-          links: links.viaBreaker({}, { label: `Idempotency-Key: 7f3a`, labelAt: 0.5 }),
+          links: { ...links.uo(), ...links.viaBreaker({}, { label: `Idempotency-Key: 7f3a`, labelAt: 0.5 }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`, `bp`], rate: 1.8, bounce: !0, pattern: [`req`, `req`, `req`, `slow`] },
@@ -364,7 +364,7 @@ const timeoutsRetriesLesson = {
             br: breakerBlock([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
             pay: paymentsService({ ...makeCool(0.45), tags: [{ text: `budget: 1.4 s`, icon: `timer` }] }),
           },
-          links: links.viaBreaker({}, { label: `deadline: 12:00:02.000`, labelAt: 0.5 }),
+          links: { ...links.uo(), ...links.viaBreaker({}, { label: `deadline: 12:00:02.000`, labelAt: 0.5 }) },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`, `bp`], rate: 1.8, bounce: !0 },
@@ -435,7 +435,7 @@ const timeoutsRetriesLesson = {
             br: breakerBlock([{ text: `CLOSED`, tone: `green`, icon: `check` }]),
             pay: paymentsService(makeCool(0.5)),
           },
-          links: links.viaBreaker(),
+          links: { ...links.uo(), ...links.viaBreaker() },
           flows: [
             { route: [`uo`], rate: 1.8, bounce: !0 },
             { route: [`ob`, `bp`], rate: 1.8, bounce: !0 },
