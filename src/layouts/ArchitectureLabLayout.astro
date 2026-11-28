@@ -6,7 +6,7 @@ import SimulationWorkbench from '@/components/lab/architecture/SimulationWorkben
 import '@/styles/simulation.css';
 import '@/styles/lab-architecture.css';
 import { ALL_SCENES } from '@/data/scenes';
-import { getLessonHref } from '@/data/curriculum';
+import { CURRICULUM_MODULES, getLessonHref } from '@/data/curriculum';
 import type { Lesson } from '@/lib/simulator/types';
 
 export const prerender = true;
@@ -26,9 +26,11 @@ const scenes = labLesson?.steps?.map((s) => s.scene) ?? [];
 // A lesson can be reachable from several URLs (e.g. /lab/angular and
 // /lab/angular-flow); the canonical one is the URL the site links to.
 const canonicalPath = getLessonHref(lessonId);
+// build-og.mjs renders a social card for every curriculum lesson.
+const ogImage = CURRICULUM_MODULES.some((m) => m.lessons.some((l) => l.id === lessonId)) ? `lab-${lessonId}` : undefined;
 ---
 
-<BaseLayout title={title} description={description} fullBleed={true} canonicalPath={canonicalPath}>
+<BaseLayout title={title} description={description} fullBleed={true} canonicalPath={canonicalPath} ogImage={ogImage}>
   <div slot="topbar-actions" class="topbar-lab-controls">
     <ChapterPicker currentLessonId={lessonId} trackId={trackId} moduleId={moduleId} />
   </div>

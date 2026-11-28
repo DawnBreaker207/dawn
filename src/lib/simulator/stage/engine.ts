@@ -87,6 +87,8 @@ export class StageEngine {
   host: HTMLElement;
   svg: SVGSVGElement;
   paused = false;
+  /** Packet speed multiplier (1 = normal); step transitions are not affected. */
+  speed = 1;
   destroyed = false;
   rafId = 0;
   resizeObserver: ResizeObserver | null = null;
@@ -805,6 +807,6 @@ export class StageEngine {
     }
 
     if (this.camera.blend && !this.anim) this.camera.set(this.camera.cam);
-    if (!this.paused) this.traffic.step(dt);
+    if (!this.paused) this.traffic.step(dt * this.speed);
   }
 }

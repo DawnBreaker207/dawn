@@ -40,6 +40,8 @@ export default function SceneRenderer({ lessonId, scenes }: Props) {
     const fitBtn = document.getElementById('fit') as HTMLElement | null;
     const replayBtn = document.getElementById('replay') as HTMLElement | null;
     const pauseBtn = document.getElementById('pause') as HTMLElement | null;
+    const speedBtn = document.getElementById('speed') as HTMLElement | null;
+    const speedLabel = document.getElementById('speed-label') as HTMLElement | null;
 
     const updatePauseUI = (isPaused: boolean) => {
       if (!pauseBtn) return;
@@ -111,9 +113,49 @@ export default function SceneRenderer({ lessonId, scenes }: Props) {
       updatePauseUI(engine.paused);
     };
 
+    // Packet speed cycles 1× → 2× → 0.5× and is kept while the learner changes steps.
+    const SPEEDS = [1, 2, 0.5];
+    const handleSpeed = () => {
+      if (!engine) return;
+      const next = SPEEDS[(SPEEDS.indexOf(engine.speed) + 1) % SPEEDS.length];
+      engine.speed = next;
+      if (speedLabel) speedLabel.textContent = `${next}×`;
+      speedBtn?.setAttribute('aria-label', `Packet speed: ${next}×`);
+      speedBtn?.classList.toggle('is-active', next !== 1);
+      window.umami?.track('workbench-speed', { lesson: lessonId, speed: next, step: currentIdx + 1 });
+    };
+
+    // "Save this step as an image": the module is fetched on first use, so it costs nothing up front.
+    const snapshotBtn = document.getElementById('snapshot') as HTMLButtonElement | null;
+    const handleSnapshot = async () => {
+      const svg = el.querySelector<SVGSVGElement>('svg.stage-svg');
+      if (!svg || !snapshotBtn) return;
+      snapshotBtn.disabled = true;
+      try {
+        const { stageToPng } = await import('@/lib/simulator/export-image');
+        const title = document.title.split(/\s[|·–-]\s/)[0].trim() || lessonId;
+        const blob = await stageToPng(svg, {
+          title,
+          caption: `Step ${currentIdx + 1} of ${scenes.length} · ${window.location.pathname}`,
+        });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${lessonId}-step-${currentIdx + 1}.png`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        window.umami?.track('workbench-snapshot', { lesson: lessonId, step: currentIdx + 1 });
+      } catch (err) {
+        console.error('[SceneRenderer] snapshot failed:', err);
+      } finally {
+        snapshotBtn.disabled = false;
+      }
+    };
+
     fitBtn?.addEventListener('click', handleFit);
+    snapshotBtn?.addEventListener('click', handleSnapshot);
     replayBtn?.addEventListener('click', handleReplay);
     pauseBtn?.addEventListener('click', handlePause);
+    speedBtn?.addEventListener('click', handleSpeed);
 
     // Theme sync
     const observer = new MutationObserver(() => engine?.retheme());
@@ -127,6 +169,8 @@ export default function SceneRenderer({ lessonId, scenes }: Props) {
       fitBtn?.removeEventListener('click', handleFit);
       replayBtn?.removeEventListener('click', handleReplay);
       pauseBtn?.removeEventListener('click', handlePause);
+      speedBtn?.removeEventListener('click', handleSpeed);
+      snapshotBtn?.removeEventListener('click', handleSnapshot);
       observer.disconnect();
       if (engine) {
         try {

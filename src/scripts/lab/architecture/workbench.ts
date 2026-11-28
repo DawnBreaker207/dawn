@@ -423,6 +423,9 @@ function initSimWorkbench() {
       e.preventDefault();
       document.getElementById('pause')?.click();
     }
+    if (e.key === 's' || e.key === 'S') {
+      document.getElementById('speed')?.click();
+    }
     if (e.key === '0') {
       document.getElementById('fit')?.click();
     }

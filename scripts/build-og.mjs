@@ -3,6 +3,7 @@
 // Run as `node scripts/build-og.mjs`. Requires `npm i -D satori @resvg/resvg-js`.
 import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createElement as h } from 'react';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
@@ -14,7 +15,10 @@ const W = 1200;
 const H = 630;
 
 const FONT_DIR = join(process.cwd(), 'node_modules', '@fontsource', 'outfit', 'files');
+// `latin` holds plain ASCII; `latin-ext` only adds accented letters, so both are loaded (latin first).
 const fonts = [
+  { name: 'Outfit', weight: 700, data: readFileSync(join(FONT_DIR, 'outfit-latin-700-normal.woff')) },
+  { name: 'Outfit', weight: 400, data: readFileSync(join(FONT_DIR, 'outfit-latin-400-normal.woff')) },
   { name: 'Outfit', weight: 700, data: readFileSync(join(FONT_DIR, 'outfit-latin-ext-700-normal.woff')) },
   { name: 'Outfit', weight: 400, data: readFileSync(join(FONT_DIR, 'outfit-latin-ext-400-normal.woff')) },
 ];
@@ -147,6 +151,31 @@ async function generate() {
     count += 1;
   }
   console.log(`[build-og] generated ${count} og image(s) -> public/og/`);
+  await generateLessons();
+}
+
+// One card per lab lesson (`public/og/lab-<lessonId>.png`, git-ignored, rebuilt on every build).
+// curriculum.ts has no imports, so Node can load it directly.
+async function generateLessons() {
+  const { CURRICULUM_MODULES } = await import(pathToFileURL(join(process.cwd(), 'src', 'data', 'curriculum.ts')).href);
+  let count = 0;
+  for (const mod of CURRICULUM_MODULES) {
+    for (const lesson of mod.lessons) {
+      const svg = await satori(
+        layout({
+          title: lesson.title,
+          summary: `${mod.title} · step-by-step interactive 3D simulation`,
+          tags: [mod.trackId],
+          dateStr: 'Interactive lab',
+        }),
+        { width: W, height: H, fonts },
+      );
+      const png = new Resvg(svg, { fitTo: { mode: 'width', value: W } }).render().asPng();
+      writeFileSync(join(OUT_DIR, `lab-${lesson.id}.png`), png);
+      count += 1;
+    }
+  }
+  console.log(`[build-og] generated ${count} lab lesson og image(s) -> public/og/lab-*.png`);
 }
 
 generate().catch((err) => {
