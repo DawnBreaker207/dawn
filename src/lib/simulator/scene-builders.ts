@@ -3,11 +3,53 @@
  * entities, links and common presets.
  */
 import type { EntityProps, LinkSpec, PointRef } from './stage/types';
+import type { Lesson } from './types';
 
 /** Extra entity props merged over a factory's defaults. */
 type Opts = Partial<EntityProps>;
+
+/** Open bag of entity/link props that a scene helper merges over its defaults. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- same open shape as EntityProps
+export type Bag = Record<string, any>;
+
+/** Small state pill shown on a block (`tone`: green / red / amber / violet / gray). */
+export interface Tag {
+  text: string;
+  tone?: string;
+  icon?: string;
+}
+
+/** Screen position in px → world grid coordinates, for placing blocks by where they appear. */
+export const fromScreen = (sx: number, sy: number, digits = 1) => {
+  const k = 10 ** digits;
+  return {
+    x: Math.round(((sx / 14 + sy / 7) / 2) * k) / k,
+    y: Math.round(((sx / 14 - sy / 7) / 2) * k) / k,
+  };
+};
 /** Floor rect for crowds, zones and panels anchors. */
 type Area = Record<string, number>;
+
+/**
+ * AGENTS.md §4C minimum sizes: a glyph plus two text lines needs s ≥ 4 / h ≥ 46, and a two-line
+ * label plus a subtitle needs s ≥ 4.8 / h ≥ 54, or the text spills over the block's faces.
+ * Raises only what is below the minimum; blocks that already comply are untouched.
+ */
+const fitText = (o: Opts): Opts => {
+  const lines = Array.isArray(o.label) ? o.label.length : o.label ? 1 : 0;
+  const rows = lines + (o.sub ? 1 : 0);
+  let s = typeof o.s === `number` ? o.s : undefined;
+  let h = typeof o.h === `number` ? o.h : undefined;
+  if (rows >= 2 && ((s ?? 4) < 4 || (h ?? 46) < 46)) {
+    s = Math.max(s ?? 4, 4);
+    h = Math.max(h ?? 46, 46);
+  }
+  if (lines >= 2 && o.sub && ((s ?? 4) < 4.8 || (h ?? 46) < 54)) {
+    s = Math.max(s ?? 4, 4.8);
+    h = Math.max(h ?? 46, 54);
+  }
+  return { ...o, ...(s === undefined ? {} : { s }), ...(h === undefined ? {} : { h }) };
+};
 
 export const makeBlock = (x: number, y: number, opts: Opts = {}) => ({
   type: `block`,
@@ -15,7 +57,7 @@ export const makeBlock = (x: number, y: number, opts: Opts = {}) => ({
   y,
   color: `blue`,
   glyph: `server`,
-  ...opts,
+  ...fitText(opts),
 });
 
 export const makeBalancer = (x: number, y: number, opts: Opts = {}) => ({
@@ -45,7 +87,7 @@ export const makeGhost = (x: number, y: number, s: number, h: number, label: str
   label,
 });
 
-export const makeLink = (from: string, to: string, pts: PointRef[], opts: Partial<LinkSpec> = {}): LinkSpec => ({
+export const makeLink = (from: string, to: string | null, pts: PointRef[], opts: Partial<LinkSpec> = {}): LinkSpec => ({
   from,
   to,
   pts,
@@ -78,10 +120,10 @@ export const makeDb = (x: number, y: number, opts: Opts = {}) => ({
   ...opts,
 });
 
-export const makeZone = (pos: Area, label: string, opts: Opts = {}) => ({
+export const makeZone = (pos: Area, label?: string, opts: Opts = {}) => ({
   type: `zone`,
   ...pos,
-  label,
+  ...(label === undefined ? {} : { label }),
   ...opts,
 });
 
@@ -145,3 +187,112 @@ export const TIMING_PANEL = makePanel(
   ],
   { icon: `timer` },
 );
+
+/**
+ * The "one fixed stage" layout shared by explainer lessons: an actor on the left, the thing
+ * under discussion in the middle, its backing store on the right, a collaborator above and a
+ * side element top-right. Chosen by a constrained search (AGENTS.md §8): every node inside
+ * x∈[-16,16], y∈[-24,20]; every pair of nodes ≥ 195 px apart; every link 200–215 px (≥ 210 px
+ * once tagged, ≤ 360 px max); camera zoom maximised with the engine's own planScene().
+ */
+export const STAGE = {
+  caller: fromScreen(-176, 131),
+  main: fromScreen(20, 49),
+  store: fromScreen(233, 74),
+  helper: fromScreen(-77, -141),
+  alt: fromScreen(149, -104),
+  /** A second actor next to the caller (concurrency lessons). */
+  caller2: fromScreen(-249, -57),
+} as const;
+
+/**
+ * A standard-size block at a stage position: s 4.4 / h 52, or s 4.8 / h 54 when it carries
+ * a two-line label plus a subtitle (AGENTS.md §4C sizing table).
+ */
+export const stageBlock = (p: { x: number; y: number }, o: Opts = {}) => {
+  const lines = Array.isArray(o.label) ? o.label.length : o.label ? 1 : 0;
+  const roomy = lines >= 2 && !!o.sub;
+  return makeBlock(p.x, p.y, { s: roomy ? 4.8 : 4.4, h: roomy ? 54 : 52, ...o });
+};
+
+/** Link between two entity ids; two-way by default, optional label. */
+export const linkOf = (from: string, to: string, label?: string, both = true): LinkSpec =>
+  makeLink(from, to, [from, to], { ...(both ? { heads: `both` } : {}), ...(label ? { label } : {}) });
+
+/** Code/CLI card parked bottom-left under the caller, where the stage has nothing else. */
+export const codeCard = (title: string, lines: string[]) =>
+  makePanel({ x: STAGE.main.x, y: STAGE.main.y, z: 0, dx: -250, dy: 150 }, title, lines, { icon: `code` });
+
+/**
+ * Gives every concept its own id. A block that keeps its id but changes its label between steps
+ * is silently a different thing (the engine only swaps the text), so this renames it (`hub`,
+ * `hub~2`, …): the old block leaves the stage and the new one enters. Links are re-keyed by their
+ * endpoints so a link never snaps from one target to another (AGENTS.md §8, semantic link ids).
+ * Use it on lessons whose steps are separate "screens" rather than one growing system.
+ */
+export const distinctConcepts = (lesson: Lesson): Lesson => {
+  const used: Record<string, number> = {};
+  let prev: Record<string, { sig: string; id: string }> = {};
+  const steps = lesson.steps.map((step) => {
+    const seen: Record<string, { sig: string; id: string }> = {};
+    const ids: Record<string, string> = {};
+    const entities: Record<string, EntityProps> = {};
+    for (const [key, ent] of Object.entries(step.scene.entities)) {
+      if (ent.type !== `block` && ent.type !== `db` && ent.type !== `device`) {
+        entities[key] = ent;
+        ids[key] = key;
+        continue;
+      }
+      const label = Array.isArray(ent.label) ? ent.label.join(` `) : String(ent.label ?? ``);
+      const sig = `${ent.type}|${label}`;
+      const before = prev[key];
+      let id = before?.id ?? key;
+      if (!before || before.sig !== sig) {
+        const n = used[key] ?? 0;
+        used[key] = n + 1;
+        id = n === 0 ? key : `${key}_${n + 1}`;
+      }
+      seen[key] = { sig, id };
+      ids[key] = id;
+      entities[id] = ent;
+    }
+    prev = seen;
+    const ref = (p: string) => ids[p] ?? p;
+    const linkIds: Record<string, string> = {};
+    const links: Record<string, LinkSpec> = {};
+    for (const [key, spec] of Object.entries(step.scene.links ?? {})) {
+      const from = ref(spec.from);
+      const to = spec.to == null ? undefined : ref(spec.to);
+      const id = `${key}__${from}__${to ?? ``}`;
+      linkIds[key] = id;
+      links[id] = {
+        ...spec,
+        from,
+        ...(to === undefined ? {} : { to }),
+        pts: spec.pts.map((p): PointRef => (typeof p === `string` ? ref(p) : p)),
+      };
+    }
+    const lid = (k: string) => linkIds[k] ?? k;
+    const flows = (step.scene.flows ?? []).map((f) => ({
+      ...f,
+      ...(f.route ? { route: f.route.map((r) => (Array.isArray(r) ? r.map(lid) : lid(r))) } : {}),
+      ...(f.routes ? { routes: f.routes.map((r) => ({ ...r, path: r.path.map(lid) })) } : {}),
+    }));
+    return { ...step, scene: { entities, links, flows } };
+  });
+  return { ...lesson, steps };
+};
+
+/**
+ * Factory for a lesson's code/CLI card: a floating panel anchored at a world position and offset in
+ * screen px. `defaultIcon` is used when a call does not pass an icon.
+ */
+export const cardAt =
+  (at: { x: number; y: number; dx?: number; dy?: number }, defaultIcon = `code`) =>
+  (title: string, lines: string[], icon: string = defaultIcon, extra: Bag = {}) =>
+    makePanel(
+      { x: at.x, y: at.y, z: 0, ...(at.dx === undefined ? {} : { dx: at.dx }), ...(at.dy === undefined ? {} : { dy: at.dy }) },
+      title,
+      lines,
+      { icon, ...extra },
+    );

@@ -14,7 +14,8 @@ export type PointRef = string | [number | string, number | string];
 
 export interface LinkSpec {
   from: string;
-  to?: string;
+  /** Target entity id; omitted or null for a link that ends in free space. */
+  to?: string | null;
   pts: PointRef[];
   /** Arrow heads: default end only, `'none'`, or `'both'`. */
   heads?: string;
