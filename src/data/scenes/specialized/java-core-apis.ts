@@ -1,234 +1,194 @@
-import {
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel,
-} from '@/lib/simulator/scene-builders';
+import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
-export const javaCoreApisLesson: Lesson = {
+// One stage for the whole lesson: your code on the left, the API under discussion in the
+// middle (same id, new label each act), the value it wraps on the right, and a
+// collaborator (an expensive call, a time zone, a clock, a server) joining from the top.
+//
+//                  collaborator      alt
+//   your code ──── api ───────────── value
+
+type Opts = Record<string, unknown>;
+
+const positions = {
+  caller: STAGE.caller,
+  api: STAGE.main,
+  value: STAGE.store,
+  mach: STAGE.helper,
+  alt: STAGE.alt,
+};
+
+const block = stageBlock;
+const caller = (tags: Tag[] = []) => block(positions.caller, { color: `blue`, glyph: `code`, label: [`your code`], sub: `caller`, tags });
+const api = (label: string[], sub: string, tags: Tag[] = [], glyph = `box`) =>
+  block(positions.api, { color: `green`, glyph, label, sub, tags });
+const value = (label: string, tags: Tag[] = []) =>
+  makeDb(positions.value.x, positions.value.y, { r: 2.2, h: 46, glyph: `database`, label, tags });
+const mach = (label: string[], sub: string, glyph: string, tags: Tag[] = []) =>
+  block(positions.mach, { color: `orange`, glyph, label, sub, tags });
+const alt = (label: string[], sub: string, tags: Tag[] = []) =>
+  block(positions.alt, { color: `slab`, glyph: `route`, label, sub, tags });
+
+const links = {
+  call: (label?: string) => linkOf(`caller`, `api`, label),
+  back: (label?: string) => linkOf(`api`, `value`, label),
+  mach: (label?: string) => ({ ...linkOf(`mach`, `api`, label, false), labelAt: 0.6 }),
+  alt: makeLink(`caller`, `alt`, [`caller`, `alt`], { heads: `both`, style: `off` }),
+};
+
+/** Code card, parked bottom-left under the caller where nothing else lives. */
+const card = cardAt({ x: positions.api.x, y: positions.api.y, dx: -250, dy: 150 }, `code`);
+
+export const javaCoreApisLesson: Lesson = distinctConcepts({
   id: 'java-core-apis',
   title: 'Modern Java & Core APIs',
   summary:
-    'Master Java’s most-used daily APIs: Optional lazy vs eager traps, java.time Instant/ZonedDateTime/Clock, built-in HTTP/2 HttpClient, Java 21 SequencedCollection, and ScopedValue.',
+    'The APIs you use every day, and what they really do: Optional and its eager trap, java.time, a testable Clock, the built-in HttpClient, and Java 21’s sequenced collections.',
   minutes: 12,
   level: 'beginner',
-  metrics: ['api', 'safety', 'evaluation', 'java_version'],
-  legend: ['flow', ['req', 'input / call'], ['res', 'safe output'], ['fail', 'eager trap / leak']],
+  metrics: ['api', 'behavior', 'cost', 'since'],
+  legend: [[`req`, `call`], [`res`, `result`], [`fail`, `trap`]],
   goals: [
-    { text: 'Model null-absent values safely with Optional', step: 1 },
-    { text: 'Avoid the orElse() eager evaluation trap with orElseGet()', step: 2 },
-    { text: 'Separate Instant (UTC) vs LocalDateTime vs ZonedDateTime', step: 3 },
-    { text: 'Test time deterministically with Clock & DateTimeFormatter', step: 4 },
-    { text: 'Call HTTP/2 & Async APIs with built-in HttpClient', step: 5 },
-    { text: 'Use Java 21 SequencedCollection & ScopedValue', step: 6 },
+    { text: 'Model absent values safely with Optional', step: 1 },
+    { text: 'Avoid the orElse() eager-evaluation trap', step: 2 },
+    { text: 'Separate Instant, LocalDateTime and ZonedDateTime', step: 3 },
+    { text: 'Test time deterministically with Clock', step: 4 },
+    { text: 'Call HTTP/2 and async APIs with HttpClient', step: 5 },
+    { text: 'Use Java 21 SequencedCollection and ScopedValue', step: 6 },
   ],
   steps: [
     {
       short: 'Optional',
-      chapter: 'null-safety',
-      title: 'Optional<T> Null-Safety Pipeline',
+      chapter: 'setup',
+      title: 'Optional makes absence part of the type',
       body: [
-        '<code>Optional&lt;T&gt;</code> makes absence explicit in return types instead of returning raw <code>null</code> and risking <code>NullPointerException</code>.',
-        'Chain <code>map()</code> and <code>flatMap()</code> declaratively. Never call <code>.get()</code> blindly, and avoid using <code>Optional</code> as entity fields or method parameters.',
+        `A method that may find nothing should say so in its return type. <code>Optional&lt;User&gt;</code> is a small box that holds either a value or nothing — callers can’t forget to check.`,
+        `Chain <code>map()</code> and <code>flatMap()</code> instead of <code>if (x != null)</code>. Don’t call <code>.get()</code> blindly, and don’t use Optional for fields or method parameters.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Use Optional.ofNullable(val) at boundaries; use Optional.of(val) only when null is a programming bug.',
-      },
-      metrics: { api: 'Optional<T>', safety: 'NPE-Free', evaluation: 'Declarative', java_version: 'Java 8+' },
+      callout: { kind: 'tip', text: `Use Optional.ofNullable(v) at the boundary with null-returning code; Optional.of(v) only when null would be a bug.` },
+      metrics: { api: 'Optional', behavior: 'no null', cost: '16 B', since: 'Java 8' },
       scene: {
         entities: {
-          input: makeDevice(-14, -8, { label: 'Nullable User' }),
-          opt: makeBlock(0, -8, { s: 4.6, h: 52, color: 'blue', glyph: 'shield', label: ['Optional.map'], sub: 'null-safe pipe' }),
-          out: makeBlock(14, -8, { s: 4.4, h: 50, color: 'green', glyph: 'code', label: ['Email String'], sub: 'orElseThrow()' }),
-          card: makePanel({ x: -12, y: 12 }, 'Declarative Optional Pipeline', [
-            'String email = findUser(id)',
-            '  .flatMap(User::getProfile)   // avoids Optional<Optional>',
-            '  .map(Profile::email)',
-            '  .map(String::toLowerCase)',
-            '  .orElseThrow(() -> new NotFoundException(id));',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          api: api([`Optional`], `User or empty`, [{ text: `present`, tone: `green` }]),
+          value: value(`User #7`),
+          card: card(`A null-free lookup`, [`Optional<User> u = repo.find(7);`, `String name = u.map(User::name).orElse("guest");`, `= no null returned, no NullPointerException`]),
         },
-        links: {
-          in_opt: makeLink('input', 'opt', ['input', 'opt'], { heads: 'end', label: 'ofNullable()' }),
-          opt_out: makeLink('opt', 'out', ['opt', 'out'], { heads: 'end', label: 'present' }),
-        },
-        flows: [{ route: ['in_opt', 'opt_out'], kind: 'res', rate: 1.8 }],
+        links: { call: links.call(`find(7)`), back: links.back(`wraps`) },
+        flows: [{ route: ['call'], rate: 1.4, bounce: true }],
       },
     },
     {
-      short: 'orElse Trap',
-      chapter: 'null-safety',
-      title: 'The orElse() Eager Trap vs orElseGet()',
+      short: 'orElse trap',
+      chapter: 'problem',
+      title: 'orElse() always runs its argument',
       body: [
-        'A classic production bug: <code>opt.orElse(createDefault())</code> evaluates <code>createDefault()</code> <strong>even when <code>opt</code> is present</strong> — triggering extra DB calls or allocations!',
-        'Always pass a lambda to <code>orElseGet(() -> createDefault())</code> when the fallback involves computation or I/O so it runs lazily only on empty.',
+        `Java evaluates arguments <em>before</em> the call. <code>opt.orElse(load())</code> therefore runs <code>load()</code> even when the Optional already holds a value — and throws the result away.`,
+        `<code>orElseGet(() -&gt; load())</code> takes a <b>supplier</b>, so <code>load()</code> runs only when the Optional is empty. Use it whenever the fallback costs something.`,
       ],
-      callout: {
-        kind: 'warning',
-        text: 'orElse(T) is eager; orElseGet(Supplier<T>) is lazy. Use orElse() ONLY for pre-existing constants.',
-      },
-      changes: ['+ Highlight eager DB call inside orElse()', '+ Switch to lazy Supplier in orElseGet()'],
-      metrics: { api: 'orElseGet()', safety: 'Zero Waste', evaluation: 'Lazy Supplier', java_version: 'Java 8+' },
+      changes: [`+ load() (200 ms DB call)`, `+ orElseGet alt`],
+      metrics: { api: 'orElse', behavior: 'eager', cost: '200 ms', since: 'Java 8' },
       scene: {
         entities: {
-          present: makeBlock(-14, -8, { s: 4.4, h: 50, color: 'green', glyph: 'shield', label: ['Optional.of(hit)'], sub: 'value present' }),
-          eager: makeBlock(2, -16, { s: 4.4, h: 50, color: 'red', glyph: 'alert', label: ['orElse(dbCall())'], sub: 'RUNS ANYWAY!' }),
-          lazy: makeBlock(2, -2, { s: 4.4, h: 50, color: 'cyan', glyph: 'zap', label: ['orElseGet(fn)'], sub: 'skipped on hit' }),
-          card: makePanel({ x: -12, y: 12 }, 'Eager orElse vs Lazy orElseGet', [
-            '// BUG: createUserInDb() executes EVEN IF user exists!',
-            'User u1 = repo.findById(id).orElse(createUserInDb());',
-            '',
-            '// FIX: Supplier lambda runs ONLY when Optional is empty',
-            'User u2 = repo.findById(id).orElseGet(() -> createUserInDb());',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          api: api([`orElse(…)`], `value present`, [{ text: `argument ran`, tone: `red`, icon: `alert` }]),
+          value: value(`User #7`),
+          mach: mach([`load()`], `200 ms query`, `zap`, [{ text: `wasted`, tone: `red` }]),
+          alt: alt([`orElseGet`], `lazy supplier`, [{ text: `skipped`, tone: `green` }]),
+          card: card(`Eager vs lazy`, [`u.orElse(load());                 // load() ALWAYS runs`, `= u.orElseGet(() -> load());       // only when empty`]),
         },
-        links: {
-          hit_eager: makeLink('present', 'eager', ['present', 'eager'], { heads: 'end', label: 'eager eval', style: 'dashed' }),
-          hit_lazy: makeLink('present', 'lazy', ['present', 'lazy'], { heads: 'end', label: 'skip lambda' }),
-        },
-        flows: [
-          { route: ['hit_eager'], kind: 'fail', rate: 1.6 },
-          { route: ['hit_lazy'], kind: 'res', rate: 1.6 },
-        ],
+        links: { call: links.call(`orElse`), back: links.back(), mach: links.mach(`runs anyway`) },
+        flows: [{ route: ['mach'], kind: 'fail', rate: 1 }],
       },
     },
     {
       short: 'java.time',
-      chapter: 'time',
-      title: 'java.time: Instant vs Local vs ZonedDateTime',
+      chapter: 'technique',
+      title: 'Instant, LocalDateTime and ZonedDateTime',
       body: [
-        'Legacy <code>java.util.Date</code> and <code>SimpleDateFormat</code> were mutable and not thread-safe. <code>java.time</code> provides immutable value types:',
-        '• <code>Instant</code>: machine UTC epoch timestamp (use in DB & APIs).<br>• <code>LocalDateTime</code>: calendar date+time <em>without</em> timezone.<br>• <code>ZonedDateTime</code>: instant + IANA zone (e.g. <code>Asia/Ho_Chi_Minh</code>).',
+        `<span class="term">Instant</span> is one moment on the UTC timeline — what you store and compare. <span class="term">ZonedDateTime</span> is that moment seen on a wall clock in a specific <code>ZoneId</code>, with daylight-saving rules.`,
+        `<span class="term">LocalDateTime</span> has no zone at all: “2026-03-08 02:30” may not exist or may exist twice. Use it for things like a birthday, never for a point in time.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Store Instant (UTC) in databases and convert to ZonedDateTime only at the UI / formatting boundary.',
-      },
-      changes: ['+ Immutable Instant (UTC) + ZonedDateTime', '+ Replaces mutable Date / Calendar'],
-      metrics: { api: 'java.time', safety: 'Immutable', evaluation: 'UTC First', java_version: 'Java 8+' },
+      changes: [`~ API: Instant`, `+ ZoneId`, `+ LocalDateTime alt`],
+      metrics: { api: 'Instant', behavior: 'UTC', cost: '12 B', since: 'Java 8' },
       scene: {
         entities: {
-          instant: makeDb(-12, -8, { r: 2.2, h: 48, color: 'purple', label: ['Instant (UTC)'], sub: 'epoch nanos' }),
-          zone: makeBlock(2, -8, { s: 4.4, h: 50, color: 'blue', glyph: 'globe', label: ['ZoneId'], sub: 'UTC+7 ZoneId' }),
-          zdt: makeBlock(14, -8, { s: 4.4, h: 50, color: 'green', glyph: 'code', label: ['ZonedDateTime'], sub: '+07:00 DST ok' }),
-          card: makePanel({ x: -12, y: 12 }, 'Instant -> ZonedDateTime', [
-            'Instant now = Instant.now(); // always UTC',
-            'ZonedDateTime vn = now.atZone(ZoneId.of("Asia/Ho_Chi_Minh"));',
-            '// LocalDateTime has NO timezone — never use for timestamps!',
-            'LocalDate birthday = LocalDate.of(1998, 5, 20);',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          api: api([`Instant`], `UTC moment`, [{ text: `no zone`, tone: `violet` }], `clock`),
+          value: value(`epoch ms`),
+          mach: mach([`ZoneId`], `Asia/Ho_Chi_Minh`, `globe`, [{ text: `+07:00`, tone: `green` }]),
+          alt: alt([`LocalDateTime`], `no zone`, [{ text: `ambiguous`, tone: `red`, icon: `alert` }]),
+          card: card(`Same moment, three views`, [`Instant t = Instant.now();                  // UTC`, `var z = t.atZone(ZoneId.of("Asia/Ho_Chi_Minh"));`, `! LocalDateTime.now()  // which zone? nobody knows`]),
         },
-        links: {
-          ins_z: makeLink('instant', 'zone', ['instant', 'zone'], { heads: 'end', label: 'atZone()' }),
-          z_zdt: makeLink('zone', 'zdt', ['zone', 'zdt'], { heads: 'end', label: 'toLocal' }),
-        },
-        flows: [{ route: ['ins_z', 'z_zdt'], kind: 'req', rate: 1.8 }],
+        links: { call: links.call(`now()`), back: links.back(`stores`), mach: links.mach(`atZone`) },
+        flows: [{ route: ['call'], rate: 1.2, bounce: true }, { route: ['mach'], kind: 'write', rate: 1 }],
       },
     },
     {
-      short: 'Clock & Format',
-      chapter: 'time',
-      title: 'Duration, DateTimeFormatter & Testable Clock',
+      short: 'Clock',
+      chapter: 'solution',
+      title: 'Inject a Clock so time can be tested',
       body: [
-        'Use <code>Duration</code> for exact time (seconds/nanos) and <code>Period</code> for calendar units (years/months/days, accounting for leap years).',
-        '<code>DateTimeFormatter</code> is 100% immutable and thread-safe (keep it as a <code>static final</code> constant). Inject <code>java.time.Clock</code> into services so unit tests never flake.',
+        `<code>Instant.now()</code> reads the system clock, so tests that depend on it break at midnight or on a slow CI box. Pass a <code>Clock</code> into your class and call <code>Instant.now(clock)</code> instead.`,
+        `In production use <code>Clock.systemUTC()</code>; in a test use <code>Clock.fixed(...)</code>. <code>Duration</code> and <code>DateTimeFormatter</code> are immutable and thread-safe, unlike the old <code>SimpleDateFormat</code>.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Injecting Clock.fixed(...) makes expiry and billing tests deterministic without Thread.sleep().',
-      },
-      changes: ['+ Static thread-safe DateTimeFormatter', '+ Clock.fixed() enables deterministic tests'],
-      metrics: { api: 'Clock / Duration', safety: 'Thread-Safe', evaluation: 'Deterministic', java_version: 'Java 8+' },
+      changes: [`~ collaborator: Clock`, `+ fixed clock in tests`],
+      metrics: { api: 'Clock', behavior: 'injectable', cost: '0 B', since: 'Java 8' },
       scene: {
         entities: {
-          clock: makeBlock(-12, -8, { s: 4.4, h: 50, color: 'cyan', glyph: 'cpu', label: ['Clock (Injected)'], sub: 'UTC / fixed' }),
-          service: makeBlock(2, -8, { s: 4.4, h: 50, color: 'blue', glyph: 'workflow', label: ['Billing Service'], sub: 'Duration diff' }),
-          fmt: makeBlock(14, -8, { s: 4.4, h: 50, color: 'green', glyph: 'code', label: ['DateTimeFormatter'], sub: 'ISO_INSTANT' }),
-          card: makePanel({ x: -12, y: 12 }, 'Testable Clock & Thread-Safe Formatter', [
-            'private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_INSTANT;',
-            '// Production: Clock.systemUTC() | Test: Clock.fixed(t0, UTC)',
-            'Instant now = Instant.now(clock);',
-            'boolean expired = Duration.between(createdAt, now).toMinutes() > 15;',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          api: api([`Instant.now`], `(clock)`, [{ text: `deterministic`, tone: `green`, icon: `shield` }], `clock`),
+          value: value(`2026-01-01`),
+          mach: mach([`Clock`], `fixed in tests`, `timer`, [{ text: `Clock.fixed`, tone: `violet` }]),
+          card: card(`A testable class`, [`class Invoice { Invoice(Clock clock) { ... } }`, `var c = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), UTC);`, `= Instant.now(c)   // always 2026-01-01T00:00Z`]),
         },
-        links: {
-          clk_svc: makeLink('clock', 'service', ['clock', 'service'], { heads: 'end', label: 'instant()' }),
-          svc_fmt: makeLink('service', 'fmt', ['service', 'fmt'], { heads: 'end', label: 'format()' }),
-        },
-        flows: [{ route: ['clk_svc', 'svc_fmt'], kind: 'res', rate: 1.8 }],
+        links: { call: links.call(`now(clock)`), back: links.back(), mach: links.mach(`reads`) },
+        flows: [{ route: ['mach'], kind: 'write', rate: 1.2 }, { route: ['call'], rate: 1.2, bounce: true }],
       },
     },
     {
       short: 'HttpClient',
-      chapter: 'network',
-      title: 'Built-in HTTP/2 & Async HttpClient (JDK 11+)',
+      chapter: 'technique',
+      title: 'HttpClient: HTTP/2 and async, built in',
       body: [
-        'Since Java 11, <code>java.net.http.HttpClient</code> replaces clunky <code>HttpURLConnection</code> with native <strong>HTTP/2 multiplexing</strong>, TLS, and non-blocking <code>CompletableFuture</code>.',
-        'Share one <code>HttpClient</code> singleton across your app (it manages its own connection pool and selector) and pair <code>send()</code> with Java 21 Virtual Threads.',
+        `Since Java 11 the JDK ships a modern <code>HttpClient</code>: HTTP/2 by default (falls back to 1.1), connection reuse, redirects and timeouts — no Apache or OkHttp dependency needed.`,
+        `<code>send()</code> blocks the thread; <code>sendAsync()</code> returns a <code>CompletableFuture</code> so the caller keeps working. Build the client once and share it.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Always set connectTimeout() on HttpClient and timeout() on HttpRequest to prevent hung sockets.',
-      },
-      changes: ['+ Built-in HttpClient with HTTP/2 + timeouts', '+ Non-blocking sendAsync() returns CompletableFuture'],
-      metrics: { api: 'HttpClient', safety: 'Timeouts Set', evaluation: 'HTTP/2 Async', java_version: 'Java 11–21' },
+      changes: [`~ API: HttpClient`, `~ collaborator: server`, `+ response`],
+      metrics: { api: 'HttpClient', behavior: 'HTTP/2', cost: '1 conn', since: 'Java 11' },
       scene: {
         entities: {
-          client: makeBlock(-14, -8, { s: 4.6, h: 52, color: 'purple', glyph: 'globe', label: ['HttpClient (Pool)'], sub: 'HTTP/2 + TLS' }),
-          req: makeBlock(0, -8, { s: 4.4, h: 50, color: 'blue', glyph: 'route', label: ['HttpRequest'], sub: 'timeout(5s)' }),
-          api: makeBlock(15, -8, { s: 4.4, h: 50, color: 'green', glyph: 'server', label: ['Remote API'], sub: '200 OK JSON' }),
-          card: makePanel({ x: -12, y: 12 }, 'Modern JDK HttpClient', [
-            'HttpClient http = HttpClient.newBuilder()',
-            '  .connectTimeout(Duration.ofSeconds(3)).build();',
-            'HttpRequest req = HttpRequest.newBuilder(uri)',
-            '  .timeout(Duration.ofSeconds(5)).GET().build();',
-            'CompletableFuture<String> body = http',
-            '  .sendAsync(req, BodyHandlers.ofString()).thenApply(HttpResponse::body);',
-          ], { icon: 'terminal' }),
+          caller: caller([{ text: `not blocked`, tone: `green` }]),
+          api: api([`HttpClient`], `HTTP/2 · async`, [{ text: `reuses conn`, tone: `violet`, icon: `refresh` }], `network`),
+          value: value(`response body`, [{ text: `200 OK`, tone: `green` }]),
+          mach: mach([`server`], `api.example.com`, `server`, [{ text: `h2`, tone: `gray` }]),
+          card: card(`Async request`, [`var client = HttpClient.newHttpClient();`, `var req = HttpRequest.newBuilder(URI.create(url)).build();`, `client.sendAsync(req, BodyHandlers.ofString())`, `      .thenApply(HttpResponse::body);`]),
         },
-        links: {
-          cl_req: makeLink('client', 'req', ['client', 'req'], { heads: 'end', label: 'multiplex' }),
-          req_api: makeLink('req', 'api', ['req', 'api'], { heads: 'end', label: 'sendAsync()' }),
-        },
-        flows: [{ route: ['cl_req', 'req_api'], kind: 'req', rate: 2.0 }],
+        links: { call: links.call(`sendAsync`), back: links.back(`future`), req: linkOf(`api`, `mach`, `GET /orders`) },
+        flows: [{ route: ['req'], rate: 1.3, bounce: true }, { route: ['call'], rate: 1.2, bounce: true }],
       },
     },
     {
-      short: 'Java 21 APIs',
-      chapter: 'java21',
-      title: 'Java 21: SequencedCollection & ScopedValue',
+      short: 'Java 21',
+      chapter: 'recap',
+      title: 'Java 21: sequenced collections and ScopedValue',
       body: [
-        '<strong>Sequenced Collections (JEP 431)</strong> unify first/last access across <code>List</code>, <code>Deque</code>, <code>LinkedHashSet</code>, and <code>LinkedHashMap</code> via <code>getFirst()</code>, <code>getLast()</code>, and zero-copy <code>reversed()</code>.',
-        'Meanwhile, <strong>ScopedValue (JEP 446)</strong> replaces mutable <code>ThreadLocal</code> (which leaks in pools and is heavy to copy) with immutable, auto-cleaned context for Virtual Threads.',
+        `<span class="term">SequencedCollection</span> finally gives every ordered collection (List, Deque, LinkedHashSet, LinkedHashMap, SortedSet) the same <code>getFirst()</code>, <code>getLast()</code> and <code>reversed()</code> — no more <code>list.get(list.size() - 1)</code>.`,
+        `<span class="term">ScopedValue</span> (preview) shares read-only data with everything a task calls, without <code>ThreadLocal</code>’s leaks — a good fit for virtual threads.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'list.reversed() returns a live view without copying elements; ScopedValue.where(KEY, val).run(...) auto-unbinds.',
-      },
-      changes: ['+ SequencedCollection uniform getFirst/getLast/reversed', '+ ScopedValue replaces ThreadLocal for Loom'],
-      metrics: { api: 'JEP 431 / 446', safety: 'Auto-Unbind', evaluation: 'Zero-Copy View', java_version: 'Java 21 LTS' },
+      changes: [`~ API: SequencedCollection`, `+ ScopedValue`],
+      metrics: { api: 'Sequenced', behavior: 'ordered', cost: 'O(1)', since: 'Java 21' },
       scene: {
         entities: {
-          seq: makeBlock(-10, -8, { s: 4.6, h: 52, color: 'green', glyph: 'layers', label: ['SequencedCollection'], sub: 'reversed view' }),
-          scoped: makeBlock(6, -8, { s: 4.6, h: 52, color: 'cyan', glyph: 'shield', label: ['ScopedValue<T>'], sub: 'Loom safe ctx' }),
-          card: makePanel({ x: -12, y: 12 }, 'Java 21 SequencedCollection & ScopedValue', [
-            '// JEP 431: Unified first/last & reverse view (no copy)',
-            'var last = items.getLast();',
-            'for (var item : items.reversed()) { ... }',
-            '',
-            '// JEP 446: Immutable context for Virtual Threads',
-            'static final ScopedValue<User> CTX = ScopedValue.newInstance();',
-            'ScopedValue.where(CTX, currentUser).run(() -> handleRequest());',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          api: api([`Sequenced`, `Collection`], `getFirst/Last`, [{ text: `reversed()`, tone: `violet` }], `listChecks`),
+          value: value(`LinkedHashSet`, [{ text: `insertion order`, tone: `green` }]),
+          alt: alt([`ScopedValue`], `preview`, [{ text: `no leaks`, tone: `green` }]),
+          card: card(`Java 21`, [`var last = list.getLast();   // was list.get(list.size()-1)`, `for (var x : list.reversed()) { ... }`, `= ScopedValue.where(USER, u).run(() -> handle());`]),
         },
-        links: {
-          seq_scoped: makeLink('seq', 'scoped', ['seq', 'scoped'], { heads: 'end', label: 'JDK 21 core' }),
-        },
-        flows: [{ route: ['seq_scoped'], kind: 'res', rate: 1.8 }],
+        links: { call: links.call(`getLast()`), back: links.back() },
+        flows: [{ route: ['call'], rate: 1.4, bounce: true }],
       },
     },
   ],
-};
+});

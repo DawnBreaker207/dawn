@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One fixed path for the whole lesson: a request thread borrows a warm connection
@@ -10,29 +10,26 @@ import type { Lesson } from '@/lib/simulator/types';
 //   Thread 2 ──┘
 
 /** Screen position (px) → world grid point. */
-const at = (sx: number, sy: number) => ({
-  x: +((sx / 14 + sy / 7) / 2).toFixed(2),
-  y: +((sx / 14 - sy / 7) / 2).toFixed(2),
-});
+const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
 
 type Tag = { text: string; tone?: string; icon?: string };
 
-const P = {
-  t1: at(-280, -10),
-  t2: at(-190, 170),
-  pool: at(-20, 40),
-  db: at(240, -30),
+const positions = {
+  t1: toIso(-280, -10),
+  t2: toIso(-190, 170),
+  pool: toIso(-20, 40),
+  db: toIso(240, -30),
 };
 
 const t1 = (tags: Tag[] = []) =>
-  makeBlock(P.t1.x, P.t1.y, { s: 4.4, h: 52, color: `blue`, glyph: `cpu`, label: [`Thread 1`], sub: `request`, tags });
+  makeBlock(positions.t1.x, positions.t1.y, { s: 4.4, h: 52, color: `blue`, glyph: `cpu`, label: [`Thread 1`], sub: `request`, tags });
 const t2 = (tags: Tag[] = []) =>
-  makeBlock(P.t2.x, P.t2.y, { s: 4.4, h: 52, color: `blue`, glyph: `cpu`, label: [`Thread 2`], sub: `request`, tags });
+  makeBlock(positions.t2.x, positions.t2.y, { s: 4.4, h: 52, color: `blue`, glyph: `cpu`, label: [`Thread 2`], sub: `request`, tags });
 const pool = (tags: Tag[] = []) =>
-  makeBlock(P.pool.x, P.pool.y, { s: 4.6, h: 54, color: `purple`, glyph: `layers`, label: [`HikariCP`], sub: `10 conns`, tags });
-const db = (tags: Tag[] = []) => makeDb(P.db.x, P.db.y, { r: 2.2, h: 48, label: `PostgreSQL`, tags });
+  makeBlock(positions.pool.x, positions.pool.y, { s: 4.6, h: 54, color: `purple`, glyph: `layers`, label: [`HikariCP`], sub: `10 conns`, tags });
+const database = (tags: Tag[] = []) => makeDb(positions.db.x, positions.db.y, { r: 2.2, h: 48, label: `PostgreSQL`, tags });
 
-const L = {
+const links = {
   borrow: makeLink(`t1`, `pool`, [`t1`, `pool`], { heads: `both`, label: `borrow` }),
   borrowQuiet: makeLink(`t1`, `pool`, [`t1`, `pool`], { heads: `both` }),
   wire: makeLink(`pool`, `db`, [`pool`, `db`], { heads: `both`, label: `warm TCP` }),
@@ -42,13 +39,12 @@ const L = {
 };
 
 /** Code card above the path, clear of all three blocks. */
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: P.pool.x, y: P.pool.y, z: 0, dx: -245, dy: -300 }, title, lines, { icon: `code` });
+const card = cardAt({ x: positions.pool.x, y: positions.pool.y, dx: -245, dy: -300 }, `code`);
 
 const base = (o: { t1?: Tag[]; pool?: Tag[]; db?: Tag[] } = {}) => ({
   t1: t1(o.t1),
   pool: pool(o.pool),
-  db: db(o.db),
+  db: database(o.db),
 });
 
 export const javaJdbcLesson: Lesson = {
@@ -94,7 +90,7 @@ export const javaJdbcLesson: Lesson = {
             `} // close() = give it back`,
           ]),
         },
-        links: { borrow: L.borrow, wire: L.wire },
+        links: { borrow: links.borrow, wire: links.wire },
         flows: [{ route: ['borrow'], rate: 1.4, bounce: true }],
       },
     },
@@ -123,7 +119,7 @@ export const javaJdbcLesson: Lesson = {
             `}`,
           ]),
         },
-        links: { borrow: L.borrowQuiet, wire: L.wireQuiet },
+        links: { borrow: links.borrowQuiet, wire: links.wireQuiet },
         flows: [{ route: ['borrow', 'wire'], rate: 1.4, bounce: true }],
       },
     },
@@ -152,7 +148,7 @@ export const javaJdbcLesson: Lesson = {
             `}`,
           ]),
         },
-        links: { borrow: L.borrowQuiet, wire: L.wireQuiet },
+        links: { borrow: links.borrowQuiet, wire: links.wireQuiet },
         flows: [
           { route: ['wire'], kind: 'heavy', rate: 1.6, bounce: true },
           { route: ['borrow'], rate: 1.2, bounce: true },
@@ -189,7 +185,7 @@ export const javaJdbcLesson: Lesson = {
             `finally { conn.setAutoCommit(true); }`,
           ]),
         },
-        links: { borrow: L.borrowQuiet, wire: L.wireQuiet },
+        links: { borrow: links.borrowQuiet, wire: links.wireQuiet },
         flows: [
           { route: ['borrow', 'wire'], rate: 1.2, bounce: true },
           { route: ['wire'], kind: 'fail', rate: 0.6 },
@@ -222,7 +218,7 @@ export const javaJdbcLesson: Lesson = {
             `ps.executeBatch();`,
           ]),
         },
-        links: { borrow: L.borrowQuiet, wire: L.wireQuiet },
+        links: { borrow: links.borrowQuiet, wire: links.wireQuiet },
         flows: [{ route: ['wire'], kind: 'heavy', rate: 0.7, bounce: true }],
       },
     },
@@ -255,7 +251,7 @@ export const javaJdbcLesson: Lesson = {
             `! SQLTransientConnectionException: timed out`,
           ]),
         },
-        links: { borrow: L.borrowQuiet, wire: L.wireQuiet, wait: L.wait },
+        links: { borrow: links.borrowQuiet, wire: links.wireQuiet, wait: links.wait },
         flows: [{ route: ['wait'], kind: 'fail', rate: 1 }],
       },
     },
@@ -285,7 +281,7 @@ export const javaJdbcLesson: Lesson = {
             `} // rs → ps → c closed, even on exceptions`,
           ]),
         },
-        links: { borrow: L.borrowQuiet, wire: L.wireQuiet, wait: L.waitQuiet },
+        links: { borrow: links.borrowQuiet, wire: links.wireQuiet, wait: links.waitQuiet },
         flows: [
           { route: ['borrow', 'wire'], rate: 1.2, bounce: true },
           { route: ['wait', 'wire'], rate: 1.2, bounce: true },

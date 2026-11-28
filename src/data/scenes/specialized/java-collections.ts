@@ -1,429 +1,336 @@
-import {
-  makeBlock,
-  makeDb,
-  makeLink,
-  makePanel,
-} from '@/lib/simulator/scene-builders';
+import { STAGE, makeDb, makeLink, makePanel, stageBlock, distinctConcepts, cardAt } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
-export const javaCollectionsLesson: Lesson = {
+// One stage for the whole lesson. The caller thread stays on the left, the collection under
+// discussion is always the green block in the middle (same id, new label every act), and
+// its backing storage hangs off to the right. `hash()` joins for hash-based acts, a second
+// thread for the concurrent ones.
+//
+//   thread 2        hash()          alt (step 1)
+//   main thread ──── coll ───────── backing store
+
+type Tag = { text: string; tone?: string; icon?: string };
+type Opts = Record<string, unknown>;
+
+const positions = {
+  caller: STAGE.caller,
+  coll: STAGE.main,
+  store: STAGE.store,
+  hash: STAGE.helper,
+  alt: STAGE.alt,
+  t2: STAGE.caller2,
+};
+
+const block = stageBlock;
+const caller = (tags: Tag[] = []) =>
+  block(positions.caller, { color: `blue`, glyph: `layers`, label: [`main thread`], sub: `caller`, tags });
+const t2 = (tags: Tag[] = []) =>
+  block(positions.t2, { color: `blue`, glyph: `layers`, label: [`thread 2`], sub: `writer`, tags });
+const coll = (label: string, sub: string, tags: Tag[] = [], glyph = `boxes`) =>
+  block(positions.coll, { color: `green`, glyph, label: [label], sub, tags });
+const store = (label: string, tags: Tag[] = []) =>
+  makeDb(positions.store.x, positions.store.y, { r: 2.2, h: 46, glyph: `database`, label, tags });
+const hash = (tags: Tag[] = []) =>
+  block(positions.hash, { color: `orange`, glyph: `hash`, label: [`hash()`], sub: `spread bits`, tags });
+const alt = (label: string, sub: string, tags: Tag[] = []) =>
+  block(positions.alt, { color: `slab`, glyph: `route`, label: [label], sub, tags });
+
+const links = {
+  call: (label?: string) => makeLink(`caller`, `coll`, [`caller`, `coll`], { heads: `both`, ...(label ? { label } : {}) }),
+  back: (label?: string) => makeLink(`coll`, `store`, [`coll`, `store`], { heads: `both`, ...(label ? { label } : {}) }),
+  mach: (label?: string) => makeLink(`hash`, `coll`, [`hash`, `coll`], { ...(label ? { label } : {}) }),
+  second: (label?: string) => makeLink(`t2`, `coll`, [`t2`, `coll`], { heads: `both`, ...(label ? { label } : {}) }),
+  alt: makeLink(`caller`, `alt`, [`caller`, `alt`], { heads: `both`, style: `off` }),
+};
+
+/** Code card, parked bottom-left under the caller where nothing else lives. */
+const card = cardAt({ x: positions.coll.x, y: positions.coll.y, dx: -250, dy: 150 }, `code`);
+
+export const javaCollectionsLesson: Lesson = distinctConcepts({
   id: 'java-collections',
   title: 'Collections, Maps, Queues & Concurrent Traps',
   summary:
-    'Master ArrayList vs LinkedList, HashMap/TreeMap/LinkedHashMap LRU, ArrayDeque/PriorityQueue, EnumSet/EnumMap, Fail-Fast vs CopyOnWrite, ConcurrentHashMap & SkipListMap.',
+    'See what ArrayList, HashMap, ConcurrentHashMap, deques and heaps really look like in memory — and the traps that follow from it.',
   minutes: 14,
   level: 'core',
-  metrics: ['backing_store', 'collision_op', 'concurrency', 'tricky_trap'],
-  legend: ['flow', ['req', 'put / resize'], ['res', 'treeify / CAS'], ['fail', 'lost key / lock']],
+  metrics: ['lookup', 'perEntry', 'threads', 'safe'],
+  legend: [[`req`, `call`], [`write`, `write / rehash`], [`fail`, `trap`]],
   goals: [
-    { text: 'Contrast ArrayList CPU-cache locality vs LinkedList', step: 1 },
-    { text: 'Trace HashMap perturbation hash & collision chain', step: 2 },
-    { text: 'Treeify long buckets into RB-Tree & resize by bit-mask', step: 3 },
-    { text: 'Enforce equals/hashCode & avoid Mutated Key Leaks', step: 4 },
-    { text: 'Compare List.of() / Map.of() unmodifiable collections', step: 5 },
-    { text: 'Lock only bucket head in ConcurrentHashMap (CAS + sync)', step: 6 },
-    { text: 'Avoid recursive computeIfAbsent deadlock in CHM', step: 7 },
-    { text: 'Choose HashSet, LinkedHashMap (LRU) & TreeMap', step: 8 },
-    { text: 'Use ArrayDeque (ring) & PriorityQueue (Min-Heap)', step: 9 },
-    { text: 'Optimize Enum keys with EnumSet & EnumMap', step: 10 },
-    { text: 'Fix Fail-Fast CME & use CopyOnWriteArrayList', step: 11 },
-    { text: 'Apply ConcurrentSkipListMap, IdentityHashMap & Comparator', step: 12 },
+    { text: 'Contrast ArrayList cache locality with LinkedList', step: 1 },
+    { text: 'Trace the HashMap hash spread and collision chain', step: 2 },
+    { text: 'Treeify long buckets and resize by bit mask', step: 3 },
+    { text: 'Enforce equals/hashCode; avoid mutated-key leaks', step: 4 },
+    { text: 'Compare List.of() with unmodifiable views', step: 5 },
+    { text: 'Lock only the bucket head in ConcurrentHashMap', step: 6 },
+    { text: 'Avoid the recursive computeIfAbsent trap', step: 7 },
+    { text: 'Choose HashSet, LinkedHashMap (LRU) and TreeMap', step: 8 },
+    { text: 'Use ArrayDeque (ring) and PriorityQueue (heap)', step: 9 },
+    { text: 'Use EnumSet and EnumMap for enum keys', step: 10 },
+    { text: 'Fix fail-fast CME with CopyOnWriteArrayList', step: 11 },
+    { text: 'Apply SkipList, IdentityHashMap and Comparator', step: 12 },
   ],
   steps: [
     {
       short: 'ArrayList',
-      chapter: 'list',
-      title: 'Why ArrayList Beats LinkedList Almost Always',
+      chapter: 'setup',
+      title: 'ArrayList: one block of references',
       body: [
-        '<code>ArrayList</code> stores references in a contiguous <code>Object[]</code> (growing 1.5x via <code>Arrays.copyOf</code>). CPU L1 cache prefetcher loads adjacent slots in one cache line.',
-        '<code>LinkedList</code> allocates a separate Heap <code>Node</code> wrapper (prev/next pointers) per element, causing pointer-chasing cache misses even during iteration.',
+        `An <span class="term">ArrayList</span> keeps its elements in one <code>Object[]</code>. Element <code>i</code> sits at a fixed offset, so <code>get(i)</code> is a single memory read — and the next element is right beside it in the CPU cache.`,
+        `A <span class="term">LinkedList</span> allocates one node per element, scattered over the heap. Walking it follows pointers and misses the cache on almost every step: iterating 1M elements takes ~25 ms instead of ~3 ms.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Even for queue/stack workloads, prefer ArrayDeque over LinkedList — zero per-node Heap allocation.',
-      },
-      metrics: { backing_store: 'Object[] 1.5x', collision_op: 'N/A', concurrency: 'Not sync', tricky_trap: 'LinkedList RAM' },
+      callout: { kind: 'tip', text: `Pick ArrayList by default. LinkedList only wins when you insert in the middle of a list you already hold an iterator to.` },
+      metrics: { lookup: 'O(1)', perEntry: '4 B ref', threads: '1', safe: 'no' },
       scene: {
         entities: {
-          arr: makeDb(-14, -14, { r: 2.3, h: 50, color: 'green', label: ['ArrayList'], sub: 'contiguous L1' }),
-          lnk: makeBlock(2, -6, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['LinkedList'], sub: 'cache misses' }),
-          card: makePanel({ x: -12, y: 12 }, 'Contiguous Array vs Pointer Chasing', [
-            '// ArrayList: O(1) get(i), 1.5x grow = old + (old >> 1)',
-            '// LinkedList: 24B+ Node overhead per item + cache miss',
-            'Deque<Task> q = new ArrayDeque<>(); // faster than LinkedList',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          coll: coll(`ArrayList`, `Object[]`, [{ text: `contiguous`, tone: `green` }]),
+          store: store(`Object[ 10 ]`),
+          alt: alt(`LinkedList`, `node per item`, [{ text: `iterate 25 ms`, tone: `red` }]),
+          card: card(`Access cost`, [`list.get(500_000)`, `= ArrayList  base + 500_000 × 4   O(1)`, `! LinkedList  follow 500_000 next pointers`]),
         },
-        links: {
-          ar_ln: makeLink('arr', 'lnk', ['arr', 'lnk'], { heads: 'end', label: 'prefer Array' }),
-        },
-        flows: [{ route: ['ar_ln'], kind: 'res', rate: 1.7 }],
+        links: { call: links.call(`get(i)`), back: links.back() },
+        flows: [{ route: ['call'], rate: 1.6, bounce: true }],
       },
     },
     {
       short: 'HashMap',
-      chapter: 'map',
-      title: 'HashMap Perturbation & Bucket Collisions',
+      chapter: 'technique',
+      title: 'HashMap: hash, spread, mask',
       body: [
-        'Because table size <code>n</code> is always a power of 2, <code>(n - 1) & hash</code> only uses the lowest bits. <code>HashMap</code> runs <code>(h = key.hashCode()) ^ (h >>> 16)</code> so upper bits also influence the bucket.',
-        'Distinct keys landing in the same bucket form a linked list resolved via <code>equals()</code>.',
+        `<code>put(key, v)</code> calls <code>key.hashCode()</code>, then XORs the high 16 bits into the low 16 so the table’s small index keeps some of the high bits. The bucket is <code>(n − 1) &amp; hash</code> — a bit mask, not a modulo.`,
+        `Two keys can land in the same bucket. They are chained in a short linked list and told apart with <code>equals()</code>.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Default load factor 0.75 balances memory vs collision probability (Poisson distribution: >=8 collisions < 1 in 10M).',
-      },
-      changes: ['+ h ^ (h >>> 16) mixes upper hash bits', '+ Collision appends Node to bucket'],
-      metrics: { backing_store: 'Node[16]', collision_op: 'Linked chain', concurrency: 'Unsafe!', tricky_trap: 'Infinite loop' },
+      changes: [`+ hash()`, `~ ArrayList → HashMap`, `+ collision chain`],
+      metrics: { lookup: 'O(1) avg', perEntry: '~48 B', threads: '1', safe: 'no' },
       scene: {
         entities: {
-          key: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Key.hashCode'], sub: 'h^(h>>>16)' }),
-          tbl: makeBlock(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Node[] Table'], sub: '(n-1) & hash' }),
-          bkt: makeDb(0, 0, { r: 2.2, h: 48, color: 'amber', label: ['Bucket Chain'], sub: 'Node.next' }),
-          card: makePanel({ x: -12, y: 12 }, 'How HashMap Picks a Bucket', [
-            'int h = key.hashCode();',
-            'int hash = h ^ (h >>> 16); // mix upper bits!',
-            'int idx = (n - 1) & hash;  // fast bitwise modulo',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          coll: coll(`HashMap`, `Node[] table`, [{ text: `load 0.75`, icon: `gauge` }]),
+          store: store(`table[16]`, [{ text: `2 keys · bucket 5`, tone: `amber` }]),
+          hash: hash(),
+          card: card(`Where does a key go?`, [`int h = key.hashCode();`, `h ^= h >>> 16;           // spread`, `int i = (table.length - 1) & h;`, `= same i → chain, compare equals()`]),
         },
-        links: {
-          k_tb: makeLink('key', 'tbl', ['key', 'tbl'], { heads: 'end', label: 'mask bits' }),
-          tb_bk: makeLink('tbl', 'bkt', ['tbl', 'bkt'], { heads: 'end', label: 'clash' }),
-        },
-        flows: [{ route: ['k_tb', 'tb_bk'], kind: 'req', rate: 1.8 }],
+        links: { call: links.call(`put / get`), back: links.back(`bucket i`), mach: links.mach() },
+        flows: [{ route: ['call'], rate: 1.4, bounce: true }, { route: ['mach'], kind: 'write', rate: 1 }],
       },
     },
     {
-      short: 'Treeify & Resize',
-      chapter: 'map',
-      title: 'Bucket Treeify (bin >= 8) & Bit-Mask Resize',
+      short: 'Treeify',
+      chapter: 'problem',
+      title: 'Long chains turn into trees; the table doubles',
       body: [
-        'At <code>TREEIFY_THRESHOLD = 8</code> (with table cap $\\ge 64$), the chain converts into a <strong>Red-Black Tree</strong> ($O(\\log n)$ worst-case lookup).',
-        'When resizing 2x, <code>HashMap</code> does NOT recompute <code>hashCode()</code>! It checks one bit <code>(e.hash & oldCap) == 0</code>: nodes either stay at <code>idx</code> or jump to <code>idx + oldCap</code>.',
+        `When one chain reaches <b>8</b> nodes and the table has at least 64 buckets, it becomes a red-black tree: worst-case lookup drops from O(n) to O(log n). Below 64 buckets Java resizes instead.`,
+        `At 75% load the table <span class="term">doubles</span>. Each node either stays at index <code>i</code> or moves to <code>i + oldCap</code>, decided by one hash bit — no rehashing from scratch.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Power-of-2 capacity makes resize() a pure single-bit split into loHead and hiHead chains.',
-      },
-      changes: ['+ bin >= 8 treeifies to RB-Tree', '+ resize() splits via (hash & oldCap)'],
-      metrics: { backing_store: 'TreeNode RB', collision_op: 'O(log n)', concurrency: 'Unsafe!', tricky_trap: '0 rehash' },
+      changes: [`~ chain → red-black tree`, `~ table 16 → 32`],
+      metrics: { lookup: 'O(log n)', perEntry: '~48 B', threads: '1', safe: 'no' },
       scene: {
         entities: {
-          key: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Key (bin>=8)'], sub: 'cap >= 64' }),
-          tbl: makeBlock(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['Node[] Table'], sub: 'resize 2x' }),
-          tree: makeDb(0, 0, { r: 2.2, h: 48, color: 'green', label: ['RB TreeNode'], sub: 'O(log n) bin' }),
-          resz: makeBlock(12, -2, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['2x Resize'], sub: 'hash & oldCap' }),
-          card: makePanel({ x: -12, y: 12 }, 'Treeification & Zero-Rehash 2x Resize', [
-            '// Treeify when bin >= 8 && table.length >= 64',
-            '// On 2x resize, no hashCode() call needed:',
-            'if ((e.hash & oldCap) == 0) -> stay at idx',
-            'else                        -> move to idx + oldCap',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          coll: coll(`HashMap`, `Node[] table`, [{ text: `12 / 16 entries`, tone: `amber`, icon: `gauge` }]),
+          store: store(`table[32]`, [{ text: `bucket 5: tree`, tone: `violet`, icon: `layers` }]),
+          hash: hash([{ text: `bad hashes`, tone: `red` }]),
+          card: card(`resize()`, [`if (++size > threshold) resize();`, `newCap = oldCap << 1;      // 16 → 32`, `= node.hash & oldCap == 0 ? i : i + oldCap`]),
         },
-        links: {
-          k_tb2: makeLink('key', 'tbl', ['key', 'tbl'], { heads: 'end', label: 'bin >= 8' }),
-          tb_tr: makeLink('tbl', 'tree', ['tbl', 'tree'], { heads: 'end', label: 'RB-Tree' }),
-          tb_rs: makeLink('tbl', 'resz', ['tbl', 'resz'], { heads: 'end', label: 'bit split' }),
-        },
-        flows: [{ route: ['k_tb2', 'tb_tr'], kind: 'res', rate: 1.9 }, { route: ['tb_rs'], kind: 'req', rate: 1.5 }],
+        links: { call: links.call(`put`), back: links.back(`resize`), mach: links.mach() },
+        flows: [{ route: ['back'], kind: 'write', rate: 1.2, bounce: true }],
       },
     },
     {
-      short: 'Mutated Key',
-      chapter: 'map',
-      title: 'equals/hashCode & Why Mutating a Key Loses It',
+      short: 'Mutated key',
+      chapter: 'problem',
+      title: 'Change a key and the map loses it',
       body: [
-        '<code>HashMap</code> puts <code>user</code> into bucket <code>#3</code> from its initial <code>hashCode()</code>. If you later mutate <code>user.setName("Bob")</code>, its hash changes to bucket <code>#9</code>.',
-        'Calling <code>map.get(user)</code> probes bucket <code>#9</code> and returns <code>null</code> — leaking the entry in bucket <code>#3</code>! Always use immutable keys.',
+        `The bucket is computed from <code>hashCode()</code> <em>when you put</em>. If the key’s fields change afterwards, its hash changes — and <code>get()</code> looks in a different bucket.`,
+        `The entry is still in memory, so it leaks. Use immutable keys (<code>String</code>, records, <code>Integer</code>), and always override <code>equals</code> and <code>hashCode</code> together.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Effective Java Item 11: Always override hashCode() with equals(), and never mutate fields used in hashCode() after put().',
-      },
-      changes: ['+ Key stored in bucket #3 on put()', '+ Mutation shifts lookup to #9 -> null'],
-      metrics: { backing_store: 'Orphaned Node', collision_op: 'hash + equals', concurrency: 'Broken lookup', tricky_trap: 'Mutated key' },
+      changes: [`~ key field mutated`, `− get() returns null`],
+      metrics: { lookup: 'miss', perEntry: '~48 B', threads: '1', safe: 'no' },
       scene: {
         entities: {
-          mut: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Mutate Key'], sub: 'hash: 3 -> 9' }),
-          tbl: makeBlock(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'layers', label: ['Bucket #9'], sub: 'get() -> null!' }),
-          bkt: makeDb(0, 0, { r: 2.2, h: 48, color: 'purple', label: ['Bucket #3'], sub: 'leaked entry' }),
-          card: makePanel({ x: -12, y: 12 }, 'Why HashMap Keys Must Be Immutable', [
-            'User u = new User("Alice");',
-            'map.put(u, "admin"); // stored in bucket #3',
-            'u.setName("Bob");    // hashCode changes to #9!',
-            'map.get(u);          // probes #9 -> null (leaked in #3)!',
-          ], { icon: 'terminal' }),
+          caller: caller([{ text: `p.x = 9`, tone: `red`, icon: `alert` }]),
+          coll: coll(`HashMap`, `Point → v`, [{ text: `get(p) = null`, tone: `red` }]),
+          store: store(`table[32]`, [{ text: `entry orphaned`, tone: `red`, icon: `alert` }]),
+          hash: hash([{ text: `new hash`, tone: `amber` }]),
+          card: card(`Mutable key`, [`map.put(p, "A");        // p.x = 1`, `p.x = 9;                  // hash changed`, `! map.get(p)  → null   (wrong bucket)`]),
         },
-        links: {
-          mt_tb: makeLink('mut', 'tbl', ['mut', 'tbl'], { heads: 'end', label: 'probes #9' }),
-          tb_b3: makeLink('tbl', 'bkt', ['tbl', 'bkt'], { heads: 'end', label: 'in #3' }),
-        },
-        flows: [{ route: ['mt_tb'], kind: 'fail', rate: 1.8 }],
+        links: { call: links.call(`get(p)`), back: links.back(), mach: links.mach() },
+        flows: [{ route: ['call'], kind: 'fail', rate: 1, bounce: true }],
       },
     },
     {
       short: 'Immutable',
-      chapter: 'immutable',
-      title: 'List.of() / Map.of() vs Collections.unmodifiableList',
+      chapter: 'tradeoff',
+      title: 'List.of() versus an unmodifiable view',
       body: [
-        '<code>Collections.unmodifiableList(src)</code> is only a read-only <strong>view</strong> — mutating <code>src</code> still mutates the view!',
-        'Java 9+ <code>List.of()</code> / <code>Map.of()</code> and <code>List.copyOf()</code> create truly immutable compact structures that reject <code>null</code> elements/keys and throw <code>UnsupportedOperationException</code> on writes.',
+        `<code>Collections.unmodifiableList(src)</code> is only a <b>view</b>: nobody can write through it, but whoever holds <code>src</code> still can — and the view sees every change.`,
+        `<code>List.of(...)</code> and <code>Map.of(...)</code> are truly immutable copies: no <code>null</code>, no changes, and compact internal arrays.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Map.of() and List.of() throw NullPointerException on null keys/elements — unlike HashMap or Arrays.asList().',
-      },
-      changes: ['+ List.of() rejects null & mutation', '+ List.copyOf() prevents backing drift'],
-      metrics: { backing_store: 'Compact Imm', collision_op: 'Open-address', concurrency: 'Thread-safe', tricky_trap: 'Nulls throw NPE' },
+      changes: [`+ view over source list`, `+ List.of copy`],
+      metrics: { lookup: 'O(1)', perEntry: '4 B ref', threads: '1', safe: 'read-only' },
       scene: {
         entities: {
-          src: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['Mutable Src'], sub: 'Arrays.asList' }),
-          view: makeBlock(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['unmodView'], sub: 'leaks edits' }),
-          imm: makeDb(0, 0, { r: 2.2, h: 48, color: 'green', label: ['List.copyOf'], sub: 'true immutable' }),
-          card: makePanel({ x: -12, y: 12 }, 'Shallow View vs True Immutability', [
-            '// View trap: mutating src still changes view!',
-            'var view = Collections.unmodifiableList(src);',
-            '// Truly immutable (Java 10+), rejects null:',
-            'var safe = List.copyOf(src);',
-          ], { icon: 'terminal' }),
+          caller: caller([{ text: `src.add(\"x\")`, tone: `amber` }]),
+          coll: coll(`read-only`, `view of src`, [{ text: `sees the add!`, tone: `red`, icon: `eye` }]),
+          store: store(`src list`, [{ text: `3 → 4 items`, tone: `amber` }]),
+          alt: alt(`List.of(…)`, `real copy`, [{ text: `never changes`, tone: `green`, icon: `lock` }]),
+          card: card(`View vs copy`, [`var view = Collections.unmodifiableList(src);`, `src.add("x");           // view.size() == 4`, `= var copy = List.of("a","b","c");   // frozen`]),
         },
-        links: {
-          sr_vw: makeLink('src', 'view', ['src', 'view'], { heads: 'end', label: 'mutates!' }),
-          vw_im: makeLink('view', 'imm', ['view', 'imm'], { heads: 'end', label: 'copyOf' }),
-        },
-        flows: [{ route: ['sr_vw'], kind: 'fail', rate: 1.5 }, { route: ['vw_im'], kind: 'res', rate: 1.8 }],
+        links: { call: links.call(`read`), back: links.back(`wraps`) },
+        flows: [{ route: ['call'], rate: 1.2, bounce: true }],
       },
     },
     {
-      short: 'CHM CAS+Sync',
-      chapter: 'concurrent',
-      title: 'How ConcurrentHashMap Scales (CAS + Bucket Lock)',
+      short: 'CHM',
+      chapter: 'technique',
+      title: 'ConcurrentHashMap locks one bucket, not the map',
       body: [
-        '<code>Collections.synchronizedMap()</code> locks the entire map on every read and write. In Java 8+, <code>ConcurrentHashMap</code> uses <code>volatile</code> reads (lock-free <code>get()</code>)!',
-        'On <code>put()</code>, if the bucket is empty it uses lock-free <strong>CAS</strong>; if a collision exists, it <code>synchronized</code>s ONLY on that single bucket’s head <code>Node</code>.',
+        `Inserting into an <b>empty</b> bucket needs no lock: a single <span class="term">CAS</span> (compare-and-swap) installs the node. Only when the bucket already has a head does the writer <code>synchronized</code> on <em>that head</em>.`,
+        `Writers to different buckets never wait for each other, and <code>get()</code> takes no lock at all — table and node values are <code>volatile</code>.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'ConcurrentHashMap rejects null keys and values so get(k) == null unambiguously means absent (no race with containsKey).',
-      },
-      changes: ['+ Lock-free volatile get()', '+ Empty bucket CAS; collision sync(head)'],
-      metrics: { backing_store: 'volatile Node[]', collision_op: 'sync(headNode)', concurrency: 'Per-bucket', tricky_trap: 'No null keys' },
+      changes: [`+ thread 2`, `~ HashMap → ConcurrentHashMap`],
+      metrics: { lookup: 'O(1) avg', perEntry: '~48 B', threads: '2', safe: 'CAS + lock' },
       scene: {
         entities: {
-          t1: makeBlock(-12, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'cpu', label: ['Writer T1'], sub: 'bucket #2' }),
-          tbl: makeBlock(0, -8, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['volatile Node[]'], sub: 'lock-free get' }),
-          cas: makeBlock(14, -18, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['CAS Empty'], sub: 'lock-free put' }),
-          head: makeDb(12, -2, { r: 2.2, h: 48, color: 'purple', label: ['sync(head)'], sub: 'bucket lock' }),
-          card: makePanel({ x: -12, y: 12 }, 'ConcurrentHashMap Java 8+ Locking', [
-            '// get(k): 100% lock-free volatile read!',
-            '// put(k, v):',
-            '//   if (tab[i] == null) -> CAS insert (no lock!)',
-            '//   else -> synchronized (headNode) { ... }',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          t2: t2(),
+          coll: coll(`ConcurrentHashMap`, `Node[] table`, [{ text: `thread-safe`, tone: `green`, icon: `shield` }]),
+          store: store(`table[32]`, [{ text: `lock: bucket 5 only`, tone: `violet`, icon: `lock` }]),
+          card: card(`putVal()`, [`if (tab[i] == null)`, `    casTabAt(tab, i, null, new Node(...)); // no lock`, `else synchronized (tab[i]) { ... }       // head only`]),
         },
-        links: {
-          t_tb: makeLink('t1', 'tbl', ['t1', 'tbl'], { heads: 'end', label: 'put(k, v)' }),
-          tb_cs: makeLink('tbl', 'cas', ['tbl', 'cas'], { heads: 'end', label: 'CAS' }),
-          tb_hd: makeLink('tbl', 'head', ['tbl', 'head'], { heads: 'end', label: 'clash' }),
-        },
-        flows: [{ route: ['t_tb', 'tb_cs'], kind: 'res', rate: 2.0 }, { route: ['tb_hd'], kind: 'req', rate: 1.6 }],
+        links: { call: links.call(`put`), second: links.second(`put`), back: links.back() },
+        flows: [{ route: ['call'], rate: 1.4, bounce: true }, { route: ['second'], rate: 1.4, bounce: true }],
       },
     },
     {
-      short: 'CHM Deadlock',
-      chapter: 'concurrent',
-      title: 'Tricky Trap: Recursive computeIfAbsent Deadlock',
+      short: 'CHM trap',
+      chapter: 'problem',
+      title: 'computeIfAbsent must not touch the same map',
       body: [
-        '<code>chm.computeIfAbsent(k, fn)</code> holds the <code>synchronized(reservationNode)</code> lock on bucket <code>k</code> while running your lambda <code>fn</code>.',
-        'If <code>fn</code> calls <code>chm.computeIfAbsent(otherKey, ...)</code> on the same map and hashes to the same bucket (e.g. Fibonacci memoization), the thread deadlocks on itself!',
+        `<code>computeIfAbsent</code> holds the bucket lock while your lambda runs. If the lambda calls <code>map.computeIfAbsent</code> again for a key in the <em>same</em> bucket, the thread waits on itself.`,
+        `Java 8 could hang forever; Java 9+ detects it and throws <code>IllegalStateException: Recursive update</code>. Keep lambdas short, side-effect free and away from the map.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Never call map.put/computeIfAbsent on the SAME ConcurrentHashMap inside a computeIfAbsent mapping function.',
-      },
-      changes: ['+ ReservationNode locks bucket during fn()', '+ Same-bucket nested call deadlocks'],
-      metrics: { backing_store: 'ReservationNode', collision_op: 'Locked bucket', concurrency: 'Self-deadlock!', tricky_trap: 'Nested compute' },
+      changes: [`~ lambda re-enters map`, `− bucket lock held twice`],
+      metrics: { lookup: 'blocked', perEntry: '~48 B', threads: '1', safe: 'trap' },
       scene: {
         entities: {
-          t1: makeBlock(-12, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['computeIfAbs'], sub: 'holds bin lock' }),
-          resv: makeBlock(0, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Nested Call'], sub: 'same bin hash' }),
-          hang: makeDb(0, 0, { r: 2.2, h: 48, color: 'red', label: ['Blocked!'], sub: 'self-deadlock' }),
-          card: makePanel({ x: -12, y: 12 }, 'ConcurrentHashMap Recursive Deadlock', [
-            '// BUG: Fibonacci memoization with CHM:',
-            'chm.computeIfAbsent(n, k ->',
-            '  chm.computeIfAbsent(k - 1, ...) // DEADLOCK if same bin!',
-            '); // Keep mapping lambda pure & non-reentrant!',
-          ], { icon: 'terminal' }),
+          caller: caller([{ text: `inside lambda`, tone: `amber` }]),
+          coll: coll(`ConcurrentHashMap`, `Node[] table`, [{ text: `Recursive update`, tone: `red`, icon: `alert` }]),
+          store: store(`table[32]`, [{ text: `bucket 5 locked`, tone: `red`, icon: `lock` }]),
+          card: card(`Recursive compute`, [`map.computeIfAbsent(a, k ->`, `    map.computeIfAbsent(b, k2 -> load(k2)));`, `! same bucket → IllegalStateException (Java 9+)`]),
         },
-        links: {
-          fn_rs: makeLink('t1', 'resv', ['t1', 'resv'], { heads: 'end', label: 're-enter' }),
-          rs_hg: makeLink('resv', 'hang', ['resv', 'hang'], { heads: 'end', label: 'waits self' }),
-        },
-        flows: [{ route: ['fn_rs', 'rs_hg'], kind: 'fail', rate: 1.7 }],
+        links: { call: links.call(`compute`), back: links.back(`locks head`) },
+        flows: [{ route: ['call'], kind: 'fail', rate: 1, bounce: true }],
       },
     },
     {
-      short: 'Set/LRU/Tree',
-      chapter: 'map',
-      title: 'HashSet, LinkedHashMap (LRU) & TreeMap',
+      short: 'Set · LRU · Tree',
+      chapter: 'technique',
+      title: 'HashSet, LinkedHashMap and TreeMap',
       body: [
-        '<code>HashSet</code> is literally a wrapper around <code>HashMap&lt;E, PRESENT&gt;</code>. <code>LinkedHashMap</code> adds a doubly-linked list to preserve insertion order — or set <code>accessOrder = true</code> + <code>removeEldestEntry</code> for an instant <strong>LRU Cache</strong>.',
-        '<code>TreeMap</code> / <code>TreeSet</code> use a <strong>Red-Black Tree</strong> ($O(\\log n)$) for sorted range queries (<code>subMap</code>, <code>ceilingKey</code>). Watch out for <code>BigDecimal</code>: <code>1.0</code> vs <code>1.00</code> are distinct in <code>HashSet</code> (<code>equals</code>) but equal in <code>TreeSet</code> (<code>compareTo</code>)!',
+        `<code>HashSet</code> is a <code>HashMap</code> whose values are a shared dummy object. <code>LinkedHashMap</code> adds a doubly linked list through the entries: with <code>accessOrder=true</code> and <code>removeEldestEntry</code> it is a ready-made <b>LRU cache</b>.`,
+        `<code>TreeMap</code> is a red-black tree: always sorted, O(log n) for everything, and it compares with <code>compareTo</code> — not <code>equals</code>.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Need O(1) lookup + insertion order? LinkedHashMap. Need sorted keys + range queries? TreeMap.',
-      },
-      changes: ['+ LinkedHashMap(cap, 0.75f, true) builds LRU Cache', '+ TreeMap sorts keys in Red-Black Tree O(log n)'],
-      metrics: { backing_store: 'List+Map / RB', collision_op: 'compareTo()', concurrency: 'Not sync', tricky_trap: 'BigDecimal eq' },
+      changes: [`~ coll: LinkedHashMap`, `+ TreeMap alt`],
+      metrics: { lookup: 'O(1) / O(log n)', perEntry: '~56 B', threads: '1', safe: 'no' },
       scene: {
         entities: {
-          lhm: makeBlock(-14, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['LinkedHashMap'], sub: 'LRU linked' }),
-          hset: makeBlock(0, -10, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['HashSet<E>'], sub: 'wraps HashMap' }),
-          tmap: makeDb(15, -10, { r: 2.2, h: 48, color: 'purple', label: ['TreeMap<K,V>'], sub: 'RB-Tree' }),
-          card: makePanel({ x: -12, y: 12 }, 'LinkedHashMap LRU & TreeMap Ordering', [
-            '// Instant O(1) LRU Cache with LinkedHashMap:',
-            'new LinkedHashMap<>(16, 0.75f, true) {',
-            '  protected boolean removeEldestEntry(Entry e) { return size() > 100; }',
-            '}; // TreeMap uses Comparator/Comparable (BigDecimal 1.0 == 1.00!)',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          coll: coll(`LinkedHashMap`, `LRU order`, [{ text: `oldest evicted`, tone: `amber`, icon: `clock` }]),
+          store: store(`hash + list`),
+          alt: alt(`TreeMap`, `sorted · O(log n)`),
+          card: card(`LRU in 5 lines`, [`new LinkedHashMap<>(16, .75f, true) {`, `  protected boolean removeEldestEntry(Map.Entry e) {`, `    return size() > 100;`, `  } }`]),
         },
-        links: {
-          lh_hs: makeLink('lhm', 'hset', ['lhm', 'hset'], { heads: 'end', label: 'O(1) order' }),
-          hs_tm: makeLink('hset', 'tmap', ['hset', 'tmap'], { heads: 'end', label: 'O(log n)' }),
-        },
-        flows: [{ route: ['lh_hs', 'hs_tm'], kind: 'res', rate: 1.8 }],
+        links: { call: links.call(`get / put`), back: links.back(`access order`) },
+        flows: [{ route: ['call'], rate: 1.3, bounce: true }],
       },
     },
     {
-      short: 'Deque & Heap',
-      chapter: 'queue',
-      title: 'ArrayDeque (Ring Buffer) & PriorityQueue (Min-Heap)',
+      short: 'Deque · Heap',
+      chapter: 'technique',
+      title: 'ArrayDeque is a ring; PriorityQueue is a heap in an array',
       body: [
-        '<code>ArrayDeque</code> uses a circular <code>Object[]</code> ring buffer with <code>head</code> and <code>tail</code> indices — faster than legacy <code>Stack</code> (synchronized) and <code>LinkedList</code> (zero node allocations, rejects <code>null</code>).',
-        '<code>PriorityQueue</code> stores a binary <strong>Min-Heap</strong> in an array ($O(\\log n)$ <code>offer/poll</code>, $O(1)$ <code>peek</code>). Note: iterating a <code>PriorityQueue</code> is <strong>NOT</strong> sorted — only repeated <code>poll()</code> yields sorted order!',
+        `<code>ArrayDeque</code> keeps head and tail indexes in a power-of-two array and wraps around: add or remove at either end in O(1), no node allocation. Prefer it over <code>Stack</code> and <code>LinkedList</code>.`,
+        `<code>PriorityQueue</code> stores a binary <span class="term">min-heap</span> in an array — the children of index <code>i</code> sit at <code>2i+1</code> and <code>2i+2</code>. <code>peek()</code> is O(1), <code>offer</code> and <code>poll</code> are O(log n).`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Prefer ArrayDeque over Stack and LinkedList for stacks/queues; use PriorityQueue for Top-K & scheduling.',
-      },
-      changes: ['+ ArrayDeque ring buffer replaces Stack/LinkedList', '+ PriorityQueue maintains binary Min-Heap'],
-      metrics: { backing_store: 'Ring / Heap[]', collision_op: 'siftUp / Down', concurrency: 'Unsafe!', tricky_trap: 'Iter unsorted' },
+      changes: [`~ coll: ArrayDeque`, `~ store: heap array`],
+      metrics: { lookup: 'O(1) ends', perEntry: '4 B ref', threads: '1', safe: 'no' },
       scene: {
         entities: {
-          deq: makeBlock(-14, -10, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['ArrayDeque'], sub: 'ring head/tail' }),
-          pq: makeBlock(1, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['PriorityQueue'], sub: 'Min-Heap' }),
-          top: makeDb(15, -10, { r: 2.2, h: 48, color: 'blue', label: ['poll() Min'], sub: 'O(log n) sift' }),
-          card: makePanel({ x: -12, y: 12 }, 'ArrayDeque & PriorityQueue Usage', [
-            'Deque<String> stack = new ArrayDeque<>(); // push() / pop()',
-            'PriorityQueue<Task> pq = new PriorityQueue<>(',
-            '  Comparator.comparingInt(Task::priority)); // Min-Heap',
-            '// pq.forEach() is NOT sorted! Use while (!pq.isEmpty()) pq.poll()',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          coll: coll(`ArrayDeque`, `ring buffer`, [{ text: `head 6 · tail 2`, tone: `violet` }]),
+          store: store(`PriorityQueue`, [{ text: `min at index 0`, tone: `green` }]),
+          card: card(`Index math`, [`tail = (tail + 1) & (elements.length - 1);`, `parent(i)  = (i - 1) >>> 1`, `children(i) = 2*i + 1, 2*i + 2`]),
         },
-        links: {
-          dq_pq: makeLink('deq', 'pq', ['deq', 'pq'], { heads: 'end', label: 'vs heap' }),
-          pq_tp: makeLink('pq', 'top', ['pq', 'top'], { heads: 'end', label: 'poll()' }),
-        },
-        flows: [{ route: ['dq_pq', 'pq_tp'], kind: 'req', rate: 1.8 }],
+        links: { call: links.call(`addLast`), back: links.back(`offer / poll`) },
+        flows: [{ route: ['call'], rate: 1.4, bounce: true }],
       },
     },
     {
-      short: 'EnumSet & Map',
-      chapter: 'enum',
-      title: 'Bit-Vector EnumSet & Array-Backed EnumMap',
+      short: 'EnumSet',
+      chapter: 'solution',
+      title: 'Enum keys need no hashing at all',
       body: [
-        '<code>EnumSet</code> packs all enum flags into a single <strong>64-bit <code>long</code> bitmask</strong> (<code>RegularEnumSet</code>) — <code>contains()</code>, <code>union</code>, and <code>intersection</code> execute in 1 CPU bitwise instruction with zero Heap nodes.',
-        '<code>EnumMap</code> stores values in a plain <code>Object[]</code> indexed directly by <code>key.ordinal()</code> — faster than <code>HashMap</code> with zero hash collisions.',
+        `An <code>EnumSet</code> is a single <code>long</code>: bit <code>ordinal()</code> is 1 when the constant is in the set. Union, intersection and contains become one CPU instruction.`,
+        `<code>EnumMap</code> is a plain array indexed by <code>ordinal()</code> — no hashes, no collisions, no boxed entries.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Whenever your Set or Map key is an Enum, always choose EnumSet / EnumMap over HashSet / HashMap.',
-      },
-      changes: ['+ EnumSet packs flags into 1 long bit-vector', '+ EnumMap indexes Object[] by enum.ordinal()'],
-      metrics: { backing_store: 'long / Object[]', collision_op: '0 collisions', concurrency: 'Not sync', tricky_trap: 'Enum keys only' },
+      changes: [`~ coll: EnumSet`, `− hash() not needed`],
+      metrics: { lookup: 'O(1) bit', perEntry: '1 bit', threads: '1', safe: 'no' },
       scene: {
         entities: {
-          enm: makeBlock(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'code', label: ['Enum.ordinal()'], sub: '0, 1, 2, ...' }),
-          eset: makeBlock(1, -16, { s: 4.6, h: 52, color: 'green', glyph: 'zap', label: ['EnumSet'], sub: 'long bitmask' }),
-          emap: makeDb(1, -2, { r: 2.2, h: 48, color: 'blue', label: ['EnumMap'], sub: 'arr[ordinal]' }),
-          card: makePanel({ x: -12, y: 12 }, 'Zero-Overhead EnumSet & EnumMap', [
-            'EnumSet<Role> roles = EnumSet.of(Role.ADMIN, Role.EDITOR);',
-            '// Stored as a single 64-bit long bitmask (O(1) bitwise!)',
-            'Map<Status, Handler> map = new EnumMap<>(Status.class);',
-            '// Direct array lookup: vals[status.ordinal()] — 0 hashing!',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          coll: coll(`EnumSet`, `one long`, [{ text: `0b0101`, tone: `violet` }], `hash`),
+          store: store(`EnumMap`, [{ text: `array[ordinal]`, tone: `green` }]),
+          card: card(`Day of week`, [`EnumSet<Day> work = EnumSet.range(MON, FRI);`, `work.contains(SAT);   // (bits & (1L << 5)) != 0`, `= Map<Day,V> m = new EnumMap<>(Day.class);`]),
         },
-        links: {
-          en_es: makeLink('enm', 'eset', ['enm', 'eset'], { heads: 'end', label: '1L << ord' }),
-          en_em: makeLink('enm', 'emap', ['enm', 'emap'], { heads: 'end', label: 'arr[ord]' }),
-        },
-        flows: [{ route: ['en_es'], kind: 'res', rate: 2.0 }, { route: ['en_em'], kind: 'res', rate: 2.0 }],
+        links: { call: links.call(`contains`), back: links.back(`vals[ordinal]`) },
+        flows: [{ route: ['call'], rate: 1.8, bounce: true }],
       },
     },
     {
-      short: 'Fail-Fast COW',
-      chapter: 'concurrent',
-      title: 'Fail-Fast CME Trap vs CopyOnWriteArrayList',
+      short: 'CME · COW',
+      chapter: 'problem',
+      title: 'Fail-fast iterators and CopyOnWriteArrayList',
       body: [
-        'Calling <code>list.remove(x)</code> inside a <code>for-each</code> loop increments <code>modCount</code> while the iterator checks <code>modCount != expectedModCount</code>, throwing <code>ConcurrentModificationException</code> (Fail-Fast). Fix it with <code>list.removeIf(...)</code> or <code>Iterator.remove()</code>.',
-        'For read-heavy, rarely-modified listener lists across threads, <code>CopyOnWriteArrayList</code> creates a fresh array snapshot on every write so readers iterate lock-free.',
+        `Every <code>ArrayList</code> counts structural changes in <code>modCount</code>. Its iterator remembers the count; if another change slips in mid-loop, <code>next()</code> throws <code>ConcurrentModificationException</code> — even in a single thread when you call <code>list.remove</code> inside a for-each.`,
+        `<code>CopyOnWriteArrayList</code> never throws: every write copies the whole array, and an iterator walks the snapshot it started with. Great for rarely changed listener lists, bad for write-heavy ones.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Never use CopyOnWriteArrayList for write-heavy workloads — every add/set copies the entire backing array!',
-      },
-      changes: ['+ modCount mismatch triggers Fail-Fast CME', '+ CopyOnWriteArrayList snapshots array on writes'],
-      metrics: { backing_store: 'modCount / COW', collision_op: 'Arrays.copyOf', concurrency: 'Lock-free read', tricky_trap: 'for-each remove' },
+      changes: [`+ thread 2 (writer)`, `~ coll: CopyOnWriteArrayList`],
+      metrics: { lookup: 'O(1)', perEntry: '4 B ref', threads: '2', safe: 'snapshot' },
       scene: {
         entities: {
-          loop: makeBlock(-14, -10, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['for-each remove'], sub: 'modCount err' }),
-          fix: makeBlock(1, -16, { s: 4.6, h: 52, color: 'green', glyph: 'shield', label: ['list.removeIf()'], sub: 'safe mutate' }),
-          cow: makeDb(1, -2, { r: 2.2, h: 48, color: 'blue', label: ['CopyOnWrite'], sub: 'write snapshot' }),
-          card: makePanel({ x: -12, y: 12 }, 'Fixing CME & CopyOnWriteArrayList', [
-            '// BUG: throws ConcurrentModificationException:',
-            'for (var s : list) if (s.isEmpty()) list.remove(s);',
-            '// FIX: list.removeIf(String::isEmpty);',
-            '// Thread-safe listeners: new CopyOnWriteArrayList<>()',
-          ], { icon: 'terminal' }),
+          caller: caller([{ text: `iterating`, tone: `amber` }]),
+          t2: t2([{ text: `list.add(x)`, tone: `red` }]),
+          coll: coll(`CopyOnWrite`, `array snapshot`, [{ text: `no CME`, tone: `green`, icon: `shield` }]),
+          store: store(`copy of Object[]`, [{ text: `write = full copy`, tone: `amber`, icon: `layers` }]),
+          card: card(`modCount check`, [`for (var x : list) list.remove(x);`, `! ConcurrentModificationException`, `= new CopyOnWriteArrayList<>(list)   // safe`]),
         },
-        links: {
-          lp_fx: makeLink('loop', 'fix', ['loop', 'fix'], { heads: 'end', label: 'removeIf()' }),
-          lp_cw: makeLink('loop', 'cow', ['loop', 'cow'], { heads: 'end', label: 'snapshot' }),
-        },
-        flows: [{ route: ['lp_fx'], kind: 'res', rate: 1.8 }, { route: ['lp_cw'], kind: 'req', rate: 1.5 }],
+        links: { call: links.call(`iterate`), second: links.second(`add`), back: links.back(`copy on write`) },
+        flows: [{ route: ['call'], rate: 1.2, bounce: true }, { route: ['second'], kind: 'write', rate: 0.8 }],
       },
     },
     {
-      short: 'SkipList & Sort',
-      chapter: 'advanced',
-      title: 'ConcurrentSkipListMap, IdentityHashMap & Comparator',
+      short: 'SkipList',
+      chapter: 'recap',
+      title: 'Sorted concurrency, identity and comparators',
       body: [
-        'Need both <strong>concurrency AND sorted keys</strong>? Use <code>ConcurrentSkipListMap</code> (lock-free SkipList) since <code>ConcurrentHashMap</code> is unsorted. For object-graph traversal using <code>==</code> instead of <code>equals()</code>, use <code>IdentityHashMap</code>.',
-        'Daily sorting & factories: chain <code>Comparator.comparing(...).thenComparing(..., nullsLast(...))</code>; use <code>Map.ofEntries(...)</code> when >10 entries; remember Java 16+ <code>stream.toList()</code> returns an <strong>unmodifiable</strong> list!',
+        `<code>ConcurrentSkipListMap</code> is the sorted, lock-free map: layers of linked lists let it skip ahead in O(log n) without ever locking the whole structure. <code>IdentityHashMap</code> compares keys with <code>==</code> instead of <code>equals()</code>.`,
+        `Sort with <code>Comparator.comparing(...).thenComparing(...)</code>; never write <code>a - b</code> for ints (overflow). Rule of thumb: ArrayList, HashMap, ArrayDeque first; reach for the rest when a specific need shows up.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'stream.toList() (Java 16+) is unmodifiable and allows nulls, whereas List.of() rejects nulls and Collectors.toList() is mutable.',
-      },
-      changes: ['+ ConcurrentSkipListMap provides sorted concurrent map', '+ Comparator fluent API + Stream.toList()'],
-      metrics: { backing_store: 'SkipList / ==', collision_op: 'CAS / Identity', concurrency: 'Lock-free sort', tricky_trap: 'Map.of max 10' },
+      changes: [`~ coll: ConcurrentSkipListMap`, `+ thread 2`],
+      metrics: { lookup: 'O(log n)', perEntry: '~64 B', threads: '2', safe: 'lock-free' },
       scene: {
         entities: {
-          skip: makeBlock(-14, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['SkipListMap'], sub: 'sorted + CAS' }),
-          idmap: makeBlock(1, -10, { s: 4.8, h: 54, color: 'cyan', glyph: 'shield', label: ['IdentityMap'], sub: 'uses == ref' }),
-          comp: makeBlock(15, -10, { s: 4.6, h: 52, color: 'green', glyph: 'code', label: ['Comparator'], sub: 'fluent sort' }),
-          card: makePanel({ x: -12, y: 12 }, 'SkipListMap, IdentityMap & Daily Helpers', [
-            'ConcurrentNavigableMap<Long, Order> sorted = new ConcurrentSkipListMap<>();',
-            'Map<Object, Object> graph = new IdentityHashMap<>(); // compares ==',
-            'var cmp = Comparator.comparing(User::age).thenComparing(User::name);',
-            'var imm = stream.toList(); // unmodifiable! Map.ofEntries() for >10',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          t2: t2(),
+          coll: coll(`SkipListMap`, `sorted · lock-free`, [{ text: `multi-level`, tone: `violet`, icon: `layers` }]),
+          store: store(`towers of links`, [{ text: `skip ahead`, tone: `green` }]),
+          alt: alt(`IdentityHashMap`, `compares ==`, [{ text: `rare`, tone: `gray` }]),
+          card: card(`Comparator`, [`users.sort(`, `  Comparator.comparingInt(User::age)`, `    .thenComparing(User::name));`, `! (a, b) -> a - b   // overflows`]),
         },
-        links: {
-          sk_id: makeLink('skip', 'idmap', ['skip', 'idmap'], { heads: 'end', label: 'special maps' }),
-          id_cm: makeLink('idmap', 'comp', ['idmap', 'comp'], { heads: 'end', label: 'sort & list' }),
-        },
-        flows: [{ route: ['sk_id', 'id_cm'], kind: 'res', rate: 1.8 }],
+        links: { call: links.call(`get / put`), second: links.second(`put`), back: links.back(`levels`) },
+        flows: [{ route: ['call'], rate: 1.4, bounce: true }, { route: ['second'], rate: 1.2, bounce: true }],
       },
     },
   ],
-};
+});

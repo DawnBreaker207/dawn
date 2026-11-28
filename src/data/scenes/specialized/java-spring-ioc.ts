@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: the ApplicationContext is the hub. Beans appear around it as the
@@ -16,7 +16,7 @@ type Opts = Record<string, unknown>;
 const ctx = (o: Opts = {}) =>
   makeBlock(-1.5, 1.5, { s: 5.2, h: 56, color: `orange`, glyph: `layers`, label: [`Application`, `Context`], ...o });
 const reg = (o: Opts = {}) => makeDb(-16, 3, { r: 2.2, h: 46, color: `purple`, glyph: `listOrdered`, label: `BeanDefinitions`, ...o });
-const gw = (tags: Tag[] = [], o: Opts = {}) =>
+const gateway = (tags: Tag[] = [], o: Opts = {}) =>
   makeBlock(-5.5, -13, { s: 4.4, h: 50, color: `green`, glyph: `creditCard`, label: [`Stripe`, `Gateway`], tags, ...o });
 const svc = (tags: Tag[] = [], o: Opts = {}) =>
   makeBlock(10.5, -18.5, { s: 4.4, h: 50, color: `green`, glyph: `code`, label: [`Order`, `Service`], tags, ...o });
@@ -28,9 +28,9 @@ const auto = (tags: Tag[] = []) =>
   makeBlock(10, 10, { s: 4.4, h: 50, color: `orange`, glyph: `sparkles`, label: [`AutoConfig`], sub: `140 candidates`, tags });
 const env = (tags: Tag[] = []) =>
   makeDb(15.5, -7.5, { r: 2.2, h: 46, color: `purple`, glyph: `settings`, label: `Environment`, tags });
-const ds = (tags: Tag[] = []) => makeDb(-7, 21, { r: 2.2, h: 46, glyph: `database`, label: `DataSource`, tags });
+const dataSource = (tags: Tag[] = []) => makeDb(-6, 20, { r: 2.2, h: 46, glyph: `database`, label: `DataSource`, tags });
 
-const L = {
+const links = {
   newCall: makeLink(`svc`, `gw`, [`svc`, `gw`], { label: `new()` }),
   scan: makeLink(`ctx`, `reg`, [`ctx`, `reg`], { heads: `both`, label: `register` }),
   scanQuiet: makeLink(`ctx`, `reg`, [`ctx`, `reg`], { heads: `both`, style: `off` }),
@@ -50,14 +50,13 @@ const L = {
   registerDs: makeLink(`ds`, `ctx`, [`ds`, `ctx`], { label: `bean` }),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: -1.5, y: 1.5, z: 0, dx: -150, dy: -270 }, title, lines, { icon: `code` });
+const card = cardAt({ x: -1.5, y: 1.5, dx: -150, dy: -270 }, `code`);
 
 /** Container core that exists from step 2 on. */
 const core = (o: { ctx?: Opts; gw?: Tag[]; svc?: Tag[] } = {}) => ({
   ctx: ctx(o.ctx),
   reg: reg(),
-  gw: gw(o.gw),
+  gw: gateway(o.gw),
   svc: svc(o.svc),
 });
 
@@ -97,7 +96,7 @@ export const javaSpringIocLesson: Lesson = {
       metrics: { definitions: 0, beans: 0, phase: 'manual', proxies: 0 },
       scene: {
         entities: {
-          gw: gw([{ text: 'hard-wired', tone: 'red' }]),
+          gw: gateway([{ text: 'hard-wired', tone: 'red' }]),
           svc: svc(),
           card: card('OrderService.java', [
             'class OrderService {',
@@ -107,7 +106,7 @@ export const javaSpringIocLesson: Lesson = {
             '}',
           ]),
         },
-        links: { newCall: L.newCall },
+        links: { newCall: links.newCall },
         flows: [{ route: ['newCall'], kind: 'fail', rate: 1.4 }],
       },
     },
@@ -126,7 +125,7 @@ export const javaSpringIocLesson: Lesson = {
         entities: {
           ctx: ctx(),
           reg: reg({ tags: [{ text: '2 definitions', tone: 'violet' }] }),
-          gw: gw([{ text: 'definition only', tone: 'gray' }], { dim: 1 }),
+          gw: gateway([{ text: 'definition only', tone: 'gray' }], { dim: 1 }),
           svc: svc([{ text: 'definition only', tone: 'gray' }], { dim: 1 }),
           card: card('component scan', [
             '@SpringBootApplication // scans this package',
@@ -136,7 +135,7 @@ export const javaSpringIocLesson: Lesson = {
             '@Component class StripeGateway { … }',
           ]),
         },
-        links: { scan: L.scan },
+        links: { scan: links.scan },
         flows: [{ route: ['scan'], kind: 'req', rate: 1.6 }],
       },
     },
@@ -163,7 +162,7 @@ export const javaSpringIocLesson: Lesson = {
             '}',
           ]),
         },
-        links: { scan: L.scanQuiet, makeGw: L.makeGw, makeSvc: L.makeSvc, inject: L.inject },
+        links: { scan: links.scanQuiet, makeGw: links.makeGw, makeSvc: links.makeSvc, inject: links.inject },
         flows: [
           { route: ['makeGw'], kind: 'req', rate: 1.2 },
           { route: ['inject'], kind: 'res', rate: 1.4 },
@@ -196,7 +195,7 @@ export const javaSpringIocLesson: Lesson = {
             '= 4 BPP.postProcessAfterInitialization → proxy',
           ]),
         },
-        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvc, inject: L.injectQuiet },
+        links: { scan: links.scanQuiet, makeGw: links.makeGwQuiet, makeSvc: links.makeSvc, inject: links.injectQuiet },
         flows: [{ route: ['makeSvc'], kind: 'req', rate: 1.4, bounce: true }],
       },
     },
@@ -226,7 +225,7 @@ export const javaSpringIocLesson: Lesson = {
             '@Component class JobRunner { }',
           ]),
         },
-        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet },
+        links: { scan: links.scanQuiet, makeGw: links.makeGwQuiet, makeSvc: links.makeSvcQuiet, inject: links.injectQuiet },
         flows: [{ route: ['inject'], kind: 'res', rate: 1.6 }],
       },
     },
@@ -254,12 +253,12 @@ export const javaSpringIocLesson: Lesson = {
           ]),
         },
         links: {
-          scan: L.scanQuiet,
-          makeGw: L.makeGwQuiet,
-          makeSvc: L.makeSvcQuiet,
-          inject: L.injectQuiet,
-          callProxy: L.callProxy,
-          resolve: L.resolve,
+          scan: links.scanQuiet,
+          makeGw: links.makeGwQuiet,
+          makeSvc: links.makeSvcQuiet,
+          inject: links.injectQuiet,
+          callProxy: links.callProxy,
+          resolve: links.resolve,
         },
         flows: [{ route: ['callProxy', 'resolve'], kind: 'res', rate: 1.6 }],
       },
@@ -287,7 +286,7 @@ export const javaSpringIocLesson: Lesson = {
             '  } }',
           ]),
         },
-        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.boot },
+        links: { scan: links.scanQuiet, makeGw: links.makeGwQuiet, makeSvc: links.makeSvcQuiet, inject: links.injectQuiet, boot: links.boot },
         flows: [{ route: ['boot'], kind: 'req', rate: 1.4 }],
       },
     },
@@ -313,7 +312,7 @@ export const javaSpringIocLesson: Lesson = {
             '# … ~140 lines across starters',
           ]),
         },
-        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.boot },
+        links: { scan: links.scanQuiet, makeGw: links.makeGwQuiet, makeSvc: links.makeSvcQuiet, inject: links.injectQuiet, boot: links.boot },
         flows: [{ route: ['boot'], kind: 'req', rate: 2 }],
       },
     },
@@ -343,7 +342,7 @@ export const javaSpringIocLesson: Lesson = {
             '  DataSource dataSource(…) { … } }',
           ]),
         },
-        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.bootQuiet },
+        links: { scan: links.scanQuiet, makeGw: links.makeGwQuiet, makeSvc: links.makeSvcQuiet, inject: links.injectQuiet, boot: links.bootQuiet },
         flows: [{ route: ['boot'], kind: 'req', rate: 1 }],
       },
     },
@@ -370,7 +369,7 @@ export const javaSpringIocLesson: Lesson = {
             '# application.yml (default)',
           ]),
         },
-        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.bootQuiet, props: L.props },
+        links: { scan: links.scanQuiet, makeGw: links.makeGwQuiet, makeSvc: links.makeSvcQuiet, inject: links.injectQuiet, boot: links.bootQuiet, props: links.props },
         flows: [{ route: ['props'], kind: 'res', rate: 1.6 }],
       },
     },
@@ -398,7 +397,7 @@ export const javaSpringIocLesson: Lesson = {
             '  @Positive Duration timeout) { }',
           ]),
         },
-        links: { scan: L.scanQuiet, makeGw: L.makeGwQuiet, makeSvc: L.makeSvcQuiet, inject: L.injectQuiet, boot: L.bootQuiet, props: L.props },
+        links: { scan: links.scanQuiet, makeGw: links.makeGwQuiet, makeSvc: links.makeSvcQuiet, inject: links.injectQuiet, boot: links.bootQuiet, props: links.props },
         flows: [{ route: ['props'], kind: 'res', rate: 1.6 }],
       },
     },
@@ -418,7 +417,7 @@ export const javaSpringIocLesson: Lesson = {
           ...core(),
           auto: auto([{ text: 'DataSource ✓', tone: 'green' }]),
           env: env(),
-          ds: ds([{ text: 'pool 10 ready', tone: 'green' }]),
+          ds: dataSource([{ text: 'pool 10 ready', tone: 'green' }]),
           card: card('startup log', [
             'HikariPool-1 - Starting...',
             'HikariPool-1 - Added connection org.postgresql…',
@@ -427,14 +426,14 @@ export const javaSpringIocLesson: Lesson = {
           ]),
         },
         links: {
-          scan: L.scanQuiet,
-          makeGw: L.makeGwQuiet,
-          makeSvc: L.makeSvcQuiet,
-          inject: L.injectQuiet,
-          boot: L.bootQuiet,
-          props: L.propsQuiet,
-          createDs: L.createDs,
-          registerDs: L.registerDs,
+          scan: links.scanQuiet,
+          makeGw: links.makeGwQuiet,
+          makeSvc: links.makeSvcQuiet,
+          inject: links.injectQuiet,
+          boot: links.bootQuiet,
+          props: links.propsQuiet,
+          createDs: links.createDs,
+          registerDs: links.registerDs,
         },
         flows: [
           { route: ['createDs'], kind: 'req', rate: 1.2 },

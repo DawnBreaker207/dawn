@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: a controller calls OrderService. In step 2 a proxy slides in between
@@ -20,14 +20,14 @@ const target = (tags: Tag[] = [], at = { x: 10, y: 10 }) =>
   makeBlock(at.x, at.y, { s: 4.4, h: 50, color: `green`, glyph: `code`, label: [`Order`, `Service`], sub: `raw bean`, tags });
 const pool = (tags: Tag[] = []) =>
   makeDb(9, -17, { r: 2.2, h: 46, color: `purple`, glyph: `layers`, label: `HikariCP`, tags });
-const db = (tags: Tag[] = []) => makeDb(15.5, -7.5, { r: 2.2, h: 46, glyph: `database`, label: `Postgres`, tags });
+const database = (tags: Tag[] = []) => makeDb(15.5, -7.5, { r: 2.2, h: 46, glyph: `database`, label: `Postgres`, tags });
 const exec = (tags: Tag[] = []) =>
   makeBlock(-4.5, -13, { s: 4.4, h: 50, color: `purple`, glyph: `cpu`, label: [`Executor`], sub: `@Async pool`, tags });
-const cache = (tags: Tag[] = []) => makeDb(-7, 21, { r: 2.2, h: 46, color: `purple`, glyph: `zap`, label: `Redis`, tags });
+const cache = (tags: Tag[] = []) => makeDb(-6, 20, { r: 2.2, h: 46, color: `purple`, glyph: `zap`, label: `Redis`, tags });
 const kafka = (tags: Tag[] = []) =>
-  makeBlock(-7, 21, { s: 4.4, h: 50, color: `yellow`, glyph: `send`, label: [`Kafka`], sub: `order-events`, tags });
+  makeBlock(-6, 20, { s: 4.4, h: 50, color: `yellow`, glyph: `send`, label: [`Kafka`], sub: `order-events`, tags });
 
-const L = {
+const links = {
   direct: makeLink(`caller`, `target`, [`caller`, `target`], { heads: `both`, label: `place()` }),
   call: makeLink(`caller`, `proxy`, [`caller`, `proxy`], { heads: `both`, label: `place()` }),
   callQuiet: makeLink(`caller`, `proxy`, [`caller`, `proxy`], { heads: `both` }),
@@ -44,8 +44,7 @@ const L = {
   relay: makeLink(`db`, `kafka`, [`db`, `kafka`], { label: `outbox relay` }),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: HUB.x, y: HUB.y, z: 0, dx: -150, dy: -270 }, title, lines, { icon: `code` });
+const card = cardAt({ x: HUB.x, y: HUB.y, dx: -150, dy: -270 }, `code`);
 
 /** Steps 4+: the proxy-guarded call with its database behind it. */
 const txStage = (t: { proxy?: Tag[]; target?: Tag[]; pool?: Tag[]; db?: Tag[] } = {}) => ({
@@ -53,9 +52,9 @@ const txStage = (t: { proxy?: Tag[]; target?: Tag[]; pool?: Tag[]; db?: Tag[] } 
   proxy: proxy(t.proxy),
   target: target(t.target),
   pool: pool(t.pool),
-  db: db(t.db),
+  db: database(t.db),
 });
-const txLinks = { call: L.callQuiet, delegate: L.delegateQuiet, borrow: L.borrowQuiet, conn: L.conn, sql: L.sqlQuiet };
+const txLinks = { call: links.callQuiet, delegate: links.delegateQuiet, borrow: links.borrowQuiet, conn: links.conn, sql: links.sqlQuiet };
 
 export const javaSpringAopLesson: Lesson = {
   id: 'java-spring-aop',
@@ -104,7 +103,7 @@ export const javaSpringAopLesson: Lesson = {
             '  tx.commit(); metrics.inc(); }',
           ]),
         },
-        links: { direct: L.direct },
+        links: { direct: links.direct },
         flows: [{ route: ['direct'], kind: 'req', rate: 1.2, bounce: true }],
       },
     },
@@ -130,7 +129,7 @@ export const javaSpringAopLesson: Lesson = {
             '= "OrderService$$SpringCGLIB$$0"',
           ]),
         },
-        links: { call: L.call, delegate: L.delegate },
+        links: { call: links.call, delegate: links.delegate },
         flows: [{ route: ['call', 'delegate'], kind: 'req', rate: 1.2, bounce: true }],
       },
     },
@@ -158,7 +157,7 @@ export const javaSpringAopLesson: Lesson = {
             '  finally { timer.record(System.nanoTime() - t); } }',
           ]),
         },
-        links: { call: L.callQuiet, delegate: L.delegate },
+        links: { call: links.callQuiet, delegate: links.delegate },
         flows: [{ route: ['call', 'delegate'], kind: 'req', rate: 1.4, bounce: true }],
       },
     },
@@ -184,7 +183,7 @@ export const javaSpringAopLesson: Lesson = {
             '}',
           ]),
         },
-        links: { ...txLinks, borrow: L.borrow, sql: L.sql },
+        links: { ...txLinks, borrow: links.borrow, sql: links.sql },
         flows: [
           { route: ['borrow'], kind: 'req', rate: 1, bounce: true },
           { route: ['sql'], kind: 'write', rate: 1.4 },
@@ -319,7 +318,7 @@ export const javaSpringAopLesson: Lesson = {
           proxy: proxy(),
           target: target(),
           pool: pool(),
-          db: db(),
+          db: database(),
           exec: exec([{ text: 'new thread per call', tone: 'red', icon: 'alert' }]),
           card: card('NotificationService.java', [
             '@Async',
@@ -327,7 +326,7 @@ export const javaSpringAopLesson: Lesson = {
             '! // no executor bean → unbounded threads',
           ]),
         },
-        links: { call: L.callQuiet, delegate: L.delegateQuiet, borrow: L.borrowQuiet, conn: L.conn, sql: L.sqlQuiet, submit: L.submit },
+        links: { call: links.callQuiet, delegate: links.delegateQuiet, borrow: links.borrowQuiet, conn: links.conn, sql: links.sqlQuiet, submit: links.submit },
         flows: [{ route: ['submit'], kind: 'fail', rate: 2.5 }],
       },
     },
@@ -348,7 +347,7 @@ export const javaSpringAopLesson: Lesson = {
           proxy: proxy(),
           target: target(),
           pool: pool(),
-          db: db(),
+          db: database(),
           exec: exec([{ text: '8 threads · traceId=7f3a', tone: 'green' }]),
           card: card('AsyncConfig.java', [
             '@Bean ThreadPoolTaskExecutor asyncExecutor() {',
@@ -358,7 +357,7 @@ export const javaSpringAopLesson: Lesson = {
             '  return ex; }',
           ]),
         },
-        links: { call: L.callQuiet, delegate: L.delegateQuiet, borrow: L.borrowQuiet, conn: L.conn, sql: L.sqlQuiet, submit: L.submit },
+        links: { call: links.callQuiet, delegate: links.delegateQuiet, borrow: links.borrowQuiet, conn: links.conn, sql: links.sqlQuiet, submit: links.submit },
         flows: [{ route: ['submit'], kind: 'req', rate: 1.2 }],
       },
     },
@@ -384,7 +383,7 @@ export const javaSpringAopLesson: Lesson = {
             '  return repo.findDto(id); }',
           ]),
         },
-        links: { ...txLinks, cacheGet: L.cacheGet },
+        links: { ...txLinks, cacheGet: links.cacheGet },
         flows: [
           { route: ['cacheGet'], kind: 'res', rate: 3, bounce: true },
           { route: ['sql'], kind: 'write', rate: 0.4 },
@@ -414,7 +413,7 @@ export const javaSpringAopLesson: Lesson = {
             '}',
           ]),
         },
-        links: { ...txLinks, send: L.send },
+        links: { ...txLinks, send: links.send },
         flows: [
           { route: ['send'], kind: 'fail', rate: 1.2 },
           { route: ['sql'], kind: 'fail', rate: 1 },
@@ -443,7 +442,7 @@ export const javaSpringAopLesson: Lesson = {
             'void on(OrderPlaced e) { kafka.send("order-events", e); }',
           ]),
         },
-        links: { ...txLinks, send: L.send },
+        links: { ...txLinks, send: links.send },
         flows: [
           { route: ['sql'], kind: 'write', rate: 1 },
           { route: ['send'], kind: 'res', rate: 0.8 },
@@ -472,7 +471,7 @@ export const javaSpringAopLesson: Lesson = {
             '= COMMIT; -- both or neither',
           ]),
         },
-        links: { ...txLinks, relay: L.relay },
+        links: { ...txLinks, relay: links.relay },
         flows: [
           { route: ['sql'], kind: 'write', rate: 1 },
           { route: ['relay'], kind: 'res', rate: 0.9 },

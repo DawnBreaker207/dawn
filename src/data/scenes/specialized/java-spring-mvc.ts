@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeDevice, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: a single POST /api/orders travels a fixed pipeline —
@@ -24,9 +24,9 @@ const advice = (tags: Tag[] = []) =>
   makeBlock(12, 17.5, { s: 4.4, h: 50, color: `orange`, glyph: `alertTriangle`, label: [`Controller`, `Advice`], tags });
 const stream = (tags: Tag[] = []) =>
   makeBlock(12, 17.5, { s: 4.4, h: 50, color: `yellow`, glyph: `waves`, label: [`Kafka`], sub: `price ticks`, tags });
-const db = (tags: Tag[] = []) => makeDb(4, -22, { r: 2.2, h: 46, glyph: `database`, label: `Postgres`, tags });
+const database = (tags: Tag[] = []) => makeDb(4, -22, { r: 2.2, h: 46, glyph: `database`, label: `Postgres`, tags });
 
-const L = {
+const links = {
   http: makeLink(`client`, `tomcat`, [`client`, `tomcat`], { heads: `both`, label: `POST` }),
   httpQuiet: makeLink(`client`, `tomcat`, [`client`, `tomcat`], { heads: `both` }),
   chain: makeLink(`tomcat`, `filters`, [`tomcat`, `filters`], { heads: `both`, label: `doFilter` }),
@@ -40,8 +40,7 @@ const L = {
   pull: makeLink(`stream`, `disp`, [`stream`, `disp`], { label: `request(64)` }),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: 9.5, y: 5, z: 0, dx: -60, dy: -300 }, title, lines, { icon: `code` });
+const card = cardAt({ x: 9.5, y: 5, dx: -60, dy: -300 }, `code`);
 
 const pipeline = (t: { tomcat?: Tag[]; filters?: Tag[]; disp?: Tag[]; ctrl?: Tag[] } = {}) => ({
   client: client(),
@@ -50,7 +49,7 @@ const pipeline = (t: { tomcat?: Tag[]; filters?: Tag[]; disp?: Tag[]; ctrl?: Tag
   disp: disp(t.disp),
   ctrl: ctrl(t.ctrl),
 });
-const quiet = { http: L.httpQuiet, chain: L.chainQuiet, service: L.serviceQuiet, invoke: L.invokeQuiet };
+const quiet = { http: links.httpQuiet, chain: links.chainQuiet, service: links.serviceQuiet, invoke: links.invokeQuiet };
 
 export const javaSpringMvcLesson: Lesson = {
   id: 'java-spring-mvc',
@@ -93,7 +92,7 @@ export const javaSpringMvcLesson: Lesson = {
             '{ "sku": "A-12", "qty": 2 }',
           ]),
         },
-        links: { http: L.http },
+        links: { http: links.http },
         flows: [{ route: ['http'], kind: 'req', rate: 1.2 }],
       },
     },
@@ -121,7 +120,7 @@ export const javaSpringMvcLesson: Lesson = {
             '    chain.doFilter(req, res); } }',
           ]),
         },
-        links: { http: L.httpQuiet, chain: L.chain },
+        links: { http: links.httpQuiet, chain: links.chain },
         flows: [{ route: ['http', 'chain'], kind: 'req', rate: 1.2 }],
       },
     },
@@ -149,7 +148,7 @@ export const javaSpringMvcLesson: Lesson = {
             '  onto OrderController#get(long)',
           ]),
         },
-        links: { http: L.httpQuiet, chain: L.chainQuiet, service: L.service },
+        links: { http: links.httpQuiet, chain: links.chainQuiet, service: links.service },
         flows: [{ route: ['http', 'chain', 'service'], kind: 'req', rate: 1.2 }],
       },
     },
@@ -175,7 +174,7 @@ export const javaSpringMvcLesson: Lesson = {
             '  return bucket.tryConsume(1); }',
           ]),
         },
-        links: { http: L.httpQuiet, chain: L.chainQuiet, service: L.serviceQuiet },
+        links: { http: links.httpQuiet, chain: links.chainQuiet, service: links.serviceQuiet },
         flows: [{ route: ['service'], kind: 'req', rate: 1.4, bounce: true }],
       },
     },
@@ -201,7 +200,7 @@ export const javaSpringMvcLesson: Lesson = {
             'record OrderReq(@NotBlank String sku, @Positive int qty) { }',
           ]),
         },
-        links: { ...quiet, invoke: L.invoke },
+        links: { ...quiet, invoke: links.invoke },
         flows: [{ route: ['invoke'], kind: 'req', rate: 1.4 }],
       },
     },
@@ -228,7 +227,7 @@ export const javaSpringMvcLesson: Lesson = {
             '        BAD_REQUEST, "qty must be > 0"); } }',
           ]),
         },
-        links: { ...quiet, handle: L.handle },
+        links: { ...quiet, handle: links.handle },
         flows: [
           { route: ['handle'], kind: 'fail', rate: 1 },
           { route: ['service', 'chain', 'http'], kind: 'res', rate: 0.8 },
@@ -252,7 +251,7 @@ export const javaSpringMvcLesson: Lesson = {
             tomcat: [{ text: 'virtual thread / request', tone: 'green' }],
             ctrl: [{ text: 'parks on JDBC', tone: 'violet' }],
           }),
-          db: db(),
+          db: database(),
           card: card('application.yml', [
             'spring.threads.virtual.enabled: true',
             '',
@@ -261,7 +260,7 @@ export const javaSpringMvcLesson: Lesson = {
             '    .retrieve().body(Stock.class);',
           ]),
         },
-        links: { ...quiet, jdbc: L.jdbc },
+        links: { ...quiet, jdbc: links.jdbc },
         flows: [
           { route: ['jdbc'], kind: 'write', rate: 1.4, bounce: true },
           { route: ['http'], kind: 'req', rate: 2.5 },
@@ -282,7 +281,7 @@ export const javaSpringMvcLesson: Lesson = {
       scene: {
         entities: {
           ...pipeline({ disp: [{ text: 'Flux · demand 64', tone: 'violet' }] }),
-          db: db(),
+          db: database(),
           stream: stream([{ text: '10k ticks/s', tone: 'amber' }]),
           card: card('PriceStream.java', [
             '@GetMapping(value = "/prices", produces = TEXT_EVENT_STREAM_VALUE)',
@@ -292,7 +291,7 @@ export const javaSpringMvcLesson: Lesson = {
             '      .limitRate(64); }',
           ]),
         },
-        links: { ...quiet, jdbc: L.jdbc, pull: L.pull },
+        links: { ...quiet, jdbc: links.jdbc, pull: links.pull },
         flows: [
           { route: ['pull'], kind: 'req', rate: 2 },
           { route: ['service', 'chain', 'http'], kind: 'res', rate: 1.6 },

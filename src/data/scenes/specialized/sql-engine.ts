@@ -115,7 +115,7 @@ export const sqlEngineLesson = {
           executor: makeBlock(-8, 2,   { color: `green`,  glyph: `code`,   label: [`Executor`, `pull model`] }),
           bufpool:  makeBlock(8, -6,   { color: `blue`,   glyph: `layers`, label: [`Buffer Pool`, `8KB pages`] }),
           lock_mgr: makeBlock(8,  4,   { color: `orange`, glyph: `lock`,   label: [`Lock Mgr`, `RowShareLock`] }),
-          disk:     makeDb(18, -6,  { label: [`Disk`, `heap + index`] }),
+          disk:     makeDb(16, -4,  { label: [`Disk`, `heap + index`] }),
         },
         links: {
           eb: makeLink(`executor`, `bufpool`,  [`executor`, `bufpool`],  { label: `fetch page`, heads: `both` }),
@@ -140,10 +140,10 @@ export const sqlEngineLesson = {
       metrics: { stage: `Commit`, buffers: `4`, wal: `fsynced`, locks: `released` },
       scene: {
         entities: {
-          executor: makeBlock(-10, 2, { color: `green`,  glyph: `code`,  label: [`Executor`, `COMMIT`] }),
+          executor: makeBlock(-6, 2, { color: `green`,  glyph: `code`,  label: [`Executor`, `COMMIT`] }),
           wal:      makeDb(6, -6,  { label: [`WAL`, `pg_wal`] }),
           disk:     makeDb(6,  6,  { label: [`Heap`, `data files`] }),
-          done:     makeBlock(18, 0,  { color: `green`,  glyph: `check`, label: [`Client`, `OK`] }),
+          done:     makeBlock(16, 2,  { color: `green`,  glyph: `check`, label: [`Client`, `OK`] }),
         },
         links: {
           ew:  makeLink(`executor`, `wal`,  [`executor`, `wal`],  { label: `fsync WAL`,         heads: `end` }),

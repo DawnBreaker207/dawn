@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One heap for the whole lesson. The same `order` object is allocated in Eden,
@@ -10,29 +10,26 @@ import type { Lesson } from '@/lib/simulator/types';
 //   string pool   [EDEN] order → [SURVIVOR] → [OLD GEN] ──klass──► Metaspace
 
 /** Screen position (px) → world grid point. */
-const at = (sx: number, sy: number) => ({
-  x: +((sx / 14 + sy / 7) / 2).toFixed(2),
-  y: +((sx / 14 - sy / 7) / 2).toFixed(2),
-});
+const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
 
 type Tag = { text: string; tone?: string; icon?: string };
 
-const P = {
-  stack: at(30, -185),
-  pool: at(-310, -30),
-  inEden: at(-130, 50),
-  inSurv: at(80, 20),
-  inOld: at(250, -40),
+const positions = {
+  stack: toIso(30, -185),
+  pool: toIso(-260, -20),
+  inEden: toIso(-130, 50),
+  inSurv: toIso(80, 20),
+  inOld: toIso(250, -40),
   // off-heap: deliberately outside every heap region
-  meta: at(-160, -90),
+  meta: toIso(-160, -90),
 };
 
 const stack = (tags: Tag[] = []) =>
-  makeBlock(P.stack.x, P.stack.y, { s: 4.4, h: 52, color: `blue`, glyph: `layers`, label: [`Thread`], sub: `stack frames`, tags });
+  makeBlock(positions.stack.x, positions.stack.y, { s: 4.4, h: 52, color: `blue`, glyph: `layers`, label: [`Thread`], sub: `stack frames`, tags });
 const order = (where: { x: number; y: number }, tags: Tag[] = [], o: Record<string, unknown> = {}) =>
   makeBlock(where.x, where.y, { s: 4.2, h: 48, color: `green`, glyph: `box`, label: [`Order`], sub: `heap object`, tags, ...o });
-const pool = (tags: Tag[] = []) => makeDb(P.pool.x, P.pool.y, { r: 2, h: 42, label: `String pool`, tags });
-const meta = (tags: Tag[] = []) => makeDb(P.meta.x, P.meta.y, { r: 2, h: 42, label: `Metaspace`, tags });
+const pool = (tags: Tag[] = []) => makeDb(positions.pool.x, positions.pool.y, { r: 2, h: 42, label: `String pool`, tags });
+const meta = (tags: Tag[] = []) => makeDb(positions.meta.x, positions.meta.y, { r: 2, h: 42, label: `Metaspace`, tags });
 
 /** Floor regions, padded so each title runs clear of the object inside it. */
 const zones = () => ({
@@ -41,7 +38,7 @@ const zones = () => ({
   old: makeZone({ x0: 3.5, x1: 10, y0: 6, y1: 17.5 }, `OLD GEN`),
 });
 
-const L = {
+const links = {
   ref: makeLink(`stack`, `order`, [`stack`, `order`], { label: `ref` }),
   refQuiet: makeLink(`stack`, `order`, [`stack`, `order`]),
   // collections trace live objects starting from GC roots such as this stack
@@ -53,8 +50,7 @@ const L = {
 };
 
 /** Code card parked top-right, beside the thread and above Old Gen. */
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: P.stack.x, y: P.stack.y, z: 0, dx: 85, dy: -85 }, title, lines, { icon: `code` });
+const card = cardAt({ x: positions.stack.x, y: positions.stack.y, dx: 85, dy: -85 }, `code`);
 
 export const javaJvmMemoryLesson: Lesson = {
   id: 'java-jvm-memory',
@@ -92,7 +88,7 @@ export const javaJvmMemoryLesson: Lesson = {
         entities: {
           ...zones(),
           stack: stack(),
-          order: order(P.inEden, [{ text: `age 0`, tone: `green` }]),
+          order: order(positions.inEden, [{ text: `age 0`, tone: `green` }]),
           card: card(`OrderService.java`, [
             `void process() {`,
             `  int qty = 5;            // in the stack frame`,
@@ -100,7 +96,7 @@ export const javaJvmMemoryLesson: Lesson = {
             `} // frame popped; Order now waits for GC`,
           ]),
         },
-        links: { ref: L.ref },
+        links: { ref: links.ref },
         flows: [{ route: ['ref'], kind: 'write', rate: 1.4 }],
       },
     },
@@ -122,7 +118,7 @@ export const javaJvmMemoryLesson: Lesson = {
         entities: {
           ...zones(),
           stack: stack(),
-          order: order(P.inEden, [{ text: `age 0`, tone: `green` }]),
+          order: order(positions.inEden, [{ text: `age 0`, tone: `green` }]),
           pool: pool([{ text: `"ok" × 1`, tone: `violet` }]),
           card: card(`Strings.java`, [
             `String a = "ok";             // pooled`,
@@ -131,7 +127,7 @@ export const javaJvmMemoryLesson: Lesson = {
             `// Java 9+: byte[], 1 byte per Latin-1 char`,
           ]),
         },
-        links: { ref: L.refQuiet, literal: L.literal },
+        links: { ref: links.refQuiet, literal: links.literal },
         flows: [{ route: ['literal'], rate: 1.2, bounce: true }],
       },
     },
@@ -153,7 +149,7 @@ export const javaJvmMemoryLesson: Lesson = {
         entities: {
           ...zones(),
           stack: stack([{ text: `TLAB bump ptr`, tone: `violet` }]),
-          order: order(P.inEden, [{ text: `age 0`, tone: `green` }]),
+          order: order(positions.inEden, [{ text: `age 0`, tone: `green` }]),
           pool: pool(),
           card: card(`TLAB fast path (pseudo)`, [
             `top = tlab.top;`,
@@ -163,7 +159,7 @@ export const javaJvmMemoryLesson: Lesson = {
             `} // else: refill TLAB or slow path`,
           ]),
         },
-        links: { ref: L.refQuiet, literal: L.literalQuiet },
+        links: { ref: links.refQuiet, literal: links.literalQuiet },
         flows: [{ route: ['ref'], kind: 'write', rate: 3 }],
       },
     },
@@ -185,7 +181,7 @@ export const javaJvmMemoryLesson: Lesson = {
         entities: {
           ...zones(),
           stack: stack(),
-          order: order(P.inSurv, [{ text: `age 1 · copied`, tone: `green` }]),
+          order: order(positions.inSurv, [{ text: `age 1 · copied`, tone: `green` }]),
           pool: pool(),
           card: card(`GC log`, [
             `[gc] GC(12) Pause Young (Normal)`,
@@ -194,7 +190,7 @@ export const javaJvmMemoryLesson: Lesson = {
             `= [gc] GC(12) 6.1ms`,
           ]),
         },
-        links: { ref: L.root, literal: L.literalQuiet },
+        links: { ref: links.root, literal: links.literalQuiet },
         flows: [{ route: ['ref'], kind: 'msg', rate: 1.6 }],
       },
     },
@@ -216,7 +212,7 @@ export const javaJvmMemoryLesson: Lesson = {
         entities: {
           ...zones(),
           stack: stack(),
-          order: order(P.inOld, [{ text: `tenured · age 15`, tone: `violet` }]),
+          order: order(positions.inOld, [{ text: `tenured · age 15`, tone: `violet` }]),
           pool: pool(),
           card: card(`JVM flags`, [
             `-XX:+UseG1GC -XX:MaxGCPauseMillis=200`,
@@ -225,7 +221,7 @@ export const javaJvmMemoryLesson: Lesson = {
             `-XX:+UseZGC -XX:+ZGenerational`,
           ]),
         },
-        links: { ref: L.root, literal: L.literalQuiet },
+        links: { ref: links.root, literal: links.literalQuiet },
         flows: [{ route: ['ref'], kind: 'msg', rate: 1.2 }],
       },
     },
@@ -247,7 +243,7 @@ export const javaJvmMemoryLesson: Lesson = {
         entities: {
           ...zones(),
           stack: stack(),
-          order: order(P.inOld, [{ text: `weakly reachable`, tone: `amber` }], { dim: 0.35 }),
+          order: order(positions.inOld, [{ text: `weakly reachable`, tone: `amber` }], { dim: 0.35 }),
           pool: pool(),
           card: card(`References.java`, [
             `var soft = new SoftReference<>(cache); // near OOM`,
@@ -256,7 +252,7 @@ export const javaJvmMemoryLesson: Lesson = {
             `// strong > soft > weak > phantom`,
           ]),
         },
-        links: { ref: L.refWeak, literal: L.literalQuiet },
+        links: { ref: links.refWeak, literal: links.literalQuiet },
         flows: [{ route: ['ref'], kind: 'msg', rate: 1 }],
       },
     },
@@ -278,7 +274,7 @@ export const javaJvmMemoryLesson: Lesson = {
         entities: {
           ...zones(),
           stack: stack(),
-          order: order(P.inOld),
+          order: order(positions.inOld),
           pool: pool(),
           meta: meta([{ text: `OOM: Metaspace`, tone: `red`, icon: `alert` }]),
           card: card(`container JVM flags`, [
@@ -288,7 +284,7 @@ export const javaJvmMemoryLesson: Lesson = {
             `! java.lang.OutOfMemoryError: Metaspace`,
           ]),
         },
-        links: { ref: L.refQuiet, loads: L.loads },
+        links: { ref: links.refQuiet, loads: links.loads },
         flows: [{ route: ['loads'], kind: 'fail', rate: 1.2 }],
       },
     },

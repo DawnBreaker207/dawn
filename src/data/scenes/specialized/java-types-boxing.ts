@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage for the whole lesson: a method's stack frame on the left, heap objects
@@ -12,33 +12,29 @@ type Tag = { text: string; tone?: string; icon?: string };
 type Opts = Record<string, unknown>;
 
 /** Screen position (px) → world grid coordinates. */
-const at = (sx: number, sy: number) => ({
-  x: Math.round(((sx / 14 + sy / 7) / 2) * 10) / 10,
-  y: Math.round(((sx / 14 - sy / 7) / 2) * 10) / 10,
-});
-const P = {
-  stack: at(-220, 60),
-  javac: at(-140, -165),
-  heap: at(0, 0),
-  cache: at(180, -140),
-  low: at(70, 205),
+const positions = {
+  stack: fromScreen(-220, 60),
+  javac: fromScreen(-110, -165),
+  heap: fromScreen(0, 0),
+  cache: fromScreen(180, -140),
+  low: fromScreen(70, 180),
 };
 
 const block = (p: { x: number; y: number }, o: Opts) => makeBlock(p.x, p.y, { s: 4.4, h: 52, ...o });
 const stack = (tags: Tag[] = []) =>
-  block(P.stack, { color: `blue`, glyph: `layers`, label: [`Stack frame`], sub: `main()`, tags });
+  block(positions.stack, { color: `blue`, glyph: `layers`, label: [`Stack frame`], sub: `main()`, tags });
 const boxA = (label: string, tags: Tag[] = []) =>
-  block(P.heap, { color: `green`, glyph: `box`, label: [label], sub: `16 B object`, tags });
+  block(positions.heap, { color: `green`, glyph: `box`, label: [label], sub: `16 B object`, tags });
 const cache = (tags: Tag[] = []) =>
-  block(P.cache, { color: `purple`, glyph: `database`, label: [`IntegerCache`], sub: `-128 … 127`, tags });
+  block(positions.cache, { color: `purple`, glyph: `database`, label: [`IntegerCache`], sub: `-128 … 127`, tags });
 const boxB = (label: string, sub: string, tags: Tag[] = []) =>
-  block(P.low, { color: `green`, glyph: `box`, label: [label], sub, tags });
+  block(positions.low, { color: `green`, glyph: `box`, label: [label], sub, tags });
 const javac = (tags: Tag[] = []) =>
-  block(P.javac, { color: `orange`, glyph: `code`, label: [`javac`], sub: `compiler`, tags });
+  block(positions.javac, { color: `orange`, glyph: `code`, label: [`javac`], sub: `compiler`, tags });
 const list = (tags: Tag[] = []) =>
-  block(P.heap, { color: `green`, glyph: `boxes`, label: [`ArrayList`], sub: `Object[] inside`, tags });
+  block(positions.heap, { color: `green`, glyph: `boxes`, label: [`ArrayList`], sub: `Object[] inside`, tags });
 
-const L = {
+const links = {
   ref: makeLink(`stack`, `boxA`, [`stack`, `boxA`], { label: `ref` }),
   refQuiet: makeLink(`stack`, `boxA`, [`stack`, `boxA`]),
   cached: makeLink(`cache`, `boxA`, [`cache`, `boxA`], { label: `same object` }),
@@ -51,8 +47,7 @@ const L = {
   rawAdd: makeLink(`stack`, `list`, [`stack`, `list`], { label: `raw add(42)`, labelTone: `red` }),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: 0, y: 0, z: 0, dx: 250, dy: -70 }, title, lines, { icon: `code` });
+const card = cardAt({ x: 0, y: 0, dx: 250, dy: -70 }, `code`);
 
 export const javaTypesBoxingLesson: Lesson = {
   id: 'java-types-boxing',
@@ -90,7 +85,7 @@ export const javaTypesBoxingLesson: Lesson = {
           boxA: boxA('Integer 42'),
           card: card('Main.java', ['int a = 42;      // 4 B, in the frame', 'Integer b = 42;  // ref → heap object', '# header 12 B + int 4 B = 16 B']),
         },
-        links: { ref: L.ref },
+        links: { ref: links.ref },
         flows: [{ route: ['ref'], rate: 1, bounce: true }],
       },
     },
@@ -116,7 +111,7 @@ export const javaTypesBoxingLesson: Lesson = {
           boxB: boxB('Integer 128', 'one per box'),
           card: card('== vs equals()', ['Integer a = 127, b = 127;', 'a == b        // true  (cached)', 'Integer c = 128, d = 128;', '! c == d        // false (2 objects)', '= c.equals(d)   // true']),
         },
-        links: { ref: L.refQuiet, cached: L.cached, newObj: L.newObj },
+        links: { ref: links.refQuiet, cached: links.cached, newObj: links.newObj },
         flows: [
           { route: ['newObj'], kind: 'fail', rate: 0.8 },
           { route: ['cached'], kind: 'res', rate: 1 },
@@ -142,7 +137,7 @@ export const javaTypesBoxingLesson: Lesson = {
           boxB: boxB('Long sum', 'new each turn', [{ text: '× 1,000,000', tone: 'red' }]),
           card: card('Loop.java', ['Long sum = 0L;', 'for (long i = 0; i < 1_000_000; i++)', '! sum += i;   // unbox, add, box again', 'Integer x = null;', '! int y = x;   // x.intValue() → NPE']),
         },
-        links: { ref: L.refQuiet, newObj: L.newObj },
+        links: { ref: links.refQuiet, newObj: links.newObj },
         flows: [{ route: ['newObj'], kind: 'fail', rate: 3 }],
       },
     },
@@ -165,7 +160,7 @@ export const javaTypesBoxingLesson: Lesson = {
           boxB: boxB('BigDecimal', 'value + scale', [{ text: '0.30 exactly', tone: 'green' }]),
           card: card('Money.java', ['! 0.1 + 0.2              // 0.30000000000000004', 'var a = new BigDecimal("0.1");', 'var b = new BigDecimal("0.2");', '= a.add(b)               // 0.3 exact']),
         },
-        links: { ref: L.refQuiet, newObj: L.newQuiet },
+        links: { ref: links.refQuiet, newObj: links.newQuiet },
         flows: [{ route: ['newObj'], kind: 'res', rate: 1, bounce: true }],
       },
     },
@@ -187,7 +182,7 @@ export const javaTypesBoxingLesson: Lesson = {
           list: list([{ text: 'runtime: List', tone: 'gray' }]),
           card: card('after javac', ['List<String> names = new ArrayList<>();', '# compiles to:', 'List names = new ArrayList();', '= String s = (String) names.get(0);']),
         },
-        links: { listRef: L.listRef, erase: L.erase },
+        links: { listRef: links.listRef, erase: links.erase },
         flows: [
           { route: ['erase'], kind: 'write', rate: 0.8 },
           { route: ['listRef'], rate: 1, bounce: true },
@@ -210,10 +205,10 @@ export const javaTypesBoxingLesson: Lesson = {
           stack: stack(),
           javac: javac(),
           list: list(),
-          bridge: block(P.cache, { color: `orange`, glyph: `split`, label: [`IntBox.class`], sub: `2 set() methods` }),
+          bridge: block(positions.cache, { color: `orange`, glyph: `split`, label: [`IntBox.class`], sub: `2 set() methods` }),
           card: card('javap -c IntBox', ['void set(Integer v)       // yours', 'synthetic bridge void set(Object v)', '= checkcast Integer; invokevirtual set(Integer)']),
         },
-        links: { listRef: L.listRef, emitBridge: L.emitBridge },
+        links: { listRef: links.listRef, emitBridge: links.emitBridge },
         flows: [{ route: ['emitBridge'], kind: 'write', rate: 0.8 }],
       },
     },
@@ -236,7 +231,7 @@ export const javaTypesBoxingLesson: Lesson = {
           sink: boxB('Object list', 'consumer', [{ text: '? super Integer', tone: 'green' }]),
           card: card('Collections.java', ['static <T> void copy(', '    List<? super T> dest,', '    List<? extends T> src)', '= copy(objects, integers);   // compiles']),
         },
-        links: { listRef: L.listRef, copy: L.copy },
+        links: { listRef: links.listRef, copy: links.copy },
         flows: [{ route: ['copy'], kind: 'res', rate: 1.4 }],
       },
     },
@@ -258,7 +253,7 @@ export const javaTypesBoxingLesson: Lesson = {
           list: list([{ text: 'Integer among Strings', tone: 'red' }]),
           card: card('Polluted.java', ['List<String> names = new ArrayList<>();', 'List raw = names;', '! raw.add(42);                 // only a warning', '! String s = names.get(0);     // ClassCastException']),
         },
-        links: { rawAdd: L.rawAdd },
+        links: { rawAdd: links.rawAdd },
         flows: [{ route: ['rawAdd'], kind: 'fail', rate: 1 }],
       },
     },

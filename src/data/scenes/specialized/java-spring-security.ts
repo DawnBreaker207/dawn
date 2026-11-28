@@ -1,289 +1,243 @@
-import {
-  makeBlock,
-  makeDb,
-  makeLink,
-  makePanel,
-} from '@/lib/simulator/scene-builders';
+import { STAGE, codeCard, linkOf, stageBlock, type Tag } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
+
+// Seed → result. One request reaches a controller; every step puts another piece of Spring
+// Security in front of it. Each concept has its own id; at most two nodes join per step. In
+// step 2 the controller steps back so the filter chain can stand in front of it.
+//
+//   step 1  client ── controller                        seed: an open door
+//   step 2  + chain, + delegating; controller steps back  Tomcat → Spring filter chain
+//   step 3  (chain: stateless, per-URL rules)           SecurityFilterChain
+//   step 4  + dao                                       passwords and BCrypt
+//   step 5  (CORS / CSRF decision)                      origin guard
+//   step 6  + jwt                                       OAuth2 resource server
+//   step 7  (SecurityContext filled)                    who is calling
+//   step 8  (authorisation decides)                     401 versus 403
+//
+//   jwt (left-top)      delegating (top)     dao (top-right)
+//   client ───────────  chain ─────────────  controller (right)
+
+const client = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.caller, { color: `blue`, glyph: `user`, label: [`client`], sub, tags });
+const controller = (at: { x: number; y: number }, sub: string, tags: Tag[] = []) =>
+  stageBlock(at, { color: `slab`, glyph: `box`, label: [`Controller`], sub, tags });
+const chain = (label: string[], sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.main, { color: `green`, glyph: `shield`, label, sub, tags });
+const delegating = (tags: Tag[] = []) =>
+  stageBlock(STAGE.helper, { color: `orange`, glyph: `route`, label: [`Delegating`, `FilterProxy`], sub: `Tomcat filter`, tags });
+const dao = (tags: Tag[] = []) =>
+  stageBlock(STAGE.alt, { color: `orange`, glyph: `lock`, label: [`Dao`, `Provider`], sub: `BCrypt cost 12`, tags });
+const jwt = (tags: Tag[] = []) =>
+  stageBlock(STAGE.caller2, { color: `orange`, glyph: `key`, label: [`Jwt`, `Decoder`], sub: `JWK set`, tags });
+
+const links = {
+  exposed: linkOf(`client`, `controller`),
+  request: (label?: string) => linkOf(`client`, `chain`, label),
+  guard: (label?: string) => linkOf(`chain`, `controller`, label),
+  delegate: (label?: string) => ({ ...linkOf(`delegating`, `chain`, label, false), labelAt: 0.6 }),
+  login: (label?: string) => ({ ...linkOf(`dao`, `chain`, label, false), labelAt: 0.6 }),
+  verify: (label?: string) => ({ ...linkOf(`jwt`, `chain`, label, false), labelAt: 0.6 }),
+};
 
 export const javaSpringSecurityLesson: Lesson = {
   id: 'java-spring-security',
   title: 'Spring Security & OAuth2',
   summary:
-    'Trace DelegatingFilterProxy, SecurityFilterChain, DaoAuthenticationProvider + BCrypt, CORS vs CSRF rules, OAuth2 JWK verification, SecurityContextHolder, and 401/403 RBAC.',
+    'Put one controller behind Spring Security a layer at a time: the filter chain, BCrypt password checks, CORS versus CSRF, JWT verification for OAuth2, the security context and the 401/403 decision.',
   minutes: 14,
   level: 'intermediate',
-  metrics: ['security_gate', 'auth_state', 'principal', 'http_status'],
-  legend: ['flow', ['req', 'inspect / verify'], ['res', 'authenticated'], ['fail', '401 / 403 / CSRF']],
+  metrics: ['gate', 'auth', 'principal', 'status'],
+  legend: [[`req`, `request`], [`res`, `allowed`], [`fail`, `rejected`]],
   goals: [
-    { text: 'Expose unprotected endpoint risk before Security', step: 1 },
-    { text: 'Bridge Tomcat to Spring via DelegatingFilterProxy', step: 2 },
-    { text: 'Route through ordered SecurityFilterChain', step: 3 },
-    { text: 'Verify passwords via DaoProvider + BCrypt work factor', step: 4 },
-    { text: 'Distinguish CORS vs CSRF & when disabling CSRF is safe', step: 5 },
-    { text: 'Verify OAuth2 JWTs via Resource Server JWK Set', step: 6 },
-    { text: 'Populate thread-scoped SecurityContextHolder', step: 7 },
-    { text: 'Enforce RBAC (401 vs 403, hasRole vs hasAuthority)', step: 8 },
+    { text: 'See the risk of an unprotected endpoint', step: 1 },
+    { text: 'Bridge Tomcat to Spring with DelegatingFilterProxy', step: 2 },
+    { text: 'Configure a stateless SecurityFilterChain', step: 3 },
+    { text: 'Verify passwords with BCrypt and its work factor', step: 4 },
+    { text: 'Tell CORS from CSRF; know when to disable CSRF', step: 5 },
+    { text: 'Verify OAuth2 JWTs against the JWK set', step: 6 },
+    { text: 'Find the user in the thread-scoped SecurityContext', step: 7 },
+    { text: 'Enforce roles: 401 versus 403', step: 8 },
   ],
   steps: [
     {
-      short: 'Unprotected',
-      chapter: 'security',
-      title: 'Unprotected Endpoint Risk',
+      short: 'Open door',
+      chapter: 'problem',
+      title: 'Seed: an endpoint with nothing in front of it',
       body: [
-        'Without Spring Security, any HTTP client can hit <code>/api/admin/users</code> directly on Tomcat.',
-        'Scattering manual <code>if (token == null)</code> checks inside every Controller violates DRY and inevitably leaves unguarded routes.',
+        `A controller method answers every request it receives. Without Spring Security, <code>GET /admin/orders</code> from a stranger on the internet returns the data with <code>200 OK</code>.`,
+        `Security has to be added <em>before</em> the controller runs — and it has to be in the request path by default, not something each developer remembers. We will put it there, one piece per step.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Security must be enforced at the outer Filter boundary BEFORE DispatcherServlet or Controllers ever execute.',
-      },
-      metrics: { security_gate: 'None', auth_state: 'Anonymous', principal: 'Unknown', http_status: '200 (Exposed!)' },
+      metrics: { gate: 'none', auth: 'anonymous', principal: 'unknown', status: '200 exposed' },
       scene: {
         entities: {
-          client: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Unauth Client'], sub: 'no token' }),
-          ctrl: makeBlock(2, -6, { s: 4.8, h: 54, color: 'amber', glyph: 'code', label: ['AdminCtrl'], sub: 'exposed!' }),
-          card: makePanel({ x: -12, y: 12 }, 'Problem: No Outer Security Gate', [
-            '// Without SecurityFilterChain:',
-            'GET /api/admin/users -> hits AdminController directly!',
-            '// Goal: deny-by-default before DispatcherServlet',
-          ], { icon: 'terminal' }),
+          client: client(`no credentials`, [{ text: `stranger`, tone: `amber` }]),
+          controller: controller(STAGE.main, `GET /admin`, [{ text: `200 OK · exposed`, tone: `red`, icon: `alert` }]),
+          card: codeCard(`No protection`, [`$ curl https://shop.example/admin/orders`, `200 OK  [{"id":1,"card":"4111…"}]`, `! nothing checked who is asking`]),
         },
-        links: {
-          cl_ct: makeLink('client', 'ctrl', ['client', 'ctrl'], { heads: 'end', label: 'unverified' }),
-        },
-        flows: [{ route: ['cl_ct'], kind: 'fail', rate: 1.7 }],
+        links: { exposed: links.exposed },
+        flows: [{ route: ['exposed'], kind: 'fail', rate: 1.2, bounce: true }],
       },
     },
     {
-      short: 'FilterProxy',
-      chapter: 'security',
-      title: 'DelegatingFilterProxy & FilterChainProxy',
+      short: 'Filter proxy',
+      chapter: 'technique',
+      title: 'Tomcat hands requests to a Spring filter chain',
       body: [
-        'Tomcat only knows standard Jakarta Servlet <code>Filter</code>s, not Spring Beans.',
-        '<code>DelegatingFilterProxy</code> is a thin Servlet Filter registered in Tomcat that delegates every request into Spring’s <code>FilterChainProxy</code> bean.',
+        `Servlet filters run before any controller, but Tomcat knows nothing about Spring beans. A tiny filter, <span class="term">DelegatingFilterProxy</span>, bridges the two: it looks up the bean <code>springSecurityFilterChain</code> in the Spring context and forwards each request to it.`,
+        `That bean is <span class="term">FilterChainProxy</span>, which picks the matching <code>SecurityFilterChain</code> for the URL. It now stands in front of the controller. Spring Boot registers all of this automatically when you add the starter.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'This bridge lets Spring Security filters use @Autowired beans like JwtDecoder and UserDetailsService.',
-      },
-      changes: ['+ DelegatingFilterProxy bridges Tomcat -> Spring', '+ FilterChainProxy owns security beans'],
-      metrics: { security_gate: 'FilterProxy', auth_state: 'Entering', principal: 'Pending', http_status: 'Inspecting' },
+      changes: [`+ FilterChainProxy`, `+ DelegatingFilterProxy`, `~ controller: behind the chain`],
+      metrics: { gate: 'FilterChainProxy', auth: 'entering', principal: 'pending', status: 'inspecting' },
       scene: {
         entities: {
-          tomcat: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'cpu', label: ['Tomcat'], sub: 'Servlet Filter' }),
-          dfp: makeBlock(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['DelegatingPx'], sub: 'Servlet bridge' }),
-          fcp: makeBlock(0, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['FilterChainPx'], sub: 'Spring Bean' }),
-          card: makePanel({ x: -12, y: 12 }, 'Bridging Servlet Container to Spring', [
-            '// Tomcat invokes Jakarta Servlet Filter:',
-            'DelegatingFilterProxy',
-            '  -> looks up Spring bean "springSecurityFilterChain"',
-            '  -> delegates to FilterChainProxy',
-          ], { icon: 'terminal' }),
+          client: client(`GET /admin`),
+          chain: chain([`FilterChain`, `Proxy`], `picks a chain`, [{ text: `in front of controllers`, tone: `green` }]),
+          controller: controller(STAGE.store, `not reached yet`),
+          delegating: delegating([{ text: `servlet side`, tone: `violet` }]),
+          card: codeCard(`Registered for you`, [`Tomcat filter "springSecurityFilterChain"`, `  → DelegatingFilterProxy`, `  → FilterChainProxy   (a Spring bean)`, `  → SecurityFilterChain for /admin/**`]),
         },
-        links: {
-          tm_df: makeLink('tomcat', 'dfp', ['tomcat', 'dfp'], { heads: 'end', label: 'doFilter' }),
-          df_fc: makeLink('dfp', 'fcp', ['dfp', 'fcp'], { heads: 'end', label: 'delegate' }),
-        },
-        flows: [{ route: ['tm_df', 'df_fc'], kind: 'req', rate: 1.8 }],
+        links: { request: links.request(), guard: links.guard(), delegate: links.delegate(`delegates`) },
+        flows: [{ route: ['request'], rate: 1.3, bounce: true }, { route: ['delegate'], rate: 1 }],
       },
     },
     {
-      short: 'FilterChain',
-      chapter: 'security',
-      title: 'Configuring Stateless SecurityFilterChain',
+      short: 'Chain',
+      chapter: 'technique',
+      title: 'A stateless SecurityFilterChain',
       body: [
-        'In Spring Security 6, you declare a <code>SecurityFilterChain</code> <code>@Bean</code> using lambda DSL.',
-        'For REST APIs using JWTs, set <code>SessionCreationPolicy.STATELESS</code> so Spring never creates HTTP <code>JSESSIONID</code> sessions.',
+        `A <code>SecurityFilterChain</code> is an ordered list of filters (CORS, CSRF, authentication, authorisation…) plus the rules for which URLs it covers. You define it as a bean.`,
+        `For a REST API choose <b>stateless</b>: no <code>HttpSession</code>, so every request must carry its own proof of identity — and any server instance can answer it.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Order matters: you can define multiple SecurityFilterChain beans with @Order(1) for /api/** and @Order(2) for web pages.',
-      },
-      changes: ['+ SecurityFilterChain @Bean configured', '+ STATELESS session policy for JWT'],
-      metrics: { security_gate: 'FilterChain', auth_state: 'Stateless', principal: 'Pending', http_status: 'Pipeline' },
+      changes: [`~ chain: stateless, rules per URL`],
+      metrics: { gate: 'filter chain', auth: 'stateless', principal: 'pending', status: 'pipeline' },
       scene: {
         entities: {
-          fcp: makeBlock(-14, 0, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['FilterChainPx'], sub: 'match /api/**' }),
-          chain: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['SecFilterChain'], sub: 'STATELESS' }),
-          rules: makeDb(0, -14, { r: 2.2, h: 48, color: 'sky', label: ['Auth Rules'], sub: 'deny default' }),
-          card: makePanel({ x: -12, y: 12 }, 'Spring Security 6 Lambda DSL', [
-            '@Bean SecurityFilterChain apiChain(HttpSecurity http) {',
-            '  return http.csrf(c -> c.disable())',
-            '    .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))',
-            '    .authorizeHttpRequests(a -> a.requestMatchers("/auth/**").permitAll()',
-            '      .anyRequest().authenticated()).build();',
-            '}',
-          ], { icon: 'terminal' }),
+          client: client(`GET /admin`),
+          chain: chain([`FilterChain`, `Proxy`], `ordered filters`, [{ text: `STATELESS · no session`, tone: `violet`, icon: `lock` }]),
+          controller: controller(STAGE.store, `not reached yet`),
+          delegating: delegating(),
+          card: codeCard(`The bean`, [`http.sessionManagement(s -> s.sessionCreationPolicy(STATELESS))`, `    .authorizeHttpRequests(a -> a`, `        .requestMatchers("/public/**").permitAll()`, `        .anyRequest().authenticated());`]),
         },
-        links: {
-          fc_ch: makeLink('fcp', 'chain', ['fcp', 'chain'], { heads: 'end', label: 'match URL' }),
-          ch_rl: makeLink('chain', 'rules', ['chain', 'rules'], { heads: 'end', label: 'apply DSL' }),
-        },
-        flows: [{ route: ['fc_ch', 'ch_rl'], kind: 'req', rate: 1.9 }],
+        links: { request: links.request(), guard: links.guard(), delegate: links.delegate() },
+        flows: [{ route: ['request'], rate: 1.3, bounce: true }],
       },
     },
     {
-      short: 'BCrypt Auth',
-      chapter: 'auth',
-      title: 'DaoAuthenticationProvider & BCrypt PasswordEncoder',
+      short: 'BCrypt',
+      chapter: 'technique',
+      title: 'Checking a password without storing it',
       body: [
-        'For login requests, <code>AuthenticationManager</code> delegates to <code>DaoAuthenticationProvider</code>, which loads the user via <code>UserDetailsService</code> and verifies the hash.',
-        'Use <strong>BCrypt</strong> (never SHA-256!): it embeds a random 128-bit salt and uses a deliberately slow cost factor ($2^{10}$–$2^{12}$ rounds) to defeat GPU brute-force.',
+        `The <span class="term">DaoAuthenticationProvider</span> loads the user from your <code>UserDetailsService</code> and asks a <code>PasswordEncoder</code> to compare. The database stores a <b>BCrypt hash</b>, never the password.`,
+        `BCrypt is deliberately slow and salted. A work factor of 12 costs ~250 ms per check — nothing for a login, ruinous for an attacker trying billions of guesses. Wrong password gives <code>401</code>.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Never hash passwords with fast SHA-256 — always use BCryptPasswordEncoder or Argon2PasswordEncoder.',
-      },
-      changes: ['+ DaoProvider calls UserDetailsService', '+ BCrypt adds 128-bit salt + slow rounds'],
-      metrics: { security_gate: 'DaoProvider', auth_state: 'BCrypt 2^12', principal: 'UserDetails', http_status: '401 if bad' },
+      changes: [`+ DaoAuthenticationProvider (BCrypt)`],
+      metrics: { gate: 'DaoProvider', auth: 'BCrypt 2^12', principal: 'UserDetails', status: '401 if bad' },
       scene: {
         entities: {
-          mgr: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['AuthManager'], sub: 'DaoProvider' }),
-          bc: makeBlock(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BCrypt 2^12'], sub: '~100ms hash' }),
-          db: makeDb(0, 0, { r: 2.2, h: 48, color: 'purple', label: ['Users DB'], sub: '$2a$12$...' }),
-          card: makePanel({ x: -12, y: 12 }, 'Salted Adaptive Hashing with BCrypt', [
-            '@Bean PasswordEncoder passwordEncoder() {',
-            '  return new BCryptPasswordEncoder(12); // 2^12 rounds',
-            '} // Stored: $2a$12$<22-char salt><31-char hash>',
-          ], { icon: 'terminal' }),
+          client: client(`alice / ••••••`, [{ text: `login`, tone: `green` }]),
+          chain: chain([`FilterChain`, `Proxy`], `stateless`, [{ text: `401 on mismatch`, tone: `amber` }]),
+          controller: controller(STAGE.store, `not reached yet`),
+          delegating: delegating(),
+          dao: dao([{ text: `~250 ms / check`, tone: `violet`, icon: `clock` }]),
+          card: codeCard(`Hash, don't store`, [`var encoder = new BCryptPasswordEncoder(12);`, `String hash = encoder.encode("s3cret");  // $2a$12$…`, `encoder.matches(raw, hash);               // true / false`]),
         },
-        links: {
-          mg_bc: makeLink('mgr', 'bc', ['mgr', 'bc'], { heads: 'end', label: 'matches()' }),
-          bc_db: makeLink('bc', 'db', ['bc', 'db'], { heads: 'end', label: 'verify salt' }),
-        },
-        flows: [{ route: ['mg_bc', 'bc_db'], kind: 'res', rate: 1.8 }],
+        links: { request: links.request(), guard: links.guard(), delegate: links.delegate(), login: links.login() },
+        flows: [{ route: ['request'], rate: 1.2, bounce: true }, { route: ['login'], kind: 'write', rate: 1 }],
       },
     },
     {
-      short: 'CORS vs CSRF',
-      chapter: 'browser',
-      title: 'Why CORS != CSRF & When Disabling CSRF Is Safe',
+      short: 'CORS · CSRF',
+      chapter: 'insight',
+      title: 'CORS is not CSRF',
       body: [
-        '<strong>CORS</strong> only restricts browsers reading cross-origin responses (<code>curl</code> ignores it). <strong>CSRF</strong> exploits browsers auto-attaching <code>JSESSIONID</code> cookies on forged cross-site forms.',
-        'Disabling CSRF is safe <strong>ONLY</strong> for stateless APIs reading <code>Authorization: Bearer</code> headers (never cookies!).',
+        `<span class="term">CORS</span> tells the <em>browser</em> which other origins may read responses from your API. It protects nothing on the server — it only relaxes the browser’s same-origin rule.`,
+        `<span class="term">CSRF</span> is an attack where a malicious page (say <code>evil.com</code>) makes the browser send a request that <b>automatically carries your cookie</b>. It only matters when authentication rides on cookies. An API that needs an <code>Authorization: Bearer</code> header is not exposed, so disabling CSRF there is safe.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'If you store JWT inside an HttpOnly cookie, browsers STILL auto-send it — you MUST keep CSRF protection enabled!',
-      },
-      changes: ['+ Cookies auto-send -> require CSRF token', '+ Pure Bearer header -> CSRF disable safe'],
-      metrics: { security_gate: 'Cors + Csrf', auth_state: 'Origin Guard', principal: 'Stateless', http_status: '403 if forged' },
+      changes: [`~ chain: CORS + CSRF filters`, `~ client: cookie sent automatically`],
+      metrics: { gate: 'CORS + CSRF', auth: 'origin guard', principal: 'stateless', status: '403 if forged' },
       scene: {
         entities: {
-          evil: makeBlock(-14, 0, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['Forged POST'], sub: 'auto Cookie' }),
-          csrf: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'shield', label: ['CsrfFilter'], sub: 'checks token' }),
-          api: makeBlock(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Bearer API'], sub: 'no cookies!' }),
-          card: makePanel({ x: -12, y: 12 }, 'CORS vs CSRF Protection Rules', [
-            '// Safe to disable CSRF ONLY if auth uses Bearer header:',
-            'http.cors(Customizer.withDefaults())',
-            '    .csrf(csrf -> csrf.disable()) // NO cookies!',
-            '    .sessionManagement(s -> s.sessionCreationPolicy(STATELESS));',
-          ], { icon: 'terminal' }),
+          client: client(`logged-in user`, [{ text: `cookie auto-sent`, tone: `red` }]),
+          chain: chain([`FilterChain`, `Proxy`], `origin guard`, [{ text: `CSRF: only for cookies`, tone: `green` }]),
+          controller: controller(STAGE.store, `POST /transfer`),
+          delegating: delegating(),
+          dao: dao(),
+          card: codeCard(`Pick per auth style`, [`// cookie session  → keep CSRF on`, `http.csrf(c -> c.disable());   // only for Bearer-token APIs`, `cors.setAllowedOrigins(List.of("https://shop.example"));`, `! evil.com forged form: POST /transfer with your cookie`]),
         },
-        links: {
-          ev_cs: makeLink('evil', 'csrf', ['evil', 'csrf'], { heads: 'end', label: 'blocks 403' }),
-          cs_ap: makeLink('csrf', 'api', ['csrf', 'api'], { heads: 'end', label: 'Bearer ok' }),
-        },
-        flows: [{ route: ['ev_cs'], kind: 'fail', rate: 1.5 }, { route: ['cs_ap'], kind: 'res', rate: 1.8 }],
+        links: { request: links.request(), guard: links.guard(), delegate: links.delegate(), login: links.login() },
+        flows: [{ route: ['request'], rate: 1.2, bounce: true }],
       },
     },
     {
-      short: 'OAuth2 JWK',
-      chapter: 'auth',
-      title: 'OAuth2 Resource Server & JWK Verification',
+      short: 'JWT · JWK',
+      chapter: 'solution',
+      title: 'Verifying an OAuth2 access token',
       body: [
-        'In OAuth2/OIDC (Keycloak, Auth0), the Auth Server signs JWTs with its Private Key. Spring’s <code>oauth2ResourceServer()</code> caches public keys from <code>/.well-known/jwks.json</code>.',
-        'Every incoming Bearer JWT signature and <code>exp</code> is verified locally in microseconds with zero DB/IdP round-trips.',
+        `As an OAuth2 <b>resource server</b> your API never sees a password. The client sends a signed JWT in the <code>Authorization</code> header; the <code>JwtDecoder</code> checks the signature, expiry (<code>exp</code>) and issuer (<code>iss</code>).`,
+        `The public keys come from the authorization server’s <span class="term">JWK set</span>; the token header’s <code>kid</code> says which key to use. Keys are cached, so verification needs no network call per request.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Invalid or expired JWTs fail immediately with 401 Unauthorized before reaching Controllers.',
-      },
-      changes: ['+ Fetches & caches JWKs by key ID (kid)', '+ Verifies RS256 signature + exp locally'],
-      metrics: { security_gate: 'JwtDecoder', auth_state: 'Verified JWT', principal: 'kid + claims', http_status: '401 if bad' },
+      changes: [`+ JwtDecoder (JWK set)`],
+      metrics: { gate: 'JwtDecoder', auth: 'verified JWT', principal: 'sub + claims', status: '401 if bad' },
       scene: {
         entities: {
-          req: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Bearer JWT'], sub: 'eyJhbGci...' }),
-          jwt: makeBlock(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['JwtDecoder'], sub: 'cached JWK' }),
-          bad: makeBlock(0, 0, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['401 Unauth'], sub: 'bad/expired' }),
-          card: makePanel({ x: -12, y: 12 }, 'Local OAuth2 JWT Verification via JWK', [
-            'http.oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));',
-            '// Verifies RS256 signature against cached jwks.json',
-            '// Bad signature or expired -> 401 Unauthorized',
-          ], { icon: 'terminal' }),
+          client: client(`Bearer token`, [{ text: `has access token`, tone: `green` }]),
+          chain: chain([`FilterChain`, `Proxy`], `Bearer filter`, [{ text: `sig ✓ exp ✓ iss ✓`, tone: `green`, icon: `shield` }]),
+          controller: controller(STAGE.store, `orders API`),
+          delegating: delegating(),
+          dao: dao([{ text: `login only`, tone: `gray` }]),
+          jwt: jwt([{ text: `keys from auth server`, tone: `violet` }]),
+          card: codeCard(`Resource server setup`, [`spring.security.oauth2.resourceserver.jwt`, `    .issuer-uri=https://auth.shop.example`, `// header: { "alg":"RS256", "kid":"k-2026-11" }`, `// body:   { "sub":"alice", "exp":1795900000, "scope":"orders" }`]),
         },
-        links: {
-          rq_jw: makeLink('req', 'jwt', ['req', 'jwt'], { heads: 'end', label: 'decode' }),
-          jw_bd: makeLink('jwt', 'bad', ['jwt', 'bad'], { heads: 'end', label: '401 invalid' }),
-        },
-        flows: [{ route: ['rq_jw'], kind: 'res', rate: 1.9 }, { route: ['jw_bd'], kind: 'fail', rate: 1.3 }],
+        links: { request: links.request(`Bearer JWT`), guard: links.guard(), delegate: links.delegate(), login: links.login(), verify: links.verify(`verifies`) },
+        flows: [{ route: ['request'], rate: 1.3, bounce: true }, { route: ['verify'], kind: 'write', rate: 0.8 }],
       },
     },
     {
-      short: 'SecurityContext',
-      chapter: 'auth',
-      title: 'Populating Thread-Scoped SecurityContextHolder',
+      short: 'Context',
+      chapter: 'technique',
+      title: 'Who is calling? The SecurityContext',
       body: [
-        'Once verified, the filter stores the <code>Authentication</code> object in <code>SecurityContextHolder.getContext()</code> (backed by a <code>ThreadLocal</code>).',
-        'Controllers and Services can now read <code>@AuthenticationPrincipal</code> anywhere downstream, and Spring clears the context in a <code>finally</code> block after the request.',
+        `After authentication succeeds, the filter stores an <code>Authentication</code> — principal, authorities, token — in the <span class="term">SecurityContextHolder</span>. By default that is a <code>ThreadLocal</code>, so any code on the same thread can ask “who is the current user?”.`,
+        `The context is cleared when the request ends. It does <b>not</b> follow work handed to another thread — an <code>@Async</code> method starts with no user unless you propagate the context.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Because SecurityContextHolder uses ThreadLocal, async @Async methods need DelegatingSecurityContextExecutor to propagate identity.',
-      },
-      changes: ['+ Authentication stored in ThreadLocal', '+ Cleared in finally after response'],
-      metrics: { security_gate: 'ContextHolder', auth_state: 'Authenticated', principal: 'ROLE_ADMIN', http_status: 'Proceed' },
+      changes: [`~ chain: SecurityContext filled`, `~ controller: reads the user`],
+      metrics: { gate: 'ContextHolder', auth: 'authenticated', principal: 'ROLE_ADMIN', status: 'proceed' },
       scene: {
         entities: {
-          jwt: makeBlock(-14, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['JwtAuthFilter'], sub: 'valid token' }),
-          ctx: makeDb(-14, -14, { r: 2.2, h: 48, color: 'purple', label: ['SecContext'], sub: 'ThreadLocal' }),
-          authz: makeBlock(0, -14, { s: 4.8, h: 54, color: 'blue', glyph: 'layers', label: ['AuthzFilter'], sub: 'reads roles' }),
-          card: makePanel({ x: -12, y: 12 }, 'Setting SecurityContextHolder', [
-            'SecurityContext ctx = SecurityContextHolder.createEmptyContext();',
-            'ctx.setAuthentication(authToken);',
-            'SecurityContextHolder.setContext(ctx);',
-            '// Cleared automatically by SecurityContextHolderFilter!',
-          ], { icon: 'terminal' }),
+          client: client(`Bearer token`, [{ text: `alice`, tone: `green` }]),
+          chain: chain([`FilterChain`, `Proxy`], `ThreadLocal`, [{ text: `alice · ROLE_ADMIN`, tone: `violet`, icon: `lock` }]),
+          controller: controller(STAGE.store, `orders API`, [{ text: `@Async: no user!`, tone: `red`, icon: `alert` }]),
+          delegating: delegating(),
+          dao: dao(),
+          jwt: jwt(),
+          card: codeCard(`Read it anywhere`, [`var auth = SecurityContextHolder.getContext().getAuthentication();`, `auth.getName();            // "alice"`, `auth.getAuthorities();     // [ROLE_ADMIN]`, `! not visible inside @Async without propagation`]),
         },
-        links: {
-          jw_cx: makeLink('jwt', 'ctx', ['jwt', 'ctx'], { heads: 'end', label: 'setAuth' }),
-          cx_az: makeLink('ctx', 'authz', ['ctx', 'authz'], { heads: 'end', label: 'getAuth' }),
-        },
-        flows: [{ route: ['jw_cx', 'cx_az'], kind: 'res', rate: 2.0 }],
+        links: { request: links.request(), guard: links.guard(`uses`), delegate: links.delegate(), login: links.login(), verify: links.verify() },
+        flows: [{ route: ['request', 'guard'], rate: 1.2, bounce: true }],
       },
     },
     {
-      short: 'RBAC 401/403',
-      chapter: 'authz',
-      title: 'AuthorizationFilter & @PreAuthorize (401 vs 403)',
+      short: '401 · 403',
+      chapter: 'recap',
+      title: 'Result: 401 means “who are you?”, 403 means “not you”',
       body: [
-        'At the end of the chain, <code>AuthorizationFilter</code> checks URL rules and <code>@EnableMethodSecurity</code> checks <code>@PreAuthorize("hasRole(\'ADMIN\')")</code>.',
-        '<strong>401 Unauthorized</strong> means "who are you?" (not authenticated); <strong>403 Forbidden</strong> means "I know you, but you lack permission".',
+        `The last filter, <code>AuthorizationFilter</code>, applies your rules. <b>401 Unauthorized</b> means authentication is missing or invalid — the client should log in again. <b>403 Forbidden</b> means the user is known but lacks permission — logging in again won’t help.`,
+        `Method security (<code>@PreAuthorize</code>) enforces the same rule next to the code. <code>hasRole('ADMIN')</code> is just <code>hasAuthority('ROLE_ADMIN')</code> — Spring adds the <code>ROLE_</code> prefix for you.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Use @PreAuthorize on Service methods as defense-in-depth alongside URL rules in SecurityFilterChain.',
-      },
-      changes: ['+ AuthorizationFilter checks ROLE_ADMIN', '+ Allows 200 to Controller or returns 403'],
-      metrics: { security_gate: 'AuthzFilter', auth_state: 'Authorized', principal: 'ROLE_ADMIN', http_status: '200 or 403' },
+      changes: [`~ chain: AuthorizationFilter`, `~ client: ROLE_USER`],
+      metrics: { gate: 'AuthzFilter', auth: 'authorized', principal: 'ROLE_USER', status: '200 or 403' },
       scene: {
         entities: {
-          authz: makeBlock(-12, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'shield', label: ['AuthzFilter'], sub: 'hasRole ADMIN' }),
-          ctrl: makeBlock(2, -14, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['AdminCtrl'], sub: '200 OK' }),
-          deny: makeBlock(2, -2, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['403 Forbidden'], sub: 'lacks role' }),
-          card: makePanel({ x: -12, y: 12 }, 'Method Security & HTTP Status Codes', [
-            '@PreAuthorize("hasRole(\'ADMIN\')")',
-            'public List<UserDto> listUsers() { ... }',
-            '// No / bad token -> 401 Unauthorized',
-            '// Valid token, wrong role -> 403 Forbidden',
-          ], { icon: 'terminal' }),
+          client: client(`Bearer token`, [{ text: `bob · ROLE_USER`, tone: `amber` }]),
+          chain: chain([`FilterChain`, `Proxy`], `rules + roles`, [{ text: `403 Forbidden`, tone: `red`, icon: `alert` }]),
+          controller: controller(STAGE.store, `/admin/orders`, [{ text: `@PreAuthorize ADMIN`, tone: `violet` }]),
+          delegating: delegating(),
+          dao: dao(),
+          jwt: jwt(),
+          card: codeCard(`Two different answers`, [`@PreAuthorize("hasRole('ADMIN')")`, `Order get(long id) { ... }`, `! no token       → 401 Unauthorized`, `! ROLE_USER      → 403 Forbidden`]),
         },
-        links: {
-          az_ct: makeLink('authz', 'ctrl', ['authz', 'ctrl'], { heads: 'end', label: '200 OK' }),
-          az_dn: makeLink('authz', 'deny', ['authz', 'deny'], { heads: 'end', label: 'deny -> 403' }),
-        },
-        flows: [{ route: ['az_ct'], kind: 'res', rate: 2.0 }, { route: ['az_dn'], kind: 'fail', rate: 1.3 }],
+        links: { request: links.request(`GET /admin`), guard: links.guard(), delegate: links.delegate(), login: links.login(), verify: links.verify() },
+        flows: [{ route: ['request'], kind: 'fail', rate: 1.2, bounce: true }],
       },
     },
   ],

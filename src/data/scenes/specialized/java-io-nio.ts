@@ -1,230 +1,195 @@
-import {
-  makeBlock,
-  makeDb,
-  makeLink,
-  makePanel,
-} from '@/lib/simulator/scene-builders';
+import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
-export const javaIoNioLesson: Lesson = {
+// One stage: your code on the left, the I/O class under discussion in the middle (same id,
+// new label each act), the thing it reads from on the right, and the OS kernel above it.
+//
+//                    kernel          alt
+//   your code ──── io ────────────── source
+
+type Opts = Record<string, unknown>;
+
+const positions = {
+  caller: STAGE.caller,
+  io: STAGE.main,
+  source: STAGE.store,
+  kernel: STAGE.helper,
+  alt: STAGE.alt,
+};
+
+const block = stageBlock;
+const caller = (tags: Tag[] = []) => block(positions.caller, { color: `blue`, glyph: `code`, label: [`your code`], sub: `caller`, tags });
+const ioSystem = (label: string[], sub: string, tags: Tag[] = [], glyph = `box`) =>
+  block(positions.io, { color: `green`, glyph, label, sub, tags });
+const source = (label: string, tags: Tag[] = []) =>
+  makeDb(positions.source.x, positions.source.y, { r: 2.2, h: 46, glyph: `database`, label, tags });
+const kernel = (label: string[], sub: string, glyph: string, tags: Tag[] = []) =>
+  block(positions.kernel, { color: `orange`, glyph, label, sub, tags });
+const alt = (label: string[], sub: string, tags: Tag[] = []) =>
+  block(positions.alt, { color: `slab`, glyph: `route`, label, sub, tags });
+
+const links = {
+  call: (label?: string) => linkOf(`caller`, `io`, label),
+  read: (label?: string) => linkOf(`io`, `source`, label),
+  sys: (label?: string) => ({ ...linkOf(`kernel`, `io`, label, false), labelAt: 0.6 }),
+  alt: makeLink(`caller`, `alt`, [`caller`, `alt`], { heads: `both`, style: `off` }),
+};
+
+/** Code card, parked bottom-left under the caller where nothing else lives. */
+const card = cardAt({ x: positions.io.x, y: positions.io.y, dx: -250, dy: 150 }, `code`);
+
+export const javaIoNioLesson: Lesson = distinctConcepts({
   id: 'java-io-nio',
   title: 'I/O, NIO.2 & Selector',
   summary:
-    'Understand WHY Java separates byte streams from Charset Readers, why Buffered wrappers matter, how Files.lines() leaks FDs, how ByteBuffer flip() works, and Java Serialization RCE.',
+    'How Java reads bytes: streams versus readers, why buffering saves system calls, the Files.lines leak, ByteBuffer.flip(), one thread serving 10,000 sockets, and why not to deserialize untrusted data.',
   minutes: 12,
   level: 'core',
-  metrics: ['io_layer', 'encoding', 'syscall_cost', 'security_risk'],
-  legend: ['flow', ['req', 'read / flip'], ['res', 'buffered / epoll'], ['fail', 'FD leak / RCE']],
+  metrics: ['layer', 'syscalls', 'encoding', 'risk'],
+  legend: [[`req`, `call`], [`write`, `syscall`], [`fail`, `trap`]],
   goals: [
-    { text: 'Separate InputStream (bytes) from Reader (Charset)', step: 1 },
-    { text: 'Cut OS syscalls with BufferedInputStream Decorator', step: 2 },
-    { text: 'Close lazy Files.lines() streams via try-with-resources', step: 3 },
-    { text: 'Trace NIO ByteBuffer position/limit & flip()', step: 4 },
-    { text: 'Multiplex sockets via NIO Selector & epoll_wait()', step: 5 },
-    { text: 'Avoid ObjectInputStream RCE (Effective Java Item 85)', step: 6 },
+    { text: 'Separate InputStream (bytes) from Reader (characters)', step: 1 },
+    { text: 'Cut system calls with BufferedInputStream', step: 2 },
+    { text: 'Close lazy Files.lines() streams with try-with-resources', step: 3 },
+    { text: 'Trace ByteBuffer position, limit and flip()', step: 4 },
+    { text: 'Serve many sockets with a Selector and epoll', step: 5 },
+    { text: 'Avoid ObjectInputStream remote code execution', step: 6 },
   ],
   steps: [
     {
-      short: 'Bytes vs Chars',
-      chapter: 'io',
-      title: 'Why InputStream (Bytes) != Reader (Charset)',
+      short: 'Bytes · Chars',
+      chapter: 'setup',
+      title: 'InputStream gives bytes; Reader gives characters',
       body: [
-        '<code>InputStream</code> / <code>OutputStream</code> read and write raw 8-bit bytes (images, PDFs, sockets). <code>Reader</code> / <code>Writer</code> decode bytes into Unicode characters using a <code>Charset</code>.',
-        'Always pass <code>StandardCharsets.UTF_8</code> explicitly — relying on platform default charset causes mojibake bugs across Linux vs Windows!',
+        `A file contains <b>bytes</b>. <code>InputStream</code> hands them to you untouched. A <code>Reader</code> adds one more step: it decodes the bytes into characters using a <span class="term">Charset</span>.`,
+        `Which charset? If you don’t say, Java picks the platform default on older versions — so “é” can turn into “Ã©” on another machine. Always pass <code>StandardCharsets.UTF_8</code>.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Since Java 18 (JEP 400), UTF-8 is the default charset across all OSes, but explicit UTF_8 remains best practice.',
-      },
-      metrics: { io_layer: 'Stream vs Rdr', encoding: 'UTF-8 explicit', syscall_cost: 'Unbuffered', security_risk: 'Mojibake' },
+      changes: [`+ Charset decoder`, `+ Reader alt`],
+      metrics: { layer: 'bytes', syscalls: '1 / read', encoding: 'none', risk: 'mojibake' },
       scene: {
         entities: {
-          file: makeDb(-14, -14, { r: 2.2, h: 48, color: 'blue', label: ['Raw Bytes'], sub: '0xE2 0x82 0xAC' }),
-          is: makeBlock(0, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['InputStream'], sub: '8-bit bytes' }),
-          rdr: makeBlock(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['Reader UTF-8'], sub: 'char decode' }),
-          card: makePanel({ x: -12, y: 12 }, 'Bridge Bytes to Characters Safely', [
-            'try (var r = new BufferedReader(',
-            '       new InputStreamReader(in, StandardCharsets.UTF_8))) {',
-            '  return r.readLine();',
-            '} // Never omit Charset on InputStreamReader!',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          io: ioSystem([`InputStream`], `raw bytes`, [{ text: `no charset`, tone: `amber` }]),
+          source: source(`notes.txt`),
+          kernel: kernel([`Charset`], `UTF-8`, `code`, [{ text: `decode`, tone: `violet` }]),
+          alt: alt([`Reader`], `chars, not bytes`, [{ text: `UTF-8 explicit`, tone: `green` }]),
+          card: card(`Bytes or text?`, [`new String(in.readAllBytes(), UTF_8);`, `= new InputStreamReader(in, UTF_8);   // say the charset`, `! new FileReader(f)   // platform default on Java < 18`]),
         },
-        links: {
-          fl_is: makeLink('file', 'is', ['file', 'is'], { heads: 'end', label: 'raw bytes' }),
-          is_rd: makeLink('is', 'rdr', ['is', 'rdr'], { heads: 'end', label: 'UTF-8' }),
-        },
-        flows: [{ route: ['fl_is', 'is_rd'], kind: 'req', rate: 1.8 }],
+        links: { call: links.call(`read()`), read: links.read(`bytes`), sys: links.sys(`decodes`) },
+        flows: [{ route: ['call'], rate: 1.3, bounce: true }],
       },
     },
     {
       short: 'Buffered',
-      chapter: 'io',
-      title: 'Decorator Pattern: Why Buffered* Cuts Syscalls 8000x',
+      chapter: 'technique',
+      title: 'Buffered streams cut system calls ~8000×',
       body: [
-        'Calling <code>FileInputStream.read()</code> byte-by-byte triggers an expensive user-to-kernel OS syscall for every single byte.',
-        'Wrapping it in <code>BufferedInputStream</code> (Decorator pattern) reads an 8 KB chunk in 1 syscall so subsequent <code>read()</code> calls hit user-space RAM.',
+        `Every <code>read()</code> on a bare <code>FileInputStream</code> is a <span class="term">system call</span>: a switch into the kernel that costs microseconds. Reading a 1 MB file byte by byte means a million of them.`,
+        `<code>BufferedInputStream</code> is a <b>decorator</b>: it reads 8 KB per syscall into memory and serves your single-byte reads from there. Same API, one call per 8192 bytes.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Always close only the outer Decorator in try-with-resources — closing BufferedInputStream automatically flushes & closes the inner stream.',
-      },
-      changes: ['+ 8KB user-space buffer cuts syscalls', '+ Outer close() cascades inward'],
-      metrics: { io_layer: 'Decorator 8KB', encoding: 'Any', syscall_cost: '1 / 8192B', security_risk: 'None' },
+      changes: [`~ io: BufferedInputStream`, `+ kernel syscall`],
+      metrics: { layer: 'decorator', syscalls: '1 / 8 KB', encoding: 'any', risk: 'none' },
       scene: {
         entities: {
-          file: makeDb(-14, -14, { r: 2.2, h: 48, color: 'blue', label: ['OS Kernel'], sub: '1 syscall/8KB' }),
-          buf: makeBlock(0, -14, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['BufferedIn'], sub: 'byte[8192] RAM' }),
-          app: makeBlock(0, 0, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['App read()'], sub: 'fast RAM hit' }),
-          card: makePanel({ x: -12, y: 12 }, 'Buffered Decorator Eliminates Syscalls', [
-            '// Unbuffered: 1MB file = 1,000,000 OS syscalls!',
-            '// Buffered:   1MB file = ~128 OS syscalls',
-            'try (var in = new BufferedInputStream(',
-            '       new FileInputStream("data.bin"))) { ... }',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          io: ioSystem([`Buffered`, `InputStream`], `8 KB buffer`, [{ text: `1 syscall / 8 KB`, tone: `green`, icon: `gauge` }], `layers`),
+          source: source(`notes.txt`),
+          kernel: kernel([`kernel`], `read() syscall`, `cpu`, [{ text: `~1 µs each`, tone: `amber` }]),
+          card: card(`Wrap it once`, [`try (var in = new BufferedInputStream(`, `        new FileInputStream(file))) {`, `    int b;  while ((b = in.read()) != -1) { ... }`, `= 1 MB file: 128 syscalls, not 1,048,576`]),
         },
-        links: {
-          dk_bf: makeLink('file', 'buf', ['file', 'buf'], { heads: 'end', label: '8KB read' }),
-          bf_ap: makeLink('buf', 'app', ['buf', 'app'], { heads: 'end', label: 'RAM byte' }),
-        },
-        flows: [{ route: ['dk_bf', 'bf_ap'], kind: 'res', rate: 2.0 }],
+        links: { call: links.call(`read()`), read: links.read(`8 KB chunk`), sys: links.sys(`syscall`) },
+        flows: [{ route: ['call'], rate: 2, bounce: true }, { route: ['sys'], kind: 'write', rate: 0.6 }],
       },
     },
     {
-      short: 'NIO.2 Files',
-      chapter: 'nio2',
-      title: 'NIO.2 Files.lines() & The Hidden FD Leak Trap',
+      short: 'Files.lines',
+      chapter: 'problem',
+      title: 'Files.lines() is lazy — and holds a file handle',
       body: [
-        'Modern Java uses <code>Path.of(...)</code> and <code>Files.readString(path)</code> for small files, or <code>Files.lines(path)</code> to stream multi-GB files lazily.',
-        '<strong>Tricky OCP trap:</strong> <code>Files.lines()</code> holds an open OS file descriptor! If you don’t wrap the <code>Stream&lt;String&gt;</code> in <code>try-with-resources</code>, the OS runs out of file descriptors (<code>Too many open files</code>).',
+        `<code>Files.lines(path)</code> (NIO.2) reads lazily: a line is fetched only when the stream needs it. That also means the file stays <b>open</b> until the stream is closed.`,
+        `Forget to close it and each call leaks a file descriptor; after a few thousand the process dies with “Too many open files”. Always wrap it in <code>try-with-resources</code>.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Unlike Collection.stream(), NIO Streams (Files.lines, Files.walk, Files.list) MUST be closed in try-with-resources!',
-      },
-      changes: ['+ Path + Files replaces java.io.File', '+ Files.lines() requires try-with-resources'],
-      metrics: { io_layer: 'NIO.2 Path', encoding: 'UTF-8 default', syscall_cost: 'Lazy Stream', security_risk: 'FD leak if open' },
+      changes: [`~ io: Files.lines`, `~ source: fd 7 open`],
+      metrics: { layer: 'NIO.2', syscalls: 'lazy', encoding: 'UTF-8', risk: 'fd leak' },
       scene: {
         entities: {
-          fd: makeDb(-14, -14, { r: 2.2, h: 48, color: 'amber', label: ['OS File FD'], sub: 'held open!' }),
-          stm: makeBlock(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'layers', label: ['Files.lines()'], sub: 'Stream<String>' }),
-          twr: makeBlock(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'shield', label: ['try-with-res'], sub: 'auto close()' }),
-          card: makePanel({ x: -12, y: 12 }, 'Closing Lazy NIO.2 Streams Safely', [
-            '// Small files (Java 11+):',
-            'String text = Files.readString(Path.of("cfg.json"));',
-            '// Large files: MUST close Stream to release OS FD!',
-            'try (Stream<String> lines = Files.lines(path)) {',
-            '  return lines.filter(l -> l.contains("ERR")).count();',
-            '}',
-          ], { icon: 'terminal' }),
+          caller: caller([{ text: `forgot close()`, tone: `red`, icon: `alert` }]),
+          io: ioSystem([`Files.lines`], `lazy Stream`, [{ text: `still open`, tone: `red` }], `route`),
+          source: source(`fd 7 · open`, [{ text: `leaked`, tone: `red`, icon: `alert` }]),
+          alt: alt([`try-with`, `resources`], `closes fd`, [{ text: `safe`, tone: `green`, icon: `shield` }]),
+          card: card(`Always close`, [`! Files.lines(p).forEach(...);   // fd never closed`, `try (Stream<String> s = Files.lines(p)) {`, `    s.filter(l -> l.contains("ERROR")).count();`, `= }   // closed even on exceptions`]),
         },
-        links: {
-          fd_st: makeLink('fd', 'stm', ['fd', 'stm'], { heads: 'end', label: 'stream' }),
-          st_tw: makeLink('stm', 'twr', ['stm', 'twr'], { heads: 'end', label: 'close FD' }),
-        },
-        flows: [{ route: ['fd_st', 'st_tw'], kind: 'res', rate: 1.8 }],
+        links: { call: links.call(`lines(p)`), read: links.read(`holds fd`) },
+        flows: [{ route: ['read'], kind: 'fail', rate: 0.9 }],
       },
     },
     {
       short: 'ByteBuffer',
-      chapter: 'nio',
-      title: 'How NIO ByteBuffer Works (flip() & clear())',
+      chapter: 'technique',
+      title: 'ByteBuffer: position, limit and flip()',
       body: [
-        'A <code>ByteBuffer</code> has three cursors: <code>position</code>, <code>limit</code>, and <code>capacity</code>. Writing into it advances <code>position</code>.',
-        'Before reading what you just wrote, you MUST call <code>buf.flip()</code> (sets <code>limit = position; position = 0</code>). Calling <code>clear()</code> resets for the next write.',
+        `NIO channels read into a <code>ByteBuffer</code>, which tracks three numbers: <b>position</b> (next index), <b>limit</b> (first index you must not touch) and <b>capacity</b>. After <code>channel.read(buf)</code>, position is where the data ends.`,
+        `<code>flip()</code> sets limit = position and position = 0 so you can <em>read</em> what was written. <code>clear()</code> resets for the next read. Forget <code>flip()</code> and you read garbage.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Forgetting buf.flip() reads garbage/zeros after the written bytes up to capacity!',
-      },
-      changes: ['+ channel.read(buf) advances position', '+ flip() switches write -> read mode'],
-      metrics: { io_layer: 'ByteBuffer', encoding: 'Raw bytes', syscall_cost: 'Direct DMA', security_risk: 'Read garbage' },
+      changes: [`~ io: ByteBuffer`, `~ channel read`],
+      metrics: { layer: 'buffer', syscalls: '1 / read', encoding: 'raw', risk: 'no flip' },
       scene: {
         entities: {
-          wr: makeBlock(-14, -14, { s: 4.8, h: 54, color: 'sky', glyph: 'code', label: ['Write Mode'], sub: 'pos=5, lim=16' }),
-          flp: makeBlock(0, -14, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['buf.flip()'], sub: 'lim=5, pos=0' }),
-          rd: makeBlock(0, 0, { s: 4.8, h: 54, color: 'green', glyph: 'layers', label: ['Read Mode'], sub: 'reads 0..5' }),
-          card: makePanel({ x: -12, y: 12 }, 'ByteBuffer Write -> Flip -> Read Cycle', [
-            'ByteBuffer buf = ByteBuffer.allocate(1024);',
-            'while (channel.read(buf) > 0) {',
-            '  buf.flip();   // limit = pos; pos = 0',
-            '  out.write(buf);',
-            '  buf.clear();  // pos = 0; limit = capacity',
-            '}',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          io: ioSystem([`ByteBuffer`], `pos · limit · cap`, [{ text: `pos 5 · limit 8`, tone: `violet`, icon: `gauge` }], `box`),
+          source: source(`FileChannel`),
+          kernel: kernel([`kernel`], `DMA to buffer`, `cpu`, [{ text: `direct`, tone: `green` }]),
+          alt: alt([`flip()`], `limit = pos`, [{ text: `pos 0 · limit 5`, tone: `green` }]),
+          card: card(`Fill, flip, drain`, [`var buf = ByteBuffer.allocate(8);`, `ch.read(buf);     // position = 5`, `buf.flip();        // limit = 5, position = 0`, `while (buf.hasRemaining()) use(buf.get());`, `buf.clear();`]),
         },
-        links: {
-          wr_fl: makeLink('wr', 'flp', ['wr', 'flp'], { heads: 'end', label: 'flip()' }),
-          fl_rd: makeLink('flp', 'rd', ['flp', 'rd'], { heads: 'end', label: 'drain 0..5' }),
-        },
-        flows: [{ route: ['wr_fl', 'fl_rd'], kind: 'req', rate: 1.9 }],
+        links: { call: links.call(`get()`), read: links.read(`read(buf)`), sys: links.sys(`fills`) },
+        flows: [{ route: ['read'], kind: 'write', rate: 1.2, bounce: true }],
       },
     },
     {
       short: 'Selector',
-      chapter: 'nio',
-      title: 'NIO Selector & OS epoll Multiplexing',
+      chapter: 'solution',
+      title: 'One thread, 10,000 sockets',
       body: [
-        'Traditional <code>ServerSocket.accept()</code> blocks 1 OS thread per idle client. Non-blocking NIO registers thousands of <code>SocketChannel</code>s on one <code>Selector</code>.',
-        '<code>selector.select()</code> calls OS <code>epoll_wait()</code> and returns only sockets with ready bytes — powering Netty and Project Loom’s Poller.',
+        `A classic server needs one thread per connection, and each thread sleeps on <code>read()</code>. 10,000 clients means 10,000 threads and gigabytes of stack.`,
+        `A <span class="term">Selector</span> registers many non-blocking channels and asks the kernel (<code>epoll_wait</code>) <em>which ones are ready</em>. One thread then loops over only the active keys — the model behind Netty, Redis and Nginx.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'With JDK 21 Virtual Threads, you write simple blocking Socket/HttpClient code while the JVM uses NIO epoll underneath!',
-      },
-      changes: ['+ Non-blocking SocketChannel -> Selector', '+ OS epoll wakes only ready FDs'],
-      metrics: { io_layer: 'NIO Selector', encoding: 'TCP bytes', syscall_cost: '1 epoll_wait', security_risk: 'None' },
+      changes: [`~ io: Selector`, `~ source: 10,000 sockets`, `+ epoll`],
+      metrics: { layer: 'Selector', syscalls: '1 epoll_wait', encoding: 'TCP bytes', risk: 'none' },
       scene: {
         entities: {
-          socks: makeBlock(-14, -10, { s: 4.8, h: 54, color: 'sky', glyph: 'layers', label: ['10k Sockets'], sub: 'non-blocking' }),
-          sel: makeBlock(0, -10, { s: 4.8, h: 54, color: 'purple', glyph: 'cpu', label: ['NIO Selector'], sub: 'epoll_wait()' }),
-          ready: makeBlock(14, -16, { s: 4.8, h: 54, color: 'green', glyph: 'code', label: ['Ready Keys'], sub: 'OP_READ' }),
-          rd: makeDb(14, -2, { r: 2.2, h: 48, color: 'blue', label: ['ByteBuffer'], sub: 'reads ready' }),
-          card: makePanel({ x: -12, y: 12 }, 'Multiplexing 10k Connections on 1 Thread', [
-            'channel.configureBlocking(false);',
-            'channel.register(selector, SelectionKey.OP_READ);',
-            'selector.select(); // OS epoll_wait returns ready keys',
-          ], { icon: 'terminal' }),
+          caller: caller([{ text: `1 thread`, tone: `green` }]),
+          io: ioSystem([`Selector`], `ready keys only`, [{ text: `3 of 10,000 ready`, tone: `violet`, icon: `zap` }], `filter`),
+          source: source(`10,000 sockets`, [{ text: `non-blocking`, tone: `gray` }]),
+          kernel: kernel([`epoll`], `epoll_wait()`, `radio`, [{ text: `1 syscall`, tone: `green` }]),
+          card: card(`The event loop`, [`selector.select();                       // epoll_wait`, `for (var key : selector.selectedKeys()) {`, `    if (key.isReadable()) handleRead(key);`, `}`]),
         },
-        links: {
-          sk_sl: makeLink('socks', 'sel', ['socks', 'sel'], { heads: 'end', label: 'register' }),
-          sl_rd: makeLink('sel', 'ready', ['sel', 'ready'], { heads: 'end', label: 'read' }),
-          sl_bf: makeLink('sel', 'rd', ['sel', 'rd'], { heads: 'end', label: 'fill buf' }),
-        },
-        flows: [{ route: ['sk_sl', 'sl_rd'], kind: 'res', rate: 2.0 }, { route: ['sl_bf'], kind: 'req', rate: 1.6 }],
+        links: { call: links.call(`select()`), read: links.read(`ready keys`), sys: links.sys(`epoll_wait`) },
+        flows: [{ route: ['read'], rate: 1.6, bounce: true }, { route: ['sys'], kind: 'write', rate: 1 }],
       },
     },
     {
       short: 'Serialization',
-      chapter: 'security',
-      title: 'Why Effective Java Warns Against Java Serialization',
+      chapter: 'recap',
+      title: 'Never deserialize untrusted bytes',
       body: [
-        '<code>ObjectInputStream.readObject()</code> instantiates arbitrary classes and invokes <code>readObject()</code> gadget chains BEFORE your code can even cast the result!',
-        'Effective Java Item 85: <strong>Never deserialize untrusted bytes</strong> — use JSON (Jackson), Protobuf, or set a strict <code>ObjectInputFilter</code> allowlist.',
+        `<code>ObjectInputStream.readObject()</code> rebuilds objects from bytes and runs their code while doing it. A crafted stream can chain existing classes (“gadgets”) into <b>remote code execution</b> — the reason Effective Java Item 85 says to avoid Java serialization.`,
+        `Use <span class="term">JSON</span> or <span class="term">Protobuf</span> instead. If you must read Java serialization, set an <code>ObjectInputFilter</code> allow-list first.`,
       ],
-      callout: {
-        kind: 'warn',
-        text: 'Java Deserialization gadgets caused some of the worst RCE CVEs in history (Log4j/Apache Commons Collections).',
-      },
-      changes: ['+ ObjectInputStream runs gadgets on read', '+ Prefer JSON / Protobuf / InputFilter'],
-      metrics: { io_layer: 'JSON / Proto', encoding: 'UTF-8 / Bin', syscall_cost: 'Safe parse', security_risk: 'No RCE' },
+      changes: [`~ io: ObjectInputStream`, `+ gadget chain`, `+ JSON/Protobuf alt`],
+      metrics: { layer: 'objects', syscalls: 'n/a', encoding: 'binary', risk: 'RCE' },
       scene: {
         entities: {
-          ois: makeBlock(-12, -14, { s: 4.8, h: 54, color: 'red', glyph: 'alert', label: ['ObjectInput'], sub: 'gadget RCE!' }),
-          flt: makeBlock(0, -14, { s: 4.8, h: 54, color: 'amber', glyph: 'shield', label: ['InputFilter'], sub: 'JEP 290 filter' }),
-          json: makeDb(0, 0, { r: 2.2, h: 48, color: 'green', label: ['JSON / Proto'], sub: 'data-only safe' }),
-          card: makePanel({ x: -12, y: 12 }, 'Effective Java Item 85: Prefer Alternatives', [
-            '// DANGEROUS on untrusted bytes:',
-            'Object obj = new ObjectInputStream(in).readObject();',
-            '// SAFE: use data-only formats (JSON / Protobuf)',
-            '// Or Java 9+ ObjectInputFilter allowlist!',
-          ], { icon: 'terminal' }),
+          caller: caller(),
+          io: ioSystem([`ObjectInput`, `Stream`], `readObject()`, [{ text: `runs code`, tone: `red`, icon: `alert` }], `skull`),
+          source: source(`untrusted bytes`, [{ text: `attacker`, tone: `red` }]),
+          kernel: kernel([`gadget`, `chain`], `Runtime.exec`, `skull`, [{ text: `RCE`, tone: `red` }]),
+          alt: alt([`JSON /`, `Protobuf`], `data only`, [{ text: `safe`, tone: `green`, icon: `shield` }]),
+          card: card(`Safer options`, [`! new ObjectInputStream(in).readObject();`, `= mapper.readValue(in, Order.class);   // JSON data only`, `ois.setObjectInputFilter(ObjectInputFilter.Config`, `    .createFilter("com.shop.*;!*"));`]),
         },
-        links: {
-          oi_fl: makeLink('ois', 'flt', ['ois', 'flt'], { heads: 'end', label: 'guard' }),
-          fl_js: makeLink('flt', 'json', ['flt', 'json'], { heads: 'end', label: 'prefer JSON' }),
-        },
-        flows: [{ route: ['oi_fl'], kind: 'fail', rate: 1.5 }, { route: ['fl_js'], kind: 'res', rate: 1.8 }],
+        links: { call: links.call(`readObject()`), read: links.read(`bytes`), sys: links.sys(`executes`) },
+        flows: [{ route: ['sys'], kind: 'fail', rate: 1 }],
       },
     },
   ],
-};
+});

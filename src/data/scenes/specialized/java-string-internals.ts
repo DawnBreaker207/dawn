@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: a stack frame holding String references, the String objects on the heap,
@@ -11,35 +11,31 @@ import type { Lesson } from '@/lib/simulator/types';
 
 type Tag = { text: string; tone?: string; icon?: string };
 
-const at = (sx: number, sy: number) => ({
-  x: Math.round(((sx / 14 + sy / 7) / 2) * 10) / 10,
-  y: Math.round(((sx / 14 - sy / 7) / 2) * 10) / 10,
-});
-const P = {
-  stack: at(-220, 60),
-  javac: at(-120, -150),
-  lit: at(0, 0),
-  table: at(180, -140),
-  dup: at(70, 205),
-  bytes: at(200, 110),
-  gc: at(350, -40),
+const positions = {
+  stack: fromScreen(-220, 60),
+  javac: fromScreen(-120, -150),
+  lit: fromScreen(0, 0),
+  table: fromScreen(180, -140),
+  dup: fromScreen(70, 180),
+  bytes: fromScreen(200, 110),
+  gc: fromScreen(350, -40),
 };
 
 const stack = (tags: Tag[] = []) =>
-  makeBlock(P.stack.x, P.stack.y, { s: 4.4, h: 52, color: `blue`, glyph: `layers`, label: [`Stack frame`], sub: `a, b, c`, tags });
+  makeBlock(positions.stack.x, positions.stack.y, { s: 4.4, h: 52, color: `blue`, glyph: `layers`, label: [`Stack frame`], sub: `a, b, c`, tags });
 const lit = (tags: Tag[] = []) =>
-  makeBlock(P.lit.x, P.lit.y, { s: 4.4, h: 52, color: `green`, glyph: `file`, label: [`String "ok"`], sub: `pooled`, tags });
+  makeBlock(positions.lit.x, positions.lit.y, { s: 4.4, h: 52, color: `green`, glyph: `file`, label: [`String "ok"`], sub: `pooled`, tags });
 const dup = (sub: string, tags: Tag[] = []) =>
-  makeBlock(P.dup.x, P.dup.y, { s: 4.2, h: 50, color: `green`, glyph: `file`, label: [`String "ok"`], sub, tags });
+  makeBlock(positions.dup.x, positions.dup.y, { s: 4.2, h: 50, color: `green`, glyph: `file`, label: [`String "ok"`], sub, tags });
 const table = (tags: Tag[] = []) =>
-  makeBlock(P.table.x, P.table.y, { s: 4.4, h: 52, color: `purple`, glyph: `hash`, label: [`StringTable`], sub: `in the heap`, tags });
-const bytes = (sub: string, tags: Tag[] = []) => makeDb(P.bytes.x, P.bytes.y, { r: 2, h: 44, glyph: `database`, label: `byte[] · ${sub}`, tags });
+  makeBlock(positions.table.x, positions.table.y, { s: 4.4, h: 52, color: `purple`, glyph: `hash`, label: [`StringTable`], sub: `in the heap`, tags });
+const bytes = (sub: string, tags: Tag[] = []) => makeDb(positions.bytes.x, positions.bytes.y, { r: 2, h: 44, glyph: `database`, label: `byte[] · ${sub}`, tags });
 const javac = (tags: Tag[] = []) =>
-  makeBlock(P.javac.x, P.javac.y, { s: 4.4, h: 52, color: `orange`, glyph: `code`, label: [`javac`], sub: `+ indy concat`, tags });
-const gc = (tags: Tag[] = []) =>
-  makeBlock(P.gc.x, P.gc.y, { s: 4.2, h: 50, color: `orange`, glyph: `refresh`, label: [`GC dedup`], sub: `background`, tags });
+  makeBlock(positions.javac.x, positions.javac.y, { s: 4.4, h: 52, color: `orange`, glyph: `code`, label: [`javac`], sub: `+ indy concat`, tags });
+const garbageCollector = (tags: Tag[] = []) =>
+  makeBlock(positions.gc.x, positions.gc.y, { s: 4.2, h: 50, color: `orange`, glyph: `refresh`, label: [`GC dedup`], sub: `background`, tags });
 
-const L = {
+const links = {
   refA: makeLink(`stack`, `lit`, [`stack`, `lit`], { label: `a` }),
   refAB: makeLink(`stack`, `lit`, [`stack`, `lit`], { label: `a, b` }),
   refQuiet: makeLink(`stack`, `lit`, [`stack`, `lit`]),
@@ -56,8 +52,7 @@ const L = {
   dedup: makeLink(`gc`, `bytes`, [`gc`, `bytes`], { label: `dedup` }),
 };
 
-const card = (title: string, lines: string[]) =>
-  makePanel({ x: 0, y: 0, z: 0, dx: -480, dy: 125 }, title, lines, { icon: `code` });
+const card = cardAt({ x: 0, y: 0, dx: -480, dy: 125 }, `code`);
 
 export const javaStringInternalsLesson: Lesson = {
   id: 'java-string-internals',
@@ -95,7 +90,7 @@ export const javaStringInternalsLesson: Lesson = {
           bytes: bytes(`2 B`),
           card: card('String.java (JDK 21)', ['public final class String {', '  private final byte[] value;', '  private final byte coder; // 0=LATIN1', '  private int hash = 0; // cached']),
         },
-        links: { refA: L.refA, value: L.value },
+        links: { refA: links.refA, value: links.value },
         flows: [{ route: ['refA', 'value'], rate: 1 }],
       },
     },
@@ -119,7 +114,7 @@ export const javaStringInternalsLesson: Lesson = {
           bytes: bytes(`shared`),
           card: card('ldc vs new', ['String a = "ok";              // ldc → pool', 'String b = "ok";              // same object', 'String c = new String("ok");  // new object', '! a == c        // false', '= a.equals(c)   // true']),
         },
-        links: { refAB: L.refAB, value: L.valueQuiet, pooled: L.pooled, refC: L.refC, share: L.share },
+        links: { refAB: links.refAB, value: links.valueQuiet, pooled: links.pooled, refC: links.refC, share: links.share },
         flows: [
           { route: ['refAB'], rate: 1 },
           { route: ['refC'], kind: 'fail', rate: 0.6 },
@@ -146,7 +141,7 @@ export const javaStringInternalsLesson: Lesson = {
           bytes: bytes(`shared`),
           card: card('intern()', ['String c = new String("ok");', 'c = c.intern();      // look up "ok" in the table', '= c == a             // true: pooled object']),
         },
-        links: { refAB: L.refAB, value: L.valueQuiet, pooled: L.pooledQuiet, intern: L.intern, share: L.share },
+        links: { refAB: links.refAB, value: links.valueQuiet, pooled: links.pooledQuiet, intern: links.intern, share: links.share },
         flows: [{ route: ['intern'], kind: 'res', rate: 1 }],
       },
     },
@@ -170,7 +165,7 @@ export const javaStringInternalsLesson: Lesson = {
           bytes: bytes(`2 B`, [{ text: '1 B per char', tone: 'green' }]),
           card: card('memory for the chars', ['"ok"     LATIN1   2 chars →  2 bytes', '"ok✓"    UTF16    3 chars →  6 bytes', '# before JDK 9 every char took 2 bytes', '# opt out: -XX:-CompactStrings']),
         },
-        links: { refAB: L.refQuiet, value: L.value, pooled: L.pooledQuiet, refC: L.refCQuiet },
+        links: { refAB: links.refQuiet, value: links.value, pooled: links.pooledQuiet, refC: links.refCQuiet },
         flows: [{ route: ['value'], kind: 'res', rate: 1 }],
       },
     },
@@ -194,7 +189,7 @@ export const javaStringInternalsLesson: Lesson = {
           bytes: bytes(`2 B`),
           card: card('Report.java', ['String line = id + ":" + name;    // 1 indy call', 'String s = "";', '! for (var x : items) s += x;       // O(n²) copies', '= var sb = new StringBuilder();', '= for (var x : items) sb.append(x);']),
         },
-        links: { refAB: L.refQuiet, value: L.valueQuiet, pooled: L.pooledQuiet, concat: L.concat },
+        links: { refAB: links.refQuiet, value: links.valueQuiet, pooled: links.pooledQuiet, concat: links.concat },
         flows: [{ route: ['concat'], kind: 'write', rate: 2.5 }],
       },
     },
@@ -217,10 +212,10 @@ export const javaStringInternalsLesson: Lesson = {
           table: table(),
           dup: dup(`from JSON`, [{ text: '× 50,000', tone: 'violet' }]),
           bytes: bytes(`1 shared`, [{ text: '49,999 freed', tone: 'green' }]),
-          gc: gc(),
+          gc: garbageCollector(),
           card: card('JVM flags', ['$ java -XX:+UseG1GC \\', '       -XX:+UseStringDeduplication -jar app.jar', '# String objects stay; their byte[] is shared']),
         },
-        links: { refAB: L.refQuiet, value: L.valueQuiet, pooled: L.pooledQuiet, concat: L.concatQuiet, share: L.share, dedup: L.dedup },
+        links: { refAB: links.refQuiet, value: links.valueQuiet, pooled: links.pooledQuiet, concat: links.concatQuiet, share: links.share, dedup: links.dedup },
         flows: [{ route: ['dedup'], kind: 'write', rate: 1 }],
       },
     },
@@ -244,7 +239,7 @@ export const javaStringInternalsLesson: Lesson = {
           bytes: bytes(`62 B`),
           card: card('Query.java', ['String sql = """', '    SELECT id, name', '    FROM users', '    WHERE country = ?', '    """;']),
         },
-        links: { refAB: L.refQuiet, value: L.valueQuiet, pooled: L.pooled, concat: L.concat },
+        links: { refAB: links.refQuiet, value: links.valueQuiet, pooled: links.pooled, concat: links.concat },
         flows: [{ route: ['concat'], kind: 'write', rate: 0.8 }],
       },
     },

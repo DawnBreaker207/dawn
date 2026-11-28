@@ -1,281 +1,224 @@
-import {
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel,
-} from '@/lib/simulator/scene-builders';
+import { STAGE, codeCard, linkOf, makeDb, stageBlock, type Tag } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
+
+// Seed → result. Two threads share one piece of state; each step gives them a better tool.
+// `shared` always means "the state the threads share" — the tool protecting it is named in its
+// sub line and tags. The machinery nodes keep fixed meanings: `caches` + `memory` arrive in
+// step 2, the AQS `queue` in step 6; at most two nodes join per step.
+//
+//   step 1  t1, t2 ── shared                          seed: stale read
+//   step 2  + memory, + caches                        volatile and happens-before
+//   step 3  (shared: volatile ref)                    reordering, double-checked locking
+//   step 4  (shared: AtomicInteger)                   CAS retry loop
+//   step 5  (shared: LongAdder; memory: cells)        contention
+//   step 6  + queue; (shared: ReentrantLock)          AQS state + wait queue
+//   step 7  (shared: Semaphore, latch, RW lock)       pick the right synchronizer
+//
+//   t2 (left-top)          caches (top)          queue (top-right)
+//   t1 ───────────────── shared ──────────────── memory (right)
+
+const thread = (id: 't1' | 't2', tags: Tag[] = []) =>
+  stageBlock(id === `t1` ? STAGE.caller : STAGE.caller2, {
+    color: `blue`,
+    glyph: `layers`,
+    label: [id === `t1` ? `thread 1` : `thread 2`],
+    sub: id === `t1` ? `core 0` : `core 1`,
+    tags,
+  });
+const shared = (sub: string, tags: Tag[] = [], glyph = `box`) =>
+  stageBlock(STAGE.main, { color: `green`, glyph, label: [`shared`, `state`], sub, tags });
+const memory = (label: string, tags: Tag[] = []) =>
+  makeDb(STAGE.store.x, STAGE.store.y, { r: 2.2, h: 46, glyph: `database`, label, tags });
+const caches = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.helper, { color: `orange`, glyph: `layers`, label: [`L1 caches`], sub, tags });
+const waitQueue = (tags: Tag[] = []) =>
+  stageBlock(STAGE.alt, { color: `orange`, glyph: `listChecks`, label: [`AQS queue`], sub: `FIFO waiters`, tags });
+
+const links = {
+  t1: (label?: string) => linkOf(`t1`, `shared`, label),
+  t2: (label?: string) => linkOf(`t2`, `shared`, label),
+  flush: (label?: string) => linkOf(`shared`, `memory`, label),
+  cache: (label?: string) => ({ ...linkOf(`caches`, `shared`, label, false), labelAt: 0.6 }),
+  wait: (label?: string) => ({ ...linkOf(`queue`, `shared`, label, false), labelAt: 0.6 }),
+};
 
 export const javaJmmCasAqsLesson: Lesson = {
   id: 'java-jmm-cas-aqs',
   title: 'Monitors, JMM, CAS & AQS',
   summary:
-    'Master CPU cache visibility, volatile memory barriers, Happens-Before edges, lock-free CAS (Atomic/LongAdder), and AQS (ReentrantLock, Semaphore, CountDownLatch).',
+    'Two threads share some state, and it goes wrong; then give them volatile, a safe publication, atomics and CAS, LongAdder, and ReentrantLock with the AQS queue behind it — ending with the right synchronizer for each job.',
   minutes: 14,
   level: 'advanced',
-  metrics: ['visibility', 'ordering', 'contention', 'synchronizer'],
-  legend: ['flow', ['req', 'memory read/write'], ['res', 'fence / CAS sync'], ['fail', 'stale / blocked']],
+  metrics: ['visibility', 'ordering', 'contention', 'tool'],
+  legend: [[`req`, `read / write`], [`write`, `flush / CAS`], [`fail`, `stale / retry`]],
   goals: [
-    { text: 'Understand CPU L1/L2 cache visibility & stale reads', step: 1 },
-    { text: 'Enforce visibility with volatile & Memory Barriers', step: 2 },
-    { text: 'Prevent instruction reordering in Double-Checked Locking', step: 3 },
-    { text: 'Execute lock-free Atomic CAS loops', step: 4 },
-    { text: 'Eliminate false sharing with LongAdder striped cells', step: 5 },
-    { text: 'Trace AQS CLH queue in ReentrantLock', step: 6 },
-    { text: 'Apply Semaphore, CountDownLatch & ReadWriteLock', step: 7 },
+    { text: 'Explain stale reads from per-core caches', step: 1 },
+    { text: 'Fix visibility with volatile and happens-before', step: 2 },
+    { text: 'Stop reordering in double-checked locking', step: 3 },
+    { text: 'Run a lock-free CAS retry loop', step: 4 },
+    { text: 'Beat contention with LongAdder cells', step: 5 },
+    { text: 'Trace the AQS queue inside ReentrantLock', step: 6 },
+    { text: 'Choose Semaphore, CountDownLatch or a ReadWriteLock', step: 7 },
   ],
   steps: [
     {
-      short: 'Cache Stale',
-      chapter: 'jmm',
-      title: 'CPU Cache Visibility & Stale Reads',
+      short: 'Stale read',
+      chapter: 'problem',
+      title: 'Seed: two threads, one plain variable',
       body: [
-        'Each CPU core keeps local <code>L1/L2</code> caches and a <code>Store Buffer</code>. Without synchronization, Thread A writing <code>ready = true</code> may only update its core cache.',
-        'Thread B running on Core 2 keeps reading <code>ready == false</code> from its own L1 cache indefinitely — an infinite loop despite Thread A finishing.',
+        `Every CPU core caches variables in its own L1/L2. When thread 1 sets <code>stop = true</code>, the new value can sit in <b>its</b> cache and write buffer for a while — thread 2, on another core, keeps seeing <code>false</code>.`,
+        `It can be worse than delay: the JIT is allowed to read a non-volatile field <em>once</em> and reuse it, so <code>while (!stop) { }</code> may never see the change at all. We will give the threads better tools one step at a time.`,
       ],
-      callout: {
-        kind: 'warning',
-        text: 'The Java Memory Model (JMM) abstracts CPU caches and compiler registers: no synchronization = no visibility guarantee.',
-      },
-      metrics: { visibility: 'Stale (L1 Only)', ordering: 'Unordered', contention: 'None', synchronizer: 'None' },
+      metrics: { visibility: 'stale', ordering: 'any', contention: 'none', tool: 'none' },
       scene: {
         entities: {
-          core1: makeBlock(-12, -8, { s: 4.4, h: 52, color: 'blue', glyph: 'cpu', label: ['Core 1 (Thread A)'], sub: 'L1: ready=true' }),
-          ram: makeDb(4, -8, { r: 2.2, h: 48, color: 'purple', label: ['Main RAM'], sub: 'ready=false' }),
-          card: makePanel({ x: -12, y: 12 }, 'Stale Cache Visibility Bug', [
-            'boolean ready = false; // non-volatile',
-            '// Thread A (Core 1):',
-            'ready = true; // stays in Core 1 L1 / Store Buffer',
-            '// Thread B (Core 2):',
-            'while (!ready) { } // reads stale false forever!',
-          ], { icon: 'terminal' }),
+          t1: thread('t1', [{ text: `stop = true`, tone: `green` }]),
+          t2: thread('t2', [{ text: `still false`, tone: `red`, icon: `alert` }]),
+          shared: shared(`plain boolean`, [{ text: `no guarantee`, tone: `red` }]),
+          card: codeCard(`An endless loop`, [`boolean stop = false;`, `// thread 2:  while (!stop) { work(); }`, `// thread 1:  stop = true;`, `! thread 2 may never exit`]),
         },
-        links: {
-          c1_ram: makeLink('core1', 'ram', ['core1', 'ram'], { heads: 'end', label: 'buffered write', style: 'dashed' }),
-        },
-        flows: [{ route: ['c1_ram'], kind: 'fail', rate: 1.4 }],
+        links: { t1: links.t1(), t2: links.t2(`read`) },
+        flows: [{ route: ['t1'], rate: 1.2, bounce: true }, { route: ['t2'], kind: 'fail', rate: 1.2, bounce: true }],
       },
     },
     {
       short: 'volatile',
-      chapter: 'jmm',
-      title: 'volatile & Memory Barriers (Happens-Before)',
+      chapter: 'solution',
+      title: 'volatile: write, then everyone sees it',
       body: [
-        'Declaring <code>volatile boolean ready</code> inserts hardware <strong>Memory Barriers</strong> (<code>StoreLoad</code> fence on x86/ARM).',
-        'A write to a <code>volatile</code> field flushes the Store Buffer to Main RAM and invalidates other cores’ cache lines (MESI). Every volatile write <strong>Happens-Before</strong> any subsequent volatile read.',
+        `The copies live in the per-core <b>L1 caches</b>; main memory holds the truth. Marking the field <code>volatile</code> tells the JVM to put <b>memory barriers</b> around it. A write is flushed to main memory; a read always fetches the latest value; neither is reordered past the other accesses.`,
+        `That gives a <span class="term">happens-before</span> edge: everything thread 1 did <em>before</em> writing the flag is visible to thread 2 <em>after</em> it reads the flag. It does not make <code>count++</code> atomic.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'volatile guarantees visibility and ordering, NOT atomicity for compound ops like count++.',
-      },
-      changes: ['+ Added Core 2 (Thread B) reading invalidated cache', '+ StoreLoad memory barrier flushes to Main RAM'],
-      metrics: { visibility: 'MESI Flushed', ordering: 'Happens-Before', contention: 'Lock-Free', synchronizer: 'volatile' },
+      changes: [`+ main memory`, `+ L1 caches`, `~ shared: volatile`],
+      metrics: { visibility: 'guaranteed', ordering: 'happens-before', contention: 'lock-free', tool: 'volatile' },
       scene: {
         entities: {
-          core1: makeBlock(-14, -8, { s: 4.4, h: 52, color: 'green', glyph: 'cpu', label: ['Core 1 (Writer)'], sub: 'StoreLoad' }),
-          ram: makeDb(0, -8, { r: 2.2, h: 48, color: 'purple', label: ['Main RAM'], sub: 'ready=true' }),
-          core2: makeBlock(15, -20, { s: 4.4, h: 52, color: 'cyan', glyph: 'cpu', label: ['Core 2 (Reader)'], sub: 'L1 invalidated' }),
-          card: makePanel({ x: -12, y: 12 }, 'volatile Happens-Before Edge', [
-            'volatile boolean ready = false;',
-            '// Thread A: writes data, then volatile ready = true',
-            'data = 42; ready = true; // StoreStore + StoreLoad',
-            '// Thread B: sees ready == true -> guaranteed data == 42',
-            'if (ready) assert data == 42;',
-          ], { icon: 'terminal' }),
+          t1: thread('t1', [{ text: `stop = true`, tone: `green` }]),
+          t2: thread('t2', [{ text: `sees true`, tone: `green`, icon: `shield` }]),
+          shared: shared(`volatile boolean`, [{ text: `barrier`, tone: `violet`, icon: `lock` }]),
+          memory: memory(`main memory`, [{ text: `stop = true`, tone: `green` }]),
+          caches: caches(`one per core`, [{ text: `flush + invalidate`, tone: `violet` }]),
+          card: codeCard(`One keyword`, [`volatile boolean stop;`, `// thread 1:  stop = true;      // flushes to memory`, `// thread 2:  while (!stop) { } // always re-reads`, `= count++ on a volatile is STILL not atomic`]),
         },
-        links: {
-          c1_flush: makeLink('core1', 'ram', ['core1', 'ram'], { heads: 'end', label: 'flush + fence' }),
-          ram_read: makeLink('ram', 'core2', ['ram', 'core2'], { heads: 'end', label: 'reload' }),
-        },
-        flows: [{ route: ['c1_flush', 'ram_read'], kind: 'res', rate: 2.0 }],
+        links: { t1: links.t1(), t2: links.t2(), flush: links.flush(), cache: links.cache(`fences`) },
+        flows: [{ route: ['flush'], kind: 'write', rate: 1.4, bounce: true }, { route: ['t2'], rate: 1.4, bounce: true }],
       },
     },
     {
       short: 'Reordering',
-      chapter: 'jmm',
-      title: 'Instruction Reordering & Double-Checked Locking',
+      chapter: 'problem',
+      title: 'Reordering breaks double-checked locking',
       body: [
-        'JIT and CPUs reorder independent instructions for pipelining. Constructing <code>instance = new Singleton()</code> has 3 steps: allocate memory, run constructor, assign reference.',
-        'Without <code>volatile</code>, another thread can observe a non-null <code>instance</code> whose constructor has NOT finished! <code>volatile</code> forbids reordering across the barrier.',
+        `<code>instance = new Service()</code> is really three steps: allocate memory, run the constructor, store the reference. The compiler or CPU may swap the last two.`,
+        `Then thread 2 sees a <b>non-null</b> reference to a half-built object. Declare the field <code>volatile</code> and the constructor’s writes happen-before the reference becomes visible.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Always mark the Double-Checked Locking field volatile (or prefer the Initialization-on-Demand Holder idiom).',
-      },
-      changes: ['+ JIT Reorder Guard blocks unsafe publication', '+ Safe DCL singleton reference published'],
-      metrics: { visibility: 'Safe Publish', ordering: 'No Reorder', contention: 'Fast Path Free', synchronizer: 'DCL volatile' },
+      changes: [`~ shared: a lazily built instance`, `~ memory: half-built object`],
+      metrics: { visibility: 'safe publish', ordering: 'no reorder', contention: 'fast path', tool: 'volatile DCL' },
       scene: {
         entities: {
-          core1: makeBlock(-14, -8, { s: 4.4, h: 52, color: 'green', glyph: 'cpu', label: ['Init Thread'], sub: '1.alloc 2.init' }),
-          guard: makeBlock(0, -8, { s: 4.4, h: 52, color: 'orange', glyph: 'shield', label: ['Memory Barrier'], sub: 'blocks reorder' }),
-          core2: makeBlock(15, -20, { s: 4.4, h: 52, color: 'cyan', glyph: 'cpu', label: ['Reader Thread'], sub: 'sees full obj' }),
-          card: makePanel({ x: -12, y: 12 }, 'Safe Double-Checked Locking', [
-            'private static volatile Singleton instance;',
-            'public static Singleton getInstance() {',
-            '  if (instance == null) { // 1st check (unlocked)',
-            '    synchronized (Singleton.class) {',
-            '      if (instance == null) instance = new Singleton();',
-            '    }',
-            '  } return instance;',
-            '}',
-          ], { icon: 'terminal' }),
+          t1: thread('t1', [{ text: `creating`, tone: `amber` }]),
+          t2: thread('t2', [{ text: `got half object`, tone: `red`, icon: `alert` }]),
+          shared: shared(`volatile Service ref`, [{ text: `ref before init`, tone: `red` }]),
+          memory: memory(`heap`, [{ text: `Service (fields = 0)`, tone: `amber` }]),
+          caches: caches(`ctor ⇄ store`, [{ text: `reorder allowed`, tone: `red` }]),
+          card: codeCard(`Double-checked locking`, [`private static volatile Service instance;   // volatile!`, `if (instance == null)`, `    synchronized (Service.class) {`, `        if (instance == null) instance = new Service();`, `    }`, `# new Service() = alloc · ctor · store`]),
         },
-        links: {
-          init_guard: makeLink('core1', 'guard', ['core1', 'guard'], { heads: 'end', label: '3. publish' }),
-          guard_read: makeLink('guard', 'core2', ['guard', 'core2'], { heads: 'end', label: 'safe read' }),
-        },
-        flows: [{ route: ['init_guard', 'guard_read'], kind: 'req', rate: 1.8 }],
+        links: { t1: links.t1(), t2: links.t2(), flush: links.flush(), cache: links.cache(`swaps`) },
+        flows: [{ route: ['t2'], kind: 'fail', rate: 1, bounce: true }],
       },
     },
     {
-      short: 'Atomic CAS',
-      chapter: 'cas',
-      title: 'Lock-Free CAS (AtomicInteger & VarHandle)',
+      short: 'CAS',
+      chapter: 'technique',
+      title: 'CAS: lock-free by retrying',
       body: [
-        '<code>AtomicInteger.incrementAndGet()</code> avoids OS mutexes by using a single CPU instruction: <strong>Compare-And-Swap</strong> (<code>LOCK CMPXCHG</code> on x86).',
-        'It reads <code>expected</code>, computes <code>next</code>, and atomically swaps only if memory still equals <code>expected</code>. On conflict, it retries in a fast spin loop.',
+        `<code>AtomicInteger.incrementAndGet()</code> uses <span class="term">compare-and-swap</span>: one CPU instruction (<code>lock cmpxchg</code>) that writes the new value <em>only if</em> the variable still holds the value you read.`,
+        `If another thread got there first, the CAS fails and you simply <b>retry</b> with the fresh value. No thread is ever blocked, but under heavy contention many retries are wasted spinning.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'JDK 9+ replaced sun.misc.Unsafe with VarHandle.compareAndSet() for safe, strongly-typed hardware CAS.',
-      },
-      changes: ['+ AtomicInteger CAS loop replaces mutex lock', '+ Hardware LOCK CMPXCHG validates expected value'],
-      metrics: { visibility: 'Atomic', ordering: 'Sequential', contention: 'Spin Retry', synchronizer: 'CAS Loop' },
+      changes: [`~ shared: AtomicInteger`, `~ thread 2 loses the race`],
+      metrics: { visibility: 'atomic', ordering: 'sequential', contention: 'spin retry', tool: 'CAS loop' },
       scene: {
         entities: {
-          t1: makeDevice(-14, -10, { label: 'Thread 1', tags: [{ text: 'CAS', tone: 'blue', icon: 'zap' }] }),
-          casUnit: makeBlock(0, -10, { s: 4.6, h: 52, color: 'purple', glyph: 'cpu', label: ['CPU CAS Unit'], sub: 'LOCK CMPXCHG' }),
-          memVal: makeDb(12, -2, { r: 2.2, h: 48, color: 'green', label: ['Atomic Value'], sub: 'val: 41 -> 42' }),
-          card: makePanel({ x: -12, y: 12 }, 'Compare-And-Swap (CAS) Loop', [
-            'AtomicInteger counter = new AtomicInteger(41);',
-            '// Internally inside VarHandle / Unsafe:',
-            'do {',
-            '  int expected = getVolatile(mem);      // 41',
-            '  int next = expected + 1;              // 42',
-            '} while (!compareAndSet(mem, expected, next));',
-          ], { icon: 'terminal' }),
+          t1: thread('t1', [{ text: `CAS 5 → 6 ✓`, tone: `green` }]),
+          t2: thread('t2', [{ text: `CAS 5 → 6 ✗ retry`, tone: `amber`, icon: `refresh` }]),
+          shared: shared(`AtomicInteger = 6`, [{ text: `lock-free`, tone: `green` }], `hash`),
+          memory: memory(`main memory`, [{ text: `v = 6`, tone: `green` }]),
+          caches: caches(`lock cmpxchg`, [{ text: `1 instruction`, tone: `violet` }]),
+          card: codeCard(`The retry loop`, [`int old;`, `do { old = v.get(); }`, `while (!v.compareAndSet(old, old + 1));`, `= incrementAndGet() does exactly this`]),
         },
-        links: {
-          t1_cas: makeLink('t1', 'casUnit', ['t1', 'casUnit'], { heads: 'end', label: 'CAS(41 -> 42)' }),
-          cas_mem: makeLink('casUnit', 'memVal', ['casUnit', 'memVal'], { heads: 'end', label: 'atomic swap' }),
-        },
-        flows: [{ route: ['t1_cas', 'cas_mem'], kind: 'res', rate: 2.2 }],
+        links: { t1: links.t1(), t2: links.t2(`CAS fails`), flush: links.flush(), cache: links.cache(`atomic`) },
+        flows: [{ route: ['t1'], kind: 'write', rate: 1.2, bounce: true }, { route: ['t2'], kind: 'fail', rate: 1.2, bounce: true }],
       },
     },
     {
       short: 'LongAdder',
-      chapter: 'cas',
-      title: 'High Contention & LongAdder Striped Cells',
+      chapter: 'solution',
+      title: 'LongAdder: spread the contention',
       body: [
-        'Under heavy write contention (64+ threads), a single <code>AtomicLong</code> suffers constant CAS failures and cache-line bouncing.',
-        '<code>LongAdder</code> solves this by hashing threads across a striped <code>Cell[]</code> array padded with <code>@Contended</code> to prevent <strong>False Sharing</strong>. <code>sum()</code> aggregates cells on read.',
+        `With dozens of threads, one hot <code>AtomicLong</code> becomes a bottleneck: every CAS fights over the same cache line. <code>LongAdder</code> keeps a <b>base</b> and an array of <b>cells</b>; each thread updates its own cell, so they rarely collide.`,
+        `<code>sum()</code> adds them up when you ask. It is not an instantaneous snapshot, so use it for counters and statistics, not for sequence numbers. The cells are padded so neighbours don’t share a cache line (false sharing).`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Use LongAdder for high-throughput metrics/counters; use AtomicLong when you need atomic getAndIncrement() sequence IDs.',
-      },
-      changes: ['+ Striped @Contended Cell[] eliminates false sharing', '+ Threads update independent cache lines'],
-      metrics: { visibility: 'Striped', ordering: 'Eventual Sum', contention: 'Near Zero', synchronizer: 'LongAdder' },
+      changes: [`~ shared: LongAdder`, `~ memory: striped cells`],
+      metrics: { visibility: 'striped', ordering: 'eventual sum', contention: 'near zero', tool: 'LongAdder' },
       scene: {
         entities: {
-          t1: makeDevice(-15, -14, { label: 'Threads A..D' }),
-          cell0: makeBlock(-1, -18, { s: 4.2, h: 48, color: 'green', glyph: 'layers', label: ['Cell[0] (@Contended)'], sub: '64B padded' }),
-          cell1: makeBlock(-1, -2, { s: 4.2, h: 48, color: 'blue', glyph: 'layers', label: ['Cell[1] (@Contended)'], sub: '64B padded' }),
-          sumNode: makeDb(14, -10, { r: 2.2, h: 48, color: 'purple', label: ['adder.sum()'], sub: 'base + cells' }),
-          card: makePanel({ x: -12, y: 12 }, 'LongAdder Striped Counters', [
-            'LongAdder requests = new LongAdder();',
-            '// Hot path: threads hash to separate Cell[] slots',
-            'requests.increment(); // zero cross-core cache bounce',
-            '// Read path: sums base + all Cell values',
-            'long total = requests.sum();',
-          ], { icon: 'terminal' }),
+          t1: thread('t1', [{ text: `cell 0`, tone: `green` }]),
+          t2: thread('t2', [{ text: `cell 1`, tone: `green` }]),
+          shared: shared(`LongAdder base + cells`, [{ text: `sum() on demand`, tone: `violet` }], `layers`),
+          memory: memory(`cells[ 4 ]`, [{ text: `padded, one line each`, tone: `green` }]),
+          caches: caches(`64 B cache line`, [{ text: `no false sharing`, tone: `green` }]),
+          card: codeCard(`Counters under load`, [`var hits = new LongAdder();`, `hits.increment();        // each thread: own cell`, `long total = hits.sum();  // adds base + cells`, `# one hot AtomicLong: all threads CAS-retry`]),
         },
-        links: {
-          t_c0: makeLink('t1', 'cell0', ['t1', 'cell0'], { heads: 'end', label: 'hash->0' }),
-          t_c1: makeLink('t1', 'cell1', ['t1', 'cell1'], { heads: 'end', label: 'hash -> 1' }),
-          c0_sum: makeLink('cell0', 'sumNode', ['cell0', 'sumNode'], { heads: 'end', label: 'sum()' }),
-          c1_sum: makeLink('cell1', 'sumNode', ['cell1', 'sumNode'], { heads: 'end', label: 'sum()' }),
-        },
-        flows: [
-          { route: ['t_c0', 'c0_sum'], kind: 'req', rate: 2.0 },
-          { route: ['t_c1', 'c1_sum'], kind: 'res', rate: 2.0 },
-        ],
+        links: { t1: links.t1(), t2: links.t2(), flush: links.flush(), cache: links.cache(`pads`) },
+        flows: [{ route: ['t1'], kind: 'write', rate: 1.6, bounce: true }, { route: ['t2'], kind: 'write', rate: 1.6, bounce: true }],
       },
     },
     {
-      short: 'AQS Queue',
-      chapter: 'aqs',
-      title: 'AbstractQueuedSynchronizer (AQS) & ReentrantLock',
+      short: 'AQS',
+      chapter: 'technique',
+      title: 'AQS: a counter plus a waiting queue',
       body: [
-        '<code>ReentrantLock</code> is built on <strong>AQS</strong>: a single <code>volatile int state</code> updated via CAS plus a FIFO <strong>CLH Wait Queue</strong> of parked threads.',
-        'If CAS on <code>state</code> (0 → 1) fails, AQS wraps the thread in a Node, parks it via <code>LockSupport.park()</code> (zero CPU burn), and unparks the head successor on <code>unlock()</code>.',
+        `<code>ReentrantLock</code> is built on <span class="term">AbstractQueuedSynchronizer</span>: one <code>volatile int state</code> (0 = free, n = held n times) changed with CAS, plus a FIFO queue of waiting threads.`,
+        `Thread 1 CASes <code>state</code> from 0 to 1 and owns the lock. Thread 2 fails, queues itself and <b>parks</b> (0% CPU). <code>unlock()</code> sets state to 0 and wakes the first waiter. Semaphore, CountDownLatch and the read-write lock reuse the same machinery.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Virtual Threads (JDK 21) can park cleanly on ReentrantLock without pinning carrier threads — unlike synchronized.',
-      },
-      changes: ['+ AQS volatile state + CLH FIFO wait queue', '+ LockSupport.park/unpark replaces busy spinning'],
-      metrics: { visibility: 'CAS State', ordering: 'FIFO / Non-Fair', contention: 'Parked (0% CPU)', synchronizer: 'ReentrantLock' },
+      changes: [`+ AQS wait queue`, `~ shared: ReentrantLock`],
+      metrics: { visibility: 'CAS on state', ordering: 'FIFO queue', contention: 'parked, 0% CPU', tool: 'ReentrantLock' },
       scene: {
         entities: {
-          owner: makeDevice(-14, -10, { label: 'Owner Thread' }),
-          aqsState: makeBlock(-1, -10, { s: 4.6, h: 52, color: 'purple', glyph: 'shield', label: ['AQS state = 1'], sub: 'CAS acquire' }),
-          clhQueue: makeBlock(12, -10, { s: 4.4, h: 52, color: 'orange', glyph: 'queue', label: ['CLH Wait Queue'], sub: 'parked nodes' }),
-          card: makePanel({ x: -12, y: 12 }, 'AQS State + CLH Queue', [
-            'final ReentrantLock lock = new ReentrantLock();',
-            'lock.lock(); // CAS(state, 0, 1) or enqueue + park()',
-            'try {',
-            '  criticalSection();',
-            '} finally {',
-            '  lock.unlock(); // state-- -> LockSupport.unpark(head)',
-            '}',
-          ], { icon: 'terminal' }),
+          t1: thread('t1', [{ text: `owns lock`, tone: `green`, icon: `lock` }]),
+          t2: thread('t2', [{ text: `parked`, tone: `amber`, icon: `clock` }]),
+          shared: shared(`ReentrantLock state = 1`, [{ text: `owner: thread 1`, tone: `violet` }], `lock`),
+          memory: memory(`protected data`, [{ text: `one writer`, tone: `green` }]),
+          caches: caches(`barrier on state`, [{ text: `CAS on state`, tone: `violet` }]),
+          queue: waitQueue([{ text: `head → thread 2`, tone: `amber` }]),
+          card: codeCard(`Use it like this`, [`lock.lock();`, `try { balance += amount; }`, `finally { lock.unlock(); }   // always in finally`, `= tryLock(100, MILLISECONDS) avoids waiting forever`]),
         },
-        links: {
-          own_aqs: makeLink('owner', 'aqsState', ['owner', 'aqsState'], { heads: 'end', label: 'CAS(0->1)' }),
-          aqs_clh: makeLink('aqsState', 'clhQueue', ['aqsState', 'clhQueue'], { heads: 'end', label: 'unpark next' }),
-        },
-        flows: [{ route: ['own_aqs', 'aqs_clh'], kind: 'req', rate: 1.8 }],
+        links: { t1: links.t1(`lock ✓`), t2: links.t2(`queued`), flush: links.flush(), cache: links.cache(), wait: links.wait() },
+        flows: [{ route: ['t1'], kind: 'write', rate: 1.2, bounce: true }, { route: ['wait'], rate: 0.8 }],
       },
     },
     {
       short: 'Synchronizers',
-      chapter: 'aqs',
-      title: 'Semaphore, CountDownLatch & ReadWriteLock',
+      chapter: 'recap',
+      title: 'Result: pick the right synchronizer',
       body: [
-        'AQS powers Java’s daily production synchronizers by changing what <code>state</code> means:',
-        '• <code>Semaphore(permits)</code>: caps concurrent access (rate limiting / connection pools).<br>• <code>CountDownLatch(N)</code>: awaits N worker completions.<br>• <code>ReentrantReadWriteLock</code>: allows parallel readers while writers stay exclusive.',
+        `<b>Semaphore</b> limits how many threads enter at once (permits). <b>CountDownLatch</b> makes threads wait until N events have happened — one-shot. <b>ReentrantReadWriteLock</b> allows many readers <em>or</em> one writer. All of them wait in the same AQS queue.`,
+        `Rule of thumb: prefer <code>java.util.concurrent</code> collections and atomics, use <code>synchronized</code> or <code>ReentrantLock</code> for compound updates, and reach for the rest when the problem actually looks like a gate, a countdown or a read-mostly cache.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'On Virtual Threads, use Semaphore instead of fixed thread pools to bound concurrency against downstream DBs.',
-      },
-      changes: ['+ Semaphore caps permits via AQS shared acquire', '+ CountDownLatch releases all waiters at state == 0'],
-      metrics: { visibility: 'Happens-Before', ordering: 'Shared/Excl', contention: 'Bounded', synchronizer: 'JUC Suite' },
+      changes: [`~ shared: Semaphore, latch, RW lock`, `~ memory: DB pool`],
+      metrics: { visibility: 'happens-before', ordering: 'shared / exclusive', contention: 'bounded', tool: 'JUC suite' },
       scene: {
         entities: {
-          workers: makeDevice(-15, -10, { label: 'Virtual Workers' }),
-          sem: makeBlock(0, -18, { s: 4.2, h: 48, color: 'cyan', glyph: 'shield', label: ['Semaphore(10)'], sub: 'permits--' }),
-          latch: makeBlock(0, -2, { s: 4.2, h: 48, color: 'green', glyph: 'workflow', label: ['CountDownLatch'], sub: 'await() -> 0' }),
-          rwLock: makeBlock(14, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'database', label: ['ReadWriteLock'], sub: 'N rd / 1 wr' }),
-          card: makePanel({ x: -12, y: 12 }, 'Production JUC Synchronizers', [
-            'Semaphore dbLimit = new Semaphore(16);',
-            'CountDownLatch done = new CountDownLatch(3);',
-            'dbLimit.acquire(); // blocks when 16 permits active',
-            'try { callDownstream(); }',
-            'finally { dbLimit.release(); done.countDown(); }',
-          ], { icon: 'terminal' }),
+          t1: thread('t1', [{ text: `acquire()`, tone: `green` }]),
+          t2: thread('t2', [{ text: `await()`, tone: `amber` }]),
+          shared: shared(`Semaphore permits = 2`, [{ text: `limits to 2`, tone: `green`, icon: `gauge` }], `gauge`),
+          memory: memory(`DB pool`, [{ text: `2 connections`, tone: `gray` }]),
+          caches: caches(`barriers`, [{ text: `happens-before`, tone: `violet` }]),
+          queue: waitQueue([{ text: `latch · RW waiters`, tone: `violet` }]),
+          card: codeCard(`Three gates`, [`var gate = new Semaphore(2);   gate.acquire();`, `var ready = new CountDownLatch(3);   ready.await();`, `var rw = new ReentrantReadWriteLock();   rw.readLock().lock();`]),
         },
-        links: {
-          w_sem: makeLink('workers', 'sem', ['workers', 'sem'], { heads: 'end', label: 'acquire' }),
-          w_lat: makeLink('workers', 'latch', ['workers', 'latch'], { heads: 'end', label: 'countDown()' }),
-          sem_rw: makeLink('sem', 'rwLock', ['sem', 'rwLock'], { heads: 'end', label: 'shared read' }),
-        },
-        flows: [
-          { route: ['w_sem', 'sem_rw'], kind: 'req', rate: 1.8 },
-          { route: ['w_lat'], kind: 'res', rate: 1.6 },
-        ],
+        links: { t1: links.t1(`acquire`), t2: links.t2(`await`), flush: links.flush(), cache: links.cache(), wait: links.wait() },
+        flows: [{ route: ['t1'], rate: 1.2, bounce: true }, { route: ['wait'], kind: 'write', rate: 0.9 }],
       },
     },
   ],
