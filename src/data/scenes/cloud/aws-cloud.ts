@@ -52,7 +52,7 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: makeDevice(-18, -4, {
+            client: makeDevice(-12, -6, {
               label: `users`,
               tags: [{ text: `https://app.io`, icon: `globe` }],
             }),
@@ -97,7 +97,7 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: makeDevice(-18, -4, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
+            client: makeDevice(-12, -6, { label: `users`, tags: [{ text: `global edge`, icon: `globe` }] }),
             r53: makeBlock(-2, -16, {
               color: `yellow`,
               glyph: `globe`,
@@ -142,7 +142,7 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            client: makeDevice(-18, -4, { label: `users` }),
+            client: makeDevice(-12, -6, { label: `users` }),
             alb: makeBalancer(-2, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
             srv_a: makeBlock(12, -12, {
               color: `blue`,
@@ -189,7 +189,7 @@ export const awsCloudLesson = {
         },
         scene: {
           entities: {
-            alb: makeBalancer(-8, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
+            alb: makeBalancer(-5, -4, { color: `orange`, glyph: `balancer`, label: [`ALB`, `Dual-AZ`] }),
             ecs1: makeBlock(6, -14, { color: `blue`, glyph: `server`, label: [`ECS-1 (AZ-a)`], cpu: 0.3 }),
             ecs2: makeBlock(6, -6,  { color: `blue`, glyph: `server`, label: [`ECS-2 (AZ-a)`], cpu: 0.3 }),
             ecs3: makeBlock(6, 2,   { color: `blue`, glyph: `server`, label: [`ECS-3 (AZ-b)`], cpu: 0.3 }),
@@ -411,7 +411,7 @@ export const awsCloudLesson = {
               label: [`ECS AZ-b (#2)`],
               cpu: 0.35,
             }),
-            db_b: makeDb(18, -2, {
+            db_b: makeDb(16, 0, {
               label: `Aurora New Writer`,
               cpu: 0.4,
               tags: [{ text: `PRIMARY WRITER`, tone: `green` }],

@@ -1,291 +1,183 @@
-import {
-  makeBlock,
-  makeDb,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { STAGE, codeCard, linkOf, makeDb, stageBlock, distinctConcepts, type Tag } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-// ============================================================================
-// AWS SAA-C03: STORAGE & DATABASE TIERING
-// ============================================================================
-export const awsStorageDbLesson = {
-  id: `aws-storage-db`,
-  title: `AWS Storage & Database Architecture`,
-  summary: `Evaluate storage and database trade-offs: S3 lifecycle tiers, EBS vs EFS, Amazon Aurora shared-storage clusters, and DynamoDB single-digit ms scale.`,
+// One stage: an app on the left, the storage/database service in the middle (same id, new
+// label each act), the data tier on the right, a helper above and an alternative beside.
+//
+//                helper             alt
+//   app ──── service ─────────── data
+
+const app = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.caller, { color: `blue`, glyph: `server`, label: [`app`], sub, tags });
+const service = (label: string[], sub: string, tags: Tag[] = [], glyph = `database`) =>
+  stageBlock(STAGE.main, { color: `green`, glyph, label, sub, tags });
+const data = (label: string, tags: Tag[] = []) =>
+  makeDb(STAGE.store.x, STAGE.store.y, { r: 2.2, h: 46, glyph: `database`, label, tags });
+const helper = (label: string[], sub: string, glyph: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.helper, { color: `orange`, glyph, label, sub, tags });
+const alt = (label: string[], sub: string, tags: Tag[] = [], glyph = `route`) =>
+  stageBlock(STAGE.alt, { color: `slab`, glyph, label, sub, tags });
+
+const links = {
+  use: (label?: string) => linkOf(`app`, `service`, label),
+  keep: (label?: string) => linkOf(`service`, `data`, label),
+  help: (label?: string) => ({ ...linkOf(`helper`, `service`, label, false), labelAt: 0.6 }),
+};
+
+export const awsStorageDbLesson: Lesson = distinctConcepts({
+  id: 'aws-storage-db',
+  title: 'AWS Storage & Database Architecture',
+  summary:
+    'Matching data to the right AWS store: S3 storage classes and lifecycle, EBS versus EFS, Aurora’s shared storage, DynamoDB at single-digit milliseconds, ElastiCache in front, and S3 versioning with Object Lock.',
   minutes: 15,
-  level: `intermediate`,
-  metrics: [`storage_class`, `ebs_iops`, `aurora_replicas`, `dynamo_lat`, `cost_opt`],
-  legend: [`req`, `res`, [`ping`, `storage read`], `fail`],
+  level: 'intermediate',
+  metrics: ['access', 'latency', 'durability', 'cost'],
+  legend: [[`req`, `read / write`], [`write`, `replicate / tier`], [`fail`, `failure`]],
   goals: [
-    { text: 'Amazon S3 Storage Classes &', step: 1 },
-    { text: 'EBS Block Storage vs EFS', step: 2 },
-    { text: 'Amazon Aurora Multi-AZ', step: 3 },
-    { text: 'Amazon DynamoDB', step: 4 },
-    { text: 'Amazon ElastiCache', step: 5 },
-    { text: 'S3 Versioning & Object Lock', step: 6 },
+    { text: 'Pick S3 storage classes and lifecycle rules', step: 1 },
+    { text: 'Choose EBS block storage or shared EFS', step: 2 },
+    { text: 'Explain Aurora’s shared-storage Multi-AZ design', step: 3 },
+    { text: 'Design DynamoDB tables around the partition key', step: 4 },
+    { text: 'Cache hot reads with ElastiCache', step: 5 },
+    { text: 'Protect data with S3 Versioning and Object Lock', step: 6 },
   ],
   steps: [
     {
-      short: `S3 Tiering`,
-      chapter: `technique`,
-      title: `Amazon S3 Storage Classes & Lifecycle Rules`,
+      short: 'S3 classes',
+      chapter: 'setup',
+      title: 'S3: pay less as data gets colder',
       body: [
-        `Amazon S3 offers 99.999999999% (11 9's) durability by storing objects redundantly across multiple AZs.`,
-        `To optimize cost at scale, SAA-C03 designs use <strong>Lifecycle Rules</strong>:`,
-        `• <strong>S3 Standard</strong>: Frequent access, millisecond latency.`,
-        `• <strong>S3 Standard-Infrequent Access (IA)</strong>: Lower storage fee, retrieval fee per GB.`,
-        `• <strong>S3 Intelligent-Tiering</strong>: Automatically shifts objects between tiers without retrieval fees.`,
-        `• <strong>S3 Glacier Flexible / Deep Archive</strong>: Long-term compliance backup (cents per TB, hours retrieval).`,
+        `S3 stores objects with 11 nines of durability across at least three AZs. You pay for the <b>class</b>: <b>Standard</b> for hot data, <b>Intelligent-Tiering</b> to let AWS move objects by access pattern, <b>Standard-IA / One Zone-IA</b> for rarely read data, and <b>Glacier</b> tiers (Instant, Flexible, Deep Archive) for archives.`,
+        `A <span class="term">lifecycle rule</span> moves or expires objects automatically — e.g. Standard → IA at 30 days → Glacier at 90 → delete at 7 years. Colder classes cost less to store but more (or slower) to retrieve.`,
       ],
-      callout: {
-        kind: `tip`,
-        text: `S3 Intelligent-Tiering is the best practice for unpredictable or changing access patterns with zero operational overhead.`,
-      },
-      changes: [
-        `+ Lifecycle Policy: 30 days → S3 Standard-IA`,
-        `+ Lifecycle Policy: 90 days → Glacier Flexible`,
-        `+ Lifecycle Policy: 365 days → Glacier Deep Archive`,
-      ],
-      metrics: {
-        storage_class: `Tiered`,
-        ebs_iops: `—`,
-        aurora_replicas: `—`,
-        dynamo_lat: `—`,
-        cost_opt: `Save 70%`,
-      },
+      metrics: { access: 'by key', latency: 'ms → hours', durability: '11 nines', cost: '$0.02 → $0.001' },
       scene: {
         entities: {
-          s3_std: makeDb(-10, -4, { r: 1.8, h: 32, label: `S3 Standard ($0.023/GB)`, color: `green` }),
-          s3_ia: makeDb(0, 0, { r: 1.8, h: 32, label: `S3 Standard-IA ($0.0125/GB)`, color: `yellow` }),
-          s3_glacier: makeDb(10, 4, { r: 1.8, h: 32, label: `Glacier Deep ($0.00099/GB)`, color: `blue` }),
+          app: app(`uploads logs`, [{ text: `PutObject`, tone: `gray` }]),
+          service: service([`Amazon S3`], `Standard`, [{ text: `hot · $0.023/GB`, tone: `amber` }], `box`),
+          data: data(`Glacier Deep`, [{ text: `$0.00099 / GB`, tone: `green` }]),
+          helper: helper([`Lifecycle`, `rule`], `30 d → IA · 90 d → Glacier`, `clock`, [{ text: `automatic`, tone: `violet` }]),
+          alt: alt([`Standard-IA`], `rarely read`, [{ text: `$0.0125 / GB`, tone: `violet` }]),
+          card: codeCard(`Lifecycle policy`, [`{ "ID": "age-out", "Status": "Enabled", "Filter": { "Prefix": "logs/" },`, `  "Transitions": [{ "Days": 30, "StorageClass": "STANDARD_IA" },`, `                  { "Days": 90, "StorageClass": "DEEP_ARCHIVE" }],`, `  "Expiration": { "Days": 2555 } }`]),
         },
-        links: {
-          t1: makeLink(`s3_std`, `s3_ia`, [`s3_std`, `s3_ia`], { heads: `end`, label: `30 days` }),
-          t2: makeLink(`s3_ia`, `s3_glacier`, [`s3_ia`, `s3_glacier`], { heads: `end`, label: `90 days` }),
-        },
-        flows: [
-          { route: [`t1`], bounce: false, rate: 1.0 },
-          { route: [`t2`], bounce: false, rate: 1.0 },
-        ],
+        links: { use: links.use(`upload`), keep: links.keep(`tiers`), help: links.help(`moves`) },
+        flows: [{ route: ['use'], kind: 'write', rate: 1.4, bounce: true }, { route: ['keep'], kind: 'write', rate: 0.8 }],
       },
     },
     {
-      short: `EBS vs EFS`,
-      chapter: `technique`,
-      title: `EBS (Block Storage) vs EFS (Shared File System)`,
+      short: 'EBS · EFS',
+      chapter: 'technique',
+      title: 'Block disk for one instance; file system for many',
       body: [
-        `Understanding when to pick EBS vs EFS is a cornerstone of SAA-C03:`,
-        `• <strong>Amazon EBS (Elastic Block Store)</strong>: High-performance virtual disk (gp3, io2 Block Express). Bound to ONE Availability Zone, attached to ONE instance at a time (unless io2 Multi-Attach in same AZ). Ideal for databases & boot volumes.`,
-        `• <strong>Amazon EFS (Elastic File System)</strong>: Managed network file system (NFSv4). Mountable concurrently by hundreds of EC2 instances / ECS tasks across multiple AZs. Ideal for CMS (WordPress), shared analytics, and container state.`,
+        `<span class="term">EBS</span> is a network-attached <b>block</b> volume for a single EC2 instance (one AZ): low latency, snapshots to S3, ideal for boot disks and databases. Pick <code>gp3</code> by default and <code>io2</code> for high IOPS.`,
+        `<span class="term">EFS</span> is a shared <b>NFS</b> file system: thousands of instances across AZs mount the same directory, and it grows automatically. It costs more per GB and has higher latency — right for shared content, wrong for a database’s data files.`,
       ],
-      callout: {
-        kind: `insight`,
-        text: `Need high IOPS for a relational DB? Use EBS gp3 or io2. Need shared access for 50 web servers across 3 AZs? Use EFS.`,
-      },
-      changes: [
-        `+ EBS gp3 root volume: 3000 baseline IOPS, 125 MB/s`,
-        `+ EFS file system mounted via Mount Targets in 3 AZs`,
-        `+ ReadWriteMany (RWX) capability enabled`,
-      ],
-      metrics: {
-        storage_class: `EBS + EFS`,
-        ebs_iops: `3,000 IOPS`,
-        aurora_replicas: `—`,
-        dynamo_lat: `—`,
-        cost_opt: `Optimized`,
-      },
+      changes: [`~ service: EBS`, `+ EFS alt`, `+ snapshot`],
+      metrics: { access: 'block / NFS', latency: '1 / 2 ms', durability: '5 / 11 nines', cost: '$0.08 / $0.30' },
       scene: {
         entities: {
-          ec2_1: makeBlock(-11, -6, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 1`] }),
-          ec2_2: makeBlock(11, -6, { s: 3.8, h: 42, color: `teal`, glyph: `server`, label: [`EC2 Web Node 2`] }),
-          efs: makeBlock(0, 8, { s: 4.4, h: 48, color: `orange`, glyph: `folder`, label: [`Amazon EFS`], sub: `Shared POSIX` }),
+          app: app(`EC2 instance`, [{ text: `AZ-a`, tone: `gray` }]),
+          service: service([`EBS`], `gp3 · 1 AZ`, [{ text: `1 instance`, tone: `violet` }], `database`),
+          data: data(`S3 snapshots`, [{ text: `incremental`, tone: `green` }]),
+          helper: helper([`Snapshot`], `to S3`, `copy`, [{ text: `daily`, tone: `gray` }]),
+          alt: alt([`EFS`], `NFS · multi-AZ`, [{ text: `1,000s of clients`, tone: `green` }], `network`),
+          card: codeCard(`Which one?`, [`$ aws ec2 attach-volume --volume-id vol-0a1 --instance-id i-0b2 --device /dev/sdf`, `$ mount -t efs fs-0a1:/ /mnt/shared    # many instances, any AZ`, `= EBS: one instance, one AZ  ·  EFS: shared across AZs`]),
         },
-        links: {
-          m1: makeLink(`ec2_1`, `efs`, [`ec2_1`, `efs`], { heads: `both`, label: `NFS Mount` }),
-          m2: makeLink(`ec2_2`, `efs`, [`ec2_2`, `efs`], { heads: `both`, label: `NFS Mount` }),
-        },
-        flows: [
-          { route: [`m1`], bounce: true, rate: 1.5 },
-          { route: [`m2`], bounce: true, rate: 1.5 },
-        ],
+        links: { use: links.use(`block I/O`), keep: links.keep(`snapshots`), help: links.help(`schedules`) },
+        flows: [{ route: ['use'], rate: 1.6, bounce: true }, { route: ['keep'], kind: 'write', rate: 0.7 }],
       },
     },
     {
-      short: `Aurora Cluster`,
-      chapter: `technique`,
-      title: `Amazon Aurora Multi-AZ & Distributed Storage`,
+      short: 'Aurora',
+      chapter: 'technique',
+      title: 'Aurora: compute here, storage shared across AZs',
       body: [
-        `Amazon Aurora re-architects relational databases for the cloud:`,
-        `• Storage is independent of compute: data is striped into 10 GB chunks replicated 6 times across 3 AZs.`,
-        `• Writes only require a 4 of 6 quorum, eliminating disk stalls.`,
-        `• Up to <strong>15 Read Replicas</strong> share the exact same underlying distributed storage with sub-10ms replica lag.`,
-        `• Automated failover in under 30 seconds with zero data loss.`,
+        `Aurora separates compute from storage. The cluster volume is a distributed log-structured store that keeps <b>6 copies across 3 AZs</b>, self-heals in 10 GB segments, and tolerates losing a whole AZ for writes and reads.`,
+        `One writer and up to 15 <b>read replicas</b> all attach to the same volume, so replicas lag by only milliseconds and a failover promotes a replica in about 30 seconds. Use the cluster endpoint for writes and the reader endpoint to spread reads.`,
       ],
-      callout: {
-        kind: `insight`,
-        text: `Aurora Cluster Endpoints simplify code: Writer Endpoint directs to Primary instance; Reader Endpoint load-balances across all 15 Read Replicas.`,
-      },
-      changes: [
-        `+ Aurora PostgreSQL cluster provisioned`,
-        `+ 1 Writer instance (us-east-1a)`,
-        `+ 2 Read Replicas (us-east-1b, us-east-1c)`,
-        `+ Shared 6-way replicated storage volume`,
-      ],
-      metrics: {
-        storage_class: `Aurora SSD`,
-        ebs_iops: `Distributed`,
-        aurora_replicas: `2 Replicas`,
-        dynamo_lat: `< 10ms lag`,
-        cost_opt: `Enterprise`,
-      },
+      changes: [`~ service: Aurora writer`, `+ read replica`, `~ data: cluster volume`],
+      metrics: { access: 'SQL', latency: '~ms', durability: '6 copies · 3 AZ', cost: 'instances + I/O' },
       scene: {
         entities: {
-          writer: makeDb(-15, -8, { r: 2.2, h: 48, label: ['Aurora Writer'], sub: 'Primary AZ-1a', color: `purple` }),
-          storageVol: makeDb(0, -8, { r: 2.3, h: 50, label: ['Shared Storage'], sub: '6x / 3 AZs', color: `cyan` }),
-          reader1: makeDb(15, -16, { r: 2.1, h: 46, label: ['Read Replica 1'], sub: 'AZ-1b (<10ms)', color: `blue` }),
-          reader2: makeDb(15, 0, { r: 2.1, h: 46, label: ['Read Replica 2'], sub: 'AZ-1c (<10ms)', color: `blue` }),
-          card: makePanel({ x: -12, y: 12 }, `Aurora Cluster Endpoints & Quorum`, [
-            `// Writer Endpoint -> always routes to Primary (4/6 write quorum)`,
-            `// Reader Endpoint -> load-balances across up to 15 Read Replicas`,
-            `// Shared 6-way storage across 3 AZs -> <30s failover, zero data loss`,
-          ], { icon: `terminal` }),
+          app: app(`two endpoints`, [{ text: `writes + reads`, tone: `gray` }]),
+          service: service([`Aurora`, `writer`], `PostgreSQL`, [{ text: `AZ-a`, tone: `violet` }]),
+          data: data(`cluster volume`, [{ text: `6 copies · 3 AZ`, tone: `green`, icon: `shield` }]),
+          helper: helper([`Reader`, `endpoint`], `load balances`, `balancer`, [{ text: `up to 15`, tone: `violet` }]),
+          alt: alt([`Replica`], `AZ-b · lag ~10 ms`, [{ text: `promotes in ~30 s`, tone: `green`, icon: `zap` }], `database`),
+          card: codeCard(`Failover without data loss`, [`$ aws rds failover-db-cluster --db-cluster-identifier shop`, `writer AZ-a ✗  →  replica AZ-b promoted  (same volume, nothing to copy)`, `= endpoints keep their DNS names`]),
         },
-        links: {
-          w_s: makeLink(`writer`, `storageVol`, [`writer`, `storageVol`], { heads: `end`, label: `4/6 write` }),
-          s_r1: makeLink(`storageVol`, `reader1`, [`storageVol`, `reader1`], { heads: `end`, label: `read` }),
-          s_r2: makeLink(`storageVol`, `reader2`, [`storageVol`, `reader2`], { heads: `end`, label: `read` }),
-        },
-        flows: [
-          { route: [`w_s`, `s_r1`], bounce: false, rate: 2.0 },
-          { route: [`w_s`, `s_r2`], bounce: false, rate: 1.8 },
-        ],
+        links: { use: links.use(`writes`), keep: links.keep(`6 copies`), help: links.help(`reads`) },
+        flows: [{ route: ['use'], rate: 1.4, bounce: true }, { route: ['keep'], kind: 'write', rate: 1 }],
       },
     },
     {
-      short: `DynamoDB`,
-      chapter: `deep`,
-      title: `Amazon DynamoDB & Single-Digit Millisecond Scale`,
+      short: 'DynamoDB',
+      chapter: 'technique',
+      title: 'DynamoDB: design around the partition key',
       body: [
-        `Amazon DynamoDB is a fully managed, serverless key-value and document NoSQL database designed for massive scale.`,
-        `• <strong>Single-digit millisecond latency</strong> at any scale (gigabytes to petabytes).`,
-        `• <strong>DynamoDB Accelerator (DAX)</strong>: In-memory cache providing microsecond response times for read-heavy workloads without changing query logic.`,
-        `• <strong>Global Tables</strong>: Multi-Region Active-Active replication with sub-second replication latency for global apps.`,
+        `<span class="term">DynamoDB</span> is a serverless key-value and document store with single-digit-millisecond reads and writes at any scale. Items are placed by a hash of the <b>partition key</b>, so every access should name it; the sort key orders items inside a partition.`,
+        `Model for the queries you run (denormalise, use secondary indexes), pick a key with <em>high cardinality</em> so no partition runs hot, and choose <b>on-demand</b> (pay per request) or <b>provisioned</b> (cheaper at steady load). DAX adds a microsecond cache.`,
       ],
-      callout: {
-        kind: `tip`,
-        text: `Use DynamoDB when you need predictable single-digit ms response times at massive scale without managing connections, shards, or vacuuming.`,
-      },
-      changes: [
-        `+ On-Demand Capacity Mode configured`,
-        `+ DAX cluster deployed in VPC (Microsecond reads)`,
-        `+ Global Tables replication active across US & EU`,
-      ],
-      metrics: {
-        storage_class: `NoSQL SSD`,
-        ebs_iops: `Serverless`,
-        aurora_replicas: `Global`,
-        dynamo_lat: `< 1ms (DAX)`,
-        cost_opt: `On-Demand`,
-      },
+      changes: [`~ service: DynamoDB`, `~ data: partitions`],
+      metrics: { access: 'by key', latency: '< 10 ms', durability: '3 AZ replicas', cost: 'per request / RCU' },
       scene: {
         entities: {
-          app: makeBlock(-14, -4, { s: 4.8, h: 52, color: `teal`, glyph: `cpu`, label: [`API Microservice`] }),
-          dax: makeBlock(0, 0, { s: 4.4, h: 48, color: `orange`, glyph: `zap`, label: [`DAX Cache`], sub: `In-Memory` }),
-          dynamo: makeDb(14, 4, { r: 2.2, h: 36, label: `Amazon DynamoDB`, color: `blue` }),
+          app: app(`GetItem(customerId)`, [{ text: `by key`, tone: `green` }]),
+          service: service([`DynamoDB`], `on-demand`, [{ text: `hash(partition key)`, tone: `violet`, icon: `hash` }], `hash`),
+          data: data(`partitions`, [{ text: `cust# → partition 7`, tone: `green` }]),
+          helper: helper([`DAX`], `in-memory cache`, `zap`, [{ text: `µs reads`, tone: `green` }]),
+          alt: alt([`hot key`], `1 customer = 90%`, [{ text: `throttled`, tone: `red`, icon: `alert` }], `alert`),
+          card: codeCard(`Access by key`, [`$ aws dynamodb get-item --table-name Orders \\`, `      --key '{"customerId":{"S":"c-1042"},"orderId":{"S":"2026-0007"}}'`, `! a Scan reads every partition — avoid it on big tables`]),
         },
-        links: {
-          a_dax: makeLink(`app`, `dax`, [`app`, `dax`], { heads: `both`, label: `Cache Hit (<1ms)` }),
-          dax_ddb: makeLink(`dax`, `dynamo`, [`dax`, `dynamo`], { heads: `both`, label: `Cache Miss (4ms)` }),
-        },
-        flows: [
-          { route: [`a_dax`], bounce: true, rate: 3.0 },
-        ],
+        links: { use: links.use(`GetItem`), keep: links.keep(`partition`), help: links.help(`caches`) },
+        flows: [{ route: ['use', 'keep'], rate: 1.8, bounce: true }],
       },
     },
     {
-      short: `ElastiCache`,
-      chapter: `solution`,
-      title: `Amazon ElastiCache: Redis Cluster vs Memcached`,
+      short: 'ElastiCache',
+      chapter: 'solution',
+      title: 'ElastiCache: keep hot reads in memory',
       body: [
-        `<strong>Amazon ElastiCache</strong> delivers sub-millisecond responses for session stores, leaderboards, and database query caching.`,
-        `• <strong>Redis</strong>: Supports complex data structures (hashes, sorted sets, lists), Multi-AZ replication, automated failover, and pub/sub.`,
-        `• <strong>Memcached</strong>: Simple pure key-value caching with multi-threaded horizontal scaling across memory shards.`,
+        `Even a fast database is slower than RAM. <span class="term">ElastiCache</span> (Redis or Memcached) sits beside the database: the app checks the cache first and only on a <em>miss</em> reads the database, then stores the result with a TTL — the cache-aside pattern.`,
+        `Redis adds replication, persistence and rich data structures (sorted sets, streams); Memcached is a simpler multi-threaded cache. Watch the hit rate: at 90% the database sees a tenth of the reads.`,
       ],
-      callout: {
-        kind: `tip`,
-        text: `Use Cache-Aside pattern: application checks ElastiCache first on read. On miss, read database and write result into cache with TTL.`,
-      },
-      changes: [
-        `+ ElastiCache Redis Cluster provisioned in Multi-AZ`,
-        `+ Lazy loading (Cache-Aside) with 1h TTL`,
-        `+ Relieves 90% of read query load on database tier`,
-      ],
-      metrics: {
-        storage_class: `In-Memory RAM`,
-        ebs_iops: `Offloaded`,
-        aurora_replicas: `Relieved 90%`,
-        dynamo_lat: `Sub-millisecond`,
-        cost_opt: `Max Throughput`,
-      },
+      changes: [`~ service: ElastiCache`, `+ cache-aside`, `~ database load −90%`],
+      metrics: { access: 'by key', latency: '< 1 ms', durability: 'replicated (Redis)', cost: '$ per node-hour' },
       scene: {
         entities: {
-          app: makeBlock(-14, -4, { s: 4.4, h: 48, color: `teal`, glyph: `server`, label: [`API Cluster`] }),
-          redis: makeBlock(0, 0, { s: 4.4, h: 48, color: `rose`, glyph: `zap`, label: [`ElastiCache`], sub: `Redis Cluster` }),
-          db: makeDb(14, 4, { r: 2.2, h: 36, label: `Primary Aurora DB`, color: `purple` }),
+          app: app(`read-heavy`, [{ text: `95% reads`, tone: `gray` }]),
+          service: service([`Elasti`, `Cache`], `Redis cluster`, [{ text: `hit rate 92%`, tone: `green`, icon: `gauge` }], `zap`),
+          data: data(`Aurora`, [{ text: `load −90%`, tone: `green` }]),
+          helper: helper([`TTL`], `300 s`, `clock`, [{ text: `expires stale`, tone: `violet` }]),
+          alt: alt([`Memcached`], `simple cache`, [{ text: `no persistence`, tone: `gray` }]),
+          card: codeCard(`Cache-aside`, [`v = redis.get(key)`, `if v is None:                  # miss`, `    v = db.query(...); redis.setex(key, 300, v)`, `return v`]),
         },
-        links: {
-          ar: makeLink(`app`, `redis`, [`app`, `redis`], { heads: `both`, label: `Cache-Aside (0.8ms)` }),
-          ad: makeLink(`app`, `db`, [`app`, `db`], { heads: `both`, label: `DB Fallback on Miss`, style: `dashed` }),
-        },
-        flows: [
-          { route: [`ar`], bounce: true, rate: 2.5 },
-        ],
+        links: { use: links.use(`GET`), keep: links.keep(`on miss`), help: links.help(`expires`) },
+        flows: [{ route: ['use'], rate: 2, bounce: true }, { route: ['keep'], kind: 'write', rate: 0.5 }],
       },
     },
     {
-      short: `S3 Object Lock`,
-      chapter: `deep`,
-      title: `S3 Versioning, Object Lock (WORM) & Replication`,
+      short: 'Object Lock',
+      chapter: 'recap',
+      title: 'Versioning and Object Lock: never lose or alter it',
       body: [
-        `Protect critical S3 objects from accidental deletion or ransomware using <strong>S3 Versioning</strong> + <strong>MFA Delete</strong> + <strong>S3 Object Lock (WORM)</strong>.`,
-        `Use <strong>Compliance Mode</strong> when not even the AWS root user may overwrite or delete an object before its retention date, and pair with <strong>CRR (Cross-Region Replication)</strong>.`,
+        `<span class="term">Versioning</span> keeps every version of an object: an overwrite adds one, a delete adds a delete marker you can undo. It protects against accidents and is required for replication and Object Lock.`,
+        `<span class="term">Object Lock</span> makes versions <b>write-once-read-many</b>. In <i>governance</i> mode special permissions can lift it; in <i>compliance</i> mode nobody — not even root — can delete or shorten the retention. Use it for audit logs and regulated records.`,
       ],
-      callout: {
-        kind: `insight`,
-        text: 'S3 Replication (CRR/SRR) requires S3 Versioning to be enabled on BOTH source and destination buckets.',
-      },
-      changes: [
-        `+ S3 Versioning + Object Lock (Compliance) enabled`,
-        `+ Cross-Region Replication (CRR) syncs to DR bucket`,
-      ],
-      metrics: {
-        storage_class: `S3 WORM + CRR`,
-        ebs_iops: `11 9s`,
-        aurora_replicas: `DR Bucket`,
-        dynamo_lat: `Async CRR`,
-        cost_opt: `Compliant`,
-      },
+      changes: [`+ versioning`, `+ Object Lock (compliance)`, `~ data: immutable versions`],
+      metrics: { access: 'by key + version', latency: 'ms', durability: '11 nines', cost: 'per stored version' },
       scene: {
         entities: {
-          srcS3: makeDb(-14, -8, { r: 2.2, h: 48, color: `orange`, label: [`Source S3`], sub: `Versioning ON` }),
-          lock: makeBlock(0, -8, { s: 4.4, h: 50, color: `purple`, glyph: `shield`, label: [`Object Lock`], sub: `WORM Lock` }),
-          drS3: makeDb(15, -8, { r: 2.2, h: 48, color: `green`, label: [`DR Bucket`], sub: `CRR Replica` }),
-          card: makePanel({ x: -12, y: 12 }, `S3 Object Lock (Governance vs Compliance)`, [
-            `// Governance Mode: special IAM permission can override/delete`,
-            `// Compliance Mode: NOBODY (even root) can delete until retain-until`,
-            `// Prerequisite: Versioning MUST be enabled on source & target`,
-          ], { icon: `terminal` }),
+          app: app(`overwrites + deletes`, [{ text: `ransomware?`, tone: `red`, icon: `alert` }]),
+          service: service([`S3 bucket`], `versioning on`, [{ text: `Object Lock`, tone: `violet`, icon: `lock` }], `box`),
+          data: data(`3 versions`, [{ text: `locked 7 years`, tone: `green` }]),
+          helper: helper([`MFA`, `Delete`], `extra confirm`, `key`, [{ text: `root only`, tone: `gray` }]),
+          alt: alt([`delete`, `marker`], `undo-able`, [{ text: `object recoverable`, tone: `green` }]),
+          card: codeCard(`WORM retention`, [`$ aws s3api put-object-retention --bucket audit --key log-2026.json \\`, `      --retention '{"Mode":"COMPLIANCE","RetainUntilDate":"2033-12-31T00:00:00Z"}'`, `! DeleteObjectVersion → AccessDenied until 2033`]),
         },
-        links: {
-          s_lk: makeLink(`srcS3`, `lock`, [`srcS3`, `lock`], { heads: `end`, label: `WORM seal` }),
-          lk_dr: makeLink(`lock`, `drS3`, [`lock`, `drS3`], { heads: `end`, label: `CRR copy` }),
-        },
-        flows: [
-          { route: [`s_lk`, `lk_dr`], bounce: false, rate: 1.8 },
-        ],
+        links: { use: links.use(`DELETE`), keep: links.keep(`versions`), help: links.help(`requires`) },
+        flows: [{ route: ['use'], kind: 'fail', rate: 1, bounce: true }],
       },
     },
   ],
-};
-
-export default awsStorageDbLesson;
+});

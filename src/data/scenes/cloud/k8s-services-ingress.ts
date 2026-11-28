@@ -1,163 +1,219 @@
-import { makeBlock,makeLink,makePanel } from '@/lib/simulator/scene-builders';
+import { STAGE, codeCard, linkOf, stageBlock, type Tag } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const k8sServicesIngressLesson = {
+// Seed → result. A client must reach changing Pods; each step adds the piece that solves the
+// previous step’s limit, ending with the Gateway API.
+//
+//   1 client, pods (seed)        2 + service        3 + endpointslice
+//   4 + extuser, + node (NodePort)   5 + cloudlb (endpointslice leaves)
+//   6 + ingress (node leaves)        7 gateway replaces ingress                result
+//
+//                 endpointslice / cloudlb        node / ingress / gateway
+//   extuser                    service ───────── pods
+//   client
+
+const client = (tags: Tag[] = []) =>
+  stageBlock(STAGE.caller, { color: `blue`, glyph: `container`, label: [`client Pod`], sub: `10.244.1.5`, tags });
+const pods = (tags: Tag[] = []) =>
+  stageBlock(STAGE.store, { color: `blue`, glyph: `boxes`, label: [`web Pods`], sub: `app=web :8080`, tags });
+const service = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.main, { color: `green`, glyph: `network`, label: [`Service`], sub, tags });
+const endpointslice = (tags: Tag[] = []) =>
+  stageBlock(STAGE.helper, { color: `orange`, glyph: `listChecks`, label: [`Endpoint`, `Slice`], sub: `ready IPs only`, tags });
+const cloudlb = (tags: Tag[] = []) =>
+  stageBlock(STAGE.helper, { color: `orange`, glyph: `network`, label: [`Cloud LB`], sub: `NLB · health checks`, tags });
+const extuser = (tags: Tag[] = []) =>
+  stageBlock(STAGE.caller2, { color: `blue`, glyph: `user`, label: [`external`, `user`], sub: `203.0.113.7`, tags });
+const ingress = (tags: Tag[] = []) =>
+  stageBlock(STAGE.alt, { color: `green`, glyph: `route`, label: [`Ingress`, `controller`], sub: `NGINX · L7`, tags });
+const gateway = (tags: Tag[] = []) =>
+  stageBlock(STAGE.alt, { color: `green`, glyph: `route`, label: [`Gateway`], sub: `listeners · TLS`, tags });
+
+const links = {
+  cs: (label?: string) => linkOf(`client`, `service`, label),
+  sp: (label?: string) => linkOf(`service`, `pods`, label),
+  es: (label?: string) => ({ ...linkOf(`endpointslice`, `service`, label, false), labelAt: 0.6 }),
+  xs: (label?: string) => linkOf(`extuser`, `service`, label, false),
+  xl: linkOf(`extuser`, `cloudlb`, undefined, false),
+  ls: linkOf(`cloudlb`, `service`, undefined, false),
+  li: linkOf(`cloudlb`, `ingress`, undefined, false),
+  is: linkOf(`ingress`, `service`, undefined, false),
+  lg: linkOf(`cloudlb`, `gateway`, undefined, false),
+  gs: linkOf(`gateway`, `service`, undefined, false),
+};
+
+export const k8sServicesIngressLesson: Lesson = {
   id: 'k8s-services-ingress',
   title: 'Services, Ingress Controllers & Gateway API',
-  trackId: 'k8s',
-  badge: 'Intermediate',
-  summary: 'Understand how traffic enters a Kubernetes cluster: ClusterIP internal routing, NodePort high-port exposure, cloud LoadBalancer provisioning, and L7 Ingress / Gateway API HTTP routing.',
-  metrics: ['service_type', 'cluster_ip', 'ingress_tls', 'backend_pods'],
+  summary:
+    'Start with a client and Pods that keep changing, and add one piece per step: a Service, the endpoint list, NodePort, a cloud load balancer, an Ingress controller and finally the role-based Gateway API.',
+  minutes: 14,
+  level: 'intermediate',
+  metrics: ['layer', 'reach', 'cost', 'owner'],
+  legend: [[`req`, `request`], [`res`, `response`], [`fail`, `not ready`]],
   goals: [
-    { text: 'ClusterIP Internal Routing', step: 1 },
-    { text: 'NodePort External Exposure', step: 2 },
-    { text: 'Cloud LoadBalancer Service', step: 3 },
-    { text: 'L7 Ingress Controller Routing', step: 4 },
-    { text: 'Gateway API Role Architecture', step: 5 },
+    { text: 'Reach Pods through a stable ClusterIP', step: 2 },
+    { text: 'See how readiness controls the endpoint list', step: 3 },
+    { text: 'Expose a Service with NodePort', step: 4 },
+    { text: 'Provision a cloud LoadBalancer Service', step: 5 },
+    { text: 'Route by host and path with Ingress', step: 6 },
+    { text: 'Split roles with the Gateway API', step: 7 },
   ],
   steps: [
     {
-      title: 'ClusterIP: Internal Microservice Communication',
-      short: 'Default Cluster-Internal VIP',
+      short: 'Seed',
+      chapter: 'problem',
+      title: 'Seed: calling Pods by IP does not last',
       body: [
-        'ClusterIP is the default service type. It allocates a stable virtual IP address accessible only from within the cluster.',
-        'Pods communicate with the service name `order-svc`, while kube-proxy dynamically distributes traffic across healthy backend Pods.',
+        `A client Pod wants to call the web Pods. It could use a Pod’s IP — but Pods are replaced all the time and every replacement gets a <b>new IP</b>. Hard-coding addresses breaks at the first rolling update.`,
+        `What we need is one stable address that always leads to “whichever web Pods exist right now”. Each step below adds the piece that provides it, and then extends it to the outside world.`,
       ],
+      metrics: { layer: 'L3', reach: 'by Pod IP', cost: 'free', owner: 'app team' },
       scene: {
         entities: {
-          frontendPod: makeBlock(-10, -16, { s: 4, h: 42, color: 'blue', label: ['Frontend Pod', 'Calls order-svc:80'] }),
-          clusterIpVip: makeBlock(6, -16, { s: 4.5, h: 44, color: 'purple', label: ['ClusterIP VIP', '10.96.10.45:80'] }),
-          backendPod1: makeBlock(-10, 4, { s: 4, h: 42, color: 'green', label: ['Order Pod 1', '10.244.1.12:8080'] }),
-          backendPod2: makeBlock(6, 4, { s: 4, h: 42, color: 'green', label: ['Order Pod 2', '10.244.2.18:8080'] }),
-          card: makePanel({ x: -2, y: 14 }, 'ClusterIP Service', [
-            'type: ClusterIP',
-            'Virtual IP: 10.96.10.45',
-            'Internal access only',
-          ]),
+          client: client([{ text: `calls 10.244.2.9`, tone: `amber` }]),
+          pods: pods([{ text: `IPs change on restart`, tone: `red`, icon: `alert` }]),
+          card: codeCard(`A fragile address`, [`$ kubectl get pods -l app=web -o wide`, `web-7d9f-a  10.244.2.9`, `$ kubectl rollout restart deploy/web`, `web-7d9f-b  10.244.3.4     # a different IP`]),
         },
-        links: {
-          frontendPod_clusterIpVip: makeLink('frontendPod', 'clusterIpVip', ['frontendPod', 'clusterIpVip'], { label: 'HTTP request' }),
-          clusterIpVip_backendPod1: makeLink('clusterIpVip', 'backendPod1', ['clusterIpVip', 'backendPod1'], { label: 'load balanced' }),
-          clusterIpVip_backendPod2: makeLink('clusterIpVip', 'backendPod2', ['clusterIpVip', 'backendPod2'], { label: 'load balanced' }),
-        },
+        links: {},
+        flows: [],
       },
     },
     {
-      title: 'NodePort: Port Forwarding on Every Node',
-      short: 'High Port (30000-32767)',
+      short: 'ClusterIP',
+      chapter: 'setup',
+      title: '+ Service: one stable address',
       body: [
-        'NodePort opens a dedicated high port (default 30000–32767) on all worker node physical IPs.',
-        'Any traffic sent to `node-ip:31250` is automatically forwarded to the underlying service and routed to healthy pods, even if the pod lives on another node.',
+        `A <span class="term">Service</span> gives a group of Pods one stable virtual IP, a <b>ClusterIP</b>, plus a DNS name. Pods are chosen by a <b>label selector</b> (<code>app=web</code>). kube-proxy on every node turns the virtual IP into one of the real Pod IPs.`,
+        `Clients now call <code>web:80</code> and never care which Pods exist. ClusterIP is the default and reachable only inside the cluster.`,
       ],
+      changes: [`+ Service (ClusterIP)`],
+      metrics: { layer: 'L4', reach: 'in-cluster', cost: 'free', owner: 'app team' },
       scene: {
         entities: {
-          externalUser: makeBlock(-2, -18, { s: 4.2, h: 42, color: 'blue', label: ['External User', 'Traffic to :31250'] }),
-          workerNode1: makeBlock(-10, -2, { s: 4.5, h: 44, color: 'orange', label: ['Node 1 (:31250)', 'Receives connection'] }),
-          workerNode2: makeBlock(6, -2, { s: 4.5, h: 44, color: 'slab', label: ['Node 2 (:31250)', 'Idle listener'] }),
-          backendPod: makeBlock(6, 14, { s: 4, h: 42, color: 'green', label: ['Target Pod (Node 2)', 'Receives packet'] }),
-          card: makePanel({ x: -12, y: 12 }, 'NodePort Allocation', [
-            'type: NodePort',
-            'nodePort: 31250',
-            'Allocated on ALL nodes',
-          ]),
+          client: client(),
+          pods: pods([{ text: `3 ready`, tone: `green` }]),
+          service: service(`ClusterIP 10.96.0.20`, [{ text: `app=web`, tone: `violet` }]),
+          card: codeCard(`The Service`, [`apiVersion: v1`, `kind: Service`, `spec: { selector: { app: web }, ports: [{ port: 80, targetPort: 8080 }] }`, `= one name (web), one IP, any number of Pods`]),
         },
-        links: {
-          externalUser_workerNode1: makeLink('externalUser', 'workerNode1', ['externalUser', 'workerNode1'], { label: 'hits port 31250' }),
-          workerNode1_backendPod: makeLink('workerNode1', 'backendPod', ['workerNode1', 'backendPod'], { label: 'cross-node forwarding' }),
-        },
+        links: { cs: links.cs(`web:80`), sp: links.sp(`picks one`) },
+        flows: [{ route: ['cs', 'sp'], rate: 1.4, bounce: true }],
       },
     },
     {
-      title: 'LoadBalancer: Cloud Provider Integration',
-      short: 'Cloud NLB/ALB Provisioning',
+      short: 'Endpoints',
+      chapter: 'technique',
+      title: '+ EndpointSlice: only ready Pods get traffic',
       body: [
-        'When running on cloud providers (AWS, GCP, Azure), setting `type: LoadBalancer` automatically provisions an external cloud load balancer.',
-        'The cloud load balancer distributes external internet traffic across cluster NodePorts, providing a dedicated public entry IP.',
+        `The Service doesn’t hold Pod IPs itself. The control plane keeps an <span class="term">EndpointSlice</span>: the IPs of Pods that match the selector <em>and pass their readiness probe</em>.`,
+        `A Pod that is starting, overloaded or failing its probe is removed from the list within seconds and added back when it recovers — rolling updates stay invisible to clients.`,
       ],
+      changes: [`+ EndpointSlice`, `~ one Pod not ready`],
+      metrics: { layer: 'L4', reach: 'in-cluster', cost: 'free', owner: 'app team' },
       scene: {
         entities: {
-          cloudLb: makeBlock(-2, -16, { s: 5, h: 46, color: 'purple', label: ['Cloud Load Balancer', 'IP: 34.120.45.10'] }),
-          nodeA: makeBlock(-10, 2, { s: 4, h: 42, color: 'orange', label: ['Node 1 (Port 32100)', 'Target group instance'] }),
-          nodeB: makeBlock(6, 2, { s: 4, h: 42, color: 'orange', label: ['Node 2 (Port 32100)', 'Target group instance'] }),
-          card: makePanel({ x: -12, y: 14 }, 'Cloud LoadBalancer', [
-            'type: LoadBalancer',
-            'Provisions AWS NLB',
-            'Dedicated Public IP',
-          ]),
+          client: client(),
+          pods: pods([{ text: `2 ready · 1 failing`, tone: `amber`, icon: `alert` }]),
+          service: service(`ClusterIP 10.96.0.20`, [{ text: `2 endpoints`, tone: `green` }]),
+          endpointslice: endpointslice([{ text: `.2.9 · .3.4`, tone: `violet` }]),
+          card: codeCard(`Who is in the list?`, [`$ kubectl get endpointslices -l kubernetes.io/service-name=web`, `ENDPOINTS: 10.244.2.9, 10.244.3.4`, `! 10.244.1.8 failed readinessProbe → removed`]),
         },
-        links: {
-          cloudLb_nodeA: makeLink('cloudLb', 'nodeA', ['cloudLb', 'nodeA'], { label: 'health check' }),
-          cloudLb_nodeB: makeLink('cloudLb', 'nodeB', ['cloudLb', 'nodeB'], { label: 'health check' }),
-        },
+        links: { cs: links.cs(`web:80`), sp: links.sp(`2 of 3`), es: links.es(`updates`) },
+        flows: [{ route: ['cs', 'sp'], rate: 1.4, bounce: true }],
       },
     },
     {
-      title: 'Ingress Controller: L7 HTTP Routing',
-      short: 'Host & Path Based Routing',
+      short: 'NodePort',
+      chapter: 'technique',
+      title: '+ NodePort: a port on every node',
       body: [
-        'Creating a cloud LoadBalancer for each service is expensive and unmanageable.',
-        'An Ingress Controller (NGINX, Envoy, Traefik) acts as a single reverse proxy entry point, routing traffic by HTTP Host header and URL Path to hundreds of internal services.',
+        `To reach the Service from <em>outside</em> the cluster, <b>NodePort</b> opens the same high port (30000–32767) on every node. A request to <code>any-node:31250</code> is forwarded to the Service, then to a Pod, even on another node.`,
+        `Simple and cloud-independent, but clients must know node IPs, the port range is odd, and a dead node is a dead address.`,
       ],
+      changes: [`+ external user`, `~ Service: NodePort 31250`],
+      metrics: { layer: 'L4', reach: 'node IP:port', cost: 'free', owner: 'platform' },
       scene: {
         entities: {
-          ingressController: makeBlock(-2, -16, { s: 5, h: 46, color: 'green', label: ['Ingress Controller', 'NGINX / Envoy Proxy'] }),
-          orderService: makeBlock(-10, 4, { s: 4, h: 42, color: 'blue', label: ['order-svc:80', 'Path: /orders'] }),
-          userService: makeBlock(6, 4, { s: 4, h: 42, color: 'orange', label: ['user-svc:80', 'Path: /users'] }),
-          card: makePanel({ x: -12, y: 14 }, 'Ingress Rules', [
-            'rules:',
-            '- host: api.example.com',
-            '  /orders -> order-svc',
-            '  /users  -> user-svc',
-          ]),
+          client: client(),
+          pods: pods([{ text: `3 ready`, tone: `green` }]),
+          service: service(`NodePort 31250`, [{ text: `every node`, tone: `violet` }]),
+          endpointslice: endpointslice(),
+          extuser: extuser([{ text: `any-node:31250`, tone: `amber` }]),
+          card: codeCard(`Expose it`, [`spec:`, `  type: NodePort`, `  ports: [{ port: 80, nodePort: 31250 }]`, `$ curl http://192.168.1.11:31250/`]),
         },
-        links: {
-          ingressController_orderService: makeLink('ingressController', 'orderService', ['ingressController', 'orderService'], { label: 'GET /orders' }),
-          ingressController_userService: makeLink('ingressController', 'userService', ['ingressController', 'userService'], { label: 'GET /users' }),
-        },
+        links: { cs: links.cs(), sp: links.sp(), es: links.es(), xs: links.xs(`:31250`) },
+        flows: [{ route: ['xs', 'sp'], rate: 1.4, bounce: true }],
       },
     },
     {
-      title: 'Gateway API: The Modern Successor',
-      short: 'Role-Oriented Gateway API',
+      short: 'LoadBalancer',
+      chapter: 'solution',
+      title: '+ Cloud LB: the provider fronts the nodes',
       body: [
-        'The Gateway API is the modern evolution of Ingress, separating concerns by role:',
-        'Platform engineers manage Gateways and TLS policies, while developers manage granular HTTPRoutes, canary traffic splitting, and header filtering.',
+        `Set <code>type: LoadBalancer</code> and the cloud controller asks the provider for a real load balancer (an AWS NLB, a GCP forwarding rule…) with a public IP, health-checking the nodes’ NodePorts.`,
+        `One Service, one load balancer: clean for a few Services, but it costs money per balancer and gives only L4 — no host or path routing. Ten APIs would mean ten bills.`,
       ],
+      changes: [`+ Cloud LB`, `− EndpointSlice (out of focus)`, `− direct NodePort access`],
+      metrics: { layer: 'L4', reach: 'public IP', cost: '~$18 / mo each', owner: 'platform' },
       scene: {
         entities: {
-          infraGateway: makeBlock(-2, -16, { s: 5, h: 46, color: 'purple', label: ['Gateway Resource', 'Platform Team'] }),
-          stableRoute: makeBlock(-10, 4, { s: 4, h: 42, color: 'blue', label: ['Order Stable', '90% Traffic'] }),
-          canaryRoute: makeBlock(6, 4, { s: 4, h: 42, color: 'green', label: ['Order Canary', '10% Traffic'] }),
+          client: client(),
+          pods: pods([{ text: `3 ready`, tone: `green` }]),
+          service: service(`LoadBalancer`, [{ text: `34.120.5.9`, tone: `green` }]),
+          extuser: extuser(),
+          cloudlb: cloudlb([{ text: `provisioned`, tone: `violet` }]),
+          card: codeCard(`One line`, [`spec:`, `  type: LoadBalancer`, `$ kubectl get svc web`, `EXTERNAL-IP: 34.120.5.9`]),
         },
-        links: {
-          infraGateway_stableRoute: makeLink('infraGateway', 'stableRoute', ['infraGateway', 'stableRoute'], { label: 'weight: 90' }),
-          infraGateway_canaryRoute: makeLink('infraGateway', 'canaryRoute', ['infraGateway', 'canaryRoute'], { label: 'weight: 10' }),
-        },
+        links: { cs: links.cs(), sp: links.sp(), xl: links.xl, ls: links.ls },
+        flows: [{ route: ['xl', 'ls', 'sp'], rate: 1.4, bounce: true }],
       },
     },
     {
-      title: 'Traffic Ingress Architecture Summary',
-      short: 'Full Traffic Pipeline',
+      short: 'Ingress',
+      chapter: 'solution',
+      title: '+ Ingress: one entry point, many Services',
       body: [
-        'From external DNS queries to final container socket buffers, Kubernetes provides layered abstraction models balancing cost, flexibility, and security.',
+        `An <span class="term">Ingress</span> is a set of L7 rules: “<code>api.shop.com</code> → api Service, <code>shop.com/</code> → web Service”. An <b>Ingress controller</b> (NGINX, Traefik, HAProxy) runs as Pods, watches those rules and does the routing.`,
+        `Only the controller needs a load balancer, so ten Services share <b>one</b> balancer. It also terminates TLS and can rewrite paths. The balancer now forwards everything to the controller, which decides where it goes.`,
       ],
+      changes: [`+ Ingress controller`, `− direct LB → Service hop`],
+      metrics: { layer: 'L7', reach: 'host + path', cost: '1 LB', owner: 'platform' },
       scene: {
         entities: {
-          internetUser: makeBlock(-2, -18, { s: 4.2, h: 42, color: 'blue', label: ['Internet Client', 'https://api.com'] }),
-          edgeLb: makeBlock(-2, -4, { s: 5, h: 44, color: 'purple', label: ['Cloud LB / Ingress', 'TLS Termination'] }),
-          clusterService: makeBlock(-10, 12, { s: 4, h: 42, color: 'orange', label: ['ClusterIP Service', 'Virtual IP'] }),
-          targetPodEnd: makeBlock(6, 12, { s: 4, h: 42, color: 'green', label: ['Endpoint Pod', 'App Handler'] }),
-          card: makePanel({ x: -12, y: 14 }, 'Ingress Pipeline', [
-            '1. DNS -> Cloud LB',
-            '2. Ingress terminates TLS',
-            '3. Match path -> Service',
-            '4. Deliver to Pod IP',
-          ]),
+          client: client(),
+          pods: pods([{ text: `/api → api`, tone: `green` }]),
+          service: service(`ClusterIP`, [{ text: `web · api`, tone: `violet` }]),
+          extuser: extuser(),
+          cloudlb: cloudlb([{ text: `one for all`, tone: `gray` }]),
+          ingress: ingress([{ text: `TLS ends here`, tone: `violet`, icon: `lock` }]),
+          card: codeCard(`Routing rules`, [`kind: Ingress`, `rules:`, `- host: shop.com`, `  http: { paths: [{ path: /api, backend: api }, { path: /, backend: web }] }`]),
         },
-        links: {
-          internetUser_edgeLb: makeLink('internetUser', 'edgeLb', ['internetUser', 'edgeLb'], { label: 'HTTPS request' }),
-          edgeLb_clusterService: makeLink('edgeLb', 'clusterService', ['edgeLb', 'clusterService'], { label: 'path matching' }),
-          clusterService_targetPodEnd: makeLink('clusterService', 'targetPodEnd', ['clusterService', 'targetPodEnd'], { label: 'DNAT to Pod IP' }),
+        links: { cs: links.cs(), sp: links.sp(), xl: links.xl, li: links.li, is: links.is },
+        flows: [{ route: ['xl', 'li', 'is'], rate: 1.4, bounce: true }],
+      },
+    },
+    {
+      short: 'Gateway API',
+      chapter: 'recap',
+      title: 'Result: Gateway API splits the roles',
+      body: [
+        `Ingress squeezes everything into one object, and each controller invents its own annotations. The <span class="term">Gateway API</span> splits it by role: infrastructure providers define a <b>GatewayClass</b>, cluster operators create a <b>Gateway</b> (listeners, TLS), and app teams attach an <b>HTTPRoute</b> in their own namespace.`,
+        `It is more expressive (header matching, weighted traffic split, retries), portable across implementations, and safer for multi-team clusters. The finished path: user → cloud LB → Gateway → Service → Pods.`,
+      ],
+      changes: [`+ Gateway (replaces Ingress)`, `+ HTTPRoute (app team)`],
+      metrics: { layer: 'L4–L7', reach: 'host + path + header', cost: '1 LB', owner: 'split by role' },
+      scene: {
+        entities: {
+          client: client(),
+          pods: pods([{ text: `90% v1 · 10% v2`, tone: `green` }]),
+          service: service(`ClusterIP`, [{ text: `api-v1 · api-v2`, tone: `violet` }]),
+          extuser: extuser(),
+          cloudlb: cloudlb([{ text: `GatewayClass: provider`, tone: `gray` }]),
+          gateway: gateway([{ text: `cluster operator`, tone: `violet` }]),
+          card: codeCard(`An app team's route`, [`kind: HTTPRoute`, `parentRefs: [{ name: shop-gateway }]`, `rules: [{ matches: [{ path: { value: /api } }],`, `  backendRefs: [{ name: api-v1, weight: 90 }, { name: api-v2, weight: 10 }] }]`]),
         },
+        links: { cs: links.cs(), sp: links.sp(`weighted`), xl: links.xl, lg: links.lg, gs: links.gs },
+        flows: [{ route: ['xl', 'lg', 'gs'], rate: 1.4, bounce: true }],
       },
     },
   ],

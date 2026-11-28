@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
 
 // One worker node, one Pod, start to finish. The kubelet is the hub: it watches the API
 // server, drives containerd over CRI, and probes the app itself. The Pod is a box holding
@@ -12,7 +12,7 @@ type Tag = { text: string; tone?: string; icon?: string };
 type Opts = Record<string, unknown>;
 
 const api = () =>
-  makeBlock(-15.5, 3, { s: 4.4, h: 52, color: `blue`, glyph: `network`, label: [`API server`], sub: `kube-apiserver` });
+  makeBlock(-16, 3, { s: 4.4, h: 52, color: `blue`, glyph: `network`, label: [`API server`], sub: `kube-apiserver` });
 const kubelet = (tags: Tag[] = []) =>
   makeBlock(-1.5, 1.5, { s: 5, h: 56, color: `green`, glyph: `container`, label: [`kubelet`], sub: `node-1`, tags });
 const containerd = (tags: Tag[] = []) =>
@@ -23,7 +23,7 @@ const app = (tags: Tag[] = [], o: Opts = {}) =>
   makeBlock(12, 5, { s: 4.4, h: 52, color: `green`, glyph: `cpu`, label: [`web`], sub: `app container`, tags, ...o });
 const pod = () => makeZone({ x0: 9.5, x1: 15.5, y0: -15.5, y1: 8.5 }, `POD web`);
 
-const L = {
+const links = {
   watch: makeLink(`api`, `kubelet`, [`api`, `kubelet`], { heads: `both`, label: `watch` }),
   watchQuiet: makeLink(`api`, `kubelet`, [`api`, `kubelet`], { heads: `both` }),
   cri: makeLink(`kubelet`, `containerd`, [`kubelet`, `containerd`], { heads: `both`, label: `gRPC` }),
@@ -35,8 +35,7 @@ const L = {
 };
 
 /** Cards park in the open floor at the top right. */
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: -1.5, y: 1.5, z: 0, dx: 60, dy: -250 }, title, lines, { icon });
+const card = cardAt({ x: -1.5, y: 1.5, dx: 60, dy: -250 });
 
 const running = (appTags: Tag[] = [], appOpts: Opts = {}) => ({
   api: api(),
@@ -47,11 +46,11 @@ const running = (appTags: Tag[] = [], appOpts: Opts = {}) => ({
   pod: pod(),
 });
 const runningLinks = {
-  watch: L.watchQuiet,
-  cri: L.criQuiet,
-  sandbox: L.sandboxQuiet,
-  netns: L.netns,
-  probe: L.probe,
+  watch: links.watchQuiet,
+  cri: links.criQuiet,
+  sandbox: links.sandboxQuiet,
+  netns: links.netns,
+  probe: links.probe,
 };
 
 export const k8sWorkerNodeLesson = {
@@ -87,7 +86,7 @@ export const k8sWorkerNodeLesson = {
           kubelet: kubelet([{ text: `new Pod: web-7d9f`, tone: `amber`, icon: `bell` }]),
           card: card(`kubectl get pod -o wide`, [`$ kubectl get pod web-7d9f -o wide`, `NAME      STATUS   NODE`, `= web-7d9f  Pending  node-1`], `scan`),
         },
-        links: { watch: L.watch },
+        links: { watch: links.watch },
         flows: [{ route: [`watch`], kind: `msg`, rate: 1.2, bounce: true }],
       },
     },
@@ -108,7 +107,7 @@ export const k8sWorkerNodeLesson = {
           containerd: containerd([{ text: `/run/containerd.sock`, tone: `gray` }]),
           card: card(`api.proto (CRI)`, [`service RuntimeService {`, `  rpc RunPodSandbox(...)`, `  rpc CreateContainer(...)`, `  rpc StartContainer(...)`, `}`], `braces`),
         },
-        links: { watch: L.watchQuiet, cri: L.cri },
+        links: { watch: links.watchQuiet, cri: links.cri },
         flows: [{ route: [`cri`], kind: `msg`, rate: 1.4, bounce: true }],
       },
     },
@@ -131,7 +130,7 @@ export const k8sWorkerNodeLesson = {
           pod: pod(),
           card: card(`crictl pods`, [`$ crictl pods`, `POD ID   STATE  NAME`, `= 8c1f…   Ready  web-7d9f`], `scan`),
         },
-        links: { watch: L.watchQuiet, cri: L.criQuiet, sandbox: L.sandbox },
+        links: { watch: links.watchQuiet, cri: links.criQuiet, sandbox: links.sandbox },
         flows: [{ route: [`cri`, `sandbox`], kind: `msg`, rate: 1 }],
       },
     },
@@ -155,7 +154,7 @@ export const k8sWorkerNodeLesson = {
           pod: pod(),
           card: card(`crictl ps`, [`$ crictl ps`, `IMAGE    STATE    NAME`, `= web:1.4  Running  web`, `# pause is hidden — it is the sandbox`], `scan`),
         },
-        links: { watch: L.watchQuiet, cri: L.criQuiet, sandbox: L.sandboxQuiet, netns: L.netns },
+        links: { watch: links.watchQuiet, cri: links.criQuiet, sandbox: links.sandboxQuiet, netns: links.netns },
         flows: [{ route: [`cri`, `sandbox`, `netns`], kind: `msg`, rate: 1 }],
       },
     },
@@ -177,7 +176,7 @@ export const k8sWorkerNodeLesson = {
           ]),
           card: card(
             `pod spec`,
-            [`startupProbe:   httpGet /healthz  failureThreshold: 30`, `readinessProbe: httpGet /ready    periodSeconds: 5`, `livenessProbe:  httpGet /healthz  periodSeconds: 10`],
+            [`containers:`, `  - name: web`, `    readinessProbe: { httpGet: /ready }`, `    livenessProbe:  { httpGet: /healthz }`],
             `heartPulse`,
           ),
         },
@@ -200,7 +199,7 @@ export const k8sWorkerNodeLesson = {
           ...running([{ text: `liveness ✗ 3/3`, tone: `red`, icon: `alert` }], { heat: 1 }),
           card: card(
             `kubectl describe pod`,
-            [`! Warning  Unhealthy  Liveness probe failed: timeout`, `  Normal   Killing    Container web failed liveness`, `= Normal   Started    Started container web`],
+            [`$ kubectl describe pod web`, `! Warning  Unhealthy  Liveness probe failed: timeout`, `  Normal   Killing    Container web failed liveness`],
             `alertTriangle`,
           ),
         },
@@ -226,7 +225,7 @@ export const k8sWorkerNodeLesson = {
           ...running([{ text: `SIGTERM · 30 s grace`, tone: `amber`, icon: `clock` }]),
           card: card(`pod spec`, [`terminationGracePeriodSeconds: 30`, `lifecycle:`, `  preStop:`, `    exec: { command: ["sleep", "5"] }`], `power`),
         },
-        links: { ...runningLinks, watch: L.watch },
+        links: { ...runningLinks, watch: links.watch },
         flows: [
           { route: [`watch`], kind: `msg`, rate: 1, bounce: true },
           { route: [`cri`], kind: `msg`, rate: 0.8 },

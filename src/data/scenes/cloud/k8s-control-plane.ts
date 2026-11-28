@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeDevice, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One fixed stage for the whole lesson: kube-apiserver is the hub, and every other
 // component only ever talks to it (hub-and-spoke). Steps add one actor at a time.
@@ -24,7 +24,7 @@ const node = (x: number, y: number, name: string, tags: Tag[] = []) =>
 const node1 = (tags: Tag[] = []) => node(9, -17, `node-1`, tags);
 const node2 = (tags: Tag[] = []) => node(15.5, -7.5, `node-2`, tags);
 
-const L = {
+const links = {
   apply: makeLink(`dev`, `api`, [`dev`, `api`], { heads: `both`, label: `apply` }),
   // after the request is in, the kubectl link stays as a quiet anchor
   applyBusy: makeLink(`dev`, `api`, [`dev`, `api`], { heads: `both` }),
@@ -37,8 +37,7 @@ const L = {
 };
 
 /** Code / output card, parked in the empty band above the hub. */
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: -1.5, y: 1.5, z: 0, dx: -120, dy: -262 }, title, lines, { icon });
+const card = cardAt({ x: -1.5, y: 1.5, dx: -120, dy: -262 });
 
 export const k8sControlPlaneLesson = {
   id: `k8s-control-plane`,
@@ -76,7 +75,7 @@ export const k8sControlPlaneLesson = {
             `file`,
           ),
         },
-        links: { apply: L.apply },
+        links: { apply: links.apply },
         flows: [{ route: [`apply`], rate: 1.2, bounce: true }],
       },
     },
@@ -112,7 +111,7 @@ export const k8sControlPlaneLesson = {
             `scroll`,
           ),
         },
-        links: { apply: L.applyBusy, persist: L.persist },
+        links: { apply: links.applyBusy, persist: links.persist },
         flows: [
           { route: [`apply`], rate: 1.2, bounce: true },
           { route: [`persist`], kind: `write`, rate: 1 },
@@ -150,7 +149,7 @@ export const k8sControlPlaneLesson = {
             `database`,
           ),
         },
-        links: { apply: L.applyIdle, persist: L.persist },
+        links: { apply: links.applyIdle, persist: links.persist },
         flows: [{ route: [`persist`], kind: `write`, rate: 0.8, bounce: true }],
       },
     },
@@ -182,7 +181,7 @@ export const k8sControlPlaneLesson = {
             `refresh`,
           ),
         },
-        links: { apply: L.applyIdle, persist: L.persist, ctrlWatch: L.ctrlWatch },
+        links: { apply: links.applyIdle, persist: links.persist, ctrlWatch: links.ctrlWatch },
         flows: [
           { route: [`ctrlWatch`], kind: `msg`, rate: 1.4, bounce: true },
           { route: [`persist`], kind: `write`, rate: 1 },
@@ -209,11 +208,11 @@ export const k8sControlPlaneLesson = {
           node2: node2([{ text: `cpu 20% used`, tone: `green` }]),
         },
         links: {
-          apply: L.applyIdle,
-          persist: L.persist,
-          ctrlWatch: L.ctrlWatch,
-          kubelet1: L.kubelet1,
-          kubelet2: L.kubelet2,
+          apply: links.applyIdle,
+          persist: links.persist,
+          ctrlWatch: links.ctrlWatch,
+          kubelet1: links.kubelet1,
+          kubelet2: links.kubelet2,
         },
         flows: [
           { route: [`kubelet1`], kind: `msg`, rate: 0.8, bounce: true },
@@ -252,12 +251,12 @@ export const k8sControlPlaneLesson = {
           ),
         },
         links: {
-          apply: L.applyIdle,
-          persist: L.persist,
-          ctrlWatch: L.ctrlWatch,
-          schedWatch: L.schedWatch,
-          kubelet1: L.kubelet1,
-          kubelet2: L.kubelet2,
+          apply: links.applyIdle,
+          persist: links.persist,
+          ctrlWatch: links.ctrlWatch,
+          schedWatch: links.schedWatch,
+          kubelet1: links.kubelet1,
+          kubelet2: links.kubelet2,
         },
         flows: [
           { route: [`schedWatch`], kind: `msg`, rate: 1.4, bounce: true },
@@ -297,12 +296,12 @@ export const k8sControlPlaneLesson = {
           ),
         },
         links: {
-          apply: L.applyIdle,
-          persist: L.persist,
-          ctrlWatch: L.ctrlWatch,
-          schedWatch: L.schedWatch,
-          kubelet1: L.kubelet1,
-          kubelet2: L.kubelet2,
+          apply: links.applyIdle,
+          persist: links.persist,
+          ctrlWatch: links.ctrlWatch,
+          schedWatch: links.schedWatch,
+          kubelet1: links.kubelet1,
+          kubelet2: links.kubelet2,
         },
         flows: [
           { route: [`ctrlWatch`], kind: `msg`, rate: 0.7, bounce: true },

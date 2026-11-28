@@ -1,11 +1,11 @@
-// @ts-nocheck
+import { type Bag } from '@/lib/simulator/scene-builders';
 
 // ============================================================================
 // DAWN BLOG SYSTEM ARCHITECTURE (FULL EDGE & C4 MODEL)
 // ============================================================================
-const sys_d = (x, y, opts = {}) => ({ type: "block", x, y, color: "blue", glyph: "server", ...opts });
+const sys_d = (x: number, y: number, opts: Bag = {}) => ({ type: "block", x, y, color: "blue", glyph: "server", ...opts });
 
-const sys_f = (x, y, opts = {}) => ({
+const sys_f = (x: number, y: number, opts: Bag = {}) => ({
   type: "block",
   x,
   y,
@@ -16,11 +16,11 @@ const sys_f = (x, y, opts = {}) => ({
   ...opts,
 });
 
-const sys_b = (x, y, opts = {}) => ({ type: "db", x, y, ...opts });
+const sys_b = (x: number, y: number, opts: Bag = {}) => ({ type: "db", x, y, ...opts });
 
-const sys_y = (x, y, opts = {}) => ({ type: "device", x, y, ...opts });
+const sys_y = (x: number, y: number, opts: Bag = {}) => ({ type: "device", x, y, ...opts });
 
-const sys_h = (from, to, pts, opts = {}) => ({ from, to, pts, heads: "end", ...opts });
+const sys_h = (from: string, to: string, pts: unknown[], opts: Bag = {}) => ({ from, to, pts, heads: "end", ...opts });
 
 export const systemDesignLesson = {
   id: "system-design",
@@ -63,7 +63,7 @@ export const systemDesignLesson = {
       },
       scene: {
         entities: {
-          author: sys_y(-18, 6, {
+          author: sys_y(-16, 4, {
             label: "Author",
             tags: [{ text: "Drafting in Notion", icon: "file" }],
           }),
@@ -100,7 +100,7 @@ export const systemDesignLesson = {
       },
       scene: {
         entities: {
-          author: sys_y(-18, 6, {
+          author: sys_y(-16, 4, {
             label: "Author",
             tags: [{ text: "Published ✓", tone: "green" }],
           }),
@@ -163,7 +163,7 @@ export const systemDesignLesson = {
       },
       scene: {
         entities: {
-          author: sys_y(-18, 6, { label: "Author" }),
+          author: sys_y(-16, 4, { label: "Author" }),
           notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
@@ -234,7 +234,7 @@ export const systemDesignLesson = {
             pills: "above",
             tags: [{ text: "Cache HIT · 18ms", tone: "green" }],
           }),
-          author: sys_y(-18, 6, { label: "Author" }),
+          author: sys_y(-16, 4, { label: "Author" }),
           notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
@@ -310,12 +310,12 @@ export const systemDesignLesson = {
             pills: "above",
             tags: [{ text: "Prisma · 45ms", tone: "violet" }],
           }),
-          db: sys_b(18, 6, {
+          db: sys_b(16, 8, {
             label: "PostgreSQL",
             cpu: 0.45,
             tags: [{ text: "Pool: 1/10", tone: "green" }],
           }),
-          author: sys_y(-18, 6, { label: "Author" }),
+          author: sys_y(-16, 4, { label: "Author" }),
           notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
@@ -382,7 +382,7 @@ export const systemDesignLesson = {
       },
       scene: {
         entities: {
-          author: sys_y(-18, 6, { label: "Author" }),
+          author: sys_y(-16, 4, { label: "Author" }),
           notion: sys_d(-11, 13, {
             color: "purple",
             glyph: "globe",
@@ -409,7 +409,7 @@ export const systemDesignLesson = {
             label: ["Astro SSR"],
             sub: "Serverless",
           }),
-          db: sys_b(18, 6, { label: "PostgreSQL" }),
+          db: sys_b(16, 8, { label: "PostgreSQL" }),
         },
         links: {
           readers_edge: sys_h("readers", "edge", ["readers", "edge"], {

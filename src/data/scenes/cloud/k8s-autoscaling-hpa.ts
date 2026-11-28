@@ -1,156 +1,195 @@
-import { makeBlock,makeLink,makePanel } from '@/lib/simulator/scene-builders';
+import { STAGE, codeCard, linkOf, makeDb, stageBlock, type Tag } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const k8sAutoscalingHpaLesson = {
+// Seed → result. The Pods sit in the middle; every scaler is its own node attached to them.
+//
+//   1 traffic, pods (seed)          2 + metricsserver, + hpa
+//   3 + queue, + keda (temporary)   4 keda + queue leave, + vpa
+//   5 + karpenter                   6 everything together                     result
+//
+//                 metricsserver                  hpa
+//   traffic ───── pods ──────────────────────── karpenter / queue
+//   vpa / keda
+
+const traffic = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.caller, { color: `blue`, glyph: `users`, label: [`traffic`], sub, tags });
+const pods = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.main, { color: `green`, glyph: `boxes`, label: [`web Pods`], sub, tags });
+const metricsserver = (tags: Tag[] = []) =>
+  stageBlock(STAGE.helper, { color: `orange`, glyph: `activity`, label: [`metrics-`, `server`], sub: `kubelet scrape`, tags });
+const hpa = (tags: Tag[] = []) =>
+  stageBlock(STAGE.alt, { color: `orange`, glyph: `gauge`, label: [`HPA`], sub: `target 50% CPU`, tags });
+const queue = (tags: Tag[] = []) =>
+  makeDb(STAGE.store.x, STAGE.store.y, { r: 2.2, h: 46, glyph: `inbox`, label: `SQS queue`, tags });
+const keda = (tags: Tag[] = []) =>
+  stageBlock(STAGE.caller2, { color: `orange`, glyph: `filter`, label: [`KEDA`], sub: `ScaledObject`, tags });
+const vpa = (tags: Tag[] = []) =>
+  stageBlock(STAGE.caller2, { color: `orange`, glyph: `scale`, label: [`VPA`], sub: `right-sizing`, tags });
+const karpenter = (tags: Tag[] = []) =>
+  stageBlock(STAGE.store, { color: `orange`, glyph: `rocket`, label: [`Karpenter`], sub: `node provisioner`, tags });
+
+const links = {
+  tp: (label?: string) => linkOf(`traffic`, `pods`, label),
+  ms: (label?: string) => ({ ...linkOf(`metricsserver`, `pods`, label, false), labelAt: 0.6 }),
+  hp: linkOf(`hpa`, `pods`, undefined, false),
+  pq: linkOf(`pods`, `queue`, undefined, false),
+  kd: linkOf(`keda`, `pods`, undefined, false),
+  vp: linkOf(`vpa`, `pods`, undefined, false),
+  kn: linkOf(`karpenter`, `pods`, undefined, false),
+};
+
+export const k8sAutoscalingHpaLesson: Lesson = {
   id: 'k8s-autoscaling-hpa',
   title: 'Autoscaling: Horizontal Pod Autoscaler (HPA), VPA & Cluster Autoscaler',
-  trackId: 'k8s',
-  badge: 'Intermediate',
-  summary: 'Explore elasticity in Kubernetes: Metrics Server polling, HPA PID scaling formulas, Vertical Pod Autoscaling (VPA) right-sizing, and Cluster Autoscaler / Karpenter node provisioning.',
-  metrics: ['target_cpu', 'current_cpu', 'replica_count', 'scaling_cooldown'],
+  summary:
+    'Start with overloaded Pods and add one scaler per step: metrics-server with the HPA, event-driven KEDA, the VPA for right-sizing and Karpenter for nodes — until three layers cooperate.',
+  minutes: 14,
+  level: 'advanced',
+  metrics: ['replicas', 'cpu', 'trigger', 'nodes'],
+  legend: [[`req`, `traffic`], [`write`, `scale`], [`msg`, `metric`]],
   goals: [
-    { text: 'Metrics Server Scraping API', step: 1 },
-    { text: 'HPA PID Scaling Math Formula', step: 2 },
-    { text: 'Custom Business Metrics Scaling', step: 3 },
-    { text: 'VPA Automatic Resource Sizing', step: 4 },
-    { text: 'Karpenter Fast Node Provisioning', step: 5 },
+    { text: 'Read Pod CPU/memory from metrics-server', step: 2 },
+    { text: 'Apply the HPA replica formula and smoothing', step: 2 },
+    { text: 'Scale on queue length with KEDA', step: 3 },
+    { text: 'Right-size requests with the VPA', step: 4 },
+    { text: 'Add nodes with Cluster Autoscaler / Karpenter', step: 5 },
+    { text: 'Combine the three layers without fighting', step: 6 },
   ],
   steps: [
     {
-      title: 'Metrics Server & Resource Metrics API',
-      short: 'Metric Aggregation',
+      short: 'Overload',
+      chapter: 'problem',
+      title: 'Seed: two Pods, 90% CPU, rising load',
       body: [
-        'Elasticity begins with real-time telemetry.',
-        'The lightweight in-memory Metrics Server periodically scrapes CPU and Memory usage counters directly from Kubelet cgroup metrics on every node and serves them through the aggregated API.',
+        `Our web app runs as two Pods. At peak hour each one sits at <b>90% of its CPU request</b> and latency climbs. Someone could add Pods by hand, but load changes by the hour — we want the cluster to follow it by itself.`,
+        `Autoscaling is built in layers. Each step adds one: first something to <em>measure</em> and <em>decide</em>, then event-driven scaling, then Pod sizing, then nodes.`,
       ],
+      metrics: { replicas: '2', cpu: '90%', trigger: 'none', nodes: '3' },
       scene: {
         entities: {
-          kubeletScraper: makeBlock(-10, -14, { s: 4, h: 42, color: 'blue', label: ['Kubelet cgroups', 'CPU/RAM stats'] }),
-          metricsServer: makeBlock(6, -14, { s: 4.5, h: 44, color: 'purple', label: ['Metrics Server', 'Aggregated API'] }),
-          hpaController: makeBlock(-2, 4, { s: 4.8, h: 44, color: 'orange', label: ['HPA Controller', 'Polls metrics every 15s'] }),
-          card: makePanel({ x: -12, y: 14 }, 'Metrics Scraping', [
-            '$ kubectl top pods',
-            'Metrics Server scrapes kubelet',
-            'Serves /apis/metrics.k8s.io',
-          ]),
+          traffic: traffic(`800 req/s`, [{ text: `peak hour`, tone: `amber` }]),
+          pods: pods(`2 replicas`, [{ text: `CPU 90% of request`, tone: `red`, icon: `alert` }]),
+          card: codeCard(`Overloaded`, [`$ kubectl top pods -l app=web`, `NAME        CPU(cores)  MEMORY`, `web-7d9f-a   450m       210Mi`, `! request is 500m → 90% utilisation, nobody is scaling`]),
         },
-        links: {
-          kubeletScraper_metricsServer: makeLink('kubeletScraper', 'metricsServer', ['kubeletScraper', 'metricsServer'], { label: '15s scrape' }),
-          metricsServer_hpaController: makeLink('metricsServer', 'hpaController', ['metricsServer', 'hpaController'], { label: 'GET metrics' }),
-        },
+        links: { tp: links.tp(`800/s`) },
+        flows: [{ route: ['tp'], rate: 2, bounce: true }],
       },
     },
     {
-      title: 'The HPA Scaling Algorithm',
-      short: 'Math Formula & Smoothing',
+      short: 'HPA',
+      chapter: 'technique',
+      title: '+ metrics-server and HPA: measure, then decide',
       body: [
-        'The Horizontal Pod Autoscaler calculates the exact number of replicas required to bring average resource utilization back to the desired target.',
-        'A stabilization cooldown window prevents thrashing (flapping) during rapid metric fluctuations.',
+        `<span class="term">metrics-server</span> polls every kubelet for each Pod’s CPU and memory and serves it through the <b>Metrics API</b> — the data behind <code>kubectl top</code>. The <b>HPA</b> reads it as utilisation: usage divided by the Pod’s <em>request</em>.`,
+        `Every 15 s it computes <code>desired = ceil( current × metric / target )</code>. With 2 Pods at 90% and a 50% target: <code>ceil(2 × 90 / 50) = 4</code>. To avoid flapping it ignores changes under 10%, scales up fast, and waits a <span class="term">stabilisation window</span> (5 min) before scaling down.`,
       ],
+      changes: [`+ metrics-server`, `+ HPA`, `~ replicas 2 → 4`],
+      metrics: { replicas: '2 → 4', cpu: '90% → 45%', trigger: 'CPU 50%', nodes: '3' },
       scene: {
         entities: {
-          metricInput: makeBlock(-10, -14, { s: 4, h: 42, color: 'orange', label: ['Current CPU: 80%', 'Target: 50%'] }),
-          scalingMath: makeBlock(6, -14, { s: 4.5, h: 44, color: 'purple', label: ['HPA Formula Engine', 'ceil[ 2 * (80/50) ] = 4'] }),
-          replicaSetScale: makeBlock(-2, 4, { s: 5, h: 46, color: 'green', label: ['Scale ReplicaSet', 'Replicas: 2 -> 4'] }),
-          card: makePanel({ x: -12, y: 14 }, 'HPA Formula', [
-            'desired = ceil[ current * (val/target) ]',
-            'desired = ceil[ 2 * (80 / 50) ] = 4',
-            'Cooldown window prevents flap',
-          ]),
+          traffic: traffic(`800 req/s`),
+          pods: pods(`4 replicas`, [{ text: `CPU 45%`, tone: `green` }]),
+          metricsserver: metricsserver([{ text: `Metrics API`, tone: `violet` }]),
+          hpa: hpa([{ text: `ceil(2 × 90/50) = 4`, tone: `green`, icon: `zap` }]),
+          card: codeCard(`The math`, [`desired = ceil[ current × (metric / target) ]`, `        = ceil[ 2 × (90 / 50) ] = 4`, `behavior.scaleDown.stabilizationWindowSeconds: 300`]),
         },
-        links: {
-          metricInput_scalingMath: makeLink('metricInput', 'scalingMath', ['metricInput', 'scalingMath'], { label: 'utilization ratio' }),
-          scalingMath_replicaSetScale: makeLink('scalingMath', 'replicaSetScale', ['scalingMath', 'replicaSetScale'], { label: 'PATCH /scale' }),
-        },
+        links: { tp: links.tp(), ms: links.ms(`CPU 90%`), hp: links.hp },
+        flows: [{ route: ['ms'], kind: 'msg', rate: 1.2 }, { route: ['hp'], kind: 'write', rate: 1 }, { route: ['tp'], rate: 2, bounce: true }],
       },
     },
     {
-      title: 'Scaling on Custom & External Metrics (KEDA)',
-      short: 'Event-Driven Autoscaling',
+      short: 'KEDA',
+      chapter: 'technique',
+      title: '+ KEDA: scale on queues, not CPU',
       body: [
-        'CPU is a lagging indicator. For message queues, scaling based on backlog depth is much faster.',
-        'KEDA (Kubernetes Event-driven Autoscaling) queries external metric sources (Kafka lag, SQS queue depth, Redis lengths) and scales pods directly, including scaling to zero.',
+        `CPU is a lagging signal for a worker that drains a queue. <span class="term">KEDA</span> adds scalers for queue length, Kafka lag, Prometheus queries and cron, and feeds them to an HPA it manages for you.`,
+        `It can also scale a Deployment to <b>zero</b> when there is nothing to do and wake it when the first message arrives — something the plain HPA cannot do.`,
       ],
+      changes: [`+ SQS queue`, `+ KEDA`, `~ replicas 0 → 8`],
+      metrics: { replicas: '0 → 8', cpu: 'low', trigger: 'queue ≥ 5', nodes: '3' },
       scene: {
         entities: {
-          sqsQueue: makeBlock(-10, -14, { s: 4, h: 42, color: 'orange', label: ['AWS SQS Queue', 'Backlog: 200 msgs'] }),
-          kedaMetrics: makeBlock(6, -14, { s: 4.5, h: 44, color: 'purple', label: ['KEDA Operator', 'Computes: 10 pods needed'] }),
-          workerPods: makeBlock(-2, 4, { s: 5, h: 46, color: 'green', label: ['Queue Worker Fleet', 'Scales 0 -> 10 Pods'] }),
+          traffic: traffic(`5,000 msgs queued`, [{ text: `burst`, tone: `amber` }]),
+          pods: pods(`8 workers`, [{ text: `draining queue`, tone: `green` }]),
+          metricsserver: metricsserver(),
+          hpa: hpa([{ text: `managed by KEDA`, tone: `violet` }]),
+          queue: queue([{ text: `lag 5,000`, tone: `red` }]),
+          keda: keda([{ text: `scale to 0 ok`, tone: `green` }]),
+          card: codeCard(`Scale by lag`, [`kind: ScaledObject`, `spec:`, `  minReplicaCount: 0`, `  triggers: [{ type: aws-sqs-queue, metadata: { queueLength: "5" } }]`]),
         },
-        links: {
-          sqsQueue_kedaMetrics: makeLink('sqsQueue', 'kedaMetrics', ['sqsQueue', 'kedaMetrics'], { label: 'polls queue depth' }),
-          kedaMetrics_workerPods: makeLink('kedaMetrics', 'workerPods', ['kedaMetrics', 'workerPods'], { label: 'activates workers' }),
-        },
+        links: { tp: links.tp(), ms: links.ms(), hp: links.hp, pq: links.pq, kd: links.kd },
+        flows: [{ route: ['pq'], kind: 'msg', rate: 1.4, bounce: true }, { route: ['kd'], kind: 'write', rate: 1 }],
       },
     },
     {
-      title: 'Vertical Pod Autoscaler (VPA)',
-      short: 'Right-Sizing CPU & RAM',
+      short: 'VPA',
+      chapter: 'technique',
+      title: '+ VPA: make each Pod the right size',
       body: [
-        'While HPA adds more Pod replicas (scaling out), VPA increases CPU and memory limits of individual Pods (scaling up).',
-        'VPA observes long-term historical resource profiles, eliminating developer guesswork and right-sizing allocations.',
+        `The queue story is done; back to web Pods. HPA adds more Pods; the <span class="term">Vertical Pod Autoscaler</span> changes how big each one is. It watches real usage and recommends better <code>requests</code> — here 500m → 220m CPU — so you stop paying for idle headroom, or fix Pods that get OOM-killed.`,
+        `In <code>Auto</code> mode it evicts and re-creates Pods with the new size. Don’t let HPA and VPA both act on CPU for the same Deployment: they will fight. Use VPA for memory, HPA for CPU, or VPA in recommend-only mode.`,
       ],
+      changes: [`+ VPA`, `− KEDA and queue (done)`],
+      metrics: { replicas: '4', cpu: 'request 220m', trigger: 'usage history', nodes: '3' },
       scene: {
         entities: {
-          vpaRecommender: makeBlock(-10, -14, { s: 4.2, h: 42, color: 'blue', label: ['VPA Recommender', 'Analyzes OOM / waste'] }),
-          vpaUpdater: makeBlock(6, -14, { s: 4.2, h: 42, color: 'purple', label: ['VPA Updater', 'Evicts under-sized pod'] }),
-          rightSizedPod: makeBlock(-2, 4, { s: 5, h: 46, color: 'green', label: ['New Pod Spec', 'RAM upgraded 256M -> 1G'] }),
-          card: makePanel({ x: -12, y: 14 }, 'VPA Right-Sizing', [
-            'Recommends: 256M -> 1G',
-            'Prevents OOMKilled errors',
-            'Reduces idle node waste',
-          ]),
+          traffic: traffic(`steady 400 req/s`),
+          pods: pods(`4 replicas`, [{ text: `request 220m`, tone: `green` }]),
+          metricsserver: metricsserver(),
+          hpa: hpa([{ text: `on CPU`, tone: `violet` }]),
+          vpa: vpa([{ text: `500m → 220m`, tone: `green`, icon: `gauge` }]),
+          card: codeCard(`Recommend, then apply`, [`kind: VerticalPodAutoscaler`, `spec: { updatePolicy: { updateMode: "Auto" } }`, `$ kubectl describe vpa web | grep Target`, `Target: cpu 220m, memory 180Mi`]),
         },
-        links: {
-          vpaRecommender_vpaUpdater: makeLink('vpaRecommender', 'vpaUpdater', ['vpaRecommender', 'vpaUpdater'], { label: 'new recommendation' }),
-          vpaUpdater_rightSizedPod: makeLink('vpaUpdater', 'rightSizedPod', ['vpaUpdater', 'rightSizedPod'], { label: 'mutating admission' }),
-        },
+        links: { tp: links.tp(), ms: links.ms(), hp: links.hp, vp: links.vp },
+        flows: [{ route: ['vp'], kind: 'write', rate: 1 }, { route: ['tp'], rate: 1.5, bounce: true }],
       },
     },
     {
-      title: 'Cluster Autoscaler & Karpenter',
-      short: 'Node Provisioning',
+      short: 'Nodes',
+      chapter: 'solution',
+      title: '+ Karpenter: no room? Add a node',
       body: [
-        'When HPA scales up and nodes run out of capacity, Pods enter `Pending` state.',
-        'Cluster Autoscaler or Karpenter detects un-schedulable pods, provisions new physical cloud nodes, and joins them to the cluster in seconds.',
+        `More replicas need somewhere to run. When new Pods are <b>Pending</b> because no node fits them, the <span class="term">Cluster Autoscaler</span> grows a node group; <span class="term">Karpenter</span> instead picks a fitting instance type directly and starts it, typically in ~60 s.`,
+        `When nodes sit mostly empty for a while, they are drained and removed. This is what turns HPA’s Pods into an actual change on the cloud bill.`,
       ],
+      changes: [`+ Karpenter`, `~ nodes 3 → 4`, `~ 4 Pods Pending → Running`],
+      metrics: { replicas: '12', cpu: 'high', trigger: 'Pending Pods', nodes: '3 → 4' },
       scene: {
         entities: {
-          pendingPods: makeBlock(-10, -14, { s: 4, h: 42, color: 'orange', label: ['Pending Pods', 'Failed Scheduling'] }),
-          karpenterEngine: makeBlock(6, -14, { s: 4.5, h: 44, color: 'purple', label: ['Karpenter Autoscaler', 'Bin-packing evaluation'] }),
-          newEc2Node: makeBlock(-2, 4, { s: 5, h: 46, color: 'green', label: ['New EC2 Node (45s)', 'Joins cluster'] }),
-          card: makePanel({ x: -12, y: 14 }, 'Karpenter Node Scaler', [
-            'Detects unschedulable Pods',
-            'Bypasses ASG: calls EC2 API',
-            'Launches node in < 45 seconds',
-          ]),
+          traffic: traffic(`1,600 req/s`, [{ text: `2× peak`, tone: `red` }]),
+          pods: pods(`12 replicas`, [{ text: `4 Pending`, tone: `amber`, icon: `alert` }]),
+          metricsserver: metricsserver(),
+          hpa: hpa([{ text: `12 desired`, tone: `green` }]),
+          vpa: vpa(),
+          karpenter: karpenter([{ text: `+1 node m6i.xlarge · ~60 s`, tone: `green`, icon: `clock` }]),
+          card: codeCard(`Why a node appears`, [`$ kubectl get pods | grep Pending`, `web-7d9f-k2m  0/1  Pending  FailedScheduling: 0/3 nodes fit`, `= Karpenter launches an instance sized for the Pending Pods`]),
         },
-        links: {
-          pendingPods_karpenterEngine: makeLink('pendingPods', 'karpenterEngine', ['pendingPods', 'karpenterEngine'], { label: 'detects capacity gap' }),
-          karpenterEngine_newEc2Node: makeLink('karpenterEngine', 'newEc2Node', ['karpenterEngine', 'newEc2Node'], { label: 'ec2:RunInstances' }),
-        },
+        links: { tp: links.tp(), ms: links.ms(), hp: links.hp, vp: links.vp, kn: links.kn },
+        flows: [{ route: ['kn'], kind: 'write', rate: 1 }, { route: ['hp'], kind: 'write', rate: 1 }],
       },
     },
     {
-      title: 'Autoscaling Architecture Summary',
-      short: 'Multi-Tier Elasticity',
+      short: 'Together',
+      chapter: 'recap',
+      title: 'Result: three layers, one direction',
       body: [
-        'The combination of HPA, VPA, and node-level autoscaling forms a fully self-healing, cost-optimized, and elastically scaling platform.',
+        `Read the stack from the top: <b>HPA/KEDA</b> change the number of Pods to follow load; <b>VPA</b> keeps each Pod right-sized; <b>Karpenter</b> keeps enough nodes underneath. Each reacts to the layer above it, and the load has dropped again: replicas and nodes shrink back.`,
+        `Set sensible <code>requests</code> first (everything keys off them), add a <code>PodDisruptionBudget</code> so scale-down stays safe, and keep a little headroom — scaling takes seconds to minutes, spikes take milliseconds.`,
       ],
+      changes: [`~ replicas follow load`, `~ nodes follow Pods`],
+      metrics: { replicas: '12 → 5', cpu: '48%', trigger: 'load drops', nodes: '4 → 3' },
       scene: {
         entities: {
-          trafficLoad: makeBlock(-10, -14, { s: 4, h: 42, color: 'blue', label: ['Incoming Traffic', 'Surge Spike'] }),
-          hpaLayer: makeBlock(6, -14, { s: 4, h: 42, color: 'orange', label: ['HPA Pod Scaler', 'Spawns 20 replicas'] }),
-          karpenterLayer: makeBlock(-2, 4, { s: 4.8, h: 44, color: 'purple', label: ['Karpenter Node Scaler', 'Adds 3 EC2 nodes'] }),
-          card: makePanel({ x: -12, y: 14 }, 'Autoscaling Pillars', [
-            '1. Pod Horizontal (HPA / KEDA)',
-            '2. Pod Vertical (VPA)',
-            '3. Node Infrastructure (Karpenter)',
-          ]),
+          traffic: traffic(`500 req/s`, [{ text: `quiet again`, tone: `green` }]),
+          pods: pods(`5 replicas`, [{ text: `CPU 48%`, tone: `green` }]),
+          metricsserver: metricsserver([{ text: `48% / 50%`, tone: `gray` }]),
+          hpa: hpa([{ text: `12 → 5`, tone: `violet` }]),
+          vpa: vpa([{ text: `request 220m`, tone: `green` }]),
+          karpenter: karpenter([{ text: `removes idle node 4 → 3`, tone: `gray` }]),
+          card: codeCard(`Watch it settle`, [`$ kubectl get hpa web -w`, `NAME  TARGETS   MINPODS  MAXPODS  REPLICAS`, `web   48%/50%   3        20       5`]),
         },
-        links: {
-          trafficLoad_hpaLayer: makeLink('trafficLoad', 'hpaLayer', ['trafficLoad', 'hpaLayer'], { label: 'metric surge' }),
-          hpaLayer_karpenterLayer: makeLink('hpaLayer', 'karpenterLayer', ['hpaLayer', 'karpenterLayer'], { label: 'triggers node scale' }),
-        },
+        links: { tp: links.tp(), ms: links.ms(), hp: links.hp, vp: links.vp, kn: links.kn },
+        flows: [{ route: ['hp'], kind: 'write', rate: 1 }, { route: ['kn'], kind: 'write', rate: 0.8 }, { route: ['tp'], rate: 1.2, bounce: true }],
       },
     },
   ],

@@ -1,237 +1,183 @@
-import {
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel,
-} from '@/lib/simulator/scene-builders';
+import { STAGE, codeCard, linkOf, makeDb, stageBlock, distinctConcepts, type Tag } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
-export const awsComputeMigrationLesson: Lesson = {
+// One stage: demand on the left, the compute/DR/migration piece in the middle (same id, new
+// label each act), what it runs or protects on the right, a helper above and an alternative beside.
+//
+//                helper             alt
+//   demand ──── subject ────────── target
+
+const demand = (label: string[], sub: string, tags: Tag[] = [], glyph = `users`) =>
+  stageBlock(STAGE.caller, { color: `blue`, glyph, label, sub, tags });
+const subject = (label: string[], sub: string, tags: Tag[] = [], glyph = `server`) =>
+  stageBlock(STAGE.main, { color: `green`, glyph, label, sub, tags });
+const target = (label: string, tags: Tag[] = []) =>
+  makeDb(STAGE.store.x, STAGE.store.y, { r: 2.2, h: 46, glyph: `database`, label, tags });
+const helper = (label: string[], sub: string, glyph: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.helper, { color: `orange`, glyph, label, sub, tags });
+const alt = (label: string[], sub: string, tags: Tag[] = [], glyph = `route`) =>
+  stageBlock(STAGE.alt, { color: `slab`, glyph, label, sub, tags });
+
+const links = {
+  ask: (label?: string) => linkOf(`demand`, `subject`, label),
+  run: (label?: string) => linkOf(`subject`, `target`, label),
+  help: (label?: string) => ({ ...linkOf(`helper`, `subject`, label, false), labelAt: 0.6 }),
+};
+
+export const awsComputeMigrationLesson: Lesson = distinctConcepts({
   id: 'aws-compute-migration',
   title: 'Compute Pricing, LB Tiers, DR (RTO/RPO) & Migration',
   summary:
-    'Master AWS SAA-C03 Compute & Cost Optimization: EC2 On-Demand/Savings Plans/Spot, ALB vs NLB vs GWLB, 4 Disaster Recovery Tiers (RTO/RPO), DMS/DataSync/Snowball, and CloudTrail/CloudWatch.',
+    'Choosing and paying for compute, picking the right load balancer, sizing disaster recovery by RTO and RPO, automating backups, moving data and databases into AWS, and observing it all.',
   minutes: 14,
   level: 'intermediate',
-  metrics: ['cost_model', 'lb_layer', 'rto_rpo', 'migration'],
-  legend: ['flow', ['req', 'workload / sync'], ['res', 'cost / DR ready'], ['fail', 'spot reclaim']],
+  metrics: ['choice', 'cost', 'recovery', 'effort'],
+  legend: [[`req`, `request`], [`write`, `copy / replicate`], [`fail`, `outage`]],
   goals: [
-    { text: 'Choose EC2 On-Demand, Savings Plans & Spot Instances', step: 1 },
-    { text: 'Select ALB (L7) vs NLB (L4 Static IP) vs GWLB', step: 2 },
-    { text: 'Compare 4 DR Tiers by RTO & RPO budgets', step: 3 },
-    { text: 'Automate cross-region DB & backup recovery', step: 4 },
-    { text: 'Migrate DBs & petabytes via DMS, DataSync & Snowball', step: 5 },
-    { text: 'Audit APIs & trace apps with CloudTrail, Flow Logs & X-Ray', step: 6 },
+    { text: 'Choose On-Demand, Savings Plans or Spot', step: 1 },
+    { text: 'Pick ALB, NLB or GWLB for the traffic', step: 2 },
+    { text: 'Compare the four DR tiers by RTO and RPO', step: 3 },
+    { text: 'Automate cross-Region backups', step: 4 },
+    { text: 'Migrate databases and bulk data with DMS, DataSync, Snowball', step: 5 },
+    { text: 'Audit and trace with CloudTrail, Flow Logs and X-Ray', step: 6 },
   ],
   steps: [
     {
-      short: 'EC2 Pricing',
-      chapter: 'compute',
-      title: 'EC2 Pricing: On-Demand, Savings Plans & Spot',
+      short: 'EC2 pricing',
+      chapter: 'setup',
+      title: 'Same instance, three ways to pay',
       body: [
-        'SAA-C03 heavily tests matching workloads to the cheapest EC2 model:',
-        '• <strong>On-Demand</strong>: spiky/unpredictable short workloads.<br>• <strong>Compute Savings Plans</strong>: up to 66% off for steady 1–3 yr baselines (flexible across EC2, Fargate, Lambda!).<br>• <strong>Spot Instances</strong>: up to 90% off for fault-tolerant batch/ML/stateless workers (2-min interruption notice).',
+        `<b>On-Demand</b> is pay-per-second with no commitment — the baseline and the most expensive. A <span class="term">Savings Plan</span> commits to a spend per hour for 1 or 3 years in return for up to ~70% off, and keeps flexibility across instance types.`,
+        `<span class="term">Spot</span> uses spare capacity at up to ~90% off, but AWS may reclaim it with a two-minute warning — fine for stateless batch, CI and fault-tolerant workers. Typical mix: Savings Plan for the steady base, On-Demand for the unknown, Spot for the flexible.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Exam keyword: "Fault-tolerant batch job / CI runner at lowest cost" -> Spot. "Steady 24/7 baseline across EC2 & Fargate" -> Compute Savings Plans.',
-      },
-      metrics: { cost_model: 'Spot + Savings', lb_layer: 'N/A', rto_rpo: '2-min Reclaim', migration: 'None' },
+      metrics: { choice: 'mix 3 models', cost: '−40% blended', recovery: 'n/a', effort: 'low' },
       scene: {
         entities: {
-          asg: makeBlock(-14, -8, { s: 4.4, h: 50, color: 'blue', glyph: 'balancer', label: ['Mixed ASG'], sub: 'Base + Burst' }),
-          savings: makeBlock(1, -15, { s: 4.4, h: 50, color: 'green', glyph: 'server', label: ['Savings Plan'], sub: '66% off steady' }),
-          spot: makeBlock(1, -1, { s: 4.4, h: 50, color: 'orange', glyph: 'zap', label: ['Spot Fleet'], sub: '90% off (2m)' }),
-          card: makePanel({ x: -12, y: 12 }, 'EC2 Purchasing Strategy Matrix', [
-            '// On-Demand:     0% commit, spiky / unknown workloads',
-            '// Savings Plans: 66% off, 1-3yr $/hr commit (EC2+Fargate+Lambda)',
-            '// Spot:          90% off, stateless/batch, 2-min reclaim notice',
-            '// Dedicated Host: BYOL per-socket / per-core licensing',
-          ], { icon: 'terminal' }),
+          demand: demand([`workload`], `steady + bursts`, [{ text: `70% steady`, tone: `green` }]),
+          subject: subject([`EC2`, `fleet`], `m6i.large`, [{ text: `On-Demand $0.096/h`, tone: `amber` }]),
+          target: target(`monthly bill`, [{ text: `target −40%`, tone: `green` }]),
+          helper: helper([`Savings`, `Plan`], `1 yr · $/hour`, `dollar`, [{ text: `up to −70%`, tone: `green` }]),
+          alt: alt([`Spot`], `2-min warning`, [{ text: `up to −90%`, tone: `violet` }], `zap`),
+          card: codeCard(`A sensible mix`, [`steady base     → Savings Plan   (commit $/hr)`, `unknown peaks   → On-Demand`, `batch · CI       → Spot           (interruptible)`]),
         },
-        links: {
-          asg_sav: makeLink('asg', 'savings', ['asg', 'savings'], { heads: 'end', label: 'steady' }),
-          asg_spot: makeLink('asg', 'spot', ['asg', 'spot'], { heads: 'end', label: 'stateless burst' }),
-        },
-        flows: [
-          { route: ['asg_sav'], kind: 'res', rate: 1.8 },
-          { route: ['asg_spot'], kind: 'req', rate: 1.8 },
-        ],
+        links: { ask: links.ask(`needs`), run: links.run(`bills`), help: links.help(`discounts`) },
+        flows: [{ route: ['ask'], rate: 1.4, bounce: true }],
       },
     },
     {
-      short: 'ALB vs NLB',
-      chapter: 'compute',
-      title: 'Load Balancers: ALB vs NLB vs GWLB',
+      short: 'ALB · NLB',
+      chapter: 'technique',
+      title: 'Three load balancers, three layers',
       body: [
-        '• <strong>ALB (Layer 7)</strong>: HTTP/HTTPS/gRPC, path/host routing, Cognito/OIDC auth, WAF integration.<br>• <strong>NLB (Layer 4)</strong>: TCP/UDP/TLS, millions of req/s, ultra-low latency, <strong>Static Elastic IP per AZ</strong>, and required for <strong>AWS PrivateLink</strong>.<br>• <strong>GWLB (Layer 3/4)</strong>: GENEVE protocol for 3rd-party inline firewalls/IDS.',
+        `<b>ALB</b> works at layer 7: HTTP/HTTPS, host and path routing, WebSockets, gRPC, auth integration — the default for web apps. <b>NLB</b> works at layer 4: TCP/UDP/TLS, millions of requests per second, ultra-low latency, a <em>static IP</em> per AZ.`,
+        `<b>GWLB</b> works at layer 3: it sends traffic transparently through fleets of third-party appliances (firewalls, inspection) using GENEVE on port 6081. Pick by need: routing logic (ALB), raw speed or fixed IPs (NLB), inline appliances (GWLB).`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Need Static IP addresses or UDP or PrivateLink? Choose NLB. Need HTTP path routing or WAF? Choose ALB.',
-      },
-      changes: ['+ NLB provides Static Elastic IPs & L4 ultra-low latency', '+ ALB handles L7 HTTP routing & WAF inspection'],
-      metrics: { cost_model: 'LCU Billing', lb_layer: 'L7 ALB / L4 NLB', rto_rpo: 'Multi-AZ', migration: 'None' },
+      changes: [`~ subject: ALB`, `+ NLB alt`, `+ GWLB`],
+      metrics: { choice: 'by layer', cost: '$0.0225 / hr + LCU', recovery: 'multi-AZ', effort: 'low' },
       scene: {
         entities: {
-          clients: makeDevice(-15, -8, { label: 'L4 / L7 Clients' }),
-          alb: makeBlock(1, -15, { s: 4.4, h: 50, color: 'blue', glyph: 'balancer', label: ['ALB (Layer 7)'], sub: '/api + WAF' }),
-          nlb: makeBlock(1, -1, { s: 4.4, h: 50, color: 'purple', glyph: 'balancer', label: ['NLB (Layer 4)'], sub: 'Static EIP' }),
-          targets: makeBlock(15, -8, { s: 4.4, h: 50, color: 'green', glyph: 'server', label: ['ECS / EC2'], sub: 'Target Group' }),
-          card: makePanel({ x: -12, y: 12 }, 'Choosing ALB vs NLB vs GWLB', [
-            '// ALB:  HTTP/HTTPS/WebSocket/gRPC, path/header routing, WAF',
-            '// NLB:  TCP/UDP, Static IP (EIP), PrivateLink, <100us overhead',
-            '// GWLB: Inline 3rd-party firewall appliances (GENEVE port 6081)',
-          ], { icon: 'terminal' }),
+          demand: demand([`clients`], `web + mobile`, [{ text: `HTTPS`, tone: `gray` }]),
+          subject: subject([`ALB`], `L7 · path routing`, [{ text: `/api → api · / → web`, tone: `violet` }], `balancer`),
+          target: target(`target groups`, [{ text: `ECS · Lambda · EC2`, tone: `gray` }]),
+          helper: helper([`GWLB`], `L3 · appliances`, `shield`, [{ text: `GENEVE 6081`, tone: `gray` }]),
+          alt: alt([`NLB`], `L4 · static IP`, [{ text: `millions rps`, tone: `green`, icon: `zap` }], `network`),
+          card: codeCard(`Pick by need`, [`ALB  host/path rules, auth, WebSockets, gRPC`, `NLB  TCP/UDP/TLS, static Elastic IP, PrivateLink target`, `GWLB inline firewalls / IDS (transparent L3)`]),
         },
-        links: {
-          c_alb: makeLink('clients', 'alb', ['clients', 'alb'], { heads: 'end', label: 'HTTPS /api' }),
-          c_nlb: makeLink('clients', 'nlb', ['clients', 'nlb'], { heads: 'end', label: 'TCP Static IP' }),
-          alb_t: makeLink('alb', 'targets', ['alb', 'targets'], { heads: 'end', label: 'HTTP' }),
-          nlb_t: makeLink('nlb', 'targets', ['nlb', 'targets'], { heads: 'end', label: 'TCP' }),
-        },
-        flows: [
-          { route: ['c_alb', 'alb_t'], kind: 'req', rate: 1.9 },
-          { route: ['c_nlb', 'nlb_t'], kind: 'res', rate: 2.1 },
-        ],
+        links: { ask: links.ask(`HTTPS`), run: links.run(`routes`), help: links.help(`inspects`) },
+        flows: [{ route: ['ask', 'run'], rate: 1.4, bounce: true }],
       },
     },
     {
-      short: '4 DR Tiers',
-      chapter: 'dr',
-      title: 'Disaster Recovery: 4 Tiers (RTO vs RPO)',
+      short: 'DR tiers',
+      chapter: 'insight',
+      title: 'RTO and RPO set the DR budget',
       body: [
-        'From lowest cost (hours RTO/RPO) to zero downtime (seconds RTO/RPO):',
-        '1. <strong>Backup & Restore</strong>: cheapest, S3/AWS Backup snapshots.<br>2. <strong>Pilot Light</strong>: core DB replicated live, compute off.<br>3. <strong>Warm Standby</strong>: scaled-down full stack running.<br>4. <strong>Multi-Site Active-Active</strong>: Route 53 routes live to both Regions.',
+        `<span class="term">RTO</span> is how long you can be down; <span class="term">RPO</span> is how much recent data you can lose. Tighter numbers cost more. Four strategies, cheapest first: <b>backup &amp; restore</b> (hours), <b>pilot light</b> (tens of minutes), <b>warm standby</b> (minutes), <b>multi-site active/active</b> (near zero).`,
+        `Each step up keeps more of the second Region running: from backups only, to a minimal core (database replicating), to a scaled-down full copy, to a full copy serving traffic. Match the tier to the business cost of an hour of downtime.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Pilot Light keeps ONLY critical data/DB live; Warm Standby runs a minimal version of the full application stack.',
-      },
-      changes: ['+ Primary Region replicates async to DR Region', '+ DR tier trades standby cost for lower RTO/RPO'],
-      metrics: { cost_model: 'Cost vs RTO', lb_layer: 'Route 53 Failover', rto_rpo: '4 DR Tiers', migration: 'Cross-Region' },
+      changes: [`~ subject: primary Region`, `+ DR Region`, `+ tier alt`],
+      metrics: { choice: '4 tiers', cost: '$ → $$$$', recovery: 'hours → ~0', effort: 'rising' },
       scene: {
         entities: {
-          pri: makeBlock(-14, -8, { s: 4.6, h: 52, color: 'green', glyph: 'server', label: ['Primary Region'], sub: 'us-east-1 Live' }),
-          rep: makeBlock(0, -8, { s: 4.4, h: 50, color: 'cyan', glyph: 'route', label: ['DR Replication'], sub: 'S3 CRR + Sync' }),
-          dr: makeBlock(15, -8, { s: 4.6, h: 52, color: 'orange', glyph: 'database', label: ['DR Region'], sub: 'Pilot / Warm' }),
-          card: makePanel({ x: -12, y: 12 }, 'AWS 4 DR Tiers (Cost vs RTO/RPO)', [
-            '// 1. Backup & Restore:   RPO/RTO = Hours     | Cost: $',
-            '// 2. Pilot Light:        RPO=Mins, RTO=10s m | Cost: $$ (DB only)',
-            '// 3. Warm Standby:       RPO=Secs, RTO=Mins  | Cost: $$$ (Mini stack)',
-            '// 4. Active-Active:      RPO/RTO ~ 0         | Cost: $$$$ (Full)',
-          ], { icon: 'terminal' }),
+          demand: demand([`users`], `eu-west-1 down`, [{ text: `outage`, tone: `red`, icon: `alert` }]),
+          subject: subject([`Primary`, `Region`], `eu-west-1`, [{ text: `unavailable`, tone: `red` }], `building`),
+          target: target(`DR Region`, [{ text: `us-east-1`, tone: `green` }]),
+          helper: helper([`Route 53`], `failover routing`, `globe`, [{ text: `health check ✗`, tone: `amber` }]),
+          alt: alt([`Warm`, `standby`], `RTO ~ minutes`, [{ text: `RPO ~ seconds`, tone: `violet` }], `copy`),
+          card: codeCard(`The four tiers`, [`backup & restore   RTO hours   RPO hours`, `pilot light        RTO ~30 min  RPO minutes`, `warm standby       RTO minutes  RPO seconds`, `multi-site         RTO ≈ 0      RPO ≈ 0   ($$$$)`]),
         },
-        links: {
-          p_rep: makeLink('pri', 'rep', ['pri', 'rep'], { heads: 'end', label: 'async stream' }),
-          rep_dr: makeLink('rep', 'dr', ['rep', 'dr'], { heads: 'end', label: 'standby sync' }),
-        },
-        flows: [{ route: ['p_rep', 'rep_dr'], kind: 'res', rate: 1.8 }],
+        links: { ask: links.ask(`fails`), run: links.run(`fail over`), help: links.help(`switches`) },
+        flows: [{ route: ['ask'], kind: 'fail', rate: 1, bounce: true }, { route: ['run'], kind: 'write', rate: 1 }],
       },
     },
     {
-      short: 'AWS Backup',
-      chapter: 'dr',
-      title: 'Centralized AWS Backup & Vault Lock (WORM)',
+      short: 'Backup',
+      chapter: 'solution',
+      title: 'AWS Backup: policy-driven, cross-Region',
       body: [
-        '<strong>AWS Backup</strong> centralizes scheduled snapshots across EBS, RDS, DynamoDB, EFS, and S3 with cross-account and cross-region copy.',
-        'Enable <strong>AWS Backup Vault Lock</strong> (WORM — Write-Once-Read-Many) so not even the AWS root user or a compromised admin can delete backups during ransomware incidents.',
+        `<span class="term">AWS Backup</span> replaces per-service backup scripts with one policy: which resources (by tag), how often, how long to keep, and where to copy. It covers EBS, RDS, DynamoDB, EFS, S3 and more from a single console.`,
+        `Add a <b>cross-Region copy</b> rule so a regional failure leaves restorable data elsewhere, and a <b>vault lock</b> to make backups tamper-proof. Test restores — an untested backup is a hope, not a plan.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Exam keyword: "Immutable backups / protect against ransomware or accidental deletion by admin" -> AWS Backup Vault Lock.',
-      },
-      changes: ['+ AWS Backup orchestrates cross-region vault copy', '+ Vault Lock enforces WORM immutability'],
-      metrics: { cost_model: 'Cold Tiering', lb_layer: 'Control Plane', rto_rpo: 'Immutable WORM', migration: 'Cross-Account' },
+      changes: [`+ AWS Backup plan`, `+ cross-Region copy`, `+ vault lock`],
+      metrics: { choice: 'one policy', cost: '$0.05 / GB mo', recovery: 'RPO = schedule', effort: 'low' },
       scene: {
         entities: {
-          src: makeDb(-14, -8, { r: 2.2, h: 48, color: 'blue', label: ['EBS / RDS / EFS'], sub: 'Prod Data' }),
-          bk: makeBlock(0, -8, { s: 4.6, h: 52, color: 'purple', glyph: 'workflow', label: ['AWS Backup'], sub: 'Policy Cron' }),
-          vault: makeDb(15, -8, { r: 2.2, h: 48, color: 'green', label: ['Locked Vault'], sub: 'WORM Immutable' }),
-          card: makePanel({ x: -12, y: 12 }, 'AWS Backup + WORM Vault Lock', [
-            '// Single backup plan covers EBS, RDS, Aurora, EFS, DynamoDB, S3',
-            '// Cross-Region + Cross-Account copy into isolated security account',
-            '// Vault Lock (Compliance Mode): cannot delete until retention expires',
-          ], { icon: 'terminal' }),
+          demand: demand([`tagged`, `resources`], `backup=daily`, [{ text: `EBS · RDS · EFS`, tone: `gray` }], `database`),
+          subject: subject([`AWS Backup`], `plan + vault`, [{ text: `daily · keep 35 d`, tone: `violet` }], `shield`),
+          target: target(`DR vault`, [{ text: `us-east-1 copy`, tone: `green` }]),
+          helper: helper([`Vault Lock`], `WORM`, `lock`, [{ text: `cannot delete`, tone: `green` }]),
+          alt: alt([`primary`, `vault`], `eu-west-1`, [{ text: `35-day retention`, tone: `gray` }], `database`),
+          card: codeCard(`A backup rule`, [`{ "RuleName": "daily", "ScheduleExpression": "cron(0 3 * * ? *)",`, `  "Lifecycle": { "DeleteAfterDays": 35 },`, `  "CopyActions": [{ "DestinationBackupVaultArn": "arn:aws:backup:us-east-1:…:dr-vault" }] }`]),
         },
-        links: {
-          s_bk: makeLink('src', 'bk', ['src', 'bk'], { heads: 'end', label: 'snapshot' }),
-          bk_v: makeLink('bk', 'vault', ['bk', 'vault'], { heads: 'end', label: 'WORM copy' }),
-        },
-        flows: [{ route: ['s_bk', 'bk_v'], kind: 'res', rate: 1.7 }],
+        links: { ask: links.ask(`protects`), run: links.run(`copies`), help: links.help(`locks`) },
+        flows: [{ route: ['run'], kind: 'write', rate: 1.2, bounce: true }],
       },
     },
     {
       short: 'Migration',
-      chapter: 'migration',
-      title: 'Migration: DMS + SCT, DataSync & Snowball',
+      chapter: 'technique',
+      title: 'Moving in: DMS, DataSync and Snowball',
       body: [
-        '• <strong>AWS DMS + SCT</strong>: live database migration with near-zero downtime. Use <strong>Schema Conversion Tool (SCT)</strong> for heterogeneous migrations (Oracle → Aurora PostgreSQL).<br>• <strong>AWS DataSync</strong>: online petabyte file sync (NFS/SMB → S3/EFS) over WAN.<br>• <strong>Snowball Edge</strong>: offline 80 TB+ physical appliance when bandwidth is too slow.',
+        `<b>Database Migration Service</b> copies a live database to AWS and keeps it in sync (change data capture) so cutover is minutes of downtime; use the Schema Conversion Tool for engine changes (Oracle to Aurora). <b>DataSync</b> moves files over the network — NFS/SMB to S3, EFS or FSx — with scheduling and verification.`,
+        `When the network is the limit (tens of terabytes or more, slow link), <b>Snowball Edge</b> devices are shipped to you, filled offline and returned. Rule of thumb: if the transfer would take over a week online, ship a device.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Oracle -> Aurora PostgreSQL always requires SCT (schema) + DMS (data + CDC). Offline 100 TB with slow WAN -> Snowball.',
-      },
-      changes: ['+ DMS CDC streams live changes with zero downtime', '+ DataSync / Snowball handle bulk file transfer'],
-      metrics: { cost_model: 'Pay-per-GB', lb_layer: 'CDC / WAN', rto_rpo: 'Near-Zero Cut', migration: 'DMS + DataSync' },
+      changes: [`~ subject: DMS`, `+ DataSync alt`, `+ Snowball`],
+      metrics: { choice: 'by size + link', cost: 'per GB / device', recovery: 'minutes cutover', effort: 'medium' },
       scene: {
         entities: {
-          oracle: makeDb(-14, -8, { r: 2.2, h: 48, color: 'red', label: ['On-Prem Oracle'], sub: 'Source DB' }),
-          dms: makeBlock(0, -8, { s: 4.6, h: 52, color: 'cyan', glyph: 'workflow', label: ['SCT + DMS'], sub: 'Full + CDC' }),
-          aurora: makeDb(15, -8, { r: 2.2, h: 48, color: 'green', label: ['Aurora PG'], sub: 'Target DB' }),
-          card: makePanel({ x: -12, y: 12 }, 'AWS Migration Tool Selector', [
-            '// Heterogeneous DB (Oracle -> Aurora): SCT + DMS (CDC)',
-            '// Online NFS/SMB -> EFS/S3 (up to 10 Gbps): AWS DataSync',
-            '// Offline >50 TB / poor WAN (<1 week): AWS Snowball Edge',
-            '// Hybrid local cache of S3/NFS: AWS Storage Gateway',
-          ], { icon: 'terminal' }),
+          demand: demand([`on-prem`, `database`], `Oracle · 4 TB`, [{ text: `source`, tone: `gray` }], `building`),
+          subject: subject([`DMS`], `full load + CDC`, [{ text: `lag 2 s`, tone: `green`, icon: `gauge` }], `refresh`),
+          target: target(`Aurora`, [{ text: `target`, tone: `green` }]),
+          helper: helper([`Snowball`, `Edge`], `ship 80 TB`, `box`, [{ text: `offline`, tone: `violet` }]),
+          alt: alt([`DataSync`], `NFS → S3`, [{ text: `online files`, tone: `violet` }], `copy`),
+          card: codeCard(`Pick by size`, [`database, live sync      → DMS (+ SCT for engine change)`, `files over the network    → DataSync`, `80 TB, 100 Mbps link     → Snowball  (online: ~80 days)`]),
         },
-        links: {
-          or_dms: makeLink('oracle', 'dms', ['oracle', 'dms'], { heads: 'end', label: 'CDC stream' }),
-          dms_au: makeLink('dms', 'aurora', ['dms', 'aurora'], { heads: 'end', label: 'convert + load' }),
-        },
-        flows: [{ route: ['or_dms', 'dms_au'], kind: 'req', rate: 1.9 }],
+        links: { ask: links.ask(`reads`), run: links.run(`replicates`), help: links.help(`ships`) },
+        flows: [{ route: ['ask', 'run'], kind: 'write', rate: 1.4 }],
       },
     },
     {
-      short: 'Observability',
-      chapter: 'ops',
-      title: 'CloudTrail, CloudWatch, Flow Logs & X-Ray',
+      short: 'Observe',
+      chapter: 'recap',
+      title: 'Audit, flow and trace',
       body: [
-        'SAA-C03 distinguishes four telemetry planes:',
-        '• <strong>CloudTrail</strong>: <em>Who</em> called <em>which</em> AWS API (governance & audit).<br>• <strong>CloudWatch</strong>: Metrics, Alarms & Application Logs.<br>• <strong>VPC Flow Logs</strong>: IP-level <code>ACCEPT</code>/<code>REJECT</code> network metadata.<br>• <strong>AWS X-Ray</strong>: distributed microservice request tracing.',
+        `Three tools answer three questions. <span class="term">CloudTrail</span>: <em>who</em> called which API, when and from where. <span class="term">VPC Flow Logs</span>: <em>which</em> network connections were accepted or rejected. <span class="term">X-Ray</span>: <em>where</em> a single request spent its time across services.`,
+        `Turn CloudTrail on for all Regions into a locked S3 bucket, send Flow Logs to CloudWatch or S3 for troubleshooting, and add X-Ray (or OpenTelemetry) tracing to find the slow hop in a microservice call chain.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Exam keyword: "Who deleted the S3 bucket / modified Security Group?" -> CloudTrail. "Why is packet dropped?" -> VPC Flow Logs.',
-      },
-      changes: ['+ CloudTrail records all IAM/API control-plane calls', '+ CloudWatch + X-Ray monitor runtime latency & alarms'],
-      metrics: { cost_model: 'Log Retention', lb_layer: 'Control + Data', rto_rpo: 'Real-Time Alarm', migration: 'Governance' },
+      changes: [`+ CloudTrail`, `+ Flow Logs`, `+ X-Ray`],
+      metrics: { choice: '3 tools', cost: 'per event / GB', recovery: 'n/a', effort: 'low' },
       scene: {
         entities: {
-          awsApi: makeBlock(-14, -8, { s: 4.4, h: 50, color: 'blue', glyph: 'server', label: ['AWS Workload'], sub: 'API + Traffic' }),
-          trail: makeBlock(1, -15, { s: 4.4, h: 50, color: 'purple', glyph: 'shield', label: ['CloudTrail'], sub: 'API Audit' }),
-          cw: makeBlock(1, -1, { s: 4.4, h: 50, color: 'green', glyph: 'cpu', label: ['CloudWatch'], sub: 'Metrics/Alarms' }),
-          s3Logs: makeDb(15, -8, { r: 2.2, h: 48, color: 'orange', label: ['S3 Archive'], sub: 'Glacier/Athena' }),
-          card: makePanel({ x: -12, y: 12 }, 'AWS Observability & Audit Matrix', [
-            '// CloudTrail:    API audit (Who ran DeleteBucket?) -> S3 / Athena',
-            '// CloudWatch:    CPU/Latency metrics, Alarms -> ASG / SNS',
-            '// VPC Flow Logs: L3/L4 ACCEPT/REJECT -> troubleshoot SG/NACL',
-            '// AWS X-Ray:     Distributed trace map across Lambda/ECS/RDS',
-          ], { icon: 'terminal' }),
+          demand: demand([`API call`], `who + when`, [{ text: `DeleteBucket`, tone: `amber` }], `user`),
+          subject: subject([`CloudTrail`], `API audit log`, [{ text: `all Regions`, tone: `green` }], `scroll`),
+          target: target(`log bucket`, [{ text: `object lock`, tone: `green` }]),
+          helper: helper([`VPC Flow`, `Logs`], `ACCEPT / REJECT`, `network`, [{ text: `src · dst · port`, tone: `gray` }]),
+          alt: alt([`X-Ray`], `request trace`, [{ text: `p99 in DB call`, tone: `violet` }], `activity`),
+          card: codeCard(`Three questions`, [`CloudTrail  { "eventName": "DeleteBucket", "userIdentity": "alice" }`, `Flow Logs   2 eni-0a 10.0.1.5 10.0.2.9 443 6 ACCEPT OK`, `X-Ray       api 12 ms → orders 40 ms → db 410 ms`]),
         },
-        links: {
-          api_tr: makeLink('awsApi', 'trail', ['awsApi', 'trail'], { heads: 'end', label: 'API events' }),
-          api_cw: makeLink('awsApi', 'cw', ['awsApi', 'cw'], { heads: 'end', label: 'metrics' }),
-          tr_s3: makeLink('trail', 's3Logs', ['trail', 's3Logs'], { heads: 'end', label: 'archive' }),
-          cw_s3: makeLink('cw', 's3Logs', ['cw', 's3Logs'], { heads: 'end', label: 'export' }),
-        },
-        flows: [
-          { route: ['api_tr', 'tr_s3'], kind: 'req', rate: 1.8 },
-          { route: ['api_cw', 'cw_s3'], kind: 'res', rate: 1.8 },
-        ],
+        links: { ask: links.ask(`API`), run: links.run(`records`), help: links.help(`logs`) },
+        flows: [{ route: ['ask', 'run'], kind: 'msg', rate: 1.3 }],
       },
     },
   ],
-};
+});

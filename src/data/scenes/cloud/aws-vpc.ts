@@ -1,4 +1,4 @@
-import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
+import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
 
 // One VPC for the whole lesson. Two subnet strips (public, private) run along the
 // iso y-axis; each holds one node per AZ. Later steps only add gateways, rules,
@@ -21,28 +21,27 @@ const ec2 = (y: number, az: string, tags: Tag[] = []) =>
 const appA = (tags: Tag[] = []) => ec2(-6, `AZ-a`, tags);
 const appB = (tags: Tag[] = []) => ec2(6, `AZ-b`, tags);
 const rds = (tags: Tag[] = []) => makeDb(7, 17, { r: 2.1, h: 44, label: `RDS`, tags });
-const s3 = (tags: Tag[] = []) => makeDb(17, 6, { r: 2.1, h: 44, glyph: `package`, label: `S3`, tags });
+const s3 = (tags: Tag[] = []) => makeDb(16, 7, { r: 2.1, h: 44, glyph: `package`, label: `S3`, tags });
 const logs = (tags: Tag[] = []) =>
   makeBlock(-4, 18, { s: 4.2, h: 48, color: `slab`, glyph: `scroll`, label: [`CloudWatch`], sub: `flow logs`, tags });
 
 const publicNet = () => makeZone({ x0: -6.5, x1: -1.5, y0: -11.5, y1: 9.5 }, `PUBLIC`);
 const privateNet = () => makeZone({ x0: 4.5, x1: 9.5, y0: -11.5, y1: 19.5 }, `PRIVATE`);
 
-const L = {
+const links = {
   inIgw: makeLink(`internet`, `igw`, [`internet`, `igw`], { heads: `both` }),
   igwAlb: makeLink(`igw`, `alb`, [`igw`, `alb`], { heads: `both` }),
   albA: makeLink(`alb`, `appA`, [`alb`, `appA`], { heads: `both` }),
   albB: makeLink(`alb`, `appB`, [`alb`, `appB`], { heads: `both` }),
   bRds: makeLink(`appB`, `rds`, [`appB`, `rds`], { heads: `both` }),
-  bNat: makeLink(`appB`, `nat`, [`appB`, `nat`], { label: `egress` }),
+  bNat: makeLink(`appB`, `nat`, [`appB`, `nat`]),
   bNatQuiet: makeLink(`appB`, `nat`, [`appB`, `nat`]),
   natIgw: makeLink(`nat`, `igw`, [`nat`, `igw`]),
-  bS3: makeLink(`appB`, `s3`, [`appB`, `s3`], { heads: `both`, label: `vpce` }),
+  bS3: makeLink(`appB`, `s3`, [`appB`, `s3`], { heads: `both` }),
   bLogs: makeLink(`appB`, `logs`, [`appB`, `logs`], { style: `dashed` }),
 };
 
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: -13, y: -7, z: 0, dx: -190, dy: -250 }, title, lines, { icon });
+const card = cardAt({ x: -13, y: -7, dx: -190, dy: -250 });
 
 const vpcCore = () => ({ publicNet: publicNet(), privateNet: privateNet() });
 
@@ -85,11 +84,11 @@ export const awsVpcLesson = {
           rds: rds(),
           card: card(
             `subnets`,
-            [`10.0.1.0/24   public-a    us-east-1a`, `10.0.2.0/24   public-b    us-east-1b`, `10.0.10.0/24  private-a   us-east-1a`, `10.0.11.0/24  private-b   us-east-1b`],
+            [`$ aws ec2 describe-subnets --query "Subnets[].[CidrBlock,AvailabilityZone]"`, `10.0.1.0/24   public-a    us-east-1a`, `10.0.2.0/24   public-b    us-east-1b`, `10.0.10.0/24  private-a   us-east-1a`, `10.0.11.0/24  private-b   us-east-1b`],
             `listOrdered`,
           ),
         },
-        links: { bRds: L.bRds },
+        links: { bRds: links.bRds },
         flows: [{ route: [`bRds`], rate: 0.8, bounce: true }],
       },
     },
@@ -106,7 +105,7 @@ export const awsVpcLesson = {
       metrics: { vpcCidr: `10.0.0.0/16`, subnets: `4`, inbound: `ALB :443`, outbound: `none`, firewall: `default` },
       scene: {
         entities: { ...vpcCore(), internet: internet(), igw: igw(), alb: alb(), appA: appA(), appB: appB(), rds: rds() },
-        links: { inIgw: L.inIgw, igwAlb: L.igwAlb, albA: L.albA, albB: L.albB, bRds: L.bRds },
+        links: { inIgw: links.inIgw, igwAlb: links.igwAlb, albA: links.albA, albB: links.albB, bRds: links.bRds },
         flows: [
           { route: [`inIgw`, `igwAlb`, `albA`], rate: 1, bounce: true },
           { route: [`inIgw`, `igwAlb`, `albB`], rate: 1, bounce: true },
@@ -136,11 +135,11 @@ export const awsVpcLesson = {
           rds: rds(),
           card: card(
             `route tables`,
-            [`private-b   10.0.0.0/16 → local`, `= private-b   0.0.0.0/0   → nat-0abc`, `public-*    10.0.0.0/16 → local`, `public-*    0.0.0.0/0   → igw-0def`],
+            [`$ aws ec2 describe-route-tables --route-table-ids rtb-private-b`, `private-b   10.0.0.0/16 → local`, `= private-b   0.0.0.0/0   → nat-0abc`, `public-*    10.0.0.0/16 → local`, `public-*    0.0.0.0/0   → igw-0def`],
             `route`,
           ),
         },
-        links: { inIgw: L.inIgw, igwAlb: L.igwAlb, albA: L.albA, albB: L.albB, bRds: L.bRds, bNat: L.bNat, natIgw: L.natIgw },
+        links: { inIgw: links.inIgw, igwAlb: links.igwAlb, albA: links.albA, albB: links.albB, bRds: links.bRds, bNat: links.bNat, natIgw: links.natIgw },
         flows: [
           { route: [`bNat`, `natIgw`, `inIgw`], kind: `write`, rate: 1.4, bounce: true },
           { route: [`inIgw`, `igwAlb`, `albA`], rate: 0.8, bounce: true },
@@ -174,7 +173,7 @@ export const awsVpcLesson = {
             `shield`,
           ),
         },
-        links: { inIgw: L.inIgw, igwAlb: L.igwAlb, albA: L.albA, albB: L.albB, bRds: L.bRds, bNat: L.bNatQuiet, natIgw: L.natIgw },
+        links: { inIgw: links.inIgw, igwAlb: links.igwAlb, albA: links.albA, albB: links.albB, bRds: links.bRds, bNat: links.bNatQuiet, natIgw: links.natIgw },
         flows: [
           { route: [`inIgw`, `igwAlb`, `albA`], rate: 1, bounce: true },
           { route: [`inIgw`], kind: `fail`, rate: 0.6 },
@@ -205,7 +204,7 @@ export const awsVpcLesson = {
           s3: s3([{ text: `$0 / GB`, tone: `green` }]),
           card: card(`route table · private-b`, [`10.0.0.0/16        → local`, `0.0.0.0/0          → nat-0abc`, `= pl-63a5400a (s3)  → vpce-0a1b`], `route`),
         },
-        links: { inIgw: L.inIgw, igwAlb: L.igwAlb, albA: L.albA, albB: L.albB, bRds: L.bRds, bNat: L.bNatQuiet, natIgw: L.natIgw, bS3: L.bS3 },
+        links: { inIgw: links.inIgw, igwAlb: links.igwAlb, albA: links.albA, albB: links.albB, bRds: links.bRds, bNat: links.bNatQuiet, natIgw: links.natIgw, bS3: links.bS3 },
         flows: [
           { route: [`bS3`], kind: `write`, rate: 2, bounce: true },
           { route: [`inIgw`, `igwAlb`, `albB`], rate: 0.8, bounce: true },
@@ -237,20 +236,20 @@ export const awsVpcLesson = {
           logs: logs([{ text: `1 REJECT`, tone: `red`, icon: `alert` }]),
           card: card(
             `flow log records`,
-            [`eni-0a1b 198.51.100.2 → 10.0.11.25 :443  ACCEPT`, `! eni-0a1b 203.0.113.99 → 10.0.11.25 :22   REJECT`],
+            [`$ aws logs filter-log-events --log-group-name vpc-flow --filter-pattern "REJECT"`, `eni-0a1b 198.51.100.2 → 10.0.11.25 :443  ACCEPT`, `! eni-0a1b 203.0.113.99 → 10.0.11.25 :22   REJECT`],
             `scroll`,
           ),
         },
         links: {
-          inIgw: L.inIgw,
-          igwAlb: L.igwAlb,
-          albA: L.albA,
-          albB: L.albB,
-          bRds: L.bRds,
-          bNat: L.bNatQuiet,
-          natIgw: L.natIgw,
-          bS3: L.bS3,
-          bLogs: L.bLogs,
+          inIgw: links.inIgw,
+          igwAlb: links.igwAlb,
+          albA: links.albA,
+          albB: links.albB,
+          bRds: links.bRds,
+          bNat: links.bNatQuiet,
+          natIgw: links.natIgw,
+          bS3: links.bS3,
+          bLogs: links.bLogs,
         },
         flows: [
           { route: [`bLogs`], kind: `write`, rate: 1.4 },
@@ -271,15 +270,15 @@ export const awsVpcLesson = {
       scene: {
         entities: { ...vpcCore(), internet: internet(), igw: igw(), alb: alb(), nat: nat(), appA: appA(), appB: appB(), rds: rds(), s3: s3(), logs: logs() },
         links: {
-          inIgw: L.inIgw,
-          igwAlb: L.igwAlb,
-          albA: L.albA,
-          albB: L.albB,
-          bRds: L.bRds,
-          bNat: L.bNatQuiet,
-          natIgw: L.natIgw,
-          bS3: L.bS3,
-          bLogs: L.bLogs,
+          inIgw: links.inIgw,
+          igwAlb: links.igwAlb,
+          albA: links.albA,
+          albB: links.albB,
+          bRds: links.bRds,
+          bNat: links.bNatQuiet,
+          natIgw: links.natIgw,
+          bS3: links.bS3,
+          bLogs: links.bLogs,
         },
         flows: [
           { route: [`inIgw`, `igwAlb`, `albA`], rate: 1, bounce: true },

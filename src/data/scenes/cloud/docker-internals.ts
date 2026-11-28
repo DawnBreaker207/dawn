@@ -1,4 +1,4 @@
-import { makeBlock, makeDevice, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDevice, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
 
 // One host for the whole lesson. A container is born (docker → containerd → runc),
 // then the same app process gets wrapped step by step: namespaces decide what it can
@@ -18,18 +18,18 @@ const dev = () => makeDevice(-13, -10.5, { label: `docker CLI` });
 const containerd = (o: Opts = {}) =>
   makeBlock(-10.5, 2.5, { s: 4.6, h: 52, color: `orange`, glyph: `boxes`, label: [`containerd`], sub: `daemon`, ...o });
 const runc = (o: Opts = {}) =>
-  makeBlock(2, -11, { s: 4.2, h: 50, color: `purple`, glyph: `hammer`, label: [`runc`], sub: `OCI runtime`, ...o });
+  makeBlock(2, -12, { s: 4.2, h: 50, color: `purple`, glyph: `hammer`, label: [`runc`], sub: `OCI runtime`, ...o });
 const shim = (o: Opts = {}) =>
-  makeBlock(2, -11, { s: 4.2, h: 50, color: `orange`, glyph: `route`, label: [`shim`], sub: `holds stdio`, ...o });
+  makeBlock(2, -12, { s: 4.2, h: 50, color: `orange`, glyph: `route`, label: [`shim`], sub: `holds stdio`, ...o });
 const app = (tags: Tag[] = [], o: Opts = {}) =>
   makeBlock(APP.x, APP.y, { s: 4.6, h: 54, color: `green`, glyph: `cpu`, label: [`node app`], sub: `server.js`, tags, ...o });
 const kernel = (o: Opts = {}) =>
-  makeBlock(15, -12, { s: 5.4, h: 42, color: `slab`, glyph: `layers`, label: [`Linux kernel`], sub: `shared by all`, ...o });
+  makeBlock(15, -12, { s: 5.4, h: 46, color: `slab`, glyph: `layers`, label: [`Linux kernel`], sub: `shared by all`, ...o });
 const bridge = () => makeBlock(9.5, 18, { s: 4.2, h: 48, color: `blue`, glyph: `network`, label: [`docker0`], sub: `bridge` });
 // Roomy enough that the floor label runs clear of the app block (label starts at y0 + 0.55).
 const box = () => makeZone({ x0: 2.5, x1: 10.5, y0: -1, y1: 10 }, `NAMESPACES`);
 
-const L = {
+const links = {
   run: makeLink(`dev`, `containerd`, [`dev`, `containerd`], { heads: `both`, label: `run` }),
   runIdle: makeLink(`dev`, `containerd`, [`dev`, `containerd`], { heads: `both`, style: `off` }),
   // short vertical hop — the config.json card names what travels here
@@ -43,8 +43,7 @@ const L = {
   veth: makeLink(`app`, `bridge`, [`app`, `bridge`], { heads: `both`, label: `veth pair` }),
 };
 
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: -10.5, y: 2.5, z: 0, dx: 70, dy: -250 }, title, lines, { icon });
+const card = cardAt({ x: -10.5, y: 2.5, dx: 70, dy: -250 });
 
 /** The parts that stay on stage once the container is running. */
 const running = (appTags: Tag[], extra: Opts = {}) => ({
@@ -89,7 +88,7 @@ export const dockerInternalsLesson = {
           kernel: kernel(),
           card: card(`terminal`, [`$ docker run -d --name web \\`, `    --memory 512m --cpus 0.5 \\`, `    -p 8080:3000 web:1.4`], `keyboard`),
         },
-        links: { run: L.run },
+        links: { run: links.run },
         flows: [{ route: [`run`], rate: 1.2, bounce: true }],
       },
     },
@@ -116,7 +115,7 @@ export const dockerInternalsLesson = {
             `braces`,
           ),
         },
-        links: { run: L.runIdle, spec: L.spec, clone: L.clone },
+        links: { run: links.runIdle, spec: links.spec, clone: links.clone },
         flows: [
           { route: [`spec`], rate: 1, kind: `write` },
           { route: [`clone`], rate: 1 },
@@ -141,7 +140,7 @@ export const dockerInternalsLesson = {
             `scan`,
           ),
         }),
-        links: { run: L.runIdle, supervise: L.supervise, stdio: L.stdio, syscalls: L.syscalls },
+        links: { run: links.runIdle, supervise: links.supervise, stdio: links.stdio, syscalls: links.syscalls },
         flows: [
           { route: [`syscalls`], kind: `write`, rate: 1.6, bounce: true },
           { route: [`stdio`], rate: 0.6, bounce: true },
@@ -163,7 +162,7 @@ export const dockerInternalsLesson = {
           box: box(),
           card: card(`inside vs outside`, [`$ docker exec web ps`, `PID  CMD`, `= 1    node server.js`, `# host ps: same process is 2845`], `eye`),
         }),
-        links: { run: L.runIdle, supervise: L.supervise, stdio: L.stdioQuiet, syscalls: L.syscallsQuiet },
+        links: { run: links.runIdle, supervise: links.supervise, stdio: links.stdioQuiet, syscalls: links.syscallsQuiet },
         flows: [{ route: [`syscalls`], kind: `write`, rate: 1.4, bounce: true }],
       },
     },
@@ -189,7 +188,7 @@ export const dockerInternalsLesson = {
             card: card(`inside the container`, [`$ ip -brief addr`, `lo     127.0.0.1/8`, `= eth0   172.17.0.2/16`, `$ ls /   # image files only`], `network`),
           },
         ),
-        links: { run: L.runIdle, supervise: L.supervise, stdio: L.stdioQuiet, syscalls: L.syscallsQuiet, veth: L.veth },
+        links: { run: links.runIdle, supervise: links.supervise, stdio: links.stdioQuiet, syscalls: links.syscallsQuiet, veth: links.veth },
         flows: [
           { route: [`veth`], rate: 2, bounce: true },
           { route: [`syscalls`], kind: `write`, rate: 1, bounce: true },
@@ -222,7 +221,7 @@ export const dockerInternalsLesson = {
             ),
           },
         ),
-        links: { run: L.runIdle, supervise: L.supervise, stdio: L.stdioQuiet, syscalls: L.syscallsQuiet, veth: L.veth },
+        links: { run: links.runIdle, supervise: links.supervise, stdio: links.stdioQuiet, syscalls: links.syscallsQuiet, veth: links.veth },
         flows: [
           { route: [`veth`], rate: 3, bounce: true },
           { route: [`syscalls`], kind: `write`, rate: 1.6, bounce: true },
@@ -246,7 +245,7 @@ export const dockerInternalsLesson = {
           bridge: bridge(),
           card: card(`dmesg`, [`! Memory cgroup out of memory:`, `! Killed process 2845 (node)`, `  total-vm:1.1GB, anon-rss:524288kB`], `alertTriangle`),
         }),
-        links: { run: L.runIdle, supervise: L.supervise, stdio: L.stdioQuiet, syscalls: L.syscallsQuiet, veth: L.veth },
+        links: { run: links.runIdle, supervise: links.supervise, stdio: links.stdioQuiet, syscalls: links.syscallsQuiet, veth: links.veth },
         flows: [{ route: [`supervise`], kind: `fail`, rate: 0.8 }],
       },
     },
@@ -272,7 +271,7 @@ export const dockerInternalsLesson = {
             card: card(`docker stats`, [`$ docker stats --no-stream web`, `NAME  CPU %   MEM USAGE / LIMIT`, `= web   20%     95MiB / 512MiB`], `activity`),
           },
         ),
-        links: { run: L.runIdle, supervise: L.supervise, stdio: L.stdioQuiet, syscalls: L.syscallsQuiet, veth: L.veth },
+        links: { run: links.runIdle, supervise: links.supervise, stdio: links.stdioQuiet, syscalls: links.syscallsQuiet, veth: links.veth },
         flows: [
           { route: [`veth`], rate: 2, bounce: true },
           { route: [`syscalls`], kind: `write`, rate: 1.2, bounce: true },

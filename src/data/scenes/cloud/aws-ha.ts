@@ -1,4 +1,4 @@
-import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone } from '@/lib/simulator/scene-builders';
+import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
 
 // One region, two AZs, then a DR region. Same nodes all lesson long:
 //
@@ -10,7 +10,7 @@ type Tag = { text: string; tone?: string; icon?: string };
 type Opts = Record<string, unknown>;
 
 // colors by role: edge/DNS yellow · gateways orange · compute blue · data db · security purple
-const users = () => makeDevice(-17, -14.5, { label: `users` });
+const users = () => makeDevice(-16, -15.5, { label: `users` });
 const r53 = (tags: Tag[] = []) => makeBlock(-11.5, -8.5, { s: 4.4, h: 50, color: `yellow`, glyph: `globe`, label: [`Route 53`], sub: `DNS`, tags });
 const alb = (tags: Tag[] = []) => makeBalancer(-5.5, -3, { s: 4.4, h: 50, label: [`ALB`], sub: `cross-zone`, tags });
 const ec2 = (x: number, y: number, az: string, tags: Tag[], o: Opts) =>
@@ -27,7 +27,7 @@ const azA = () => makeZone({ x0: -9.5, x1: 1.5, y0: 5.5, y1: 19 }, `AZ-A`);
 const azB = () => makeZone({ x0: 5.5, x1: 17, y0: -9.5, y1: 4 }, `AZ-B`);
 const drRegion = () => makeZone({ x0: -1, x1: 17, y0: -24, y1: -16 }, ``);
 
-const L = {
+const links = {
   dns: makeLink(`users`, `r53`, [`users`, `r53`], { heads: `both` }),
   r53Alb: makeLink(`r53`, `alb`, [`r53`, `alb`], { heads: `both` }),
   albA: makeLink(`alb`, `ec2a`, [`alb`, `ec2a`], { heads: `both` }),
@@ -43,8 +43,7 @@ const L = {
   drDbLink: makeLink(`drApp`, `drDb`, [`drApp`, `drDb`], { heads: `both` }),
 };
 
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: -11.5, y: -8.5, z: 0, dx: -180, dy: -235 }, title, lines, { icon });
+const card = cardAt({ x: -11.5, y: -8.5, dx: -180, dy: -235 });
 
 const region = () => ({ azA: azA(), azB: azB(), users: users() });
 
@@ -77,7 +76,7 @@ export const awsHaLesson = {
       metrics: { routing: `primary`, healthy: `1 / 1`, capacity: `1`, database: `—`, rto: `—` },
       scene: {
         entities: { azA: azA(), users: users(), r53: r53([{ text: `health ✓`, tone: `green` }]), alb: alb(), ec2a: ec2a() },
-        links: { dns: L.dns, r53Alb: L.r53Alb, albA: L.albA },
+        links: { dns: links.dns, r53Alb: links.r53Alb, albA: links.albA },
         flows: [{ route: [`dns`, `r53Alb`, `albA`], rate: 1.2, bounce: true }],
       },
     },
@@ -94,7 +93,7 @@ export const awsHaLesson = {
       metrics: { routing: `primary`, healthy: `2 / 2`, capacity: `2`, database: `—`, rto: `—` },
       scene: {
         entities: { ...region(), r53: r53(), alb: alb(), ec2a: ec2a(), ec2b: ec2b() },
-        links: { dns: L.dns, r53Alb: L.r53Alb, albA: L.albA, albB: L.albB },
+        links: { dns: links.dns, r53Alb: links.r53Alb, albA: links.albA, albB: links.albB },
         flows: [
           { route: [`dns`, `r53Alb`, `albA`], rate: 1, bounce: true },
           { route: [`dns`, `r53Alb`, `albB`], rate: 1, bounce: true },
@@ -121,7 +120,7 @@ export const awsHaLesson = {
           ec2b: ec2b([{ text: `×2 · cpu 61%`, tone: `green` }]),
           card: card(`target tracking`, [`ASG web-asg   min 2  desired 4  max 10`, `policy  ASGAverageCPUUtilization = 60`, `= cpu 82% → +2 instances (scale out)`], `gauge`),
         },
-        links: { dns: L.dns, r53Alb: L.r53Alb, albA: L.albA, albB: L.albB },
+        links: { dns: links.dns, r53Alb: links.r53Alb, albA: links.albA, albB: links.albB },
         flows: [
           { route: [`dns`, `r53Alb`, `albA`], rate: 1.8, bounce: true },
           { route: [`dns`, `r53Alb`, `albB`], rate: 1.8, bounce: true },
@@ -141,7 +140,7 @@ export const awsHaLesson = {
       metrics: { routing: `primary`, healthy: `4 / 4`, capacity: `4`, database: `Multi-AZ`, rto: `—` },
       scene: {
         entities: { ...region(), r53: r53(), alb: alb(), ec2a: ec2a(), ec2b: ec2b(), dbP: dbP(), dbS: dbS() },
-        links: { dns: L.dns, r53Alb: L.r53Alb, albA: L.albA, albB: L.albB, aDb: L.aDb, bDb: L.bDb, sync: L.sync },
+        links: { dns: links.dns, r53Alb: links.r53Alb, albA: links.albA, albB: links.albB, aDb: links.aDb, bDb: links.bDb, sync: links.sync },
         flows: [
           { route: [`dns`, `r53Alb`, `albA`, `aDb`], rate: 1.2, bounce: true },
           { route: [`dns`, `r53Alb`, `albB`, `bDb`], rate: 1.2, bounce: true },
@@ -170,7 +169,7 @@ export const awsHaLesson = {
           dbP: dbP([], { dead: 1 }),
           dbS: dbS([{ text: `promoted`, tone: `green`, icon: `check` }]),
         },
-        links: { dns: L.dns, r53Alb: L.r53Alb, albA: L.albA, albB: L.albB, bDbS: L.bDbS, sync: L.syncQuiet },
+        links: { dns: links.dns, r53Alb: links.r53Alb, albA: links.albA, albB: links.albB, bDbS: links.bDbS, sync: links.syncQuiet },
         flows: [
           { route: [`dns`, `r53Alb`, `albB`, `bDbS`], rate: 2, bounce: true },
           { route: [`albA`], kind: `fail`, rate: 0.6 },
@@ -201,22 +200,22 @@ export const awsHaLesson = {
           drApp: drApp([{ text: `warm standby`, tone: `amber` }]),
           drDb: drDb(),
           card: card(
-            `DR strategies`,
-            [`backup & restore   RPO hours   RTO hours   $`, `pilot light        RPO mins    RTO 10s min $$`, `= warm standby       RPO secs    RTO mins    $$$`, `active-active      RPO ~0      RTO ~0      $$$$`],
+            `Failover record`,
+            [`$ aws route53 change-resource-record-sets --hosted-zone-id Z1 --change-batch file://failover.json`, `{ "SetIdentifier": "eu", "Failover": "PRIMARY",   "HealthCheckId": "hc-eu" }`, `{ "SetIdentifier": "us", "Failover": "SECONDARY", "AliasTarget": "dr-alb" }`, `= warm standby: us-east-1 takes over when the eu health check fails`],
             `chart`,
           ),
         },
         links: {
-          dns: L.dns,
-          r53Alb: L.r53Alb,
-          albA: L.albA,
-          albB: L.albB,
-          aDb: L.aDb,
-          bDb: L.bDb,
-          sync: L.syncQuiet,
-          global: L.global,
-          r53Dr: L.r53Dr,
-          drDbLink: L.drDbLink,
+          dns: links.dns,
+          r53Alb: links.r53Alb,
+          albA: links.albA,
+          albB: links.albB,
+          aDb: links.aDb,
+          bDb: links.bDb,
+          sync: links.syncQuiet,
+          global: links.global,
+          r53Dr: links.r53Dr,
+          drDbLink: links.drDbLink,
         },
         flows: [
           { route: [`dns`, `r53Alb`, `albB`, `bDb`], rate: 1, bounce: true },
@@ -253,7 +252,7 @@ export const awsHaLesson = {
             `keyboard`,
           ),
         },
-        links: { dns: L.dns, r53Alb: L.r53Alb, albA: L.albA, albB: L.albB, sync: L.syncQuiet, r53Dr: L.r53DrLive, drDbLink: L.drDbLink },
+        links: { dns: links.dns, r53Alb: links.r53Alb, albA: links.albA, albB: links.albB, sync: links.syncQuiet, r53Dr: links.r53DrLive, drDbLink: links.drDbLink },
         flows: [
           { route: [`dns`, `r53Dr`, `drDbLink`], rate: 1.8, bounce: true },
           { route: [`r53Alb`], kind: `fail`, rate: 0.5 },
