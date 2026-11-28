@@ -1,0 +1,47 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { GISCUS_ENABLED, SITE } from '@/lib/site';
+
+export const prerender = true;
+
+const cfg = SITE.comments.giscusConfig;
+// One fixed discussion for the whole page, instead of the title mapping that blog posts use.
+const giscusConfig = JSON.stringify({
+  'data-repo': cfg.repo,
+  'data-repo-id': cfg.repositoryId,
+  'data-category': cfg.category,
+  'data-category-id': cfg.categoryId,
+  'data-mapping': 'specific',
+  'data-term': 'guestbook',
+  'data-reactions-enabled': cfg.reactions,
+  'data-emit-metadata': cfg.metadata,
+  'data-theme': cfg.theme,
+  'data-lang': 'en',
+});
+---
+
+<BaseLayout
+  title="Guestbook"
+  description="Say hi, leave a note, or tell me which lab lesson helped you. Sign in with GitHub to write in the guestbook."
+>
+  <header class="mb-7 space-y-4 border-b border-(--border) pt-1 pb-6">
+    <div class="flex items-center gap-2 font-mono text-sm text-(--fg-faint)">
+      <span class="inline-block size-2 rounded-full bg-(--accent)"></span>
+      <span class="text-(--fg)">~/dawn/guestbook</span>
+    </div>
+    <div class="space-y-2.5">
+      <h1 class="m-0 text-3xl font-extrabold tracking-tight text-(--fg) sm:text-4xl md:text-5xl">Guestbook</h1>
+      <p class="m-0 max-w-2xl border-l-2 border-(--accent) pl-3.5 text-base leading-relaxed text-(--fg-dim) sm:text-lg">
+        Say hi, leave a note, or tell me which lab lesson helped you. You sign in with GitHub to write.
+      </p>
+    </div>
+  </header>
+
+  {GISCUS_ENABLED ? (
+    <div class="pb-10" id="comment" data-giscus>
+      <script is:inline type="application/json" data-giscus-config set:html={giscusConfig}></script>
+    </div>
+  ) : (
+    <p class="font-mono text-sm text-(--fg-dim) sm:text-base">The guestbook is switched off right now.</p>
+  )}
+</BaseLayout>
