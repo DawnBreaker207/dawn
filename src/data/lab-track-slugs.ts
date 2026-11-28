@@ -5,7 +5,7 @@ import { CURRICULUM_MODULES } from '@/data/curriculum';
 
 /** Hand-picked slugs: track entry pages plus aliases that are not curriculum lessons. */
 const HAND_PICKED_SLUGS: Record<string, string[]> = {
-  '/lab/security': ['security', 'authentication', 'authorization', 'encryption', 'cicd', 'testing'],
+  '/lab/security': ['security', 'authentication', 'authorization', 'encryption'],
   '/lab/foundations': [
     'foundations', 'request-lifecycle', 'latency-throughput', 'napkin-math',
     'vertical-horizontal', 'load-balancing', 'stateless', 'caching', 'cdn',
@@ -60,7 +60,7 @@ const HAND_PICKED_SLUGS: Record<string, string[]> = {
   ],
   '/lab/devops': [
     'devops', 'devops-culture-silos', 'cicd-tools-evolution', 'cicd-pipeline-internals',
-    'gitops-argocd', 'devops-dora-metrics',
+    'gitops-argocd', 'devops-dora-metrics', 'testing', 'cicd',
   ],
 };
 
@@ -77,7 +77,7 @@ const TRACK_ID_BY_ENTRY: Record<string, string> = {
   '/lab/microservices': 'microservices',
   '/lab/aws-cloud': 'cloud-aws',
   '/lab/system-design': 'system-design',
-  '/lab/security': 'devsecops',
+  '/lab/security': 'security',
 };
 
 export const TRACK_SLUG_MAP: Record<string, string[]> = Object.fromEntries(

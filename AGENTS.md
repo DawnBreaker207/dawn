@@ -154,13 +154,12 @@ Mixing data with logic, server with client, or build scripts with browser module
 │   │   │   ├── cloud/                  ← aws-vpc.ts, aws-ha.ts, k8s-*.ts, docker-*.ts
 │   │   │   ├── communication/          ← kafka-*.ts, rabbitmq-*.ts, pubsub.ts, queues.ts
 │   │   │   ├── design/                 ← hld-lld.ts, design-url-shortener.ts, design-chat.ts
-│   │   │   ├── devops/                 ← 5 DevOps culture, CI/CD runners, GitOps & DORA scenes
+│   │   │   ├── devops/                 ← 7 DevOps culture, CI/CD runners, GitOps, DORA, testing & deployments (devops-core/, devops-delivery/, shipping/)
 │   │   │   ├── git/                    ← 14 Git zones, DAG objects, worktrees & diff3 scenes
 │   │   │   ├── network/                ← request-lifecycle.ts, tcp-internals.ts, tls-handshake.ts
 │   │   │   ├── reliability/            ← observability.ts, rate-limiting.ts, timeouts-retries.ts
 │   │   │   ├── scaling/                ← caching.ts, cdn.ts, load-balancing.ts, stateless.ts
 │   │   │   ├── security/               ← authentication.ts, authorization.ts, encryption.ts
-│   │   │   ├── shipping/               ← cicd.ts, testing.ts
 │   │   │   ├── storage/                ← sql-engine.ts, redis-*.ts, sharding.ts, consensus.ts
 │   │   │   └── specialized/            ← 21 Java Runtime & Spring Enterprise scenes (java-*.ts)
 │   │   ├── curriculum.ts               ← Curriculum metadata: 10 canonical tracks, 15 modules, 104 lesson IDs & titles
@@ -836,13 +835,13 @@ All interactive simulations are strictly partitioned into 12 mutually exclusive 
 | **`storage.sim`** | Database & In-Memory Engines | **SQL Engines (10 lessons — PostgreSQL & MySQL InnoDB):** Query Engine/EXPLAIN/Tuning, 7-Step SQL Execution, Complex Queries/Temporal, B-Tree/GIN/BRIN Indexes, PgBouncer, Storage Engines, 8KB Page Footprint, SQL vs NoSQL, Transactions/MVCC/Locking/CDC, MySQL InnoDB vs PostgreSQL.<br>**Redis In-Memory Engine (6 lessons):** Single-thread event loop, Dict & SDS, Skiplist, Persistence (RDB/AOF), Sentinels, Cluster Sharding | **16** |
 | **`git.sim`** | Git Internals & Branching Operations | 4 Git zones, commit DAG objects, symbolic refs, detached HEAD, worktree concurrency, 3-way diff3, rebase surgery, CRLF filters, bisect, submodules | **14** |
 | **`angular.sim`** | Angular Architecture & Reactivity | Component lifecycle, standalone DI, interceptors, router pipeline, Ivy incremental DOM, Signals reactive DAG, zoneless runtime, non-destructive hydration | **14** |
-| **`devops.sim`** | DevOps Engineering & Delivery | Team incentives & culture, toolchain evolution, pipeline runner internals & ephemeral isolation, GitOps reconciliation loop, 4 DORA metrics & error budgets | **5** |
+| **`devops.sim`** | DevOps Engineering & Delivery | Team incentives & culture, toolchain evolution, pipeline runner internals & ephemeral isolation, GitOps reconciliation loop, 4 DORA metrics & error budgets, Testing Strategy, CI/CD & Deployments | **7** |
 | **`distributed.sim`** | Distributed Systems Core | Streaming replication, sharding & partitioning, consistent hashing ring, Snowflake IDs, CAP theorem, Raft consensus | **6** |
 | **`microservices.sim`** | Microservices, Kafka & Queues | Monolith vs microservices, service discovery, sagas, REST/gRPC.<br>**Apache Kafka (4 lessons):** Partition log, Consumer groups, ISR, Exactly-once.<br>**RabbitMQ (3 lessons):** AMQP Exchanges, DLQ & Retries, Quorum Queues | **14** |
 | **`k8s.sim`** | Containers & Kubernetes Orchestration | Docker namespaces & cgroups, multi-stage builds, K8s Pods & ReplicaSets, Services, Ingress Controller, ConfigMaps/Secrets, StatefulSets & Storage, HPA & Autoscaling | **8** |
 | **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6+ steps, Why & Core Mechanics):** Types/Boxing/Generics, String Pool & Compact Strings, HashMap & ConcurrentHashMap, Lambda & Lazy Streams, Modern Java & Core APIs, I/O/NIO.2/Selector, JDBC Pool/TX/Batch, Exceptions/Reflection/Proxy, ClassLoader & HotSpot JIT, JVM Memory/GC/Refs, Monitors/JMM/CAS/AQS, Pools/ThreadLocal/Loom, Spring IoC & Boot Auto-Config, AOP/@Transactional/@Async/Cache, MVC/Loom/WebFlux, JPA/N+1/Locking, Security/OAuth2, Actuator/Test Cache (18 lessons total) | **18** |
 | **`system-design.sim`** | System Design & AI Agents | HLD vs LLD, TinyURL, News Feed, Chat app, redundancy, rate limiting, timeouts/retries, observability.<br>**Flagship Lesson:** `ai-agent-architecture` (8-step Onion Model: LLM, RAG, MCP, Loop, Harness, Superpowers, LangChain, BMAD Swarms) | **10** |
-| **`devsecops.sim`** | Security & Delivery | Authentication, Authorization, Encryption & Secrets, CI/CD & Deployments, Testing Strategy | **5** |
+| **`security.sim`** | Security & Cryptography | Authentication, Authorization, Encryption & Secrets | **3** |
 | **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking, IAM & KMS Encryption, Edge Security, HA & DR Tiers, Compute, Storage, Databases, Serverless, Migration | **10** |
 | **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **135 Lessons** |
 

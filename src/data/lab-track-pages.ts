@@ -103,10 +103,10 @@ export const LAB_TRACK_PAGES: Record<string, LabPageConfig> = {
   security: {
     lessonId: 'authentication',
     moduleId: 'security',
-    trackId: 'devsecops',
-    title: 'DevSecOps & Security Engineering · Interactive Visual Lab',
+    trackId: 'security',
+    title: 'Security Engineering · Interactive Visual Lab',
     description:
-      'Interactive visual simulation of OAuth2/JWT token exchange, RBAC/ABAC authorization, TLS 1.3 cryptography, and automated CI/CD pipelines.',
+      'Interactive visual simulation of OAuth2/JWT token exchange, RBAC/ABAC authorization and TLS 1.3 cryptography.',
   },
   sql: {
     lessonId: 'sql-engine',

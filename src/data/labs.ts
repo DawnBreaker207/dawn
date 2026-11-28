@@ -59,8 +59,8 @@ export const LABS: LabEntry[] = [
     title: 'DevOps Engineering & Progressive Delivery',
     tag: 'CI/CD & SRE',
     tagClass: 'border-blue-500 text-blue-500',
-    intro: 'CAMS Culture, CI/CD Evolution, Pipeline Runners & MicroVMs, GitOps ArgoCD & DORA Metrics.',
-    desc: 'Deep-dive 5-chapter simulation: Overcoming Dev-Ops silos, webhook HMAC verification, S3 cache key hydration, in-cluster reconciliation loops, and SRE error budgets.',
+    intro: 'CAMS Culture, CI/CD Evolution, Pipeline Runners & MicroVMs, GitOps ArgoCD, DORA Metrics, Testing & Deployments.',
+    desc: 'Deep-dive 7-chapter simulation: Overcoming Dev-Ops silos, webhook HMAC verification, S3 cache key hydration, in-cluster reconciliation loops, SRE error budgets, a testing strategy and safe deployments.',
     cta: 'Explore DevOps Lab',
   },
   {
@@ -110,12 +110,12 @@ export const LABS: LabEntry[] = [
   },
   {
     href: '/lab/security',
-    title: 'DevSecOps: Auth, Encryption, CI/CD & Testing',
-    tag: 'DevSecOps',
+    title: 'Security: Auth, Authorization & Encryption',
+    tag: 'Security',
     tagClass: 'border-emerald-500 text-emerald-400',
-    intro: 'Authentication, authorization, encryption & secrets, CI/CD deployments and testing: who a user is, what they may do, and shipping changes safely.',
-    desc: 'Five labs on securing and shipping a service: proving who someone is, checking what they may see or do, protecting data on the wire and on disk, getting every change to production and back out again, and knowing a change is safe before users find out.',
-    cta: 'Explore DevSecOps',
+    intro: 'Authentication, authorization, encryption & secrets: who a user is, what they may do, and how their data stays protected.',
+    desc: 'Three labs on securing a service: proving who someone is, checking what they may see or do, and protecting data on the wire and on disk.',
+    cta: 'Explore Security',
   },
   {
     href: '/lab/architecture',

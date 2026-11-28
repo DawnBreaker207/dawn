@@ -52,9 +52,9 @@ export const CURRICULUM_TRACKS: Track[] = [
   {
     id: 'devops',
     title: 'DevOps Engineering & Progressive Delivery',
-    subtitle: 'DevOps culture, Tool evolution, CI quality gates, CD canary releases, GitOps & DORA metrics',
+    subtitle: 'DevOps culture, Tool evolution, CI quality gates, CD canary releases, GitOps, DORA metrics, Testing & Deployments',
     emoji: '🚀',
-    moduleIds: ['devops-core', 'devops-delivery'],
+    moduleIds: ['devops-core', 'devops-delivery', 'shipping'],
   },
   {
     id: 'k8s',
@@ -92,11 +92,11 @@ export const CURRICULUM_TRACKS: Track[] = [
     moduleIds: ['system-design', 'reliability'],
   },
   {
-    id: 'devsecops',
-    title: 'Security, Cryptography & DevSecOps',
-    subtitle: 'Authentication, OAuth2, RBAC, Data Encryption, Secrets Management & CI/CD Pipelines',
+    id: 'security',
+    title: 'Security & Cryptography',
+    subtitle: 'Authentication, OAuth2, RBAC, Data Encryption & Secrets Management',
     emoji: '🔒',
-    moduleIds: ['security', 'shipping'],
+    moduleIds: ['security'],
   },
 ];
 
@@ -339,7 +339,7 @@ export const CURRICULUM_MODULES: Module[] = [
     id: 'security',
     num: '01',
     title: 'Security & Secrets',
-    trackId: 'devsecops',
+    trackId: 'security',
     color: 'rose',
     lessons: [
       { id: 'authentication', title: 'Authentication' },
@@ -349,9 +349,9 @@ export const CURRICULUM_MODULES: Module[] = [
   },
   {
     id: 'shipping',
-    num: '02',
-    title: 'DevOps & CI/CD',
-    trackId: 'devsecops',
+    num: '03',
+    title: 'Testing & Deployments',
+    trackId: 'devops',
     color: 'olive',
     lessons: [
       { id: 'testing', title: 'Testing' },
