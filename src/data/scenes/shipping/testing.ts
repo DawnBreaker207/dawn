@@ -1,26 +1,16 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeDb,
-  makeGhost,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeCool, makeCrowd, makeDb, makeGhost, makeLink, makePanel, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const Xl = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
 
-const Zl = (e = `shoppers`) => makeCrowd(Xl, 10, e);
+const users = (e = `shoppers`) => makeCrowd(usersArea, 10, e);
 
-const Ql = (e = {}) => makeBlock(-13, -4, { color: `green`, glyph: `flask`, label: [`Tests`], ...e });
+const tests = (e: Bag = {}) => makeBlock(-13, -4, { color: `green`, glyph: `flask`, label: [`Tests`], ...e });
 
-const $l = (e = {}) => makeBlock(0, -4, { glyph: `cart`, label: [`Checkout`], sub: `your code`, ...e });
+const $l = (e: Bag = {}) => makeBlock(0, -4, { glyph: `cart`, label: [`Checkout`], sub: `your code`, ...e });
 
-const eu = (e = {}) => makeDb(11, -4, { label: `orders db`, ...e });
+const ordersDb = (e: Bag = {}) => makeDb(11, -4, { label: `orders db`, ...e });
 
-const tu = (e = {}) =>
+const paymentService = (e: Bag = {}) =>
     makeBlock(0, 9, {
       s: 4.8,
       h: 52,
@@ -31,20 +21,20 @@ const tu = (e = {}) =>
       ...e,
     });
 
-const nu = (e = {}) =>
+const inventoryService = (e: Bag = {}) =>
     makeBlock(11, 9, { color: `yellow`, glyph: `boxes`, label: [`Inventory`], sub: `another team`, ...e });
 
-const ru = (e = `fake db · in memory`) => makeGhost(11, -4, 3.6, 30, e);
+const fakeDb = (e = `fake db · in memory`) => makeGhost(11, -4, 3.6, 30, e);
 
-const iu = (e = `stub: “approved”`) => makeGhost(0, 9, 4, 34, e);
+const paymentStub = (e = `stub: “approved”`) => makeGhost(0, 9, 4, 34, e);
 
-const au = (e = `stub: “in stock”`) => makeGhost(11, 9, 4, 34, e);
+const inventoryStub = (e = `stub: “in stock”`) => makeGhost(11, 9, 4, 34, e);
 
-const W = {
-    ts: (e = {}) => makeLink(`tests`, `svc`, [`tests`, `svc`], { heads: `both`, ...e }),
-    us: (e = {}) => makeLink(`users`, `svc`, [`users`, `svc`], { heads: `both`, ...e }),
-    sd: (e = `db`, t = {}) => typeof e === 'object' ? makeLink(`svc`, `db`, [`svc`, `db`], { heads: `both`, ...e }) : makeLink(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
-    sp: (e = `pay`, t = {}) => typeof e === 'object' ? makeLink(`svc`, `pay`, [`svc`, `pay`], { heads: `both`, ...e }) : makeLink(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
+const links = {
+    ts: (e: Bag = {}) => makeLink(`tests`, `svc`, [`tests`, `svc`], { heads: `both`, ...e }),
+    us: (e: Bag = {}) => makeLink(`users`, `svc`, [`users`, `svc`], { heads: `both`, ...e }),
+    sd: (e: string | Bag = `db`, t: Bag = {}) => typeof e === 'object' ? makeLink(`svc`, `db`, [`svc`, `db`], { heads: `both`, ...e }) : makeLink(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
+    sp: (e: string | Bag = `pay`, t: Bag = {}) => typeof e === 'object' ? makeLink(`svc`, `pay`, [`svc`, `pay`], { heads: `both`, ...e }) : makeLink(`svc`, e, [`svc`, e], { heads: `both`, ...t }),
     si: (e = `inv`, t = {}) => {
       const target = typeof e === 'object' ? `inv` : e;
       const opts = typeof e === 'object' ? e : t;
@@ -55,12 +45,12 @@ const W = {
     },
   };
 
-const ou = (e, t, n) => makePanel({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
+const card = cardAt({ x: 0, y: 0 });
 
-const G = (e, t = 2.4, n = {}) => ({ route: e, rate: t, bounce: !0, ...n });
+const requestFlow = (e: string[], t = 2.4, n: Bag = {}) => ({ route: e, rate: t, bounce: !0, ...n });
 
 // --- shipping ---
-const su = {
+const lesson = {
     id: `testing`,
     title: `Testing`,
     summary: `Knowing a change is safe before your users find out — fast tests for the logic, a few slow ones for everything else.`,
@@ -89,9 +79,9 @@ const su = {
         },
         metrics: { feedback: `1 day`, covers: `what someone clicks`, escaped: `often` },
         scene: {
-          entities: { users: Zl(), svc: $l(), db: eu(), pay: tu(), inv: nu() },
-          links: { us: W.us(), sd: W.sd(), sp: W.sp(), si: W.si() },
-          flows: [G([`us`, `sd`], 1.6), G([`us`, `sp`], 0.8), G([`us`, `si`], 0.8)],
+          entities: { users: users(), svc: $l(), db: ordersDb(), pay: paymentService(), inv: inventoryService() },
+          links: { us: links.us(), sd: links.sd(), sp: links.sp(), si: links.si() },
+          flows: [requestFlow([`us`, `sd`], 1.6), requestFlow([`us`, `sp`], 0.8), requestFlow([`us`, `si`], 0.8)],
         },
       },
       {
@@ -110,14 +100,14 @@ const su = {
         metrics: { feedback: `1 day`, covers: `what someone clicks`, escaped: `often` },
         scene: {
           entities: {
-            users: Zl(`shoppers · overcharged`),
+            users: users(`shoppers · overcharged`),
             svc: $l({ tags: [{ text: `€26.98 — should be €26.97`, tone: `red`, icon: `bug` }] }),
-            db: eu(),
-            pay: tu(),
-            inv: nu(),
+            db: ordersDb(),
+            pay: paymentService(),
+            inv: inventoryService(),
           },
-          links: { us: W.us({ fail: 0.25 }), sd: W.sd(), sp: W.sp(), si: W.si() },
-          flows: [G([`us`, `sd`], 1.6), G([`us`, `sp`], 0.8), G([`us`, `si`], 0.8)],
+          links: { us: links.us({ fail: 0.25 }), sd: links.sd(), sp: links.sp(), si: links.si() },
+          flows: [requestFlow([`us`, `sd`], 1.6), requestFlow([`us`, `sp`], 0.8), requestFlow([`us`, `si`], 0.8)],
         },
       },
       {
@@ -136,9 +126,9 @@ const su = {
         metrics: { feedback: `30 s`, covers: `logic only`, escaped: `fewer` },
         scene: {
           entities: {
-            tests: Ql({ tags: [{ text: `2,000 tests · 30 s`, tone: `green`, icon: `check` }] }),
+            tests: tests({ tags: [{ text: `2,000 tests · 30 s`, tone: `green`, icon: `check` }] }),
             svc: $l(),
-            card: ou(
+            card: card(
               `A unit test`,
               [
                 `basket = [{ price: 9.99, qty: 3 }]`,
@@ -149,8 +139,8 @@ const su = {
               `flask`,
             ),
           },
-          links: { ts: W.ts() },
-          flows: [G([`ts`], 3.4)],
+          links: { ts: links.ts() },
+          flows: [requestFlow([`ts`], 3.4)],
         },
       },
       {
@@ -169,19 +159,19 @@ const su = {
         metrics: { feedback: `30 s`, covers: `logic only`, escaped: `fewer` },
         scene: {
           entities: {
-            tests: Ql({ tags: [{ text: `2,000 tests · 30 s`, tone: `green`, icon: `check` }] }),
+            tests: tests({ tags: [{ text: `2,000 tests · 30 s`, tone: `green`, icon: `check` }] }),
             svc: $l(),
-            fdb: ru(),
-            fpay: iu(),
-            finv: au(),
+            fdb: fakeDb(),
+            fpay: paymentStub(),
+            finv: inventoryStub(),
           },
           links: {
-            ts: W.ts(),
-            sd_fake: W.sd(`fdb`, { style: `dashed` }),
-            sp: W.sp(`fpay`, { style: `dashed` }),
-            si_fake: W.si(`finv`, { style: `dashed` }),
+            ts: links.ts(),
+            sd_fake: links.sd(`fdb`, { style: `dashed` }),
+            sp: links.sp(`fpay`, { style: `dashed` }),
+            si_fake: links.si(`finv`, { style: `dashed` }),
           },
-          flows: [G([`ts`, `sd_fake`], 1.4), G([`ts`, `sp`], 1), G([`ts`, `si_fake`], 1)],
+          flows: [requestFlow([`ts`, `sd_fake`], 1.4), requestFlow([`ts`, `sp`], 1), requestFlow([`ts`, `si_fake`], 1)],
         },
       },
       {
@@ -203,22 +193,22 @@ const su = {
         metrics: { feedback: `4 min`, covers: `+ database queries`, escaped: `fewer` },
         scene: {
           entities: {
-            tests: Ql({ tags: [{ text: `200 tests · 4 min`, tone: `green`, icon: `check` }] }),
+            tests: tests({ tags: [{ text: `200 tests · 4 min`, tone: `green`, icon: `check` }] }),
             svc: $l(),
-            db: eu({ label: `orders db · real, in a container` }),
-            fpay: iu(`provider sandbox`),
-            finv: au(),
+            db: ordersDb({ label: `orders db · real, in a container` }),
+            fpay: paymentStub(`provider sandbox`),
+            finv: inventoryStub(),
           },
           links: {
-            ts: W.ts(),
-            sd: W.sd(),
-            sp: W.sp(`fpay`, { style: `dashed` }),
-            si: W.si(`finv`, { style: `dashed` }),
+            ts: links.ts(),
+            sd: links.sd(),
+            sp: links.sp(`fpay`, { style: `dashed` }),
+            si: links.si(`finv`, { style: `dashed` }),
           },
           flows: [
-            G([`ts`, `sd`], 1.6, { kind: `heavy` }),
-            G([`ts`, `sp`], 0.6),
-            G([`ts`, `si`], 0.6),
+            requestFlow([`ts`, `sd`], 1.6, { kind: `heavy` }),
+            requestFlow([`ts`, `sp`], 0.6),
+            requestFlow([`ts`, `si`], 0.6),
           ],
         },
       },
@@ -241,11 +231,11 @@ const su = {
         metrics: { feedback: `4 min`, covers: `+ API contracts`, escaped: `rare` },
         scene: {
           entities: {
-            tests: Ql({ tags: [{ text: `200 tests · 4 min`, tone: `green`, icon: `check` }] }),
+            tests: tests({ tags: [{ text: `200 tests · 4 min`, tone: `green`, icon: `check` }] }),
             svc: $l(),
-            db: eu({ label: `orders db · real, in a container` }),
-            inv: nu({ tags: [{ text: `verifies the contract`, tone: `green`, icon: `fileKey` }] }),
-            card: ou(
+            db: ordersDb({ label: `orders db · real, in a container` }),
+            inv: inventoryService({ tags: [{ text: `verifies the contract`, tone: `green`, icon: `fileKey` }] }),
+            card: card(
               `The contract`,
               [
                 `GET /stock/sku-42`,
@@ -257,11 +247,11 @@ const su = {
             ),
           },
           links: {
-            ts: W.ts(),
-            sd: W.sd(),
-            si_contract: W.si(`inv`, { style: `dashed`, label: `contract` }),
+            ts: links.ts(),
+            sd: links.sd(),
+            si_contract: links.si(`inv`, { style: `dashed`, label: `contract` }),
           },
-          flows: [G([`ts`, `sd`], 1.4, { kind: `heavy` }), G([`si_contract`], 0.6)],
+          flows: [requestFlow([`ts`, `sd`], 1.4, { kind: `heavy` }), requestFlow([`si_contract`], 0.6)],
         },
       },
       {
@@ -280,25 +270,25 @@ const su = {
         metrics: { feedback: `15 min`, covers: `whole system`, escaped: `rare` },
         scene: {
           entities: {
-            users: Zl(`a test browser`),
-            tests: Ql({ tags: [{ text: `20 journeys · 15 min`, tone: `green`, icon: `check` }] }),
+            users: users(`a test browser`),
+            tests: tests({ tags: [{ text: `20 journeys · 15 min`, tone: `green`, icon: `check` }] }),
             svc: $l(),
-            db: eu(),
-            pay: tu({ sub: `sandbox` }),
-            inv: nu(),
+            db: ordersDb(),
+            pay: paymentService({ sub: `sandbox` }),
+            inv: inventoryService(),
           },
           links: {
             tu: makeLink(`tests`, `users`, [`tests`, [`tests`, `users`], `users`], { style: `dashed` }),
-            us: W.us(),
-            sd: W.sd(),
-            sp: W.sp(),
-            si: W.si(),
+            us: links.us(),
+            sd: links.sd(),
+            sp: links.sp(),
+            si: links.si(),
           },
           flows: [
             { route: [`tu`], rate: 0.5 },
-            G([`us`, `sd`], 0.9, { kind: `heavy` }),
-            G([`us`, `sp`], 0.5),
-            G([`us`, `si`], 0.5),
+            requestFlow([`us`, `sd`], 0.9, { kind: `heavy` }),
+            requestFlow([`us`, `sp`], 0.5),
+            requestFlow([`us`, `si`], 0.5),
           ],
         },
       },
@@ -317,12 +307,12 @@ const su = {
         metrics: { feedback: `30 s → 15 min`, covers: `whole system`, escaped: `rare` },
         scene: {
           entities: {
-            tests: Ql(),
+            tests: tests(),
             svc: $l(),
-            db: eu(),
-            pay: tu({ sub: `sandbox` }),
-            inv: nu(),
-            card: ou(
+            db: ordersDb(),
+            pay: paymentService({ sub: `sandbox` }),
+            inv: inventoryService(),
+            card: card(
               `Three layers`,
               [
                 `end-to-end      20    15 min   whole journeys`,
@@ -333,8 +323,8 @@ const su = {
               `layers`,
             ),
           },
-          links: { ts: W.ts(), sd: W.sd(), sp: W.sp(), si: W.si() },
-          flows: [G([`ts`], 3), G([`ts`, `sd`], 0.9), G([`ts`, `si`], 0.5)],
+          links: { ts: links.ts(), sd: links.sd(), sp: links.sp(), si: links.si() },
+          flows: [requestFlow([`ts`], 3), requestFlow([`ts`, `sd`], 0.9), requestFlow([`ts`, `si`], 0.5)],
         },
       },
       {
@@ -353,26 +343,26 @@ const su = {
         metrics: { feedback: `15 min`, covers: `whole system`, escaped: `often` },
         scene: {
           entities: {
-            users: Zl(`a test browser`),
-            tests: Ql({
+            users: users(`a test browser`),
+            tests: tests({
               tags: [{ text: `wait 2 s for the email`, tone: `red`, icon: `hourglass` }],
             }),
             svc: $l(),
-            db: eu(),
-            pay: tu({ sub: `sandbox` }),
-            inv: nu(),
+            db: ordersDb(),
+            pay: paymentService({ sub: `sandbox` }),
+            inv: inventoryService(),
           },
           links: {
             tu: makeLink(`tests`, `users`, [`tests`, [`tests`, `users`], `users`], {
               style: `dashed`,
               fail: 0.35,
             }),
-            us: W.us(),
-            sd: W.sd(),
-            sp: W.sp(),
-            si: W.si(),
+            us: links.us(),
+            sd: links.sd(),
+            sp: links.sp(),
+            si: links.si(),
           },
-          flows: [{ route: [`tu`], rate: 0.9 }, G([`us`, `sd`], 0.8), G([`us`, `sp`], 0.4)],
+          flows: [{ route: [`tu`], rate: 0.9 }, requestFlow([`us`, `sd`], 0.8), requestFlow([`us`, `sp`], 0.4)],
         },
       },
       {
@@ -394,21 +384,21 @@ const su = {
         metrics: { feedback: `hours · nightly`, covers: `+ load and failure`, escaped: `rare` },
         scene: {
           entities: {
-            users: Zl(`load generator · 5× traffic`),
+            users: users(`load generator · 5× traffic`),
             svc: $l({
               ...makeCool(0.82),
               tags: [{ text: `p99 rises at 4.2×`, tone: `amber`, icon: `trendingUp` }],
             }),
-            db: eu({ ...makeCool(0.7) }),
-            pay: tu({
+            db: ordersDb({ ...makeCool(0.7) }),
+            pay: paymentService({
               ...DEAD_STATE,
               dead: 0,
               tags: [{ text: `injected: 5 s delay`, tone: `red`, icon: `hourglass` }],
             }),
-            inv: nu(),
+            inv: inventoryService(),
           },
-          links: { us: W.us(), sd: W.sd(), sp: W.sp({ fail: 0.2 }), si: W.si() },
-          flows: [G([`us`, `sd`], 4), G([`us`, `sp`], 1.2, { kind: `slow` }), G([`us`, `si`], 1.2)],
+          links: { us: links.us(), sd: links.sd(), sp: links.sp({ fail: 0.2 }), si: links.si() },
+          flows: [requestFlow([`us`, `sd`], 4), requestFlow([`us`, `sp`], 1.2, { kind: `slow` }), requestFlow([`us`, `si`], 1.2)],
         },
       },
       {
@@ -430,13 +420,13 @@ const su = {
         },
         metrics: { feedback: `30 s → 15 min`, covers: `whole system`, escaped: `rare` },
         scene: {
-          entities: { tests: Ql(), svc: $l(), db: eu(), pay: tu({ sub: `sandbox` }), inv: nu() },
-          links: { ts: W.ts(), sd: W.sd(), sp: W.sp(), si: W.si() },
-          flows: [G([`ts`], 3), G([`ts`, `sd`], 0.9), G([`ts`, `si`], 0.5)],
+          entities: { tests: tests(), svc: $l(), db: ordersDb(), pay: paymentService({ sub: `sandbox` }), inv: inventoryService() },
+          links: { ts: links.ts(), sd: links.sd(), sp: links.sp(), si: links.si() },
+          flows: [requestFlow([`ts`], 3), requestFlow([`ts`, `sd`], 0.9), requestFlow([`ts`, `si`], 0.5)],
         },
       },
     ],
   };
 
-export { su as testingLesson };
-export default su;
+export { lesson as testingLesson };
+export default lesson;

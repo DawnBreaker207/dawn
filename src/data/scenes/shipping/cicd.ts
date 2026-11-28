@@ -1,35 +1,23 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBalancer,
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBalancer, makeBlock, makeCool, makeCrowd, makeDb, makeDevice, makeLink, makePanel, makeZone, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const cu = { x0: 15.5, x1: 22.5, y0: -3.5, y1: 3.5 };
+const usersArea = { x0: 15.5, x1: 22.5, y0: -3.5, y1: 3.5 };
 
-const lu = (e = `users`) => makeCrowd(cu, 10, e);
+const users = (e = `users`) => makeCrowd(usersArea, 10, e);
 
-const uu = (e = {}) => makeDevice(-21, -9, { label: `developer`, ...e });
+const developer = (e = {}, at: [number, number] = [-10, -9]) => makeDevice(at[0], at[1], { label: `developer`, ...e });
 
-const du = (e = {}) =>
+const gitRepo = (e: Bag = {}) =>
     makeBlock(-12, -9, { color: `slab`, glyph: `gitBranch`, label: [`Git`], sub: `main`, ...e });
 
-const fu = (e, t, n, r = {}) => makeBlock(e, -9, { s: 3.6, h: 28, color: `green`, glyph: t, label: n, ...r });
+const ciStage = (e: number, t: string, n: string[], r: Bag = {}) => makeBlock(e, -9, { s: 3.6, h: 28, color: `green`, glyph: t, label: n, ...r });
 
-const pu = (e = {}) => makeDb(10, -9, { color: `store`, glyph: `package`, label: `artifacts`, ...e });
+const artifacts = (e: Bag = {}) => makeDb(10, -9, { color: `store`, glyph: `package`, label: `artifacts`, ...e });
 
-const mu = { x0: -6, x1: 6, y0: -12, y1: -6 };
+const pipelineArea = { x0: -6, x1: 6, y0: -12, y1: -6 };
 
-const hu = (e = {}) => makeBalancer(10, 0, { ...e });
+const loadBalancer = (e: Bag = {}) => makeBalancer(10, 0, { ...e });
 
-const gu = (e, t, n) => makePanel({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
+const card = cardAt({ x: 0, y: 0 });
 
 const _u = [
     [2, -12],
@@ -38,7 +26,7 @@ const _u = [
     [2, 12],
   ];
 
-const vu = (e, t = {}) =>
+const servers = (e: string[], t: Record<string, Bag> = {}) =>
     Object.fromEntries(
       e.map((e, n) => [
         `s${n}`,
@@ -52,7 +40,7 @@ const vu = (e, t = {}) =>
       ]),
     );
 
-const yu = (e, t = {}) =>
+const serverLinks = (e: number, t: Record<number, Bag> = {}) =>
     Object.fromEntries(
       Array.from({ length: e }, (e, n) => [
         `l${n}`,
@@ -63,9 +51,9 @@ const yu = (e, t = {}) =>
       ]),
     );
 
-const bu = () => ({ ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both` }) });
+const userLink = () => ({ ul: makeLink(`users`, `lb`, [`users`, `lb`], { heads: `both` }) });
 
-const xu = (e, t = 3.2, n = []) => ({
+const requestFlows = (e: number[], t = 3.2, n: string[] = []) => ({
     routes: e
       .map((e, t) => ({ path: [`ul`, `l${t}`], weight: e, kind: n[t] }))
       .filter((e) => e.weight > 0),
@@ -74,9 +62,9 @@ const xu = (e, t = 3.2, n = []) => ({
     bounce: !0,
   });
 
-const Su = { deploys: `1 / week`, leadTime: `2 weeks`, failRate: `30%`, restore: `4 h` };
+const metrics = { deploys: `1 / week`, leadTime: `2 weeks`, failRate: `30%`, restore: `4 h` };
 
-const Cu = {
+const lesson = {
     id: `cicd`,
     title: `CI/CD & Deployments`,
     summary: `Getting every change to production quickly and safely — and back out again just as quickly.`,
@@ -104,12 +92,12 @@ const Cu = {
           kind: `insight`,
           text: `Big, rare releases feel safer and are the opposite: the more that changes at once, the harder it is to test, to find the cause, and to undo.`,
         },
-        metrics: Su,
+        metrics: metrics,
         scene: {
           entities: {
-            dev: uu({ tags: [{ text: `build on my laptop`, icon: `hammer` }] }),
+            dev: developer({ tags: [{ text: `build on my laptop`, icon: `hammer` }] }),
             srv: makeBlock(2, 0, { label: [`Production`], ...makeCool(0.4) }),
-            users: lu(),
+            users: users(),
           },
           links: {
             ds: makeLink(`dev`, `srv`, [`dev`, [`dev`, 0], `srv`], {
@@ -138,12 +126,12 @@ const Cu = {
           text: `Builds that depend on someone’s machine, and deploys nobody can repeat exactly, turn every release into an experiment.`,
         },
         changes: [`− New build fails to start`, `− Site down while someone guesses`],
-        metrics: { ...Su, failRate: `30%`, restore: `4 h` },
+        metrics: { ...metrics, failRate: `30%`, restore: `4 h` },
         scene: {
           entities: {
-            dev: uu({ tags: [{ text: `which change was it?`, tone: `red`, icon: `alert` }] }),
+            dev: developer({ tags: [{ text: `which change was it?`, tone: `red`, icon: `alert` }] }),
             srv: makeBlock(2, 0, { label: [`Production`], ...DEAD_STATE }),
-            users: lu(`users · site down`),
+            users: users(`users · site down`),
           },
           links: {
             ds: makeLink(`dev`, `srv`, [`dev`, [`dev`, 0], `srv`], {
@@ -175,13 +163,13 @@ const Cu = {
         metrics: { deploys: `1 / week`, leadTime: `1 week`, failRate: `15%`, restore: `4 h` },
         scene: {
           entities: {
-            dev: uu(),
-            repo: du(),
-            pz: makeZone(mu, `CI PIPELINE`),
-            build: fu(-3, `hammer`, [`Build`], {
+            dev: developer({}, [-16, -14]),
+            repo: gitRepo(),
+            pz: makeZone(pipelineArea, `CI PIPELINE`),
+            build: ciStage(-3, `hammer`, [`Build`], {
               tags: [{ text: `clean machine`, icon: `check` }],
             }),
-            test: fu(3, `flask`, [`Test`]),
+            test: ciStage(3, `flask`, [`Test`]),
           },
           links: {
             dr: makeLink(`dev`, `repo`, [`dev`, `repo`]),
@@ -207,12 +195,12 @@ const Cu = {
         metrics: { deploys: `1 / week`, leadTime: `1 week`, failRate: `10%`, restore: `1 h` },
         scene: {
           entities: {
-            dev: uu(),
-            repo: du(),
-            pz: makeZone({ ...mu, x1: 6 }, `CI PIPELINE`),
-            build: fu(-3, `hammer`, [`Build`]),
-            test: fu(3, `flask`, [`Test`]),
-            reg: pu({ tags: [{ text: `checkout:3f9c2a1`, icon: `gitCommit` }] }),
+            dev: developer({}, [-16, -14]),
+            repo: gitRepo(),
+            pz: makeZone({ ...pipelineArea, x1: 6 }, `CI PIPELINE`),
+            build: ciStage(-3, `hammer`, [`Build`]),
+            test: ciStage(3, `flask`, [`Test`]),
+            reg: artifacts({ tags: [{ text: `checkout:3f9c2a1`, icon: `gitCommit` }] }),
           },
           links: {
             dr: makeLink(`dev`, `repo`, [`dev`, `repo`]),
@@ -242,11 +230,11 @@ const Cu = {
         metrics: { deploys: `5 / day`, leadTime: `1 day`, failRate: `8%`, restore: `30 min` },
         scene: {
           entities: {
-            repo: du(),
-            pz: makeZone({ ...mu, x1: 6 }, `CI PIPELINE`),
-            build: fu(-3, `hammer`, [`Build`]),
-            test: fu(3, `flask`, [`Test`]),
-            reg: pu(),
+            repo: gitRepo(),
+            pz: makeZone({ ...pipelineArea, x1: 6 }, `CI PIPELINE`),
+            build: ciStage(-3, `hammer`, [`Build`]),
+            test: ciStage(3, `flask`, [`Test`]),
+            reg: artifacts(),
             stg: makeBlock(10, 2, {
               s: 3.6,
               h: 28,
@@ -293,9 +281,9 @@ const Cu = {
         metrics: { deploys: `5 / day`, leadTime: `1 day`, failRate: `8%`, restore: `1 min` },
         scene: {
           entities: {
-            users: lu(),
-            lb: hu({ tags: [{ text: `traffic → green`, tone: `green`, icon: `split` }] }),
-            ...vu([`v41`, `v41`, `v42`, `v42`], {
+            users: users(),
+            lb: loadBalancer({ tags: [{ text: `traffic → green`, tone: `green`, icon: `split` }] }),
+            ...servers([`v41`, `v41`, `v42`, `v42`], {
               0: { dim: 0.5, pills: `below`, tags: [{ text: `blue · standby`, icon: `moon` }] },
               1: { dim: 0.5 },
               3: { tags: [{ text: `green · live`, tone: `green`, icon: `check` }] },
@@ -303,8 +291,8 @@ const Cu = {
             bz: makeZone({ x0: -1.5, x1: 5.5, y0: -16, y1: -0.4 }, ``),
             gz: makeZone({ x0: -1.5, x1: 5.5, y0: 0.4, y1: 16 }, ``),
           },
-          links: { ...bu(), ...yu(4, { 0: { style: `off` }, 1: { style: `off` } }) },
-          flows: [xu([0, 0, 1, 1])],
+          links: { ...userLink(), ...serverLinks(4, { 0: { style: `off` }, 1: { style: `off` } }) },
+          flows: [requestFlows([0, 0, 1, 1])],
         },
       },
       {
@@ -327,14 +315,14 @@ const Cu = {
         metrics: { deploys: `5 / day`, leadTime: `1 day`, failRate: `4%`, restore: `1 min` },
         scene: {
           entities: {
-            users: lu(),
-            lb: hu({ tags: [{ text: `5% → v42`, tone: `amber`, icon: `split` }] }),
-            ...vu([`v41`, `v41`, `v41`, `v42`], {
+            users: users(),
+            lb: loadBalancer({ tags: [{ text: `5% → v42`, tone: `amber`, icon: `split` }] }),
+            ...servers([`v41`, `v41`, `v41`, `v42`], {
               3: { tags: [{ text: `canary · errors 0.1%`, tone: `green`, icon: `check` }] },
             }),
           },
-          links: { ...bu(), ...yu(4) },
-          flows: [xu([0.32, 0.32, 0.31, 0.05], 3.6)],
+          links: { ...userLink(), ...serverLinks(4) },
+          flows: [requestFlows([0.32, 0.32, 0.31, 0.05], 3.6)],
         },
       },
       {
@@ -357,9 +345,9 @@ const Cu = {
         metrics: { deploys: `5 / day`, leadTime: `1 day`, failRate: `4%`, restore: `1 min` },
         scene: {
           entities: {
-            users: lu(),
-            lb: hu(),
-            ...vu([`v41`, `v41`, `v41`, `v42`], {
+            users: users(),
+            lb: loadBalancer(),
+            ...servers([`v41`, `v41`, `v41`, `v42`], {
               0: {
                 heat: 0.6,
                 pills: `below`,
@@ -374,8 +362,8 @@ const Cu = {
             }),
           },
           links: {
-            ...bu(),
-            ...yu(4, { 0: { fail: 0.6 }, 1: { fail: 0.6 }, 2: { fail: 0.6 } }),
+            ...userLink(),
+            ...serverLinks(4, { 0: { fail: 0.6 }, 1: { fail: 0.6 }, 2: { fail: 0.6 } }),
             ...Object.fromEntries(
               [1, 3].map((e) => [
                 `d${e}`,
@@ -383,7 +371,7 @@ const Cu = {
               ]),
             ),
           },
-          flows: [xu([0.3, 0.3, 0.3, 0.1], 3.6)],
+          flows: [requestFlows([0.3, 0.3, 0.3, 0.1], 3.6)],
         },
       },
       {
@@ -402,9 +390,9 @@ const Cu = {
         metrics: { deploys: `20 / day`, leadTime: `2 h`, failRate: `3%`, restore: `1 min` },
         scene: {
           entities: {
-            users: lu(),
-            lb: hu(),
-            ...vu([`v42`, `v42`, `v42`, `v42`]),
+            users: users(),
+            lb: loadBalancer(),
+            ...servers([`v42`, `v42`, `v42`, `v42`]),
             flags: makeBlock(-8, 0, {
               s: 3.6,
               h: 28,
@@ -415,8 +403,8 @@ const Cu = {
             }),
           },
           links: {
-            ...bu(),
-            ...yu(4),
+            ...userLink(),
+            ...serverLinks(4),
             ...Object.fromEntries(
               [0, 1, 2, 3].map((e) => [
                 `f${e}`,
@@ -428,7 +416,7 @@ const Cu = {
             ),
           },
           flows: [
-            xu([0.25, 0.25, 0.25, 0.25], 3.4),
+            requestFlows([0.25, 0.25, 0.25, 0.25], 3.4),
             {
               fanout: !0,
               routes: [0, 1, 2, 3].map((e) => ({ path: [`f${e}`] })),
@@ -453,10 +441,10 @@ const Cu = {
         metrics: { deploys: `20 / day`, leadTime: `2 h`, failRate: `3%`, restore: `1 min` },
         scene: {
           entities: {
-            users: lu(),
-            lb: hu(),
-            ...vu([`v42`, `v42`, `v42`, `v42`]),
-            card: gu(
+            users: users(),
+            lb: loadBalancer(),
+            ...servers([`v42`, `v42`, `v42`, `v42`]),
+            card: card(
               `Before → after`,
               [
                 `deploys          1 a week   →  20 a day`,
@@ -467,8 +455,8 @@ const Cu = {
               `chartLine`,
             ),
           },
-          links: { ...bu(), ...yu(4) },
-          flows: [xu([0.25, 0.25, 0.25, 0.25], 3.4)],
+          links: { ...userLink(), ...serverLinks(4) },
+          flows: [requestFlows([0.25, 0.25, 0.25, 0.25], 3.4)],
         },
       },
       {
@@ -490,13 +478,13 @@ const Cu = {
         },
         metrics: { deploys: `20 / day`, leadTime: `2 h`, failRate: `3%`, restore: `1 min` },
         scene: {
-          entities: { users: lu(), lb: hu(), ...vu([`v42`, `v42`, `v42`, `v42`]) },
-          links: { ...bu(), ...yu(4) },
-          flows: [xu([0.25, 0.25, 0.25, 0.25], 3.4)],
+          entities: { users: users(), lb: loadBalancer(), ...servers([`v42`, `v42`, `v42`, `v42`]) },
+          links: { ...userLink(), ...serverLinks(4) },
+          flows: [requestFlows([0.25, 0.25, 0.25, 0.25], 3.4)],
         },
       },
     ],
   };
 
-export { Cu as cicdLesson };
-export default Cu;
+export { lesson as cicdLesson };
+export default lesson;
