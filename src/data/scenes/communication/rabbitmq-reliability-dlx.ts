@@ -1,266 +1,216 @@
-import {
-  makeBlock,
-  makeDevice,
-  makeLink,
-  makePanel,
-} from '@/lib/simulator/scene-builders';
+import { STAGE, codeCard, linkOf, stageBlock, type Tag } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const rabbitmqReliabilityDlxLesson = {
+// Seed → result. A producer and a queue that can lose messages; every step makes them safer.
+// Each concept has its own id, at most two nodes join per step, and the queue keeps its id while
+// it gets confirmed, replicated and monitored (state changes, shown as tags and the sub line).
+//
+//   step 1  producer ── queue                    seed: four loss points
+//   step 2  (confirms, durable: state)           publisher confirms
+//   step 3  + consumer                           manual ack + prefetch
+//   step 4  + dlx, + dlq                         failures get a place to go
+//   step 5  + retry                              TTL queue loops back with backoff
+//   step 6  (queue becomes a quorum queue)       Raft replication
+//   step 7  (everything on, monitored)           production blueprint
+//
+//   retry (left-top)        dlx (top)          dlq (top-right)
+//   producer ───────────── queue ───────────── consumer (right)
+
+const producer = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.caller, { color: `blue`, glyph: `send`, label: [`producer`], sub, tags });
+const queue = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.main, { color: `green`, glyph: `inbox`, label: [`orders`, `queue`], sub, tags });
+const consumer = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.store, { color: `blue`, glyph: `zap`, label: [`consumer`], sub, tags });
+const dlx = (tags: Tag[] = []) =>
+  stageBlock(STAGE.helper, { color: `orange`, glyph: `route`, label: [`DLX`], sub: `orders.dlx`, tags });
+const dlq = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.alt, { color: `purple`, glyph: `inbox`, label: [`orders.dlq`], sub, tags });
+const retry = (tags: Tag[] = []) =>
+  stageBlock(STAGE.caller2, { color: `orange`, glyph: `clock`, label: [`Retry`, `queue`], sub: `TTL 30 s`, tags });
+
+const links = {
+  publish: (label?: string) => linkOf(`producer`, `queue`, label),
+  deliver: (label?: string) => linkOf(`queue`, `consumer`, label),
+  deadRoute: (label?: string) => ({ ...linkOf(`queue`, `dlx`, label, false), labelAt: 0.6 }),
+  dlxDlq: (label?: string) => ({ ...linkOf(`dlx`, `dlq`, label, false), labelAt: 0.6 }),
+  dlxRetry: linkOf(`dlx`, `retry`, undefined, false),
+  retryBack: (label?: string) => ({ ...linkOf(`retry`, `queue`, label, false), labelAt: 0.6 }),
+};
+
+export const rabbitmqReliabilityDlxLesson: Lesson = {
   id: 'rabbitmq-reliability-dlx',
   title: 'RabbitMQ Reliability: Publisher Confirms & Dead Letter Exchanges',
-  summary: 'Architect resilient enterprise queues: Publisher Confirms, consumer prefetch QoS, dead letter routing, retry backoff loops, and Raft Quorum Queues.',
+  summary:
+    'Start with a producer and a queue that can lose messages, then add publisher confirms, a consumer with prefetch, a dead-letter exchange and queue, a retry loop, Raft quorum queues and monitoring.',
   minutes: 14,
   level: 'intermediate',
-  metrics: ['reliability_tier', 'delivery_guarantee', 'dlx_policy', 'queue_type'],
-  legend: ['req', 'res', ['ping', 'reliable delivery'], 'fail'],
+  metrics: ['guarantee', 'failure', 'setting', 'cost'],
+  legend: [[`req`, `publish`], [`msg`, `message`], [`fail`, `lost / dead`]],
   goals: [
-    { text: 'Publisher Confirms (confirm.select) for', step: 1 },
-    { text: 'Consumer prefetch QoS to prevent', step: 2 },
-    { text: 'Dead Letter Exchanges (DLX) for', step: 3 },
-    { text: 'Retry queues with message TTL', step: 4 },
-    { text: 'Raft Quorum Queues replacing legacy', step: 6 },
+    { text: 'Name the ways a message can be lost', step: 1 },
+    { text: 'Confirm that the broker accepted a publish', step: 2 },
+    { text: 'Limit unacked messages with consumer prefetch', step: 3 },
+    { text: 'Route failed messages to a Dead Letter Exchange', step: 4 },
+    { text: 'Retry with a TTL queue and backoff', step: 5 },
+    { text: 'Replicate queues with Raft quorum queues', step: 6 },
+    { text: 'Apply a production blueprint', step: 7 },
   ],
   steps: [
     {
-      short: 'Failure Modes',
-      chapter: 'setup',
-      title: 'Message Loss Points in Messaging Systems',
+      short: 'Failures',
+      chapter: 'problem',
+      title: 'Seed: where messages go missing',
       body: [
-        'Where can messages be lost in a message queue pipeline?',
-        '1. <b>In transit to broker:</b> Network drop between producer and RabbitMQ.<br>2. <b>Inside broker:</b> Server crashes before writing message to disk.<br>3. <b>At consumer:</b> Worker crashes midway through processing an uncommitted job.<br>Architecting 100% reliability requires safeguards at every tier.'
+        `A message can vanish at four points. The <b>producer</b> sends it and the network drops it. The <b>broker</b> crashes before writing it to disk. The <b>consumer</b> gets it, the process dies mid-work and an auto-ack had already deleted it. Or the message is <b>unroutable</b> and silently discarded.`,
+        `Each has a matching tool: publisher confirms, durable queues and persistent messages, manual acks, the <code>mandatory</code> flag. The next steps add them one by one around this producer and queue.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Reliability requires coordination between Publisher Confirms, Durable Queues, and Consumer ACKs.'
-      },
-      metrics: { reliability_tier: 'Unprotected', delivery_guarantee: 'At-Most-Once', dlx_policy: 'None', queue_type: 'Classic Transient' },
+      metrics: { guarantee: 'none yet', failure: '4 loss points', setting: 'defaults', cost: 'none' },
       scene: {
         entities: {
-          producer: makeDevice(-10, -8, { form: 'phone', label: 'Producer', tags: [{ text: 'Unconfirmed writes', tone: 'red', icon: 'alert' }] }),
-          broker: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'inbox', label: ['RabbitMQ Broker', 'Transient Queue'], sub: 'Data lost on power crash' }),
-          card: makePanel({ x: -2, y: 14 }, 'The 3 Vulnerability Points', [
-            'Point A: Producer -> Broker (Message drops on network glitch)',
-            'Point B: Inside Broker (Server killed before fsync to disk)',
-            'Point C: Broker -> Consumer (Worker throws unhandled Exception)',
-            'Result: High risk of silent lost orders and missing payments'
-          ], { icon: 'alert' })
+          producer: producer(`fire and forget`, [{ text: `no confirm`, tone: `red`, icon: `alert` }]),
+          queue: queue(`transient`, [{ text: `crash = lost`, tone: `red` }]),
+          card: codeCard(`Four loss points`, [`1. publish → network drops it        (no confirm)`, `2. broker crashes before fsync          (transient)`, `3. auto_ack=True, worker crashes        (acked early)`, `4. no queue bound for the routing key  (silently dropped)`]),
         },
-        links: {
-          pb: makeLink('producer', 'broker', ['producer', 'broker'], { heads: 'end', label: 'Unverified Publish' })
-        },
-        flows: [{ route: ['pb'], bounce: false, rate: 2.0 }]
-      }
-    },
-    {
-      short: 'Publisher Confirms',
-      chapter: 'technique',
-      title: 'Publisher Confirms: Guaranteed Broker Ingestion',
-      body: [
-        'Traditional transactions (<code>tx_select</code>) slow RabbitMQ throughput by 250x. <b>Publisher Confirms (<code>confirm.select</code>)</b> provide high-speed asynchronous delivery confirmation.',
-        'The publisher sends batches of messages with sequential sequence numbers. Once the broker persists the message to disk or mirrors it to quorum replicas, it returns an asynchronous <code>basic.ack</code> to the publisher.'
-      ],
-      callout: {
-        kind: 'tip',
-        text: 'Publisher confirms allow 50,000+ confirmed writes per second asynchronously.'
+        links: { publish: links.publish() },
+        flows: [{ route: ['publish'], kind: 'fail', rate: 1.2 }],
       },
-      metrics: { reliability_tier: 'Publisher Confirmed', delivery_guarantee: 'Guaranteed Ingestion', dlx_policy: 'None', queue_type: 'Durable Queue' },
-      scene: {
-        entities: {
-          producer: makeDevice(-10, -8, { form: 'phone', label: 'Producer App', tags: [{ text: 'confirm.select', tone: 'green', icon: 'lock' }] }),
-          broker: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'inbox', label: ['RabbitMQ Broker', 'Persisted to Disk'], sub: 'Returns basic.ack(seq)' }),
-          card: makePanel({ x: -2, y: 14 }, 'Publisher Confirms Flow', [
-            '1. channel.confirm_select() enables async confirms',
-            '2. Producer sends message #1, #2, #3 without blocking',
-            '3. Broker writes to durable queue disk buffer',
-            '4. Broker returns channel.basic_ack(delivery_tag=3, multiple=true)',
-            'Producer now knows with 100% certainty data is safely on disk!'
-          ], { icon: 'check' })
-        },
-        links: {
-          pb: makeLink('producer', 'broker', ['producer', 'broker'], { heads: 'both', label: 'Publish / basic.ack' })
-        },
-        flows: [{ route: ['pb'], bounce: true, rate: 2.8 }]
-      }
     },
     {
-      short: 'Prefetch QoS',
-      chapter: 'technique',
-      title: 'Fair Dispatch: Consumer Prefetch (basic.qos)',
-      body: [
-        'By default, RabbitMQ pushes all incoming messages to consumers in round-robin fashion, regardless of how busy they are.',
-        'If Worker 1 gets 10 heavy PDF generation tasks while Worker 2 gets light tasks, Worker 1 becomes overwhelmed while Worker 2 sits idle. <b>Prefetch Count (<code>channel.basic_qos(prefetch_count=1)</code>)</b> tells RabbitMQ not to give a worker more than 1 unacknowledged message at a time!'
-      ],
-      callout: {
-        kind: 'insight',
-        text: 'Prefetch=1 ensures work is dispatched dynamically to whoever finishes first (Fair Dispatch).'
-      },
-      metrics: { reliability_tier: 'QoS Balanced', delivery_guarantee: 'At-Least-Once', dlx_policy: 'None', queue_type: 'Fair Dispatch' },
-      scene: {
-        entities: {
-          queue: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['Task Queue', 'prefetch = 1'], sub: 'Dispatches only when idle' }),
-          w1: makeBlock(8, -8, { s: 4.4, h: 52, color: 'purple', glyph: 'server', label: ['Worker 1 (Busy)', 'Processing Task #1'], sub: 'Unacked: 1 (Blocked)' }),
-          w2: makeBlock(8, 4, { s: 4.4, h: 52, color: 'green', glyph: 'server', label: ['Worker 2 (Free)', 'Idle'], sub: 'Receives next message' }),
-          card: makePanel({ x: -2, y: 14 }, 'Prefetch QoS Mechanics', [
-            'Without prefetch: 100 messages split 50/50 upfront -> Worker 1 stalls',
-            'With basic.qos(prefetch_count=1):',
-            '- RabbitMQ will NOT send a message to a worker that has 1 unacked task',
-            '- Fast workers automatically pull more tasks from the queue',
-            '- Maximizes cluster utilization across heterogeneous servers'
-          ], { icon: 'layers' })
-        },
-        links: {
-          qw1: makeLink('queue', 'w1', ['queue', 'w1'], { heads: 'both' }),
-          qw2: makeLink('queue', 'w2', ['queue', 'w2'], { heads: 'both' })
-        },
-        flows: [
-          { route: ['qw1'], bounce: true, rate: 1.0 },
-          { route: ['qw2'], bounce: true, rate: 2.6 }
-        ]
-      }
-    },
-    {
-      short: 'Dead Letter Exchange',
-      chapter: 'technique',
-      title: 'Dead Letter Exchanges (DLX): Isolating Poison Messages',
-      body: [
-        'What happens when a message contains malformed JSON or triggers an unhandled null pointer exception? If the worker rejects it with <code>requeue=true</code>, it creates a 100% CPU infinite retry loop!',
-        'A <b>Dead Letter Exchange (DLX)</b> automatically intercepts messages when:<br>1. Rejected with <code>basic.reject(requeue=false)</code>.<br>2. Message expires due to TTL.<br>3. Queue exceeds max length. The failed message is routed to an isolated <b>DLQ</b> for inspection.'
-      ],
-      callout: {
-        kind: 'tip',
-        text: 'Configure DLX on queue creation via arguments: x-dead-letter-exchange and x-dead-letter-routing-key.'
-      },
-      metrics: { reliability_tier: 'DLX Protected', delivery_guarantee: 'Poison Isolated', dlx_policy: 'x-dead-letter-exchange', queue_type: 'DLQ Routed' },
-      scene: {
-        entities: {
-          mainQ: makeBlock(-12, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'inbox', label: ['Main Queue: orders', 'Poison Msg Detected'], sub: 'basic.reject(requeue=false)' }),
-          dlx: makeBlock(-2, 4, { s: 4.6, h: 52, color: 'rose', glyph: 'route', label: ['DLX: orders_dlx', 'Dead Letter Exchange'], sub: 'Captures failed jobs' }),
-          dlq: makeBlock(12, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue (DLQ)', 'Isolated for Review'], sub: 'Alerts sent to Sentry / Slack' }),
-          card: makePanel({ x: -2, y: 16 }, 'DLX Routing Arguments', [
-            'Map<String, Object> args = new HashMap<>();',
-            'args.put("x-dead-letter-exchange", "orders_dlx");',
-            'args.put("x-dead-letter-routing-key", "orders_dead");',
-            'channel.queueDeclare("orders_q", true, false, false, args);',
-            'Failed messages route to DLQ instead of crashing consumers!'
-          ], { icon: 'alert' })
-        },
-        links: {
-          qd: makeLink('mainQ', 'dlx', ['mainQ', 'dlx'], { heads: 'end', label: 'Rejected' }),
-          dq: makeLink('dlx', 'dlq', ['dlx', 'dlq'], { heads: 'end', label: 'Store in DLQ' })
-        },
-        flows: [
-          { route: ['qd'], bounce: false, rate: 1.5 },
-          { route: ['dq'], bounce: false, rate: 1.5 }
-        ]
-      }
-    },
-    {
-      short: 'Retry & Backoff',
-      chapter: 'deep',
-      title: 'Architectural Pattern: Retry Queues with Exponential Backoff',
-      body: [
-        'Network timeouts with external payment gateways are often transient (503 Service Unavailable).',
-        'By combining <b>Message TTL (<code>x-message-ttl</code>)</b> and DLX, you can build an automated retry loop: Failed jobs route to a <code>retry_30s_q</code>. After 30 seconds, the message expires and the DLX automatically routes it <b>back to the main queue</b> for a second attempt!'
-      ],
-      callout: {
-        kind: 'insight',
-        text: 'Zero worker code is required for delays: RabbitMQ TTL handles the sleep timer internally.'
-      },
-      metrics: { reliability_tier: 'Retry Loop', delivery_guarantee: 'Exponential Backoff', dlx_policy: 'TTL -> Return to Main', queue_type: 'Delayed Retry' },
-      scene: {
-        entities: {
-          mainQ: makeBlock(-8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'inbox', label: ['Main Queue', 'Attempts 1 & 2'], sub: 'Executes job' }),
-          retryQ: makeBlock(8, -4, { s: 4.8, h: 50, color: 'amber', glyph: 'clock', label: ['Retry Queue (30s TTL)', 'No Active Consumers'], sub: 'x-message-ttl: 30000' }),
-          card: makePanel({ x: 0, y: 14 }, 'The Dead-Letter Retry Loop', [
-            '1. Worker fails to charge credit card (Gateway timeout)',
-            '2. Worker rejects message -> DLX sends to retry_30s_q',
-            '3. retry_30s_q has NO consumers: Message sits for 30s TTL',
-            '4. After 30s, message dies -> its DLX sends it BACK to Main Queue!',
-            '5. Worker tries again and succeeds'
-          ], { icon: 'refresh' })
-        },
-        links: {
-          mr: makeLink('mainQ', 'retryQ', ['mainQ', 'retryQ'], { heads: 'end', label: 'Fail -> Retry Q' }),
-          rm: makeLink('retryQ', 'mainQ', ['retryQ', 'mainQ'], { heads: 'end', label: 'TTL Expired -> Return' })
-        },
-        flows: [
-          { route: ['mr'], bounce: false, rate: 1.8 },
-          { route: ['rm'], bounce: false, rate: 1.8 }
-        ]
-      }
-    },
-    {
-      short: 'Quorum Queues (Raft)',
-      chapter: 'deep',
-      title: 'Modern High Availability: Raft Quorum Queues',
-      body: [
-        'Legacy RabbitMQ used <i>Mirrored Queues (ha-mode: all)</i>, which were notoriously prone to network partition split-brains and message loss during failovers.',
-        'Modern RabbitMQ uses <b>Quorum Queues (<code>x-queue-type: quorum</code>)</b>: backed by the <b>Raft consensus algorithm</b>. A quorum of nodes (e.g. 2 of 3) must persist each message to disk before it is acknowledged, providing bulletproof data safety.'
-      ],
-      callout: {
-        kind: 'tip',
-        text: 'Mirrored queues are deprecated in RabbitMQ 3.13+. Always use Quorum Queues for durable messaging.'
-      },
-      metrics: { reliability_tier: 'Raft Consensus', delivery_guarantee: 'Zero Data Loss', dlx_policy: 'Quorum Replicated', queue_type: 'Quorum Queue' },
-      scene: {
-        entities: {
-          leader: makeBlock(-8, -4, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Quorum Leader', 'Raft Term 4'], sub: 'Quorum size: 3' }),
-          follower1: makeBlock(8, -8, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Quorum Follower 1', 'Raft Log Replicated'], sub: 'Persisted to disk' }),
-          follower2: makeBlock(8, 4, { s: 4.4, h: 52, color: 'teal', glyph: 'database', label: ['Quorum Follower 2', 'Raft Log Replicated'], sub: 'Persisted to disk' }),
-          card: makePanel({ x: -2, y: 16 }, 'Quorum Queue Guarantees', [
-            '1. Message written to Raft Leader',
-            '2. Leader replicates to Follower 1 and Follower 2',
-            '3. When majority (2 of 3) persist to disk -> Publisher ACK returned',
-            '4. Network partition safe: Minority partitions cannot elect leaders'
-          ], { icon: 'shield' })
-        },
-        links: {
-          lf1: makeLink('leader', 'follower1', ['leader', 'follower1'], { heads: 'both' }),
-          lf2: makeLink('leader', 'follower2', ['leader', 'follower2'], { heads: 'both' })
-        },
-        flows: [
-          { route: ['lf1'], bounce: true, rate: 2.2 },
-          { route: ['lf2'], bounce: true, rate: 2.2 }
-        ]
-      }
-    },
-    {
-      short: 'Production Blueprint',
+      short: 'Confirms',
       chapter: 'solution',
-      title: 'End-to-End Enterprise Reliability Blueprint',
+      title: 'Publisher confirms: the broker says “got it”',
       body: [
-        'To achieve zero message loss and fault tolerance across outages, configure the complete enterprise stack:',
-        '• <b>Publisher:</b> <code>confirm_select()</code> + persistent delivery mode (<code>delivery_mode=2</code>).<br>• <b>Broker:</b> <code>x-queue-type: quorum</code> + durable exchange/queue declarations.<br>• <b>Consumer:</b> <code>auto_ack=false</code> (explicit <code>basic_ack</code>) + <code>basic_qos(prefetch_count=1)</code>.<br>• <b>Error Handling:</b> Dead Letter Exchange (DLX) + delayed retry queues.'
+        `Turn on <code>confirm.select</code> and the broker sends a <code>basic.ack</code> back for every publish <em>after</em> it has taken responsibility — routed to the queues and, for persistent messages on durable queues, written to disk (or replicated, for quorum queues).`,
+        `No confirm within a timeout, or a <code>nack</code>, means: publish again. Confirm in batches or asynchronously for throughput — waiting for each one individually is slow. Add <code>mandatory</code> to get unroutable messages returned.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'This 4-tier blueprint guarantees that no message is ever dropped, duplicate retries are bounded, and bad data is safely quarantined.'
-      },
-      metrics: { reliability_tier: 'Enterprise Bulletproof', delivery_guarantee: '100% Durability', dlx_policy: 'Full DLX + DLQ', queue_type: 'Quorum + Confirms' },
+      changes: [`~ producer: confirm.select`, `~ queue: durable`],
+      metrics: { guarantee: 'accepted', failure: 'retry', setting: 'confirm.select', cost: '~1 RTT' },
       scene: {
         entities: {
-          publisher: makeDevice(-12, -4, { form: 'phone', label: 'Publisher', tags: [{ text: 'delivery_mode=2', tone: 'green', icon: 'lock' }] }),
-          quorumQ: makeBlock(-2, -4, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Quorum Queue (Raft)', 'durable=true'], sub: '3-Node Multi-AZ Quorum' }),
-          consumer: makeBlock(8, -4, { s: 4.6, h: 52, color: 'blue', glyph: 'server', label: ['Worker Pool', 'manual_ack'], sub: 'prefetch_count=1' }),
-          dlq: makeBlock(8, 6, { s: 4.4, h: 52, color: 'rose', glyph: 'inbox', label: ['Dead Letter Queue', 'Quarantine'], sub: 'Unrecoverable jobs' }),
-          card: makePanel({ x: -2, y: 16 }, 'Production Reliability Checklist', [
-            '1. delivery_mode = 2 (PERSISTENT message header)',
-            '2. x-queue-type = "quorum" (Raft replication across 3 AZs)',
-            '3. channel.basic_qos(prefetch_count=1) (Fair dispatch)',
-            '4. auto_ack = false (Manual basic_ack after DB transaction)',
-            '5. Dead Letter Exchange configured on all queues'
-          ], { icon: 'check' })
+          producer: producer(`confirm mode`, [{ text: `waits for ack`, tone: `green`, icon: `clock` }]),
+          queue: queue(`durable`, [{ text: `persisted`, tone: `green`, icon: `shield` }]),
+          card: codeCard(`Async confirms`, [`ch.confirm_delivery()`, `ch.basic_publish("orders", "order.paid", body, mandatory=True)`, `# broker → publisher: basic.ack(delivery_tag)  or  basic.nack`, `= unacked after timeout → publish again`]),
         },
-        links: {
-          pq: makeLink('publisher', 'quorumQ', ['publisher', 'quorumQ'], { heads: 'both' }),
-          qc: makeLink('quorumQ', 'consumer', ['quorumQ', 'consumer'], { heads: 'both' }),
-          qdl: makeLink('quorumQ', 'dlq', ['quorumQ', 'dlq'], { heads: 'end', label: 'DLX' })
+        links: { publish: links.publish() },
+        flows: [{ route: ['publish'], kind: 'msg', rate: 1.2, bounce: true }],
+      },
+    },
+    {
+      short: 'Prefetch',
+      chapter: 'technique',
+      title: 'A consumer with manual acks and prefetch',
+      body: [
+        `The consumer now acks <em>after</em> the work is done, so a crash means redelivery instead of loss. But without a limit RabbitMQ pushes messages as fast as it can: a slow worker ends up holding thousands of unacked messages while a fast one sits idle.`,
+        `<code>basic.qos(prefetch_count=N)</code> caps the number of unacked messages per consumer. With N=20 a worker gets a new message only when it acks one, so fast workers naturally take more. Start around 20–50 and tune by processing time.`,
+      ],
+      changes: [`+ consumer`, `+ manual ack`, `+ basic.qos(20)`],
+      metrics: { guarantee: 'fair dispatch', failure: 'redelivery bounded', setting: 'prefetch 20', cost: 'none' },
+      scene: {
+        entities: {
+          producer: producer(`1,000 msg/s`),
+          queue: queue(`ready 4,200`, [{ text: `durable`, tone: `green` }]),
+          consumer: consumer(`manual ack`, [{ text: `20 unacked max`, tone: `green` }]),
+          card: codeCard(`Limit in flight`, [`ch.basic_qos(prefetch_count=20)`, `ch.basic_consume("orders", on_message, auto_ack=False)`, `= worker holds ≤ 20 unacked; the rest wait in the queue`]),
         },
-        flows: [
-          { route: ['pq'], bounce: true, rate: 2.5 },
-          { route: ['qc'], bounce: true, rate: 2.2 }
-        ]
-      }
-    }
-  ]
+        links: { publish: links.publish(), deliver: links.deliver() },
+        flows: [{ route: ['deliver'], kind: 'msg', rate: 1.2, bounce: true }],
+      },
+    },
+    {
+      short: 'DLX',
+      chapter: 'solution',
+      title: 'Dead Letter Exchange: a place for failures',
+      body: [
+        `A message that keeps failing would loop forever. Declare the queue with <code>x-dead-letter-exchange</code> and RabbitMQ <b>dead-letters</b> a message when it is rejected with <code>requeue=false</code>, expires (TTL), or the queue overflows its length limit.`,
+        `The dead letter goes to another exchange and queue (a <b>DLQ</b>) with headers recording the reason and count (<code>x-death</code>). Alert on the DLQ depth; fix; then shovel the messages back.`,
+      ],
+      changes: [`+ DLX`, `+ DLQ`, `~ consumer: nack, requeue=false`],
+      metrics: { guarantee: 'failures kept', failure: 'poison isolated', setting: 'x-dead-letter-*', cost: 'a queue' },
+      scene: {
+        entities: {
+          producer: producer(`publish`),
+          queue: queue(`1 poison msg`, [{ text: `x-dead-letter-exchange`, tone: `violet` }]),
+          consumer: consumer(`nack, requeue=false`, [{ text: `fails`, tone: `red` }]),
+          dlx: dlx([{ text: `reason in x-death`, tone: `violet` }]),
+          dlq: dlq(`dead letters`, [{ text: `alarm: depth > 0`, tone: `amber` }]),
+          card: codeCard(`Declare with a DLX`, [`ch.queue_declare("orders", durable=True, arguments={`, `    "x-dead-letter-exchange": "orders.dlx",`, `    "x-dead-letter-routing-key": "orders.failed" })`, `ch.basic_nack(tag, requeue=False)     # → DLQ`]),
+        },
+        links: { publish: links.publish(), deliver: links.deliver(), deadRoute: links.deadRoute(), dlxDlq: links.dlxDlq() },
+        flows: [{ route: ['deliver'], kind: 'fail', rate: 1, bounce: true }, { route: ['deadRoute', 'dlxDlq'], kind: 'msg', rate: 1 }],
+      },
+    },
+    {
+      short: 'Retry',
+      chapter: 'technique',
+      title: 'Retry with a TTL queue and backoff',
+      body: [
+        `Immediate retries hammer a service that is down. Build a <b>delay loop</b>: the failed message dead-letters into a <em>retry queue</em> that has <code>x-message-ttl</code> (say 30 s) and a DLX pointing back to the main exchange. When the TTL expires it returns for another attempt.`,
+        `Use several retry queues (10 s, 1 min, 10 min) for growing backoff and count attempts in the <code>x-death</code> header; after the last one, send to the final DLQ. The delayed-message plugin is an alternative.`,
+      ],
+      changes: [`+ retry queue (TTL 30 s)`, `~ DLX loops back`],
+      metrics: { guarantee: 'bounded retries', failure: 'backoff', setting: 'x-message-ttl', cost: 'extra queues' },
+      scene: {
+        entities: {
+          producer: producer(`publish`),
+          queue: queue(`attempt 2 of 3`, [{ text: `durable`, tone: `green` }]),
+          consumer: consumer(`fails again`, [{ text: `nack`, tone: `red` }]),
+          dlx: dlx([{ text: `routes by attempt`, tone: `violet` }]),
+          dlq: dlq(`after 3 tries`, [{ text: `give up`, tone: `red` }]),
+          retry: retry([{ text: `waits, then returns`, tone: `violet` }]),
+          card: codeCard(`A delay loop`, [`retry: { "x-message-ttl": 30000, "x-dead-letter-exchange": "orders" }`, `main:  { "x-dead-letter-exchange": "orders.retry" }`, `if x_death_count(props) >= 3: publish("orders.dlq", body)`]),
+        },
+        links: { publish: links.publish(), deliver: links.deliver(), deadRoute: links.deadRoute(), dlxDlq: links.dlxDlq(), dlxRetry: links.dlxRetry, retryBack: links.retryBack(`30 s`) },
+        flows: [{ route: ['deliver'], kind: 'fail', rate: 1, bounce: true }, { route: ['dlxRetry'], kind: 'msg', rate: 0.8 }, { route: ['retryBack'], kind: 'msg', rate: 0.8 }],
+      },
+    },
+    {
+      short: 'Quorum',
+      chapter: 'solution',
+      title: 'Quorum queues: replicated with Raft',
+      body: [
+        `A durable queue on one node still dies with that node. <span class="term">Quorum queues</span> keep each queue on several nodes (3 or 5) using the <b>Raft</b> consensus protocol: one leader, followers, and a write counts only when a majority has it.`,
+        `Lose one node of three and nothing is lost; a new leader is elected. They replace the old classic <em>mirrored</em> queues (removed in RabbitMQ 4). Bonus: a built-in <code>x-delivery-limit</code> dead-letters poison messages automatically.`,
+      ],
+      changes: [`~ queue: quorum, 3 nodes`, `~ producer: confirmed by quorum`],
+      metrics: { guarantee: 'majority', failure: '1 node lost', setting: 'quorum', cost: '3× disk' },
+      scene: {
+        entities: {
+          producer: producer(`confirms`, [{ text: `confirmed by quorum`, tone: `green` }]),
+          queue: queue(`quorum · 3 nodes`, [{ text: `Raft term 7 · majority 2/3`, tone: `violet`, icon: `layers` }]),
+          consumer: consumer(`manual ack`),
+          dlx: dlx(),
+          dlq: dlq(`after 3 tries`),
+          retry: retry(),
+          card: codeCard(`Declare a quorum queue`, [`ch.queue_declare("orders", durable=True, arguments={`, `    "x-queue-type": "quorum",`, `    "x-delivery-limit": 5 })            # poison → DLX after 5 tries`]),
+        },
+        links: { publish: links.publish(), deliver: links.deliver(), deadRoute: links.deadRoute(), dlxDlq: links.dlxDlq(), dlxRetry: links.dlxRetry, retryBack: links.retryBack() },
+        flows: [{ route: ['publish'], kind: 'write', rate: 1.2, bounce: true }],
+      },
+    },
+    {
+      short: 'Blueprint',
+      chapter: 'recap',
+      title: 'Result: the production blueprint',
+      body: [
+        `Combine every layer: a <b>quorum queue</b> on a 3-node cluster; <b>persistent</b> messages with <b>publisher confirms</b>; consumers with <b>manual acks</b> and a <b>prefetch</b> limit; a <b>delivery limit</b> plus a DLX and DLQ; retry queues with backoff for transient errors.`,
+        `Then watch it: queue depth, unacked count, consumer utilisation, DLQ depth and publish/confirm latency (the Prometheus plugin exposes them). Reliability you do not monitor is only a hope.`,
+      ],
+      changes: [`~ all layers on`, `~ DLQ alerts`],
+      metrics: { guarantee: 'at-least-once', failure: 'node loss ok', setting: 'full blueprint', cost: 'moderate' },
+      scene: {
+        entities: {
+          producer: producer(`persistent + confirm`, [{ text: `confirmed`, tone: `green` }]),
+          queue: queue(`quorum · 3 nodes`, [{ text: `delivery limit 5`, tone: `violet` }]),
+          consumer: consumer(`manual ack · prefetch 20`, [{ text: `idempotent`, tone: `green`, icon: `shield` }]),
+          dlx: dlx(),
+          dlq: dlq(`inspect + redrive`, [{ text: `Prometheus alert · empty`, tone: `green` }]),
+          retry: retry(),
+          card: codeCard(`Checklist`, [`quorum queue   persistent msgs   publisher confirms`, `manual ack   prefetch 20   x-delivery-limit + DLX`, `retry queues (backoff)   alert on DLQ depth > 0`]),
+        },
+        links: { publish: links.publish(), deliver: links.deliver(), deadRoute: links.deadRoute(), dlxDlq: links.dlxDlq(), dlxRetry: links.dlxRetry, retryBack: links.retryBack() },
+        flows: [{ route: ['publish'], kind: 'msg', rate: 1.4, bounce: true }, { route: ['deliver'], kind: 'msg', rate: 1.2, bounce: true }],
+      },
+    },
+  ],
 };

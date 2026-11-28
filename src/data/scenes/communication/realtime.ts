@@ -1,20 +1,12 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCool,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeDb, makeDevice, makeLink, makePanel, cardAt, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const es = (e = []) => makeDevice(0, -19, { form: `phone`, w: 5, d: 5, label: `Alice`, tags: e });
+const alicePhone = (e: Tag[] = []) => makeDevice(0, -19, { form: `phone`, w: 5, d: 5, label: `Alice`, tags: e });
 
-const ts = (e = []) => makeDevice(13, -6, { form: `phone`, w: 5, d: 5, label: `Bob`, tags: e });
+const bobPhone = (e: Tag[] = []) => makeDevice(13, -6, { form: `phone`, w: 5, d: 5, label: `Bob`, tags: e });
 
-const ns = (e = {}) => makeBlock(0, -6, { label: [`Chat`, `Server`], glyph: `message`, ...e });
+const chatServer = (e: Bag = {}) => makeBlock(0, -6, { label: [`Chat`, `Server`], glyph: `message`, ...e });
 
-const rs = (e = {}) => ({
+const aliceLinks = (e: Bag = {}) => ({
     ap: makeLink(
       `alice`,
       `srv`,
@@ -26,7 +18,7 @@ const rs = (e = {}) => ({
     ),
   });
 
-const is = (e = {}) => ({
+const aliceReturnLinks = (e: Bag = {}) => ({
     sa: makeLink(
       `srv`,
       `alice`,
@@ -38,7 +30,7 @@ const is = (e = {}) => ({
     ),
   });
 
-const as = (e = {}) => ({
+const bobLinks = (e: Bag = {}) => ({
     bs: makeLink(
       `bob`,
       `srv`,
@@ -50,7 +42,7 @@ const as = (e = {}) => ({
     ),
   });
 
-const os = (e = {}) => ({
+const bobReturnLinks = (e: Bag = {}) => ({
     sb: makeLink(
       `srv`,
       `bob`,
@@ -62,21 +54,21 @@ const os = (e = {}) => ({
     ),
   });
 
-const ss = { text: `new message from Bob`, tone: `violet`, icon: `message` };
+const newMessageTag = { text: `new message from Bob`, tone: `violet`, icon: `message` };
 
-const cs = (e, t, n) => makePanel({ x: 13, y: -6, z: 0, dx: 40, dy: -205 }, e, t, { icon: n });
+const card = cardAt({ x: 13, y: -6, dx: 40, dy: -205 });
 
-const ls = () => ({
-    alice: es([ss]),
-    srv: ns({ label: [`Server 1`], tags: [{ text: `Alice’s socket` }] }),
+const baseEntities = () => ({
+    alice: alicePhone([newMessageTag]),
+    srv: chatServer({ label: [`Server 1`], tags: [{ text: `Alice’s socket` }] }),
     bob: makeDevice(13, -8, { form: `phone`, w: 5, d: 5, label: `Bob` }),
     srv2: makeBlock(13, 6, { label: [`Server 2`], glyph: `message`, tags: [{ text: `Bob’s socket` }] }),
     br: makeBlock(0, 6, { color: `slab`, glyph: `radio`, label: [`Pub/Sub`], sub: `Redis` }),
   });
 
-const us = {
-    ...rs(),
-    ...is(),
+const broadcastLinks = {
+    ...aliceLinks(),
+    ...aliceReturnLinks(),
     b2: makeLink(`bob`, `srv2`, [
       [`bob-1`, `bob`],
       [`srv2-1`, `srv2`],
@@ -108,12 +100,12 @@ const us = {
     ]),
   };
 
-const ds = [
+const messageFlows = [
     { route: [`b2`, `s2r`, `rs`, `sa`], kind: `msg`, rate: 0.55, speed: 1.2 },
     { route: [`ap`, `sr`, `r2`, `x2b`], kind: `msg`, rate: 0.4, speed: 1.2 },
   ];
 
-const fs = {
+const realtimeLesson = {
     id: `realtime`,
     title: `Real-time Updates`,
     summary: `How the server tells you something happened — chat, live scores, notifications.`,
@@ -144,15 +136,15 @@ const fs = {
         metrics: { delay: `never`, rpm: 0, wasted: `—`, conns: 0 },
         scene: {
           entities: {
-            alice: es([{ text: `anything new?`, icon: `info` }]),
-            srv: ns({
+            alice: alicePhone([{ text: `anything new?`, icon: `info` }]),
+            srv: chatServer({
               tags: [{ text: `1 new message for Alice`, tone: `violet`, icon: `message` }],
             }),
-            bob: ts(),
+            bob: bobPhone(),
           },
           links: {
-            ...as(),
-            ...is({ style: `off`, label: `server can’t start a request`, labelTone: `gray` }),
+            ...bobLinks(),
+            ...aliceReturnLinks({ style: `off`, label: `server can’t start a request`, labelTone: `gray` }),
           },
           flows: [{ route: [`bs`], kind: `msg`, rate: 0.5 }],
         },
@@ -172,8 +164,8 @@ const fs = {
         changes: [`+ Alice polls every 2 s`],
         metrics: { delay: `up to 2 s`, rpm: 30, wasted: 95, conns: 0 },
         scene: {
-          entities: { alice: es(), srv: ns(makeCool(0.15)), bob: ts() },
-          links: { ...rs({ heads: `both`, label: `GET /messages · every 2 s` }), ...as() },
+          entities: { alice: alicePhone(), srv: chatServer(makeCool(0.15)), bob: bobPhone() },
+          links: { ...aliceLinks({ heads: `both`, label: `GET /messages · every 2 s` }), ...bobLinks() },
           flows: [
             {
               route: [`ap`],
@@ -201,15 +193,15 @@ const fs = {
         metrics: { delay: `up to 2 s`, rpm: 30, wasted: 95, conns: 0 },
         scene: {
           entities: {
-            alice: es([{ text: `one of 1,000,000`, icon: `users` }]),
-            srv: ns({
+            alice: alicePhone([{ text: `one of 1,000,000`, icon: `users` }]),
+            srv: chatServer({
               heat: 0.8,
               cpu: 0.94,
               tags: [{ text: `500,000 req/s · 95% empty`, tone: `red`, icon: `alert` }],
             }),
-            bob: ts(),
+            bob: bobPhone(),
           },
-          links: { ...rs({ heads: `both`, label: `GET /messages · every 2 s` }), ...as() },
+          links: { ...aliceLinks({ heads: `both`, label: `GET /messages · every 2 s` }), ...bobLinks() },
           flows: [
             {
               route: [`ap`],
@@ -241,11 +233,11 @@ const fs = {
         metrics: { delay: `< 100 ms`, rpm: 2, wasted: 10, conns: `1 held / user` },
         scene: {
           entities: {
-            alice: es(),
-            srv: ns({ ...makeCool(0.2), tags: [{ text: `holding until news`, icon: `hourglass` }] }),
-            bob: ts(),
+            alice: alicePhone(),
+            srv: chatServer({ ...makeCool(0.2), tags: [{ text: `holding until news`, icon: `hourglass` }] }),
+            bob: bobPhone(),
           },
-          links: { ...rs({ heads: `both`, label: `GET /messages · held open` }), ...as() },
+          links: { ...aliceLinks({ heads: `both`, label: `GET /messages · held open` }), ...bobLinks() },
           flows: [
             { route: [`ap`], rate: 0.42, bounce: !0, hold: 1.7 },
             { route: [`bs`], kind: `msg`, rate: 0.42 },
@@ -267,11 +259,11 @@ const fs = {
         changes: [`+ One long-lived event stream to Alice`, `~ Delay → under 50 ms`],
         metrics: { delay: `< 50 ms`, rpm: 0, wasted: 0, conns: `1 per user` },
         scene: {
-          entities: { alice: es([ss]), srv: ns(makeCool(0.15)), bob: ts() },
+          entities: { alice: alicePhone([newMessageTag]), srv: chatServer(makeCool(0.15)), bob: bobPhone() },
           links: {
-            ...rs({ heads: `both` }),
-            ...is({ label: `event stream (SSE)`, labelAt: 0.3 }),
-            ...as(),
+            ...aliceLinks({ heads: `both` }),
+            ...aliceReturnLinks({ label: `event stream (SSE)`, labelAt: 0.3 }),
+            ...bobLinks(),
           },
           flows: [
             { route: [`bs`, `sa`], kind: `msg`, rate: 0.6 },
@@ -297,12 +289,12 @@ const fs = {
         ],
         metrics: { delay: `< 20 ms`, rpm: 0, wasted: 0, conns: `1 per user` },
         scene: {
-          entities: { alice: es([ss]), srv: ns(makeCool(0.15)), bob: ts() },
+          entities: { alice: alicePhone([newMessageTag]), srv: chatServer(makeCool(0.15)), bob: bobPhone() },
           links: {
-            ...rs({ label: `WebSocket · both ways` }),
-            ...is(),
-            ...as({ label: `WebSocket` }),
-            ...os(),
+            ...aliceLinks({ label: `WebSocket · both ways` }),
+            ...aliceReturnLinks(),
+            ...bobLinks({ label: `WebSocket` }),
+            ...bobReturnLinks(),
           },
           flows: [
             { route: [`bs`, `sa`], kind: `msg`, rate: 0.6 },
@@ -328,7 +320,7 @@ const fs = {
           `~ Messages relayed to the server holding each socket`,
         ],
         metrics: { delay: `< 30 ms`, rpm: 0, wasted: 0, conns: `1M on 20 servers` },
-        scene: { entities: { ...ls() }, links: us, flows: ds },
+        scene: { entities: { ...baseEntities() }, links: broadcastLinks, flows: messageFlows },
       },
       {
         short: `Offline`,
@@ -350,9 +342,9 @@ const fs = {
         metrics: { delay: `< 30 ms`, rpm: 0, wasted: 0, conns: `1M on 20 servers` },
         scene: {
           entities: {
-            ...ls(),
-            alice: es([{ text: `offline · subway`, tone: `gray`, icon: `unplug` }]),
-            srv: ns({
+            ...baseEntities(),
+            alice: alicePhone([{ text: `offline · subway`, tone: `gray`, icon: `unplug` }]),
+            srv: chatServer({
               label: [`Server 1`],
               tags: [{ text: `no socket for Alice`, tone: `amber` }],
             }),
@@ -365,7 +357,7 @@ const fs = {
             }),
           },
           links: {
-            ...us,
+            ...broadcastLinks,
             sa: makeLink(
               `srv`,
               `alice`,
@@ -396,8 +388,8 @@ const fs = {
         metrics: { delay: `< 30 ms`, rpm: 2, wasted: 0, conns: `1M on 20 servers` },
         scene: {
           entities: {
-            ...ls(),
-            alice: es([{ text: `online`, tone: `green`, icon: `signal` }]),
+            ...baseEntities(),
+            alice: alicePhone([{ text: `online`, tone: `green`, icon: `signal` }]),
             ps: makeDb(-13, 6, {
               r: 1.6,
               h: 34,
@@ -407,10 +399,10 @@ const fs = {
             }),
           },
           links: {
-            ...us,
+            ...broadcastLinks,
             ps: makeLink(`srv`, `ps`, [`srv`, [`ps`, `srv`], `ps`], { label: `heartbeat`, labelAt: 0.6 }),
           },
-          flows: [...ds, { route: [`ap`, `ps`], kind: `ping`, rate: 0.7 }],
+          flows: [...messageFlows, { route: [`ap`, `ps`], kind: `ping`, rate: 0.7 }],
         },
       },
       {
@@ -434,10 +426,10 @@ const fs = {
           text: `That completes Communication. Next module: <b>Reliability</b> — starting with redundancy and failover.`,
         },
         metrics: { delay: `< 30 ms`, rpm: 0, wasted: 0, conns: `1M on 20 servers` },
-        scene: { entities: { ...ls() }, links: us, flows: ds },
+        scene: { entities: { ...baseEntities() }, links: broadcastLinks, flows: messageFlows },
       },
     ],
   };
 
-export { fs as realtimeLesson };
-export default fs;
+export { realtimeLesson as realtimeLesson };
+export default realtimeLesson;

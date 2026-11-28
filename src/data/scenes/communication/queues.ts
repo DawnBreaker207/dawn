@@ -1,44 +1,32 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeDb,
-  makeHot,
-  makeLink,
-  makePanel,
-  makeQueue,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeCool, makeCrowd, makeDb, makeHot, makeLink, makePanel, makeQueue, makeZone, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const To = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
+const creatorsArea = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
 
-const Eo = { x0: -6.5, x1: 6.5, y0: -1.5, y1: 2.5 };
+const queueArea = { x0: -6.5, x1: 6.5, y0: -1.5, y1: 2.5 };
 
-const Do = { w1: -4, w2: 4 };
+const twoWorkerX = { w1: -4, w2: 4 };
 
-const Oo = { w4: -12, w1: -6, w3: 0, w2: 6, w5: 12 };
+const fiveWorkerX = { w4: -12, w1: -6, w3: 0, w2: 6, w5: 12 };
 
-const ko = (e = 11, t = `creators uploading`) => makeCrowd(To, e, t);
+const creators = (e = 11, t = `creators uploading`) => makeCrowd(creatorsArea, e, t);
 
-const Ao = (e = {}) => makeBlock(0, -9, { label: [`Web`, `Server`], ...e });
+const webServer = (e: Bag = {}) => makeBlock(0, -9, { label: [`Web`, `Server`], ...e });
 
-const jo = (e = `QUEUE · VIDEO JOBS`) => makeZone(Eo, e);
+const queueZone = (e = `QUEUE · VIDEO JOBS`) => makeZone(queueArea, e);
 
-const Mo = (e) => makeQueue(5.6, 1, e, [-1, 0]);
+const queue = (e: number) => makeQueue(5.6, 1, e, [-1, 0]);
 
-const No = (e, t = {}) => makeBlock(e, 9, { color: `green`, glyph: `video`, label: [`Worker`], ...t });
+const worker = (e: number, t: Bag = {}) => makeBlock(e, 9, { color: `green`, glyph: `video`, label: [`Worker`], ...t });
 
-const Po = (e, t = {}) =>
+const workers = (e: Record<string, number>, t: Bag = {}) =>
     Object.fromEntries(
-      Object.entries(e).map(([e, n]) => [e, No(n, { ...makeCool(-1), ...(t[e] || {}) })]),
+      Object.entries(e).map(([e, n]) => [e, worker(n, { ...makeCool(-1), ...(t[e] || {}) })]),
     );
 
-const F = {
-    uw: (e = {}) => ({ uw: makeLink(`users`, `web`, [`users`, `web`], { heads: `both`, ...e }) }),
+const links = {
+    uw: (e: Bag = {}) => ({ uw: makeLink(`users`, `web`, [`users`, `web`], { heads: `both`, ...e }) }),
     wq: { wq: makeLink(`web`, `mq`, [`web`, `mq`], { label: `enqueue job` }) },
-    pull: (e, t = {}) =>
+    pull: (e: string[], t: Bag = {}) =>
       Object.fromEntries(
         e.map((e, n) => [
           `q${e}`,
@@ -50,20 +38,20 @@ const F = {
       ),
   };
 
-const Fo = (e = 3) => ({ route: [`uw`], rate: e, bounce: !0 });
+const uploadFlows = (e = 3) => ({ route: [`uw`], rate: e, bounce: !0 });
 
-const Io = (e = 1.4) => ({ route: [`wq`], kind: `msg`, rate: e });
+const enqueueFlow = (e = 1.4) => ({ route: [`wq`], kind: `msg`, rate: e });
 
-const Lo = (e, t = 1.4) => ({
+const pullFlows = (e: (string | number)[], t = 1.4) => ({
     routes: e.map((e) => ({ path: [`q${e}`] })),
     rate: t,
     kind: `msg`,
     speed: 0.6,
   });
 
-const Ro = (e, t, n) => makePanel({ x: 6.5, y: 2.5, z: 0, dx: 80, dy: -240 }, e, t, { icon: n });
+const card = cardAt({ x: 6.5, y: 2.5, dx: 80, dy: -240 });
 
-const zo = {
+const queuesLesson = {
     id: `queues`,
     title: `Message Queues`,
     summary: `Answer right away, do the slow work later — and never lose a job along the way.`,
@@ -94,13 +82,13 @@ const zo = {
         metrics: { respond: 3e4, backlog: `—`, workers: 0, lost: `25%` },
         scene: {
           entities: {
-            users: ko(),
-            web: Ao({
+            users: creators(),
+            web: webServer({
               ...makeHot(0.96),
               tags: [{ text: `transcoding · 30 s`, tone: `red`, icon: `video` }],
             }),
           },
-          links: F.uw({ label: `upload … wait 30 s`, labelTone: `amber`, fail: 0.25 }),
+          links: links.uw({ label: `upload … wait 30 s`, labelTone: `amber`, fail: 0.25 }),
           flows: [{ route: [`uw`], kind: `slow`, rate: 1.8, bounce: !0, speed: 0.4 }],
         },
       },
@@ -120,14 +108,14 @@ const zo = {
         metrics: { respond: 80, backlog: 2, workers: 2, lost: 0 },
         scene: {
           entities: {
-            users: ko(),
-            web: Ao({ tags: [{ text: `202 Accepted · 80 ms`, tone: `green`, icon: `check` }] }),
-            mq: jo(),
-            q: Mo(2),
-            ...Po(Do),
+            users: creators(),
+            web: webServer({ tags: [{ text: `202 Accepted · 80 ms`, tone: `green`, icon: `check` }] }),
+            mq: queueZone(),
+            q: queue(2),
+            ...workers(twoWorkerX),
           },
-          links: { ...F.uw(), ...F.wq, ...F.pull([`w1`, `w2`]) },
-          flows: [Fo(), Io(), Lo([`w1`, `w2`])],
+          links: { ...links.uw(), ...links.wq, ...links.pull([`w1`, `w2`]) },
+          flows: [uploadFlows(), enqueueFlow(), pullFlows([`w1`, `w2`])],
         },
       },
       {
@@ -150,17 +138,17 @@ const zo = {
         metrics: { respond: 85, backlog: 1200, workers: 2, lost: 0 },
         scene: {
           entities: {
-            users: ko(15, `creators · ×10`),
-            web: Ao({ tags: [{ text: `202 Accepted · 85 ms`, tone: `green`, icon: `check` }] }),
-            mq: jo(`QUEUE · 1,200 JOBS WAITING`),
-            q: Mo(11),
-            ...Po(Do, {
+            users: creators(15, `creators · ×10`),
+            web: webServer({ tags: [{ text: `202 Accepted · 85 ms`, tone: `green`, icon: `check` }] }),
+            mq: queueZone(`QUEUE · 1,200 JOBS WAITING`),
+            q: queue(11),
+            ...workers(twoWorkerX, {
               w1: { tags: [{ text: `steady pace`, icon: `gauge` }] },
               w2: { tags: [{ text: `steady pace`, icon: `gauge` }] },
             }),
           },
-          links: { ...F.uw(), ...F.wq, ...F.pull([`w1`, `w2`]) },
-          flows: [Fo(6), Io(4), Lo([`w1`, `w2`])],
+          links: { ...links.uw(), ...links.wq, ...links.pull([`w1`, `w2`]) },
+          flows: [uploadFlows(6), enqueueFlow(4), pullFlows([`w1`, `w2`])],
         },
       },
       {
@@ -179,14 +167,14 @@ const zo = {
         metrics: { respond: 80, backlog: 300, workers: 5, lost: 0 },
         scene: {
           entities: {
-            users: ko(15, `creators · ×10`),
-            web: Ao(),
-            mq: jo(`QUEUE · DRAINING`),
-            q: Mo(4),
-            ...Po(Oo),
+            users: creators(15, `creators · ×10`),
+            web: webServer(),
+            mq: queueZone(`QUEUE · DRAINING`),
+            q: queue(4),
+            ...workers(fiveWorkerX),
           },
-          links: { ...F.uw(), ...F.wq, ...F.pull([`w4`, `w1`, `w3`, `w2`, `w5`]) },
-          flows: [Fo(6), Io(4), Lo([`w4`, `w1`, `w3`, `w2`, `w5`], 4.4)],
+          links: { ...links.uw(), ...links.wq, ...links.pull([`w4`, `w1`, `w3`, `w2`, `w5`]) },
+          flows: [uploadFlows(6), enqueueFlow(4), pullFlows([`w4`, `w1`, `w3`, `w2`, `w5`], 4.4)],
         },
       },
       {
@@ -202,18 +190,18 @@ const zo = {
         metrics: { respond: 80, backlog: 300, workers: 4, lost: 12 },
         scene: {
           entities: {
-            users: ko(15, `creators · ×10`),
-            web: Ao(),
-            mq: jo(`QUEUE · DRAINING`),
-            q: Mo(4),
-            ...Po(Oo, { w3: DEAD_STATE }),
+            users: creators(15, `creators · ×10`),
+            web: webServer(),
+            mq: queueZone(`QUEUE · DRAINING`),
+            q: queue(4),
+            ...workers(fiveWorkerX, { w3: DEAD_STATE }),
           },
           links: {
-            ...F.uw(),
-            ...F.wq,
-            ...F.pull([`w4`, `w1`, `w3`, `w2`, `w5`], { w3: { fail: 1 } }),
+            ...links.uw(),
+            ...links.wq,
+            ...links.pull([`w4`, `w1`, `w3`, `w2`, `w5`], { w3: { fail: 1 } }),
           },
-          flows: [Fo(6), Io(4), Lo([`w4`, `w1`, `w3`, `w2`, `w5`], 4.4)],
+          flows: [uploadFlows(6), enqueueFlow(4), pullFlows([`w4`, `w1`, `w3`, `w2`, `w5`], 4.4)],
         },
       },
       {
@@ -236,18 +224,18 @@ const zo = {
         metrics: { respond: 80, backlog: 320, workers: 4, lost: 0 },
         scene: {
           entities: {
-            users: ko(15, `creators · ×10`),
-            web: Ao(),
-            mq: jo(`QUEUE · DRAINING`),
-            q: Mo(4),
-            ...Po(Oo, { w3: DEAD_STATE }),
+            users: creators(15, `creators · ×10`),
+            web: webServer(),
+            mq: queueZone(`QUEUE · DRAINING`),
+            q: queue(4),
+            ...workers(fiveWorkerX, { w3: DEAD_STATE }),
           },
           links: {
-            ...F.uw(),
-            ...F.wq,
-            ...F.pull([`w4`, `w1`, `w3`, `w2`, `w5`], { w3: { style: `off` } }),
+            ...links.uw(),
+            ...links.wq,
+            ...links.pull([`w4`, `w1`, `w3`, `w2`, `w5`], { w3: { style: `off` } }),
           },
-          flows: [Fo(6), Io(4), Lo([`w4`, `w1`, `w2`, `w5`], 4)],
+          flows: [uploadFlows(6), enqueueFlow(4), pullFlows([`w4`, `w1`, `w2`, `w5`], 4)],
         },
       },
       {
@@ -270,17 +258,17 @@ const zo = {
         metrics: { respond: 80, backlog: 60, workers: 4, lost: 0 },
         scene: {
           entities: {
-            users: ko(),
-            web: Ao(),
-            mq: jo(),
-            q: Mo(2),
-            ...Po({ w4: -12, w1: -6, w2: 6, w5: 12 }),
+            users: creators(),
+            web: webServer(),
+            mq: queueZone(),
+            q: queue(2),
+            ...workers({ w4: -12, w1: -6, w2: 6, w5: 12 }),
             dlq: makeDb(-15, 0.5, { r: 1.6, h: 32, glyph: `skull`, label: `dead letters` }),
           },
           links: {
-            ...F.uw(),
-            ...F.wq,
-            ...F.pull([`w4`, `w1`, `w2`, `w5`]),
+            ...links.uw(),
+            ...links.wq,
+            ...links.pull([`w4`, `w1`, `w2`, `w5`]),
             dl: makeLink(`mq`, `dlq`, [`mq`, `dlq`], {
               style: `dashed`,
               label: `after 3 failures`,
@@ -288,9 +276,9 @@ const zo = {
             }),
           },
           flows: [
-            Fo(3),
-            Io(1.6),
-            Lo([`w4`, `w1`, `w2`, `w5`], 1.6),
+            uploadFlows(3),
+            enqueueFlow(1.6),
+            pullFlows([`w4`, `w1`, `w2`, `w5`], 1.6),
             { route: [`dl`], kind: `poison`, rate: 0.35, speed: 0.6 },
           ],
         },
@@ -314,11 +302,11 @@ const zo = {
         metrics: { respond: 80, backlog: 60, workers: 4, lost: 0 },
         scene: {
           entities: {
-            users: ko(),
-            web: Ao(),
-            mq: jo(`QUEUE · ACCOUNT EVENTS`),
-            q: Mo(3),
-            ...Po(
+            users: creators(),
+            web: webServer(),
+            mq: queueZone(`QUEUE · ACCOUNT EVENTS`),
+            q: queue(3),
+            ...workers(
               { w4: -12, w1: -6, w2: 6, w5: 12 },
               {
                 w1: { tags: [{ text: `“deleted” ✓`, tone: `green` }] },
@@ -329,8 +317,8 @@ const zo = {
               },
             ),
           },
-          links: { ...F.uw(), ...F.wq, ...F.pull([`w4`, `w1`, `w2`, `w5`]) },
-          flows: [Fo(3), Io(1.6), Lo([`w4`, `w1`, `w2`, `w5`], 1.6)],
+          links: { ...links.uw(), ...links.wq, ...links.pull([`w4`, `w1`, `w2`, `w5`]) },
+          flows: [uploadFlows(3), enqueueFlow(1.6), pullFlows([`w4`, `w1`, `w2`, `w5`], 1.6)],
         },
       },
       {
@@ -353,11 +341,11 @@ const zo = {
         metrics: { respond: 80, backlog: 60, workers: 4, lost: 0 },
         scene: {
           entities: {
-            users: ko(),
-            web: Ao(),
-            mq: jo(`TOPIC · 4 PARTITIONS BY ACCOUNT`),
-            q: Mo(3),
-            ...Po(
+            users: creators(),
+            web: webServer(),
+            mq: queueZone(`TOPIC · 4 PARTITIONS BY ACCOUNT`),
+            q: queue(3),
+            ...workers(
               { w4: -12, w1: -6, w2: 6, w5: 12 },
               {
                 w4: { tags: [{ text: `partition 0` }] },
@@ -367,8 +355,8 @@ const zo = {
               },
             ),
           },
-          links: { ...F.uw(), ...F.wq, ...F.pull([`w4`, `w1`, `w2`, `w5`]) },
-          flows: [Fo(3), Io(1.6), Lo([`w4`, `w1`, `w2`, `w5`], 1.6)],
+          links: { ...links.uw(), ...links.wq, ...links.pull([`w4`, `w1`, `w2`, `w5`]) },
+          flows: [uploadFlows(3), enqueueFlow(1.6), pullFlows([`w4`, `w1`, `w2`, `w5`], 1.6)],
         },
       },
       {
@@ -387,14 +375,14 @@ const zo = {
         metrics: { respond: 120, backlog: 5e4, workers: 4, lost: 0 },
         scene: {
           entities: {
-            users: ko(15, `all-day surge`),
-            web: Ao({ tags: [{ text: `503 · try again in 60 s`, tone: `amber`, icon: `clock` }] }),
-            mq: jo(`QUEUE · 50,000 JOBS · OLDEST 25 MIN`),
-            q: Mo(12),
-            ...Po({ w4: -12, w1: -6, w2: 6, w5: 12 }, { w4: makeHot(1), w1: makeHot(1), w2: makeHot(1), w5: makeHot(1) }),
+            users: creators(15, `all-day surge`),
+            web: webServer({ tags: [{ text: `503 · try again in 60 s`, tone: `amber`, icon: `clock` }] }),
+            mq: queueZone(`QUEUE · 50,000 JOBS · OLDEST 25 MIN`),
+            q: queue(12),
+            ...workers({ w4: -12, w1: -6, w2: 6, w5: 12 }, { w4: makeHot(1), w1: makeHot(1), w2: makeHot(1), w5: makeHot(1) }),
           },
-          links: { ...F.uw({ fail: 0.25 }), ...F.wq, ...F.pull([`w4`, `w1`, `w2`, `w5`]) },
-          flows: [Fo(6), Io(4), Lo([`w4`, `w1`, `w2`, `w5`], 1.6)],
+          links: { ...links.uw({ fail: 0.25 }), ...links.wq, ...links.pull([`w4`, `w1`, `w2`, `w5`]) },
+          flows: [uploadFlows(6), enqueueFlow(4), pullFlows([`w4`, `w1`, `w2`, `w5`], 1.6)],
         },
       },
       {
@@ -417,24 +405,24 @@ const zo = {
         metrics: { respond: 80, backlog: 60, workers: 4, lost: 0 },
         scene: {
           entities: {
-            users: ko(),
-            web: Ao(),
-            mq: jo(),
-            q: Mo(2),
-            ...Po({ w4: -12, w1: -6, w2: 6, w5: 12 }),
+            users: creators(),
+            web: webServer(),
+            mq: queueZone(),
+            q: queue(2),
+            ...workers({ w4: -12, w1: -6, w2: 6, w5: 12 }),
             dlq: makeDb(-15, 0.5, { r: 1.6, h: 32, glyph: `skull`, label: `dead letters` }),
           },
           links: {
-            ...F.uw(),
-            ...F.wq,
-            ...F.pull([`w4`, `w1`, `w2`, `w5`]),
+            ...links.uw(),
+            ...links.wq,
+            ...links.pull([`w4`, `w1`, `w2`, `w5`]),
             dl: makeLink(`mq`, `dlq`, [`mq`, `dlq`], { style: `dashed` }),
           },
-          flows: [Fo(3), Io(1.6), Lo([`w4`, `w1`, `w2`, `w5`], 1.6)],
+          flows: [uploadFlows(3), enqueueFlow(1.6), pullFlows([`w4`, `w1`, `w2`, `w5`], 1.6)],
         },
       },
     ],
   };
 
-export { zo as queuesLesson };
-export default zo;
+export { queuesLesson as queuesLesson };
+export default queuesLesson;

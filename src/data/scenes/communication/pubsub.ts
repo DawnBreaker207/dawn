@@ -1,30 +1,21 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBlock,
-  makeCrowd,
-  makeDb,
-  makeLink,
-  makePanel,
-  makeQueue
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeCrowd, makeDb, makeLink, makePanel, makeQueue, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const Bo = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
+const shoppersArea = { x0: -4.5, x1: 4.5, y0: -21, y1: -15 };
 
-const Vo = {
-    em: { x: -12, color: `blue`, glyph: `mail`, label: [`Email`] },
-    inv: { x: -4, color: `yellow`, glyph: `package`, label: [`Inventory`] },
-    an: { x: 4, color: `purple`, glyph: `chart`, label: [`Analytics`] },
-    loy: { x: 12, color: `green`, glyph: `gift`, label: [`Loyalty`] },
+const subscriberServices: Record<string, { x: number } & Bag> = {
+    em: { x: -16, color: `blue`, glyph: `mail`, label: [`Email`] },
+    inv: { x: -8, color: `yellow`, glyph: `package`, label: [`Inventory`] },
+    an: { x: 0, color: `purple`, glyph: `chart`, label: [`Analytics`] },
+    loy: { x: 8, color: `green`, glyph: `gift`, label: [`Loyalty`] },
   };
 
-const Ho = Object.keys(Vo);
+const serviceKeys = Object.keys(subscriberServices);
 
-const Uo = () => makeCrowd(Bo, 11, `shoppers`);
+const shoppers = () => makeCrowd(shoppersArea, 11, `shoppers`);
 
-const Wo = (e = {}) => makeBlock(0, -9, { color: `orange`, glyph: `cart`, label: [`Order`, `Service`], ...e });
+const orderService = (e: Bag = {}) => makeBlock(0, -9, { color: `orange`, glyph: `cart`, label: [`Order`, `Service`], ...e });
 
-const Go = (e = {}) =>
+const eventBus = (e: Bag = {}) =>
     makeBlock(0, -0.5, {
       s: 5,
       h: 52,
@@ -35,36 +26,36 @@ const Go = (e = {}) =>
       ...e,
     });
 
-const Ko = (e = {}) =>
-    Object.fromEntries(Ho.map((t) => [t, makeBlock(Vo[t].x, 8, { ...Vo[t], ...(e[t] || {}) })]));
+const subscriberBlocks = (e: Bag = {}) =>
+    Object.fromEntries(serviceKeys.map((t) => [t, makeBlock(subscriberServices[t].x, 8, { ...subscriberServices[t], ...(e[t] || {}) })]));
 
-const qo = () => ({ fr: makeBlock(0, 16, { color: `blue`, glyph: `shield`, label: [`Fraud`, `Check`] }) });
+const fraudCheck = () => ({ fr: makeBlock(0, 16, { color: `blue`, glyph: `shield`, label: [`Fraud`, `Check`] }) });
 
-const Jo = (e = {}) => ({ uo: makeLink(`shoppers`, `order`, [`shoppers`, `order`], { heads: `both`, ...e }) });
+const shopperLinks = (e: Bag = {}) => ({ uo: makeLink(`shoppers`, `order`, [`shoppers`, `order`], { heads: `both`, ...e }) });
 
-const Yo = (e = {}) =>
+const subscriberDbs = (e: Bag = {}) =>
     Object.fromEntries(
-      Ho.map((t) => [
+      serviceKeys.map((t) => [
         `d${t}`,
         makeLink(`order`, t, [`order`, [t, `order`], t], { heads: `both`, ...(e[t] || {}) }),
       ]),
     );
 
-const Xo = (e = Ho) => ({
+const busLinks = (e = serviceKeys) => ({
     ob: makeLink(`order`, `bus`, [`order`, `bus`], { label: `OrderPlaced` }),
     ...Object.fromEntries(e.map((e) => [`b${e}`, makeLink(`bus`, e, [`bus`, [e, `bus`], e])])),
   });
 
-const Zo = (e = Ho, t = 0.8) => ({
+const fanoutFlows = (e = serviceKeys, t = 0.8) => ({
     fanout: !0,
     routes: e.map((e) => ({ path: [`ob`, `b${e}`] })),
     kind: `msg`,
     rate: t,
   });
 
-const Qo = (e, t, n) => makePanel({ x: 12, y: 8, z: 0, dx: 60, dy: -260 }, e, t, { icon: n });
+const card = cardAt({ x: 12, y: 8, dx: 60, dy: -260 });
 
-const $o = {
+const pubsubLesson = {
     id: `pubsub`,
     title: `Pub/Sub & Events`,
     summary: `Announce that something happened, and let whoever cares react — without anyone waiting.`,
@@ -95,14 +86,14 @@ const $o = {
         metrics: { checkout: 920, knows: `4 services`, breaks: `—`, subs: `—` },
         scene: {
           entities: {
-            shoppers: Uo(),
-            order: Wo({ tags: [{ text: `waits for 4 calls`, tone: `amber`, icon: `hourglass` }] }),
-            ...Ko(),
+            shoppers: shoppers(),
+            order: orderService({ tags: [{ text: `waits for 4 calls`, tone: `amber`, icon: `hourglass` }] }),
+            ...subscriberBlocks(),
           },
-          links: { ...Jo(), ...Yo() },
+          links: { ...shopperLinks(), ...subscriberDbs() },
           flows: [
             { route: [`uo`], rate: 1, bounce: !0, speed: 0.5 },
-            { routes: Ho.map((e) => ({ path: [`d${e}`] })), rate: 2.4, bounce: !0 },
+            { routes: serviceKeys.map((e) => ({ path: [`d${e}`] })), rate: 2.4, bounce: !0 },
           ],
         },
       },
@@ -122,14 +113,14 @@ const $o = {
         metrics: { checkout: 920, knows: `4 services`, breaks: `yes`, subs: `—` },
         scene: {
           entities: {
-            shoppers: Uo(),
-            order: Wo({ tags: [{ text: `checkout failed`, tone: `red`, icon: `alert` }] }),
-            ...Ko({ em: DEAD_STATE }),
+            shoppers: shoppers(),
+            order: orderService({ tags: [{ text: `checkout failed`, tone: `red`, icon: `alert` }] }),
+            ...subscriberBlocks({ em: DEAD_STATE }),
           },
-          links: { ...Jo({ fail: 0.3 }), ...Yo({ em: { fail: 1 } }) },
+          links: { ...shopperLinks({ fail: 0.3 }), ...subscriberDbs({ em: { fail: 1 } }) },
           flows: [
             { route: [`uo`], rate: 1.4, bounce: !0, speed: 0.5 },
-            { routes: Ho.map((e) => ({ path: [`d${e}`] })), rate: 2.4, bounce: !0 },
+            { routes: serviceKeys.map((e) => ({ path: [`d${e}`] })), rate: 2.4, bounce: !0 },
           ],
         },
       },
@@ -152,9 +143,9 @@ const $o = {
         ],
         metrics: { checkout: 140, knows: `1 event bus`, breaks: `no`, subs: 4 },
         scene: {
-          entities: { shoppers: Uo(), order: Wo(), bus: Go(), ...Ko() },
-          links: { ...Jo(), ...Xo() },
-          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, Zo()],
+          entities: { shoppers: shoppers(), order: orderService(), bus: eventBus(), ...subscriberBlocks() },
+          links: { ...shopperLinks(), ...busLinks() },
+          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, fanoutFlows()],
         },
       },
       {
@@ -169,11 +160,11 @@ const $o = {
         metrics: { checkout: 140, knows: `1 event bus`, breaks: `no`, subs: 4 },
         scene: {
           entities: {
-            shoppers: Uo(),
-            order: Wo(),
-            bus: Go(),
-            ...Ko(),
-            card: Qo(
+            shoppers: shoppers(),
+            order: orderService(),
+            bus: eventBus(),
+            ...subscriberBlocks(),
+            card: card(
               `Queue vs topic`,
               [
                 `queue → each message to ONE consumer`,
@@ -184,8 +175,8 @@ const $o = {
               `split`,
             ),
           },
-          links: { ...Jo(), ...Xo() },
-          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, Zo()],
+          links: { ...shopperLinks(), ...busLinks() },
+          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, fanoutFlows()],
         },
       },
       {
@@ -203,9 +194,9 @@ const $o = {
         changes: [`+ Fraud check subscribes`, `~ Order service: no changes`],
         metrics: { checkout: 140, knows: `1 event bus`, breaks: `no`, subs: 5 },
         scene: {
-          entities: { shoppers: Uo(), order: Wo(), bus: Go(), ...Ko(), ...qo() },
-          links: { ...Jo(), ...Xo([...Ho, `fr`]) },
-          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, Zo([...Ho, `fr`])],
+          entities: { shoppers: shoppers(), order: orderService(), bus: eventBus(), ...subscriberBlocks(), ...fraudCheck() },
+          links: { ...shopperLinks(), ...busLinks([...serviceKeys, `fr`]) },
+          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, fanoutFlows([...serviceKeys, `fr`])],
         },
       },
       {
@@ -228,17 +219,17 @@ const $o = {
         metrics: { checkout: 140, knows: `1 event bus`, breaks: `no`, subs: 5 },
         scene: {
           entities: {
-            shoppers: Uo(),
-            order: Wo(),
-            bus: Go(),
-            ...Ko({
+            shoppers: shoppers(),
+            order: orderService(),
+            bus: eventBus(),
+            ...subscriberBlocks({
               em: { ...DEAD_STATE, tags: [{ text: `down · 4 events waiting`, tone: `red`, icon: `alert` }] },
             }),
-            ...qo(),
-            wait: makeQueue(-12, 4.8, 4, [0, -1]),
+            ...fraudCheck(),
+            wait: makeQueue(-16, 4.8, 4, [0, -1]),
           },
-          links: { ...Jo(), ...Xo([...Ho, `fr`]) },
-          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, Zo([`inv`, `an`, `loy`, `fr`])],
+          links: { ...shopperLinks(), ...busLinks([...serviceKeys, `fr`]) },
+          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, fanoutFlows([`inv`, `an`, `loy`, `fr`])],
         },
       },
       {
@@ -256,12 +247,12 @@ const $o = {
         metrics: { checkout: 140, knows: `1 event bus`, breaks: `no`, subs: 5 },
         scene: {
           entities: {
-            shoppers: Uo(),
-            order: Wo(),
-            bus: Go(),
-            ...Ko(),
-            ...qo(),
-            card: Qo(
+            shoppers: shoppers(),
+            order: orderService(),
+            bus: eventBus(),
+            ...subscriberBlocks(),
+            ...fraudCheck(),
+            card: card(
               `Events: the fine print`,
               [
                 `who reacts to OrderPlaced? check 5 repos`,
@@ -272,8 +263,8 @@ const $o = {
               `info`,
             ),
           },
-          links: { ...Jo(), ...Xo([...Ho, `fr`]) },
-          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, Zo([...Ho, `fr`])],
+          links: { ...shopperLinks(), ...busLinks([...serviceKeys, `fr`]) },
+          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, fanoutFlows([...serviceKeys, `fr`])],
         },
       },
       {
@@ -296,15 +287,15 @@ const $o = {
         metrics: { checkout: 145, knows: `1 event bus`, breaks: `no`, subs: 5 },
         scene: {
           entities: {
-            shoppers: Uo(),
-            order: Wo(),
+            shoppers: shoppers(),
+            order: orderService(),
             odb: makeDb(-11, -9, { r: 1.6, h: 34, glyph: `database`, label: `orders + outbox` }),
-            bus: Go(),
-            ...Ko(),
-            ...qo(),
+            bus: eventBus(),
+            ...subscriberBlocks(),
+            ...fraudCheck(),
           },
           links: {
-            ...Jo(),
+            ...shopperLinks(),
             od: makeLink(`order`, `odb`, [`order`, `odb`], {
               heads: `both`,
               label: `one transaction`,
@@ -312,14 +303,14 @@ const $o = {
             }),
             relay_bus: makeLink(`odb`, `bus`, [`odb`, [`odb`, `bus`], `bus`], { label: `relay`, labelAt: 0.75 }),
             ...Object.fromEntries(
-              [...Ho, `fr`].map((e) => [`b${e}`, makeLink(`bus`, e, [`bus`, [e, `bus`], e])]),
+              [...serviceKeys, `fr`].map((e) => [`b${e}`, makeLink(`bus`, e, [`bus`, [e, `bus`], e])]),
             ),
           },
           flows: [
             { route: [`uo`, `od`], rate: 1.4, bounce: !0 },
             {
               fanout: !0,
-              routes: [...Ho, `fr`].map((e) => ({ path: [`relay_bus`, `b${e}`] })),
+              routes: [...serviceKeys, `fr`].map((e) => ({ path: [`relay_bus`, `b${e}`] })),
               kind: `msg`,
               rate: 0.8,
             },
@@ -342,17 +333,17 @@ const $o = {
         metrics: { checkout: 140, knows: `1 event bus`, breaks: `no`, subs: 5 },
         scene: {
           entities: {
-            shoppers: Uo(),
-            order: Wo(),
-            bus: Go({ tags: [{ text: `retains 30 days`, icon: `clock` }] }),
-            ...Ko({
+            shoppers: shoppers(),
+            order: orderService(),
+            bus: eventBus({ tags: [{ text: `retains 30 days`, icon: `clock` }] }),
+            ...subscriberBlocks({
               an: { tags: [{ text: `rewound to 30 days ago`, tone: `violet`, icon: `replay` }] },
             }),
           },
-          links: { ...Jo(), ...Xo() },
+          links: { ...shopperLinks(), ...busLinks() },
           flows: [
             { route: [`uo`], rate: 1.6, bounce: !0 },
-            Zo(Ho, 0.6),
+            fanoutFlows(serviceKeys, 0.6),
             { route: [`ban`], kind: `msg`, rate: 3.2, speed: 1.4 },
           ],
         },
@@ -376,13 +367,13 @@ const $o = {
         },
         metrics: { checkout: 140, knows: `1 event bus`, breaks: `no`, subs: 5 },
         scene: {
-          entities: { shoppers: Uo(), order: Wo(), bus: Go(), ...Ko(), ...qo() },
-          links: { ...Jo(), ...Xo([...Ho, `fr`]) },
-          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, Zo([...Ho, `fr`])],
+          entities: { shoppers: shoppers(), order: orderService(), bus: eventBus(), ...subscriberBlocks(), ...fraudCheck() },
+          links: { ...shopperLinks(), ...busLinks([...serviceKeys, `fr`]) },
+          flows: [{ route: [`uo`], rate: 1.6, bounce: !0 }, fanoutFlows([...serviceKeys, `fr`])],
         },
       },
     ],
   };
 
-export { $o as pubsubLesson };
-export default $o;
+export { pubsubLesson as pubsubLesson };
+export default pubsubLesson;

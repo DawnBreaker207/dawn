@@ -1,6 +1,7 @@
-import { DEAD_STATE, makeBlock, makeHot, makeLink, makePanel, makeQueue } from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, fromScreen, makeBlock, makeHot, makeLink, makePanel, makeQueue, cardAt } from '@/lib/simulator/scene-builders';
 
-// One partition (orders-0), three replicas. broker-1 holds the leader copy; the
+// Seed → result. One partition (orders-0): a producer and a single copy grow into three replicas,
+// then a consumer joins in step 3. Screen grid of 190 px. Three replicas: broker-1 holds the leader copy; the
 // followers on either side fetch from it. Each replica's log hangs below its
 // broker, so you can see who is behind. The consumer under the leader may only
 // read up to the high watermark.
@@ -13,26 +14,27 @@ import { DEAD_STATE, makeBlock, makeHot, makeLink, makePanel, makeQueue } from '
 type Tag = { text: string; tone?: string; icon?: string };
 type Opts = Record<string, unknown>;
 
-const B = { b0: [-9.3, -5], b1: [-3.1, 1.1], b2: [3, 7.3] } as const;
-type BrokerId = keyof typeof B;
+const brokerPositions = { b0: fromScreen(-190, -30), b1: fromScreen(0, -30), b2: fromScreen(190, -30) } as const;
+const producerPosition = fromScreen(0, -215);
+const CONSUMER = fromScreen(0, 160);
+type BrokerId = keyof typeof brokerPositions;
 
 const producer = (tags: Tag[] = [], o: Opts = {}) =>
-  makeBlock(-15.3, 13.3, { s: 4.4, h: 48, color: `blue`, glyph: `send`, label: [`Producer`], sub: `orders app`, tags, ...o });
+  makeBlock(producerPosition.x, producerPosition.y, { s: 4.4, h: 52, color: `blue`, glyph: `send`, label: [`Producer`], sub: `orders app`, tags, ...o });
 const broker = (id: BrokerId, role: string, tags: Tag[] = [], o: Opts = {}) =>
-  makeBlock(B[id][0], B[id][1], { s: 4.6, h: 52, color: `slab`, glyph: `server`, label: [`broker-${id[1]}`], sub: role, tags, ...o });
-const log = (id: BrokerId, n: number) => makeQueue(B[id][0] + 2.6, B[id][1] - 2.6, n, [0.62, -0.62]);
+  makeBlock(brokerPositions[id].x, brokerPositions[id].y, { s: 4.6, h: 52, color: `slab`, glyph: `server`, label: [`broker-${id[1]}`], sub: role, tags, ...o });
+const log = (id: BrokerId, n: number) => makeQueue(brokerPositions[id].x + 2.6, brokerPositions[id].y - 2.6, n, [0.62, -0.62]);
 const consumer = (tags: Tag[] = []) =>
-  makeBlock(8.3, -10.3, { s: 4.2, h: 46, color: `green`, glyph: `inbox`, label: [`consumer`], sub: `billing`, tags });
+  makeBlock(CONSUMER.x, CONSUMER.y, { s: 4.4, h: 52, color: `green`, glyph: `inbox`, label: [`consumer`], sub: `billing`, tags });
 
-const L = {
+const links = {
   produce: makeLink(`producer`, `b1`, [`producer`, `b1`]),
   read: makeLink(`b1`, `c1`, [`b1`, `c1`]),
   fetch0: makeLink(`b0`, `b1`, [`b0`, `b1`], { heads: `both` }),
   fetch2: makeLink(`b2`, `b1`, [`b2`, `b1`], { heads: `both` }),
 };
 
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: -9.3, y: -5, z: 0, dx: -240, dy: -175 }, title, lines, { icon });
+const card = cardAt({ x: brokerPositions.b0.x, y: brokerPositions.b0.y, dx: -240, dy: -175 });
 
 const replicate = (rate = 1.2) => ({ routes: [{ path: [`fetch0`] }, { path: [`fetch2`] }], kind: `msg`, rate, bounce: true });
 
@@ -58,7 +60,7 @@ export const kafkaReplicationIsrLesson = {
       chapter: `problem`,
       title: `One broker, one copy`,
       body: [
-        `Partition <code>orders-0</code> lives on broker-1 only. Producers write to it and consumers read from it.`,
+        `Partition <code>orders-0</code> lives on broker-1 only. Producers write to it; a consumer will join once there is something worth protecting.`,
         `If that disk dies, every record in the partition is gone. Brokers fail all the time — disks, kernels, whole racks — so one copy is not storage, it is a bet.`,
       ],
       metrics: { rf: 1, acks: `1`, isr: `1 / 1`, hw: 100 },
@@ -67,13 +69,9 @@ export const kafkaReplicationIsrLesson = {
           producer: producer(),
           b1: broker(`b1`, `leader`, [{ text: `only copy`, tone: `amber`, icon: `alert` }]),
           l1: log(`b1`, 6),
-          c1: consumer(),
         },
-        links: { produce: L.produce, read: L.read },
-        flows: [
-          { route: [`produce`], kind: `msg`, rate: 1.4, bounce: true },
-          { route: [`read`], kind: `msg`, rate: 1.2 },
-        ],
+        links: { produce: links.produce },
+        flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }],
       },
     },
     {
@@ -95,21 +93,20 @@ export const kafkaReplicationIsrLesson = {
           l0: log(`b0`, 6),
           l1: log(`b1`, 6),
           l2: log(`b2`, 6),
-          c1: consumer(),
         },
-        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: L.fetch2 },
-        flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, replicate(), { route: [`read`], kind: `msg`, rate: 1.2 }],
+        links: { produce: links.produce, fetch0: links.fetch0, fetch2: links.fetch2 },
+        flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, replicate()],
       },
     },
     {
       short: `HW`,
       chapter: `insight`,
-      title: `Consumers only see what every in-sync copy has`,
+      title: `A consumer only sees what every in-sync copy has`,
       body: [
         `Replicas that are caught up form the <span class="term">ISR</span> (in-sync replicas). The leader tracks how far each one has fetched.`,
         `The <span class="term">high watermark</span> is the last offset present on <b>all</b> ISR members. Consumers can read only up to it — so they never see a record that could still vanish if the leader failed right now.`,
       ],
-      changes: [`~ leader at 108, followers at 106 and 104`, `~ high watermark = 104`],
+      changes: [`+ consumer`, `~ leader at 108, followers at 106 and 104`, `~ high watermark = 104`],
       metrics: { rf: 3, acks: `1`, isr: `3 / 3`, hw: 104 },
       scene: {
         entities: {
@@ -123,7 +120,7 @@ export const kafkaReplicationIsrLesson = {
           c1: consumer([{ text: `reads ≤ HW 104`, tone: `green`, icon: `eye` }]),
           card: card(`describe the topic`, [`$ kafka-topics.sh --describe --topic orders`, `Partition: 0  Leader: 1`, `= Replicas: 1,0,2   Isr: 1,0,2`], `search`),
         },
-        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: L.fetch2 },
+        links: { produce: links.produce, read: links.read, fetch0: links.fetch0, fetch2: links.fetch2 },
         flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, replicate(), { route: [`read`], kind: `msg`, rate: 1 }],
       },
     },
@@ -149,7 +146,7 @@ export const kafkaReplicationIsrLesson = {
           c1: consumer(),
           card: card(`producer config`, [`props.put("acks", "all");`, `props.put("enable.idempotence", "true");`, `# ack = written by leader AND all of the ISR`], `code`),
         },
-        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: L.fetch2 },
+        links: { produce: links.produce, read: links.read, fetch0: links.fetch0, fetch2: links.fetch2 },
         flows: [{ route: [`produce`], kind: `msg`, rate: 1.2, bounce: true, speed: 0.6 }, replicate(1.4), { route: [`read`], kind: `msg`, rate: 1 }],
       },
     },
@@ -175,7 +172,7 @@ export const kafkaReplicationIsrLesson = {
           c1: consumer(),
           card: card(`broker config`, [`$ kafka-configs.sh --describe --entity-type brokers`, `replica.lag.time.max.ms=30000`, `= Isr: 1,0`], `hourglass`),
         },
-        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: { ...L.fetch2, style: `dashed` } },
+        links: { produce: links.produce, read: links.read, fetch0: links.fetch0, fetch2: { ...links.fetch2, style: `dashed` } },
         flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, { route: [`fetch0`], kind: `msg`, rate: 1.4, bounce: true }, { route: [`fetch2`], kind: `slow`, rate: 0.3 }, { route: [`read`], kind: `msg`, rate: 1 }],
       },
     },
@@ -201,7 +198,7 @@ export const kafkaReplicationIsrLesson = {
           c1: consumer(),
           card: card(`topic config`, [`$ kafka-configs.sh --alter --topic orders \\`, `    --add-config min.insync.replicas=2`, `# RF=3, min ISR=2: survives 1 broker loss`], `shield`),
         },
-        links: { produce: { ...L.produce, fail: 1 }, read: L.read, fetch0: { ...L.fetch0, style: `off` }, fetch2: { ...L.fetch2, style: `dashed` } },
+        links: { produce: { ...links.produce, fail: 1 }, read: links.read, fetch0: { ...links.fetch0, style: `off` }, fetch2: { ...links.fetch2, style: `dashed` } },
         flows: [{ route: [`produce`], kind: `fail`, rate: 1 }, { route: [`fetch2`], kind: `slow`, rate: 0.4 }, { route: [`read`], kind: `msg`, rate: 0.8 }],
       },
     },
@@ -227,14 +224,14 @@ export const kafkaReplicationIsrLesson = {
           c1: consumer(),
           card: card(`broker config`, [`unclean.leader.election.enable=false`, `# true: elect broker-2 → offsets 105–112 lost`, `# false: wait for broker-0 or broker-1`], `scale`),
         },
-        links: { produce: { ...L.produce, fail: 1 }, read: { ...L.read, style: `off` }, fetch0: { ...L.fetch0, style: `off` }, fetch2: { ...L.fetch2, style: `off` } },
+        links: { produce: { ...links.produce, fail: 1 }, read: { ...links.read, style: `off` }, fetch0: { ...links.fetch0, style: `off` }, fetch2: { ...links.fetch2, style: `off` } },
         flows: [{ route: [`produce`], kind: `fail`, rate: 0.8 }],
       },
     },
     {
       short: `Recap`,
       chapter: `recap`,
-      title: `The durability recipe`,
+      title: `Result: the durability recipe`,
       body: [
         `Three replicas on different racks or zones, <code>acks=all</code>, <code>min.insync.replicas=2</code>, idempotent producers and no unclean election.`,
         `That combination survives any single broker loss without losing an acknowledged record, and refuses to pretend when it can’t.`,
@@ -252,7 +249,7 @@ export const kafkaReplicationIsrLesson = {
           c1: consumer(),
           card: card(`orders topic`, [`$ kafka-topics.sh --create --topic orders \\`, `    --replication-factor 3 --partitions 6 \\`, `    --config min.insync.replicas=2`], `check`),
         },
-        links: { produce: L.produce, read: L.read, fetch0: L.fetch0, fetch2: L.fetch2 },
+        links: { produce: links.produce, read: links.read, fetch0: links.fetch0, fetch2: links.fetch2 },
         flows: [{ route: [`produce`], kind: `msg`, rate: 1.4, bounce: true }, replicate(1.4), { route: [`read`], kind: `msg`, rate: 1.2 }],
       },
     },

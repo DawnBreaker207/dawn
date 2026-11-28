@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel, makeQueue, makeZone } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeLink, makePanel, makeQueue, makeZone, cardAt } from '@/lib/simulator/scene-builders';
 
 // One broker, one partition, for the whole lesson. Records are appended to the
 // partition log (amber dots); later steps add the sparse index, the OS page cache
@@ -7,6 +7,11 @@ import { makeBlock, makeLink, makePanel, makeQueue, makeZone } from '@/lib/simul
 //   producer ── broker ── page cache ── consumer
 //                 │  └── partition log (segments)
 //               index
+
+// Screen-grid positions (px) so every pair of blocks is >= 185 px apart and every link <= 360 px.
+const IDX = fromScreen(-60, -185);
+const CACHE = fromScreen(170, 10);
+const CONS = fromScreen(40, 185);
 
 type Tag = { text: string; tone?: string; icon?: string };
 type Opts = Record<string, unknown>;
@@ -20,18 +25,18 @@ const logZone = (label = `orders-0 LOG`) => makeZone({ x0: -4.5, x1: 0.5, y0: 3,
 const sealed = (n: number) => makeQueue(-2, 4.2, n, [0, 1], { color: `#cfc6b8` });
 const active = (n: number, start = 4.2) => makeQueue(-2, start, n, [0, 1]);
 const index = (tags: Tag[] = []) =>
-  makeBlock(-14, 8, { s: 4.2, h: 48, color: `purple`, glyph: `listOrdered`, label: [`.index`], sub: `sparse, mmap`, tags });
+  makeBlock(IDX.x, IDX.y, { s: 4.4, h: 52, color: `purple`, glyph: `listOrdered`, label: [`.index`], sub: `sparse, mmap`, tags });
 const cache = (tags: Tag[] = []) =>
-  makeBlock(9, -3, { s: 4.6, h: 50, color: `green`, glyph: `layers`, label: [`Page cache`], sub: `OS memory`, tags });
+  makeBlock(CACHE.x, CACHE.y, { s: 4.6, h: 52, color: `green`, glyph: `layers`, label: [`Page cache`], sub: `OS memory`, tags });
 const consumer = (tags: Tag[] = []) =>
-  makeBlock(9, 11, { s: 4.4, h: 48, color: `green`, glyph: `inbox`, label: [`Consumer`], sub: `analytics`, tags });
+  makeBlock(CONS.x, CONS.y, { s: 4.4, h: 52, color: `green`, glyph: `inbox`, label: [`Consumer`], sub: `analytics`, tags });
 
-const L = {
+const links = {
   produce: makeLink(`producer`, `broker`, [`producer`, `broker`], { label: `append` }),
   produceQuiet: makeLink(`producer`, `broker`, [`producer`, `broker`]),
   append: makeLink(`broker`, `log`, [`broker`, `log`]),
   lookup: makeLink(`broker`, `index`, [`broker`, `index`], { heads: `both` }),
-  fetch: makeLink(`consumer`, `broker`, [`consumer`, `broker`], { heads: `both`, label: `fetch @402` }),
+  fetch: makeLink(`consumer`, `broker`, [`consumer`, `broker`], { heads: `both` }),
   fetchReq: makeLink(`consumer`, `broker`, [`consumer`, `broker`], { style: `off` }),
   cached: makeLink(`broker`, `cache`, [`broker`, `cache`], { heads: `both` }),
   zeroCopy: makeLink(`cache`, `consumer`, [`cache`, `consumer`], { label: `sendfile()` }),
@@ -39,8 +44,7 @@ const L = {
 };
 
 /** Artifact card, parked above the stage on the right. */
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: 9, y: -3, z: 0, dx: 40, dy: -250 }, title, lines, { icon });
+const card = cardAt({ x: CACHE.x, y: CACHE.y, dx: 40, dy: -250 });
 
 export const kafkaStorageEngineLesson = {
   id: `kafka-storage-engine`,
@@ -76,7 +80,7 @@ export const kafkaStorageEngineLesson = {
           seg: active(5),
           card: card(`fio · same NVMe disk`, [`$ fio --rw=randwrite --bs=4k ...`, `  WRITE: bw=180MiB/s`, `$ fio --rw=write --bs=1m ...`, `= WRITE: bw=3200MiB/s`], `gauge`),
         },
-        links: { produce: L.produce, append: L.append },
+        links: { produce: links.produce, append: links.append },
         flows: [
           { route: [`produce`], kind: `msg`, rate: 2.4 },
           { route: [`append`], kind: `write`, rate: 2.4 },
@@ -102,7 +106,7 @@ export const kafkaStorageEngineLesson = {
           seg: active(3, 9.6),
           card: card(`$ ls /data/orders-0`, [`$ ls /data/orders-0`, `00000000000000000000.log        1.0G`, `00000000000000000000.index      10M`, `00000000000000000000.timeindex  10M`, `= 00000000000010485760.log  ← active`], `file`),
         },
-        links: { produce: L.produceQuiet, append: L.append },
+        links: { produce: links.produceQuiet, append: links.append },
         flows: [
           { route: [`produce`], kind: `msg`, rate: 2.4 },
           { route: [`append`], kind: `write`, rate: 2.4 },
@@ -127,10 +131,10 @@ export const kafkaStorageEngineLesson = {
           sealed: sealed(5),
           seg: active(3, 9.6),
           index: index([{ text: `400 → byte 16384`, tone: `violet` }]),
-          consumer: consumer(),
+          consumer: consumer([{ text: `fetch @402`, tone: `violet` }]),
           card: card(`dump the index`, [`$ kafka-dump-log.sh --files 0000...0000.index`, `offset: 396 position: 12288`, `= offset: 400 position: 16384`, `offset: 408 position: 20480`], `search`),
         },
-        links: { produce: L.produceQuiet, append: L.append, lookup: L.lookup, fetch: L.fetch },
+        links: { produce: links.produceQuiet, append: links.append, lookup: links.lookup, fetch: links.fetch },
         flows: [
           { route: [`fetch`], rate: 1.2, bounce: true },
           { route: [`lookup`], rate: 1.2, bounce: true },
@@ -159,7 +163,7 @@ export const kafkaStorageEngineLesson = {
           consumer: consumer(),
           card: card(`$ free -g  (64 GB broker)`, [`$ free -g`, `       total   used   buff/cache`, `= Mem:   64      7       55`], `layers`),
         },
-        links: { produce: L.produceQuiet, append: L.append, lookup: L.lookup, cached: L.cached, fetch: L.fetch },
+        links: { produce: links.produceQuiet, append: links.append, lookup: links.lookup, cached: links.cached, fetch: links.fetch },
         flows: [
           { route: [`produce`], kind: `msg`, rate: 2 },
           { route: [`cached`], kind: `write`, rate: 1.6, bounce: true },
@@ -189,7 +193,7 @@ export const kafkaStorageEngineLesson = {
           consumer: consumer([{ text: `1.1 GB/s`, tone: `green`, icon: `gauge` }]),
           card: card(`strace on the broker`, [`$ strace -f -e sendfile -p $(pgrep -f kafka)`, `= sendfile(212, 87, [16384], 1048576) = 1048576`, `# page cache → socket, no user-space copy`], `zap`),
         },
-        links: { produce: L.produceQuiet, append: L.append, lookup: L.lookup, cached: L.cached, fetch: L.fetchReq, zeroCopy: L.zeroCopy },
+        links: { produce: links.produceQuiet, append: links.append, lookup: links.lookup, cached: links.cached, fetch: links.fetchReq, zeroCopy: links.zeroCopy },
         flows: [
           { route: [`produce`], kind: `msg`, rate: 2 },
           { route: [`fetch`], rate: 0.8 },
@@ -211,15 +215,15 @@ export const kafkaStorageEngineLesson = {
         entities: {
           producer: producer(),
           broker: broker([{ text: `log cleaner`, icon: `refresh` }]),
-          log: logZone(`COMPACTED LOG`),
+          log: logZone(),
           sealed: sealed(2),
           seg: active(4, 9.6),
           index: index(),
           cache: cache(),
           consumer: consumer(),
-          card: card(`users topic`, [`$ kafka-configs.sh --alter --topic users \\`, `    --add-config cleanup.policy=compact`, `before: u42=a@x  u7=b@y  u42=c@x  u42=d@x`, `= after:  u7=b@y  u42=d@x`], `refresh`),
+          card: card(`compact a users topic`, [`$ kafka-configs.sh --alter --topic users \\`, `    --add-config cleanup.policy=compact`, `before: u42=a@x  u7=b@y  u42=c@x  u42=d@x`, `= after:  u7=b@y  u42=d@x`], `refresh`),
         },
-        links: { produce: L.produceQuiet, append: L.append, lookup: L.lookup, cached: L.cached, fetch: L.fetchReq, zeroCopy: L.zeroCopyQuiet },
+        links: { produce: links.produceQuiet, append: links.append, lookup: links.lookup, cached: links.cached, fetch: links.fetchReq, zeroCopy: links.zeroCopyQuiet },
         flows: [
           { route: [`append`], kind: `write`, rate: 1.6 },
           { route: [`zeroCopy`], kind: `msg`, rate: 2 },
@@ -247,7 +251,7 @@ export const kafkaStorageEngineLesson = {
           consumer: consumer(),
           card: card(`broker host tuning`, [`$ sysctl -w vm.dirty_background_ratio=5`, `$ sysctl -w vm.dirty_ratio=10`, `$ mount -o noatime /dev/nvme1n1 /data`, `# KAFKA_HEAP_OPTS="-Xmx6g" · rest is page cache`], `settings`),
         },
-        links: { produce: L.produce, append: L.append, lookup: L.lookup, cached: L.cached, fetch: L.fetchReq, zeroCopy: L.zeroCopy },
+        links: { produce: links.produce, append: links.append, lookup: links.lookup, cached: links.cached, fetch: links.fetchReq, zeroCopy: links.zeroCopy },
         flows: [
           { route: [`produce`], kind: `msg`, rate: 2.4 },
           { route: [`append`], kind: `write`, rate: 2.4 },

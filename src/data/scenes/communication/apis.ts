@@ -1,16 +1,8 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCool,
-  makeDevice,
-  makeHot,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeDevice, makeHot, makeLink, makePanel, cardAt, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const ho = (e = []) => makeDevice(0, -19, { form: `phone`, w: 5, d: 5, label: `mobile app`, tags: e });
+const mobileApp = (e: Tag[] = []) => makeDevice(0, -19, { form: `phone`, w: 5, d: 5, label: `mobile app`, tags: e });
 
-const go = (e = {}) =>
+const restApi = (e: Bag = {}) =>
     makeBlock(0, -7, {
       label: [`REST`, `API`],
       glyph: `globe`,
@@ -22,10 +14,10 @@ const go = (e = {}) =>
       ...e,
     });
 
-const _o = (e = {}) =>
+const graphqlApi = (e: Bag = {}) =>
     makeBlock(0, -7, { color: `purple`, label: [`GraphQL`], sub: `one endpoint`, glyph: `braces`, ...e });
 
-const vo = (e = {}) => ({
+const serviceBlocks = (e: Bag = {}) => ({
     us: makeBlock(-7, 4, {
       color: `green`,
       glyph: `user`,
@@ -42,14 +34,14 @@ const vo = (e = {}) => ({
     }),
   });
 
-const yo = (e = {}) => ({ pa: makeLink(`phone`, `api`, [`phone`, `api`], { heads: `both`, ...e }) });
+const phoneLink = (e: Bag = {}) => ({ pa: makeLink(`phone`, `api`, [`phone`, `api`], { heads: `both`, ...e }) });
 
-const bo = (e = {}) => ({
+const apiLinks = (e: Bag = {}) => ({
     au: makeLink(`api`, `us`, [`api`, [`us`, `api`], `us`], { heads: `both`, ...e }),
     ap: makeLink(`api`, `ps`, [`api`, [`ps`, `api`], `ps`], { heads: `both`, ...e }),
   });
 
-const xo = (e = 0.7, t) => ({
+const requestFlows = (e = 0.7, t?: string) => ({
     fanout: !0,
     routes: [{ path: [`pa`, `au`] }, { path: [`pa`, `ap`] }],
     rate: e,
@@ -57,12 +49,12 @@ const xo = (e = 0.7, t) => ({
     kind: t,
   });
 
-const So = (e, t, n) => makePanel({ x: 7, y: 4, z: 0, dx: 70, dy: -250 }, e, t, { icon: n });
+const card = cardAt({ x: 7, y: 4, dx: 70, dy: -250 });
 
-const Co = { label: `4G · 100 ms per round trip`, labelTone: `amber` };
+const slowNetwork = { label: `4G · 100 ms per round trip`, labelTone: `amber` };
 
 // --- communication ---
-const wo = {
+const apisLesson = {
     id: `apis`,
     title: `REST, RPC & GraphQL`,
     summary: `Three ways for programs to ask each other for things — and what each costs a phone on 4G.`,
@@ -92,8 +84,8 @@ const wo = {
         },
         metrics: { trips: `—`, payload: `—`, screenMs: null, unused: `—` },
         scene: {
-          entities: { phone: ho(), api: go({ tags: [] }) },
-          links: yo({ label: `HTTPS + JSON` }),
+          entities: { phone: mobileApp(), api: restApi({ tags: [] }) },
+          links: phoneLink({ label: `HTTPS + JSON` }),
           flows: [{ route: [`pa`], rate: 0.9, bounce: !0 }],
         },
       },
@@ -113,9 +105,9 @@ const wo = {
         metrics: { trips: 3, payload: `48 KB`, screenMs: 210, unused: 94 },
         scene: {
           entities: {
-            phone: ho(),
-            api: go(),
-            card: So(
+            phone: mobileApp(),
+            api: restApi(),
+            card: card(
               `The profile screen, in REST`,
               [
                 `GET /users/42           → 18 KB`,
@@ -126,7 +118,7 @@ const wo = {
               `globe`,
             ),
           },
-          links: yo({ label: `HTTPS + JSON` }),
+          links: phoneLink({ label: `HTTPS + JSON` }),
           flows: [{ route: [`pa`], rate: 1.6, bounce: !0 }],
         },
       },
@@ -150,10 +142,10 @@ const wo = {
         metrics: { trips: 3, payload: `48 KB`, screenMs: 420, unused: 94 },
         scene: {
           entities: {
-            phone: ho([{ text: `loading…`, tone: `amber`, icon: `hourglass` }]),
-            api: go(),
+            phone: mobileApp([{ text: `loading…`, tone: `amber`, icon: `hourglass` }]),
+            api: restApi(),
           },
-          links: yo(Co),
+          links: phoneLink(slowNetwork),
           flows: [{ route: [`pa`], rate: 1.6, bounce: !0, speed: 0.6 }],
         },
       },
@@ -178,10 +170,10 @@ const wo = {
         metrics: { trips: 1, payload: `3 KB`, screenMs: 140, unused: 0 },
         scene: {
           entities: {
-            phone: ho(),
-            api: _o(),
-            ...vo(),
-            card: So(
+            phone: mobileApp(),
+            api: graphqlApi(),
+            ...serviceBlocks(),
+            card: card(
               `One query`,
               [
                 `query {`,
@@ -194,8 +186,8 @@ const wo = {
               `braces`,
             ),
           },
-          links: { ...yo(Co), ...bo() },
-          flows: [xo()],
+          links: { ...phoneLink(slowNetwork), ...apiLinks() },
+          flows: [requestFlows()],
         },
       },
       {
@@ -214,12 +206,12 @@ const wo = {
         metrics: { trips: 1, payload: `2.1 MB`, screenMs: 3800, unused: 0 },
         scene: {
           entities: {
-            phone: ho(),
-            api: _o(),
-            ...vo({
+            phone: mobileApp(),
+            api: graphqlApi(),
+            ...serviceBlocks({
               us: { ...makeHot(0.97), tags: [{ text: `41,000 lookups`, tone: `red`, icon: `alert` }] },
             }),
-            card: So(
+            card: card(
               `A “small” query`,
               [
                 `followers {`,
@@ -231,8 +223,8 @@ const wo = {
               `alert`,
             ),
           },
-          links: { ...yo(Co), ...bo() },
-          flows: [xo(0.5, `heavy`)],
+          links: { ...phoneLink(slowNetwork), ...apiLinks() },
+          flows: [requestFlows(0.5, `heavy`)],
         },
       },
       {
@@ -251,10 +243,10 @@ const wo = {
         metrics: { trips: 1, payload: `3 KB`, screenMs: 130, unused: 0 },
         scene: {
           entities: {
-            phone: ho(),
-            api: _o(),
-            ...vo({ us: makeCool(0.3), ps: makeCool(0.3) }),
-            card: So(
+            phone: mobileApp(),
+            api: graphqlApi(),
+            ...serviceBlocks({ us: makeCool(0.3), ps: makeCool(0.3) }),
+            card: card(
               `A gRPC contract`,
               [
                 `service Users {`,
@@ -265,8 +257,8 @@ const wo = {
               `workflow`,
             ),
           },
-          links: { ...yo(Co), ...bo({ label: `gRPC` }) },
-          flows: [xo(0.9)],
+          links: { ...phoneLink(slowNetwork), ...apiLinks({ label: `gRPC` }) },
+          flows: [requestFlows(0.9)],
         },
       },
       {
@@ -285,13 +277,13 @@ const wo = {
         metrics: { trips: 1, payload: `3 KB`, screenMs: 130, unused: 0 },
         scene: {
           entities: {
-            phone: ho([{ text: `followers · page 2,001`, icon: `users` }]),
-            api: _o(),
-            ...vo({
+            phone: mobileApp([{ text: `followers · page 2,001`, icon: `users` }]),
+            api: graphqlApi(),
+            ...serviceBlocks({
               us: { ...makeCool(0.3), tags: [{ text: `2,000,000 followers`, icon: `users` }] },
               ps: makeCool(0.3),
             }),
-            card: So(
+            card: card(
               `Paging a long list`,
               [
                 `! ?offset=40000&limit=20  → walks 40,020 rows`,
@@ -301,7 +293,7 @@ const wo = {
               `listOrdered`,
             ),
           },
-          links: { ...yo({ label: `GET followers?after=9f3c&limit=20`, labelAt: 0.45 }), ...bo() },
+          links: { ...phoneLink({ label: `GET followers?after=9f3c&limit=20`, labelAt: 0.45 }), ...apiLinks() },
           flows: [{ route: [`pa`, `au`], rate: 1.4, bounce: !0 }],
         },
       },
@@ -325,10 +317,10 @@ const wo = {
         metrics: { trips: 1, payload: `3 KB`, screenMs: 130, unused: 0 },
         scene: {
           entities: {
-            phone: ho([{ text: `app v3.2 · crashed`, tone: `red`, icon: `alert` }]),
-            api: _o({ tags: [{ text: `name → display_name`, tone: `amber`, icon: `replay` }] }),
-            ...vo({ us: makeCool(0.3), ps: makeCool(0.3) }),
-            card: So(
+            phone: mobileApp([{ text: `app v3.2 · crashed`, tone: `red`, icon: `alert` }]),
+            api: graphqlApi({ tags: [{ text: `name → display_name`, tone: `amber`, icon: `replay` }] }),
+            ...serviceBlocks({ us: makeCool(0.3), ps: makeCool(0.3) }),
+            card: card(
               `Evolving safely`,
               [
                 `! remove or rename a field   → old apps break`,
@@ -339,8 +331,8 @@ const wo = {
               `layers`,
             ),
           },
-          links: { ...yo({ fail: 0.5 }), ...bo({ label: `gRPC` }) },
-          flows: [xo(0.9)],
+          links: { ...phoneLink({ fail: 0.5 }), ...apiLinks({ label: `gRPC` }) },
+          flows: [requestFlows(0.9)],
         },
       },
       {
@@ -364,9 +356,9 @@ const wo = {
         },
         metrics: { trips: 1, payload: `3 KB`, screenMs: 130, unused: 0 },
         scene: {
-          entities: { phone: ho(), api: _o(), ...vo({ us: makeCool(0.3), ps: makeCool(0.3) }) },
-          links: { ...yo({ label: `GraphQL` }), ...bo({ label: `gRPC` }) },
-          flows: [xo(0.9)],
+          entities: { phone: mobileApp(), api: graphqlApi(), ...serviceBlocks({ us: makeCool(0.3), ps: makeCool(0.3) }) },
+          links: { ...phoneLink({ label: `GraphQL` }), ...apiLinks({ label: `gRPC` }) },
+          flows: [requestFlows(0.9)],
         },
       },
       {
@@ -388,13 +380,13 @@ const wo = {
         },
         metrics: { trips: 1, payload: `3 KB`, screenMs: 130, unused: 0 },
         scene: {
-          entities: { phone: ho(), api: _o(), ...vo({ us: makeCool(0.3), ps: makeCool(0.3) }) },
-          links: { ...yo({ label: `GraphQL` }), ...bo({ label: `gRPC` }) },
-          flows: [xo(0.9)],
+          entities: { phone: mobileApp(), api: graphqlApi(), ...serviceBlocks({ us: makeCool(0.3), ps: makeCool(0.3) }) },
+          links: { ...phoneLink({ label: `GraphQL` }), ...apiLinks({ label: `gRPC` }) },
+          flows: [requestFlows(0.9)],
         },
       },
     ],
   };
 
-export { wo as apisLesson };
-export default wo;
+export { apisLesson as apisLesson };
+export default apisLesson;

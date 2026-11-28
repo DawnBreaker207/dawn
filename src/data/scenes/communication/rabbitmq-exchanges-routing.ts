@@ -1,271 +1,203 @@
-import {
-  makeBlock,
-  makeDevice,
-  makeLink,
-  makePanel,
-} from '@/lib/simulator/scene-builders';
+import { STAGE, codeCard, linkOf, stageBlock, distinctConcepts, type Tag } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const rabbitmqExchangesRoutingLesson = {
+// One stage: a publisher on the left, the exchange in the middle (same id, new type each act),
+// and up to three queues on the right/top: q1 (lower right), q2 (upper right), q3 (upper left).
+//
+//             q3                 q2
+//   publisher ──── exchange ───── q1
+
+const publisher = (sub: string, tags: Tag[] = []) =>
+  stageBlock(STAGE.caller, { color: `blue`, glyph: `send`, label: [`publisher`], sub, tags });
+const exchange = (label: string[], sub: string, tags: Tag[] = [], glyph = `route`) =>
+  stageBlock(STAGE.main, { color: `green`, glyph, label, sub, tags });
+const queueBlock = (at: { x: number; y: number }, label: string[], sub: string, tags: Tag[] = []) =>
+  stageBlock(at, { color: `purple`, glyph: `inbox`, label, sub, tags });
+const q1 = (label: string[], sub: string, tags: Tag[] = []) => queueBlock(STAGE.store, label, sub, tags);
+const q2 = (label: string[], sub: string, tags: Tag[] = []) => queueBlock(STAGE.alt, label, sub, tags);
+const q3 = (label: string[], sub: string, tags: Tag[] = []) => queueBlock(STAGE.helper, label, sub, tags);
+
+const links = {
+  pub: (label?: string) => linkOf(`publisher`, `exchange`, label),
+  to1: (label?: string) => linkOf(`exchange`, `q1`, label, false),
+  to2: (label?: string) => linkOf(`exchange`, `q2`, label, false),
+  to3: (label?: string) => linkOf(`exchange`, `q3`, label, false),
+};
+
+export const rabbitmqExchangesRoutingLesson: Lesson = distinctConcepts({
   id: 'rabbitmq-exchanges-routing',
   title: 'RabbitMQ Routing: Direct, Fanout & Topic Exchanges',
-  summary: 'Master flexible message routing: Direct exact matching, Fanout broadcast, Topic wildcard pattern matching (* and #), and Exchange-to-Exchange topologies.',
+  summary:
+    'How an exchange decides where a message goes: direct exact-match, fanout broadcast, topic wildcards (* and #), headers matching, exchange-to-exchange chains and the alternate exchange for unroutable messages.',
   minutes: 13,
   level: 'intermediate',
-  metrics: ['exchange_type', 'routing_pattern', 'fanout_factor', 'binding_count'],
-  legend: ['req', 'res', ['ping', 'routed message'], 'fail'],
+  metrics: ['exchange', 'match rule', 'queues hit', 'use for'],
+  legend: [[`req`, `publish`], [`msg`, `delivered copy`], [`fail`, `unroutable`]],
   goals: [
-    { text: 'Compare 4 AMQP exchange types', step: 1 },
-    { text: 'Direct Exchange exact string matching', step: 2 },
-    { text: 'Fanout Exchange high-speed broadcast publishing', step: 3 },
-    { text: 'Topic Exchange wildcard matching with', step: 4 },
-    { text: 'Exchange-to-Exchange bindings for modular', step: 6 },
+    { text: 'Compare the four exchange types', step: 1 },
+    { text: 'Route by exact key with a direct exchange', step: 2 },
+    { text: 'Broadcast with a fanout exchange', step: 3 },
+    { text: 'Match patterns with topic wildcards * and #', step: 4 },
+    { text: 'Match on headers instead of a key', step: 5 },
+    { text: 'Chain exchanges to build modular topologies', step: 6 },
+    { text: 'Catch unroutable messages with an alternate exchange', step: 7 },
   ],
   steps: [
     {
-      short: 'Exchange Types',
+      short: 'Types',
       chapter: 'setup',
-      title: 'The 4 AMQP Exchange Routing Engines',
+      title: 'The exchange type is the routing rule',
       body: [
-        'RabbitMQ does not force one routing pattern. It provides 4 specialized Exchange types to solve different architectural communication needs:',
-        '• <b>Direct:</b> Exact string match between routing key and binding key.<br>• <b>Fanout:</b> Broadcasts to all bound queues (ignores routing keys).<br>• <b>Topic:</b> Multi-criteria routing using wildcards (<code>*</code> and <code>#</code>).<br>• <b>Headers:</b> Routes on message header metadata (<code>x-match: all/any</code>).'
+        `A message arrives at an exchange with a <b>routing key</b>. The exchange’s <em>type</em> decides how that key is compared with each queue’s <b>binding</b>: <code>direct</code> (exact match), <code>fanout</code> (ignore the key, send to all), <code>topic</code> (pattern match) and <code>headers</code> (match message headers).`,
+        `Same producer, same queues — only the type changes who receives what. The next steps take each in turn.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Exchanges are stateless in-memory routing tables executed inside the Erlang process in microseconds.'
-      },
-      metrics: { exchange_type: '4 AMQP Types', routing_pattern: 'Direct/Fanout/Topic', fanout_factor: '1 to N', binding_count: 'Configurable' },
+      metrics: { exchange: '4 types', 'match rule': 'by type', 'queues hit': '0 … all', 'use for': 'routing' },
       scene: {
         entities: {
-          producer: makeDevice(-10, -8, { form: 'phone', label: 'Event Publisher', tags: [{ text: 'Publish with RoutingKey', icon: 'zap' }] }),
-          exchange: makeBlock(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'route', label: ['AMQP Exchange', 'Routing Table'], sub: 'Inspects key & bindings' }),
-          card: makePanel({ x: -2, y: 14 }, 'Exchange Comparison Matrix', [
-            'Direct:  routing_key == binding_key (e.g. "email.critical")',
-            'Fanout:  Ignores key -> copies to ALL queues (Pub/Sub)',
-            'Topic:   Pattern match: "orders.*.eu" or "logs.#"',
-            'Headers: Compares message header dictionary values'
-          ], { icon: 'listOrdered' })
+          publisher: publisher(`key: order.paid`, [{ text: `basic.publish`, tone: `green` }]),
+          exchange: exchange([`Exchange`], `type decides`, [{ text: `direct · fanout · topic · headers`, tone: `violet` }]),
+          q1: q1([`billing`], `queue`, [{ text: `bound`, tone: `gray` }]),
+          q2: q2([`email`], `queue`, [{ text: `bound`, tone: `gray` }]),
+          card: codeCard(`Declare by type`, [`ch.exchange_declare("orders", exchange_type="direct")`, `ch.exchange_declare("events", exchange_type="fanout")`, `ch.exchange_declare("logs",   exchange_type="topic")`, `ch.exchange_declare("jobs",   exchange_type="headers")`]),
         },
-        links: {
-          pe: makeLink('producer', 'exchange', ['producer', 'exchange'], { heads: 'both', label: 'basic.publish' })
-        },
-        flows: [{ route: ['pe'], bounce: true, rate: 2.2 }]
-      }
+        links: { pub: links.pub(`order.paid`), to1: links.to1(), to2: links.to2() },
+        flows: [{ route: ['pub'], kind: 'msg', rate: 1.4 }],
+      },
     },
     {
-      short: 'Direct Exchange',
+      short: 'Direct',
       chapter: 'technique',
-      title: 'Direct Exchange: Exact String Matching',
+      title: 'Direct: the key must match exactly',
       body: [
-        'A <b>Direct Exchange</b> routes messages based on exact equality between the message’s <code>routing_key</code> and the queue’s <code>binding_key</code>.',
-        'If an error occurs, the logger publishes with key <code>"error"</code>. Only queues bound with key <code>"error"</code> receive the message. Messages published with key <code>"info"</code> are routed to a separate analytics queue.'
+        `A <span class="term">direct</span> exchange delivers a message to every queue whose binding key <b>equals</b> the routing key — nothing more, nothing less. Several queues may bind the same key, and one queue may have several bindings.`,
+        `Ideal for work distribution by category: log level (<code>error</code> → alerting queue, <code>info</code> → archive), or one queue per task type. The default exchange (<code>""</code>) is a direct exchange bound to every queue by its own name.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'Multiple queues can bind with the same binding key to a Direct Exchange, turning it into a selective fanout.'
-      },
-      metrics: { exchange_type: 'Direct Exchange', routing_pattern: 'Exact Equality', fanout_factor: '1 to 1', binding_count: '2 Queues' },
+      changes: [`~ exchange: direct`, `+ bindings by key`],
+      metrics: { exchange: 'direct', 'match rule': 'exact key', 'queues hit': '1 of 2', 'use for': 'tasks' },
       scene: {
         entities: {
-          producer: makeDevice(-12, -4, { form: 'phone', label: 'Logger', tags: [{ text: 'key = "error"', tone: 'red', icon: 'alert' }] }),
-          directEx: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'route', label: ['Direct Exchange', 'logs_direct'], sub: 'Exact Match' }),
-          qError: makeBlock(8, -10, { s: 4.4, h: 52, color: 'rose', glyph: 'inbox', label: ['Queue: error_q', 'Binding: "error"'], sub: 'Receives ERROR logs' }),
-          qInfo: makeBlock(8, 2, { s: 4.4, h: 52, color: 'blue', glyph: 'inbox', label: ['Queue: all_logs_q', 'Binding: "info"'], sub: 'Ignores ERROR logs' }),
-          card: makePanel({ x: -2, y: 14 }, 'Direct Routing Logic', [
-            'Message published with routing_key = "error"',
-            'Exchange checks bindings:',
-            '- error_q has binding "error" -> MATCH! (Message delivered)',
-            '- all_logs_q has binding "info" -> NO MATCH (Skipped)'
-          ], { icon: 'check' })
+          publisher: publisher(`key: error`, [{ text: `log event`, tone: `red` }]),
+          exchange: exchange([`Direct`], `logs.direct`, [{ text: `exact match`, tone: `violet` }]),
+          q1: q1([`alerts`], `binding: error`, [{ text: `+1 message`, tone: `green` }]),
+          q2: q2([`archive`], `binding: info`, [{ text: `no match`, tone: `gray` }]),
+          card: codeCard(`Bind by key`, [`ch.queue_bind("alerts",  "logs.direct", routing_key="error")`, `ch.queue_bind("archive", "logs.direct", routing_key="info")`, `ch.basic_publish("logs.direct", "error", body)   # → alerts only`]),
         },
-        links: {
-          pe_direct: makeLink('producer', 'directEx', ['producer', 'directEx'], { heads: 'end' }),
-          eqE: makeLink('directEx', 'qError', ['directEx', 'qError'], { heads: 'end', label: 'error' }),
-          eqI: makeLink('directEx', 'qInfo', ['directEx', 'qInfo'], { heads: 'end', label: 'info' })
-        },
-        flows: [
-          { route: ['pe_direct', 'eqE'], bounce: false, rate: 2.8 }
-        ]
-      }
+        links: { pub: links.pub(`error`), to1: links.to1(`error`), to2: links.to2() },
+        flows: [{ route: ['pub'], kind: 'msg', rate: 1.4 }, { route: ['to1'], kind: 'msg', rate: 1.2 }],
+      },
     },
     {
-      short: 'Fanout Exchange',
+      short: 'Fanout',
       chapter: 'technique',
-      title: 'Fanout Exchange: High-Speed Broadcast',
+      title: 'Fanout: every queue gets a copy',
       body: [
-        'A <b>Fanout Exchange</b> ignores the routing key completely. It simply duplicates and pushes every incoming message to <b>every single queue</b> bound to it.',
-        'This is the fastest exchange type in RabbitMQ because it bypasses all string comparisons. It is ideal for pub/sub: sport score updates, live notifications, or cache invalidation events across multiple services.'
+        `A <span class="term">fanout</span> exchange ignores the routing key and copies the message to <b>every bound queue</b>. It is the fastest type — there is no matching to do — and the broadcast primitive of AMQP.`,
+        `Use it when each subscriber must see every event: an <code>OrderPlaced</code> event consumed by billing, email and analytics, each with its own queue and its own pace. A new subscriber just binds a new queue.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Fanout exchanges execute at near wire speed: zero header parsing, zero regex checks.'
-      },
-      metrics: { exchange_type: 'Fanout Exchange', routing_pattern: 'Broadcast (Ignore Key)', fanout_factor: '1 to ALL', binding_count: 'All Bound Queues' },
+      changes: [`~ exchange: fanout`, `+ third queue`],
+      metrics: { exchange: 'fanout', 'match rule': 'none (all)', 'queues hit': '3 of 3', 'use for': 'broadcast events' },
       scene: {
         entities: {
-          producer: makeDevice(-12, -4, { form: 'phone', label: 'Order App', tags: [{ text: 'OrderPlaced', icon: 'zap' }] }),
-          fanoutEx: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Fanout Exchange', 'events_fanout'], sub: 'Duplicates to ALL' }),
-          qEmail: makeBlock(8, -12, { s: 4.2, h: 52, color: 'teal', glyph: 'inbox', label: ['Email Queue'], sub: 'Receives copy' }),
-          qInven: makeBlock(8, -4, { s: 4.2, h: 52, color: 'purple', glyph: 'inbox', label: ['Inventory Queue'], sub: 'Receives copy' }),
-          qAudit: makeBlock(8, 4, { s: 4.2, h: 52, color: 'green', glyph: 'inbox', label: ['Audit Queue'], sub: 'Receives copy' }),
-          card: makePanel({ x: -2, y: 16 }, 'Fanout Broadcast Mechanism', [
-            'Producer sends: basic_publish(exchange="events_fanout", routing_key="")',
-            'Fanout duplicates payload into:',
-            '  -> Email Queue',
-            '  -> Inventory Queue',
-            '  -> Audit Queue',
-            'Each microservice receives its own independent copy!'
-          ], { icon: 'workflow' })
+          publisher: publisher(`OrderPlaced`, [{ text: `one publish`, tone: `green` }]),
+          exchange: exchange([`Fanout`], `events`, [{ text: `key ignored`, tone: `violet` }]),
+          q1: q1([`billing`], `own queue`, [{ text: `+1`, tone: `green` }]),
+          q2: q2([`email`], `own queue`, [{ text: `+1`, tone: `green` }]),
+          q3: q3([`analytics`], `own queue`, [{ text: `+1`, tone: `green` }]),
+          card: codeCard(`Broadcast`, [`ch.exchange_declare("events", exchange_type="fanout")`, `for q in ("billing", "email", "analytics"): ch.queue_bind(q, "events")`, `ch.basic_publish("events", "", body)   # copy to all 3`]),
         },
-        links: {
-          pe_fanout: makeLink('producer', 'fanoutEx', ['producer', 'fanoutEx'], { heads: 'end' }),
-          fe1: makeLink('fanoutEx', 'qEmail', ['fanoutEx', 'qEmail'], { heads: 'end' }),
-          fe2: makeLink('fanoutEx', 'qInven', ['fanoutEx', 'qInven'], { heads: 'end' }),
-          fe3: makeLink('fanoutEx', 'qAudit', ['fanoutEx', 'qAudit'], { heads: 'end' })
-        },
-        flows: [
-          { route: ['pe_fanout', 'fe1'], bounce: false, rate: 2.0 },
-          { route: ['pe_fanout', 'fe2'], bounce: false, rate: 2.0 },
-          { route: ['pe_fanout', 'fe3'], bounce: false, rate: 2.0 }
-        ]
-      }
-    },
-    {
-      short: 'Topic Exchange (* & #)',
-      chapter: 'deep',
-      title: 'Topic Exchange: Wildcard Pattern Matching (* & #)',
-      body: [
-        'A <b>Topic Exchange</b> routes messages based on dot-separated words in routing keys (e.g. <code>stock.us.nyse</code>), matching two powerful wildcards:',
-        '• <code>* (star):</code> Replaces <b>exactly one word</b> (e.g. <code>*.us.*</code> matches <code>stock.us.nasdaq</code>).<br>• <code># (hash):</code> Replaces <b>zero or more words</b> (e.g. <code>stock.#</code> matches <code>stock.us</code>, <code>stock.eu.de.frankfurt</code>).'
-      ],
-      callout: {
-        kind: 'tip',
-        text: 'A topic binding of "#" receives all messages (behaving like a Fanout exchange).'
+        links: { pub: links.pub(`OrderPlaced`), to1: links.to1(`copy`), to2: links.to2(), to3: links.to3(`copy`) },
+        flows: [{ route: ['pub'], kind: 'msg', rate: 1.4 }, { route: ['to1'], kind: 'msg', rate: 1 }, { route: ['to2'], kind: 'msg', rate: 1 }, { route: ['to3'], kind: 'msg', rate: 1 }],
       },
-      metrics: { exchange_type: 'Topic Exchange', routing_pattern: 'Wildcard * and #', fanout_factor: 'Dynamic Pattern', binding_count: 'Hierarchical' },
-      scene: {
-        entities: {
-          producer: makeDevice(-12, -4, { form: 'phone', label: 'Payment Svc', tags: [{ text: 'key="payment.eu.visa"', icon: 'zap' }] }),
-          topicEx: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'route', label: ['Topic Exchange', 'payments_topic'], sub: 'Trie Pattern Match' }),
-          qEuAll: makeBlock(8, -10, { s: 4.4, h: 52, color: 'blue', glyph: 'inbox', label: ['Queue 1: EU All', 'Binding: "*.eu.*"'], sub: 'Matches payment.eu.visa' }),
-          qPayAll: makeBlock(8, 2, { s: 4.4, h: 52, color: 'teal', glyph: 'inbox', label: ['Queue 2: Global Pay', 'Binding: "payment.#"'], sub: 'Matches payment.eu.visa' }),
-          card: makePanel({ x: -2, y: 14 }, 'Topic Wildcard Rules', [
-            'Routing key: "payment.eu.visa" (3 words)',
-            '- Binding "*.eu.*": MATCHES (word1=payment, word2=eu, word3=visa)',
-            '- Binding "payment.#": MATCHES (starts with payment, rest wild)',
-            '- Binding "auth.*": NO MATCH (word1 does not match)',
-            'Result: Message copied to both Queue 1 and Queue 2!'
-          ], { icon: 'listOrdered' })
-        },
-        links: {
-          pe_topic: makeLink('producer', 'topicEx', ['producer', 'topicEx'], { heads: 'end' }),
-          eq1: makeLink('topicEx', 'qEuAll', ['topicEx', 'qEuAll'], { heads: 'end', label: '*.eu.*' }),
-          eq2: makeLink('topicEx', 'qPayAll', ['topicEx', 'qPayAll'], { heads: 'end', label: 'payment.#' })
-        },
-        flows: [
-          { route: ['pe_topic', 'eq1'], bounce: false, rate: 2.2 },
-          { route: ['pe_topic', 'eq2'], bounce: false, rate: 2.2 }
-        ]
-      }
     },
     {
-      short: 'Headers Exchange',
-      chapter: 'deep',
-      title: 'Headers Exchange: Metadata Routing (x-match)',
-      body: [
-        'A <b>Headers Exchange</b> ignores the routing key and routes based on key-value pairs inside the message headers table.',
-        'Bindings specify an <code>x-match</code> rule:<br>• <code>x-match: all:</code> All specified header pairs must match.<br>• <code>x-match: any:</code> Matching at least one header pair routes the message. Ideal for routing complex metadata (e.g. format: PDF, priority: high).'
-      ],
-      callout: {
-        kind: 'insight',
-        text: 'Headers exchanges can route on integer or boolean values without string parsing.'
-      },
-      metrics: { exchange_type: 'Headers Exchange', routing_pattern: 'x-match: all / any', fanout_factor: 'Attribute Match', binding_count: 'Header Filtered' },
-      scene: {
-        entities: {
-          producer: makeDevice(-10, -8, { form: 'phone', label: 'Report Generator', tags: [{ text: 'format: PDF, prio: 1', icon: 'zap' }] }),
-          hdrEx: makeBlock(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'route', label: ['Headers Exchange', 'Header Matcher'], sub: 'x-match: all' }),
-          card: makePanel({ x: -2, y: 14 }, 'Headers Evaluation', [
-            'Headers: { "format": "pdf", "priority": "high" }',
-            'Binding on pdf_queue:',
-            '  x-match: "all", format: "pdf", priority: "high"',
-            'Matches both conditions -> Message routed to pdf_queue'
-          ], { icon: 'check' })
-        },
-        links: {
-          ph: makeLink('producer', 'hdrEx', ['producer', 'hdrEx'], { heads: 'end', label: 'Headers Dict' })
-        },
-        flows: [{ route: ['ph'], bounce: false, rate: 2.0 }]
-      }
-    },
-    {
-      short: 'Default Exchange',
+      short: 'Topic',
       chapter: 'technique',
-      title: 'The Default Nameless Exchange',
+      title: 'Topic: patterns with * and #',
       body: [
-        'Every RabbitMQ broker pre-defines a default, nameless direct exchange (<code>""</code>).',
-        'Every created queue is automatically bound to the default exchange with a <b>binding key equal to the queue’s name</b>. Publishing with <code>exchange=""</code> and <code>routing_key="orders_queue"</code> delivers directly to <code>orders_queue</code>, mimicking a traditional point-to-point queue.'
+        `A <span class="term">topic</span> exchange routes by <b>dot-separated words</b> and binding patterns. <code>*</code> matches exactly <em>one</em> word; <code>#</code> matches <em>zero or more</em>. So <code>payment.*.visa</code> matches <code>payment.eu.visa</code>, and <code>payment.#</code> matches everything under <code>payment</code>.`,
+        `Design keys from general to specific (<code>domain.region.method</code>) so consumers can subscribe at any level. It is the most flexible common type — and the most commonly used one in practice.`,
       ],
-      callout: {
-        kind: 'tip',
-        text: 'The default exchange makes simple 1-to-1 work queues trivial without declaring custom exchanges.'
-      },
-      metrics: { exchange_type: 'Default (Nameless)', routing_pattern: 'routingKey == queueName', fanout_factor: '1 to 1', binding_count: 'Implicit Auto' },
+      changes: [`~ exchange: topic`, `+ wildcard bindings`],
+      metrics: { exchange: 'topic', 'match rule': '* word · # many', 'queues hit': '2 of 3', 'use for': 'subscriptions' },
       scene: {
         entities: {
-          producer: makeDevice(-10, -8, { form: 'phone', label: 'Simple Producer', tags: [{ text: 'routingKey="task_queue"', icon: 'zap' }] }),
-          defEx: makeBlock(6, 8, { s: 4.8, h: 50, color: 'orange', glyph: 'inbox', label: ['Default Exchange ""', 'Implicit Direct Router'], sub: 'Routes to queue: task_queue' }),
-          card: makePanel({ x: -2, y: 14 }, 'Default Exchange Routing', [
-            'channel.basic_publish(',
-            '  exchange="",',
-            '  routing_key="task_queue",',
-            '  body="Send Welcome Email"',
-            ');',
-            'Message automatically lands in queue named "task_queue"!'
-          ], { icon: 'inbox' })
+          publisher: publisher(`payment.eu.visa`, [{ text: `3-word key`, tone: `green` }]),
+          exchange: exchange([`Topic`], `payments`, [{ text: `pattern match`, tone: `violet` }]),
+          q1: q1([`eu-audit`], `payment.eu.*`, [{ text: `match ✓`, tone: `green` }]),
+          q2: q2([`all-pay`], `payment.#`, [{ text: `match ✓`, tone: `green` }]),
+          q3: q3([`us-only`], `payment.us.*`, [{ text: `no match`, tone: `gray` }]),
+          card: codeCard(`Bindings`, [`ch.queue_bind("eu-audit", "payments", routing_key="payment.eu.*")`, `ch.queue_bind("all-pay",  "payments", routing_key="payment.#")`, `ch.queue_bind("us-only",  "payments", routing_key="payment.us.*")`]),
         },
-        links: {
-          pd: makeLink('producer', 'defEx', ['producer', 'defEx'], { heads: 'end', label: 'Direct to Queue Name' })
-        },
-        flows: [{ route: ['pd'], bounce: false, rate: 2.4 }]
-      }
+        links: { pub: links.pub(`eu.visa`), to1: links.to1(`eu.*`), to2: links.to2(), to3: links.to3() },
+        flows: [{ route: ['pub'], kind: 'msg', rate: 1.4 }, { route: ['to1'], kind: 'msg', rate: 1 }, { route: ['to2'], kind: 'msg', rate: 1 }],
+      },
     },
     {
-      short: 'Exchange-to-Exchange',
+      short: 'Headers',
+      chapter: 'technique',
+      title: 'Headers: match on attributes, not the key',
+      body: [
+        `A <span class="term">headers</span> exchange ignores the routing key and compares the message’s <b>header table</b> with the binding’s arguments. <code>x-match: all</code> needs every pair to match; <code>x-match: any</code> needs one.`,
+        `Use it when routing depends on several attributes that don’t fit in one dotted key (format, priority, tenant). It is slower than direct or topic, so reserve it for cases a topic key cannot express.`,
+      ],
+      changes: [`~ exchange: headers`, `+ header bindings`],
+      metrics: { exchange: 'headers', 'match rule': 'x-match', 'queues hit': '1 of 2', 'use for': 'attributes' },
+      scene: {
+        entities: {
+          publisher: publisher(`format=pdf · tier=gold`, [{ text: `headers set`, tone: `green` }]),
+          exchange: exchange([`Headers`], `jobs`, [{ text: `key ignored`, tone: `violet` }]),
+          q1: q1([`gold-pdf`], `all of: pdf+gold`, [{ text: `match ✓`, tone: `green` }]),
+          q2: q2([`any-csv`], `any of: csv`, [{ text: `no match`, tone: `gray` }]),
+          card: codeCard(`Bind on headers`, [`ch.queue_bind("gold-pdf", "jobs", arguments={"x-match": "all", "format": "pdf", "tier": "gold"})`, `ch.queue_bind("any-csv",  "jobs", arguments={"x-match": "any", "format": "csv"})`, `ch.basic_publish("jobs", "", body, properties=pika.BasicProperties(headers={"format": "pdf", "tier": "gold"}))`]),
+        },
+        links: { pub: links.pub(`headers`), to1: links.to1(`all match`), to2: links.to2() },
+        flows: [{ route: ['pub'], kind: 'msg', rate: 1.4 }, { route: ['to1'], kind: 'msg', rate: 1.2 }],
+      },
+    },
+    {
+      short: 'Chaining',
       chapter: 'solution',
-      title: 'Advanced Topology: Exchange-to-Exchange Bindings',
+      title: 'Exchange-to-exchange bindings',
       body: [
-        'In AMQP, you can bind an <b>Exchange to another Exchange</b> (E2E bindings) using <code>exchange_bind()</code>.',
-        'This allows building modular routing trees: a top-level Fanout exchange broadcasts raw events into multiple specialized Topic exchanges, creating clean decoupled routing pipelines across dozens of internal microservices.'
+        `An exchange can be bound to <em>another exchange</em> as if it were a queue. Messages published to the first are routed on by the second’s bindings. This builds <b>layers</b>: a coarse fanout or topic at the edge, finer direct exchanges per team behind it.`,
+        `Benefits: teams own their own exchange and bindings; you can add or remove a whole subtree with one binding; the topology stays readable. Avoid cycles — RabbitMQ delivers each message to a given queue only once.`,
       ],
-      callout: {
-        kind: 'insight',
-        text: 'Exchange-to-Exchange bindings eliminate duplicate network hops between producers and routing layers.'
-      },
-      metrics: { exchange_type: 'E2E Chained Topology', routing_pattern: 'Hierarchical Tree', fanout_factor: 'Multi-Tier', binding_count: 'Modular' },
+      changes: [`+ second exchange`, `~ edge exchange → team exchange`],
+      metrics: { exchange: 'topic → direct', 'match rule': 'layered', 'queues hit': '2', 'use for': 'modular' },
       scene: {
         entities: {
-          producer: makeDevice(-12, -4, { form: 'phone', label: 'Core Gateway', tags: [{ text: 'Publish Raw Event', icon: 'zap' }] }),
-          topEx: makeBlock(-2, -4, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Top Fanout Exchange', 'events_root'], sub: 'Binds to sub-exchanges' }),
-          topicSub1: makeBlock(8, -10, { s: 4.4, h: 52, color: 'purple', glyph: 'route', label: ['Sub Topic: orders', 'order.*'], sub: 'Routes to orders_q' }),
-          topicSub2: makeBlock(8, 2, { s: 4.4, h: 52, color: 'purple', glyph: 'route', label: ['Sub Topic: audit', 'audit.*'], sub: 'Routes to audit_q' }),
-          card: makePanel({ x: -2, y: 14 }, 'Exchange-to-Exchange Hierarchy', [
-            'exchange_bind(destination="orders_topic", source="events_root")',
-            'exchange_bind(destination="audit_topic", source="events_root")',
-            '1. Producer publishes once to events_root',
-            '2. events_root pushes to orders_topic & audit_topic in RAM',
-            '3. Sub-exchanges evaluate granular topic wildcards independently'
-          ], { icon: 'workflow' })
+          publisher: publisher(`order.paid`),
+          exchange: exchange([`Edge`, `exchange`], `topic · public API`, [{ text: `binds → billing.ex`, tone: `violet` }]),
+          q1: q1([`billing.ex`], `team exchange`, [{ text: `direct`, tone: `green` }]),
+          q2: q2([`audit`], `queue`, [{ text: `order.#`, tone: `gray` }]),
+          q3: q3([`billing`], `queue`, [{ text: `via billing.ex`, tone: `green` }]),
+          card: codeCard(`Chain them`, [`ch.exchange_bind(destination="billing.ex", source="orders", routing_key="order.paid")`, `ch.queue_bind("billing", "billing.ex", routing_key="order.paid")`, `= publish to "orders"; billing.ex routes it on to the billing queue`]),
         },
-        links: {
-          pe: makeLink('producer', 'topEx', ['producer', 'topEx'], { heads: 'end' }),
-          et1: makeLink('topEx', 'topicSub1', ['topEx', 'topicSub1'], { heads: 'end', label: 'E2E Bind' }),
-          et2: makeLink('topEx', 'topicSub2', ['topEx', 'topicSub2'], { heads: 'end', label: 'E2E Bind' })
+        links: { pub: links.pub(`order.paid`), to1: links.to1(`bound`), to2: links.to2(), to3: links.to3(`via .ex`) },
+        flows: [{ route: ['pub'], kind: 'msg', rate: 1.4 }, { route: ['to1'], kind: 'msg', rate: 1.2 }],
+      },
+    },
+    {
+      short: 'Unroutable',
+      chapter: 'recap',
+      title: 'Unroutable messages: don’t drop them silently',
+      body: [
+        `If no binding matches, the exchange drops the message by default. Two protections: publish with <code>mandatory=True</code> so the broker <b>returns</b> it to the publisher, and declare an <b>alternate exchange</b> (<code>alternate-exchange</code> argument) that receives everything the main exchange cannot route.`,
+        `Bind a queue to the alternate exchange, alert on it, and you have a safety net for typos and missing bindings. Together with confirms and dead-lettering it closes the last silent-loss hole.`,
+      ],
+      changes: [`+ alternate exchange`, `+ unroutable queue`, `~ message routed to safety`],
+      metrics: { exchange: 'alternate', 'match rule': 'no match', 'queues hit': '1', 'use for': 'safety net' },
+      scene: {
+        entities: {
+          publisher: publisher(`key: ordr.paid (typo)`, [{ text: `no binding`, tone: `red`, icon: `alert` }]),
+          exchange: exchange([`Topic`], `orders`, [{ text: `alternate-exchange`, tone: `violet` }]),
+          q1: q1([`billing`], `order.paid`, [{ text: `not reached`, tone: `gray` }]),
+          q2: q2([`unroutable`], `via alternate`, [{ text: `caught`, tone: `green`, icon: `shield` }]),
+          card: codeCard(`A safety net`, [`ch.exchange_declare("orders", "topic", arguments={"alternate-exchange": "orders.unrouted"})`, `ch.queue_bind("unroutable", "orders.unrouted")`, `ch.basic_publish("orders", "ordr.paid", body, mandatory=True)   # typo → caught`]),
         },
-        flows: [
-          { route: ['pe', 'et1'], bounce: false, rate: 2.2 },
-          { route: ['pe', 'et2'], bounce: false, rate: 2.2 }
-        ]
-      }
-    }
-  ]
-};
+        links: { pub: links.pub(`ordr.paid`), to1: links.to1(), to2: links.to2() },
+        flows: [{ route: ['pub'], kind: 'msg', rate: 1.4 }, { route: ['to2'], kind: 'msg', rate: 1.2 }],
+      },
+    },
+  ],
+});
