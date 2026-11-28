@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
-import type { Lesson } from '@/lib/simulator/types';
+import type { StageScene } from '@/lib/simulator/stage/types';
 import { StageEngine } from '@/lib/simulator/stage';
 
 interface Props {
-  lesson: Lesson;
+  lessonId: string;
+  scenes: StageScene[];
 }
 
-export default function SceneRenderer({ lesson }: Props) {
+export default function SceneRenderer({ lessonId, scenes }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<StageEngine | null>(null);
 
@@ -21,10 +22,9 @@ export default function SceneRenderer({ lesson }: Props) {
     try {
       engine = new StageEngine(el);
       engineRef.current = engine;
-      (window as any).__ap_native = engine;
+      window.__ap_native = engine;
 
-      const scenes = lesson.steps?.map((s) => s.scene) ?? [];
-      if (scenes.length > 0) {
+      if (scenes && scenes.length > 0) {
         engine.frame(scenes);
         engine.goTo(scenes[0], { instant: true });
       }
@@ -79,9 +79,9 @@ export default function SceneRenderer({ lesson }: Props) {
     const handleStepChange = (e: Event) => {
       const detail = (e as CustomEvent<{ idx?: number; index?: number }>).detail;
       const idx = detail?.idx ?? detail?.index;
-      if (typeof idx === 'number' && engine && lesson.steps?.[idx]) {
+      if (typeof idx === 'number' && engine && scenes?.[idx]) {
         currentIdx = idx;
-        engine.goTo(lesson.steps[idx].scene);
+        engine.goTo(scenes[idx]);
         updatePauseUI(false);
       }
     };
@@ -94,20 +94,20 @@ export default function SceneRenderer({ lesson }: Props) {
     }
 
     const handleFit = () => {
-      (window as any).umami?.track('workbench-fit', { lesson: lesson.id });
+      window.umami?.track('workbench-fit', { lesson: lessonId });
       engine?.fit();
     };
     const handleReplay = () => {
-      if (engine && lesson.steps?.[currentIdx]) {
-        (window as any).umami?.track('workbench-replay', { lesson: lesson.id, step: currentIdx + 1 });
-        engine.goTo(lesson.steps[currentIdx].scene, { instant: true });
+      if (engine && scenes?.[currentIdx]) {
+        window.umami?.track('workbench-replay', { lesson: lessonId, step: currentIdx + 1 });
+        engine.goTo(scenes[currentIdx], { instant: true });
         updatePauseUI(false);
       }
     };
     const handlePause = () => {
       if (!engine) return;
       engine.paused = !engine.paused;
-      (window as any).umami?.track('workbench-pause', { lesson: lesson.id, paused: engine.paused, step: currentIdx + 1 });
+      window.umami?.track('workbench-pause', { lesson: lessonId, paused: engine.paused, step: currentIdx + 1 });
       updatePauseUI(engine.paused);
     };
 
@@ -139,7 +139,7 @@ export default function SceneRenderer({ lesson }: Props) {
       }
       el.innerHTML = '';
     };
-  }, [lesson]);
+  }, [lessonId, scenes]);
 
   return (
     <div
