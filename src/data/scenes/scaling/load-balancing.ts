@@ -1,37 +1,28 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBalancer,
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeHot,
-  makeLink
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBalancer, makeBlock, makeCool, makeCrowd, makeHot, makeLink, type Bag } from '@/lib/simulator/scene-builders';
 
-const Ue = { x0: -4.5, x1: 4.5, y0: -17, y1: -11 };
+const crowdArea = { x0: -4.5, x1: 4.5, y0: -17, y1: -11 };
 
-const We = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
 
-const Ge = [`la`, `lbb`, `lc`];
+const serverLinkIds = [`la`, `lbb`, `lc`];
 
-const Ke = (e = {}) => ({
+const servers = (e: Bag = {}) => ({
     a: makeBlock(-7, 0, { label: [`Server A`], ...makeCool(0.34), ...(e.a || {}) }),
     b: makeBlock(0, 0, { label: [`Server B`], ...makeCool(0.36), ...(e.b || {}) }),
     c: makeBlock(7, 0, { label: [`Server C`], ...makeCool(0.33), ...(e.c || {}) }),
   });
 
-const qe = (e = `lb`, t = { a: `la`, b: `lbb`, c: `lc` }, n = {}) => ({
+const serverLinks = (e = `lb`, t: Record<string, string> = { a: `la`, b: `lbb`, c: `lc` }, n: Bag = {}) => ({
     [t.a]: makeLink(e, `a`, [e, [`a`, e], `a`], n.a),
     [t.b]: makeLink(e, `b`, [e, `b`], n.b),
     [t.c]: makeLink(e, `c`, [e, [`c`, e], `c`], n.c),
   });
 
-const Je = (e = `lb`, t = `ul`, n = {}) => ({ [t]: makeLink(`users`, e, [`users`, e], n) });
+const userLink = (e = `lb`, t = `ul`, n = {}) => ({ [t]: makeLink(`users`, e, [`users`, e], n) });
 
-const Ye = (e = We) => makeCrowd(e, 15, `200,000 users`);
+const users = (e = usersArea) => makeCrowd(e, 15, `200,000 users`);
 
-const Xe = (e = 4.5, t = {}) => [{ route: [`ul`, Ge], pick: `rr`, rate: e, ...t }];
+const requestFlows = (e = 4.5, t = {}) => [{ route: [`ul`, serverLinkIds], pick: `rr`, rate: e, ...t }];
 
 export const loadBalancingLesson = {
     id: `load-balancing`,
@@ -63,7 +54,7 @@ export const loadBalancingLesson = {
         },
         metrics: { users: 2e5, rps: 6e3, p95: 1800, errors: 12, healthy: `3 / 3` },
         scene: {
-          entities: { users: Ye(Ue), ...Ke({ a: makeCool(0.03), b: makeHot(1), c: makeCool(0.03) }) },
+          entities: { users: users(crowdArea), ...servers({ a: makeCool(0.03), b: makeHot(1), c: makeCool(0.03) }) },
           links: { ub: makeLink(`users`, `b`, [`users`, `b`], { fail: 0.22 }) },
           flows: [{ route: [`ub`], rate: 6 }],
         },
@@ -87,9 +78,9 @@ export const loadBalancingLesson = {
         ],
         metrics: { users: 2e5, rps: 6e3, p95: 90, errors: 0, healthy: `3 / 3` },
         scene: {
-          entities: { users: Ye(), lb: makeBalancer(0, -9), ...Ke() },
-          links: { ...Je(), ...qe() },
-          flows: Xe(4.5),
+          entities: { users: users(), lb: makeBalancer(0, -9), ...servers() },
+          links: { ...userLink(), ...serverLinks() },
+          flows: requestFlows(4.5),
         },
       },
       {
@@ -108,12 +99,12 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 90, errors: 0, healthy: `3 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb: makeBalancer(0, -9, { tags: [{ text: `round robin`, icon: `replay` }] }),
-            ...Ke(),
+            ...servers(),
           },
-          links: { ...Je(), ...qe() },
-          flows: Xe(1.6),
+          links: { ...userLink(), ...serverLinks() },
+          flows: requestFlows(1.6),
         },
       },
       {
@@ -129,16 +120,16 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 1200, errors: 3, healthy: `3 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb: makeBalancer(0, -9, { tags: [{ text: `round robin`, icon: `replay` }] }),
-            ...Ke({
+            ...servers({
               a: makeCool(0.24),
               b: { ...makeHot(0.97), tags: [{ text: `23 queued`, tone: `red` }] },
               c: makeCool(0.25),
             }),
           },
-          links: { ...Je(), ...qe() },
-          flows: Xe(3.2, { pattern: [`req`, `heavy`, `req`] }),
+          links: { ...userLink(), ...serverLinks() },
+          flows: requestFlows(3.2, { pattern: [`req`, `heavy`, `req`] }),
         },
       },
       {
@@ -161,18 +152,18 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 140, errors: 0, healthy: `3 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb: makeBalancer(0, -9, { tags: [{ text: `least connections`, icon: `gauge` }] }),
-            ...Ke({
+            ...servers({
               a: { ...makeCool(0.5), tags: [{ text: `4 active` }] },
               b: { ...makeCool(0.52), tags: [{ text: `9 active` }] },
               c: { ...makeCool(0.48), tags: [{ text: `4 active` }] },
             }),
           },
-          links: { ...Je(), ...qe() },
+          links: { ...userLink(), ...serverLinks() },
           flows: [
             {
-              route: [`ul`, Ge],
+              route: [`ul`, serverLinkIds],
               pick: `weights`,
               weights: [0.42, 0.16, 0.42],
               rate: 3.2,
@@ -202,17 +193,17 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 150, errors: 0, healthy: `2 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb: makeBalancer(0, -9, { tags: [{ text: `least connections`, icon: `gauge` }] }),
-            ...Ke({
+            ...servers({
               a: makeCool(0.55),
               b: makeCool(0.57),
               c: { ...DEAD_STATE, tags: [{ text: `out of pool`, tone: `gray`, icon: `alert` }] },
             }),
           },
-          links: { ...Je(), ...qe(`lb`, void 0, { c: { style: `off`, fail: 1 } }) },
+          links: { ...userLink(), ...serverLinks(`lb`, void 0, { c: { style: `off`, fail: 1 } }) },
           flows: [
-            { route: [`ul`, Ge], pick: `weights`, weights: [0.5, 0.5, 0], rate: 3.4 },
+            { route: [`ul`, serverLinkIds], pick: `weights`, weights: [0.5, 0.5, 0], rate: 3.4 },
             { route: [`la`], kind: `ping`, bounce: !0, rate: 0.55 },
             { route: [`lbb`], kind: `ping`, bounce: !0, rate: 0.55 },
             { route: [`lc`], kind: `ping`, bounce: !0, rate: 0.55 },
@@ -234,10 +225,10 @@ export const loadBalancingLesson = {
         changes: [`− Load balancer down`, `~ Errors 0% → 100%`],
         metrics: { users: 2e5, rps: 6e3, p95: null, errors: 100, healthy: `3 / 3` },
         scene: {
-          entities: { users: Ye(), lb: makeBalancer(0, -9, DEAD_STATE), ...Ke({ a: makeCool(0.02), b: makeCool(0.02), c: makeCool(0.02) }) },
+          entities: { users: users(), lb: makeBalancer(0, -9, DEAD_STATE), ...servers({ a: makeCool(0.02), b: makeCool(0.02), c: makeCool(0.02) }) },
           links: {
-            ...Je(`lb`, `ul`, { fail: 1 }),
-            ...qe(`lb`, void 0, { a: { style: `off` }, b: { style: `off` }, c: { style: `off` } }),
+            ...userLink(`lb`, `ul`, { fail: 1 }),
+            ...serverLinks(`lb`, void 0, { a: { style: `off` }, b: { style: `off` }, c: { style: `off` } }),
           },
           flows: [{ route: [`ul`], rate: 5 }],
         },
@@ -261,7 +252,7 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 90, errors: 0, healthy: `3 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb: makeBalancer(0, -9, { tags: [{ text: `ACTIVE · VIP`, tone: `green`, icon: `globe` }] }),
             lb2: makeBalancer(-14, -9, {
               label: [`Standby`, `LB`],
@@ -269,11 +260,11 @@ export const loadBalancingLesson = {
               pills: `above`,
               tags: [{ text: `STANDBY`, tone: `gray` }],
             }),
-            ...Ke(),
+            ...servers(),
           },
           links: {
-            ...Je(),
-            ...qe(),
+            ...userLink(),
+            ...serverLinks(),
             beat: makeLink(
               `lb2`,
               `lb`,
@@ -284,7 +275,7 @@ export const loadBalancingLesson = {
               { style: `beat`, heads: `none` },
             ),
           },
-          flows: [...Xe(4.2), { route: [`beat`], kind: `ping`, bounce: !0, rate: 0.8 }],
+          flows: [...requestFlows(4.2), { route: [`beat`], kind: `ping`, bounce: !0, rate: 0.8 }],
         },
       },
       {
@@ -307,11 +298,11 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 95, errors: 0, healthy: `3 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb2: makeBalancer(0, -9, { tags: [{ text: `ACTIVE · VIP`, tone: `green`, icon: `globe` }] }),
-            ...Ke(),
+            ...servers(),
           },
-          links: { ...Je(`lb2`, `ul2`), ...qe(`lb2`, { a: `la2`, b: `lbb2`, c: `lc2` }) },
+          links: { ...userLink(`lb2`, `ul2`), ...serverLinks(`lb2`, { a: `la2`, b: `lbb2`, c: `lc2` }) },
           flows: [{ route: [`ul2`, [`la2`, `lbb2`, `lc2`]], pick: `rr`, rate: 4.2 }],
         },
       },
@@ -331,7 +322,7 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 85, errors: 0, healthy: `3 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb2: makeBalancer(0, -9, {
               tags: [{ text: `L7 · routes by path`, tone: `green`, icon: `split` }],
             }),
@@ -340,8 +331,8 @@ export const loadBalancingLesson = {
             c: makeBlock(7, 0, { color: `yellow`, glyph: `file`, label: [`Images`], ...makeCool(0.3) }),
           },
           links: {
-            ...Je(`lb2`, `ul2`),
-            ...qe(
+            ...userLink(`lb2`, `ul2`),
+            ...serverLinks(
               `lb2`,
               { a: `la2`, b: `lbb2`, c: `lc2` },
               { a: { label: `/api/*`, labelAt: 0.45 }, c: { label: `/images/*`, labelAt: 0.45 } },
@@ -373,7 +364,7 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 95, errors: 0, healthy: `2 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb2: makeBalancer(0, -9, { tags: [{ text: `rolling deploy`, tone: `green`, icon: `replay` }] }),
             a: makeBlock(-7, 0, {
               label: [`Server A`],
@@ -393,8 +384,8 @@ export const loadBalancingLesson = {
             }),
           },
           links: {
-            ...Je(`lb2`, `ul2`),
-            ...qe(`lb2`, { a: `la2`, b: `lbb2`, c: `lc2` }, { b: { style: `off` } }),
+            ...userLink(`lb2`, `ul2`),
+            ...serverLinks(`lb2`, { a: `la2`, b: `lbb2`, c: `lc2` }, { b: { style: `off` } }),
           },
           flows: [{ route: [`ul2`, [`la2`, `lc2`]], pick: `rr`, rate: 4.2 }],
         },
@@ -419,11 +410,11 @@ export const loadBalancingLesson = {
         metrics: { users: 2e5, rps: 6e3, p95: 90, errors: 0, healthy: `3 / 3` },
         scene: {
           entities: {
-            users: Ye(),
+            users: users(),
             lb2: makeBalancer(0, -9, { tags: [{ text: `VIP`, tone: `green`, icon: `globe` }] }),
-            ...Ke(),
+            ...servers(),
           },
-          links: { ...Je(`lb2`, `ul2`), ...qe(`lb2`, { a: `la2`, b: `lbb2`, c: `lc2` }) },
+          links: { ...userLink(`lb2`, `ul2`), ...serverLinks(`lb2`, { a: `la2`, b: `lbb2`, c: `lc2` }) },
           flows: [{ route: [`ul2`, [`la2`, `lbb2`, `lc2`]], pick: `rr`, rate: 4.2 }],
         },
       },

@@ -1,32 +1,25 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCrowd,
-  makeDb,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const lt = { x0: -4.5, x1: 4.5, y0: -18, y1: -12 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -18, y1: -12 };
 
-const ut = (e = `20,000 users`) => makeCrowd(lt, 13, e);
+const users = (e = `20,000 users`) => makeCrowd(usersArea, 13, e);
 
-const dt = () => makeBlock(0, -3, { label: [`App`, `Server`] });
+const appServer = () => makeBlock(0, -3, { label: [`App`, `Server`] });
 
-const ft = (e = {}) => makeDb(11, -3, { label: `database`, ...e });
+const database = (e: Bag = {}) => makeDb(11, -3, { label: `database`, ...e });
 
-const pt = (e = {}) =>
+const cache = (e: Bag = {}) =>
     makeBlock(-11, -3, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `in memory`, ...e });
 
-const mt = {
+const links = {
     us: makeLink(`users`, `app`, [`users`, `app`], { heads: `both` }),
     sd: makeLink(`app`, `db`, [`app`, `db`], { heads: `both` }),
     sc: makeLink(`app`, `cache`, [`app`, `cache`], { heads: `both` }),
   };
 
-const ht = (e, t, n) => makePanel({ x: 11, y: -3, z: 0, dx: 30, dy: -250 }, e, t, { icon: n });
+const card = cardAt({ x: 11, y: -3, dx: 30, dy: -250 });
 
-const gt = (e, t = 4) => [
+const requestFlows = (e: number, t = 4) => [
     {
       routes: [
         { path: [`us`, `sc`], weight: e },
@@ -69,8 +62,8 @@ export const cachingLesson = {
         },
         metrics: { p95: 450, hitRate: 0, dbLoad: 92, fresh: `fresh` },
         scene: {
-          entities: { users: ut(), app: dt(), db: ft({ heat: 0.8, cpu: 0.92 }) },
-          links: { us: mt.us, sd: mt.sd },
+          entities: { users: users(), app: appServer(), db: database({ heat: 0.8, cpu: 0.92 }) },
+          links: { us: links.us, sd: links.sd },
           flows: [{ route: [`us`, `sd`], rate: 4, bounce: !0 }],
         },
       },
@@ -89,10 +82,10 @@ export const cachingLesson = {
         metrics: { p95: 450, hitRate: 0, dbLoad: 92, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(),
-            app: dt(),
-            db: ft({ heat: 0.8, cpu: 0.92 }),
-            card: ht(
+            users: users(),
+            app: appServer(),
+            db: database({ heat: 0.8, cpu: 0.92 }),
+            card: card(
               `Who reads what`,
               [
                 `top 1% of products   → 60% of reads`,
@@ -102,7 +95,7 @@ export const cachingLesson = {
               `activity`,
             ),
           },
-          links: { us: mt.us, sd: mt.sd },
+          links: { us: links.us, sd: links.sd },
           flows: [{ route: [`us`, `sd`], rate: 4, bounce: !0 }],
         },
       },
@@ -121,9 +114,9 @@ export const cachingLesson = {
         changes: [`+ Cache`, `~ 80% of reads served from memory`, `~ Database CPU 92% → 25%`],
         metrics: { p95: 40, hitRate: 80, dbLoad: 25, fresh: `fresh` },
         scene: {
-          entities: { users: ut(), app: dt(), db: ft({ cpu: 0.25 }), cache: pt() },
-          links: mt,
-          flows: gt(0.8),
+          entities: { users: users(), app: appServer(), db: database({ cpu: 0.25 }), cache: cache() },
+          links: links,
+          flows: requestFlows(0.8),
         },
       },
       {
@@ -142,11 +135,11 @@ export const cachingLesson = {
         metrics: { p95: 25, hitRate: 95, dbLoad: 8, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(),
-            app: dt(),
-            db: ft({ cpu: 0.08 }),
-            cache: pt(),
-            card: ht(
+            users: users(),
+            app: appServer(),
+            db: database({ cpu: 0.08 }),
+            cache: cache(),
+            card: card(
               `Average read time`,
               [
                 `cache hit  ≈ 1 ms`,
@@ -157,8 +150,8 @@ export const cachingLesson = {
               `timer`,
             ),
           },
-          links: mt,
-          flows: gt(0.95),
+          links: links,
+          flows: requestFlows(0.95),
         },
       },
       {
@@ -177,13 +170,13 @@ export const cachingLesson = {
         metrics: { p95: 25, hitRate: 95, dbLoad: 8, fresh: `stale` },
         scene: {
           entities: {
-            users: ut(`users see $20`),
-            app: dt(),
-            db: ft({ cpu: 0.08, tags: [{ text: `price: $25`, tone: `green` }] }),
-            cache: pt({ tags: [{ text: `price: $20 · stale`, tone: `red`, icon: `alert` }] }),
+            users: users(`users see $20`),
+            app: appServer(),
+            db: database({ cpu: 0.08, tags: [{ text: `price: $25`, tone: `green` }] }),
+            cache: cache({ tags: [{ text: `price: $20 · stale`, tone: `red`, icon: `alert` }] }),
           },
-          links: mt,
-          flows: [...gt(0.95), { route: [`sd`], kind: `write`, rate: 0.5 }],
+          links: links,
+          flows: [...requestFlows(0.95), { route: [`sd`], kind: `write`, rate: 0.5 }],
         },
       },
       {
@@ -203,19 +196,19 @@ export const cachingLesson = {
         metrics: { p95: 26, hitRate: 94, dbLoad: 9, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(`users see $25`),
-            app: dt(),
-            db: ft({ cpu: 0.09, tags: [{ text: `price: $25`, tone: `green` }] }),
-            cache: pt({
+            users: users(`users see $25`),
+            app: appServer(),
+            db: database({ cpu: 0.09, tags: [{ text: `price: $25`, tone: `green` }] }),
+            cache: cache({
               tags: [
                 { text: `TTL 60 s`, icon: `clock` },
                 { text: `price: $25`, tone: `green` },
               ],
             }),
           },
-          links: mt,
+          links: links,
           flows: [
-            ...gt(0.94),
+            ...requestFlows(0.94),
             { route: [`sd`], kind: `write`, rate: 0.6 },
             { route: [`sc`], kind: `kill`, rate: 0.6 },
           ],
@@ -238,13 +231,13 @@ export const cachingLesson = {
         metrics: { p95: 30, hitRate: 92, dbLoad: 12, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(`users see $25`),
-            app: dt(),
-            db: ft({ cpu: 0.12 }),
-            cache: pt({ tags: [{ text: `memory full`, tone: `amber`, icon: `alert` }] }),
+            users: users(`users see $25`),
+            app: appServer(),
+            db: database({ cpu: 0.12 }),
+            cache: cache({ tags: [{ text: `memory full`, tone: `amber`, icon: `alert` }] }),
           },
-          links: mt,
-          flows: gt(0.92),
+          links: links,
+          flows: requestFlows(0.92),
         },
       },
       {
@@ -264,16 +257,16 @@ export const cachingLesson = {
         metrics: { p95: 1400, hitRate: 40, dbLoad: 100, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(`everyone opens the home page`),
-            app: dt(),
-            db: ft({
+            users: users(`everyone opens the home page`),
+            app: appServer(),
+            db: database({
               heat: 0.9,
               cpu: 1,
               tags: [{ text: `2,000 identical queries`, tone: `red`, icon: `alert` }],
             }),
-            cache: pt({ tags: [{ text: `home page · expired`, tone: `amber`, icon: `clock` }] }),
+            cache: cache({ tags: [{ text: `home page · expired`, tone: `amber`, icon: `clock` }] }),
           },
-          links: mt,
+          links: links,
           flows: [{ route: [`us`, `sd`], rate: 7, bounce: !0, kind: `slow` }],
         },
       },
@@ -297,15 +290,15 @@ export const cachingLesson = {
         metrics: { p95: 30, hitRate: 97, dbLoad: 9, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(`everyone opens the home page`),
-            app: dt(),
-            db: ft({ cpu: 0.09 }),
-            cache: pt({
+            users: users(`everyone opens the home page`),
+            app: appServer(),
+            db: database({ cpu: 0.09 }),
+            cache: cache({
               tags: [{ text: `refreshed early · 1 fetch`, tone: `green`, icon: `check` }],
             }),
           },
-          links: mt,
-          flows: gt(0.97, 5),
+          links: links,
+          flows: requestFlows(0.97, 5),
         },
       },
       {
@@ -328,16 +321,16 @@ export const cachingLesson = {
         metrics: { p95: 520, hitRate: 50, dbLoad: 85, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(`real users + a crawler guessing IDs`),
-            app: dt(),
-            db: ft({
+            users: users(`real users + a crawler guessing IDs`),
+            app: appServer(),
+            db: database({
               heat: 0.7,
               cpu: 0.85,
               tags: [{ text: `0 rows found`, tone: `red`, icon: `search` }],
             }),
-            cache: pt({ tags: [{ text: `nothing to cache`, tone: `amber`, icon: `alert` }] }),
+            cache: cache({ tags: [{ text: `nothing to cache`, tone: `amber`, icon: `alert` }] }),
           },
-          links: mt,
+          links: links,
           flows: [
             {
               routes: [
@@ -371,11 +364,11 @@ export const cachingLesson = {
         metrics: { p95: 28, hitRate: 95, dbLoad: 9, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(`real users + a crawler guessing IDs`),
-            app: dt(),
-            db: ft({ cpu: 0.09 }),
-            cache: pt({ tags: [{ text: `“not found” · TTL 30 s`, icon: `clock` }] }),
-            card: ht(
+            users: users(`real users + a crawler guessing IDs`),
+            app: appServer(),
+            db: database({ cpu: 0.09 }),
+            cache: cache({ tags: [{ text: `“not found” · TTL 30 s`, icon: `clock` }] }),
+            card: card(
               `Bloom filter · 12 M IDs in 15 MB`,
               [
                 `is product:99900017 real?`,
@@ -386,8 +379,8 @@ export const cachingLesson = {
               `search`,
             ),
           },
-          links: mt,
-          flows: gt(0.95, 5),
+          links: links,
+          flows: requestFlows(0.95, 5),
         },
       },
       {
@@ -405,11 +398,11 @@ export const cachingLesson = {
         metrics: { p95: 25, hitRate: 95, dbLoad: 8, fresh: `fresh` },
         scene: {
           entities: {
-            users: ut(`users see $25`),
-            app: dt(),
-            db: ft({ cpu: 0.08 }),
-            cache: pt(),
-            card: ht(
+            users: users(`users see $25`),
+            app: appServer(),
+            db: database({ cpu: 0.08 }),
+            cache: cache(),
+            card: card(
               `Where a read can stop`,
               [
                 `browser cache       0 ms · per user`,
@@ -421,8 +414,8 @@ export const cachingLesson = {
               `layers`,
             ),
           },
-          links: mt,
-          flows: gt(0.95),
+          links: links,
+          flows: requestFlows(0.95),
         },
       },
       {
@@ -445,9 +438,9 @@ export const cachingLesson = {
         },
         metrics: { p95: 25, hitRate: 95, dbLoad: 8, fresh: `fresh` },
         scene: {
-          entities: { users: ut(`users see $25`), app: dt(), db: ft({ cpu: 0.08 }), cache: pt() },
-          links: mt,
-          flows: gt(0.95),
+          entities: { users: users(`users see $25`), app: appServer(), db: database({ cpu: 0.08 }), cache: cache() },
+          links: links,
+          flows: requestFlows(0.95),
         },
       },
     ],

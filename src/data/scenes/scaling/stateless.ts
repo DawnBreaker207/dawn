@@ -1,45 +1,37 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBalancer,
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBalancer, makeBlock, makeDb, makeDevice, makeLink, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const Qe = { text: `session: Alice · cart 2`, tone: `violet`, icon: `user` };
+const sessionTag = { text: `session: Alice · cart 2`, tone: `violet`, icon: `user` };
 
 const $e = { text: `no session for Alice`, tone: `red`, icon: `alert` };
 
-const et = (e = [{ text: `cart: 2 items`, icon: `check` }]) => makeDevice(0, -19, { label: `Alice`, tags: e });
+const alice = (e: Tag[] = [{ text: `cart: 2 items`, icon: `check` }]) => makeDevice(0, -19, { label: `Alice`, tags: e });
 
-const tt = (e = []) => makeBalancer(0, -9, { tags: e });
+const loadBalancer = (e: Tag[] = []) => makeBalancer(0, -9, { tags: e });
 
-const nt = (e = {}) => ({
+const servers = (e: Bag = {}) => ({
     a: makeBlock(-7, 0, { label: [`Server A`], ...(e.a || {}) }),
     b: makeBlock(0, 0, { label: [`Server B`], ...(e.b || {}) }),
     c: makeBlock(7, 0, { label: [`Server C`], ...(e.c || {}) }),
   });
 
-const rt = (e = [{ text: `Alice · cart 2`, tone: `violet`, icon: `user` }]) =>
+const sessionStore = (e = [{ text: `Alice · cart 2`, tone: `violet`, icon: `user` }]) =>
     makeDb(0, 10, { glyph: `zap`, label: `session store`, tags: e });
 
-const it = { ul: makeLink(`alice`, `lb`, [`alice`, `lb`], { heads: `both` }) };
+const userLink = { ul: makeLink(`alice`, `lb`, [`alice`, `lb`], { heads: `both` }) };
 
-const at = (e = {}) => ({
+const serverLinks = (e: Bag = {}) => ({
     la: makeLink(`lb`, `a`, [`lb`, [`a`, `lb`], `a`], e.a),
     lbb: makeLink(`lb`, `b`, [`lb`, `b`], e.b),
     lc: makeLink(`lb`, `c`, [`lb`, [`c`, `lb`], `c`], e.c),
   });
 
-const ot = {
+const sessionLinks = {
     as: makeLink(`a`, `st`, [`a`, [`a`, `st`], `st`], { heads: `both` }),
     bs: makeLink(`b`, `st`, [`b`, `st`], { heads: `both` }),
     cs: makeLink(`c`, `st`, [`c`, [`c`, `st`], `st`], { heads: `both` }),
   };
 
-const st = (e, t = 1.5) => [{ routes: e.map((e) => ({ path: e })), rate: t, bounce: !0, kind: `mine` }];
+const requestFlows = (e: string[][], t = 1.5) => [{ routes: e.map((e) => ({ path: e })), rate: t, bounce: !0, kind: `mine` }];
 
 export const statelessLesson = {
     id: `stateless`,
@@ -71,9 +63,9 @@ export const statelessLesson = {
         },
         metrics: { ok: `1 / 1`, survive: `—`, scale: `—`, extra: `+0 ms` },
         scene: {
-          entities: { alice: et(), lb: tt(), ...nt({ a: { tags: [Qe] } }) },
-          links: { ...it, ...at() },
-          flows: st([[`ul`, `la`]], 1),
+          entities: { alice: alice(), lb: loadBalancer(), ...servers({ a: { tags: [sessionTag] } }) },
+          links: { ...userLink, ...serverLinks() },
+          flows: requestFlows([[`ul`, `la`]], 1),
         },
       },
       {
@@ -92,12 +84,12 @@ export const statelessLesson = {
         metrics: { ok: `1 / 3`, survive: `no`, scale: `no`, extra: `+0 ms` },
         scene: {
           entities: {
-            alice: et(),
-            lb: tt([{ text: `round robin`, icon: `replay` }]),
-            ...nt({ a: { tags: [Qe] }, b: { tags: [$e] }, c: { tags: [$e] } }),
+            alice: alice(),
+            lb: loadBalancer([{ text: `round robin`, icon: `replay` }]),
+            ...servers({ a: { tags: [sessionTag] }, b: { tags: [$e] }, c: { tags: [$e] } }),
           },
-          links: { ...it, ...at({ b: { fail: 1 }, c: { fail: 1 } }) },
-          flows: st([
+          links: { ...userLink, ...serverLinks({ b: { fail: 1 }, c: { fail: 1 } }) },
+          flows: requestFlows([
             [`ul`, `la`],
             [`ul`, `lbb`],
             [`ul`, `lc`],
@@ -120,12 +112,12 @@ export const statelessLesson = {
         metrics: { ok: `3 / 3`, survive: `no`, scale: `limited`, extra: `+0 ms` },
         scene: {
           entities: {
-            alice: et(),
-            lb: tt([{ text: `sticky: Alice → A`, icon: `user` }]),
-            ...nt({ a: { tags: [Qe] } }),
+            alice: alice(),
+            lb: loadBalancer([{ text: `sticky: Alice → A`, icon: `user` }]),
+            ...servers({ a: { tags: [sessionTag] } }),
           },
-          links: { ...it, ...at() },
-          flows: st([[`ul`, `la`]]),
+          links: { ...userLink, ...serverLinks() },
+          flows: requestFlows([[`ul`, `la`]]),
         },
       },
       {
@@ -144,12 +136,12 @@ export const statelessLesson = {
         metrics: { ok: `0 / 3`, survive: `no`, scale: `limited`, extra: `+0 ms` },
         scene: {
           entities: {
-            alice: et([{ text: `signed out · cart empty`, tone: `red`, icon: `alert` }]),
-            lb: tt([{ text: `sticky: Alice → B`, icon: `user` }]),
-            ...nt({ a: DEAD_STATE, b: { tags: [$e] } }),
+            alice: alice([{ text: `signed out · cart empty`, tone: `red`, icon: `alert` }]),
+            lb: loadBalancer([{ text: `sticky: Alice → B`, icon: `user` }]),
+            ...servers({ a: DEAD_STATE, b: { tags: [$e] } }),
           },
-          links: { ...it, ...at({ a: { style: `off` }, b: { fail: 1 } }) },
-          flows: st([[`ul`, `lbb`]]),
+          links: { ...userLink, ...serverLinks({ a: { style: `off` }, b: { fail: 1 } }) },
+          flows: requestFlows([[`ul`, `lbb`]]),
         },
       },
       {
@@ -168,17 +160,17 @@ export const statelessLesson = {
         metrics: { ok: `3 / 3`, survive: `yes`, scale: `yes`, extra: `+1 ms` },
         scene: {
           entities: {
-            alice: et(),
-            lb: tt([{ text: `round robin`, icon: `replay` }]),
-            ...nt({
+            alice: alice(),
+            lb: loadBalancer([{ text: `round robin`, icon: `replay` }]),
+            ...servers({
               a: { tags: [{ text: `stateless` }] },
               b: { tags: [{ text: `stateless` }] },
               c: { tags: [{ text: `stateless` }] },
             }),
-            st: rt(),
+            st: sessionStore(),
           },
-          links: { ...it, ...at(), ...ot },
-          flows: st([
+          links: { ...userLink, ...serverLinks(), ...sessionLinks },
+          flows: requestFlows([
             [`ul`, `la`, `as`],
             [`ul`, `lbb`, `bs`],
             [`ul`, `lc`, `cs`],
@@ -201,17 +193,17 @@ export const statelessLesson = {
         metrics: { ok: `3 / 3`, survive: `yes`, scale: `yes`, extra: `+1 ms` },
         scene: {
           entities: {
-            alice: et(),
-            lb: tt([{ text: `round robin`, icon: `replay` }]),
-            ...nt({
+            alice: alice(),
+            lb: loadBalancer([{ text: `round robin`, icon: `replay` }]),
+            ...servers({
               a: DEAD_STATE,
               b: { tags: [{ text: `stateless` }] },
               c: { tags: [{ text: `stateless` }] },
             }),
-            st: rt(),
+            st: sessionStore(),
           },
-          links: { ...it, ...at({ a: { style: `off` } }), ...ot },
-          flows: st([
+          links: { ...userLink, ...serverLinks({ a: { style: `off` } }), ...sessionLinks },
+          flows: requestFlows([
             [`ul`, `lbb`, `bs`],
             [`ul`, `lc`, `cs`],
           ]),
@@ -233,16 +225,16 @@ export const statelessLesson = {
         metrics: { ok: `3 / 3`, survive: `yes`, scale: `yes`, extra: `+0 ms` },
         scene: {
           entities: {
-            alice: et([{ text: `signed token: Alice`, tone: `violet`, icon: `lock` }]),
-            lb: tt([{ text: `round robin`, icon: `replay` }]),
-            ...nt({
+            alice: alice([{ text: `signed token: Alice`, tone: `violet`, icon: `lock` }]),
+            lb: loadBalancer([{ text: `round robin`, icon: `replay` }]),
+            ...servers({
               a: { tags: [{ text: `stateless` }] },
               b: { tags: [{ text: `stateless` }] },
               c: { tags: [{ text: `stateless` }] },
             }),
           },
-          links: { ...it, ...at() },
-          flows: st([
+          links: { ...userLink, ...serverLinks() },
+          flows: requestFlows([
             [`ul`, `la`],
             [`ul`, `lbb`],
             [`ul`, `lc`],
@@ -265,16 +257,16 @@ export const statelessLesson = {
         metrics: { ok: `1 / 3`, survive: `no`, scale: `no`, extra: `+0 ms` },
         scene: {
           entities: {
-            alice: et([{ text: `avatar: broken image`, tone: `red`, icon: `alert` }]),
-            lb: tt([{ text: `round robin`, icon: `replay` }]),
-            ...nt({
+            alice: alice([{ text: `avatar: broken image`, tone: `red`, icon: `alert` }]),
+            lb: loadBalancer([{ text: `round robin`, icon: `replay` }]),
+            ...servers({
               a: { tags: [{ text: `avatar.png on local disk`, tone: `violet`, icon: `file` }] },
               b: { tags: [{ text: `avatar.png?`, tone: `red`, icon: `alert` }] },
               c: { tags: [{ text: `avatar.png?`, tone: `red`, icon: `alert` }] },
             }),
           },
-          links: { ...it, ...at({ b: { fail: 1 }, c: { fail: 1 } }) },
-          flows: st([
+          links: { ...userLink, ...serverLinks({ b: { fail: 1 }, c: { fail: 1 } }) },
+          flows: requestFlows([
             [`ul`, `la`],
             [`ul`, `lbb`],
             [`ul`, `lc`],
@@ -301,9 +293,9 @@ export const statelessLesson = {
         metrics: { ok: `3 / 3`, survive: `yes`, scale: `yes`, extra: `+0 ms` },
         scene: {
           entities: {
-            alice: et([{ text: `avatar ✓`, tone: `green`, icon: `check` }]),
-            lb: tt([{ text: `round robin`, icon: `replay` }]),
-            ...nt({
+            alice: alice([{ text: `avatar ✓`, tone: `green`, icon: `check` }]),
+            lb: loadBalancer([{ text: `round robin`, icon: `replay` }]),
+            ...servers({
               a: { tags: [{ text: `stateless` }] },
               b: { tags: [{ text: `stateless` }] },
               c: { tags: [{ text: `stateless` }] },
@@ -315,14 +307,14 @@ export const statelessLesson = {
             }),
           },
           links: {
-            ...it,
-            ...at(),
+            ...userLink,
+            ...serverLinks(),
             ao: makeLink(`a`, `os`, [`a`, [`a`, `os`], `os`], { heads: `both` }),
             bo: makeLink(`b`, `os`, [`b`, `os`], { heads: `both` }),
             co: makeLink(`c`, `os`, [`c`, [`c`, `os`], `os`], { heads: `both` }),
           },
           flows: [
-            ...st([
+            ...requestFlows([
               [`ul`, `la`, `ao`],
               [`ul`, `lbb`, `bo`],
               [`ul`, `lc`, `co`],
@@ -351,17 +343,17 @@ export const statelessLesson = {
         metrics: { ok: `3 / 3`, survive: `yes`, scale: `yes`, extra: `+1 ms` },
         scene: {
           entities: {
-            alice: et(),
-            lb: tt([{ text: `round robin`, icon: `replay` }]),
-            ...nt({
+            alice: alice(),
+            lb: loadBalancer([{ text: `round robin`, icon: `replay` }]),
+            ...servers({
               a: { tags: [{ text: `stateless` }] },
               b: { tags: [{ text: `stateless` }] },
               c: { tags: [{ text: `stateless` }] },
             }),
-            st: rt(),
+            st: sessionStore(),
           },
-          links: { ...it, ...at(), ...ot },
-          flows: st([
+          links: { ...userLink, ...serverLinks(), ...sessionLinks },
+          flows: requestFlows([
             [`ul`, `la`, `as`],
             [`ul`, `lbb`, `bs`],
             [`ul`, `lc`, `cs`],

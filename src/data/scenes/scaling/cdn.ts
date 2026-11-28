@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   makeBlock,
   makeCool,
@@ -8,24 +7,24 @@ import {
   makePanel
 } from '@/lib/simulator/scene-builders';
 
-const vt = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
+const londonArea = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
 
-const yt = { x0: 18, x1: 24, y0: -4.5, y1: 4.5 };
+const sydneyArea = { x0: 18, x1: 24, y0: -4.5, y1: 4.5 };
 
-const bt = (e = 11, t = `London`) => makeCrowd(vt, e, t);
+const londonUsers = (e = 11, t = `London`) => makeCrowd(londonArea, e, t);
 
-const xt = (e = 11, t = `Sydney`) => makeCrowd(yt, e, t);
+const sydneyUsers = (e = 11, t = `Sydney`) => makeCrowd(sydneyArea, e, t);
 
-const St = (e = {}) => makeBlock(0, 0, { label: [`Origin`], sub: `Virginia`, ...e });
+const origin = (e = {}) => makeBlock(0, 0, { label: [`Origin`], sub: `Virginia`, ...e });
 
-const Ct = (e, t, n, r = {}) =>
+const edgeNode = (e: number, t: number, n: string, r = {}) =>
     makeBlock(e, t, { color: `green`, glyph: `globe`, label: [`Edge`], sub: n, ...r });
 
-const wt = (e = {}, t = {}) => ({ el: Ct(0, -12, `London`, e), es: Ct(12, 0, `Sydney`, t) });
+const edgeNodes = (e = {}, t = {}) => ({ el: edgeNode(0, -12, `London`, e), es: edgeNode(12, 0, `Sydney`, t) });
 
-const Tt = 0.72;
+const packetSpeed = 0.72;
 
-const Et = {
+const originLinks = {
     lo: makeLink(`lon`, `origin`, [`lon`, `origin`], { heads: `both`, label: `≈ 75 ms per round trip` }),
     so: makeLink(`syd`, `origin`, [`syd`, `origin`], {
       heads: `both`,
@@ -34,7 +33,7 @@ const Et = {
     }),
   };
 
-const Dt = {
+const edgeLinks = {
     le: makeLink(`lon`, `el`, [`lon`, `el`], { heads: `both`, label: `≈ 10 ms` }),
     eo: makeLink(`el`, `origin`, [`el`, `origin`], {
       heads: `both`,
@@ -49,7 +48,7 @@ const Dt = {
     }),
   };
 
-const Ot = (e = 0.9, t = 0.9, n = 1.8) => [
+const requestFlows = (e = 0.9, t = 0.9, n = 1.8) => [
     {
       routes: [
         { path: [`le`], weight: e },
@@ -58,7 +57,7 @@ const Ot = (e = 0.9, t = 0.9, n = 1.8) => [
       pick: `weights`,
       rate: n,
       bounce: !0,
-      speed: Tt,
+      speed: packetSpeed,
     },
     {
       routes: [
@@ -68,7 +67,7 @@ const Ot = (e = 0.9, t = 0.9, n = 1.8) => [
       pick: `weights`,
       rate: n,
       bounce: !0,
-      speed: Tt,
+      speed: packetSpeed,
     },
   ];
 
@@ -102,11 +101,11 @@ export const cdnLesson = {
         },
         metrics: { lon: 80, syd: 210, origin: 9e3, hitRate: 0 },
         scene: {
-          entities: { lon: bt(), syd: xt(), origin: St(makeHot(0.88)) },
-          links: Et,
+          entities: { lon: londonUsers(), syd: sydneyUsers(), origin: origin(makeHot(0.88)) },
+          links: originLinks,
           flows: [
-            { route: [`lo`], rate: 1.6, bounce: !0, speed: Tt },
-            { route: [`so`], rate: 1.6, bounce: !0, speed: Tt },
+            { route: [`lo`], rate: 1.6, bounce: !0, speed: packetSpeed },
+            { route: [`so`], rate: 1.6, bounce: !0, speed: packetSpeed },
           ],
         },
       },
@@ -122,9 +121,9 @@ export const cdnLesson = {
         metrics: { lon: 80, syd: 210, origin: 9e3, hitRate: 0 },
         scene: {
           entities: {
-            lon: bt(),
-            syd: xt(),
-            origin: St(makeHot(0.88)),
+            lon: londonUsers(),
+            syd: sydneyUsers(),
+            origin: origin(makeHot(0.88)),
             card: ((e, t, n) => makePanel({ x: 0, y: 0, z: 0, dx: -340, dy: -230 }, e, t, { icon: n }))(
               `What a page is made of`,
               [
@@ -136,10 +135,10 @@ export const cdnLesson = {
               `layers`,
             ),
           },
-          links: Et,
+          links: originLinks,
           flows: [
-            { route: [`lo`], rate: 1.6, bounce: !0, speed: Tt },
-            { route: [`so`], rate: 1.6, bounce: !0, speed: Tt },
+            { route: [`lo`], rate: 1.6, bounce: !0, speed: packetSpeed },
+            { route: [`so`], rate: 1.6, bounce: !0, speed: packetSpeed },
           ],
         },
       },
@@ -162,9 +161,9 @@ export const cdnLesson = {
         ],
         metrics: { lon: 12, syd: 15, origin: 900, hitRate: 90 },
         scene: {
-          entities: { lon: bt(), syd: xt(), origin: St(makeCool(0.2)), ...wt() },
-          links: Dt,
-          flows: Ot(),
+          entities: { lon: londonUsers(), syd: sydneyUsers(), origin: origin(makeCool(0.2)), ...edgeNodes() },
+          links: edgeLinks,
+          flows: requestFlows(),
         },
       },
       {
@@ -186,16 +185,16 @@ export const cdnLesson = {
         metrics: { lon: 12, syd: 95, origin: 2400, hitRate: 70 },
         scene: {
           entities: {
-            lon: bt(),
-            syd: xt(),
-            origin: St(makeCool(0.32)),
-            ...wt(
+            lon: londonUsers(),
+            syd: sydneyUsers(),
+            origin: origin(makeCool(0.32)),
+            ...edgeNodes(
               { tags: [{ text: `warm`, tone: `green` }] },
               { tags: [{ text: `cold · filling`, tone: `amber`, icon: `alert` }] },
             ),
           },
-          links: Dt,
-          flows: Ot(0.93, 0.45),
+          links: edgeLinks,
+          flows: requestFlows(0.93, 0.45),
         },
       },
       {
@@ -214,16 +213,16 @@ export const cdnLesson = {
         metrics: { lon: 12, syd: 15, origin: 900, hitRate: 90 },
         scene: {
           entities: {
-            lon: bt(),
-            syd: xt(),
-            origin: St({ ...makeCool(0.2), tags: [{ text: `logo.png · new`, tone: `green` }] }),
-            ...wt(
+            lon: londonUsers(),
+            syd: sydneyUsers(),
+            origin: origin({ ...makeCool(0.2), tags: [{ text: `logo.png · new`, tone: `green` }] }),
+            ...edgeNodes(
               { tags: [{ text: `logo.png · old`, tone: `red`, icon: `alert` }] },
               { tags: [{ text: `logo.png · old`, tone: `red`, icon: `alert` }] },
             ),
           },
-          links: Dt,
-          flows: Ot(),
+          links: edgeLinks,
+          flows: requestFlows(),
         },
       },
       {
@@ -242,16 +241,16 @@ export const cdnLesson = {
         metrics: { lon: 12, syd: 15, origin: 900, hitRate: 96 },
         scene: {
           entities: {
-            lon: bt(),
-            syd: xt(),
-            origin: St({ ...makeCool(0.15), tags: [{ text: `logo.3f9a.png`, tone: `green` }] }),
-            ...wt(
+            lon: londonUsers(),
+            syd: sydneyUsers(),
+            origin: origin({ ...makeCool(0.15), tags: [{ text: `logo.3f9a.png`, tone: `green` }] }),
+            ...edgeNodes(
               { tags: [{ text: `logo.3f9a.png · 1 yr`, tone: `green` }] },
               { tags: [{ text: `logo.3f9a.png · 1 yr`, tone: `green` }] },
             ),
           },
-          links: Dt,
-          flows: Ot(0.96, 0.96),
+          links: edgeLinks,
+          flows: requestFlows(0.96, 0.96),
         },
       },
       {
@@ -270,13 +269,13 @@ export const cdnLesson = {
         metrics: { lon: 14, syd: 18, origin: 1100, hitRate: 97 },
         scene: {
           entities: {
-            lon: bt(15, `London · ×20`),
-            syd: xt(15, `Sydney · ×20`),
-            origin: St(makeCool(0.2)),
-            ...wt({ cpu: 0.6 }, { cpu: 0.6 }),
+            lon: londonUsers(15, `London · ×20`),
+            syd: sydneyUsers(15, `Sydney · ×20`),
+            origin: origin(makeCool(0.2)),
+            ...edgeNodes({ cpu: 0.6 }, { cpu: 0.6 }),
           },
-          links: Dt,
-          flows: Ot(0.97, 0.97, 4.6),
+          links: edgeLinks,
+          flows: requestFlows(0.97, 0.97, 4.6),
         },
       },
       {
@@ -298,18 +297,18 @@ export const cdnLesson = {
         metrics: { lon: 12, syd: 15, origin: 1400, hitRate: 88 },
         scene: {
           entities: {
-            lon: bt(),
-            syd: xt(),
-            origin: St(makeCool(0.22)),
-            ...wt(
+            lon: londonUsers(),
+            syd: sydneyUsers(),
+            origin: origin(makeCool(0.22)),
+            ...edgeNodes(
               { tags: [{ text: `/cart → private · pass`, tone: `amber`, icon: `lock` }] },
               { tags: [{ text: `/cart → private · pass`, tone: `amber`, icon: `lock` }] },
             ),
           },
-          links: Dt,
+          links: edgeLinks,
           flows: [
-            ...Ot(0.88, 0.88),
-            { route: [`le`, `eo`], kind: `mine`, rate: 0.5, bounce: !0, speed: Tt },
+            ...requestFlows(0.88, 0.88),
+            { route: [`le`, `eo`], kind: `mine`, rate: 0.5, bounce: !0, speed: packetSpeed },
           ],
         },
       },
@@ -329,8 +328,8 @@ export const cdnLesson = {
         metrics: { lon: 12, syd: 15, origin: 120, hitRate: 98 },
         scene: {
           entities: {
-            lon: bt(),
-            syd: xt(),
+            lon: londonUsers(),
+            syd: sydneyUsers(),
             origin: makeBlock(-9, 9, { label: [`Origin`], sub: `Virginia`, ...makeCool(0.05) }),
             sh: makeBlock(0, 0, {
               color: `green`,
@@ -338,11 +337,11 @@ export const cdnLesson = {
               label: [`Shield`],
               sub: `mid-tier cache`,
             }),
-            ...wt(),
+            ...edgeNodes(),
           },
           links: {
-            le: Dt.le,
-            se: Dt.se,
+            le: edgeLinks.le,
+            se: edgeLinks.se,
             esh: makeLink(`el`, `sh`, [`el`, `sh`], {
               heads: `both`,
               style: `dashed`,
@@ -363,7 +362,7 @@ export const cdnLesson = {
               pick: `weights`,
               rate: 1.8,
               bounce: !0,
-              speed: Tt,
+              speed: packetSpeed,
             },
             {
               routes: [
@@ -373,7 +372,7 @@ export const cdnLesson = {
               pick: `weights`,
               rate: 1.8,
               bounce: !0,
-              speed: Tt,
+              speed: packetSpeed,
             },
             { route: [`sho`], kind: `slow`, rate: 0.15, bounce: !0 },
           ],
@@ -398,9 +397,9 @@ export const cdnLesson = {
         },
         metrics: { lon: 12, syd: 15, origin: 900, hitRate: 96 },
         scene: {
-          entities: { lon: bt(), syd: xt(), origin: St(makeCool(0.15)), ...wt() },
-          links: Dt,
-          flows: Ot(0.96, 0.96),
+          entities: { lon: londonUsers(), syd: sydneyUsers(), origin: origin(makeCool(0.15)), ...edgeNodes() },
+          links: edgeLinks,
+          flows: requestFlows(0.96, 0.96),
         },
       },
     ],
