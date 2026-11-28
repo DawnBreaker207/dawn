@@ -1,52 +1,44 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const Wc = {
+const services: Record<string, { x: number } & Bag> = {
     fl: { x: -9, color: `blue`, glyph: `plane`, label: [`Flights`] },
     ho: { x: 0, color: `yellow`, glyph: `hotel`, label: [`Hotels`] },
     car: { x: 9, color: `green`, glyph: `car`, label: [`Cars`] },
   };
 
-const Gc = Object.keys(Wc);
+const serviceKeys = Object.keys(services);
 
-const Kc = (e = []) => makeDevice(0, -20, { label: `traveller`, tags: e });
+const traveller = (e: Tag[] = []) => makeDevice(0, -20, { label: `traveller`, tags: e });
 
-const qc = (e = {}) =>
+const tripService = (e: Bag = {}) =>
     makeBlock(0, -9, { s: 5.2, color: `orange`, glyph: `route`, label: [`Trip`, `Service`], pills: `below`, ...e });
 
-const Jc = (e = {}) =>
-    Object.fromEntries(Gc.map((t) => [t, makeBlock(Wc[t].x, 2, { ...Wc[t], ...(e[t] || {}) })]));
+const serviceBlocks = (e: Bag = {}) =>
+    Object.fromEntries(serviceKeys.map((t) => [t, makeBlock(services[t].x, 2, { ...services[t], ...(e[t] || {}) })]));
 
-const Yc = () =>
-    Object.fromEntries(Gc.map((e) => [`${e}db`, makeDb(Wc[e].x, 11, { r: 1.5, h: 30, label: `` })]));
+const serviceDbs = () =>
+    Object.fromEntries(serviceKeys.map((e) => [`${e}db`, makeDb(services[e].x, 11, { r: 1.5, h: 30, label: `` })]));
 
-const R = {
+const links = {
     ut: { ut: makeLink(`trav`, `trip`, [`trav`, `trip`], { heads: `both` }) },
-    calls: (e = `trip`, t = {}) =>
+    calls: (e = `trip`, t: Bag = {}) =>
       Object.fromEntries(
-        Gc.map((n) => [`${e[0]}${n}`, makeLink(e, n, [e, [n, e], n], { heads: `both`, ...(t[n] || {}) })]),
+        serviceKeys.map((n) => [`${e[0]}${n}`, makeLink(e, n, [e, [n, e], n], { heads: `both`, ...(t[n] || {}) })]),
       ),
     dbs: () =>
       Object.fromEntries(
-        Gc.map((e) => [`d${e}`, makeLink(e, `${e}db`, [e, `${e}db`], { heads: `both` })]),
+        serviceKeys.map((e) => [`d${e}`, makeLink(e, `${e}db`, [e, `${e}db`], { heads: `both` })]),
       ),
   };
 
-const Xc = (e) => ({ text: `${e} booked`, tone: `green`, icon: `check` });
+const bookedTag = (e: string) => ({ text: `${e} booked`, tone: `green`, icon: `check` });
 
-const Zc = (e, t, n) => makePanel({ x: 9, y: 11, z: 0, dx: -30, dy: -195 }, e, t, { icon: n });
+const card = cardAt({ x: 9, y: 11, dx: -30, dy: -195 });
 
-const Qc = (e = `t`, t = {}) =>
-    Gc.map((n) => ({ route: [`${e}${n}`, `d${n}`], rate: 0.6, bounce: !0, ...(t[n] || {}) }));
+const flows = (e = `t`, t: Bag = {}) =>
+    serviceKeys.map((n) => ({ route: [`${e}${n}`, `d${n}`], rate: 0.6, bounce: !0, ...(t[n] || {}) }));
 
-const $c = {
+const sagasLesson = {
     id: `sagas`,
     title: `Sagas & Distributed Transactions`,
     summary: `One action, several services, several databases: how to keep it all-or-nothing without one big transaction.`,
@@ -84,19 +76,19 @@ const $c = {
         metrics: { allOrNothing: `no`, blocked: `—`, coord: `none` },
         scene: {
           entities: {
-            trav: Kc([{ text: `flight + hotel, no car`, tone: `red`, icon: `alert` }]),
-            trip: qc(),
-            ...Jc({
-              fl: { tags: [Xc(`flight`)] },
-              ho: { tags: [Xc(`room`)] },
+            trav: traveller([{ text: `flight + hotel, no car`, tone: `red`, icon: `alert` }]),
+            trip: tripService(),
+            ...serviceBlocks({
+              fl: { tags: [bookedTag(`flight`)] },
+              ho: { tags: [bookedTag(`room`)] },
               car: { tags: [{ text: `no cars left`, tone: `red`, icon: `alert` }] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
-          links: { ...R.ut, ...R.calls(`trip`, { car: { fail: 1 } }), ...R.dbs() },
+          links: { ...links.ut, ...links.calls(`trip`, { car: { fail: 1 } }), ...links.dbs() },
           flows: [
             { route: [`ut`], rate: 0.6, bounce: !0 },
-            ...Qc(`t`, { car: { route: [`tcar`], bounce: !1 } }),
+            ...flows(`t`, { car: { route: [`tcar`], bounce: !1 } }),
           ],
         },
       },
@@ -119,30 +111,30 @@ const $c = {
         metrics: { allOrNothing: `yes`, blocked: `during commit`, coord: `2PC` },
         scene: {
           entities: {
-            trav: Kc([{ text: `no car → nothing booked`, tone: `amber` }]),
-            trip: qc({
+            trav: traveller([{ text: `no car → nothing booked`, tone: `amber` }]),
+            trip: tripService({
               label: [`Coordinator`],
               tags: [
                 { text: `votes: yes · yes · no → roll back`, tone: `amber`, icon: `listOrdered` },
               ],
             }),
-            ...Jc({
+            ...serviceBlocks({
               fl: { tags: [{ text: `prepared ✓` }] },
               ho: { tags: [{ text: `prepared ✓` }] },
               car: { tags: [{ text: `vote: no`, tone: `red` }] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
-          links: { ...R.ut, ...R.calls(), ...R.dbs() },
+          links: { ...links.ut, ...links.calls(), ...links.dbs() },
           flows: [
             {
               fanout: !0,
-              routes: Gc.map((e) => ({ path: [`t${e}`] })),
+              routes: serviceKeys.map((e) => ({ path: [`t${e}`] })),
               kind: `ping`,
               rate: 0.5,
               bounce: !0,
             },
-            { fanout: !0, routes: Gc.map((e) => ({ path: [`t${e}`] })), kind: `kill`, rate: 0.25 },
+            { fanout: !0, routes: serviceKeys.map((e) => ({ path: [`t${e}`] })), kind: `kill`, rate: 0.25 },
           ],
         },
       },
@@ -162,23 +154,23 @@ const $c = {
         metrics: { allOrNothing: `yes`, blocked: `3 services`, coord: `2PC` },
         scene: {
           entities: {
-            trav: Kc([{ text: `waiting…`, tone: `amber`, icon: `hourglass` }]),
-            trip: qc({ ...DEAD_STATE, label: [`Coordinator`] }),
-            ...Jc({
+            trav: traveller([{ text: `waiting…`, tone: `amber`, icon: `hourglass` }]),
+            trip: tripService({ ...DEAD_STATE, label: [`Coordinator`] }),
+            ...serviceBlocks({
               fl: { heat: 0.4, tags: [{ text: `locked`, tone: `red`, icon: `lock` }] },
               ho: { heat: 0.4, tags: [{ text: `locked`, tone: `red`, icon: `lock` }] },
               car: { heat: 0.4, tags: [{ text: `locked`, tone: `red`, icon: `lock` }] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
           links: {
-            ...R.ut,
-            ...R.calls(`trip`, {
+            ...links.ut,
+            ...links.calls(`trip`, {
               fl: { style: `off` },
               ho: { style: `off` },
               car: { style: `off` },
             }),
-            ...R.dbs(),
+            ...links.dbs(),
           },
           flows: [{ route: [`ut`], rate: 0.6, bounce: !0, hold: 2 }],
         },
@@ -203,18 +195,18 @@ const $c = {
         metrics: { allOrNothing: `eventually`, blocked: `none`, coord: `saga` },
         scene: {
           entities: {
-            trav: Kc([{ text: `no car → fully refunded`, tone: `green`, icon: `check` }]),
-            trip: qc(),
-            ...Jc({
+            trav: traveller([{ text: `no car → fully refunded`, tone: `green`, icon: `check` }]),
+            trip: tripService(),
+            ...serviceBlocks({
               fl: { tags: [{ text: `booked → cancelled`, tone: `amber`, icon: `undo` }] },
               ho: { tags: [{ text: `booked → cancelled`, tone: `amber`, icon: `undo` }] },
               car: { tags: [{ text: `no cars left`, tone: `red`, icon: `alert` }] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
-          links: { ...R.ut, ...R.calls(`trip`, { car: { fail: 1 } }), ...R.dbs() },
+          links: { ...links.ut, ...links.calls(`trip`, { car: { fail: 1 } }), ...links.dbs() },
           flows: [
-            ...Qc(`t`, { car: { route: [`tcar`], bounce: !1 } }),
+            ...flows(`t`, { car: { route: [`tcar`], bounce: !1 } }),
             { route: [`tho`], kind: `kill`, rate: 0.4 },
             { route: [`tfl`], kind: `kill`, rate: 0.4 },
           ],
@@ -236,22 +228,22 @@ const $c = {
         metrics: { allOrNothing: `eventually`, blocked: `none`, coord: `orchestrator` },
         scene: {
           entities: {
-            trav: Kc(),
-            trip: qc({
+            trav: traveller(),
+            trip: tripService({
               label: [`Saga`, `Orchestrator`],
               tags: [{ text: `trip 81: hotel ✓ · car pending`, icon: `workflow` }],
             }),
             odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
-            ...Jc({ fl: { tags: [Xc(`flight`)] }, ho: { tags: [Xc(`room`)] } }),
-            ...Yc(),
+            ...serviceBlocks({ fl: { tags: [bookedTag(`flight`)] }, ho: { tags: [bookedTag(`room`)] } }),
+            ...serviceDbs(),
           },
           links: {
-            ...R.ut,
+            ...links.ut,
             so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
-            ...R.calls(),
-            ...R.dbs(),
+            ...links.calls(),
+            ...links.dbs(),
           },
-          flows: [...Qc(`t`), { route: [`so`], kind: `write`, rate: 1.2 }],
+          flows: [...flows(`t`), { route: [`so`], kind: `write`, rate: 1.2 }],
         },
       },
       {
@@ -274,23 +266,23 @@ const $c = {
         metrics: { allOrNothing: `eventually`, blocked: `none`, coord: `events` },
         scene: {
           entities: {
-            trav: Kc(),
+            trav: traveller(),
             bus: makeBlock(0, -9, { color: `slab`, glyph: `radio`, label: [`Event`, `Bus`] }),
-            ...Jc({
+            ...serviceBlocks({
               fl: { tags: [{ text: `→ FlightBooked` }] },
               ho: { tags: [{ text: `→ HotelBooked` }] },
               car: { tags: [{ text: `→ CarRented` }] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
           links: {
             ub: makeLink(`trav`, `bus`, [`trav`, `bus`], { heads: `both` }),
-            ...R.calls(`bus`),
-            ...R.dbs(),
+            ...links.calls(`bus`),
+            ...links.dbs(),
           },
           flows: [
             { route: [`ub`], rate: 0.5, bounce: !0 },
-            { routes: Gc.map((e) => ({ path: [`b${e}`] })), kind: `msg`, rate: 1.4, bounce: !0 },
+            { routes: serviceKeys.map((e) => ({ path: [`b${e}`] })), kind: `msg`, rate: 1.4, bounce: !0 },
           ],
         },
       },
@@ -314,16 +306,16 @@ const $c = {
         metrics: { allOrNothing: `eventually`, blocked: `none`, coord: `orchestrator` },
         scene: {
           entities: {
-            trav: Kc([{ text: `charged only at the end`, icon: `creditCard` }]),
-            trip: qc({ label: [`Saga`, `Orchestrator`] }),
+            trav: traveller([{ text: `charged only at the end`, icon: `creditCard` }]),
+            trip: tripService({ label: [`Saga`, `Orchestrator`] }),
             odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
-            ...Jc({
+            ...serviceBlocks({
               fl: { tags: [{ text: `seat: reserved`, tone: `amber`, icon: `clock` }] },
               ho: { tags: [{ text: `room: reserved`, tone: `amber`, icon: `clock` }] },
               car: { tags: [{ text: `checked first ✓`, tone: `green` }] },
             }),
-            ...Yc(),
-            card: Zc(
+            ...serviceDbs(),
+            card: card(
               `Order the steps`,
               [
                 `1. check car    likely to fail → first`,
@@ -335,12 +327,12 @@ const $c = {
             ),
           },
           links: {
-            ...R.ut,
+            ...links.ut,
             so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
-            ...R.calls(),
-            ...R.dbs(),
+            ...links.calls(),
+            ...links.dbs(),
           },
-          flows: [...Qc(`t`), { route: [`so`], kind: `write`, rate: 1.2 }],
+          flows: [...flows(`t`), { route: [`so`], kind: `write`, rate: 1.2 }],
         },
       },
       {
@@ -363,23 +355,23 @@ const $c = {
         metrics: { allOrNothing: `eventually`, blocked: `none`, coord: `orchestrator` },
         scene: {
           entities: {
-            trav: Kc(),
-            trip: qc({
+            trav: traveller(),
+            trip: tripService({
               label: [`Saga`, `Orchestrator`],
               tags: [{ text: `restarted · resuming trip 81`, tone: `amber`, icon: `replay` }],
             }),
             odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
-            ...Jc({
-              fl: { tags: [Xc(`flight`)] },
+            ...serviceBlocks({
+              fl: { tags: [bookedTag(`flight`)] },
               ho: { tags: [{ text: `key 81-hotel seen → same room`, tone: `green`, icon: `key` }] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
           links: {
-            ...R.ut,
+            ...links.ut,
             so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
-            ...R.calls(`trip`, { ho: { label: `book hotel · key 81-hotel`, labelAt: 0.5 } }),
-            ...R.dbs(),
+            ...links.calls(`trip`, { ho: { label: `book hotel · key 81-hotel`, labelAt: 0.5 } }),
+            ...links.dbs(),
           },
           flows: [
             { route: [`tho`, `dho`], rate: 1.2, bounce: !0, pattern: [`req`, `slow`] },
@@ -407,24 +399,24 @@ const $c = {
         metrics: { allOrNothing: `eventually`, blocked: `none`, coord: `orchestrator` },
         scene: {
           entities: {
-            trav: Kc([{ text: `refund pending`, tone: `amber`, icon: `clock` }]),
-            trip: qc({
+            trav: traveller([{ text: `refund pending`, tone: `amber`, icon: `clock` }]),
+            trip: tripService({
               label: [`Saga`, `Orchestrator`],
               tags: [{ text: `cancel hotel · attempt 4`, tone: `amber`, icon: `replay` }],
             }),
             odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
-            ...Jc({
+            ...serviceBlocks({
               fl: { tags: [{ text: `cancelled ✓`, tone: `green`, icon: `undo` }] },
               ho: { ...DEAD_STATE, tags: [{ text: `API down`, tone: `red`, icon: `alert` }] },
               car: { tags: [{ text: `no cars left`, tone: `red`, icon: `alert` }] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
           links: {
-            ...R.ut,
+            ...links.ut,
             so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
-            ...R.calls(`trip`, { ho: { fail: 1, label: `retry with backoff`, labelAt: 0.5 } }),
-            ...R.dbs(),
+            ...links.calls(`trip`, { ho: { fail: 1, label: `retry with backoff`, labelAt: 0.5 } }),
+            ...links.dbs(),
           },
           flows: [
             { route: [`tho`], kind: `kill`, rate: 0.6 },
@@ -452,24 +444,24 @@ const $c = {
         metrics: { allOrNothing: `eventually`, blocked: `none`, coord: `orchestrator` },
         scene: {
           entities: {
-            trav: Kc(),
-            trip: qc({
+            trav: traveller(),
+            trip: tripService({
               label: [`Saga`, `Orchestrator`],
               tags: [{ text: `car: unknown → asking`, tone: `amber`, icon: `info` }],
             }),
             odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
-            ...Jc({
-              fl: { tags: [Xc(`flight`)] },
-              ho: { tags: [Xc(`room`)] },
+            ...serviceBlocks({
+              fl: { tags: [bookedTag(`flight`)] },
+              ho: { tags: [bookedTag(`room`)] },
               car: { tags: [{ text: `81-car: booked ✓`, tone: `green`, icon: `key` }] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
           links: {
-            ...R.ut,
+            ...links.ut,
             so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
-            ...R.calls(`trip`, { car: { label: `status of 81-car?`, labelAt: 0.5 } }),
-            ...R.dbs(),
+            ...links.calls(`trip`, { car: { label: `status of 81-car?`, labelAt: 0.5 } }),
+            ...links.dbs(),
           },
           flows: [
             { route: [`tcar`], rate: 0.9, bounce: !0, pattern: [`slow`, `req`] },
@@ -497,27 +489,27 @@ const $c = {
         metrics: { allOrNothing: `eventually`, blocked: `none`, coord: `orchestrator` },
         scene: {
           entities: {
-            trav: Kc([{ text: `trip confirmed`, tone: `green`, icon: `check` }]),
-            trip: qc({ label: [`Saga`, `Orchestrator`] }),
+            trav: traveller([{ text: `trip confirmed`, tone: `green`, icon: `check` }]),
+            trip: tripService({ label: [`Saga`, `Orchestrator`] }),
             odb: makeDb(-11, -9, { r: 1.5, h: 30, glyph: `listOrdered`, label: `saga state` }),
-            ...Jc({
-              fl: { tags: [Xc(`flight`)] },
-              ho: { tags: [Xc(`room`)] },
-              car: { tags: [Xc(`car`)] },
+            ...serviceBlocks({
+              fl: { tags: [bookedTag(`flight`)] },
+              ho: { tags: [bookedTag(`room`)] },
+              car: { tags: [bookedTag(`car`)] },
             }),
-            ...Yc(),
+            ...serviceDbs(),
           },
           links: {
-            ...R.ut,
+            ...links.ut,
             so: makeLink(`trip`, `odb`, [`trip`, `odb`], { heads: `both` }),
-            ...R.calls(),
-            ...R.dbs(),
+            ...links.calls(),
+            ...links.dbs(),
           },
-          flows: [...Qc(`t`), { route: [`so`], kind: `write`, rate: 1.2 }],
+          flows: [...flows(`t`), { route: [`so`], kind: `write`, rate: 1.2 }],
         },
       },
     ],
   };
 
-export { $c as sagasLesson };
-export default $c;
+export { sagasLesson as sagasLesson };
+export default sagasLesson;

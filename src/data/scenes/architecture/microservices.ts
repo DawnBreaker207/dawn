@@ -1,21 +1,11 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBalancer,
-  makeBlock,
-  makeCrowd,
-  makeDb,
-  makeHot,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBalancer, makeBlock, makeCrowd, makeDb, makeHot, makeLink, makePanel, cardAt, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
 // ============================================================================
 // MICROSERVICES & DISTRIBUTED SYSTEMS
 // ============================================================================
-const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
-  pc = () => makeCrowd(fc, 13, `shoppers`),
-  mc = (x, y = 4, t = {}) =>
+const frontendArea = { x0: -9, x1: -1, y0: -24, y1: -18 },
+  shoppers = () => makeCrowd(frontendArea, 13, `shoppers`),
+  microservice = (x: number, y = 4, t: Bag = {}) =>
     makeBlock(x, y, {
       s: 5.5,
       h: 60,
@@ -26,10 +16,10 @@ const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
       ...(typeof y === 'object' ? y : t),
     }),
   hc = (e = {}, t = {}, n = {}) => ({
-    users: pc(),
+    users: shoppers(),
     lb: makeBalancer(-5, -6),
-    m1: mc(-3, 6, e),
-    m2: mc(8, -4, t),
+    m1: microservice(-3, 6, e),
+    m2: microservice(8, -4, t),
     mdb: makeDb(9, 7, { r: 2.2, h: 44, label: `one database`, ...n }),
   }),
   gc = {
@@ -42,26 +32,26 @@ const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
   _c = [
     { routes: [{ path: [`ul`, `l1`, `d1`] }, { path: [`ul`, `l2`, `d2`] }], rate: 2.4, bounce: !0 },
   ],
-  vc = {
+  vc: Record<string, { x: number; y: number } & Bag> = {
     usr: { x: -12, y: 4, color: `green`, glyph: `user`, label: [`Users`] },
     cat: { x: -3, y: 4, color: `yellow`, glyph: `layers`, label: [`Catalog`] },
     ord: { x: 6, y: 4, color: `blue`, glyph: `cart`, label: [`Orders`] },
     pay: { x: 15, y: 4, color: `purple`, glyph: `creditCard`, label: [`Payments`] },
   },
   yc = Object.keys(vc),
-  bc = (e = []) =>
-    makeBlock(-2, -6, {
+  bc = (e: Tag[] = []) =>
+    makeBlock(0, -6, {
       color: `orange`,
       glyph: `route`,
       label: [`API`, `Gateway`],
       tags: e,
       pills: `below`,
     }),
-  xc = (e = {}) =>
+  xc = (e: Record<string, Bag> = {}) =>
     Object.fromEntries(yc.map((t) => [t, makeBlock(vc[t].x, vc[t].y, { ...vc[t], ...(e[t] || {}) })])),
   Sc = () =>
     Object.fromEntries(yc.map((e) => [`${e}db`, makeDb(vc[e].x, 14, { r: 1.5, h: 30, label: `` })])),
-  Cc = (e = {}) => ({
+  Cc = (e: Bag = {}) => ({
     ug: makeLink(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
     ...Object.fromEntries(
       yc.map((t) => [
@@ -72,13 +62,13 @@ const fc = { x0: -9, x1: -1, y0: -24, y1: -18 },
   }),
   wc = () =>
     Object.fromEntries(yc.map((e) => [`d${e}`, makeLink(e, `${e}db`, [e, `${e}db`], { heads: `both` })])),
-  Tc = (e = {}) => ({
+  Tc = (e: Bag = {}) => ({
     op: makeLink(`ord`, `pay`, [`ord`, `pay`], { heads: `both`, label: `API call`, ...e }),
   }),
   Ec = (e = 2.6) => [
     { routes: yc.map((e) => ({ path: [`ug`, `g${e}`, `d${e}`] })), rate: e, bounce: !0 },
   ],
-  Dc = (e, t, n) => makePanel({ x: 15, y: 14, z: 0, dx: 60, dy: -175 }, e, t, { icon: n });
+  Dc = cardAt({ x: 15, y: 14, dx: 60, dy: -175 });
 
 export const microservicesLesson = {
     id: `microservices`,
@@ -162,7 +152,7 @@ export const microservicesLesson = {
         metrics: { deploys: `40 / day`, blast: `one feature`, hops: `2–4`, opsCost: `high` },
         scene: {
           entities: {
-            users: pc(),
+            users: shoppers(),
             gw: bc(),
             ...xc(),
             mdb: makeDb(2, 14, { r: 2.2, h: 44, label: `one database` }),
@@ -194,7 +184,7 @@ export const microservicesLesson = {
         metrics: { deploys: `40 / day`, blast: `one feature`, hops: `2–4`, opsCost: `high` },
         scene: {
           entities: {
-            users: pc(),
+            users: shoppers(),
             gw: bc(),
             ...xc(),
             ...Sc(),
@@ -233,7 +223,7 @@ export const microservicesLesson = {
         metrics: { deploys: `40 / day`, blast: `one feature`, hops: `6`, opsCost: `high` },
         scene: {
           entities: {
-            users: pc(),
+            users: shoppers(),
             gw: bc(),
             ...xc({
               pay: { heat: 0.5, tags: [{ text: `slow · 2 s`, tone: `amber`, icon: `hourglass` }] },
@@ -264,7 +254,7 @@ export const microservicesLesson = {
         metrics: { deploys: `1 / week`, blast: `whole site`, hops: `6`, opsCost: `high` },
         scene: {
           entities: {
-            users: pc(),
+            users: shoppers(),
             gw: bc([{ text: `release train: all 4 together`, tone: `red`, icon: `alert` }]),
             ...xc(),
             mdb: makeDb(2, 14, { r: 2.2, h: 44, label: `shared tables`, heat: 0.6 }),
@@ -298,7 +288,7 @@ export const microservicesLesson = {
         metrics: { deploys: `40 / day`, blast: `one feature`, hops: `1 + 20`, opsCost: `high` },
         scene: {
           entities: {
-            users: pc(),
+            users: shoppers(),
             gw: bc(),
             ...xc({
               ord: { tags: [{ text: `history: 20 orders`, icon: `listOrdered` }] },
@@ -341,7 +331,7 @@ export const microservicesLesson = {
         metrics: { deploys: `40 / day`, blast: `one feature`, hops: `2`, opsCost: `high` },
         scene: {
           entities: {
-            users: pc(),
+            users: shoppers(),
             gw: bc(),
             ...xc({
               ord: { tags: [{ text: `local copy: name · photo`, tone: `green`, icon: `layers` }] },
@@ -375,7 +365,7 @@ export const microservicesLesson = {
         metrics: { deploys: `40 / day`, blast: `one feature`, hops: `2–4`, opsCost: `high` },
         scene: {
           entities: {
-            users: pc(),
+            users: shoppers(),
             gw: bc(),
             ...xc({
               ord: { tags: [{ text: `contract: needs amount`, icon: `clipboard` }] },
@@ -412,7 +402,7 @@ export const microservicesLesson = {
         },
         metrics: { deploys: `40 / day`, blast: `one feature`, hops: `2–4`, opsCost: `high` },
         scene: {
-          entities: { users: pc(), gw: bc(), ...xc(), ...Sc() },
+          entities: { users: shoppers(), gw: bc(), ...xc(), ...Sc() },
           links: { ...Cc(), ...wc(), ...Tc() },
           flows: [...Ec(), { route: [`op`], rate: 0.8, bounce: !0 }],
         },
@@ -437,9 +427,9 @@ export const microservicesLesson = {
         metrics: { deploys: `5 / day`, blast: `whole site`, hops: `1–2`, opsCost: `medium` },
         scene: {
           entities: {
-            users: pc(),
+            users: shoppers(),
             gw: bc(),
-            m1: mc(-4, 4, { tags: [{ text: `users · catalog · orders` }] }),
+            m1: microservice(-4, 4, { tags: [{ text: `users · catalog · orders` }] }),
             mdb: makeDb(-4, 14, { r: 2.2, h: 44, label: `monolith DB` }),
             pay: makeBlock(12, 4, { ...vc.pay, tags: [{ text: `new`, tone: `green` }] }),
             paydb: makeDb(12, 14, { r: 1.5, h: 30, label: `` }),
@@ -488,7 +478,7 @@ export const microservicesLesson = {
         },
         metrics: { deploys: `40 / day`, blast: `one feature`, hops: `2–4`, opsCost: `high` },
         scene: {
-          entities: { users: pc(), gw: bc(), ...xc(), ...Sc() },
+          entities: { users: shoppers(), gw: bc(), ...xc(), ...Sc() },
           links: { ...Cc(), ...wc(), ...Tc() },
           flows: [...Ec(), { route: [`op`], rate: 0.8, bounce: !0 }],
         },

@@ -1,30 +1,20 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeDb,
-  makeHot,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeCrowd, makeDb, makeHot, makeLink, makePanel, makeZone, type Bag, type Tag, cardAt } from '@/lib/simulator/scene-builders';
 
-const el = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 };
+const viewersArea = { x0: -4.5, x1: 4.5, y0: -25, y1: -19 };
 
-const tl = { x0: -16, x1: -6, y0: -3, y1: 9 };
+const batchArea = { x0: -16, x1: -6, y0: -3, y1: 9 };
 
-const nl = () => makeCrowd(el, 13, `viewers`);
+const viewers = () => makeCrowd(viewersArea, 13, `viewers`);
 
-const rl = () => makeBlock(0, -5, { label: [`Video`, `App`] });
+const videoApp = () => makeBlock(0, -5, { label: [`Video`, `App`] });
 
-const il = (e = {}) => makeDb(0, 0, { r: 2, h: 42, label: `production DB`, ...e });
+const productionDb = (e: Bag = {}) => makeDb(0, 0, { r: 2, h: 42, label: `production DB`, ...e });
 
-const al = (e = []) => makeBlock(0, 6, { color: `slab`, glyph: `chartLine`, label: [`Dashboard`], tags: e });
+const dashboard = (e: Tag[] = []) => makeBlock(0, 6, { color: `slab`, glyph: `chartLine`, label: [`Dashboard`], tags: e });
 
-const ol = (e = `NIGHTLY BATCH JOB`, t = {}) => ({
+const batchScene = (e = `NIGHTLY BATCH JOB`, t: Record<string, Tag[]> = {}) => ({
     logs: makeDb(-5, -5, { r: 1.8, h: 36, glyph: `box`, label: `event logs` }),
-    batch: makeZone(tl, e),
+    batch: makeZone(batchArea, e),
     w1: makeBlock(-13.5, 0, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w1 || [] }),
     w2: makeBlock(-8.5, 0, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w2 || [] }),
     w3: makeBlock(-13.5, 6, { s: 3, h: 30, color: `green`, glyph: `cpu`, label: [], tags: t.w3 || [] }),
@@ -32,13 +22,13 @@ const ol = (e = `NIGHTLY BATCH JOB`, t = {}) => ({
     wh: makeDb(-5, 6, { r: 1.8, h: 36, glyph: `chart`, label: `warehouse` }),
   });
 
-const sl = (e = [], t = []) => ({
+const streamScene = (e: Tag[] = [], t: Tag[] = []) => ({
     kafka: makeBlock(5, -5, { color: `slab`, glyph: `waves`, label: [`Event`, `Stream`], tags: t }),
     proc: makeBlock(11, 3, { color: `green`, glyph: `activity`, label: [`Stream`, `Processor`], tags: e }),
     live: makeDb(5, 6, { r: 1.8, h: 36, glyph: `zap`, label: `live counts` }),
   });
 
-const z = {
+const links = {
     base: {
       va: makeLink(`viewers`, `app`, [`viewers`, `app`], { heads: `both` }),
       ad: makeLink(`app`, `prod`, [`app`, `prod`], { heads: `both` }),
@@ -65,7 +55,7 @@ const z = {
     },
   };
 
-const B = {
+const flows = {
     base: { route: [`va`, `ad`], rate: 2.2, bounce: !0 },
     batch: [
       { route: [`al`], kind: `write`, rate: 2.2 },
@@ -79,11 +69,11 @@ const B = {
     ],
   };
 
-const cl = (e, t, n, r = {}) => makePanel({ x: 0, y: 0, z: 0, dx: 75, dy: 25 }, e, t, { icon: n, ...r });
+const card = cardAt({ x: 0, y: 0, dx: 75, dy: 25 });
 
-const ll = (e, t, n, r = {}) => makePanel({ x: -5, y: -5, z: 0, dx: -40, dy: -215 }, e, t, { icon: n, ...r });
+const logsCard = cardAt({ x: -5, y: -5, dx: -40, dy: -215 });
 
-const ul = {
+const batchStreamLesson = {
     id: `batch-stream`,
     title: `Batch & Stream Processing`,
     summary: `Crunching billions of events: overnight in big batches, or continuously as they arrive.`,
@@ -120,9 +110,9 @@ const ul = {
         },
         metrics: { freshness: `live`, prodLoad: 95, eventsDay: `2 billion`, exact: `yes` },
         scene: {
-          entities: { viewers: nl(), app: rl(), prod: il(makeHot(0.95)), dash: al() },
-          links: { ...z.base, ...z.heavy },
-          flows: [B.base, { route: [`dp`], kind: `heavy`, rate: 0.6, bounce: !0, hold: 1.3 }],
+          entities: { viewers: viewers(), app: videoApp(), prod: productionDb(makeHot(0.95)), dash: dashboard() },
+          links: { ...links.base, ...links.heavy },
+          flows: [flows.base, { route: [`dp`], kind: `heavy`, rate: 0.6, bounce: !0, hold: 1.3 }],
         },
       },
       {
@@ -145,9 +135,9 @@ const ul = {
         ],
         metrics: { freshness: `up to 24 h`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
-          entities: { viewers: nl(), app: rl(), prod: il(makeCool(0.3)), dash: al(), ...ol() },
-          links: { ...z.base, ...z.batch },
-          flows: [B.base, ...B.batch],
+          entities: { viewers: viewers(), app: videoApp(), prod: productionDb(makeCool(0.3)), dash: dashboard(), ...batchScene() },
+          links: { ...links.base, ...links.batch },
+          flows: [flows.base, ...flows.batch],
         },
       },
       {
@@ -166,19 +156,19 @@ const ul = {
         metrics: { freshness: `up to 24 h`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al(),
-            ...ol(`MAP → SHUFFLE → REDUCE`, {
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard(),
+            ...batchScene(`MAP → SHUFFLE → REDUCE`, {
               w1: [{ text: `map` }],
               w2: [{ text: `map` }],
               w3: [{ text: `reduce` }],
               w4: [{ text: `reduce` }],
             }),
           },
-          links: { ...z.base, ...z.batch },
-          flows: [B.base, ...B.batch],
+          links: { ...links.base, ...links.batch },
+          flows: [flows.base, ...flows.batch],
         },
       },
       {
@@ -201,11 +191,11 @@ const ul = {
         metrics: { freshness: `up to 27 h`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al(),
-            ...ol(`MAP → SHUFFLE → REDUCE`, {
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard(),
+            ...batchScene(`MAP → SHUFFLE → REDUCE`, {
               w1: [{ text: `map` }],
               w2: [{ text: `map` }],
               w4: [{ text: `5 min`, tone: `green` }],
@@ -220,8 +210,8 @@ const ul = {
               tags: [{ text: `40% of data · 3 h`, tone: `red`, icon: `hourglass` }],
             }),
           },
-          links: { ...z.base, ...z.batch },
-          flows: [B.base, ...B.batch],
+          links: { ...links.base, ...links.batch },
+          flows: [flows.base, ...flows.batch],
         },
       },
       {
@@ -244,17 +234,17 @@ const ul = {
         metrics: { freshness: `up to 24 h`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al(),
-            ...ol(`MAP + COMBINE → REDUCE`, {
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard(),
+            ...batchScene(`MAP + COMBINE → REDUCE`, {
               w1: [{ text: `map + combine` }],
               w2: [{ text: `map + combine` }],
               w3: [{ text: `reduce · even`, tone: `green` }],
               w4: [{ text: `reduce · even`, tone: `green` }],
             }),
-            card: cl(
+            card: card(
               `Taming a hot key`,
               [
                 `! viral video: 800M rows → one reducer`,
@@ -265,8 +255,8 @@ const ul = {
               `split`,
             ),
           },
-          links: { ...z.base, ...z.batch },
-          flows: [B.base, ...B.batch],
+          links: { ...links.base, ...links.batch },
+          flows: [flows.base, ...flows.batch],
         },
       },
       {
@@ -285,14 +275,14 @@ const ul = {
         metrics: { freshness: `up to 24 h`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al([{ text: `trending: yesterday’s`, tone: `red`, icon: `clock` }]),
-            ...ol(),
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard([{ text: `trending: yesterday’s`, tone: `red`, icon: `clock` }]),
+            ...batchScene(),
           },
-          links: { ...z.base, ...z.batch },
-          flows: [B.base, ...B.batch],
+          links: { ...links.base, ...links.batch },
+          flows: [flows.base, ...flows.batch],
         },
       },
       {
@@ -317,14 +307,14 @@ const ul = {
         metrics: { freshness: `5 s`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
-            ...sl(),
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
+            ...streamScene(),
           },
-          links: { ...z.base, ...z.stream },
-          flows: [B.base, ...B.stream],
+          links: { ...links.base, ...links.stream },
+          flows: [flows.base, ...flows.stream],
         },
       },
       {
@@ -343,12 +333,12 @@ const ul = {
         metrics: { freshness: `5 s`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
-            ...sl([{ text: `windows: 1 min`, icon: `clock` }]),
-            card: ll(`Views of video 4f2 per minute`, [], `chartLine`, {
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
+            ...streamScene([{ text: `windows: 1 min`, icon: `clock` }]),
+            card: logsCard(`Views of video 4f2 per minute`, [], `chartLine`, {
               chart: `bars`,
               bars: [
                 { label: `12:01`, to: 0.05, tone: `gray`, note: `120` },
@@ -358,8 +348,8 @@ const ul = {
               ],
             }),
           },
-          links: { ...z.base, ...z.stream },
-          flows: [B.base, ...B.stream],
+          links: { ...links.base, ...links.stream },
+          flows: [flows.base, ...flows.stream],
         },
       },
       {
@@ -378,15 +368,15 @@ const ul = {
         metrics: { freshness: `5 s`, prodLoad: 30, eventsDay: `2 billion`, exact: `with care` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al(),
-            ...sl(
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard(),
+            ...streamScene(
               [{ text: `watermark: 12:05 · dedupe on`, icon: `filter` }],
               [{ text: `event from 2 h ago`, tone: `amber`, icon: `clock` }],
             ),
-            card: ll(
+            card: logsCard(
               `Event time vs arrival time`,
               [
                 `view at 12:04, arrives 14:10`,
@@ -397,9 +387,9 @@ const ul = {
               `clock`,
             ),
           },
-          links: { ...z.base, ...z.stream },
+          links: { ...links.base, ...links.stream },
           flows: [
-            B.base,
+            flows.base,
             {
               route: [`ak`, `kp`, `pl`],
               kind: `msg`,
@@ -427,11 +417,11 @@ const ul = {
         metrics: { freshness: `4 min`, prodLoad: 30, eventsDay: `2 billion`, exact: `with care` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al([{ text: `live counts: 4 min old`, tone: `amber`, icon: `clock` }]),
-            ...sl([], [{ text: `lag: 4 min · 18M events`, tone: `red`, icon: `clock` }]),
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard([{ text: `live counts: 4 min old`, tone: `amber`, icon: `clock` }]),
+            ...streamScene([], [{ text: `lag: 4 min · 18M events`, tone: `red`, icon: `clock` }]),
             proc: makeBlock(11, 3, {
               color: `green`,
               glyph: `activity`,
@@ -440,9 +430,9 @@ const ul = {
               tags: [{ text: `falling behind`, tone: `red`, icon: `alert` }],
             }),
           },
-          links: { ...z.base, ...z.stream },
+          links: { ...links.base, ...links.stream },
           flows: [
-            B.base,
+            flows.base,
             { route: [`ak`], kind: `msg`, rate: 4.4, speed: 1.1 },
             { route: [`kp`, `pl`], kind: `msg`, rate: 1.2 },
             { route: [`dl`], rate: 0.8, bounce: !0 },
@@ -465,11 +455,11 @@ const ul = {
         metrics: { freshness: `5 s`, prodLoad: 30, eventsDay: `2 billion`, exact: `with care` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
-            ...sl(
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard([{ text: `trending: now`, tone: `green`, icon: `trendingUp` }]),
+            ...streamScene(
               [{ text: `partitions 0–1` }],
               [{ text: `4 partitions · lag 2 s`, tone: `green`, icon: `layers` }],
             ),
@@ -481,13 +471,13 @@ const ul = {
             }),
           },
           links: {
-            ...z.base,
-            ...z.stream,
+            ...links.base,
+            ...links.stream,
             kp2: makeLink(`kafka`, `proc2`, [`kafka`, [`proc2`, `kafka`], `proc2`]),
             p2l: makeLink(`proc2`, `live`, [`proc2`, [`proc2`, `live`], `live`]),
           },
           flows: [
-            B.base,
+            flows.base,
             { route: [`ak`], kind: `msg`, rate: 4.4, speed: 1.1 },
             {
               routes: [{ path: [`kp`, `pl`] }, { path: [`kp2`, `p2l`] }],
@@ -519,12 +509,12 @@ const ul = {
         metrics: { freshness: `5 s`, prodLoad: 30, eventsDay: `2 billion`, exact: `≈ 1% error` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al([{ text: `unique viewers ≈ 48.2M`, icon: `users` }]),
-            ...sl([{ text: `HyperLogLog per video`, icon: `sigma` }]),
-            card: ll(
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard([{ text: `unique viewers ≈ 48.2M`, icon: `users` }]),
+            ...streamScene([{ text: `HyperLogLog per video`, icon: `sigma` }]),
+            card: logsCard(
               `Unique viewers of 4f2`,
               [
                 `exact: remember every viewer id`,
@@ -535,8 +525,8 @@ const ul = {
               `sigma`,
             ),
           },
-          links: { ...z.base, ...z.stream },
-          flows: [B.base, ...B.stream],
+          links: { ...links.base, ...links.stream },
+          flows: [flows.base, ...flows.stream],
         },
       },
       {
@@ -563,15 +553,15 @@ const ul = {
         metrics: { freshness: `5 s`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al(),
-            ...ol(`NIGHTLY · EXACT`),
-            ...sl(),
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard(),
+            ...batchScene(`NIGHTLY · EXACT`),
+            ...streamScene(),
           },
-          links: { ...z.base, ...z.batch, ...z.stream },
-          flows: [B.base, ...B.batch, ...B.stream],
+          links: { ...links.base, ...links.batch, ...links.stream },
+          flows: [flows.base, ...flows.batch, ...flows.stream],
         },
       },
       {
@@ -594,19 +584,19 @@ const ul = {
         metrics: { freshness: `5 s`, prodLoad: 30, eventsDay: `2 billion`, exact: `yes` },
         scene: {
           entities: {
-            viewers: nl(),
-            app: rl(),
-            prod: il(makeCool(0.3)),
-            dash: al(),
-            ...ol(`NIGHTLY · EXACT`),
-            ...sl(),
+            viewers: viewers(),
+            app: videoApp(),
+            prod: productionDb(makeCool(0.3)),
+            dash: dashboard(),
+            ...batchScene(`NIGHTLY · EXACT`),
+            ...streamScene(),
           },
-          links: { ...z.base, ...z.batch, ...z.stream },
-          flows: [B.base, ...B.batch, ...B.stream],
+          links: { ...links.base, ...links.batch, ...links.stream },
+          flows: [flows.base, ...flows.batch, ...flows.stream],
         },
       },
     ],
   };
 
-export { ul as batchStreamLesson };
-export default ul;
+export { batchStreamLesson as batchStreamLesson };
+export default batchStreamLesson;
