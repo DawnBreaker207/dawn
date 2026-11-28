@@ -121,15 +121,29 @@ if (!userId) {
 }
 
 const result = { ...existing };
+let failed = 0;
+let changed = false;
 
 for (const [shelf, key] of SHELVES) {
   try {
     const books = await fetchShelf(shelf);
+    if (JSON.stringify(books) !== JSON.stringify(existing[key])) changed = true;
     result[key] = books;
     console.log(`  📚 ${shelf}: ${books.length} book(s)`);
   } catch (err) {
+    failed++;
     console.error(`  ❌ Failed to fetch "${shelf}" — keeping previous data: ${err.message}`);
   }
+}
+
+// Only touch books.json when the data really changed, so a failed or unchanged sync leaves git clean.
+if (failed === SHELVES.length) {
+  console.warn('⚠️  Every shelf failed — books.json left untouched.');
+  process.exit(0);
+}
+if (!changed) {
+  console.log('✅ Books unchanged — books.json left untouched.');
+  process.exit(0);
 }
 
 result.syncedAt = new Date().toISOString();
