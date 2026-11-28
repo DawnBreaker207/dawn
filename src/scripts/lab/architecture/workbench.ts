@@ -78,6 +78,14 @@ function initSimWorkbench() {
 
     isInitialized = true;
 
+    // Keep the address bar on the current step so it can be shared: /lab/x#step-3 opens at step 3.
+    try {
+      const url = `${location.pathname}${location.search}${idx === 0 ? '' : `#step-${idx + 1}`}`;
+      history.replaceState(history.state, '', url);
+    } catch {
+      /* some embedded browsers refuse replaceState; the link is a convenience only */
+    }
+
     // Notify SceneRenderer and 2D Deep-Dive Visualizers
     const stepEvtDetail = { idx, step: s, index: idx };
     root?.dispatchEvent(new CustomEvent('wb:step-change', { detail: stepEvtDetail, bubbles: true }));
@@ -441,8 +449,14 @@ function initSimWorkbench() {
     }
   }, { signal: controller.signal });
 
-  // Initialize Step 0
-  renderStep(0);
+  // Open at the step named in the address (#step-3), otherwise at the first step.
+  const stepFromHash = (): number => {
+    const m = /^#step-(\d+)$/.exec(location.hash);
+    const n = m ? Number(m[1]) - 1 : 0;
+    return Number.isInteger(n) && n >= 0 && n < total ? n : 0;
+  };
+  window.addEventListener('hashchange', () => renderStep(stepFromHash()), { signal: controller.signal });
+  renderStep(stepFromHash());
 }
 
 document.addEventListener('astro:page-load', initSimWorkbench);

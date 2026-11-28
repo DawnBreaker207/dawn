@@ -6,7 +6,10 @@ import SimulationWorkbench from '@/components/lab/architecture/SimulationWorkben
 import '@/styles/simulation.css';
 import '@/styles/lab-architecture.css';
 import { ALL_SCENES } from '@/data/scenes';
-import { CURRICULUM_MODULES, getLessonHref } from '@/data/curriculum';
+import { CURRICULUM_MODULES, CURRICULUM_TRACKS, getLessonHref } from '@/data/curriculum';
+import { TRACK_ID_BY_ENTRY } from '@/data/lab-track-slugs';
+import { SITE, SITE_URL } from '@/lib/site';
+import { clipDescription } from '@/lib/utils/seo';
 import type { Lesson } from '@/lib/simulator/types';
 
 export const prerender = true;
@@ -27,10 +30,40 @@ const scenes = labLesson?.steps?.map((s) => s.scene) ?? [];
 // /lab/angular-flow); the canonical one is the URL the site links to.
 const canonicalPath = getLessonHref(lessonId);
 // build-og.mjs renders a social card for every curriculum lesson.
+const pageUrl = `${SITE_URL}${canonicalPath}`;
+const track = CURRICULUM_TRACKS.find((t) => t.id === trackId);
+const trackHref = Object.entries(TRACK_ID_BY_ENTRY).find(([, id]) => id === trackId)?.[0];
+const lessonName = title.replace(/ · 3D Lab$/, '');
+// Structured data: what the page is (a lesson) and where it sits (breadcrumbs).
+const jsonLd = [
+  {
+    '@type': 'LearningResource',
+    name: lessonName,
+    description: clipDescription(description, 300),
+    url: pageUrl,
+    inLanguage: 'en',
+    learningResourceType: 'Interactive simulation',
+    ...(labLesson?.minutes ? { timeRequired: `PT${labLesson.minutes}M` } : {}),
+    ...(track ? { isPartOf: { '@type': 'Course', name: track.title, provider: { '@type': 'Person', name: SITE.fullName } } } : {}),
+    ...(scenes.length ? { teaches: labLesson.steps.map((s) => s.title).slice(0, 12) } : {}),
+    author: { '@type': 'Person', name: SITE.fullName, url: SITE_URL },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Lab', item: `${SITE_URL}/lab` },
+      ...(track && trackHref
+        ? [{ '@type': 'ListItem', position: 3, name: track.title, item: `${SITE_URL}${trackHref}` }]
+        : []),
+      { '@type': 'ListItem', position: track && trackHref ? 4 : 3, name: lessonName, item: pageUrl },
+    ],
+  },
+];
 const ogImage = CURRICULUM_MODULES.some((m) => m.lessons.some((l) => l.id === lessonId)) ? `lab-${lessonId}` : undefined;
 ---
 
-<BaseLayout title={title} description={description} fullBleed={true} canonicalPath={canonicalPath} ogImage={ogImage}>
+<BaseLayout title={title} description={description} fullBleed={true} canonicalPath={canonicalPath} ogImage={ogImage} jsonLd={jsonLd}>
   <div slot="topbar-actions" class="topbar-lab-controls">
     <ChapterPicker currentLessonId={lessonId} trackId={trackId} moduleId={moduleId} />
   </div>

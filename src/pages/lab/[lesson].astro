@@ -3,6 +3,8 @@ import ArchitectureLabLayout from '@/layouts/ArchitectureLabLayout.astro';
 import { CURRICULUM_MODULES } from '@/data/curriculum';
 import { LAB_TRACK_PAGES } from '@/data/lab-track-pages';
 import { ALL_SCENES } from '@/data/scenes';
+import { SITE } from '@/lib/site';
+import { labDescription, labTitle } from '@/lib/utils/seo';
 
 export const prerender = true;
 
@@ -21,8 +23,10 @@ export async function getStaticPaths() {
             lessonId: lesson.id,
             moduleId: mod.id,
             trackId: mod.trackId,
-            title: `${lesson.title} · Interactive Visual Architecture Lab`,
-            description: scene?.summary || `Interactive visual architecture lab simulating ${lesson.title}.`,
+            title: labTitle(lesson.title, SITE.title),
+            description: labDescription(
+              scene?.summary || `Interactive visual architecture lab simulating ${lesson.title}.`,
+            ),
           },
         };
       })
@@ -30,7 +34,11 @@ export async function getStaticPaths() {
 
   const trackPaths = Object.entries(LAB_TRACK_PAGES).map(([slug, page]) => ({
     params: { lesson: slug },
-    props: page,
+    props: {
+      ...page,
+      title: labTitle(page.title, SITE.title),
+      description: labDescription(page.description),
+    },
   }));
 
   return [...lessonPaths, ...trackPaths];

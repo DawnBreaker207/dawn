@@ -460,6 +460,19 @@ const humanizeMetricKey = (k: string) => {
   </aside>
 </div>
 
+<!-- Every step as plain text. The guide above only renders the current step, so this is what search engines
+     and screen readers can read for the whole lesson. -->
+<section class="sr-only" aria-label="Lesson transcript">
+  <h2>{lesson.title} · full transcript</h2>
+  {lesson.steps.map((step, idx) => (
+    <article>
+      <h3>Step {idx + 1}: {step.title}</h3>
+      {step.body.map((p) => <p set:html={p} />)}
+      {step.callout?.text && <p set:html={step.callout.text} />}
+    </article>
+  ))}
+</section>
+
 <script>
   import '@/scripts/lab/architecture/workbench';
 </script>

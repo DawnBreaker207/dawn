@@ -16,6 +16,7 @@ import { getPosts, slugify } from '@/lib/utils/blog';
 import projectsData from '@/data/projectsData.json';
 import { SITE, SITE_URL, tabsFor } from '@/lib/site';
 import { headerNavLinks } from '@/lib/nav';
+import { clipDescription } from '@/lib/utils/seo';
 
 interface Props {
   title?: string;
@@ -23,7 +24,7 @@ interface Props {
   ogImage?: string;
   type?: string;
   publishedTime?: string;
-  jsonLd?: Record<string, unknown>;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   fullBleed?: boolean;
   noindex?: boolean;
   /** Canonical path when this URL duplicates another page (defaults to the current path). */
@@ -44,7 +45,11 @@ const {
 const ogUrl = ogImage ? `${SITE_URL}/og/${ogImage}.png` : `${SITE_URL}${SITE.socialBanner}`;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
 const canonicalUrl = `${SITE_URL}${canonicalPath ?? Astro.url.pathname}`;
-const jsonLdGraph = [{ '@type': 'WebSite', name: SITE.title, url: SITE_URL }, ...(jsonLd ? [jsonLd] : [])];
+const jsonLdGraph = [
+  { '@type': 'WebSite', name: SITE.title, url: SITE_URL },
+  ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : []),
+];
+const metaDescription = clipDescription(description);
 
 const activePath = Astro.url.pathname;
 const tabs = tabsFor(activePath);
@@ -73,7 +78,7 @@ const projects = projectsData
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
-    <meta name="description" content={description} />
+    <meta name="description" content={metaDescription} />
     <link rel="canonical" href={canonicalUrl} />
     {noindex ? (
       <meta name="robots" content="noindex, nofollow" />
@@ -92,7 +97,7 @@ const projects = projectsData
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
 
     <meta property="og:title" content={pageTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={metaDescription} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content={SITE.title} />
     <meta property="og:image" content={ogUrl} />
@@ -108,7 +113,7 @@ const projects = projectsData
       </>
     )}
     <meta name="twitter:title" content={pageTitle} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:description" content={metaDescription} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogUrl} />
     <meta name="twitter:image:alt" content={pageTitle} />

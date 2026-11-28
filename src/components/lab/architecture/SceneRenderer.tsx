@@ -19,6 +19,7 @@ export default function SceneRenderer({ lessonId, scenes }: Props) {
     el.innerHTML = '';
 
     let engine: StageEngine | null = null;
+    let startIdx = 0;
     try {
       engine = new StageEngine(el);
       engineRef.current = engine;
@@ -26,7 +27,11 @@ export default function SceneRenderer({ lessonId, scenes }: Props) {
 
       if (scenes && scenes.length > 0) {
         engine.frame(scenes);
-        engine.goTo(scenes[0], { instant: true });
+        // A shared link like /lab/x#step-3 opens on that step's diagram too.
+        const fromHash = /^#step-(\d+)$/.exec(window.location.hash);
+        const start = fromHash && Number(fromHash[1]) >= 1 && Number(fromHash[1]) <= scenes.length ? Number(fromHash[1]) - 1 : 0;
+        engine.goTo(scenes[start], { instant: true });
+        startIdx = start;
       }
     } catch (err) {
       console.error('[SceneRenderer] Failed to initialize StageEngine:', err);
@@ -34,7 +39,7 @@ export default function SceneRenderer({ lessonId, scenes }: Props) {
 
     // Step change listener
     const root = el.closest<HTMLElement>('.body') ?? document;
-    let currentIdx = 0;
+    let currentIdx = startIdx;
 
     // Tools
     const fitBtn = document.getElementById('fit') as HTMLElement | null;

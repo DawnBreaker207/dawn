@@ -65,7 +65,7 @@ const HAND_PICKED_SLUGS: Record<string, string[]> = {
 };
 
 /** Curriculum track id behind each track entry href, used to add every lesson of the track. */
-const TRACK_ID_BY_ENTRY: Record<string, string> = {
+export const TRACK_ID_BY_ENTRY: Record<string, string> = {
   '/lab/git': 'git',
   '/lab/foundations': 'network-scale',
   '/lab/sql': 'storage-tier',
