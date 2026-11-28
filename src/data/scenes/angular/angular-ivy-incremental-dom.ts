@@ -39,7 +39,7 @@ export const angularIvyIncrementalDomLesson = {
       scene: {
         entities: {
           templateAst: makeDevice(-16, -6, { label: 'Template', tags: [{ text: 'HTML AST', tone: 'blue', icon: 'zap' }] }),
-          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
+          ivyCompiler: makeBlock(-3, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'VDOM vs iDOM Architecture', [
             `Virtual DOM (React):`,
             `  render() -> generates JS VNode objects -> diff trees -> patch DOM`,
@@ -73,7 +73,7 @@ export const angularIvyIncrementalDomLesson = {
       scene: {
         entities: {
           templateAst: makeDevice(-16, -6, { label: 'Template', tags: [{ text: 'HTML AST', tone: 'blue', icon: 'zap' }] }),
-          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
+          ivyCompiler: makeBlock(-3, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
           instructions: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['ɵcmp.template'], sub: 'executable ops' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Compiled Ivy Template Function', [
             `function AppComponent_Template(rf, ctx) {`,
@@ -113,7 +113,7 @@ export const angularIvyIncrementalDomLesson = {
       metrics: { compilerTarget: 'Bitmask Branching', vdomAllocation: '0 objects', treeShaking: 'Active', memoryFootprint: 'Zero branch waste' },
       scene: {
         entities: {
-          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
+          ivyCompiler: makeBlock(-3, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Compiler'], sub: 'ngtsc compiler' }),
           instructions: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['RenderFlags'], sub: 'rf bitmask' }),
           realDomNode: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Update Branch'], sub: 'dynamic pass' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'RenderFlags Bitmask Logic', [
@@ -187,7 +187,7 @@ export const angularIvyIncrementalDomLesson = {
         entities: {
           instructions: makeBlock(8, -6, { s: 4.8, h: 52, color: 'cyan', glyph: 'package', label: ['Ivy Opcodes'], sub: 'exported fns' }),
           realDomNode: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Used Opcodes'], sub: 'element, text' }),
-          leanFramework: makeBlock(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Runtime'], sub: 'tree-shaken' }),
+          leanFramework: makeBlock(-14, 8, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Runtime'], sub: 'tree-shaken' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Opcode Tree-Shaking Output', [
             `@angular/core export inventory:`,
             `  [USED]     ɵɵelementStart`,
@@ -222,10 +222,10 @@ export const angularIvyIncrementalDomLesson = {
       scene: {
         entities: {
           templateAst: makeDevice(-16, -6, { label: 'WebSocket', tags: [{ text: '60Hz stream', tone: 'blue', icon: 'zap' }] }),
-          ivyCompiler: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Runtime'], sub: 'slot mutate' }),
+          ivyCompiler: makeBlock(-3, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Ivy Runtime'], sub: 'slot mutate' }),
           realDomNode: makeDb(8, 8, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Real DOM H1'], sub: 'in-place write' }),
           flatHeapProfile: makeBlock(-4, 8, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['Zero GC Pauses'], sub: 'zero GC pause' }),
-          leanFramework: makeBlock(-16, 8, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Runtime'], sub: 'tree-shaken' }),
+          leanFramework: makeBlock(-14, 8, { s: 4.8, h: 52, color: 'green', glyph: 'package', label: ['Lean Runtime'], sub: 'tree-shaken' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Memory Profiler Timeline', [
             `Browser DevTools Memory Timeline (60 seconds):`,
             `  Virtual DOM: Sawtooth pattern (allocating 50MB -> GC freeze 30ms)`,

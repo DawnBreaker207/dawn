@@ -41,7 +41,7 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Bootstrap + SSR', networkState: 'Idle', reactivityMode: 'Hydrating', domMutations: '0 (Preserved)' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Bootstrap & Hydration', [
             `bootstrapApplication(AppComponent, {`,
@@ -76,7 +76,7 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Router + Chunk', networkState: 'Chunk Ready', reactivityMode: 'Init', domMutations: '0' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Route & Lazy Chunk', [
@@ -112,10 +112,10 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Guards + Resolver', networkState: 'Authorized', reactivityMode: 'Resolving', domMutations: '0' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          diLifecycle: makeBlock(16, -10, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Guards & Resolvers', [
             `export const authGuard: CanActivateFn = () => {`,
             `  return inject(AuthService).isLoggedIn()`,
@@ -148,11 +148,11 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'DI + Lifecycle', networkState: 'Preparing Req', reactivityMode: 'ngOnInit', domMutations: 'Mount' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          diLifecycle: makeBlock(16, -10, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(16, 2, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'DI, Lifecycle & RxJS Stream', [
             `orders$ = this.query$.pipe(`,
             `  debounceTime(300), distinctUntilChanged(),`,
@@ -186,11 +186,11 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Interceptors', networkState: 'In Flight', reactivityMode: 'Pending', domMutations: '0' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          diLifecycle: makeBlock(16, -10, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(16, 2, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
           backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Interceptors & Backend', [
             `const authReq = req.clone({`,
@@ -225,11 +225,11 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Backend -> Signal', networkState: '200 OK', reactivityMode: 'toSignal()', domMutations: 'Pending' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          diLifecycle: makeBlock(16, -10, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(16, 2, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
           backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
           resSignals: makeBlock(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Response & Signals DAG', [
@@ -269,11 +269,11 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Signals DAG', networkState: 'Cached', reactivityMode: 'Glitch-Free', domMutations: 'Scheduled' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          diLifecycle: makeBlock(16, -10, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(16, 2, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
           backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
           resSignals: makeBlock(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
           zonelessCd: makeBlock(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
@@ -315,15 +315,15 @@ export const angularFlowLesson = {
       metrics: { activeStage: 'Zoneless + OnPush', networkState: 'Complete', reactivityMode: 'Surgical O(1)', domMutations: 'Ready' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: 'Event Replay', tone: 'blue', icon: 'zap' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          diLifecycle: makeBlock(16, -10, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(16, 2, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
           backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
           resSignals: makeBlock(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
           zonelessCd: makeBlock(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
-          ivyControl: makeBlock(-18, 2, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['Ivy + @for'], sub: 'in-place DOM' }),
+          ivyControl: makeBlock(-16, 0, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['Ivy + @for'], sub: 'in-place DOM' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Zoneless -> Ivy Incremental DOM', [
             `@if (orders().length) {`,
             `  @for (o of orders(); track o.id) {`,
@@ -365,15 +365,15 @@ export const angularFlowLesson = {
       metrics: { activeStage: '60fps Painted', networkState: 'Complete', reactivityMode: 'Zoneless + Ivy', domMutations: 'In-Place (0 GC)' },
       scene: {
         entities: {
-          userHydrate: makeDevice(-18, -12, { label: 'User / SSR', tags: [{ text: '60fps Painted', tone: 'green', icon: 'shield' }] }),
+          userHydrate: makeDevice(-16, -14, { label: 'User / SSR', tags: [{ text: '60fps Painted', tone: 'green', icon: 'shield' }] }),
           routerMatch: makeBlock(-6, -12, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Router + Chunk'], sub: 'UrlTree + lazy' }),
           routeGuards: makeBlock(6, -12, { s: 4.8, h: 52, color: 'amber', glyph: 'shield', label: ['Guards &', 'Resolvers'], sub: 'canMatch/Auth' }),
-          diLifecycle: makeBlock(18, -12, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
-          interceptors: makeBlock(18, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
+          diLifecycle: makeBlock(16, -10, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['DI + Lifecycle'], sub: 'DI + Lifecycle' }),
+          interceptors: makeBlock(16, 2, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Interceptors'], sub: 'req.clone()' }),
           backendApi: makeDb(14, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Backend API'], sub: 'REST 200 OK' }),
           resSignals: makeBlock(2, 14, { s: 4.8, h: 52, color: 'amber', glyph: 'cpu', label: ['Signals DAG'], sub: 'toSignal DAG' }),
           zonelessCd: makeBlock(-10, 14, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['Zoneless CD'], sub: 'OnPush + Sched' }),
-          ivyControl: makeBlock(-18, 2, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['Ivy + @for'], sub: 'in-place DOM' }),
+          ivyControl: makeBlock(-16, 0, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['Ivy + @for'], sub: 'in-place DOM' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Complete Angular Flow', [
             `User/SSR -> Router -> Guards/Resolver -> DI/Lifecycle`,
             `  -> Interceptors (req.clone) -> Backend API`,

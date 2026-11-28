@@ -190,11 +190,11 @@ export const angularRxjsReactivityLesson = {
       metrics: { streamState: 'Flattening', activePipe: 'switchMap()', concurrency: '1 Active', subscription: 'Race-Free' },
       scene: {
         entities: {
-          outerSrc: makeDevice(-18, 0, { label: 'query$', tags: [{ text: 'Req 1 -> Req 2', tone: 'blue', icon: 'zap' }] }),
+          outerSrc: makeDevice(-16, -2, { label: 'query$', tags: [{ text: 'Req 1 -> Req 2', tone: 'blue', icon: 'zap' }] }),
           operatorHub: makeBlock(-4, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['switchMap()'], sub: 'cancel old' }),
-          workerTop: makeBlock(10, -10, { s: 4.4, h: 50, color: 'rose', glyph: 'boxes', label: ['HTTP Req 1'], sub: 'ABORTED' }),
-          workerBot: makeBlock(10, 10, { s: 4.4, h: 50, color: 'green', glyph: 'boxes', label: ['HTTP Req 2'], sub: 'latest wins' }),
-          outputStream: makeDb(22, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['output$'], sub: 'only Req 2' }),
+          workerTop: makeBlock(8, -10, { s: 4.4, h: 50, color: 'rose', glyph: 'boxes', label: ['HTTP Req 1'], sub: 'ABORTED' }),
+          workerBot: makeBlock(8, 10, { s: 4.4, h: 50, color: 'green', glyph: 'boxes', label: ['HTTP Req 2'], sub: 'latest wins' }),
+          outputStream: makeDb(16, 6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['output$'], sub: 'only Req 2' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'switchMap vs exhaustMap', [
             `// Search / Route (Cancel stale):`,
             `query$.pipe(debounceTime(300), switchMap(q => api.search(q)))`,
@@ -230,12 +230,12 @@ export const angularRxjsReactivityLesson = {
       metrics: { streamState: 'Concurrent', activePipe: 'concat / merge', concurrency: 'FIFO vs Parallel', subscription: 'Deterministic' },
       scene: {
         entities: {
-          outerSrc: makeDevice(-18, 0, { label: 'tasks$', tags: [{ text: '1, 2, 3', tone: 'green', icon: 'zap' }] }),
+          outerSrc: makeDevice(-16, -2, { label: 'tasks$', tags: [{ text: '1, 2, 3', tone: 'green', icon: 'zap' }] }),
           operatorHub: makeBlock(-4, 0, { s: 4.8, h: 52, color: 'green', glyph: 'cpu', label: ['mergeMap()'], sub: 'parallel / FIFO' }),
-          workerTop: makeBlock(10, -10, { s: 4.4, h: 50, color: 'green', glyph: 'boxes', label: ['Worker #1'], sub: 'task 1' }),
-          workerMid: makeBlock(10, 0, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['Worker #2'], sub: 'task 2' }),
-          workerBot: makeBlock(10, 10, { s: 4.4, h: 50, color: 'purple', glyph: 'boxes', label: ['Worker #3'], sub: 'task 3' }),
-          outputStream: makeDb(22, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['output$'], sub: 'flattened' }),
+          workerTop: makeBlock(8, -10, { s: 4.4, h: 50, color: 'green', glyph: 'boxes', label: ['Worker #1'], sub: 'task 1' }),
+          workerMid: makeBlock(8, 0, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['Worker #2'], sub: 'task 2' }),
+          workerBot: makeBlock(8, 10, { s: 4.4, h: 50, color: 'purple', glyph: 'boxes', label: ['Worker #3'], sub: 'task 3' }),
+          outputStream: makeDb(16, 6, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['output$'], sub: 'flattened' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'concatMap vs mergeMap', [
             `concatMap -> 1 at a time FIFO (Sequential saves)`,
             `mergeMap  -> All in parallel  (Bulk deletes, max N)`,

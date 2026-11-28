@@ -216,7 +216,7 @@ export const angularArchitectureOverviewLesson = {
         entities: {
           appRef: makeBlock(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
           appComp: makeBlock(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
-          navComp: makeBlock(-18, 4, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['NavComponent', '(Child)'], sub: 'header view' }),
+          navComp: makeBlock(-16, 2, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['NavComponent', '(Child)'], sub: 'header view' }),
           feedComp: makeBlock(-6, 20, { s: 4.4, h: 50, color: 'amber', glyph: 'boxes', label: ['FeedComponent', '(Outlet)'], sub: 'outlet child' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Hierarchical View Tree', [
             `AppComponent (Root View)`,
@@ -251,7 +251,7 @@ export const angularArchitectureOverviewLesson = {
         entities: {
           appRef: makeBlock(8, 8, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['ApplicationRef'], sub: 'orchestrator' }),
           appComp: makeBlock(-6, 6, { s: 5.0, h: 54, color: 'green', glyph: 'terminal', label: ['AppComponent', '(Root)'], sub: 'root component' }),
-          navComp: makeBlock(-18, 4, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['NavComponent', '(Child)'], sub: 'header view' }),
+          navComp: makeBlock(-16, 2, { s: 4.4, h: 50, color: 'cyan', glyph: 'boxes', label: ['NavComponent', '(Child)'], sub: 'header view' }),
           feedComp: makeBlock(-6, 20, { s: 4.4, h: 50, color: 'amber', glyph: 'boxes', label: ['FeedComponent', '(Outlet)'], sub: 'outlet child' }),
           realDom: makeDb(16, 14, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Browser DOM'], sub: 'DOM mutations' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Change Detection Loop', [

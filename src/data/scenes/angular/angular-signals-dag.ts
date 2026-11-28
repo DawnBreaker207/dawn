@@ -159,10 +159,10 @@ export const angularSignalsDagLesson = {
       metrics: { graphState: 'Topological Sort', producerVersion: 'v2', consumerState: 'Glitch-Free', glitchFree: '100% Clean' },
       scene: {
         entities: {
-          priceSignal: makeDevice(-16, 0, { label: 'price.set(20)', tags: [{ text: 'Node A Root', tone: 'blue', icon: 'zap' }] }),
+          priceSignal: makeDevice(-14, 0, { label: 'price.set(20)', tags: [{ text: 'Node A Root', tone: 'blue', icon: 'zap' }] }),
           taxComp: makeBlock(0, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['tax (Node B)'], sub: 'recomputed 1st' }),
           discountComp: makeBlock(0, 10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['disc (Node C)'], sub: 'recomputed 2nd' }),
-          consumerEffect: makeDb(16, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['total (Node D)'], sub: 'evaluates once' }),
+          consumerEffect: makeDb(14, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['total (Node D)'], sub: 'evaluates once' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'The Diamond Problem & Fix', [
             `Diamond Topology:`,
             `       [Price]`,

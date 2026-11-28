@@ -38,7 +38,7 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'constructor()', domReady: 'No (Virtual)', inputsBound: 'Pending', subscriptionsCleaned: 'N/A' },
       scene: {
         entities: {
-          ctorInst: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
+          ctorInst: makeBlock(-12, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
           diEngine: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['DI Injector'], sub: 'DI singletons' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Constructor vs ngOnInit', [
             `export class ProfileComponent implements OnInit {`,
@@ -74,7 +74,7 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'ngOnChanges()', domReady: 'No', inputsBound: 'Bound (1st change)', subscriptionsCleaned: 'N/A' },
       scene: {
         entities: {
-          ctorInst: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
+          ctorInst: makeBlock(-12, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
           diEngine: makeBlock(-4, -6, { s: 4.8, h: 52, color: 'blue', glyph: 'cpu', label: ['DI Injector'], sub: 'DI singletons' }),
           onChanges: makeBlock(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'terminal', label: ['ngOnChanges'], sub: 'diff map' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ngOnChanges Execution Dump', [
@@ -111,7 +111,7 @@ export const angularComponentLifecycleLesson = {
       metrics: { activeHook: 'ngOnInit()', domReady: 'Content Pending', inputsBound: 'Bound', subscriptionsCleaned: 'N/A' },
       scene: {
         entities: {
-          ctorInst: makeBlock(-16, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
+          ctorInst: makeBlock(-12, -6, { s: 4.8, h: 52, color: 'purple', glyph: 'boxes', label: ['Constructor'], sub: 'inject deps' }),
           onChanges: makeBlock(8, -6, { s: 4.8, h: 52, color: 'amber', glyph: 'terminal', label: ['ngOnChanges'], sub: 'diff map' }),
           ngInit: makeBlock(8, 8, { s: 4.8, h: 52, color: 'green', glyph: 'terminal', label: ['ngOnInit'], sub: 'init state' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ngOnInit Hook', [

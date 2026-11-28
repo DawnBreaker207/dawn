@@ -78,7 +78,7 @@ export const angularServicesDiLesson = {
           rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
           authSvc: makeDb(12, -12, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['AuthService'], sub: 'app singleton' }),
           compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget A'], sub: 'inst 1' }),
-          sibInj: makeBlock(12, 12, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget B'], sub: 'inst 2' }),
+          sibInj: makeBlock(10, 10, { s: 4.6, h: 50, color: 'amber', glyph: 'boxes', label: ['CartWidget B'], sub: 'inst 2' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Scoped Service Definition', [
             `// Global singleton:`,
             `@Injectable({ providedIn: 'root' })`,
@@ -122,7 +122,7 @@ export const angularServicesDiLesson = {
           rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Root Injector'], sub: 'root env' }),
           routeInj: makeBlock(0, 0, { s: 4.8, h: 52, color: 'blue', glyph: 'boxes', label: ['Parent Host'], sub: 'host boundary' }),
           compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'cyan', glyph: 'boxes', label: ['Child Node'], sub: 'skip self' }),
-          childComp: makeDevice(-12, 24, { label: 'leaf-view', tags: [{ text: '@SkipSelf()', tone: 'amber', icon: 'zap' }] }),
+          childComp: makeDevice(-8, 20, { label: 'leaf-view', tags: [{ text: '@SkipSelf()', tone: 'amber', icon: 'zap' }] }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Resolution Flags in Action', [
             `constructor(`,
             `  // Start search from parent, not self:`,
@@ -236,7 +236,7 @@ export const angularServicesDiLesson = {
           rootInj: makeBlock(0, -12, { s: 5.0, h: 54, color: 'purple', glyph: 'package', label: ['Parent Injector'], sub: 'root env' }),
           routeInj: makeBlock(0, 0, { s: 4.8, h: 52, color: 'cyan', glyph: 'cpu', label: ['createEnvInj'], sub: 'spawns scope' }),
           compInj: makeBlock(-12, 12, { s: 4.6, h: 50, color: 'green', glyph: 'terminal', label: ['Modal Scope'], sub: 'DialogRef' }),
-          sibInj: makeBlock(12, 12, { s: 4.6, h: 50, color: 'purple', glyph: 'package', label: ['Dynamic Component'], sub: 'mounted modal' }),
+          sibInj: makeBlock(10, 10, { s: 4.6, h: 50, color: 'purple', glyph: 'package', label: ['Dynamic Component'], sub: 'mounted modal' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Dynamic Environment Injector Creation', [
             `const modalInjector = createEnvironmentInjector(`,
             `  [{ provide: DIALOG_DATA, useValue: data }],`,

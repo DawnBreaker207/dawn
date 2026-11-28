@@ -38,7 +38,7 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'Classic Store', stateMutation: 'Immutable Reducer', asyncSideEffect: 'Pending', boilerplate: 'High (4 files)' },
       scene: {
         entities: {
-          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'dispatch()', tone: 'blue', icon: 'zap' }] }),
+          componentUi: makeDevice(-16, -2, { label: 'Component', tags: [{ text: 'dispatch()', tone: 'blue', icon: 'zap' }] }),
           actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Action'], sub: 'dispatch()' }),
           reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Action & Pure Reducer', [
@@ -71,7 +71,7 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'Classic Store', stateMutation: 'Memoized ===', asyncSideEffect: 'None', boilerplate: 'High' },
       scene: {
         entities: {
-          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'selectSignal()', tone: 'green', icon: 'zap' }] }),
+          componentUi: makeDevice(-16, -2, { label: 'Component', tags: [{ text: 'selectSignal()', tone: 'green', icon: 'zap' }] }),
           actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Action'], sub: 'dispatch()' }),
           reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
           selectorOut: makeBlock(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['createSelector'], sub: 'createSelector' }),
@@ -106,7 +106,7 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'Store + Effects', stateMutation: 'Pure + Async', asyncSideEffect: 'createEffect()', boilerplate: 'High' },
       scene: {
         entities: {
-          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'selectSignal()', tone: 'green', icon: 'zap' }] }),
+          componentUi: makeDevice(-16, -2, { label: 'Component', tags: [{ text: 'selectSignal()', tone: 'green', icon: 'zap' }] }),
           actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['Actions$'], sub: 'ofType()' }),
           reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['Reducer + Store'], sub: 'pure reducer' }),
           effectsApi: makeBlock(10, 10, { s: 4.8, h: 52, color: 'amber', glyph: 'server', label: ['Effects + API'], sub: 'createEffect' }),
@@ -150,7 +150,7 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'SignalStore', stateMutation: 'patchState()', asyncSideEffect: 'withMethods', boilerplate: 'Minimal (-75%)' },
       scene: {
         entities: {
-          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'inject(Store)', tone: 'green', icon: 'zap' }] }),
+          componentUi: makeDevice(-16, -2, { label: 'Component', tags: [{ text: 'inject(Store)', tone: 'green', icon: 'zap' }] }),
           reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
           selectorOut: makeBlock(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['withComputed'], sub: 'withComputed' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'NgRx SignalStore Definition', [
@@ -186,7 +186,7 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'SignalStore', stateMutation: 'patchState()', asyncSideEffect: 'withMethods', boilerplate: '1 File' },
       scene: {
         entities: {
-          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'store.add()', tone: 'blue', icon: 'zap' }] }),
+          componentUi: makeDevice(-16, -2, { label: 'Component', tags: [{ text: 'store.add()', tone: 'blue', icon: 'zap' }] }),
           actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['withMethods'], sub: 'patchState()' }),
           reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
           selectorOut: makeBlock(-4, 10, { s: 4.8, h: 52, color: 'cyan', glyph: 'boxes', label: ['withComputed'], sub: 'withComputed' }),
@@ -225,7 +225,7 @@ export const angularNgrxStateLesson = {
       metrics: { ngrxModel: 'Hybrid NgRx', stateMutation: 'patchState()', asyncSideEffect: 'rxMethod()', boilerplate: 'Optimal' },
       scene: {
         entities: {
-          componentUi: makeDevice(-18, 0, { label: 'Component', tags: [{ text: 'search(query)', tone: 'purple', icon: 'zap' }] }),
+          componentUi: makeDevice(-16, -2, { label: 'Component', tags: [{ text: 'search(query)', tone: 'purple', icon: 'zap' }] }),
           actionBus: makeBlock(-4, -10, { s: 4.8, h: 52, color: 'purple', glyph: 'cpu', label: ['rxMethod()'], sub: 'rxMethod()' }),
           reducerStore: makeDb(10, -10, { s: 4.6, h: 48, color: 'green', glyph: 'database', label: ['SignalStore'], sub: 'signalStore' }),
           effectsApi: makeBlock(10, 10, { s: 4.8, h: 52, color: 'amber', glyph: 'server', label: ['RxJS + API'], sub: 'withMethods' }),
