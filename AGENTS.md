@@ -1713,7 +1713,7 @@ and has not been converted yet. Update this table as work is completed.
 | Root screenshot PNGs deleted | ✅ Done | Cleaned all root debug screenshots |
 | `faq/` deleted | ✅ Done | Cleaned leftover docs |
 | `public/system-design.html` deleted | ✅ Done | Deleted dev prototype |
-| Unused `public/static/images/` deleted | ✅ Done | 12 files (canada/, ocean.jpeg, google.png, github-traffic.png, sparrowhawk-avatar.jpg, both time-machine.jpg, projects/jira-clone.png, experiences/fpoly-logo.png). Kept `404.gif` and the grit PNGs (listed as intentional in §17, now unreferenced) |
+| Unused `public/static/images/` deleted | ✅ Done | 12 files (canada/, ocean.jpeg, google.png, github-traffic.png, sparrowhawk-avatar.jpg, both time-machine.jpg, projects/jira-clone.png, experiences/fpoly-logo.png). Kept the grit PNGs (listed as intentional in §17, now unreferenced). `404.gif` and `mario_coder.gif` were later replaced by `404.webp` / `mario_coder.webp` (3 MB → 0.45 MB, 373 KB → 227 KB at 960×540) |
 | `.gitignore` gaps added | ✅ Done | Added patterns for screenshots, scratch/, etc. |
 | Simulator iframe pages migrated to TS renderer | ✅ Done | All labs render via `SceneRenderer` + `StageEngine`; `public/dts/` removed |
 | Simulator engine de-minified & typed | ✅ Done | `src/lib/simulator/stage/` + `draw/`, no `@ts-nocheck`; output verified byte-identical on all 142 lessons |
