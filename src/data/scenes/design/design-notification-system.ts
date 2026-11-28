@@ -1,4 +1,4 @@
-import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, makeQueue, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, makeQueue, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One stage for the whole lesson. Shoppers trigger an order event; the notification
 // service fans it out to one worker per channel. Each later step adds one piece:
@@ -8,13 +8,10 @@ import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, makeQueue, cardAt } 
 //   preferences ─── Notification service ──┤
 //   shoppers → Order service ─┘            └─ (queue) ── Push ── delivery log
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 const shoppers = () => makeCrowd({ x0: -14, x1: -8, y0: -20, y1: -15 }, 9, `shoppers`);
 const orders = (tags: Tag[] = []) =>
   makeBlock(0, -16, { s: 4.4, h: 50, color: `yellow`, glyph: `cart`, label: [`Order`, `service`], tags });
-const notif = (tags: Tag[] = [], o: Opts = {}) =>
+const notif = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(0, -4, { s: 4.8, h: 54, glyph: `send`, label: [`Notification`, `service`], tags, ...o });
 const prefs = (tags: Tag[] = []) => makeDb(-12, -4, { r: 1.9, h: 44, glyph: `userCheck`, label: `preferences`, tags });
 const channel = (x: number, y: number, glyph: string, name: string, sub: string) => (tags: Tag[] = []) =>

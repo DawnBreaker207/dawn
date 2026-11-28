@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel, makeZone, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 import type { LinkSpec } from '@/lib/simulator/stage/types';
 
 // One rail of history from v2.3.0 (good) to HEAD (bad), 1,024 commits apart. A single
@@ -6,8 +6,6 @@ import type { LinkSpec } from '@/lib/simulator/stage/types';
 // the range still in doubt. A test runner joins to automate the checks.
 //
 //   v2.3.0 ─── … ─── probe ─── … ─── HEAD          test.sh ──▶ probe
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const RAIL = -2;
 const GOOD_Y = -12;

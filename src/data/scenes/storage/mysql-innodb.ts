@@ -3,10 +3,11 @@ import {
   makeDb,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
-export const mysqlInnodbLesson: Lesson = {
+export const mysqlInnodbLesson: Lesson = distinctConcepts({
   id: 'mysql-innodb',
   title: 'MySQL InnoDB Internals vs PostgreSQL',
   summary:
@@ -219,4 +220,4 @@ export const mysqlInnodbLesson: Lesson = {
       },
     },
   ],
-};
+});

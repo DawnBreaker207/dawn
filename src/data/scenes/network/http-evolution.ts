@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const httpEvolutionLesson = {
+export const httpEvolutionLesson: Lesson = distinctConcepts({
   id: 'http-evolution',
   title: 'Evolution of HTTP: HTTP/1.1 → HTTP/2 → HTTP/3 QUIC',
   summary: 'Follow the protocol evolution: from text-based head-of-line blocking to binary multiplexing and UDP-based QUIC independent streams.',
@@ -227,4 +229,4 @@ export const httpEvolutionLesson = {
       }
     }
   ]
-};
+});

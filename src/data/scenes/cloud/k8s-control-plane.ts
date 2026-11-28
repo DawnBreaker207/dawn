@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One fixed stage for the whole lesson: kube-apiserver is the hub, and every other
 // component only ever talks to it (hub-and-spoke). Steps add one actor at a time.
@@ -8,16 +8,13 @@ import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt } from '@/li
 //   controller-manager ─┘      └─ scheduler
 //                 node-1 ─┘ └─ node-2
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
-const dev = (o: Opts = {}) => makeDevice(-15.5, 3, { label: `kubectl`, ...o });
-const api = (o: Opts = {}) =>
+const dev = (o: SceneOpts = {}) => makeDevice(-15.5, 3, { label: `kubectl`, ...o });
+const api = (o: SceneOpts = {}) =>
   makeBlock(-1.5, 1.5, { s: 5.2, h: 56, color: `blue`, glyph: `network`, label: [`API server`], sub: `kube-apiserver`, ...o });
-const etcd = (o: Opts = {}) => makeDb(-5, 18, { r: 2.2, h: 46, glyph: `database`, label: `etcd`, ...o });
-const ctrl = (o: Opts = {}) =>
+const etcd = (o: SceneOpts = {}) => makeDb(-5, 18, { r: 2.2, h: 46, glyph: `database`, label: `etcd`, ...o });
+const ctrl = (o: SceneOpts = {}) =>
   makeBlock(-4.5, -13, { s: 4.4, h: 52, color: `orange`, glyph: `refresh`, label: [`Controller`, `manager`], ...o });
-const sched = (o: Opts = {}) =>
+const sched = (o: SceneOpts = {}) =>
   makeBlock(10, 10, { s: 4.4, h: 52, color: `orange`, glyph: `target`, label: [`Scheduler`], sub: `filter · score`, ...o });
 const node = (x: number, y: number, name: string, tags: Tag[] = []) =>
   makeBlock(x, y, { s: 4.4, h: 50, color: `green`, glyph: `container`, label: [name], sub: `kubelet`, tags });

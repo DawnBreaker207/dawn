@@ -12,6 +12,9 @@ type Opts = Partial<EntityProps>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same open shape as EntityProps
 export type Bag = Record<string, any>;
 
+/** Loose option bag a scene helper spreads into a builder call (values are not inspected). */
+export type SceneOpts = Record<string, unknown>;
+
 /** Small state pill shown on a block (`tone`: green / red / amber / violet / gray). */
 export interface Tag {
   text: string;
@@ -191,18 +194,49 @@ export const TIMING_PANEL = makePanel(
 /**
  * The "one fixed stage" layout shared by explainer lessons: an actor on the left, the thing
  * under discussion in the middle, its backing store on the right, a collaborator above and a
- * side element top-right. Chosen by a constrained search (AGENTS.md §8): every node inside
- * x∈[-16,16], y∈[-24,20]; every pair of nodes ≥ 195 px apart; every link 200–215 px (≥ 210 px
- * once tagged, ≤ 360 px max); camera zoom maximised with the engine's own planScene().
+ * side element top-right. Chosen by an annealing search on the engine's own planScene()
+ * (AGENTS.md §8) under the rules the auditor enforces: every node inside x∈[-16,16],
+ * y∈[-24,20]; every pair of nodes ≥ 185 px apart; every pair joined by a labelled link to a
+ * tagged block (caller–main, main–store, helper–main, caller2–main, alt–helper, caller–helper)
+ * ≥ 211 px, none over 360 px; camera zoom maximised (mean ≈1.12 on the 834×547 canvas of a
+ * 1440×900 window, up from ≈1.06).
  */
 export const STAGE = {
-  caller: fromScreen(-176, 131),
-  main: fromScreen(20, 49),
-  store: fromScreen(233, 74),
-  helper: fromScreen(-77, -141),
-  alt: fromScreen(149, -104),
+  caller: fromScreen(-184, 79),
+  main: fromScreen(27, 73),
+  store: fromScreen(244, 82),
+  helper: fromScreen(-79, -114),
+  alt: fromScreen(152, -79),
   /** A second actor next to the caller (concurrency lessons). */
-  caller2: fromScreen(-249, -57),
+  caller2: fromScreen(-270, -85),
+} as const;
+
+/**
+ * Three-Tier Web Architecture Archetype (Users -> Load Balancer -> App Servers -> DB).
+ * Shared by the scaling lessons that draw this stack (stateless, load-balancing).
+ */
+export const STAGE_THREE_TIER = {
+  usersArea: { x0: -4.5, x1: 4.5, y0: -24, y1: -18 },
+  lb: { x: 0, y: -9 },
+  db: { x: 0, y: 10 },
+} as const;
+
+/**
+ * Event-Driven Messaging Archetype (Producer -> three Brokers -> Consumers down-left of each broker).
+ * Shared by the Kafka lessons.
+ */
+export const STAGE_MESSAGING = {
+  producer: fromScreen(0, -215),
+  brokers: {
+    b0: fromScreen(-190, -30),
+    b1: fromScreen(0, -30),
+    b2: fromScreen(190, -30),
+  },
+  consumers: {
+    c0: fromScreen(-280, 135),
+    c1: fromScreen(-90, 135),
+    c2: fromScreen(100, 135),
+  },
 } as const;
 
 /**
@@ -269,7 +303,11 @@ export const distinctConcepts = (lesson: Lesson): Lesson => {
         ...spec,
         from,
         ...(to === undefined ? {} : { to }),
-        pts: spec.pts.map((p): PointRef => (typeof p === `string` ? ref(p) : p)),
+        // A waypoint is an entity id, or an [x, y] pair where either half may be an entity id.
+        pts: spec.pts.map(
+          (p): PointRef =>
+            typeof p === `string` ? ref(p) : [typeof p[0] === `string` ? ref(p[0]) : p[0], typeof p[1] === `string` ? ref(p[1]) : p[1]],
+        ),
       };
     }
     const lid = (k: string) => linkIds[k] ?? k;

@@ -1,6 +1,6 @@
-import { makeBlock, makeCool, makeCrowd, makeDb, makeHot, makeLink, makePanel, makeZone, type Bag, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeCrowd, makeDb, makeHot, makeLink, makePanel, makeZone, STAGE_THREE_TIER, type Bag, cardAt } from '@/lib/simulator/scene-builders';
 
-const usersArea = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
+const usersArea: Record<string, number> = { ...STAGE_THREE_TIER.usersArea };
 
 const storeArea = { x0: -8.5, x1: 8.5, y0: -12.5, y1: -2.5 };
 

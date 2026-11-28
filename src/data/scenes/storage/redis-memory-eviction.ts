@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const redisMemoryEvictionLesson = {
+export const redisMemoryEvictionLesson: Lesson = distinctConcepts({
   id: 'redis-memory-eviction',
   title: 'Redis Eviction Policies: LRU, LFU & Active Defrag',
   summary: 'Architect memory management at capacity: approximated LRU sampling pools, logarithmic LFU counters, lazy TTL expiration, and active defragmentation.',
@@ -245,4 +247,4 @@ export const redisMemoryEvictionLesson = {
       }
     }
   ]
-};
+});

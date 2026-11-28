@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const reverseProxyL4L7Lesson = {
+export const reverseProxyL4L7Lesson: Lesson = distinctConcepts({
   id: 'reverse-proxy-l4-l7',
   title: 'Layer 4 vs Layer 7 Load Balancing & Envoy Proxy',
   summary: 'Compare L4 Direct Server Return (DSR) operating at millions of packets/sec with L7 Envoy application routing and graceful connection draining.',
@@ -270,4 +272,4 @@ export const reverseProxyL4L7Lesson = {
       }
     }
   ]
-};
+});

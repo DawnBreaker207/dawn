@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 
 // One diamond DAG for the whole lesson: the merge base on top, our commit on the left,
 // their commit on the right. The conflicted file sits where the merge commit will land,
@@ -9,8 +9,6 @@ import { fromScreen, makeBlock, makeLink, makePanel, cardAt } from '@/lib/simula
 //   ours 4d5e6f            theirs 7a8b9c
 //            ↖            ↗
 //         tax.ts  →  merge 9a8b7c
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen position (px) → world grid coordinates. */
 const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);

@@ -1,4 +1,4 @@
-import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf } from '@/lib/simulator/scene-builders';
+import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf, type SceneOpts } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage. Acts 1–2 are production: Kubernetes and Prometheus watch a Boot app. Acts 3–6
@@ -7,8 +7,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //
 //                    helper                    alt
 //   caller ──── main (app / context) ───────── store
-
-type Opts = Record<string, unknown>;
 
 const positions = {
   caller: STAGE.caller,

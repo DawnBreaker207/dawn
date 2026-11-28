@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const redisDataStructuresLesson = {
+export const redisDataStructuresLesson: Lesson = distinctConcepts({
   id: 'redis-data-structures',
   title: 'Redis C Internals: SDS, Dict & Progressive Rehash',
   summary: 'Explore Redis data structures written in C: Simple Dynamic Strings (SDS), hash tables with progressive rehashing, and memory-compact listpacks.',
@@ -248,4 +250,4 @@ export const redisDataStructuresLesson = {
       }
     }
   ]
-};
+});

@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const redisPersistenceRdbAofLesson = {
+export const redisPersistenceRdbAofLesson: Lesson = distinctConcepts({
   id: 'redis-persistence-rdb-aof',
   title: 'Redis Persistence: RDB Snapshots vs AOF Logs',
   summary: 'Deep-dive into durability trade-offs: Linux fork Copy-on-Write snapshots, append-only logs with fsync policies, and hybrid persistence.',
@@ -237,4 +239,4 @@ export const redisPersistenceRdbAofLesson = {
       }
     }
   ]
-};
+});

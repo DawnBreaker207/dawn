@@ -1,4 +1,4 @@
-import { DEAD_STATE, makeBalancer, makeBlock, makeDb, makeDevice, makeLink, type Bag, type Tag } from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, STAGE_THREE_TIER, makeBalancer, makeBlock, makeDb, makeDevice, makeLink, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
 const sessionTag = { text: `session: Alice · cart 2`, tone: `violet`, icon: `user` };
 
@@ -6,7 +6,7 @@ const $e = { text: `no session for Alice`, tone: `red`, icon: `alert` };
 
 const alice = (e: Tag[] = [{ text: `cart: 2 items`, icon: `check` }]) => makeDevice(0, -19, { label: `Alice`, tags: e });
 
-const loadBalancer = (e: Tag[] = []) => makeBalancer(0, -9, { tags: e });
+const loadBalancer = (e: Tag[] = []) => makeBalancer(STAGE_THREE_TIER.lb.x, STAGE_THREE_TIER.lb.y, { tags: e });
 
 const servers = (e: Bag = {}) => ({
     a: makeBlock(-7, 0, { label: [`Server A`], ...(e.a || {}) }),
@@ -15,7 +15,7 @@ const servers = (e: Bag = {}) => ({
   });
 
 const sessionStore = (e = [{ text: `Alice · cart 2`, tone: `violet`, icon: `user` }]) =>
-    makeDb(0, 10, { glyph: `zap`, label: `session store`, tags: e });
+    makeDb(STAGE_THREE_TIER.db.x, STAGE_THREE_TIER.db.y, { glyph: `zap`, label: `session store`, tags: e });
 
 const userLink = { ul: makeLink(`alice`, `lb`, [`alice`, `lb`], { heads: `both` }) };
 
@@ -300,7 +300,7 @@ export const statelessLesson = {
               b: { tags: [{ text: `stateless` }] },
               c: { tags: [{ text: `stateless` }] },
             }),
-            os: makeDb(0, 10, {
+            os: makeDb(STAGE_THREE_TIER.db.x, STAGE_THREE_TIER.db.y, {
               glyph: `box`,
               label: `object storage`,
               tags: [{ text: `avatar.png`, tone: `violet`, icon: `file` }],

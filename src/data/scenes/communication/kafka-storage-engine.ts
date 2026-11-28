@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeLink, makePanel, makeQueue, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeLink, makePanel, makeQueue, makeZone, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One broker, one partition, for the whole lesson. Records are appended to the
 // partition log (amber dots); later steps add the sparse index, the OS page cache
@@ -13,12 +13,9 @@ const IDX = fromScreen(-60, -185);
 const CACHE = fromScreen(170, 10);
 const CONS = fromScreen(40, 185);
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
-const producer = (o: Opts = {}) =>
+const producer = (o: SceneOpts = {}) =>
   makeBlock(-2, -17, { s: 4.4, h: 48, color: `blue`, glyph: `send`, label: [`Producer`], sub: `orders app`, ...o });
-const broker = (tags: Tag[] = [], o: Opts = {}) =>
+const broker = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(-2, -3, { s: 5, h: 56, color: `slab`, glyph: `server`, label: [`Broker`], sub: `kafka-1`, tags, ...o });
 const logZone = (label = `orders-0 LOG`) => makeZone({ x0: -4.5, x1: 0.5, y0: 3, y1: 14 }, label);
 /** Sealed segment (grey) + active segment (amber) — the log grows along +y. */

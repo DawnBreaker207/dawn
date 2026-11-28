@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const tcpInternalsLesson = {
+export const tcpInternalsLesson: Lesson = distinctConcepts({
   id: 'tcp-internals',
   title: 'TCP Internals & Flow Control',
   summary: 'Follow bytes through the transport layer: 3-way handshake, sliding window, congestion control, and connection teardown.',
@@ -233,4 +235,4 @@ export const tcpInternalsLesson = {
       }
     }
   ]
-};
+});

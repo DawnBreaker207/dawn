@@ -1,8 +1,10 @@
-import { DEAD_STATE, makeBalancer, makeBlock, makeCool, makeCrowd, makeHot, makeLink, type Bag } from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, STAGE_THREE_TIER, makeBalancer, makeBlock, makeCool, makeCrowd, makeHot, makeLink, type Bag } from '@/lib/simulator/scene-builders';
 
 const crowdArea = { x0: -4.5, x1: 4.5, y0: -17, y1: -11 };
 
-const usersArea = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
+const usersArea: Record<string, number> = { ...STAGE_THREE_TIER.usersArea };
+
+const LB = STAGE_THREE_TIER.lb;
 
 const serverLinkIds = [`la`, `lbb`, `lc`];
 
@@ -78,7 +80,7 @@ export const loadBalancingLesson = {
         ],
         metrics: { users: 2e5, rps: 6e3, p95: 90, errors: 0, healthy: `3 / 3` },
         scene: {
-          entities: { users: users(), lb: makeBalancer(0, -9), ...servers() },
+          entities: { users: users(), lb: makeBalancer(LB.x, LB.y), ...servers() },
           links: { ...userLink(), ...serverLinks() },
           flows: requestFlows(4.5),
         },
@@ -100,7 +102,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb: makeBalancer(0, -9, { tags: [{ text: `round robin`, icon: `replay` }] }),
+            lb: makeBalancer(LB.x, LB.y, { tags: [{ text: `round robin`, icon: `replay` }] }),
             ...servers(),
           },
           links: { ...userLink(), ...serverLinks() },
@@ -121,7 +123,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb: makeBalancer(0, -9, { tags: [{ text: `round robin`, icon: `replay` }] }),
+            lb: makeBalancer(LB.x, LB.y, { tags: [{ text: `round robin`, icon: `replay` }] }),
             ...servers({
               a: makeCool(0.24),
               b: { ...makeHot(0.97), tags: [{ text: `23 queued`, tone: `red` }] },
@@ -153,7 +155,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb: makeBalancer(0, -9, { tags: [{ text: `least connections`, icon: `gauge` }] }),
+            lb: makeBalancer(LB.x, LB.y, { tags: [{ text: `least connections`, icon: `gauge` }] }),
             ...servers({
               a: { ...makeCool(0.5), tags: [{ text: `4 active` }] },
               b: { ...makeCool(0.52), tags: [{ text: `9 active` }] },
@@ -194,7 +196,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb: makeBalancer(0, -9, { tags: [{ text: `least connections`, icon: `gauge` }] }),
+            lb: makeBalancer(LB.x, LB.y, { tags: [{ text: `least connections`, icon: `gauge` }] }),
             ...servers({
               a: makeCool(0.55),
               b: makeCool(0.57),
@@ -225,7 +227,7 @@ export const loadBalancingLesson = {
         changes: [`− Load balancer down`, `~ Errors 0% → 100%`],
         metrics: { users: 2e5, rps: 6e3, p95: null, errors: 100, healthy: `3 / 3` },
         scene: {
-          entities: { users: users(), lb: makeBalancer(0, -9, DEAD_STATE), ...servers({ a: makeCool(0.02), b: makeCool(0.02), c: makeCool(0.02) }) },
+          entities: { users: users(), lb: makeBalancer(LB.x, LB.y, DEAD_STATE), ...servers({ a: makeCool(0.02), b: makeCool(0.02), c: makeCool(0.02) }) },
           links: {
             ...userLink(`lb`, `ul`, { fail: 1 }),
             ...serverLinks(`lb`, void 0, { a: { style: `off` }, b: { style: `off` }, c: { style: `off` } }),
@@ -253,7 +255,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb: makeBalancer(0, -9, { tags: [{ text: `ACTIVE · VIP`, tone: `green`, icon: `globe` }] }),
+            lb: makeBalancer(LB.x, LB.y, { tags: [{ text: `ACTIVE · VIP`, tone: `green`, icon: `globe` }] }),
             lb2: makeBalancer(-14, -9, {
               label: [`Standby`, `LB`],
               dim: 1,
@@ -299,7 +301,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb2: makeBalancer(0, -9, { tags: [{ text: `ACTIVE · VIP`, tone: `green`, icon: `globe` }] }),
+            lb2: makeBalancer(LB.x, LB.y, { tags: [{ text: `ACTIVE · VIP`, tone: `green`, icon: `globe` }] }),
             ...servers(),
           },
           links: { ...userLink(`lb2`, `ul2`), ...serverLinks(`lb2`, { a: `la2`, b: `lbb2`, c: `lc2` }) },
@@ -323,7 +325,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb2: makeBalancer(0, -9, {
+            lb2: makeBalancer(LB.x, LB.y, {
               tags: [{ text: `L7 · routes by path`, tone: `green`, icon: `split` }],
             }),
             a: makeBlock(-7, 0, { label: [`API A`], ...makeCool(0.4) }),
@@ -365,7 +367,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb2: makeBalancer(0, -9, { tags: [{ text: `rolling deploy`, tone: `green`, icon: `replay` }] }),
+            lb2: makeBalancer(LB.x, LB.y, { tags: [{ text: `rolling deploy`, tone: `green`, icon: `replay` }] }),
             a: makeBlock(-7, 0, {
               label: [`Server A`],
               ...makeCool(0.5),
@@ -411,7 +413,7 @@ export const loadBalancingLesson = {
         scene: {
           entities: {
             users: users(),
-            lb2: makeBalancer(0, -9, { tags: [{ text: `VIP`, tone: `green`, icon: `globe` }] }),
+            lb2: makeBalancer(LB.x, LB.y, { tags: [{ text: `VIP`, tone: `green`, icon: `globe` }] }),
             ...servers(),
           },
           links: { ...userLink(`lb2`, `ul2`), ...serverLinks(`lb2`, { a: `la2`, b: `lbb2`, c: `lc2` }) },

@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const redisEventLoopLesson = {
+export const redisEventLoopLesson: Lesson = distinctConcepts({
   id: 'redis-event-loop',
   title: 'Redis Internals: Single-Threaded Reactor & Epoll',
   summary: 'Dive inside the Redis execution core: how a single thread processes 100,000 queries per second using Linux epoll without locks or context switches.',
@@ -242,4 +244,4 @@ export const redisEventLoopLesson = {
       }
     }
   ]
-};
+});

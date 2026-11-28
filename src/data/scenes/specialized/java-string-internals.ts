@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: a stack frame holding String references, the String objects on the heap,
@@ -8,8 +8,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //   javac          StringTable      dedup (GC)
 //   stack ── "ok" (pooled) ── byte[]
 //              new String ──┘
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const positions = {
   stack: fromScreen(-220, 60),

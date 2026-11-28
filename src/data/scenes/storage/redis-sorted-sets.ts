@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const redisSortedSetsLesson = {
+export const redisSortedSetsLesson: Lesson = distinctConcepts({
   id: 'redis-sorted-sets',
   title: 'Redis Sorted Sets: SkipLists & Leaderboard Algorithms',
   summary: 'Deconstruct the Redis ZSET engine: dual data structures combining hash tables with probabilistic SkipLists for O(log N) range queries and leaderboards.',
@@ -246,4 +248,4 @@ export const redisSortedSetsLesson = {
       }
     }
   ]
-};
+});

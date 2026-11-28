@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const tlsHandshakeLesson = {
+export const tlsHandshakeLesson: Lesson = distinctConcepts({
   id: 'tls-handshake',
   title: 'Cryptography & The TLS 1.3 Handshake',
   summary: 'Inside the cryptographic protocol securing the web: TLS 1.2 vs 1.3, ECDHE key exchange, certificate verification, and mutual TLS.',
@@ -230,4 +232,4 @@ export const tlsHandshakeLesson = {
       }
     }
   ]
-};
+});

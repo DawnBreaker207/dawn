@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeLink, makePanel, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage for the whole lesson: a method's stack frame on the left, heap objects
@@ -7,9 +7,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //            javac            IntegerCache
 //   stack frame ── heap object
 //                      └── second object / BigDecimal
-
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
 
 /** Screen position (px) → world grid coordinates. */
 const positions = {
@@ -20,7 +17,7 @@ const positions = {
   low: fromScreen(70, 180),
 };
 
-const block = (p: { x: number; y: number }, o: Opts) => makeBlock(p.x, p.y, { s: 4.4, h: 52, ...o });
+const block = (p: { x: number; y: number }, o: SceneOpts) => makeBlock(p.x, p.y, { s: 4.4, h: 52, ...o });
 const stack = (tags: Tag[] = []) =>
   block(positions.stack, { color: `blue`, glyph: `layers`, label: [`Stack frame`], sub: `main()`, tags });
 const boxA = (label: string, tags: Tag[] = []) =>

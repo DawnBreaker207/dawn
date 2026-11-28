@@ -1,4 +1,4 @@
-import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One region, two AZs, then a DR region. Same nodes all lesson long:
 //
@@ -6,20 +6,17 @@ import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZ
 //              │            └─ EC2 (AZ-b) ─ RDS standby
 //              └─ DR app ─ DR database (us-west-2)
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 // colors by role: edge/DNS yellow · gateways orange · compute blue · data db · security purple
 const users = () => makeDevice(-16, -15.5, { label: `users` });
 const r53 = (tags: Tag[] = []) => makeBlock(-11.5, -8.5, { s: 4.4, h: 50, color: `yellow`, glyph: `globe`, label: [`Route 53`], sub: `DNS`, tags });
 const alb = (tags: Tag[] = []) => makeBalancer(-5.5, -3, { s: 4.4, h: 50, label: [`ALB`], sub: `cross-zone`, tags });
-const ec2 = (x: number, y: number, az: string, tags: Tag[], o: Opts) =>
+const ec2 = (x: number, y: number, az: string, tags: Tag[], o: SceneOpts) =>
   makeBlock(x, y, { s: 4.4, h: 50, color: `blue`, glyph: `server`, label: [`EC2 · ASG`], sub: az, tags, ...o });
-const ec2a = (tags: Tag[] = [], o: Opts = {}) => ec2(-7, 10, `AZ-a`, tags, o);
-const ec2b = (tags: Tag[] = [], o: Opts = {}) => ec2(8, -5, `AZ-b`, tags, o);
-const dbP = (tags: Tag[] = [], o: Opts = {}) => makeDb(-0.5, 16.5, { r: 2.1, h: 44, label: `RDS primary`, tags, ...o });
-const dbS = (tags: Tag[] = [], o: Opts = {}) => makeDb(14.5, 1.5, { r: 2.1, h: 44, label: `RDS standby`, tags, ...o });
-const drApp = (tags: Tag[] = [], o: Opts = {}) =>
+const ec2a = (tags: Tag[] = [], o: SceneOpts = {}) => ec2(-7, 10, `AZ-a`, tags, o);
+const ec2b = (tags: Tag[] = [], o: SceneOpts = {}) => ec2(8, -5, `AZ-b`, tags, o);
+const dbP = (tags: Tag[] = [], o: SceneOpts = {}) => makeDb(-0.5, 16.5, { r: 2.1, h: 44, label: `RDS primary`, tags, ...o });
+const dbS = (tags: Tag[] = [], o: SceneOpts = {}) => makeDb(14.5, 1.5, { r: 2.1, h: 44, label: `RDS standby`, tags, ...o });
+const drApp = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(1.5, -21.5, { s: 4.2, h: 48, color: `blue`, glyph: `server`, label: [`DR stack`], sub: `us-west-2`, tags, ...o });
 const drDb = (tags: Tag[] = []) => makeDb(14.5, -18.5, { r: 2.1, h: 44, label: `Aurora global`, tags });
 

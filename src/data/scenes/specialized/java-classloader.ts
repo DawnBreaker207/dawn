@@ -1,4 +1,4 @@
-import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf } from '@/lib/simulator/scene-builders';
+import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf, type SceneOpts } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage, two acts. Act 1 (steps 1–6) is class loading: a .class file on the left, the
@@ -8,8 +8,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //
 //                  helper (parent / profiler)    alt (Bootstrap / optimisation)
 //   caller ────── main (loader / tier) ────────── store (Metaspace / CodeCache)
-
-type Opts = Record<string, unknown>;
 
 const positions = {
   caller: STAGE.caller,

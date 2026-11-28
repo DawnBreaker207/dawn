@@ -1,4 +1,4 @@
-import { DEAD_STATE, fromScreen, makeBlock, makeHot, makeLink, makePanel, makeQueue, cardAt } from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, STAGE_MESSAGING, fromScreen, makeBlock, makeHot, makeLink, makePanel, makeQueue, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // Seed → result. One partition (orders-0): a producer and a single copy grow into three replicas,
 // then a consumer joins in step 3. Screen grid of 190 px. Three replicas: broker-1 holds the leader copy; the
@@ -11,17 +11,14 @@ import { DEAD_STATE, fromScreen, makeBlock, makeHot, makeLink, makePanel, makeQu
 //       replica     leader       replica
 //                  consumer
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
-const brokerPositions = { b0: fromScreen(-190, -30), b1: fromScreen(0, -30), b2: fromScreen(190, -30) } as const;
-const producerPosition = fromScreen(0, -215);
+const brokerPositions = STAGE_MESSAGING.brokers;
+const producerPosition = STAGE_MESSAGING.producer;
 const CONSUMER = fromScreen(0, 160);
 type BrokerId = keyof typeof brokerPositions;
 
-const producer = (tags: Tag[] = [], o: Opts = {}) =>
+const producer = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(producerPosition.x, producerPosition.y, { s: 4.4, h: 52, color: `blue`, glyph: `send`, label: [`Producer`], sub: `orders app`, tags, ...o });
-const broker = (id: BrokerId, role: string, tags: Tag[] = [], o: Opts = {}) =>
+const broker = (id: BrokerId, role: string, tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(brokerPositions[id].x, brokerPositions[id].y, { s: 4.6, h: 52, color: `slab`, glyph: `server`, label: [`broker-${id[1]}`], sub: role, tags, ...o });
 const log = (id: BrokerId, n: number) => makeQueue(brokerPositions[id].x + 2.6, brokerPositions[id].y - 2.6, n, [0.62, -0.62]);
 const consumer = (tags: Tag[] = []) =>

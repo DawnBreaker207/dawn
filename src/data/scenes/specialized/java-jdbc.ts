@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One fixed path for the whole lesson: a request thread borrows a warm connection
@@ -11,8 +11,6 @@ import type { Lesson } from '@/lib/simulator/types';
 
 /** Screen position (px) → world grid point. */
 const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const positions = {
   t1: toIso(-280, -10),

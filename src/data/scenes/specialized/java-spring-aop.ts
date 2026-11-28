@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: a controller calls OrderService. In step 2 a proxy slides in between
@@ -7,8 +7,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //
 //   Controller ── Proxy ── OrderService ── Kafka / Redis
 //        Executor ─┘  └─ HikariCP ── Postgres
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const HUB = { x: -1.5, y: 1.5 };
 

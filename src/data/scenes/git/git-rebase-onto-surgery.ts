@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // Two commit trains on fixed rails. Top rail: main (M1, M2) — later B1', B2' are grafted
 // onto its tip. Bottom rail: feat-A (A1, A2) with feat-B (B1, B2) stacked on top of it.
@@ -8,22 +8,19 @@ import { makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-bu
 //    ↖
 //     A1 ← A2 ← B1 ← B2           (feat-A, feat-B)
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 const TRUNK = -9;
 const SIDE = 5;
-const commit = (x: number, y: number, sha: string, sub: string, tags: Tag[] = [], o: Opts = {}) =>
+const commit = (x: number, y: number, sha: string, sub: string, tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(x, y, { s: 4.2, h: 50, color: `purple`, glyph: `gitCommit`, label: [sha], sub, tags, ...o });
 const ref = (name: string): Tag => ({ text: name, tone: `amber`, icon: `gitBranch` });
-const dropped: Opts = { dim: 0.75 };
+const dropped: SceneOpts = { dim: 0.75 };
 
 const M1 = (t: Tag[] = []) => commit(TRUNK, -22, `3c1d00`, `M1`, t);
 const M2 = (t: Tag[] = [ref(`main`)]) => commit(TRUNK, -10, `8f2e11`, `M2`, t);
-const A1 = (t: Tag[] = [], o: Opts = {}) => commit(SIDE, -18, `a1b2c3`, `A1`, t, o);
-const A2 = (t: Tag[] = [ref(`feat-A`)], o: Opts = {}) => commit(SIDE, -6, `a4d5e6`, `A2`, t, o);
-const B1 = (t: Tag[] = [], o: Opts = {}) => commit(SIDE, 6, `b17f20`, `B1`, t, o);
-const B2 = (t: Tag[] = [ref(`feat-B`)], o: Opts = {}) => commit(SIDE, 18, `b29c31`, `B2`, t, o);
+const A1 = (t: Tag[] = [], o: SceneOpts = {}) => commit(SIDE, -18, `a1b2c3`, `A1`, t, o);
+const A2 = (t: Tag[] = [ref(`feat-A`)], o: SceneOpts = {}) => commit(SIDE, -6, `a4d5e6`, `A2`, t, o);
+const B1 = (t: Tag[] = [], o: SceneOpts = {}) => commit(SIDE, 6, `b17f20`, `B1`, t, o);
+const B2 = (t: Tag[] = [ref(`feat-B`)], o: SceneOpts = {}) => commit(SIDE, 18, `b29c31`, `B2`, t, o);
 const B1n = (t: Tag[] = []) => commit(TRUNK, 4, `c5e6f7`, `B1'`, t);
 const B2n = (t: Tag[] = [ref(`feat-B`)]) => commit(TRUNK, 16, `c8a9b0`, `B2'`, t);
 

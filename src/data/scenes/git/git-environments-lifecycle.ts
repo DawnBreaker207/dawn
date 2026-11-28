@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: the four places a change lives, left to right.
 //
@@ -7,8 +7,6 @@ import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/li
 //
 // Git colours (shared by every git lesson): working tree = blue, index = orange,
 // commit = purple, ref/branch = yellow (amber tags), object store = db, remote = slab.
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen-space placement (px from stage centre) → world (x, y). */
 const toIso = (sx: number, sy: number): [number, number] => {

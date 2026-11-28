@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel, makeZone, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One image, one container, for the whole lesson. The image layers climb a staircase
 // (base → runtime → app); the container's writable upperdir sits on top, and the running
@@ -10,17 +10,14 @@ import { makeBlock, makeDb, makeLink, makePanel, makeZone, cardAt } from '@/lib/
 //     base ─────┘                              │
 //                                         volume (survives)
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
-const layer = (y: number, name: string, sub: string, o: Opts = {}) =>
+const layer = (y: number, name: string, sub: string, o: SceneOpts = {}) =>
   makeBlock(-8, y, { s: 4.4, h: 48, color: `purple`, glyph: `layers`, label: [name], sub, ...o });
-const base = (o: Opts = {}) => layer(-16, `debian:12`, `base · 117 MB`, o);
-const runtime = (o: Opts = {}) => layer(-4, `node:20`, `+ 52 MB`, o);
-const appLayer = (o: Opts = {}) => layer(8, `COPY app/`, `+ 13 MB`, o);
-const upper = (tags: Tag[] = [], o: Opts = {}) =>
+const base = (o: SceneOpts = {}) => layer(-16, `debian:12`, `base · 117 MB`, o);
+const runtime = (o: SceneOpts = {}) => layer(-4, `node:20`, `+ 52 MB`, o);
+const appLayer = (o: SceneOpts = {}) => layer(8, `COPY app/`, `+ 13 MB`, o);
+const upper = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(-6, 20, { s: 4.4, h: 48, color: `yellow`, glyph: `file`, label: [`upperdir`], sub: `writable`, tags, ...o });
-const container = (tags: Tag[] = [], o: Opts = {}) =>
+const container = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(11.5, 3, { s: 4.6, h: 54, color: `green`, glyph: `cpu`, label: [`container`], sub: `merged view`, tags, ...o });
 const volume = (tags: Tag[] = []) => makeDb(11.5, -13, { r: 2.2, h: 46, glyph: `database`, label: `volume pgdata`, tags });
 const image = () => makeZone({ x0: -11, x1: -5, y0: -21, y1: 11 }, `IMAGE · RO`);

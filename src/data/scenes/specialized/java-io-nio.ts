@@ -1,4 +1,4 @@
-import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf } from '@/lib/simulator/scene-builders';
+import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf, type SceneOpts } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: your code on the left, the I/O class under discussion in the middle (same id,
@@ -6,8 +6,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //
 //                    kernel          alt
 //   your code ──── io ────────────── source
-
-type Opts = Record<string, unknown>;
 
 const positions = {
   caller: STAGE.caller,

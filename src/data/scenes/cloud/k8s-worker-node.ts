@@ -1,4 +1,4 @@
-import { makeBlock, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeLink, makePanel, makeZone, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One worker node, one Pod, start to finish. The kubelet is the hub: it watches the API
 // server, drives containerd over CRI, and probes the app itself. The Pod is a box holding
@@ -8,9 +8,6 @@ import { makeBlock, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulato
 //                  │                      │ POD
 //              containerd ── pause ───────┘
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 const api = () =>
   makeBlock(-16, 3, { s: 4.4, h: 52, color: `blue`, glyph: `network`, label: [`API server`], sub: `kube-apiserver` });
 const kubelet = (tags: Tag[] = []) =>
@@ -19,7 +16,7 @@ const containerd = (tags: Tag[] = []) =>
   makeBlock(1.5, -15.5, { s: 4.4, h: 52, color: `orange`, glyph: `boxes`, label: [`containerd`], sub: `CRI runtime`, tags });
 const pause = (tags: Tag[] = []) =>
   makeBlock(13, -10, { s: 4.2, h: 48, color: `slab`, glyph: `pause`, label: [`pause`], sub: `sandbox`, tags });
-const app = (tags: Tag[] = [], o: Opts = {}) =>
+const app = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(12, 5, { s: 4.4, h: 52, color: `green`, glyph: `cpu`, label: [`web`], sub: `app container`, tags, ...o });
 const pod = () => makeZone({ x0: 9.5, x1: 15.5, y0: -15.5, y1: 8.5 }, `POD web`);
 
@@ -37,7 +34,7 @@ const links = {
 /** Cards park in the open floor at the top right. */
 const card = cardAt({ x: -1.5, y: 1.5, dx: 60, dy: -250 });
 
-const running = (appTags: Tag[] = [], appOpts: Opts = {}) => ({
+const running = (appTags: Tag[] = [], appOpts: SceneOpts = {}) => ({
   api: api(),
   kubelet: kubelet(),
   containerd: containerd(),

@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDevice, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDevice, makeLink, makePanel, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One repository on one laptop. First half: a crashed git process left `.git/index.lock`
 // behind. Second half: the same working tree and index, now with a stash — which is
@@ -8,21 +8,18 @@ import { fromScreen, makeBlock, makeDevice, makeLink, makePanel, cardAt } from '
 //                 │                              ▲ parent
 //             working tree ──stash / pop──▶ stash@{0}
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 /** Screen position (px) → world grid coordinates. */
 const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
 const positions = { ide: toIso(-290, -40), index: toIso(-40, -110), tree: toIso(-20, 110), head: toIso(230, -120), stash: toIso(230, 90) };
 
-const ide = (tags: Tag[] = [], o: Opts = {}) => makeDevice(positions.ide.x, positions.ide.y, { label: `IDE git`, tags, ...o });
+const ide = (tags: Tag[] = [], o: SceneOpts = {}) => makeDevice(positions.ide.x, positions.ide.y, { label: `IDE git`, tags, ...o });
 const index = (tags: Tag[] = []) =>
   makeBlock(positions.index.x, positions.index.y, { s: 4.4, h: 52, color: `orange`, glyph: `listChecks`, label: [`index`], sub: `.git/index`, tags });
 const tree = (tags: Tag[] = []) =>
   makeBlock(positions.tree.x, positions.tree.y, { s: 4.4, h: 52, color: `blue`, glyph: `file`, label: [`working`, `tree`], tags });
 const head = () =>
   makeBlock(positions.head.x, positions.head.y, { s: 4.2, h: 50, color: `purple`, glyph: `gitCommit`, label: [`4c2a91`], sub: `HEAD · main`, tags: [{ text: `main`, tone: `amber`, icon: `gitBranch` }] });
-const stash = (tags: Tag[] = [], o: Opts = {}) =>
+const stash = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(positions.stash.x, positions.stash.y, { s: 4.4, h: 52, color: `purple`, glyph: `layers`, label: [`stash@{0}`], sub: `WIP commit`, tags, ...o });
 
 const links = {

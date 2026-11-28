@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, makeZone, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One heap for the whole lesson. The same `order` object is allocated in Eden,
@@ -11,8 +11,6 @@ import type { Lesson } from '@/lib/simulator/types';
 
 /** Screen position (px) → world grid point. */
 const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const positions = {
   stack: toIso(30, -185),

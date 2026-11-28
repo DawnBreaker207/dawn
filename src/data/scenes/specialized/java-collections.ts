@@ -1,4 +1,4 @@
-import { STAGE, makeDb, makeLink, makePanel, stageBlock, distinctConcepts, cardAt } from '@/lib/simulator/scene-builders';
+import { STAGE, makeDb, makeLink, makePanel, stageBlock, distinctConcepts, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage for the whole lesson. The caller thread stays on the left, the collection under
@@ -8,9 +8,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //
 //   thread 2        hash()          alt (step 1)
 //   main thread ──── coll ───────── backing store
-
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
 
 const positions = {
   caller: STAGE.caller,

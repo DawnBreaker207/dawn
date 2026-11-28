@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: a single POST /api/orders travels a fixed pipeline —
@@ -8,8 +8,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //   client ── Tomcat ── Filters
 //                          │
 //      Postgres ── Controller ── DispatcherServlet ── Advice / Kafka
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const client = (tags: Tag[] = []) => makeDevice(-14.5, -10, { label: `client`, tags });
 const tomcat = (tags: Tag[] = []) =>

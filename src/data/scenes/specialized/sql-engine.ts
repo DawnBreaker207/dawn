@@ -3,10 +3,12 @@ import {
   makeDb,
   makeDevice,
   makeLink,
-  makePanel
+  makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const sqlEngineLesson = {
+export const sqlEngineLesson: Lesson = distinctConcepts({
   id: `sql-engine`,
   title: `PostgreSQL Query Engine, EXPLAIN & Tuning`,
   summary: `Follow a SQL query through parse, analyze, plan, execute, commit, checkpoint, EXPLAIN cost/buffers, Index Only Scan, Sargable rewrites, EXISTS, and work_mem tuning.`,
@@ -429,6 +431,6 @@ export const sqlEngineLesson = {
       },
     },
   ],
-};
+});
 
 export default sqlEngineLesson;

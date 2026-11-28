@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: the same feature travels to production under two workflows.
 // Git Flow routes it through `develop`; trunk-based retires `develop` and adds a CI
@@ -8,8 +8,6 @@ import { fromScreen, makeBlock, makeLink, makePanel, cardAt } from '@/lib/simula
 //        └──── CI ─────────┘
 //
 // Git colours: branches are yellow, the CI process green, production slab.
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const toIso = (sx: number, sy: number): [number, number] => {
   const p = fromScreen(sx, sy, 2);

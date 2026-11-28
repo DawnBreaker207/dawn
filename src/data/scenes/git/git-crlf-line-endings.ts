@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 
 // A line-ending pipeline: Windows working tree → index (where git add converts) →
 // object store → Linux working tree. The fix lives in the middle of the pipe
@@ -7,8 +7,6 @@ import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/li
 //   Windows tree ──git add──▶ index ──commit──▶ objects ──checkout──▶ Linux tree
 //                               ▲
 //                           pre-commit
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen position (px) → world grid coordinates. */
 const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);

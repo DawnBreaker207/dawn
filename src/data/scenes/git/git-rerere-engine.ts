@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 
 // One rebase, one recurring conflict. The commit being replayed sits on the left, the
 // conflicted file in the middle, rerere's cache on the right and the index below.
@@ -7,8 +7,6 @@ import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/li
 //   pick e41a09 ──apply──▶ auth.ts ──record──▶ .git/rr-cache
 //                            │  ◀───replay────
 //                          index
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 /** Screen position (px) → world grid coordinates. */
 const toIso = (sx: number, sy: number) => fromScreen(sx, sy, 2);

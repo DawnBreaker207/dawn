@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: the four object types laid out as the pointer chain they form.
 // Arrows point the way Git stores them — from the object that names a hash to the
@@ -8,8 +8,6 @@ import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/li
 //                              └──────── pack ────┘   (git gc)
 //
 // Git colours: commit = purple, tree = green, tag/ref = yellow, blob/pack = db.
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const toIso = (sx: number, sy: number): [number, number] => {
   const p = fromScreen(sx, sy, 2);

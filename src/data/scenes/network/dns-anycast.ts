@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const dnsAnycastLesson = {
+export const dnsAnycastLesson: Lesson = distinctConcepts({
   id: 'dns-anycast',
   title: 'Global DNS Resolution & Anycast Routing',
   summary: 'Trace DNS queries from browser cache to Root, TLD, and Authoritative servers, and see how BGP Anycast routes traffic to the nearest PoP.',
@@ -242,4 +244,4 @@ export const dnsAnycastLesson = {
       }
     }
   ]
-};
+});

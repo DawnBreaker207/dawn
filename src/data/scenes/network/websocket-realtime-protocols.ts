@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const websocketRealtimeProtocolsLesson = {
+export const websocketRealtimeProtocolsLesson: Lesson = distinctConcepts({
   id: 'websocket-realtime-protocols',
   title: 'Real-Time Protocols: WebSockets, SSE & Scaling Sockets',
   summary: 'Architect bidirectional real-time channels: from the HTTP 101 Upgrade to minimal 2-byte framing, SSE trade-offs, and multi-server Redis backplanes.',
@@ -240,4 +242,4 @@ export const websocketRealtimeProtocolsLesson = {
       }
     }
   ]
-};
+});

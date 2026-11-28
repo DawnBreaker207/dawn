@@ -1,4 +1,4 @@
-import { DEAD_STATE, fromScreen, makeBlock, makeLink, makePanel, makeQueue, cardAt } from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, STAGE_MESSAGING, fromScreen, makeBlock, makeLink, makePanel, makeQueue, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // Seed → result. One broker and a producer grow into a cluster; every step adds at most two
 // blocks, and nodes keep their meaning. Metadata first lives in ZooKeeper (which leaves in
@@ -18,29 +18,26 @@ import { DEAD_STATE, fromScreen, makeBlock, makeLink, makePanel, makeQueue, card
 //   broker-0       broker-1         broker-2       zk   (screen grid: 190 px)
 //   consumer c0    consumer c1      consumer c2 (each down-left of its broker)
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
-const brokerPositions = { b0: fromScreen(-190, -30), b1: fromScreen(0, -30), b2: fromScreen(190, -30) } as const;
+const brokerPositions = STAGE_MESSAGING.brokers;
 // Consumers sit down-left of their broker (not straight below) so the whole picture fits the world bounds.
-const consumerPositions = { c0: fromScreen(-280, 135), c1: fromScreen(-90, 135), c2: fromScreen(100, 135) } as const;
-const producerPosition = fromScreen(0, -215);
+const consumerPositions = STAGE_MESSAGING.consumers;
+const producerPosition = STAGE_MESSAGING.producer;
 const zkPosition = fromScreen(380, -30);
 type BrokerId = keyof typeof brokerPositions;
 type ConsumerId = keyof typeof consumerPositions;
 
 const producer = (tags: Tag[] = []) =>
   makeBlock(producerPosition.x, producerPosition.y, { s: 4.4, h: 52, color: `blue`, glyph: `send`, label: [`Producer`], sub: `orders app`, tags });
-const broker = (id: BrokerId, tags: Tag[] = [], o: Opts = {}) =>
+const broker = (id: BrokerId, tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(brokerPositions[id].x, brokerPositions[id].y, { s: 4.6, h: 52, color: `slab`, glyph: `server`, label: [`broker-${id[1]}`], sub: `partition ${id[1]}`, tags, ...o });
 /** Partition log hanging in front of its broker; it grows downward on screen. */
 const log = (id: BrokerId, n: number) => makeQueue(brokerPositions[id].x + 2.6, brokerPositions[id].y - 2.6, n, [0.62, -0.62]);
-const consumer = (id: ConsumerId, o: Opts = {}) =>
+const consumer = (id: ConsumerId, o: SceneOpts = {}) =>
   makeBlock(consumerPositions[id].x, consumerPositions[id].y, { s: 4.4, h: 52, color: `green`, glyph: `inbox`, label: [`consumer`], sub: `group: billing`, ...o });
 const zookeeper = (tags: Tag[] = []) =>
   makeBlock(zkPosition.x, zkPosition.y, { s: 4.4, h: 52, color: `yellow`, glyph: `layers`, label: [`ZooKeeper`], sub: `3-node ensemble`, tags });
 
-const send = (id: BrokerId, o: Opts = {}) => makeLink(`producer`, id, [`producer`, id], o);
+const send = (id: BrokerId, o: SceneOpts = {}) => makeLink(`producer`, id, [`producer`, id], o);
 const read = (b: BrokerId, c: ConsumerId) => makeLink(b, c, [b, c]);
 
 const links = {
@@ -61,7 +58,7 @@ const links = {
 
 const card = cardAt({ x: brokerPositions.b0.x, y: brokerPositions.b0.y, dx: -250, dy: -170 });
 
-const brokers = (ids: BrokerId[], tags: Partial<Record<BrokerId, Tag[]>> = {}, o: Partial<Record<BrokerId, Opts>> = {}) =>
+const brokers = (ids: BrokerId[], tags: Partial<Record<BrokerId, Tag[]>> = {}, o: Partial<Record<BrokerId, SceneOpts>> = {}) =>
   Object.fromEntries(ids.map((id) => [id, broker(id, tags[id], o[id])]));
 const logs = (n: Partial<Record<BrokerId, number>>) =>
   Object.fromEntries((Object.keys(n) as BrokerId[]).map((id) => [`l${id[1]}`, log(id, n[id] as number)]));

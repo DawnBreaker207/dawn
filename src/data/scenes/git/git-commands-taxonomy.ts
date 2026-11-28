@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: you type commands, one plumbing process does the work, and every
 // result lands in the same two places — the object store and a ref file.
@@ -9,8 +9,6 @@ import { fromScreen, makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt 
 //
 // Git colours: working tree = blue, index = orange, commit = purple, ref = yellow,
 // object store = db, the git process itself = green.
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const toIso = (sx: number, sy: number): [number, number] => {
   const p = fromScreen(sx, sy, 2);

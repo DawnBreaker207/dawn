@@ -1,4 +1,5 @@
-import { makeBlock, makeCool, makeCrowd, makeDb, makeHot, makeLink, makePanel, makeQueue, type Bag } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeCrowd, makeDb, makeHot, makeLink, makePanel, makeQueue, type Bag, distinctConcepts } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
 const usersArea = { x0: -4.5, x1: 4.5, y0: -16, y1: -10 };
 
@@ -18,7 +19,7 @@ const latencyPanel = (e: number, t: Bag = { x: 0, y: 0 }) =>
 
 const requestFlows = (e: number, t: Bag = {}) => [{ route: [`u`], bounce: !0, rate: e, speed: 0.85, ...t }];
 
-export const latencyThroughputLesson = {
+export const latencyThroughputLesson: Lesson = distinctConcepts({
     id: `latency-throughput`,
     title: `Latency & Throughput`,
     summary: `Two questions about speed — and why busy servers slow down before they’re full.`,
@@ -309,7 +310,7 @@ export const latencyThroughputLesson = {
               rate: 0.7,
               bounce: !0,
             },
-            { route: [`f4`], rate: 0.7, bounce: !0, hold: 1.3, kind: `slow` },
+            { route: [`f2`], rate: 0.7, bounce: !0, hold: 1.3, kind: `slow` },
           ],
         },
       },
@@ -386,6 +387,6 @@ export const latencyThroughputLesson = {
         },
       },
     ],
-  };
+  });
 
 export default latencyThroughputLesson;

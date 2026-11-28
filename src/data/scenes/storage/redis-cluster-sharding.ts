@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const redisClusterShardingLesson = {
+export const redisClusterShardingLesson: Lesson = distinctConcepts({
   id: 'redis-cluster-sharding',
   title: 'Redis Cluster: 16,384 Hash Slots & Sentinel Failover',
   summary: 'Scale Redis horizontally: Sentinel automatic master failover, CRC16 16,384 hash slots, MOVED/ASK client redirection, and online slot migration.',
@@ -244,4 +246,4 @@ export const redisClusterShardingLesson = {
       }
     }
   ]
-};
+});

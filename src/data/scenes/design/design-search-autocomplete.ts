@@ -1,4 +1,4 @@
-import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One stage for the whole lesson: users type search queries keystroke by keystroke;
 // the search autocomplete service returns top-k matching suggestions within 100ms.
@@ -10,15 +10,12 @@ import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt } from '@/lib
 //   searchers ──┘                 │
 //               query logs ── Aggregator ── Trie DB
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 const searchers = () => makeCrowd({ x0: -5, x1: 5, y0: -21, y1: -16 }, 12, `searchers`);
-const api = (tags: Tag[] = [], o: Opts = {}) =>
+const api = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(0, -4, { s: 4.8, h: 54, glyph: `search`, label: [`Query`, `Service`], tags, ...o });
-const cache = (tags: Tag[] = [], o: Opts = {}) =>
+const cache = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(-12, -4, { s: 4.4, h: 50, color: `green`, glyph: `zap`, label: [`Trie`, `Cache`], sub: `top-k cache`, tags, ...o });
-const trie = (tags: Tag[] = [], o: Opts = {}) =>
+const trie = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(12, -4, { s: 4.8, h: 54, color: `purple`, glyph: `gitFork`, label: [`Trie`, `Cluster`], sub: `in-memory index`, tags, ...o });
 const logs = (tags: Tag[] = []) =>
   makeDb(-8, 10, { r: 1.8, h: 42, color: `store`, glyph: `fileText`, label: `query logs`, tags });

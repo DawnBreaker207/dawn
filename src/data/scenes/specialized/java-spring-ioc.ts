@@ -1,4 +1,4 @@
-import { makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage: the ApplicationContext is the hub. Beans appear around it as the
@@ -10,15 +10,12 @@ import type { Lesson } from '@/lib/simulator/types';
 //   Gateway ─────┘   │        └─ RequestCtx / AutoConfig
 //         OrderService ── ScopedProxy / Environment
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
-const ctx = (o: Opts = {}) =>
+const ctx = (o: SceneOpts = {}) =>
   makeBlock(-1.5, 1.5, { s: 5.2, h: 56, color: `orange`, glyph: `layers`, label: [`Application`, `Context`], ...o });
-const reg = (o: Opts = {}) => makeDb(-16, 3, { r: 2.2, h: 46, color: `purple`, glyph: `listOrdered`, label: `BeanDefinitions`, ...o });
-const gateway = (tags: Tag[] = [], o: Opts = {}) =>
+const reg = (o: SceneOpts = {}) => makeDb(-16, 3, { r: 2.2, h: 46, color: `purple`, glyph: `listOrdered`, label: `BeanDefinitions`, ...o });
+const gateway = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(-5.5, -13, { s: 4.4, h: 50, color: `green`, glyph: `creditCard`, label: [`Stripe`, `Gateway`], tags, ...o });
-const svc = (tags: Tag[] = [], o: Opts = {}) =>
+const svc = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(10.5, -18.5, { s: 4.4, h: 50, color: `green`, glyph: `code`, label: [`Order`, `Service`], tags, ...o });
 const proxy = (tags: Tag[] = []) =>
   makeBlock(15.5, -7.5, { s: 4.4, h: 50, color: `orange`, glyph: `shield`, label: [`Scoped`, `proxy`], sub: `CGLIB`, tags });
@@ -53,7 +50,7 @@ const links = {
 const card = cardAt({ x: -1.5, y: 1.5, dx: -150, dy: -270 }, `code`);
 
 /** Container core that exists from step 2 on. */
-const core = (o: { ctx?: Opts; gw?: Tag[]; svc?: Tag[] } = {}) => ({
+const core = (o: { ctx?: SceneOpts; gw?: Tag[]; svc?: Tag[] } = {}) => ({
   ctx: ctx(o.ctx),
   reg: reg(),
   gw: gateway(o.gw),

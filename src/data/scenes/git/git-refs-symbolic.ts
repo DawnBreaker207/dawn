@@ -1,4 +1,4 @@
-import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt, type Tag } from '@/lib/simulator/scene-builders';
 
 // One fixed stage: refs on the right, the commits they name on the left.
 //
@@ -7,8 +7,6 @@ import { fromScreen, makeBlock, makeDb, makeLink, makePanel, cardAt } from '@/li
 //   commit 9c1d22   origin/main ── packed-refs
 //
 // Git colours: commit = purple, ref = yellow, ref storage = db.
-
-type Tag = { text: string; tone?: string; icon?: string };
 
 const toIso = (sx: number, sy: number): [number, number] => {
   const p = fromScreen(sx, sy, 2);

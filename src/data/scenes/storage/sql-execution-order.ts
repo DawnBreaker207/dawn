@@ -3,10 +3,11 @@ import {
   makeDb,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
-export const sqlExecutionOrderLesson: Lesson = {
+export const sqlExecutionOrderLesson: Lesson = distinctConcepts({
   id: 'sql-execution-order',
   title: 'SQL 7-Step Logical Execution Order & NULL/Pagination Traps',
   summary:
@@ -252,4 +253,4 @@ export const sqlExecutionOrderLesson: Lesson = {
       },
     },
   ],
-};
+});

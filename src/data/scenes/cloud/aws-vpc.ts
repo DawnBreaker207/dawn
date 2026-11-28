@@ -1,4 +1,4 @@
-import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One VPC for the whole lesson. Two subnet strips (public, private) run along the
 // iso y-axis; each holds one node per AZ. Later steps only add gateways, rules,
@@ -8,12 +8,9 @@ import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZ
 //                   └─ NAT ──┴─ EC2 (AZ-b) ─ RDS
 //                                    └─ S3 (gateway endpoint)
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 // ---- colors by role (shared across AWS lessons): edge/DNS yellow · gateways orange · compute blue · data db · security purple
 const internet = () => makeDevice(-16, -16, { label: `internet` });
-const igw = (o: Opts = {}) => makeBlock(-13, -7, { s: 4.4, h: 50, color: `orange`, glyph: `globe`, label: [`Internet`, `Gateway`], ...o });
+const igw = (o: SceneOpts = {}) => makeBlock(-13, -7, { s: 4.4, h: 50, color: `orange`, glyph: `globe`, label: [`Internet`, `Gateway`], ...o });
 const alb = (tags: Tag[] = []) => makeBalancer(-4, -6, { s: 4.4, h: 50, label: [`ALB`], sub: `public`, tags });
 const nat = (tags: Tag[] = []) => makeBlock(-4, 7, { s: 4.4, h: 50, color: `orange`, glyph: `route`, label: [`NAT GW`], sub: `elastic IP`, tags });
 const ec2 = (y: number, az: string, tags: Tag[] = []) =>

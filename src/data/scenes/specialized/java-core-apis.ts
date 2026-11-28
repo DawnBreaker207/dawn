@@ -1,4 +1,4 @@
-import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf } from '@/lib/simulator/scene-builders';
+import { STAGE, makeDb, makeLink, makePanel, distinctConcepts, type Tag, stageBlock, cardAt, linkOf, type SceneOpts } from '@/lib/simulator/scene-builders';
 import type { Lesson } from '@/lib/simulator/types';
 
 // One stage for the whole lesson: your code on the left, the API under discussion in the
@@ -7,8 +7,6 @@ import type { Lesson } from '@/lib/simulator/types';
 //
 //                  collaborator      alt
 //   your code ──── api ───────────── value
-
-type Opts = Record<string, unknown>;
 
 const positions = {
   caller: STAGE.caller,

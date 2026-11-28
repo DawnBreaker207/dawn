@@ -1,4 +1,4 @@
-import { makeBlock, makeDevice, makeLink, makePanel, makeZone, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDevice, makeLink, makePanel, makeZone, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One host for the whole lesson. A container is born (docker → containerd → runc),
 // then the same app process gets wrapped step by step: namespaces decide what it can
@@ -9,21 +9,18 @@ import { makeBlock, makeDevice, makeLink, makePanel, makeZone, cardAt } from '@/
 //                runc → shim ──────── app (in a namespace box)
 //                              Linux kernel ─┘
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 const APP = { x: 6.5, y: 5 };
 
 const dev = () => makeDevice(-13, -10.5, { label: `docker CLI` });
-const containerd = (o: Opts = {}) =>
+const containerd = (o: SceneOpts = {}) =>
   makeBlock(-10.5, 2.5, { s: 4.6, h: 52, color: `orange`, glyph: `boxes`, label: [`containerd`], sub: `daemon`, ...o });
-const runc = (o: Opts = {}) =>
+const runc = (o: SceneOpts = {}) =>
   makeBlock(2, -12, { s: 4.2, h: 50, color: `purple`, glyph: `hammer`, label: [`runc`], sub: `OCI runtime`, ...o });
-const shim = (o: Opts = {}) =>
+const shim = (o: SceneOpts = {}) =>
   makeBlock(2, -12, { s: 4.2, h: 50, color: `orange`, glyph: `route`, label: [`shim`], sub: `holds stdio`, ...o });
-const app = (tags: Tag[] = [], o: Opts = {}) =>
+const app = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(APP.x, APP.y, { s: 4.6, h: 54, color: `green`, glyph: `cpu`, label: [`node app`], sub: `server.js`, tags, ...o });
-const kernel = (o: Opts = {}) =>
+const kernel = (o: SceneOpts = {}) =>
   makeBlock(15, -12, { s: 5.4, h: 46, color: `slab`, glyph: `layers`, label: [`Linux kernel`], sub: `shared by all`, ...o });
 const bridge = () => makeBlock(9.5, 18, { s: 4.2, h: 48, color: `blue`, glyph: `network`, label: [`docker0`], sub: `bridge` });
 // Roomy enough that the floor label runs clear of the app block (label starts at y0 + 0.55).
@@ -46,7 +43,7 @@ const links = {
 const card = cardAt({ x: -10.5, y: 2.5, dx: 70, dy: -250 });
 
 /** The parts that stay on stage once the container is running. */
-const running = (appTags: Tag[], extra: Opts = {}) => ({
+const running = (appTags: Tag[], extra: SceneOpts = {}) => ({
   dev: dev(),
   containerd: containerd(),
   shim: shim(),

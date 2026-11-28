@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable */
 import {
   makeBlock,
@@ -24,18 +23,24 @@ import {
   TIMING_PANEL,
 } from '@/lib/simulator/scene-builders';
 
+interface PillTag {
+  text: string;
+  icon?: string;
+  tone?: string;
+}
+
 const clickersArea = { x0: -4.5, x1: 4.5, y0: -19, y1: -13 };
 
 const clickers = (e = `people clicking links`) => makeCrowd(clickersArea, 12, e);
 
-const apiServers = (e = [], t = {}) => makeBlock(0, -4, { label: [`API`, `Servers`], tags: e, ...t });
+const apiServers = (e: PillTag[] = [], t = {}) => makeBlock(0, -4, { label: [`API`, `Servers`], tags: e, ...t });
 
 const linksTable = (e = {}) => makeDb(12, -4, { r: 1.9, glyph: `database`, label: `links table`, ...e });
 
 const cache = (e = {}) =>
     makeBlock(-12, -4, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `code → URL`, ...e });
 
-const idBlocks = (e = []) =>
+const idBlocks = (e: PillTag[] = []) =>
     makeBlock(-7, 10, { s: 4.2, h: 46, color: `yellow`, glyph: `hash`, label: [`ID`, `Blocks`], tags: e });
 
 const clickStream = () =>
@@ -69,7 +74,7 @@ const baseLinks = {
 
 const shardLoads = () =>
     Object.fromEntries(
-      shardY.map((e, t) => [
+      shardY.map((e: number, t: number) => [
         `k${t}l`,
         makeLink(`app`, `k${t}`, t === 1 ? [`app`, `k1`] : [`app`, [7, `app`], [7, e], `k${t}`], {
           heads: `both`,
@@ -77,7 +82,7 @@ const shardLoads = () =>
       ]),
     );
 
-const readFlows = (e, t = [`sd`], n = 4) => [
+const readFlows = (e: number, t: string[] = [`sd`], n = 4) => [
     {
       routes: [
         { path: [`us`, `sc`], weight: e },
@@ -96,7 +101,7 @@ const writeFlows = [
     { route: [`ag`], kind: `write`, rate: 0.7 },
   ];
 
-const panelAt = (e, t, n, r = {}) => makePanel({ x: 0, y: -4, z: 0, dx: 70, dy: -215, ...r }, e, t, { icon: n });
+const panelAt = (e: string, t: string[], n: string, r = {}) => makePanel({ x: 0, y: -4, z: 0, dx: 70, dy: -215, ...r }, e, t, { icon: n });
 
 const panelSide = { x: 12, y: -4, dx: -185, dy: 78 };
 

@@ -3,9 +3,11 @@ import {
   makeDevice,
   makeLink,
   makePanel,
+  distinctConcepts,
 } from '@/lib/simulator/scene-builders';
+import type { Lesson } from '@/lib/simulator/types';
 
-export const networkSecurityDdosLesson = {
+export const networkSecurityDdosLesson: Lesson = distinctConcepts({
   id: 'network-security-ddos',
   title: 'Network Attacks & DDoS Defense Architecture',
   summary: 'Architect resilient defenses against volumetric attacks: SYN flood mitigation via SYN cookies, Anycast scrubbing centers, and Layer 7 WAF rate limiting.',
@@ -246,4 +248,4 @@ export const networkSecurityDdosLesson = {
       }
     }
   ]
-};
+});

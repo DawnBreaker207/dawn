@@ -1,4 +1,4 @@
-import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt, type Tag, type SceneOpts } from '@/lib/simulator/scene-builders';
 
 // One stage for the whole lesson: shoppers pay through a payment service that talks to
 // an external PSP. Each step adds one safeguard — payments table, idempotency keys,
@@ -8,11 +8,8 @@ import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt } from '@/lib
 //   ledger ── Payment service ──────── PSP
 //   shoppers ──┘                        └── reconcile
 
-type Tag = { text: string; tone?: string; icon?: string };
-type Opts = Record<string, unknown>;
-
 const shoppers = (label = `shoppers`) => makeCrowd({ x0: -4.5, x1: 4.5, y0: -19, y1: -13 }, 12, label);
-const api = (tags: Tag[] = [], o: Opts = {}) =>
+const api = (tags: Tag[] = [], o: SceneOpts = {}) =>
   makeBlock(0, -4, { s: 4.8, h: 54, glyph: `creditCard`, label: [`Payment`, `service`], tags, ...o });
 const payments = (tags: Tag[] = []) => makeDb(-7, 10, { r: 1.9, h: 44, glyph: `database`, label: `payments`, tags });
 const psp = (tags: Tag[] = []) =>
