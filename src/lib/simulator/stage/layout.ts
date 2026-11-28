@@ -16,6 +16,10 @@ export interface Viewport {
   height: number;
   hudScale: number;
   showCards: boolean;
+  /** Height of metric-chip rows beyond the first (px); a top-docked card sits below them. */
+  hudInset?: number;
+  /** Host-px rects of the metric-chip rows; the diagram is framed to stay clear of them. */
+  hudBoxes?: Rect[];
 }
 
 /** Chosen label placement for a link. */
@@ -50,6 +54,8 @@ interface SceneLayout {
 const DOCK_MARGIN = { x: 10, top: 16, bottom: 10 };
 /** Extra clearance around the card when testing overlap (px). */
 const CARD_CLEARANCE = 12;
+/** Extra clearance around a metric-chip row when testing overlap (px). */
+const HUD_CLEARANCE = 4;
 /** Corner preference order. */
 const CORNERS: Corner[] = ['tr', 'br', 'tl', 'bl'];
 const MIN_ZOOM = 0.42;
@@ -145,7 +151,7 @@ function layoutScene(scene: StageScene, vp: Viewport): SceneLayout {
 /** Screen rect (host px) of a HUD card of `size` docked at `corner`. */
 export function dockRect(corner: Corner, size: Size, vp: Viewport): Rect {
   const x = corner[1] === 'l' ? DOCK_MARGIN.x : vp.width - DOCK_MARGIN.x - size.w;
-  const y = corner[0] === 't' ? DOCK_MARGIN.top : vp.height - DOCK_MARGIN.bottom - size.h;
+  const y = corner[0] === 't' ? DOCK_MARGIN.top + (vp.hudInset ?? 0) : vp.height - DOCK_MARGIN.bottom - size.h;
   return [x, y, x + size.w, y + size.h];
 }
 
@@ -160,6 +166,21 @@ function cardIsClear(layout: SceneLayout, cam: Cam, corner: Corner, vp: Viewport
     cam.y + (d[3] + CARD_CLEARANCE) / scale,
   ];
   return !layout.boxes.some((box) => rectsIntersect(box, area)) && !layout.polys.some((p) => polygonIntersectsRect(p, area));
+}
+
+/** True when no entity, label or tag sits under a metric-chip row of the HUD at camera `cam`. */
+function hudIsClear(layout: SceneLayout, cam: Cam, vp: Viewport): boolean {
+  if (!vp.hudBoxes?.length) return true;
+  const scale = vp.width / cam.w;
+  return vp.hudBoxes.every(([l, t, r, b]) => {
+    const area: Rect = [
+      cam.x + (l - HUD_CLEARANCE) / scale,
+      cam.y + (t - HUD_CLEARANCE) / scale,
+      cam.x + (r + HUD_CLEARANCE) / scale,
+      cam.y + (b + HUD_CLEARANCE) / scale,
+    ];
+    return !layout.boxes.some((box) => rectsIntersect(box, area));
+  });
 }
 
 /**
@@ -189,8 +210,17 @@ export function planScene(scene: StageScene, prev: ScenePlan | null, vp: Viewpor
 
   type Choice = { zoom: number; ax: number; ay: number; corner: Corner | null; score?: number };
   let choice: Choice | null = null;
-  if (!layout.panel) choice = { zoom: snapZoom(fitZoom), ax: 0, ay: 0, corner: null };
-  else {
+  if (!layout.panel) {
+    // Largest zoom (centered, else pushed down) that keeps the diagram clear of the metric chips;
+    // when nothing overlaps, the first candidate wins and the framing is the plain centered fit.
+    for (let z = snapZoom(fitZoom); z >= MIN_ZOOM && !choice; z = Math.round((z - 0.05) * 100) / 100)
+      for (const [ax, ay] of [[0, 0], [0, 1]] as [number, number][])
+        if (hudIsClear(layout, camAt(z, ax, ay), vp)) {
+          choice = { zoom: z, ax, ay, corner: null };
+          break;
+        }
+    choice ||= { zoom: snapZoom(fitZoom), ax: 0, ay: 0, corner: null };
+  } else {
     for (const [ci, corner] of CORNERS.entries()) {
       // Push the diagram away from the card's side.
       const sx = corner[1] === 'l' ? 1 : -1;
@@ -204,7 +234,7 @@ export function planScene(scene: StageScene, prev: ScenePlan | null, vp: Viewpor
       let found: Required<Choice> | null = null;
       for (let z = snapZoom(fitZoom); z >= MIN_ZOOM && !found; z = Math.round((z - 0.05) * 100) / 100)
         for (const [ai, [ax, ay]] of anchors.entries())
-          if (cardIsClear(layout, camAt(z, ax, ay), corner, vp)) {
+          if (cardIsClear(layout, camAt(z, ax, ay), corner, vp) && hudIsClear(layout, camAt(z, ax, ay), vp)) {
             found = {
               zoom: z,
               ax,

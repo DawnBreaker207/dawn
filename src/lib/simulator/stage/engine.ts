@@ -96,6 +96,10 @@ export class StageEngine {
   onSettle: (() => void) | null = null;
   hudScale = MAX_HUD_SCALE;
   showCards = true;
+  /** Extra metric-chip rows (px) above the canvas; see `hudExtra()`. */
+  hudInset = 0;
+  /** Host-px rects of the metric-chip rows, see `hudRows()`. */
+  hudBoxes: Rect[] = [];
   scenes: StageScene[] = [];
   scene: StageScene | undefined;
   anim: StepAnimation | null = null;
@@ -158,13 +162,16 @@ export class StageEngine {
     attachGestures(host, this.camera, (dir) => this.onSwipe?.(dir));
 
     this.resizeObserver = new ResizeObserver(() => {
-      const size = `${host.clientWidth}x${host.clientHeight}`;
+      const size = `${host.clientWidth}x${host.clientHeight}|${this.hudExtra()}`;
       if (size !== this.size) {
         this.size = size;
         this.refit();
       }
     });
     this.resizeObserver.observe(host);
+    // The metric chips wrap onto more rows on narrower stages; watch them so a top-docked card re-docks.
+    const hud = host.closest('.stage')?.querySelector('.stage__hud');
+    if (hud) this.resizeObserver.observe(hud);
 
     const loop = (now: number) => {
       if (this.destroyed) return;
@@ -196,6 +203,8 @@ export class StageEngine {
       height: this.host.clientHeight,
       hudScale: this.hudScale,
       showCards: this.showCards,
+      hudInset: this.hudInset,
+      hudBoxes: this.hudBoxes,
     };
   }
 
@@ -209,8 +218,38 @@ export class StageEngine {
     return { sx: r[0], sy: r[1] };
   }
 
+  /** Height of the metric-chip rows beyond the first, i.e. how far the chips reach into the canvas. */
+  private hudExtra(): number {
+    const hud = this.host.closest('.stage')?.querySelector<HTMLElement>('.stage__hud');
+    const row = hud?.firstElementChild as HTMLElement | null | undefined; // first chip = one row
+    return hud && row ? Math.max(0, hud.offsetHeight - row.offsetHeight) : 0;
+  }
+
+  /**
+   * Host-px rects of the metric-chip rows. Each row spans the whole HUD width, because chip widths
+   * change from step to step while the plan for every step is made up front.
+   */
+  private hudRows(): Rect[] {
+    const hud = this.host.closest('.stage')?.querySelector<HTMLElement>('.stage__hud');
+    if (!hud) return [];
+    const host = this.host.getBoundingClientRect();
+    const right = hud.getBoundingClientRect().right - host.left;
+    const rows = new Map<number, Rect>();
+    for (const chip of hud.querySelectorAll('.chip')) {
+      const r = chip.getBoundingClientRect();
+      const rect: Rect = [r.left - host.left, r.top - host.top, r.right - host.left, r.bottom - host.top];
+      const key = Math.round(r.top);
+      const row = rows.get(key);
+      rows.set(key, row ? [Math.min(row[0], rect[0]), Math.min(row[1], rect[1]), Math.max(row[2], rect[2]), Math.max(row[3], rect[3])] : rect);
+    }
+    // Only rows that reach into the canvas matter.
+    return [...rows.values()].filter((r) => r[3] > 0).map(([l, t, , b]): Rect => [l, t, right, b]);
+  }
+
   /** Updates HUD scale / card visibility from the host width; true if visibility changed. */
   private measure(): boolean {
+    this.hudInset = this.hudExtra();
+    this.hudBoxes = this.hudRows();
     const width = this.host.clientWidth;
     if (!width) return false;
     this.hudScale = Math.min(MAX_HUD_SCALE, Math.max(0.86, width / 780));
