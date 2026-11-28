@@ -38,9 +38,9 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 1 (2001)', isolationLevel: 'None (Bare Host)', pipelineDefinition: 'XML (build.xml)', securityModel: 'Host Root' },
       scene: {
         entities: {
-          vcsRepo: makeDevice(-16, -8, { label: 'vcs-server', tags: [{ text: 'SVN Repository', icon: 'gitBranch' }] }),
-          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'clock', label: ['CruiseControl'], sub: 'poll every 60s' }),
-          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'terminal', label: ['Ant Runner'], sub: 'build.xml exec' }),
+          vcsRepo: makeDevice(-16, -6, { label: 'vcs-server', tags: [{ text: 'SVN Repository', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'clock', label: ['CruiseControl'], sub: 'poll every 60s' }),
+          buildHost: makeDb(8, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'terminal', label: ['Ant Runner'], sub: 'build.xml exec' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'cruisecontrol.xml Config', [
             `<cruisecontrol>`,
             `  <project name="payment-app">`,
@@ -75,9 +75,9 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 1.5 (Jenkins)', isolationLevel: 'Dirty Host (/tmp)', pipelineDefinition: 'Freestyle UI / XML', securityModel: 'Shared Agent' },
       scene: {
         entities: {
-          vcsRepo: makeDevice(-16, -8, { label: 'vcs-server', tags: [{ text: 'Git Central', tone: 'blue', icon: 'gitBranch' }] }),
-          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Jenkins Master'], sub: 'shared /tmp' }),
-          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'red', glyph: 'alert', label: ['Pet Agent-01'], sub: 'version clash' }),
+          vcsRepo: makeDevice(-16, -6, { label: 'vcs-server', tags: [{ text: 'Git Central', tone: 'blue', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Jenkins Master'], sub: 'shared /tmp' }),
+          buildHost: makeDb(8, 0, { s: 4.6, h: 48, color: 'red', glyph: 'alert', label: ['Pet Agent-01'], sub: 'version clash' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Jenkins Agent Error Log', [
             `[Agent-01] Executing /usr/bin/node index.js`,
             `Error: Node version v16.14.0 incompatible`,
@@ -110,9 +110,9 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 2 (YAML)', isolationLevel: 'Matrix Matrix', pipelineDefinition: 'YAML Spec', securityModel: 'Git Protected' },
       scene: {
         entities: {
-          vcsRepo: makeDevice(-16, -8, { label: 'vcs-server', tags: [{ text: 'repo/.github', tone: 'green', icon: 'gitBranch' }] }),
-          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['GitHub Actions'], sub: 'parse yaml' }),
-          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'boxes', label: ['Matrix Runners'], sub: 'matrix runner' }),
+          vcsRepo: makeDevice(-16, -6, { label: 'vcs-server', tags: [{ text: 'repo/.github', tone: 'green', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'terminal', label: ['GitHub Actions'], sub: 'parse yaml' }),
+          buildHost: makeDb(8, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'boxes', label: ['Matrix Runners'], sub: 'matrix runner' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, '.github/workflows/ci.yml', [
             `name: CI`,
             `on: [push, pull_request]`,
@@ -147,9 +147,9 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 2.5 (Ephemeral)', isolationLevel: 'MicroVM (38ms)', pipelineDefinition: 'Declarative YAML', securityModel: 'Zero Persistence' },
       scene: {
         entities: {
-          vcsRepo: makeDevice(-16, -8, { label: 'vcs-server', tags: [{ text: 'repo/.github', tone: 'green', icon: 'gitBranch' }] }),
-          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Runner Pool'], sub: 'boot 38ms' }),
-          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['Ephemeral VM'], sub: 'wiped on exit' }),
+          vcsRepo: makeDevice(-16, -6, { label: 'vcs-server', tags: [{ text: 'repo/.github', tone: 'green', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'cpu', label: ['Runner Pool'], sub: 'boot 38ms' }),
+          buildHost: makeDb(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['Ephemeral VM'], sub: 'wiped on exit' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Ephemeral Runner Lifecycle', [
             `event: runner_job_assigned`,
             `action: qemu-kvm spawn ephemeral-worker-89`,
@@ -182,10 +182,10 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Push CD (Vulnerable)', isolationLevel: 'External Access', pipelineDefinition: 'kubectl apply', securityModel: 'Vulnerable Secret' },
       scene: {
         entities: {
-          vcsRepo: makeDevice(-16, -8, { label: 'vcs-server', tags: [{ text: 'External CI', tone: 'red', icon: 'alert' }] }),
-          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'red', glyph: 'shield', label: ['Push CI Runner'], sub: 'secret leak' }),
-          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'server', label: ['K8s Cluster'], sub: 'port 6443' }),
-          exposedApi: makeBlock(-4, 16, { s: 4.4, h: 48, color: 'red', glyph: 'alert', label: ['Exposed API'], sub: 'secret leak' }),
+          vcsRepo: makeDevice(-16, -6, { label: 'vcs-server', tags: [{ text: 'External CI', tone: 'red', icon: 'alert' }] }),
+          ciMaster: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'red', glyph: 'shield', label: ['Push CI Runner'], sub: 'secret leak' }),
+          buildHost: makeDb(8, 0, { s: 4.6, h: 48, color: 'purple', glyph: 'server', label: ['K8s Cluster'], sub: 'port 6443' }),
+          exposedApi: makeBlock(-2, 16, { s: 4.4, h: 48, color: 'red', glyph: 'alert', label: ['Exposed API'], sub: 'secret leak' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Security Vulnerability Report', [
             `Vulnerability: KUBECONFIG secret stored in CI`,
             `Target: https://api.prod.k8s:6443 (Port open)`,
@@ -218,10 +218,10 @@ export const cicdToolsEvolutionLesson = {
       metrics: { toolGeneration: 'Gen 3 (GitOps)', isolationLevel: 'In-Cluster Agent', pipelineDefinition: 'Git Single Truth', securityModel: 'Zero Inbound' },
       scene: {
         entities: {
-          vcsRepo: makeDevice(-16, -8, { label: 'vcs-server', tags: [{ text: 'Git Truth', tone: 'green', icon: 'gitBranch' }] }),
-          ciMaster: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['ArgoCD Agent'], sub: 'cluster pull' }),
-          buildHost: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: 'state in etcd' }),
-          prodWorkload: makeDb(14, 6, { s: 4.6, h: 48, color: 'blue', glyph: 'network', label: ['Live App Fleet'], sub: 'state in etcd' }),
+          vcsRepo: makeDevice(-16, -6, { label: 'vcs-server', tags: [{ text: 'Git Truth', tone: 'green', icon: 'gitBranch' }] }),
+          ciMaster: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['ArgoCD Agent'], sub: 'cluster pull' }),
+          buildHost: makeDb(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'boxes', label: ['K8s Production'], sub: 'state in etcd' }),
+          prodWorkload: makeDb(16, 6, { s: 4.6, h: 48, color: 'blue', glyph: 'network', label: ['Live App Fleet'], sub: 'state in etcd' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'ArgoCD Reconciliation Loop', [
             `Model: Pull-based continuous reconciliation`,
             `Credentials: Stored securely inside cluster etcd`,

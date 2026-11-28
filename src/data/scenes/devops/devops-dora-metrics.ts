@@ -38,9 +38,9 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite Target', deployFrequency: 'Daily (On-demand)', leadTime: '< 1 Hour', cfrMttr: 'CFR < 5%' },
       scene: {
         entities: {
-          devStream: makeDevice(-16, -8, { label: 'dev-stream', tags: [{ text: 'Throughput Flow', tone: 'blue', icon: 'zap' }] }),
-          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['DORA Engine'], sub: 'speed/safety' }),
-          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
+          devStream: makeDevice(-16, -6, { label: 'dev-stream', tags: [{ text: 'Throughput Flow', tone: 'blue', icon: 'zap' }] }),
+          doraEngine: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['DORA Engine'], sub: 'speed/safety' }),
+          prodFleet: makeDb(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'The 4 DORA Metrics', [
             `1. Deployment Frequency:    Multiple per day`,
             `2. Lead Time for Changes:   < 1 hour (commit -> prod)`,
@@ -72,9 +72,9 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite (DF)', deployFrequency: '14 Deploys/day', leadTime: '38 Minutes', cfrMttr: '0% Outages' },
       scene: {
         entities: {
-          devStream: makeDevice(-16, -8, { label: 'dev-stream', tags: [{ text: '14 Rollouts Today', tone: 'green', icon: 'zap' }] }),
-          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['CD Pipeline'], sub: '14 rollouts' }),
-          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
+          devStream: makeDevice(-16, -6, { label: 'dev-stream', tags: [{ text: '14 Rollouts Today', tone: 'green', icon: 'zap' }] }),
+          doraEngine: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'green', glyph: 'cpu', label: ['CD Pipeline'], sub: '14 rollouts' }),
+          prodFleet: makeDb(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Deployment Frequency Telemetry', [
             `Window: Rolling 24 Hours`,
             `Total Deploys: 14 successful rollouts`,
@@ -106,9 +106,9 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite (LTFC)', deployFrequency: 'Continuous', leadTime: '38m (Fast Path)', cfrMttr: 'CFR < 5%' },
       scene: {
         entities: {
-          devStream: makeDevice(-16, -8, { label: 'dev-stream', tags: [{ text: 'T=00:00 Commit', tone: 'blue', icon: 'gitBranch' }] }),
-          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'clock', label: ['Lead Time Engine'], sub: 'sharded tests' }),
-          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'T=38s in prod' }),
+          devStream: makeDevice(-16, -6, { label: 'dev-stream', tags: [{ text: 'T=00:00 Commit', tone: 'blue', icon: 'gitBranch' }] }),
+          doraEngine: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'cyan', glyph: 'clock', label: ['Lead Time Engine'], sub: 'sharded tests' }),
+          prodFleet: makeDb(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'T=38s in prod' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Lead Time Breakdown', [
             `T=00:00 - Git commit pushed to trunk`,
             `T=00:02 - Automated CI/CD pipeline triggered`,
@@ -140,10 +140,10 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite (CFR)', deployFrequency: 'Continuous', leadTime: '38m', cfrMttr: 'CFR 1.8% (Target < 5%)' },
       scene: {
         entities: {
-          devStream: makeDevice(-16, -8, { label: 'dev-stream', tags: [{ text: 'Live Traffic', icon: 'globe' }] }),
-          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['Canary Router'], sub: 'auto rollback' }),
-          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Stable Fleet v1.8'], sub: '95% traffic' }),
-          canaryPod: makeBlock(-4, 16, { s: 4.4, h: 48, color: 'red', glyph: 'alert', label: ['Canary Pod v1.9'], sub: 'blast radius' }),
+          devStream: makeDevice(-16, -6, { label: 'dev-stream', tags: [{ text: 'Live Traffic', icon: 'globe' }] }),
+          doraEngine: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['Canary Router'], sub: 'auto rollback' }),
+          prodFleet: makeDb(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Stable Fleet v1.8'], sub: '95% traffic' }),
+          canaryPod: makeBlock(-2, 16, { s: 4.4, h: 48, color: 'red', glyph: 'alert', label: ['Canary Pod v1.9'], sub: 'blast radius' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Canary Health Evaluation', [
             `Stable Fleet (95%): http_5xx = 0.00% (Clean)`,
             `Canary Pod   (5%):  http_5xx = 3.82% (SPIKE)`,
@@ -179,10 +179,10 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite (MTTR)', deployFrequency: 'Continuous', leadTime: '38m', cfrMttr: 'MTTR 6m 20s' },
       scene: {
         entities: {
-          devStream: makeDevice(-16, -8, { label: 'dev-stream', tags: [{ text: 'Incident Alarm', tone: 'red', icon: 'alert' }] }),
-          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'purple', glyph: 'shield', label: ['Rollback Gate'], sub: 'rollback SHA' }),
-          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Restored Fleet'], sub: 'MTTR 6m 20s' }),
-          rollbackHook: makeBlock(-4, 16, { s: 4.4, h: 48, color: 'green', glyph: 'zap', label: ['Fast Recovery'], sub: 'auto rollback' }),
+          devStream: makeDevice(-16, -6, { label: 'dev-stream', tags: [{ text: 'Incident Alarm', tone: 'red', icon: 'alert' }] }),
+          doraEngine: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'purple', glyph: 'shield', label: ['Rollback Gate'], sub: 'rollback SHA' }),
+          prodFleet: makeDb(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Restored Fleet'], sub: 'MTTR 6m 20s' }),
+          rollbackHook: makeBlock(-2, 16, { s: 4.4, h: 48, color: 'green', glyph: 'zap', label: ['Fast Recovery'], sub: 'auto rollback' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'Incident MTTR Timeline', [
             `14:02:10 - Metric breach: p99 latency > 120ms`,
             `14:02:35 - Auto-rollback triggered via webhook`,
@@ -215,10 +215,10 @@ export const devopsDoraMetricsLesson = {
       metrics: { doraTier: 'Elite Continuous', deployFrequency: '14/day', leadTime: '38m', cfrMttr: 'CFR 1.8% | MTTR 6m' },
       scene: {
         entities: {
-          devStream: makeDevice(-16, -8, { label: 'dev-stream', tags: [{ text: 'High Velocity Flow', tone: 'green', icon: 'zap' }] }),
-          doraEngine: makeBlock(-6, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Policy Engine'], sub: '82% budget' }),
-          prodFleet: makeDb(6, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
-          errorBudget: makeDb(14, 6, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['Error Budget'], sub: '82% budget' }),
+          devStream: makeDevice(-16, -6, { label: 'dev-stream', tags: [{ text: 'High Velocity Flow', tone: 'green', icon: 'zap' }] }),
+          doraEngine: makeBlock(-4, -2, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['Policy Engine'], sub: '82% budget' }),
+          prodFleet: makeDb(8, 0, { s: 4.6, h: 48, color: 'green', glyph: 'server', label: ['Production Fleet'], sub: 'continuous CD' }),
+          errorBudget: makeDb(16, 6, { s: 4.6, h: 48, color: 'purple', glyph: 'database', label: ['Error Budget'], sub: '82% budget' }),
           card: makePanel({ x: -14, y: 4, dx: -20, dy: -180 }, 'SRE Error Budget Policy', [
             `Monthly SLO Target:     99.95% Availability`,
             `Actual Rolling SLI:     99.98% Healthy`,
