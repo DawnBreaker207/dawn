@@ -1,4 +1,4 @@
-import { makeBlock, makeCrowd, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One stage for the whole lesson: shoppers pay through a payment service that talks to
 // an external PSP. Each step adds one safeguard — payments table, idempotency keys,
@@ -23,7 +23,7 @@ const relay = (tags: Tag[] = []) =>
 const recon = (tags: Tag[] = []) =>
   makeBlock(16, -16, { s: 4.4, h: 50, color: `purple`, glyph: `scale`, label: [`Reconcile`], sub: `nightly job`, tags });
 
-const L = {
+const links = {
   pay: makeLink(`users`, `api`, [`users`, `api`], { heads: `both` }),
   charge: makeLink(`api`, `psp`, [`api`, `psp`], { heads: `both` }),
   save: makeLink(`api`, `payments`, [`api`, `payments`], { heads: `both` }),
@@ -35,16 +35,15 @@ const L = {
   check: makeLink(`recon`, `payments`, [`recon`, `payments`], { style: `dashed` }),
 };
 
-const core = { pay: L.pay, save: L.save, charge: L.charge };
-const withLedger = { ...core, post: L.post };
-const withOutbox = { ...withLedger, outbox: L.outbox };
+const core = { pay: links.pay, save: links.save, charge: links.charge };
+const withLedger = { ...core, post: links.post };
+const withOutbox = { ...withLedger, outbox: links.outbox };
 
 const paying = (rate = 1.4) => ({ route: [`pay`, `charge`], rate, bounce: true });
 const writes = (rate = 1) => ({ route: [`save`], kind: `write`, rate });
 
 /** Artifact card, parked in the empty band above-left of the service. */
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: 0, y: -4, z: 0, dx: -414, dy: -298 }, title, lines, { icon });
+const card = cardAt({ x: 0, y: -4, dx: -414, dy: -298 });
 
 export const designPaymentSystemLesson = {
   id: `design-payment-system`,
@@ -85,7 +84,7 @@ export const designPaymentSystemLesson = {
             `clipboard`,
           ),
         },
-        links: { pay: L.pay },
+        links: { pay: links.pay },
         flows: [{ route: [`pay`], rate: 1.2, bounce: true }],
       },
     },
@@ -113,7 +112,7 @@ export const designPaymentSystemLesson = {
             `sigma`,
           ),
         },
-        links: { pay: L.pay },
+        links: { pay: links.pay },
         flows: [{ route: [`pay`], rate: 1.6, bounce: true }],
       },
     },
@@ -173,7 +172,7 @@ export const designPaymentSystemLesson = {
             `alertTriangle`,
           ),
         },
-        links: { ...core, charge: { ...L.charge, fail: 0.3 } },
+        links: { ...core, charge: { ...links.charge, fail: 0.3 } },
         flows: [paying(1.8), writes()],
       },
     },
@@ -295,7 +294,7 @@ export const designPaymentSystemLesson = {
             `alertTriangle`,
           ),
         },
-        links: { ...core, post: { ...L.post, style: `cut` } },
+        links: { ...core, post: { ...links.post, style: `cut` } },
         flows: [paying(), writes()],
       },
     },
@@ -359,7 +358,7 @@ export const designPaymentSystemLesson = {
             `inbox`,
           ),
         },
-        links: { ...withOutbox, hook: L.hook },
+        links: { ...withOutbox, hook: links.hook },
         flows: [paying(), writes(), { route: [`hook`], kind: `push`, rate: 0.8 }, { route: [`outbox`], kind: `msg`, rate: 0.8 }],
       },
     },
@@ -392,7 +391,7 @@ export const designPaymentSystemLesson = {
             `scale`,
           ),
         },
-        links: { ...withOutbox, hook: L.hook, settle: L.settle, check: L.check },
+        links: { ...withOutbox, hook: links.hook, settle: links.settle, check: links.check },
         flows: [
           paying(),
           writes(),
@@ -434,7 +433,7 @@ export const designPaymentSystemLesson = {
           relay: relay(),
           recon: recon(),
         },
-        links: { ...withOutbox, hook: L.hook, settle: L.settle, check: L.check },
+        links: { ...withOutbox, hook: links.hook, settle: links.settle, check: links.check },
         flows: [
           paying(),
           writes(),

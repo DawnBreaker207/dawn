@@ -1,23 +1,14 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCrowd,
-  makeDb,
-  makeDevice,
-  makeHot,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeDevice, makeHot, makeLink, makePanel, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const ud = { x0: -4.5, x1: 4.5, y0: -19, y1: -13 };
+const readersArea = { x0: -4.5, x1: 4.5, y0: -19, y1: -13 };
 
-const dd = (e = `people opening their feed`) => makeCrowd(ud, 12, e);
+const readers = (e = `people opening their feed`) => makeCrowd(readersArea, 12, e);
 
-const fd = (e = [], t = {}) => makeBlock(0, -4, { s: 4.8, h: 52, label: [`Feed`, `API`], tags: e, ...t });
+const feedApi = (e: Tag[] = [], t: Bag = {}) => makeBlock(0, -4, { s: 4.8, h: 52, label: [`Feed`, `API`], tags: e, ...t });
 
-const pd = (e = `Ana posts`) => makeDevice(-16, -12, { form: `phone`, label: e });
+const author = (e = `Ana posts`) => makeDevice(-16, -12, { form: `phone`, label: e });
 
-const md = (e = [], t = {}) =>
+const feedCache = (e: Tag[] = [], t: Bag = {}) =>
     makeBlock(-12, -4, {
       s: 4.8,
       h: 52,
@@ -29,10 +20,10 @@ const md = (e = [], t = {}) =>
       ...t,
     });
 
-const hd = (e = [], t = {}) =>
+const queueBlock = (e: Tag[] = [], t: Bag = {}) =>
     makeBlock(0, 9, { s: 3.4, h: 34, color: `orange`, glyph: `inbox`, label: [`Queue`], tags: e, ...t });
 
-const gd = (e = [], t = {}) =>
+const fanoutWorkers = (e: Tag[] = [], t: Bag = {}) =>
     makeBlock(-12, 9, {
       s: 4.4,
       h: 46,
@@ -43,31 +34,31 @@ const gd = (e = [], t = {}) =>
       ...t,
     });
 
-const _d = () => makeDb(-12, 19, { r: 1.6, glyph: `network`, color: `store`, label: `who follows whom` });
+const followGraph = () => makeDb(-12, 19, { r: 1.6, glyph: `network`, color: `store`, label: `who follows whom` });
 
-const vd = [-10, -4, 2];
+const shardY = [-10, -4, 2];
 
-const yd = (e = {}) =>
+const shards = (e: Bag = {}) =>
     Object.fromEntries(
-      vd.map((t, n) => [
+      shardY.map((t, n) => [
         `k${n}`,
         makeDb(12, t, { r: 1.6, glyph: `database`, label: n === 1 ? `posts, by author` : ``, ...e }),
       ]),
     );
 
-const bd = {
+const links = {
     us: makeLink(`readers`, `api`, [`readers`, `api`], { heads: `both` }),
     au: makeLink(`author`, `api`, [`author`, [-1.4, `author`], [-1.4, `api`]]),
-    fc: (e = {}) => makeLink(`api`, `feeds`, [`api`, `feeds`], { heads: `both`, ...e }),
+    fc: (e: Bag = {}) => makeLink(`api`, `feeds`, [`api`, `feeds`], { heads: `both`, ...e }),
     q: makeLink(`api`, `jobs`, [`api`, `jobs`]),
     qw: makeLink(`jobs`, `workers`, [`jobs`, `workers`]),
-    wf: (e = {}) => makeLink(`workers`, `feeds`, [`workers`, `feeds`], e),
+    wf: (e: Bag = {}) => makeLink(`workers`, `feeds`, [`workers`, `feeds`], e),
     wg: makeLink(`workers`, `graph`, [`workers`, `graph`], { heads: `both` }),
   };
 
-const xd = (e = {}) =>
+const shardLoads = (e: Bag = {}) =>
     Object.fromEntries(
-      vd.map((t, n) => [
+      shardY.map((t, n) => [
         `k${n}l`,
         makeLink(`api`, `k${n}`, n === 1 ? [`api`, `k1`] : [`api`, [7, `api`], [7, t], `k${n}`], {
           heads: `both`,
@@ -76,65 +67,65 @@ const xd = (e = {}) =>
       ]),
     );
 
-const Sd = {
+const fanoutFlow = {
     fanout: !0,
     routes: [{ path: [`k0l`] }, { path: [`k1l`] }, { path: [`k2l`] }],
     kind: `slow`,
     bounce: !0,
   };
 
-const Cd = (e = 3.4) => ({ route: [`us`, `fc`], rate: e, bounce: !0 });
+const readFlow = (e = 3.4) => ({ route: [`us`, `fc`], rate: e, bounce: !0 });
 
-const wd = (e = 1.6) => ({
+const shardReads = (e = 1.6) => ({
     routes: [{ path: [`k0l`] }, { path: [`k1l`] }, { path: [`k2l`] }],
     rate: e,
     bounce: !0,
   });
 
-const Td = (e = 0.6) => [
+const writeFlows = (e = 0.6) => [
     { route: [`au`], kind: `write`, rate: e },
     { route: [`k1l`], kind: `write`, rate: e },
     { route: [`q`, `qw`], kind: `msg`, rate: e },
     { route: [`wg`], rate: e * 0.8, bounce: !0 },
   ];
 
-const Ed = (e = 3) => ({ route: [`wf`], kind: `write`, rate: e });
+const postWrite = (e = 3) => ({ route: [`wf`], kind: `write`, rate: e });
 
-const Dd = (e = {}) => ({
-    readers: dd(),
-    author: pd(),
-    api: fd(),
-    feeds: md(),
-    jobs: hd(),
-    workers: gd(),
-    graph: _d(),
-    ...yd(),
+const baseEntities = (e: Bag = {}) => ({
+    readers: readers(),
+    author: author(),
+    api: feedApi(),
+    feeds: feedCache(),
+    jobs: queueBlock(),
+    workers: fanoutWorkers(),
+    graph: followGraph(),
+    ...shards(),
     ...e,
   });
 
-const Od = (e = {}) => ({
-    us: bd.us,
-    au: bd.au,
-    fc: bd.fc(),
-    q: bd.q,
-    qw: bd.qw,
-    wf: bd.wf(),
-    wg: bd.wg,
-    ...xd(),
+const baseLinks = (e: Bag = {}) => ({
+    us: links.us,
+    au: links.au,
+    fc: links.fc(),
+    q: links.q,
+    qw: links.qw,
+    wf: links.wf(),
+    wg: links.wg,
+    ...shardLoads(),
     ...e,
   });
 
-const kd = () => [Cd(), wd(), ...Td(), Ed()];
+const baseFlows = () => [readFlow(), shardReads(), ...writeFlows(), postWrite()];
 
-const Ad = { x: 0, y: -4, dx: 70, dy: -215 };
+const panelTop = { x: 0, y: -4, dx: 70, dy: -215 };
 
-const jd = { x: 12, y: -4, dx: -185, dy: 84 };
+const panelSide = { x: 12, y: -4, dx: -185, dy: 84 };
 
-const Md = (e, t, n, r = jd) => makePanel({ z: 0, ...r }, e, t, { icon: n });
+const panelAt = (e: string, t: string[], n: string, r: Bag = panelSide) => makePanel({ z: 0, ...r }, e, t, { icon: n });
 
-const Nd = { feedMs: 60, readWork: `1 list + a few`, fanout: `≈ 70 · active only`, postDelay: `≈ 2 s` };
+const metrics = { feedMs: 60, readWork: `1 list + a few`, fanout: `≈ 70 · active only`, postDelay: `≈ 2 s` };
 
-const Pd = {
+const newsFeedLesson = {
     id: `design-news-feed`,
     title: `Design a News Feed`,
     summary: `Posts from everyone you follow, in 200 ms — and the question of when to do the work.`,
@@ -172,9 +163,9 @@ const Pd = {
         metrics: { feedMs: null, readWork: `—`, fanout: `—`, postDelay: `—` },
         scene: {
           entities: {
-            readers: dd(),
-            api: fd([], { sub: `to be designed` }),
-            card: Md(
+            readers: readers(),
+            api: feedApi([], { sub: `to be designed` }),
+            card: panelAt(
               `Requirements`,
               [
                 `post        text and a photo`,
@@ -183,10 +174,10 @@ const Pd = {
                 `# a new post may take a few seconds`,
               ],
               `clipboard`,
-              Ad,
+              panelTop,
             ),
           },
-          links: { us: bd.us },
+          links: { us: links.us },
           flows: [{ route: [`us`], rate: 2.4, bounce: !0 }],
         },
       },
@@ -206,9 +197,9 @@ const Pd = {
         metrics: { feedMs: null, readWork: `—`, fanout: `—`, postDelay: `—` },
         scene: {
           entities: {
-            readers: dd(),
-            api: fd([], { sub: `to be designed` }),
-            card: Md(
+            readers: readers(),
+            api: feedApi([], { sub: `to be designed` }),
+            card: panelAt(
               `Napkin math`,
               [
                 `200 M users × 10 opens   ≈ 23,000 feeds/s`,
@@ -217,10 +208,10 @@ const Pd = {
                 `# a typical user follows 200 accounts`,
               ],
               `sigma`,
-              Ad,
+              panelTop,
             ),
           },
-          links: { us: bd.us },
+          links: { us: links.us },
           flows: [{ route: [`us`], rate: 4, bounce: !0 }],
         },
       },
@@ -243,14 +234,14 @@ const Pd = {
         metrics: { feedMs: 600, readWork: 200, fanout: 0, postDelay: `instantly` },
         scene: {
           entities: {
-            readers: dd(),
-            api: fd([{ text: `merge 200 timelines`, icon: `merge` }]),
-            ...yd(),
+            readers: readers(),
+            api: feedApi([{ text: `merge 200 timelines`, icon: `merge` }]),
+            ...shards(),
           },
-          links: { us: bd.us, ...xd() },
+          links: { us: links.us, ...shardLoads() },
           flows: [
             { route: [`us`], rate: 2.4, bounce: !0 },
-            { ...Sd, rate: 1.6 },
+            { ...fanoutFlow, rate: 1.6 },
           ],
         },
       },
@@ -274,10 +265,10 @@ const Pd = {
         metrics: { feedMs: 1400, readWork: 200, fanout: 0, postDelay: `instantly` },
         scene: {
           entities: {
-            readers: dd(),
-            api: fd([{ text: `merge 200 timelines`, icon: `merge` }]),
-            ...yd({ ...makeHot(0.97), heat: 0.8 }),
-            card: Md(
+            readers: readers(),
+            api: feedApi([{ text: `merge 200 timelines`, icon: `merge` }]),
+            ...shards({ ...makeHot(0.97), heat: 0.8 }),
+            card: panelAt(
               `Cost of pull`,
               [
                 `23,000 feed loads / s`,
@@ -286,13 +277,13 @@ const Pd = {
                 `# and each load waits for the slowest shard`,
               ],
               `alert`,
-              Ad,
+              panelTop,
             ),
           },
-          links: { us: bd.us, ...xd({ fail: 0.2 }) },
+          links: { us: links.us, ...shardLoads({ fail: 0.2 }) },
           flows: [
             { route: [`us`], rate: 3, bounce: !0 },
-            { ...Sd, rate: 3.2 },
+            { ...fanoutFlow, rate: 3.2 },
           ],
         },
       },
@@ -315,7 +306,7 @@ const Pd = {
           `~ Feed load: 200 lookups → 1`,
         ],
         metrics: { feedMs: 40, readWork: 1, fanout: `200 on average`, postDelay: `≈ 2 s` },
-        scene: { entities: Dd(), links: Od(), flows: kd() },
+        scene: { entities: baseEntities(), links: baseLinks(), flows: baseFlows() },
       },
       {
         short: `Ids only`,
@@ -341,11 +332,11 @@ const Pd = {
           postDelay: `≈ 2 s`,
         },
         scene: {
-          entities: Dd({
-            feeds: md([{ text: `alice → [9041, 9038, 9017 …]`, icon: `listOrdered` }]),
+          entities: baseEntities({
+            feeds: feedCache([{ text: `alice → [9041, 9038, 9017 …]`, icon: `listOrdered` }]),
           }),
-          links: Od({ ...xd({ label: `hydrate: 20 posts, 1 batch`, labelAt: 0.6 }) }),
-          flows: kd(),
+          links: baseLinks({ ...shardLoads({ label: `hydrate: 20 posts, 1 batch`, labelAt: 0.6 }) }),
+          flows: baseFlows(),
         },
       },
       {
@@ -372,15 +363,15 @@ const Pd = {
           postDelay: `8+ min`,
         },
         scene: {
-          entities: Dd({
-            author: pd(`pop star · 50 M followers`),
-            jobs: hd([{ text: `backlog: 50 M deliveries`, tone: `red`, icon: `alert` }], {
+          entities: baseEntities({
+            author: author(`pop star · 50 M followers`),
+            jobs: queueBlock([{ text: `backlog: 50 M deliveries`, tone: `red`, icon: `alert` }], {
               heat: 0.8,
             }),
-            workers: gd([], { ...makeHot(1), heat: 0.9 }),
+            workers: fanoutWorkers([], { ...makeHot(1), heat: 0.9 }),
           }),
-          links: Od(),
-          flows: [Cd(), wd(), ...Td(0.5), Ed(7)],
+          links: baseLinks(),
+          flows: [readFlow(), shardReads(), ...writeFlows(0.5), postWrite(7)],
         },
       },
       {
@@ -407,18 +398,18 @@ const Pd = {
           postDelay: `≈ 2 s`,
         },
         scene: {
-          entities: Dd({
-            author: pd(`pop star · 50 M followers`),
-            api: fd([{ text: `merge: my list + 3 celebrities`, tone: `green`, icon: `merge` }]),
-            jobs: hd([{ text: `celebrities skipped`, icon: `check` }]),
+          entities: baseEntities({
+            author: author(`pop star · 50 M followers`),
+            api: feedApi([{ text: `merge: my list + 3 celebrities`, tone: `green`, icon: `merge` }]),
+            jobs: queueBlock([{ text: `celebrities skipped`, icon: `check` }]),
           }),
-          links: Od({ ...xd({ label: `pull celebrity timelines`, labelAt: 0.6 }) }),
+          links: baseLinks({ ...shardLoads({ label: `pull celebrity timelines`, labelAt: 0.6 }) }),
           flows: [
-            Cd(),
-            wd(2.2),
+            readFlow(),
+            shardReads(2.2),
             { route: [`au`], kind: `write`, rate: 0.6 },
             { route: [`k1l`], kind: `write`, rate: 0.6 },
-            Ed(1.6),
+            postWrite(1.6),
           ],
         },
       },
@@ -439,14 +430,14 @@ const Pd = {
           `~ Idle feed lists expire`,
           `+ Returning users: rebuilt by pull, once`,
         ],
-        metrics: Nd,
+        metrics: metrics,
         scene: {
-          entities: Dd({
-            workers: gd([{ text: `active in last 30 days only`, tone: `green`, icon: `filter` }]),
-            feeds: md([{ text: `idle lists expire`, icon: `clock` }]),
+          entities: baseEntities({
+            workers: fanoutWorkers([{ text: `active in last 30 days only`, tone: `green`, icon: `filter` }]),
+            feeds: feedCache([{ text: `idle lists expire`, icon: `clock` }]),
           }),
-          links: Od(),
-          flows: [Cd(), wd(), ...Td(), Ed(1.4)],
+          links: baseLinks(),
+          flows: [readFlow(), shardReads(), ...writeFlows(), postWrite(1.4)],
         },
       },
       {
@@ -462,10 +453,10 @@ const Pd = {
           text: `Time-ordered ids (<em>Unique IDs at Scale</em>) make this easy: “older than” is simply “id less than”.`,
         },
         changes: [`+ GET /feed?before=9017&limit=20`],
-        metrics: Nd,
+        metrics: metrics,
         scene: {
-          entities: Dd({
-            card: Md(
+          entities: baseEntities({
+            card: panelAt(
               `Cursor pagination`,
               [
                 `GET /feed?limit=20`,
@@ -476,8 +467,8 @@ const Pd = {
               `listOrdered`,
             ),
           }),
-          links: Od(),
-          flows: kd(),
+          links: baseLinks(),
+          flows: baseFlows(),
         },
       },
       {
@@ -504,14 +495,14 @@ const Pd = {
           postDelay: `≈ 2 s`,
         },
         scene: {
-          entities: Dd({
-            api: fd([{ text: `rebuild on open · max 500 at once`, icon: `gauge` }]),
-            feeds: md([{ text: `empty · warming up`, tone: `amber`, icon: `refresh` }], {
+          entities: baseEntities({
+            api: feedApi([{ text: `rebuild on open · max 500 at once`, icon: `gauge` }]),
+            feeds: feedCache([{ text: `empty · warming up`, tone: `amber`, icon: `refresh` }], {
               heat: 0.3,
             }),
           }),
-          links: Od({ fc: bd.fc({ fail: 0.5 }) }),
-          flows: [Cd(2.6), { ...Sd, rate: 1.4 }, ...Td(), Ed(2)],
+          links: baseLinks({ fc: links.fc({ fail: 0.5 }) }),
+          flows: [readFlow(2.6), { ...fanoutFlow, rate: 1.4 }, ...writeFlows(), postWrite(2)],
         },
       },
       {
@@ -535,11 +526,11 @@ const Pd = {
           kind: `next`,
           text: `Next up: <b>Design a Chat System</b> — where every message has to arrive, in order, and show up exactly once.`,
         },
-        metrics: Nd,
-        scene: { entities: Dd(), links: Od(), flows: kd() },
+        metrics: metrics,
+        scene: { entities: baseEntities(), links: baseLinks(), flows: baseFlows() },
       },
     ],
   };
 
-export { Pd as designNewsFeedLesson };
-export default Pd;
+export { newsFeedLesson as designNewsFeedLesson };
+export default newsFeedLesson;

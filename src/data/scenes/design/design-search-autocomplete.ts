@@ -1,4 +1,4 @@
-import { makeBlock, makeCrowd, makeDb, makeLink, makePanel } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, cardAt } from '@/lib/simulator/scene-builders';
 
 // One stage for the whole lesson: users type search queries keystroke by keystroke;
 // the search autocomplete service returns top-k matching suggestions within 100ms.
@@ -27,7 +27,7 @@ const agg = (tags: Tag[] = []) =>
 const triedb = (tags: Tag[] = []) =>
   makeDb(16, 5, { r: 1.9, h: 44, color: `store`, glyph: `database`, label: `trie storage`, tags });
 
-const L = {
+const links = {
   query: makeLink(`users`, `api`, [`users`, `api`], { heads: `both` }),
   askTrie: makeLink(`api`, `trie`, [`api`, `trie`], { heads: `both` }),
   checkCache: makeLink(`api`, `cache`, [`api`, `cache`], { heads: `both` }),
@@ -37,13 +37,12 @@ const L = {
   deployTrie: makeLink(`triedb`, `trie`, [`triedb`, `trie`], { style: `dashed` }),
 };
 
-const live = { query: L.query, askTrie: L.askTrie };
-const withCache = { ...live, checkCache: L.checkCache };
-const withPipeline = { ...withCache, emitLog: L.emitLog, drainLog: L.drainLog, saveTrie: L.saveTrie, deployTrie: L.deployTrie };
+const live = { query: links.query, askTrie: links.askTrie };
+const withCache = { ...live, checkCache: links.checkCache };
+const withPipeline = { ...withCache, emitLog: links.emitLog, drainLog: links.drainLog, saveTrie: links.saveTrie, deployTrie: links.deployTrie };
 
 /** Artifact card, parked in the empty band above-left of the service. */
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: 0, y: -4, z: 0, dx: -414, dy: -298 }, title, lines, { icon });
+const card = cardAt({ x: 0, y: -4, dx: -414, dy: -298 });
 
 export const designSearchAutocompleteLesson = {
   id: `design-search-autocomplete`,
@@ -223,7 +222,7 @@ export const designSearchAutocompleteLesson = {
           trie: trie([{ text: `read-only`, tone: `green` }]),
           logs: logs([{ text: `stream`, tone: `yellow` }]),
         },
-        links: { ...withCache, emitLog: L.emitLog },
+        links: { ...withCache, emitLog: links.emitLog },
         flows: [
           { route: [`query`, `checkCache`], rate: 2.0, bounce: true },
           { route: [`emitLog`], kind: `write`, rate: 1.2 },
@@ -253,7 +252,7 @@ export const designSearchAutocompleteLesson = {
           agg: agg([{ text: `Spark job`, tone: `yellow` }]),
           triedb: triedb([{ text: `frequency db`, tone: `blue` }]),
         },
-        links: { ...withCache, emitLog: L.emitLog, drainLog: L.drainLog, saveTrie: L.saveTrie },
+        links: { ...withCache, emitLog: links.emitLog, drainLog: links.drainLog, saveTrie: links.saveTrie },
         flows: [
           { route: [`query`, `checkCache`], rate: 2.2, bounce: true },
           { route: [`emitLog`], kind: `write`, rate: 1.2 },

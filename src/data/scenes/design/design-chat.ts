@@ -1,27 +1,19 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeDb, makeDevice, makeLink, makePanel, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const Fd = (e, t, n, r = [], i = {}) => makeDevice(e, t, { form: `phone`, w: 5, d: 5, label: n, tags: r, ...i });
+const phone = (e: number, t: number, n: string, r: Tag[] = [], i: Bag = {}) => makeDevice(e, t, { form: `phone`, w: 5, d: 5, label: n, tags: r, ...i });
 
-const Id = (e = []) => Fd(-9, -14, `Alice`, e);
+const alice = (e: Tag[] = []) => phone(-9, -14, `Alice`, e);
 
-const Ld = (e = [], t = {}) => Fd(9, -14, `Bob`, e, t);
+const bob = (e: Tag[] = [], t: Bag = {}) => phone(9, -14, `Bob`, e, t);
 
-const Rd = () => Fd(18, -4, `Cara`);
+const cara = () => phone(16, -2, `Cara`);
 
-const zd = (e = [], t = {}) => makeBlock(0, -4, { s: 4.8, h: 52, label: [`Chat`, `Service`], tags: e, ...t });
+const chatService = (e: Tag[] = [], t: Bag = {}) => makeBlock(0, -4, { s: 4.8, h: 52, label: [`Chat`, `Service`], tags: e, ...t });
 
-const Bd = (e = []) =>
+const gateway1 = (e: Tag[] = []) =>
     makeBlock(-9, -4, { s: 3.6, h: 38, color: `orange`, glyph: `network`, label: [`Gateway 1`], tags: e });
 
-const Vd = (e = [], t = {}) =>
+const gateway2 = (e: Tag[] = [], t: Bag = {}) =>
     makeBlock(9, -4, {
       s: 3.6,
       h: 38,
@@ -32,7 +24,7 @@ const Vd = (e = [], t = {}) =>
       ...t,
     });
 
-const Hd = (e = []) =>
+const sessions = (e: Tag[] = []) =>
     makeBlock(0, -14, {
       s: 3.4,
       h: 30,
@@ -43,44 +35,44 @@ const Hd = (e = []) =>
       tags: e,
     });
 
-const Ud = (e = []) => makeDb(-9, 7, { r: 1.8, glyph: `database`, label: `message store`, tags: e });
+const messageStore = (e: Tag[] = []) => makeDb(-9, 7, { r: 1.8, glyph: `database`, label: `message store`, tags: e });
 
-const Wd = () =>
+const push = () =>
     makeBlock(9, 7, { s: 4.2, h: 46, color: `yellow`, glyph: `bell`, label: [`Push`], sub: `APNs / FCM` });
 
-const q = {
-    a1: (e = {}) => makeLink(`alice`, `g1`, [`alice`, `g1`], { heads: `both`, ...e }),
-    gc: (e = {}) => makeLink(`g1`, `chat`, [`g1`, `chat`], { heads: `both`, ...e }),
-    cg: (e = {}) => makeLink(`chat`, `g2`, [`chat`, `g2`], { heads: `both`, ...e }),
-    b2: (e = {}) => makeLink(`g2`, `bob`, [`g2`, `bob`], { heads: `both`, ...e }),
-    cr: (e = {}) => makeLink(`chat`, `reg`, [`chat`, `reg`], { heads: `both`, ...e }),
-    cs: (e = {}) => makeLink(`chat`, `store`, [`chat`, [`chat`, `store`], `store`], e),
-    cp: (e = {}) => makeLink(`chat`, `notifier`, [`chat`, [`chat`, `notifier`], `notifier`], e),
-    pb: (e = {}) => makeLink(`notifier`, `bob`, [`notifier`, [13.5, `notifier`], [13.5, `bob`], `bob`], e),
-    c2: (e = {}) => makeLink(`g2`, `cara`, [`g2`, `cara`], { heads: `both`, ...e }),
+const links = {
+    a1: (e: Bag = {}) => makeLink(`alice`, `g1`, [`alice`, `g1`], { heads: `both`, ...e }),
+    gc: (e: Bag = {}) => makeLink(`g1`, `chat`, [`g1`, `chat`], { heads: `both`, ...e }),
+    cg: (e: Bag = {}) => makeLink(`chat`, `g2`, [`chat`, `g2`], { heads: `both`, ...e }),
+    b2: (e: Bag = {}) => makeLink(`g2`, `bob`, [`g2`, `bob`], { heads: `both`, ...e }),
+    cr: (e: Bag = {}) => makeLink(`chat`, `reg`, [`chat`, `reg`], { heads: `both`, ...e }),
+    cs: (e: Bag = {}) => makeLink(`chat`, `store`, [`chat`, [`chat`, `store`], `store`], e),
+    cp: (e: Bag = {}) => makeLink(`chat`, `notifier`, [`chat`, [`chat`, `notifier`], `notifier`], e),
+    pb: (e: Bag = {}) => makeLink(`notifier`, `bob`, [`notifier`, [13.5, `notifier`], [13.5, `bob`], `bob`], e),
+    c2: (e: Bag = {}) => makeLink(`g2`, `cara`, [`g2`, `cara`], { heads: `both`, ...e }),
   };
 
-const Gd = (e = {}) => ({ a1: q.a1(), gc: q.gc(), cg: q.cg(), b2: q.b2(), ...e });
+const baseLinks = (e: Bag = {}) => ({ a1: links.a1(), gc: links.gc(), cg: links.cg(), b2: links.b2(), ...e });
 
-const Kd = [`a1`, `gc`];
+const sendRoute = [`a1`, `gc`];
 
-const qd = [`cg`, `b2`];
+const deliverRoute = [`cg`, `b2`];
 
-const Jd = (e = 0.9, t = {}) => ({ route: [...Kd, ...qd], kind: `msg`, rate: e, bounce: !0, ...t });
+const messageFlow = (e = 0.9, t = {}) => ({ route: [...sendRoute, ...deliverRoute], kind: `msg`, rate: e, bounce: !0, ...t });
 
-const Yd = (e = 0.9) => ({ route: [`cr`], rate: e, bounce: !0 });
+const sessionFlow = (e = 0.9) => ({ route: [`cr`], rate: e, bounce: !0 });
 
-const Xd = (e = 0.9) => ({ route: [`cs`], kind: `write`, rate: e });
+const storeWrite = (e = 0.9) => ({ route: [`cs`], kind: `write`, rate: e });
 
-const Zd = (e = 0.5) => [{ route: [`a1`], kind: `ping`, rate: e }];
+const pingFlows = (e = 0.5) => [{ route: [`a1`], kind: `ping`, rate: e }];
 
-const Qd = { x: -9, y: 7, dx: 120, dy: -120 };
+const panelPos = { x: -9, y: 7, dx: 120, dy: -120 };
 
-const $d = (e, t, n, r = Qd) => makePanel({ z: 0, ...r }, e, t, { icon: n });
+const panelAt = (e: string, t: string[], n: string, r: Bag = panelPos) => makePanel({ z: 0, ...r }, e, t, { icon: n });
 
-const ef = { deliverMs: 110, conns: `20 M · 100 gateways`, canLoseMsg: `no`, ordered: `yes` };
+const metrics = { deliverMs: 110, conns: `20 M · 100 gateways`, canLoseMsg: `no`, ordered: `yes` };
 
-const tf = {
+const chatLesson = {
     id: `design-chat`,
     title: `Design a Chat System`,
     summary: `Twenty million open connections, and a promise: every message arrives, in order, exactly once.`,
@@ -118,10 +110,10 @@ const tf = {
         metrics: { deliverMs: null, conns: `—`, canLoseMsg: `—`, ordered: `—` },
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld(),
-            chat: zd([], { sub: `to be designed` }),
-            card: $d(
+            alice: alice(),
+            bob: bob(),
+            chat: chatService([], { sub: `to be designed` }),
+            card: panelAt(
               `Requirements`,
               [
                 `send      to a person or a group`,
@@ -153,9 +145,9 @@ const tf = {
         metrics: { deliverMs: null, conns: `20 M at peak`, canLoseMsg: `—`, ordered: `—` },
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld(),
-            chat: zd([], { sub: `to be designed` }),
+            alice: alice(),
+            bob: bob(),
+            chat: chatService([], { sub: `to be designed` }),
           },
           links: {},
           flows: [],
@@ -177,9 +169,9 @@ const tf = {
         metrics: { deliverMs: 80, conns: `2 · one server`, canLoseMsg: `yes`, ordered: `no` },
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld(),
-            chat: zd([{ text: `sockets: alice, bob`, icon: `network` }], {
+            alice: alice(),
+            bob: bob(),
+            chat: chatService([{ text: `sockets: alice, bob`, icon: `network` }], {
               label: [`Chat`, `Server`],
             }),
           },
@@ -223,14 +215,14 @@ const tf = {
         },
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld(),
-            chat: zd([{ text: `which gateway has Bob?`, tone: `amber`, icon: `search` }]),
-            g1: Bd(),
-            g2: Vd(),
+            alice: alice(),
+            bob: bob(),
+            chat: chatService([{ text: `which gateway has Bob?`, tone: `amber`, icon: `search` }]),
+            g1: gateway1(),
+            g2: gateway2(),
           },
-          links: Gd({ cg: q.cg({ fail: 1, style: `dashed` }) }),
-          flows: [{ route: [...Kd, `cg`], kind: `msg`, rate: 0.9 }],
+          links: baseLinks({ cg: links.cg({ fail: 1, style: `dashed` }) }),
+          flows: [{ route: [...sendRoute, `cg`], kind: `msg`, rate: 0.9 }],
         },
       },
       {
@@ -253,15 +245,15 @@ const tf = {
         metrics: { deliverMs: 90, conns: `20 M · 100 gateways`, canLoseMsg: `yes`, ordered: `no` },
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld(),
-            chat: zd(),
-            g1: Bd(),
-            g2: Vd(),
-            reg: Hd([{ text: `bob → gateway 2`, tone: `green`, icon: `clock` }]),
+            alice: alice(),
+            bob: bob(),
+            chat: chatService(),
+            g1: gateway1(),
+            g2: gateway2(),
+            reg: sessions([{ text: `bob → gateway 2`, tone: `green`, icon: `clock` }]),
           },
-          links: Gd({ cr: q.cr() }),
-          flows: [Jd(), Yd(), ...Zd()],
+          links: baseLinks({ cr: links.cr() }),
+          flows: [messageFlow(), sessionFlow(), ...pingFlows()],
         },
       },
       {
@@ -281,17 +273,17 @@ const tf = {
           `+ A sequence number per conversation`,
           `~ “Sent ✓” only after the write succeeds`,
         ],
-        metrics: ef,
+        metrics: metrics,
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld(),
-            chat: zd([{ text: `conv 88 · next seq 43`, icon: `listOrdered` }]),
-            g1: Bd(),
-            g2: Vd(),
-            reg: Hd(),
-            store: Ud(),
-            card: $d(
+            alice: alice(),
+            bob: bob(),
+            chat: chatService([{ text: `conv 88 · next seq 43`, icon: `listOrdered` }]),
+            g1: gateway1(),
+            g2: gateway2(),
+            reg: sessions(),
+            store: messageStore(),
+            card: panelAt(
               `One row per message`,
               [
                 `partition key   conversation_id`,
@@ -303,8 +295,8 @@ const tf = {
               { x: 9, y: -4, dx: 70, dy: 50 },
             ),
           },
-          links: Gd({ cr: q.cr(), cs: q.cs({ label: `1 · store`, labelAt: 0.7 }) }),
-          flows: [Jd(), Yd(), Xd()],
+          links: baseLinks({ cr: links.cr(), cs: links.cs({ label: `1 · store`, labelAt: 0.7 }) }),
+          flows: [messageFlow(), sessionFlow(), storeWrite()],
         },
       },
       {
@@ -324,30 +316,30 @@ const tf = {
           `+ Push notification through APNs / FCM`,
           `+ On reconnect: “send me everything after #41”`,
         ],
-        metrics: ef,
+        metrics: metrics,
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld([], { opacity: 0.6, label: `Bob · offline, has up to #41` }),
-            chat: zd(),
-            g1: Bd(),
-            g2: Vd(),
-            reg: Hd([{ text: `bob: no entry`, tone: `amber`, icon: `clock` }]),
-            store: Ud([{ text: `conv 88 · #42 #43 waiting`, tone: `green`, icon: `inbox` }]),
-            notifier: Wd(),
+            alice: alice(),
+            bob: bob([], { opacity: 0.6, label: `Bob · offline, has up to #41` }),
+            chat: chatService(),
+            g1: gateway1(),
+            g2: gateway2(),
+            reg: sessions([{ text: `bob: no entry`, tone: `amber`, icon: `clock` }]),
+            store: messageStore([{ text: `conv 88 · #42 #43 waiting`, tone: `green`, icon: `inbox` }]),
+            notifier: push(),
           },
-          links: Gd({
-            cr: q.cr(),
-            cs: q.cs(),
-            cg: q.cg({ style: `off` }),
-            b2: q.b2({ style: `off` }),
-            cp: q.cp(),
-            pb: q.pb({ label: `“2 new messages”`, labelAt: 0.6 }),
+          links: baseLinks({
+            cr: links.cr(),
+            cs: links.cs(),
+            cg: links.cg({ style: `off` }),
+            b2: links.b2({ style: `off` }),
+            cp: links.cp(),
+            pb: links.pb({ label: `“2 new messages”`, labelAt: 0.6 }),
           }),
           flows: [
-            { route: Kd, kind: `msg`, rate: 0.9, bounce: !0 },
-            Yd(),
-            Xd(),
+            { route: sendRoute, kind: `msg`, rate: 0.9, bounce: !0 },
+            sessionFlow(),
+            storeWrite(),
             { route: [`cp`, `pb`], kind: `push`, rate: 0.7 },
           ],
         },
@@ -369,26 +361,26 @@ const tf = {
           `~ A retry reuses its id → stored once`,
           `+ Receipts: ✓ sent · ✓✓ delivered`,
         ],
-        metrics: ef,
+        metrics: metrics,
         scene: {
           entities: {
-            alice: Id([{ text: `retry · same id 7f3a`, tone: `amber`, icon: `replay` }]),
-            bob: Ld([], { label: `Bob · sees it once ✓✓` }),
-            chat: zd([{ text: `seen 7f3a → just ack`, tone: `green`, icon: `fingerprint` }]),
-            g1: Bd(),
-            g2: Vd(),
-            reg: Hd(),
-            store: Ud(),
-            notifier: Wd(),
+            alice: alice([{ text: `retry · same id 7f3a`, tone: `amber`, icon: `replay` }]),
+            bob: bob([], { label: `Bob · sees it once ✓✓` }),
+            chat: chatService([{ text: `seen 7f3a → just ack`, tone: `green`, icon: `fingerprint` }]),
+            g1: gateway1(),
+            g2: gateway2(),
+            reg: sessions(),
+            store: messageStore(),
+            notifier: push(),
           },
-          links: Gd({
-            cr: q.cr(),
-            cs: q.cs(),
-            cp: q.cp({ style: `off` }),
-            pb: q.pb({ style: `off` }),
-            a1: q.a1({ fail: 0.3 }),
+          links: baseLinks({
+            cr: links.cr(),
+            cs: links.cs(),
+            cp: links.cp({ style: `off` }),
+            pb: links.pb({ style: `off` }),
+            a1: links.a1({ fail: 0.3 }),
           }),
-          flows: [Jd(0.8), { route: Kd, kind: `msg`, rate: 0.8, bounce: !0 }, Yd(), Xd(0.8)],
+          flows: [messageFlow(0.8), { route: sendRoute, kind: `msg`, rate: 0.8, bounce: !0 }, sessionFlow(), storeWrite(0.8)],
         },
       },
       {
@@ -407,36 +399,36 @@ const tf = {
           `+ Cara joins the conversation`,
           `~ One stored message → a delivery per online member`,
         ],
-        metrics: ef,
+        metrics: metrics,
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld(),
-            cara: Rd(),
-            chat: zd([{ text: `3 members`, icon: `users` }]),
-            g1: Bd(),
-            g2: Vd(),
-            reg: Hd(),
-            store: Ud(),
-            notifier: Wd(),
+            alice: alice(),
+            bob: bob(),
+            cara: cara(),
+            chat: chatService([{ text: `3 members`, icon: `users` }]),
+            g1: gateway1(),
+            g2: gateway2(),
+            reg: sessions(),
+            store: messageStore(),
+            notifier: push(),
           },
-          links: Gd({
-            cr: q.cr(),
-            cs: q.cs(),
-            cp: q.cp({ style: `off` }),
-            pb: q.pb({ style: `off` }),
-            c2: q.c2(),
+          links: baseLinks({
+            cr: links.cr(),
+            cs: links.cs(),
+            cp: links.cp({ style: `off` }),
+            pb: links.pb({ style: `off` }),
+            c2: links.c2(),
           }),
           flows: [
-            { route: Kd, kind: `msg`, rate: 0.8 },
+            { route: sendRoute, kind: `msg`, rate: 0.8 },
             {
               fanout: !0,
               routes: [{ path: [`cg`, `b2`] }, { path: [`cg`, `c2`] }],
               kind: `msg`,
               rate: 0.8,
             },
-            Yd(),
-            Xd(0.8),
+            sessionFlow(),
+            storeWrite(0.8),
           ],
         },
       },
@@ -457,30 +449,30 @@ const tf = {
           `~ Updates only to people who are looking`,
           `~ “Typing…” is never stored`,
         ],
-        metrics: ef,
+        metrics: metrics,
         scene: {
           entities: {
-            alice: Id([{ text: `sees: Bob is online`, tone: `green`, icon: `eye` }]),
-            bob: Ld([], { label: `Bob · typing…` }),
-            cara: Rd(),
-            chat: zd(),
-            g1: Bd(),
-            g2: Vd(),
-            reg: Hd([{ text: `bob: online · 30 s TTL`, tone: `green`, icon: `heartPulse` }]),
-            store: Ud(),
-            notifier: Wd(),
+            alice: alice([{ text: `sees: Bob is online`, tone: `green`, icon: `eye` }]),
+            bob: bob([], { label: `Bob · typing…` }),
+            cara: cara(),
+            chat: chatService(),
+            g1: gateway1(),
+            g2: gateway2(),
+            reg: sessions([{ text: `bob: online · 30 s TTL`, tone: `green`, icon: `heartPulse` }]),
+            store: messageStore(),
+            notifier: push(),
           },
-          links: Gd({
-            cr: q.cr(),
-            cs: q.cs({ style: `off` }),
-            cp: q.cp({ style: `off` }),
-            pb: q.pb({ style: `off` }),
-            c2: q.c2(),
+          links: baseLinks({
+            cr: links.cr(),
+            cs: links.cs({ style: `off` }),
+            cp: links.cp({ style: `off` }),
+            pb: links.pb({ style: `off` }),
+            c2: links.c2(),
           }),
           flows: [
             { route: [`b2`], kind: `ping`, rate: 1.2 },
             { route: [`c2`], kind: `ping`, rate: 0.6 },
-            Yd(0.8),
+            sessionFlow(0.8),
             { route: [`gc`], kind: `ping`, rate: 0.8 },
             { route: [`a1`], kind: `ping`, rate: 0.8 },
           ],
@@ -506,31 +498,31 @@ const tf = {
         metrics: { deliverMs: 110, conns: `20 M · 99 gateways`, canLoseMsg: `no`, ordered: `yes` },
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld([], { label: `Bob · reconnected, synced from #43` }),
-            chat: zd(),
-            g1: Bd(),
-            g2: Vd([], DEAD_STATE),
-            reg: Hd([{ text: `bob → gateway 1`, tone: `green`, icon: `signpost` }]),
-            store: Ud(),
-            notifier: Wd(),
+            alice: alice(),
+            bob: bob([], { label: `Bob · reconnected, synced from #43` }),
+            chat: chatService(),
+            g1: gateway1(),
+            g2: gateway2([], DEAD_STATE),
+            reg: sessions([{ text: `bob → gateway 1`, tone: `green`, icon: `signpost` }]),
+            store: messageStore(),
+            notifier: push(),
           },
           links: {
-            a1: q.a1(),
-            gc: q.gc(),
-            cg: q.cg({ style: `off` }),
-            b2: q.b2({ fail: 1 }),
-            cr: q.cr(),
-            cs: q.cs(),
-            cp: q.cp({ style: `off` }),
-            pb: q.pb({ style: `off` }),
+            a1: links.a1(),
+            gc: links.gc(),
+            cg: links.cg({ style: `off` }),
+            b2: links.b2({ fail: 1 }),
+            cr: links.cr(),
+            cs: links.cs(),
+            cp: links.cp({ style: `off` }),
+            pb: links.pb({ style: `off` }),
             b1: makeLink(`bob`, `g1`, [`bob`, [`bob`, -9], [-7.6, -9], [-7.6, `g1`]], { heads: `both` }),
           },
           flows: [
             { route: [`a1`, `gc`], kind: `msg`, rate: 0.8, bounce: !0 },
             { route: [`b1`, `gc`], kind: `msg`, rate: 0.8, bounce: !0 },
-            Yd(0.8),
-            Xd(0.8),
+            sessionFlow(0.8),
+            storeWrite(0.8),
           ],
         },
       },
@@ -555,29 +547,29 @@ const tf = {
           kind: `next`,
           text: `That’s the course. You have the building blocks and three complete designs — now pick a product you use every day and sketch how you would build it.`,
         },
-        metrics: ef,
+        metrics: metrics,
         scene: {
           entities: {
-            alice: Id(),
-            bob: Ld(),
-            chat: zd(),
-            g1: Bd(),
-            g2: Vd(),
-            reg: Hd(),
-            store: Ud(),
-            notifier: Wd(),
+            alice: alice(),
+            bob: bob(),
+            chat: chatService(),
+            g1: gateway1(),
+            g2: gateway2(),
+            reg: sessions(),
+            store: messageStore(),
+            notifier: push(),
           },
-          links: Gd({
-            cr: q.cr(),
-            cs: q.cs(),
-            cp: q.cp({ style: `off` }),
-            pb: q.pb({ style: `off` }),
+          links: baseLinks({
+            cr: links.cr(),
+            cs: links.cs(),
+            cp: links.cp({ style: `off` }),
+            pb: links.pb({ style: `off` }),
           }),
-          flows: [Jd(), Yd(), Xd()],
+          flows: [messageFlow(), sessionFlow(), storeWrite()],
         },
       },
     ],
   };
 
-export { tf as designChatLesson };
-export default tf;
+export { chatLesson as designChatLesson };
+export default chatLesson;

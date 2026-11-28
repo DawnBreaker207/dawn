@@ -1,4 +1,4 @@
-import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, makeQueue } from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, makeQueue, cardAt } from '@/lib/simulator/scene-builders';
 
 // One stage for the whole lesson. Shoppers trigger an order event; the notification
 // service fans it out to one worker per channel. Each later step adds one piece:
@@ -30,7 +30,7 @@ const qEmail = (n: number) => makeQueue(6.56, 7.48, n, [-0.5, -0.87]);
 const qSms = (n: number) => makeQueue(-5.7, 7.41, n, [0.45, -0.89]);
 const dlq = (n: number) => makeQueue(12.95, -6.85, n, [0.32, -0.95], { color: `#e5534b` });
 
-const L = {
+const links = {
   shop: makeLink(`users`, `orders`, [`users`, `orders`], { heads: `both` }),
   notify: makeLink(`orders`, `notif`, [`orders`, `notif`], { heads: `both` }),
   // first draft: synchronous calls that wait for the provider
@@ -45,9 +45,9 @@ const L = {
   receipts: makeLink(`push`, `log`, [`push`, `log`]),
 };
 
-const front = { shop: L.shop, notify: L.notify };
-const fanout = { ...front, toPush: L.toPush, toEmail: L.toEmail };
-const fanout3 = { ...fanout, prefs: L.prefs, toSms: L.toSms };
+const front = { shop: links.shop, notify: links.notify };
+const fanout = { ...front, toPush: links.toPush, toEmail: links.toEmail };
+const fanout3 = { ...fanout, prefs: links.prefs, toSms: links.toSms };
 
 const caller = (rate = 1.6) => ({ route: [`shop`, `notify`], rate, bounce: true });
 const drains = (push = 1.4, mail = 0.9, text = 0.5) => [
@@ -57,8 +57,7 @@ const drains = (push = 1.4, mail = 0.9, text = 0.5) => [
 ];
 
 /** Artifact card, parked in the empty band above-left of the service. */
-const card = (title: string, lines: string[], icon: string) =>
-  makePanel({ x: 0, y: -4, z: 0, dx: -414, dy: -298 }, title, lines, { icon });
+const card = cardAt({ x: 0, y: -4, dx: -414, dy: -298 });
 
 export const designNotificationSystemLesson = {
   id: `design-notification-system`,
@@ -160,7 +159,7 @@ export const designNotificationSystemLesson = {
             `timer`,
           ),
         },
-        links: { ...front, callPush: L.callPush, callEmail: L.callEmail },
+        links: { ...front, callPush: links.callPush, callEmail: links.callEmail },
         flows: [
           { route: [`shop`, `notify`, `callPush`], rate: 1.2, bounce: true },
           { route: [`callEmail`], rate: 1.2, bounce: true },
@@ -194,7 +193,7 @@ export const designNotificationSystemLesson = {
             `activity`,
           ),
         },
-        links: { ...front, callPush: L.callPush, callEmail: { ...L.callEmail, fail: 0.15 } },
+        links: { ...front, callPush: links.callPush, callEmail: { ...links.callEmail, fail: 0.15 } },
         flows: [
           { route: [`shop`, `notify`, `callPush`], rate: 1, bounce: true },
           { route: [`callEmail`], kind: `slow`, rate: 1, bounce: true },
@@ -303,7 +302,7 @@ export const designNotificationSystemLesson = {
             `refresh`,
           ),
         },
-        links: { ...fanout3, toPush: { ...L.toPush, fail: 0.2 } },
+        links: { ...fanout3, toPush: { ...links.toPush, fail: 0.2 } },
         flows: [caller(), ...drains(1.8, 0.9, 0.5)],
       },
     },
@@ -415,7 +414,7 @@ export const designNotificationSystemLesson = {
             `inbox`,
           ),
         },
-        links: { ...fanout3, sent: L.sent, receipts: L.receipts },
+        links: { ...fanout3, sent: links.sent, receipts: links.receipts },
         flows: [
           caller(),
           ...drains(),
@@ -461,7 +460,7 @@ export const designNotificationSystemLesson = {
           qSms: qSms(1),
           log: log(),
         },
-        links: { ...fanout3, sent: L.sent, receipts: L.receipts },
+        links: { ...fanout3, sent: links.sent, receipts: links.receipts },
         flows: [caller(), ...drains(), { route: [`sent`], kind: `write`, rate: 0.8 }, { route: [`receipts`], kind: `push`, rate: 0.8 }],
       },
     },

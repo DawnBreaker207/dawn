@@ -1,55 +1,47 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCrowd,
-  makeDb,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCrowd, makeDb, makeLink, makePanel, makeZone, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const wu = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
+const customersArea = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
 
-const Tu = (e = `customers`) => makeCrowd(wu, 12, e);
+const customers = (e = `customers`) => makeCrowd(customersArea, 12, e);
 
-const Eu = { ord: -10, cou: 0, pay: 10 };
+const serviceX = { ord: -10, cou: 0, pay: 10 };
 
-const Du = (e = {}) =>
+const gateway = (e: Bag = {}) =>
     makeBlock(0, -10, { color: `orange`, glyph: `signpost`, label: [`API`, `Gateway`], ...e });
 
-const Ou = (e = {}) => makeBlock(Eu.ord, 2, { glyph: `cart`, label: [`Orders`], ...e });
+const ordersService = (e: Bag = {}) => makeBlock(serviceX.ord, 2, { glyph: `cart`, label: [`Orders`], ...e });
 
-const ku = (e = {}) => makeBlock(Eu.cou, 2, { color: `green`, glyph: `car`, label: [`Couriers`], ...e });
+const couriersService = (e: Bag = {}) => makeBlock(serviceX.cou, 2, { color: `green`, glyph: `car`, label: [`Couriers`], ...e });
 
-const Au = (e = {}) =>
-    makeBlock(Eu.pay, 2, { color: `purple`, glyph: `creditCard`, label: [`Payments`], ...e });
+const paymentsService = (e: Bag = {}) =>
+    makeBlock(serviceX.pay, 2, { color: `purple`, glyph: `creditCard`, label: [`Payments`], ...e });
 
-const ju = (e = {}) => makeDb(Eu.ord, 12, { label: `orders`, ...e });
+const ordersDb = (e: Bag = {}) => makeDb(serviceX.ord, 12, { label: `orders`, ...e });
 
-const Mu = (e = {}) => makeDb(Eu.cou, 12, { label: `locations`, ...e });
+const locationsDb = (e: Bag = {}) => makeDb(serviceX.cou, 12, { label: `locations`, ...e });
 
-const Nu = (e = {}) => makeDb(Eu.pay, 12, { label: `payments`, ...e });
+const paymentsDb = (e: Bag = {}) => makeDb(serviceX.pay, 12, { label: `payments`, ...e });
 
-const Pu = (e = {}) => ({
-    users: Tu(),
-    gw: Du(),
-    ord: Ou(),
-    cou: ku(),
-    pay: Au(),
-    odb: ju(),
-    cdb: Mu(),
-    pdb: Nu(),
+const baseEntities = (e: Bag = {}) => ({
+    users: customers(),
+    gw: gateway(),
+    ord: ordersService(),
+    cou: couriersService(),
+    pay: paymentsService(),
+    odb: ordersDb(),
+    cdb: locationsDb(),
+    pdb: paymentsDb(),
     ...e,
   });
 
-const Fu = (e) =>
+const serviceLink = (e: string) =>
     makeLink(`gw`, e, e === `cou` ? [`gw`, e] : [`gw`, [`gw`, -4], [e, -4], e], { heads: `both` });
 
-const Iu = (e = {}) => ({
+const baseLinks = (e: Bag = {}) => ({
     ug: makeLink(`users`, `gw`, [`users`, `gw`], { heads: `both` }),
-    go: Fu(`ord`),
-    gc: Fu(`cou`),
-    gp: Fu(`pay`),
+    go: serviceLink(`ord`),
+    gc: serviceLink(`cou`),
+    gp: serviceLink(`pay`),
     oo: makeLink(`ord`, `odb`, [`ord`, `odb`], { heads: `both` }),
     cc: makeLink(`cou`, `cdb`, [`cou`, `cdb`], { heads: `both` }),
     pp: makeLink(`pay`, `pdb`, [`pay`, `pdb`], { heads: `both` }),
@@ -57,7 +49,7 @@ const Iu = (e = {}) => ({
     ...e,
   });
 
-const Lu = () => [
+const baseFlows = () => [
     { route: [`ug`], rate: 2.2, bounce: !0 },
     {
       routes: [{ path: [`go`, `oo`] }, { path: [`gc`, `cc`] }, { path: [`gp`, `pp`] }],
@@ -67,19 +59,19 @@ const Lu = () => [
     { route: [`ev`], kind: `msg`, rate: 0.7 },
   ];
 
-const Ru = { x0: -17.5, x1: 5.5, y0: -8.5, y1: 16.5 };
+const ordersArea = { x0: -17.5, x1: 5.5, y0: -8.5, y1: 16.5 };
 
-const zu = (e, t, n, r, i = {}) => makeBlock(e, t, { s: 4.2, h: 46, glyph: n, label: r, ...i });
+const serviceBlock = (e: number, t: number, n: string, r: string[], i: Bag = {}) => makeBlock(e, t, { s: 4.2, h: 46, glyph: n, label: r, ...i });
 
-const Bu = (e = {}) => ({
-    oz: makeZone(Ru, `ORDERS SERVICE · INSIDE`),
-    gw: Du({ x: -6, y: -12 }),
-    ctl: zu(-6, -3, `braces`, [`Controller`], { sub: `HTTP in` }),
-    svc: zu(-6, 5, `workflow`, [`Order`, `Service`]),
-    repo: zu(-14, 13, `database`, [`Repository`], { color: `yellow` }),
-    payc: zu(2, 13, `creditCard`, [`Payment`, `Client`], { color: `yellow` }),
-    odb: makeDb(-14, 22, { label: `orders table` }),
-    pay: makeBlock(2, 22, {
+const ordersInside = (e: Bag = {}) => ({
+    oz: makeZone(ordersArea, `ORDERS SERVICE · INSIDE`),
+    gw: gateway({ x: -6, y: -12 }),
+    ctl: serviceBlock(-6, -3, `braces`, [`Controller`], { sub: `HTTP in` }),
+    svc: serviceBlock(-6, 5, `workflow`, [`Order`, `Service`]),
+    repo: serviceBlock(-14, 13, `database`, [`Repository`], { color: `yellow` }),
+    payc: serviceBlock(2, 13, `creditCard`, [`Payment`, `Client`], { color: `yellow` }),
+    odb: makeDb(-12, 20, { label: `orders table` }),
+    pay: makeBlock(4, 20, {
       color: `purple`,
       glyph: `creditCard`,
       label: [`Payments`],
@@ -89,7 +81,7 @@ const Bu = (e = {}) => ({
     ...e,
   });
 
-const Vu = (e = {}) => ({
+const ordersInsideLinks = (e: Bag = {}) => ({
     gc_ctl: makeLink(`gw`, `ctl`, [`gw`, `ctl`], { heads: `both` }),
     cs: makeLink(`ctl`, `svc`, [`ctl`, `svc`], { heads: `both` }),
     sr: makeLink(`svc`, `repo`, [`svc`, [`svc`, 9], [`repo`, 9], `repo`], { heads: `both` }),
@@ -99,7 +91,7 @@ const Vu = (e = {}) => ({
     ...e,
   });
 
-const Hu = () => [
+const ordersInsideFlows = () => [
     {
       routes: [{ path: [`gc_ctl`, `cs`, `sr`, `ro`] }, { path: [`gc_ctl`, `cs`, `sp`, `pp_client`] }],
       rate: 1.4,
@@ -107,14 +99,14 @@ const Hu = () => [
     },
   ];
 
-const Uu = (e, t, n) => makePanel({ x: 0, y: 0, z: 0 }, e, t, { icon: n });
+const card = cardAt({ x: 0, y: 0 });
 
-const Wu = { zoom: `whole system`, unit: `services · stores · queues`, output: `architecture diagram` };
+const hldFacts = { zoom: `whole system`, unit: `services · stores · queues`, output: `architecture diagram` };
 
-const Gu = { zoom: `one service`, unit: `classes · tables · states`, output: `class & schema design` };
+const lldFacts = { zoom: `one service`, unit: `classes · tables · states`, output: `class & schema design` };
 
 // --- design ---
-const Ku = {
+const hldLldLesson = {
     id: `hld-lld`,
     title: `HLD & LLD`,
     summary: `The same system at two zoom levels: the map of services, and the inside of one of them.`,
@@ -141,8 +133,8 @@ const Ku = {
           kind: `insight`,
           text: `Neither is “more real”. They answer different questions, for different readers, and change at different speeds.`,
         },
-        metrics: Wu,
-        scene: { entities: Pu(), links: Iu(), flows: Lu() },
+        metrics: hldFacts,
+        scene: { entities: baseEntities(), links: baseLinks(), flows: baseFlows() },
       },
       {
         short: `The map`,
@@ -157,13 +149,13 @@ const Ku = {
           text: `A good HLD fits on one page. If a box needs a paragraph to explain, that paragraph belongs to the LLD of that box.`,
         },
         changes: [`+ The whole system is the unit of design`],
-        metrics: Wu,
+        metrics: hldFacts,
         scene: {
-          entities: Pu({
+          entities: baseEntities({
             sz: makeZone({ x0: -14, x1: 14, y0: -14, y1: 16 }, `HLD · THE WHOLE SYSTEM`),
           }),
-          links: Iu(),
-          flows: Lu(),
+          links: baseLinks(),
+          flows: baseFlows(),
         },
       },
       {
@@ -182,12 +174,12 @@ const Ku = {
           `~ Orders → Couriers: an event, not a call`,
           `~ Payments: SQL · locations: key–value`,
         ],
-        metrics: Wu,
+        metrics: hldFacts,
         scene: {
-          entities: Pu({
-            pdb: Nu({ tags: [{ text: `SQL`, icon: `lock` }] }),
-            cdb: Mu({ tags: [{ text: `key–value`, icon: `zap` }] }),
-            card: Uu(
+          entities: baseEntities({
+            pdb: paymentsDb({ tags: [{ text: `SQL`, icon: `lock` }] }),
+            cdb: locationsDb({ tags: [{ text: `key–value`, icon: `zap` }] }),
+            card: card(
               `Decisions at this level`,
               [
                 `Orders → Couriers   an event, not a call`,
@@ -198,10 +190,10 @@ const Ku = {
               `scale`,
             ),
           }),
-          links: Iu({
+          links: baseLinks({
             ev: makeLink(`ord`, `cou`, [`ord`, `cou`], { style: `dashed`, label: `OrderPlaced event` }),
           }),
-          flows: Lu(),
+          flows: baseFlows(),
         },
       },
       {
@@ -220,8 +212,8 @@ const Ku = {
           `− The rest of the system`,
           `+ Inside Orders: controller, service, repository, payment client`,
         ],
-        metrics: Gu,
-        scene: { entities: Bu(), links: Vu(), flows: Hu() },
+        metrics: lldFacts,
+        scene: { entities: ordersInside(), links: ordersInsideLinks(), flows: ordersInsideFlows() },
       },
       {
         short: `LLD decisions`,
@@ -240,17 +232,17 @@ const Ku = {
           `+ Table and index design`,
           `+ Idempotency key on POST /orders`,
         ],
-        metrics: Gu,
+        metrics: lldFacts,
         scene: {
-          entities: Bu({
-            svc: zu(-6, 5, `workflow`, [`Order`, `Service`], {
+          entities: ordersInside({
+            svc: serviceBlock(-6, 5, `workflow`, [`Order`, `Service`], {
               tags: [{ text: `state machine`, icon: `flow` }],
             }),
-            odb: makeDb(-14, 22, {
+            odb: makeDb(-12, 20, {
               label: `orders table`,
               tags: [{ text: `index (user_id, created_at)`, icon: `listOrdered` }],
             }),
-            card: Uu(
+            card: card(
               `Order states`,
               [
                 `placed → paid → cooking → on the way → delivered`,
@@ -261,8 +253,8 @@ const Ku = {
               `flow`,
             ),
           }),
-          links: Vu(),
-          flows: Hu(),
+          links: ordersInsideLinks(),
+          flows: ordersInsideFlows(),
         },
       },
       {
@@ -280,8 +272,8 @@ const Ku = {
         changes: [`+ The contract at the edge of the service`],
         metrics: { zoom: `the seams`, unit: `APIs · events`, output: `API contract` },
         scene: {
-          entities: Bu({
-            card: Uu(
+          entities: ordersInside({
+            card: card(
               `The promise`,
               [
                 `POST /orders  { items, address }`,
@@ -292,14 +284,14 @@ const Ku = {
               `braces`,
             ),
           }),
-          links: Vu({
+          links: ordersInsideLinks({
             gc_ctl: makeLink(`gw`, `ctl`, [`gw`, `ctl`], {
               heads: `both`,
               label: `the contract`,
               labelTone: `green`,
             }),
           }),
-          flows: Hu(),
+          flows: ordersInsideFlows(),
         },
       },
       {
@@ -321,10 +313,10 @@ const Ku = {
           output: `design with deep dives`,
         },
         scene: {
-          entities: Pu({
-            cdb: Mu({ tags: [{ text: `deep dive`, tone: `amber`, icon: `zoomIn` }] }),
-            pay: Au({ tags: [{ text: `deep dive`, tone: `amber`, icon: `zoomIn` }] }),
-            card: Uu(
+          entities: baseEntities({
+            cdb: locationsDb({ tags: [{ text: `deep dive`, tone: `amber`, icon: `zoomIn` }] }),
+            pay: paymentsService({ tags: [{ text: `deep dive`, tone: `amber`, icon: `zoomIn` }] }),
+            card: card(
               `A design session`,
               [
                 `1  requirements      what must it do?`,
@@ -337,8 +329,8 @@ const Ku = {
               `listOrdered`,
             ),
           }),
-          links: Iu({ ev: makeLink(`ord`, `cou`, [`ord`, `cou`], { style: `dashed` }) }),
-          flows: Lu(),
+          links: baseLinks({ ev: makeLink(`ord`, `cou`, [`ord`, `cou`], { style: `dashed` }) }),
+          flows: baseFlows(),
         },
       },
       {
@@ -361,11 +353,11 @@ const Ku = {
           kind: `next`,
           text: `Next up: <b>Design a URL Shortener</b> — the first full walkthrough, from a one-line brief to a finished design.`,
         },
-        metrics: Wu,
-        scene: { entities: Pu(), links: Iu(), flows: Lu() },
+        metrics: hldFacts,
+        scene: { entities: baseEntities(), links: baseLinks(), flows: baseFlows() },
       },
     ],
   };
 
-export { Ku as hldLldLesson };
-export default Ku;
+export { hldLldLesson as hldLldLesson };
+export default hldLldLesson;

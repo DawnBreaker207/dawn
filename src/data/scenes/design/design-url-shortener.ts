@@ -1,55 +1,55 @@
 // @ts-nocheck
 /* eslint-disable */
 import {
-  makeBlock as d,
-  makeBalancer as f,
-  makeCrowd as p,
-  makeGhost as m,
-  makeLink as h,
-  DEAD_STATE as g,
-  makeHot as _,
-  makeCool as v,
-  makeDevice as y,
-  makeDb as b,
-  makeZone as x,
-  makeQueue as ee,
-  makePanel as S,
-  makeUser as te,
-  makeDns as ne,
-  makeWebServer as re,
-  makeDatabase as ie,
-  URL_TAG as ae,
-  LINK_TEMPLATES as C,
-  CACHED_DNS_LINK as oe,
-  TIMING_PANEL as se,
+  makeBlock,
+  makeBalancer,
+  makeCrowd,
+  makeGhost,
+  makeLink,
+  DEAD_STATE,
+  makeHot,
+  makeCool,
+  makeDevice,
+  makeDb,
+  makeZone,
+  makeQueue,
+  makePanel,
+  makeUser,
+  makeDns,
+  makeWebServer,
+  makeDatabase,
+  URL_TAG,
+  LINK_TEMPLATES,
+  CACHED_DNS_LINK,
+  TIMING_PANEL,
 } from '@/lib/simulator/scene-builders';
 
-const qu = { x0: -4.5, x1: 4.5, y0: -19, y1: -13 };
+const clickersArea = { x0: -4.5, x1: 4.5, y0: -19, y1: -13 };
 
-const Ju = (e = `people clicking links`) => p(qu, 12, e);
+const clickers = (e = `people clicking links`) => makeCrowd(clickersArea, 12, e);
 
-const Yu = (e = [], t = {}) => d(0, -4, { label: [`API`, `Servers`], tags: e, ...t });
+const apiServers = (e = [], t = {}) => makeBlock(0, -4, { label: [`API`, `Servers`], tags: e, ...t });
 
-const Xu = (e = {}) => b(12, -4, { r: 1.9, glyph: `database`, label: `links table`, ...e });
+const linksTable = (e = {}) => makeDb(12, -4, { r: 1.9, glyph: `database`, label: `links table`, ...e });
 
-const Zu = (e = {}) =>
-    d(-12, -4, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `code → URL`, ...e });
+const cache = (e = {}) =>
+    makeBlock(-12, -4, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `code → URL`, ...e });
 
-const Qu = (e = []) =>
-    d(-7, 10, { s: 4.2, h: 46, color: `yellow`, glyph: `hash`, label: [`ID`, `Blocks`], tags: e });
+const idBlocks = (e = []) =>
+    makeBlock(-7, 10, { s: 4.2, h: 46, color: `yellow`, glyph: `hash`, label: [`ID`, `Blocks`], tags: e });
 
-const $u = () =>
-    d(8, 10, { s: 4.2, h: 46, color: `orange`, glyph: `waves`, label: [`Click`, `Stream`] });
+const clickStream = () =>
+    makeBlock(8, 10, { s: 4.2, h: 46, color: `orange`, glyph: `waves`, label: [`Click`, `Stream`] });
 
-const ed = () => b(16, 10, { r: 1.6, glyph: `chart`, color: `store`, label: `click counts` });
+const clickCounts = () => makeDb(16, 10, { r: 1.6, glyph: `chart`, color: `store`, label: `click counts` });
 
-const td = [-10, -4, 2];
+const shardY = [-10, -4, 2];
 
-const nd = (e = {}) =>
+const shards = (e = {}) =>
     Object.fromEntries(
-      td.map((t, n) => [
+      shardY.map((t, n) => [
         `k${n}`,
-        b(12, t, {
+        makeDb(12, t, {
           r: 1.6,
           glyph: `database`,
           label: n === 1 ? `key–value store` : ``,
@@ -58,26 +58,26 @@ const nd = (e = {}) =>
       ]),
     );
 
-const K = {
-    us: h(`users`, `app`, [`users`, `app`], { heads: `both` }),
-    sd: h(`app`, `db`, [`app`, `db`], { heads: `both` }),
-    sc: h(`app`, `cache`, [`app`, `cache`], { heads: `both` }),
-    id: h(`app`, `ids`, [[-1.3, `app`], [-1.3, `ids`], `ids`], { heads: `both`, style: `dashed` }),
-    ev: h(`app`, `stream`, [[1.3, `app`], [1.3, `stream`], `stream`]),
-    ag: h(`stream`, `counts`, [`stream`, `counts`]),
+const baseLinks = {
+    us: makeLink(`users`, `app`, [`users`, `app`], { heads: `both` }),
+    sd: makeLink(`app`, `db`, [`app`, `db`], { heads: `both` }),
+    sc: makeLink(`app`, `cache`, [`app`, `cache`], { heads: `both` }),
+    id: makeLink(`app`, `ids`, [[-1.3, `app`], [-1.3, `ids`], `ids`], { heads: `both`, style: `dashed` }),
+    ev: makeLink(`app`, `stream`, [[1.3, `app`], [1.3, `stream`], `stream`]),
+    ag: makeLink(`stream`, `counts`, [`stream`, `counts`]),
   };
 
-const rd = () =>
+const shardLoads = () =>
     Object.fromEntries(
-      td.map((e, t) => [
+      shardY.map((e, t) => [
         `k${t}l`,
-        h(`app`, `k${t}`, t === 1 ? [`app`, `k1`] : [`app`, [7, `app`], [7, e], `k${t}`], {
+        makeLink(`app`, `k${t}`, t === 1 ? [`app`, `k1`] : [`app`, [7, `app`], [7, e], `k${t}`], {
           heads: `both`,
         }),
       ]),
     );
 
-const id = (e, t = [`sd`], n = 4) => [
+const readFlows = (e, t = [`sd`], n = 4) => [
     {
       routes: [
         { path: [`us`, `sc`], weight: e },
@@ -89,18 +89,18 @@ const id = (e, t = [`sd`], n = 4) => [
     },
   ];
 
-const ad = [`k0l`, `k1l`, `k2l`];
+const shardPaths = [`k0l`, `k1l`, `k2l`];
 
-const od = [
+const writeFlows = [
     { route: [`ev`], kind: `write`, rate: 1.6 },
     { route: [`ag`], kind: `write`, rate: 0.7 },
   ];
 
-const sd = (e, t, n, r = {}) => S({ x: 0, y: -4, z: 0, dx: 70, dy: -215, ...r }, e, t, { icon: n });
+const panelAt = (e, t, n, r = {}) => makePanel({ x: 0, y: -4, z: 0, dx: 70, dy: -215, ...r }, e, t, { icon: n });
 
-const cd = { x: 12, y: -4, dx: -185, dy: 78 };
+const panelSide = { x: 12, y: -4, dx: -185, dy: 78 };
 
-const ld = {
+const urlShortenerLesson = {
     id: `design-url-shortener`,
     title: `Design a URL Shortener`,
     summary: `A first end-to-end design: from a one-line brief to a system that serves billions of redirects.`,
@@ -138,9 +138,9 @@ const ld = {
         metrics: { redirectMs: null, dbQps: `—`, codeKind: `—`, linksKept: `—` },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu([], { label: [`sho.rt`], sub: `to be designed`, glyph: `share` }),
-            card: sd(
+            users: clickers(),
+            app: apiServers([], { label: [`sho.rt`], sub: `to be designed`, glyph: `share` }),
+            card: panelAt(
               `Requirements`,
               [
                 `create     long URL → short code`,
@@ -151,7 +151,7 @@ const ld = {
               `clipboard`,
             ),
           },
-          links: { us: K.us },
+          links: { us: baseLinks.us },
           flows: [{ route: [`us`], rate: 2, bounce: !0 }],
         },
       },
@@ -174,10 +174,10 @@ const ld = {
         metrics: { redirectMs: null, dbQps: `—`, codeKind: `—`, linksKept: `6 billion · 3 TB` },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu([], { label: [`sho.rt`], sub: `to be designed`, glyph: `share` }),
+            users: clickers(),
+            app: apiServers([], { label: [`sho.rt`], sub: `to be designed`, glyph: `share` }),
           },
-          links: { us: K.us },
+          links: { us: baseLinks.us },
           flows: [{ route: [`us`], rate: 4, bounce: !0 }],
         },
       },
@@ -197,10 +197,10 @@ const ld = {
         metrics: { redirectMs: 25, dbQps: 4e3, codeKind: `?`, linksKept: `6 billion · 3 TB` },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu(),
-            db: Xu(),
-            card: sd(
+            users: clickers(),
+            app: apiServers(),
+            db: linksTable(),
+            card: panelAt(
               `The API`,
               [
                 `POST /links  { url }   →  { code }`,
@@ -210,7 +210,7 @@ const ld = {
               `braces`,
             ),
           },
-          links: { us: K.us, sd: K.sd },
+          links: { us: baseLinks.us, sd: baseLinks.sd },
           flows: [
             { route: [`us`, `sd`], rate: 4, bounce: !0 },
             { route: [`us`, `sd`], kind: `write`, rate: 0.4 },
@@ -241,10 +241,10 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu([{ text: `code = hash(url)[0..7]`, icon: `hash` }]),
-            db: Xu({ tags: [{ text: `code taken → retry`, tone: `red`, icon: `alert` }] }),
-            card: sd(
+            users: clickers(),
+            app: apiServers([{ text: `code = hash(url)[0..7]`, icon: `hash` }]),
+            db: linksTable({ tags: [{ text: `code taken → retry`, tone: `red`, icon: `alert` }] }),
+            card: panelAt(
               `Two URLs, one code`,
               [
                 `hash(“…/summer-sale”)  →  x7Kp2Qa…`,
@@ -255,7 +255,7 @@ const ld = {
               `hash`,
             ),
           },
-          links: { us: K.us, sd: { ...K.sd, fail: 0.25 } },
+          links: { us: baseLinks.us, sd: { ...baseLinks.sd, fail: 0.25 } },
           flows: [
             { route: [`us`, `sd`], rate: 3, bounce: !0 },
             { route: [`us`, `sd`], kind: `write`, rate: 1.2 },
@@ -287,11 +287,11 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu([{ text: `block 7,000,000 – 7,999,999`, tone: `green`, icon: `layers` }]),
-            db: Xu(),
-            ids: Qu(),
-            card: sd(
+            users: clickers(),
+            app: apiServers([{ text: `block 7,000,000 – 7,999,999`, tone: `green`, icon: `layers` }]),
+            db: linksTable(),
+            ids: idBlocks(),
+            card: panelAt(
               `Base 62`,
               [
                 `alphabet   0–9  a–z  A–Z`,
@@ -300,10 +300,10 @@ const ld = {
                 `= 62⁷ ≈ 3.5 trillion codes`,
               ],
               `hash`,
-              cd,
+              panelSide,
             ),
           },
-          links: { us: K.us, sd: K.sd, id: K.id },
+          links: { us: baseLinks.us, sd: baseLinks.sd, id: baseLinks.id },
           flows: [
             { route: [`us`, `sd`], rate: 3, bounce: !0 },
             { route: [`us`, `sd`], kind: `write`, rate: 1 },
@@ -336,12 +336,12 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            spy: y(-11, -11, { label: `scraper` }),
-            app: Yu([{ text: `code = base62(scramble(id))`, tone: `green`, icon: `key` }]),
-            db: Xu(),
-            ids: Qu(),
-            card: sd(
+            users: clickers(),
+            spy: makeDevice(-11, -11, { label: `scraper` }),
+            app: apiServers([{ text: `code = base62(scramble(id))`, tone: `green`, icon: `key` }]),
+            db: linksTable(),
+            ids: idBlocks(),
+            card: panelAt(
               `Same ids, shuffled`,
               [
                 `! 7,000,000 → tn1e     next is obvious`,
@@ -350,14 +350,14 @@ const ld = {
                 `= 7,000,001 → Lm03vTe`,
               ],
               `key`,
-              cd,
+              panelSide,
             ),
           },
           links: {
-            us: K.us,
-            sd: K.sd,
-            id: K.id,
-            sp: h(`spy`, `app`, [`spy`, [-1.4, `spy`], [-1.4, `app`]], {
+            us: baseLinks.us,
+            sd: baseLinks.sd,
+            id: baseLinks.id,
+            sp: makeLink(`spy`, `app`, [`spy`, [-1.4, `spy`], [-1.4, `app`]], {
               fail: 0.9,
               label: `GET /tn1f, /tn1g …`,
               labelAt: 0.16,
@@ -395,14 +395,14 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu(),
-            db: Xu(),
-            ids: Qu(),
-            cache: Zu({ tags: [{ text: `90% hits`, tone: `green`, icon: `zap` }] }),
+            users: clickers(),
+            app: apiServers(),
+            db: linksTable(),
+            ids: idBlocks(),
+            cache: cache({ tags: [{ text: `90% hits`, tone: `green`, icon: `zap` }] }),
           },
-          links: { us: K.us, sd: K.sd, id: K.id, sc: K.sc },
-          flows: id(0.9),
+          links: { us: baseLinks.us, sd: baseLinks.sd, id: baseLinks.id, sc: baseLinks.sc },
+          flows: readFlows(0.9),
         },
       },
       {
@@ -426,12 +426,12 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu([{ text: `302 Found`, tone: `green`, icon: `signpost` }]),
-            db: Xu(),
-            ids: Qu(),
-            cache: Zu(),
-            card: sd(
+            users: clickers(),
+            app: apiServers([{ text: `302 Found`, tone: `green`, icon: `signpost` }]),
+            db: linksTable(),
+            ids: idBlocks(),
+            cache: cache(),
+            card: panelAt(
               `Two kinds of redirect`,
               [
                 `301 permanent  browser remembers it`,
@@ -441,11 +441,11 @@ const ld = {
                 `= analytics and control · more load`,
               ],
               `signpost`,
-              cd,
+              panelSide,
             ),
           },
-          links: { us: K.us, sd: K.sd, id: K.id, sc: K.sc },
-          flows: id(0.9),
+          links: { us: baseLinks.us, sd: baseLinks.sd, id: baseLinks.id, sc: baseLinks.sc },
+          flows: readFlows(0.9),
         },
       },
       {
@@ -473,14 +473,14 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu(),
-            ids: Qu(),
-            cache: Zu(),
-            ...nd({ tags: [{ text: `partition = hash(code)`, icon: `split` }] }),
+            users: clickers(),
+            app: apiServers(),
+            ids: idBlocks(),
+            cache: cache(),
+            ...shards({ tags: [{ text: `partition = hash(code)`, icon: `split` }] }),
           },
-          links: { us: K.us, id: K.id, sc: K.sc, ...rd() },
-          flows: id(0.9, ad),
+          links: { us: baseLinks.us, id: baseLinks.id, sc: baseLinks.sc, ...shardLoads() },
+          flows: readFlows(0.9, shardPaths),
         },
       },
       {
@@ -508,16 +508,16 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu(),
-            ids: Qu(),
-            cache: Zu(),
-            ...nd(),
-            stream: $u(),
-            counts: ed(),
+            users: clickers(),
+            app: apiServers(),
+            ids: idBlocks(),
+            cache: cache(),
+            ...shards(),
+            stream: clickStream(),
+            counts: clickCounts(),
           },
-          links: { us: K.us, id: K.id, sc: K.sc, ...rd(), ev: K.ev, ag: K.ag },
-          flows: [...id(0.9, ad), ...od],
+          links: { us: baseLinks.us, id: baseLinks.id, sc: baseLinks.sc, ...shardLoads(), ev: baseLinks.ev, ag: baseLinks.ag },
+          flows: [...readFlows(0.9, shardPaths), ...writeFlows],
         },
       },
       {
@@ -545,30 +545,30 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            spy: y(-11, -11, { label: `spam script` }),
-            app: Yu([{ text: `rate limit · destination check`, tone: `green`, icon: `shield` }]),
-            ids: Qu(),
-            cache: Zu(),
-            ...nd(),
-            stream: $u(),
-            counts: ed(),
+            users: clickers(),
+            spy: makeDevice(-11, -11, { label: `spam script` }),
+            app: apiServers([{ text: `rate limit · destination check`, tone: `green`, icon: `shield` }]),
+            ids: idBlocks(),
+            cache: cache(),
+            ...shards(),
+            stream: clickStream(),
+            counts: clickCounts(),
           },
           links: {
-            us: K.us,
-            id: K.id,
-            sc: K.sc,
-            ...rd(),
-            ev: K.ev,
-            ag: K.ag,
-            sp: h(`spy`, `app`, [`spy`, [-1.4, `spy`], [-1.4, `app`]], {
+            us: baseLinks.us,
+            id: baseLinks.id,
+            sc: baseLinks.sc,
+            ...shardLoads(),
+            ev: baseLinks.ev,
+            ag: baseLinks.ag,
+            sp: makeLink(`spy`, `app`, [`spy`, [-1.4, `spy`], [-1.4, `app`]], {
               fail: 0.95,
               label: `POST /links × 5,000`,
               labelTone: `red`,
               labelAt: 0.16,
             }),
           },
-          flows: [...id(0.9, ad), ...od, { route: [`sp`], kind: `poison`, rate: 2.2 }],
+          flows: [...readFlows(0.9, shardPaths), ...writeFlows, { route: [`sp`], kind: `poison`, rate: 2.2 }],
         },
       },
       {
@@ -600,20 +600,20 @@ const ld = {
         },
         scene: {
           entities: {
-            users: Ju(),
-            app: Yu(),
-            ids: Qu(),
-            cache: Zu(),
-            ...nd(),
-            stream: $u(),
-            counts: ed(),
+            users: clickers(),
+            app: apiServers(),
+            ids: idBlocks(),
+            cache: cache(),
+            ...shards(),
+            stream: clickStream(),
+            counts: clickCounts(),
           },
-          links: { us: K.us, id: K.id, sc: K.sc, ...rd(), ev: K.ev, ag: K.ag },
-          flows: [...id(0.9, ad), ...od],
+          links: { us: baseLinks.us, id: baseLinks.id, sc: baseLinks.sc, ...shardLoads(), ev: baseLinks.ev, ag: baseLinks.ag },
+          flows: [...readFlows(0.9, shardPaths), ...writeFlows],
         },
       },
     ],
   };
 
-export { ld as designUrlShortenerLesson };
-export default ld;
+export { urlShortenerLesson as designUrlShortenerLesson };
+export default urlShortenerLesson;
