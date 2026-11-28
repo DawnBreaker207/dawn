@@ -1,23 +1,16 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const Sl = (e = []) => makeDevice(-12, -6, { label: `Alice · Acme`, tags: e });
+const alice = (e: Tag[] = []) => makeDevice(-12, -6, { label: `Alice · Acme`, tags: e });
 
-const Cl = (e = []) => makeDevice(12, -6, { label: `Eve · Globex`, tags: e });
+const eve = (e: Tag[] = []) => makeDevice(12, -6, { label: `Eve · Globex`, tags: e });
 
-const wl = (e = []) =>
+const invoicesApi = (e: Tag[] = []) =>
     makeBlock(0, -6, { color: `blue`, glyph: `file`, label: [`Invoices`, `API`], tags: e, pills: `below` });
 
-const Tl = (e = [], t = {}) =>
+const invoicesDb = (e: Tag[] = [], t: Bag = {}) =>
     makeDb(0, 6, { r: 2, h: 42, glyph: `file`, label: `invoices`, tags: e, ...t });
 
-const El = (e = []) =>
+const gateway = (e: Tag[] = []) =>
     makeBlock(0, -18, {
       color: `yellow`,
       glyph: `shield`,
@@ -26,13 +19,13 @@ const El = (e = []) =>
       pills: `below`,
     });
 
-const Dl = (e = [], t = {}) =>
+const reports = (e: Tag[] = [], t: Bag = {}) =>
     makeBlock(12, 6, { color: `green`, glyph: `chart`, label: [`Reports`], tags: e, ...t });
 
-const Ol = (e = []) => makeDb(-12, 6, { r: 1.7, h: 36, glyph: `clipboard`, label: `audit log`, tags: e });
+const auditLog = (e: Tag[] = []) => makeDb(-12, 6, { r: 1.7, h: 36, glyph: `clipboard`, label: `audit log`, tags: e });
 
-const H = {
-    base: (e = {}) => ({
+const links = {
+    base: (e: Bag = {}) => ({
       aa: makeLink(`alice`, `api`, [`alice`, `api`], { heads: `both` }),
       ea: makeLink(`eve`, `api`, [`eve`, `api`], { heads: `both`, ...e }),
       ad: makeLink(`api`, `db`, [`api`, `db`], { heads: `both` }),
@@ -44,24 +37,24 @@ const H = {
         labelAt: 0.55,
       }),
     },
-    reports: (e = {}) => ({ rd: makeLink(`reports`, `db`, [`reports`, `db`], { heads: `both`, ...e }) }),
+    reports: (e: Bag = {}) => ({ rd: makeLink(`reports`, `db`, [`reports`, `db`], { heads: `both`, ...e }) }),
     audit: {
       dau: makeLink(`db`, `audit`, [`db`, `audit`], { label: `every access recorded`, labelAt: 0.5 }),
     },
   };
 
-const U = {
+const requestFlows = {
     alice: { route: [`aa`, `ad`], kind: `mine`, rate: 0.8, bounce: !0 },
     eveLeak: { route: [`ea`, `ad`], kind: `poison`, rate: 0.6, bounce: !0 },
     eveDenied: { route: [`ea`], kind: `poison`, rate: 0.6 },
     eveOwn: { route: [`ea`, `ad`], rate: 0.6, bounce: !0 },
   };
 
-const kl = (e, t, n) => makePanel({ x: 0, y: 6, z: 0, dx: 95, dy: -175 }, e, t, { icon: n });
+const card1 = cardAt({ x: 0, y: 6, dx: 95, dy: -175 });
 
-const Al = (e, t, n) => makePanel({ x: 0, y: 6, z: 0, dx: 105, dy: 28 }, e, t, { icon: n });
+const card2 = cardAt({ x: 0, y: 6, dx: 105, dy: 28 });
 
-const jl = {
+const lesson = {
     id: `authorization`,
     title: `Authorization`,
     summary: `Knowing who someone is doesn’t tell you what they may see or do. Checking that, everywhere.`,
@@ -99,13 +92,13 @@ const jl = {
         metrics: { exposed: `yes`, checks: `login only`, privilege: `everything` },
         scene: {
           entities: {
-            alice: Sl(),
-            eve: Cl([{ text: `GET /invoices/1043 → Acme’s!`, tone: `red`, icon: `eye` }]),
-            api: wl([{ text: `checks: logged in? ✓`, tone: `amber` }]),
-            db: Tl([{ text: `1043 · Acme · $48,200`, tone: `violet` }]),
+            alice: alice(),
+            eve: eve([{ text: `GET /invoices/1043 → Acme’s!`, tone: `red`, icon: `eye` }]),
+            api: invoicesApi([{ text: `checks: logged in? ✓`, tone: `amber` }]),
+            db: invoicesDb([{ text: `1043 · Acme · $48,200`, tone: `violet` }]),
           },
-          links: H.base(),
-          flows: [U.alice, U.eveLeak],
+          links: links.base(),
+          flows: [requestFlows.alice, requestFlows.eveLeak],
         },
       },
       {
@@ -124,11 +117,11 @@ const jl = {
         metrics: { exposed: `no`, checks: `every request`, privilege: `everything` },
         scene: {
           entities: {
-            alice: Sl(),
-            eve: Cl([{ text: `/invoices/1043 → 404`, tone: `green`, icon: `ban` }]),
-            api: wl([{ text: `checks: owner = caller’s org`, tone: `green`, icon: `shield` }]),
-            db: Tl(),
-            card: Al(
+            alice: alice(),
+            eve: eve([{ text: `/invoices/1043 → 404`, tone: `green`, icon: `ban` }]),
+            api: invoicesApi([{ text: `checks: owner = caller’s org`, tone: `green`, icon: `shield` }]),
+            db: invoicesDb(),
+            card: card2(
               `Scope every query`,
               [
                 `SELECT * FROM invoices`,
@@ -139,8 +132,8 @@ const jl = {
               `shield`,
             ),
           },
-          links: H.base({ fail: 1 }),
-          flows: [U.alice, U.eveDenied],
+          links: links.base({ fail: 1 }),
+          flows: [requestFlows.alice, requestFlows.eveDenied],
         },
       },
       {
@@ -163,11 +156,11 @@ const jl = {
         metrics: { exposed: `yes`, checks: `every request`, privilege: `everything` },
         scene: {
           entities: {
-            alice: Sl(),
-            eve: Cl([{ text: `PATCH /me { "role": "admin" }`, tone: `red`, icon: `alert` }]),
-            api: wl([{ text: `saves every field sent`, tone: `red` }]),
-            db: Tl([{ text: `eve · role = admin!`, tone: `red`, icon: `alert` }], { heat: 0.5 }),
-            card: kl(
+            alice: alice(),
+            eve: eve([{ text: `PATCH /me { "role": "admin" }`, tone: `red`, icon: `alert` }]),
+            api: invoicesApi([{ text: `saves every field sent`, tone: `red` }]),
+            db: invoicesDb([{ text: `eve · role = admin!`, tone: `red`, icon: `alert` }], { heat: 0.5 }),
+            card: card1(
               `Allow-list writable fields`,
               [
                 `! update(user, request.body)`,
@@ -177,8 +170,8 @@ const jl = {
               `filter`,
             ),
           },
-          links: H.base(),
-          flows: [U.alice, { route: [`ea`, `ad`], kind: `poison`, rate: 0.6, bounce: !0 }],
+          links: links.base(),
+          flows: [requestFlows.alice, { route: [`ea`, `ad`], kind: `poison`, rate: 0.6, bounce: !0 }],
         },
       },
       {
@@ -197,11 +190,11 @@ const jl = {
         metrics: { exposed: `no`, checks: `app + database`, privilege: `everything` },
         scene: {
           entities: {
-            alice: Sl(),
-            eve: Cl([{ text: `Globex rows only`, tone: `green`, icon: `filter` }]),
-            api: wl([{ text: `SET app.org = caller’s org`, icon: `shield` }]),
-            db: Tl([{ text: `row-level security: org_id`, tone: `green`, icon: `filter` }]),
-            card: kl(
+            alice: alice(),
+            eve: eve([{ text: `Globex rows only`, tone: `green`, icon: `filter` }]),
+            api: invoicesApi([{ text: `SET app.org = caller’s org`, icon: `shield` }]),
+            db: invoicesDb([{ text: `row-level security: org_id`, tone: `green`, icon: `filter` }]),
+            card: card1(
               `The database filters too`,
               [
                 `CREATE POLICY tenant ON invoices`,
@@ -212,8 +205,8 @@ const jl = {
               `filter`,
             ),
           },
-          links: H.base(),
-          flows: [U.alice, U.eveOwn],
+          links: links.base(),
+          flows: [requestFlows.alice, requestFlows.eveOwn],
         },
       },
       {
@@ -232,13 +225,13 @@ const jl = {
         metrics: { exposed: `no`, checks: `every request`, privilege: `everything` },
         scene: {
           entities: {
-            alice: Sl([{ text: `role: accountant`, icon: `idCard` }]),
-            eve: Cl(),
-            api: wl([{ text: `role allows “edit”? ✓`, tone: `green`, icon: `shield` }]),
-            db: Tl(),
+            alice: alice([{ text: `role: accountant`, icon: `idCard` }]),
+            eve: eve(),
+            api: invoicesApi([{ text: `role allows “edit”? ✓`, tone: `green`, icon: `shield` }]),
+            db: invoicesDb(),
           },
-          links: H.base(),
-          flows: [U.alice, U.eveOwn],
+          links: links.base(),
+          flows: [requestFlows.alice, requestFlows.eveOwn],
         },
       },
       {
@@ -257,11 +250,11 @@ const jl = {
         metrics: { exposed: `no`, checks: `every request`, privilege: `everything` },
         scene: {
           entities: {
-            alice: Sl([{ text: `member of team Finance`, icon: `users` }]),
-            eve: Cl(),
-            api: wl([{ text: `follows the relationship chain`, tone: `green`, icon: `waypoints` }]),
-            db: Tl(),
-            card: Al(
+            alice: alice([{ text: `member of team Finance`, icon: `users` }]),
+            eve: eve(),
+            api: invoicesApi([{ text: `follows the relationship chain`, tone: `green`, icon: `waypoints` }]),
+            db: invoicesDb(),
+            card: card2(
               `Why can Alice view 1042?`,
               [
                 `invoice 1042  in      folder Q3`,
@@ -272,8 +265,8 @@ const jl = {
               `waypoints`,
             ),
           },
-          links: H.base(),
-          flows: [U.alice, U.eveOwn],
+          links: links.base(),
+          flows: [requestFlows.alice, requestFlows.eveOwn],
         },
       },
       {
@@ -292,14 +285,14 @@ const jl = {
         metrics: { exposed: `no`, checks: `central policy`, privilege: `everything` },
         scene: {
           entities: {
-            alice: Sl([{ text: `role: accountant`, icon: `idCard` }]),
-            eve: Cl(),
-            api: wl(),
-            db: Tl(),
-            policy: El([{ text: `allow: edit · deny: approve`, tone: `green`, icon: `check` }]),
+            alice: alice([{ text: `role: accountant`, icon: `idCard` }]),
+            eve: eve(),
+            api: invoicesApi(),
+            db: invoicesDb(),
+            policy: gateway([{ text: `allow: edit · deny: approve`, tone: `green`, icon: `check` }]),
           },
-          links: { ...H.base(), ...H.policy },
-          flows: [U.alice, U.eveOwn, { route: [`ap`], rate: 1, bounce: !0 }],
+          links: { ...links.base(), ...links.policy },
+          flows: [requestFlows.alice, requestFlows.eveOwn, { route: [`ap`], rate: 1, bounce: !0 }],
         },
       },
       {
@@ -321,19 +314,19 @@ const jl = {
         metrics: { exposed: `yes`, checks: `central policy`, privilege: `everything` },
         scene: {
           entities: {
-            alice: Sl(),
-            eve: Cl(),
-            api: wl(),
-            db: Tl([{ text: `users · payments · invoices dumped`, tone: `red`, icon: `alert` }], {
+            alice: alice(),
+            eve: eve(),
+            api: invoicesApi(),
+            db: invoicesDb([{ text: `users · payments · invoices dumped`, tone: `red`, icon: `alert` }], {
               heat: 0.5,
             }),
-            policy: El(),
-            reports: Dl([{ text: `admin creds · injection bug`, tone: `red`, icon: `key` }], {
+            policy: gateway(),
+            reports: reports([{ text: `admin creds · injection bug`, tone: `red`, icon: `key` }], {
               heat: 0.4,
             }),
           },
-          links: { ...H.base(), ...H.policy, ...H.reports() },
-          flows: [U.alice, { route: [`rd`], kind: `poison`, rate: 1.2, bounce: !0 }],
+          links: { ...links.base(), ...links.policy, ...links.reports() },
+          flows: [requestFlows.alice, { route: [`rd`], kind: `poison`, rate: 1.2, bounce: !0 }],
         },
       },
       {
@@ -352,18 +345,18 @@ const jl = {
         metrics: { exposed: `no`, checks: `central policy`, privilege: `least privilege` },
         scene: {
           entities: {
-            alice: Sl(),
-            eve: Cl(),
-            api: wl(),
-            db: Tl(),
-            policy: El(),
-            reports: Dl([
+            alice: alice(),
+            eve: eve(),
+            api: invoicesApi(),
+            db: invoicesDb(),
+            policy: gateway(),
+            reports: reports([
               { text: `read-only · invoices view`, tone: `green`, icon: `key` },
               { text: `users table: denied`, tone: `green`, icon: `ban` },
             ]),
           },
-          links: { ...H.base(), ...H.policy, ...H.reports() },
-          flows: [U.alice, { route: [`rd`], rate: 1, bounce: !0 }],
+          links: { ...links.base(), ...links.policy, ...links.reports() },
+          flows: [requestFlows.alice, { route: [`rd`], rate: 1, bounce: !0 }],
         },
       },
       {
@@ -382,24 +375,24 @@ const jl = {
         metrics: { exposed: `yes`, checks: `central policy`, privilege: `least privilege` },
         scene: {
           entities: {
-            alice: Sl([{ text: `report includes Globex!`, tone: `red`, icon: `alert` }]),
-            api: wl(),
-            db: Tl(),
-            policy: El(),
-            reports: Dl([{ text: `own identity · all tenants`, tone: `red`, icon: `key` }], {
+            alice: alice([{ text: `report includes Globex!`, tone: `red`, icon: `alert` }]),
+            api: invoicesApi(),
+            db: invoicesDb(),
+            policy: gateway(),
+            reports: reports([{ text: `own identity · all tenants`, tone: `red`, icon: `key` }], {
               heat: 0.4,
             }),
           },
           links: {
-            aa: H.base().aa,
-            ad: H.base().ad,
-            ...H.policy,
+            aa: links.base().aa,
+            ad: links.base().ad,
+            ...links.policy,
             ar: makeLink(`api`, `reports`, [`api`, [`reports`, `api`], `reports`], {
               heads: `both`,
               label: `run report`,
               labelAt: 0.4,
             }),
-            ...H.reports(),
+            ...links.reports(),
           },
           flows: [{ route: [`aa`, `ar`, `rd`], kind: `mine`, rate: 0.7, bounce: !0 }],
         },
@@ -424,22 +417,22 @@ const jl = {
         metrics: { exposed: `no`, checks: `central policy`, privilege: `least privilege` },
         scene: {
           entities: {
-            alice: Sl([{ text: `only Acme invoices`, tone: `green`, icon: `check` }]),
-            api: wl(),
-            db: Tl(),
-            policy: El(),
-            reports: Dl([{ text: `acts as Alice · Acme only`, tone: `green`, icon: `userCheck` }]),
+            alice: alice([{ text: `only Acme invoices`, tone: `green`, icon: `check` }]),
+            api: invoicesApi(),
+            db: invoicesDb(),
+            policy: gateway(),
+            reports: reports([{ text: `acts as Alice · Acme only`, tone: `green`, icon: `userCheck` }]),
           },
           links: {
-            aa: H.base().aa,
-            ad: H.base().ad,
-            ...H.policy,
+            aa: links.base().aa,
+            ad: links.base().ad,
+            ...links.policy,
             ar: makeLink(`api`, `reports`, [`api`, [`reports`, `api`], `reports`], {
               heads: `both`,
               label: `Alice’s token`,
               labelAt: 0.4,
             }),
-            ...H.reports(),
+            ...links.reports(),
           },
           flows: [
             { route: [`aa`, `ar`, `rd`], kind: `mine`, rate: 0.7, bounce: !0 },
@@ -463,16 +456,16 @@ const jl = {
         metrics: { exposed: `no`, checks: `central policy`, privilege: `least privilege` },
         scene: {
           entities: {
-            alice: Sl(),
-            eve: Cl(),
-            api: wl(),
-            db: Tl(),
-            policy: El(),
-            reports: Dl([{ text: `read-only · invoices view`, tone: `green`, icon: `key` }]),
-            audit: Ol([{ text: `alice viewed 1042 · 09:14`, icon: `clipboard` }]),
+            alice: alice(),
+            eve: eve(),
+            api: invoicesApi(),
+            db: invoicesDb(),
+            policy: gateway(),
+            reports: reports([{ text: `read-only · invoices view`, tone: `green`, icon: `key` }]),
+            audit: auditLog([{ text: `alice viewed 1042 · 09:14`, icon: `clipboard` }]),
           },
-          links: { ...H.base(), ...H.policy, ...H.reports(), ...H.audit },
-          flows: [U.alice, U.eveOwn, { route: [`dau`], kind: `write`, rate: 1.2 }],
+          links: { ...links.base(), ...links.policy, ...links.reports(), ...links.audit },
+          flows: [requestFlows.alice, requestFlows.eveOwn, { route: [`dau`], kind: `write`, rate: 1.2 }],
         },
       },
       {
@@ -495,18 +488,18 @@ const jl = {
         metrics: { exposed: `no`, checks: `central policy`, privilege: `least privilege` },
         scene: {
           entities: {
-            alice: Sl(),
-            eve: Cl(),
-            api: wl(),
-            db: Tl(),
-            policy: El(),
-            reports: Dl(),
-            audit: Ol(),
+            alice: alice(),
+            eve: eve(),
+            api: invoicesApi(),
+            db: invoicesDb(),
+            policy: gateway(),
+            reports: reports(),
+            audit: auditLog(),
           },
-          links: { ...H.base(), ...H.policy, ...H.reports(), ...H.audit },
+          links: { ...links.base(), ...links.policy, ...links.reports(), ...links.audit },
           flows: [
-            U.alice,
-            U.eveOwn,
+            requestFlows.alice,
+            requestFlows.eveOwn,
             { route: [`ap`], rate: 0.8, bounce: !0 },
             { route: [`dau`], kind: `write`, rate: 1 },
           ],
@@ -515,5 +508,5 @@ const jl = {
     ],
   };
 
-export { jl as authorizationLesson };
-export default jl;
+export { lesson as authorizationLesson };
+export default lesson;

@@ -1,27 +1,20 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const dl = (e = []) => makeDevice(0, -19, { label: `Alice`, tags: e });
+const alice = (e: Tag[] = []) => makeDevice(0, -19, { label: `Alice`, tags: e });
 
-const fl = (e = {}) =>
+const loginService = (e: Bag = {}) =>
     makeBlock(0, -7, { color: `orange`, glyph: `keyhole`, label: [`Login`, `Service`], ...e });
 
-const pl = (e = [], t = {}) =>
+const usersTable = (e: Tag[] = [], t: Bag = {}) =>
     makeDb(0, 5, { r: 2, h: 42, glyph: `user`, label: `users table`, tags: e, ...t });
 
-const ml = (e = `attacker`, t = []) => makeDevice(13, 5, { label: e, tags: t });
+const attacker = (e = `attacker`, t: Tag[] = []) => makeDevice(13, 5, { label: e, tags: t });
 
-const hl = (e = []) => makeDevice(13, -19, { label: `bot`, tags: e });
+const bot = (e: Tag[] = []) => makeDevice(13, -19, { label: `bot`, tags: e });
 
-const gl = () => makeDevice(-12, -19, { form: `phone`, w: 5, d: 5, label: `Alice’s phone` });
+const alicePhone = () => makeDevice(-12, -19, { form: `phone`, w: 5, d: 5, label: `Alice’s phone` });
 
-const _l = (e = {}) =>
+const _l = (e: Bag = {}) =>
     makeBlock(13, -7, {
       s: 5,
       h: 52,
@@ -32,7 +25,7 @@ const _l = (e = {}) =>
       ...e,
     });
 
-const vl = () =>
+const mfaService = () =>
     makeBlock(-12, -7, {
       s: 5,
       h: 52,
@@ -42,7 +35,7 @@ const vl = () =>
       sub: `e.g. Google`,
     });
 
-const V = {
+const links = {
     base: {
       al: makeLink(`alice`, `login`, [`alice`, `login`], { heads: `both` }),
       lu: makeLink(`login`, `users`, [`login`, `users`], { heads: `both` }),
@@ -50,19 +43,19 @@ const V = {
     steal: (e = `stolen backup`) => ({
       st: makeLink(`users`, `thief`, [`users`, `thief`], { style: `dashed`, label: e, labelTone: `red` }),
     }),
-    bot: (e = {}) => ({ bl: makeLink(`bot`, `login`, [`bot`, [`bot`, `login`], `login`], e) }),
+    bot: (e: Bag = {}) => ({ bl: makeLink(`bot`, `login`, [`bot`, [`bot`, `login`], `login`], e) }),
   };
 
-const yl = {
+const requestFlows = {
     login: { route: [`al`, `lu`], kind: `mine`, rate: 0.8, bounce: !0 },
     steal: { route: [`st`], kind: `poison`, rate: 0.7 },
     bot: (e = 4) => ({ route: [`bl`], kind: `poison`, rate: e }),
   };
 
-const bl = (e, t, n) => makePanel({ x: 0, y: 5, z: 0, dx: 100, dy: -235 }, e, t, { icon: n });
+const card = cardAt({ x: 0, y: 5, dx: 100, dy: -235 });
 
 // --- security ---
-const xl = {
+const lesson = {
     id: `authentication`,
     title: `Authentication`,
     summary: `Proving who someone is — without becoming the reason their password leaks.`,
@@ -93,13 +86,13 @@ const xl = {
         metrics: { leak: `all passwords`, stuffing: `—`, mfa: `no` },
         scene: {
           entities: {
-            alice: dl(),
-            login: fl(),
-            users: pl([{ text: `alice@… : hunter2`, tone: `red`, icon: `alert` }]),
-            thief: ml(`attacker`, [{ text: `reads every password`, tone: `red`, icon: `eye` }]),
+            alice: alice(),
+            login: loginService(),
+            users: usersTable([{ text: `alice@… : hunter2`, tone: `red`, icon: `alert` }]),
+            thief: attacker(`attacker`, [{ text: `reads every password`, tone: `red`, icon: `eye` }]),
           },
-          links: { ...V.base, ...V.steal() },
-          flows: [yl.login, yl.steal],
+          links: { ...links.base, ...links.steal() },
+          flows: [requestFlows.login, requestFlows.steal],
         },
       },
       {
@@ -118,15 +111,15 @@ const xl = {
         metrics: { leak: `hashes only`, stuffing: `—`, mfa: `no` },
         scene: {
           entities: {
-            alice: dl(),
-            login: fl({ tags: [{ text: `hash attempt, compare`, icon: `hash` }] }),
-            users: pl([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
-            thief: ml(`attacker`, [
+            alice: alice(),
+            login: loginService({ tags: [{ text: `hash attempt, compare`, icon: `hash` }] }),
+            users: usersTable([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
+            thief: attacker(`attacker`, [
               { text: `gets hashes · years to crack`, tone: `amber`, icon: `hourglass` },
             ]),
           },
-          links: { ...V.base, ...V.steal() },
-          flows: [yl.login, yl.steal],
+          links: { ...links.base, ...links.steal() },
+          flows: [requestFlows.login, requestFlows.steal],
         },
       },
       {
@@ -145,12 +138,12 @@ const xl = {
         metrics: { leak: `hashes only`, stuffing: `—`, mfa: `no` },
         scene: {
           entities: {
-            alice: dl([{ text: `cookie: HttpOnly · Secure`, icon: `lock` }]),
-            login: fl(),
-            users: pl([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
+            alice: alice([{ text: `cookie: HttpOnly · Secure`, icon: `lock` }]),
+            login: loginService(),
+            users: usersTable([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
           },
-          links: V.base,
-          flows: [yl.login],
+          links: links.base,
+          flows: [requestFlows.login],
         },
       },
       {
@@ -173,11 +166,11 @@ const xl = {
         metrics: { leak: `hashes only`, stuffing: `—`, mfa: `no` },
         scene: {
           entities: {
-            alice: dl([{ text: `reset link · expires 15 min`, tone: `green`, icon: `clock` }]),
-            login: fl({ tags: [{ text: `same reply for every email`, icon: `info` }] }),
-            users: pl([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
+            alice: alice([{ text: `reset link · expires 15 min`, tone: `green`, icon: `clock` }]),
+            login: loginService({ tags: [{ text: `same reply for every email`, icon: `info` }] }),
+            users: usersTable([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
             mail: makeBlock(-12, -7, { color: `blue`, glyph: `mail`, label: [`Email`] }),
-            card: bl(
+            card: card(
               `A safe reset`,
               [
                 `token: 32 random bytes, single use`,
@@ -189,14 +182,14 @@ const xl = {
             ),
           },
           links: {
-            ...V.base,
+            ...links.base,
             lm: makeLink(`login`, `mail`, [`login`, `mail`], { label: `one-time token` }),
             ma: makeLink(`mail`, `alice`, [`mail`, [`mail`, `alice`], `alice`], {
               label: `reset link`,
               labelAt: 0.65,
             }),
           },
-          flows: [yl.login, { route: [`lm`, `ma`], kind: `msg`, rate: 0.6 }],
+          flows: [requestFlows.login, { route: [`lm`, `ma`], kind: `msg`, rate: 0.6 }],
         },
       },
       {
@@ -215,16 +208,16 @@ const xl = {
         metrics: { leak: `hashes only`, stuffing: 0.5, mfa: `no` },
         scene: {
           entities: {
-            alice: dl(),
-            login: fl({
+            alice: alice(),
+            login: loginService({
               heat: 0.6,
               tags: [{ text: `5,000 logins / s`, tone: `red`, icon: `activity` }],
             }),
-            users: pl([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
-            bot: hl([{ text: `1B leaked passwords`, tone: `red`, icon: `bot` }]),
+            users: usersTable([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
+            bot: bot([{ text: `1B leaked passwords`, tone: `red`, icon: `bot` }]),
           },
-          links: { ...V.base, ...V.bot({ fail: 0.9, label: `try every pair`, labelTone: `red` }) },
-          flows: [yl.login, yl.bot(5)],
+          links: { ...links.base, ...links.bot({ fail: 0.9, label: `try every pair`, labelTone: `red` }) },
+          flows: [requestFlows.login, requestFlows.bot(5)],
         },
       },
       {
@@ -247,16 +240,16 @@ const xl = {
         metrics: { leak: `hashes only`, stuffing: 0.05, mfa: `no` },
         scene: {
           entities: {
-            alice: dl(),
-            login: fl({ tags: [{ text: `5 tries / account / min`, icon: `gauge` }] }),
-            users: pl([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
-            bot: hl([{ text: `slowed to a crawl`, tone: `amber`, icon: `ban` }]),
+            alice: alice(),
+            login: loginService({ tags: [{ text: `5 tries / account / min`, icon: `gauge` }] }),
+            users: usersTable([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
+            bot: bot([{ text: `slowed to a crawl`, tone: `amber`, icon: `ban` }]),
           },
           links: {
-            ...V.base,
-            ...V.bot({ fail: 0.99, label: `429 · challenge`, labelTone: `amber` }),
+            ...links.base,
+            ...links.bot({ fail: 0.99, label: `429 · challenge`, labelTone: `amber` }),
           },
-          flows: [yl.login, yl.bot(2)],
+          flows: [requestFlows.login, requestFlows.bot(2)],
         },
       },
       {
@@ -275,22 +268,22 @@ const xl = {
         metrics: { leak: `hashes only`, stuffing: 0, mfa: `yes` },
         scene: {
           entities: {
-            alice: dl(),
-            phone: gl(),
-            login: fl({ tags: [{ text: `password ✓ + phone ✓`, tone: `green`, icon: `check` }] }),
-            users: pl([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
-            bot: hl([{ text: `no phone → blocked`, tone: `green`, icon: `ban` }]),
+            alice: alice(),
+            phone: alicePhone(),
+            login: loginService({ tags: [{ text: `password ✓ + phone ✓`, tone: `green`, icon: `check` }] }),
+            users: usersTable([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
+            bot: bot([{ text: `no phone → blocked`, tone: `green`, icon: `ban` }]),
           },
           links: {
-            ...V.base,
-            ...V.bot({ fail: 1 }),
+            ...links.base,
+            ...links.bot({ fail: 1 }),
             lp: makeLink(`login`, `phone`, [`login`, [`phone`, `login`], `phone`], {
               heads: `both`,
               label: `approve sign-in?`,
               labelAt: 0.4,
             }),
           },
-          flows: [yl.login, { route: [`lp`], kind: `mine`, rate: 0.6, bounce: !0 }, yl.bot(1.2)],
+          flows: [requestFlows.login, { route: [`lp`], kind: `mine`, rate: 0.6, bounce: !0 }, requestFlows.bot(1.2)],
         },
       },
       {
@@ -312,17 +305,17 @@ const xl = {
         metrics: { leak: `hashes only`, stuffing: 0, mfa: `phishable` },
         scene: {
           entities: {
-            alice: dl([{ text: `typed password + code`, tone: `red`, icon: `alert` }]),
-            phone: gl(),
-            login: fl({ tags: [{ text: `looks like a normal login`, tone: `amber` }] }),
-            users: pl([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
+            alice: alice([{ text: `typed password + code`, tone: `red`, icon: `alert` }]),
+            phone: alicePhone(),
+            login: loginService({ tags: [{ text: `looks like a normal login`, tone: `amber` }] }),
+            users: usersTable([{ text: `alice@… : $argon2id$…7Qe`, tone: `green`, icon: `hash` }]),
             fake: _l({
               heat: 0.4,
               tags: [{ text: `relays in real time`, tone: `red`, icon: `alert` }],
             }),
           },
           links: {
-            lu: V.base.lu,
+            lu: links.base.lu,
             af: makeLink(`alice`, `fake`, [`alice`, [`fake`, `alice`], `fake`], {
               heads: `both`,
               label: `shop-example.co`,
@@ -361,20 +354,20 @@ const xl = {
         metrics: { leak: `nothing usable`, stuffing: 0, mfa: `passkey` },
         scene: {
           entities: {
-            alice: dl([
+            alice: alice([
               { text: `passkey · shop.example only`, tone: `green`, icon: `fingerprint` },
             ]),
-            phone: gl(),
-            login: fl({
+            phone: alicePhone(),
+            login: loginService({
               tags: [{ text: `checks signature + domain`, tone: `green`, icon: `check` }],
             }),
-            users: pl([{ text: `alice@… : public key only`, tone: `green`, icon: `key` }]),
+            users: usersTable([{ text: `alice@… : public key only`, tone: `green`, icon: `key` }]),
             fake: _l({
               tags: [{ text: `no passkey for this domain`, tone: `green`, icon: `ban` }],
             }),
           },
           links: {
-            ...V.base,
+            ...links.base,
             af: makeLink(`alice`, `fake`, [`alice`, [`fake`, `alice`], `fake`], {
               heads: `both`,
               fail: 1,
@@ -389,7 +382,7 @@ const xl = {
             }),
           },
           flows: [
-            yl.login,
+            requestFlows.login,
             { route: [`lp`], kind: `mine`, rate: 0.5, bounce: !0 },
             { route: [`af`], kind: `poison`, rate: 0.4 },
           ],
@@ -411,10 +404,10 @@ const xl = {
         metrics: { leak: `nothing usable`, stuffing: 0, mfa: `yes` },
         scene: {
           entities: {
-            alice: dl(),
-            idp: vl(),
-            login: fl({ tags: [{ text: `verifies ID token signature`, icon: `check` }] }),
-            users: pl([
+            alice: alice(),
+            idp: mfaService(),
+            login: loginService({ tags: [{ text: `verifies ID token signature`, icon: `check` }] }),
+            users: usersTable([
               { text: `alice@… : google-id 1042 · no password`, tone: `green`, icon: `idCard` },
             ]),
           },
@@ -425,8 +418,8 @@ const xl = {
               labelAt: 0.72,
             }),
             il: makeLink(`idp`, `login`, [`idp`, `login`], { label: `signed ID token` }),
-            lu: V.base.lu,
-            al: V.base.al,
+            lu: links.base.lu,
+            al: links.base.al,
           },
           flows: [
             { route: [`ai`, `il`], kind: `mine`, rate: 0.7 },
@@ -454,22 +447,22 @@ const xl = {
         metrics: { leak: `nothing usable`, stuffing: 0, mfa: `yes` },
         scene: {
           entities: {
-            alice: dl([{ text: `access 15 min · refresh revocable`, icon: `clock` }]),
-            idp: vl(),
-            login: fl({ tags: [{ text: `token expired → 401`, tone: `amber`, icon: `clock` }] }),
-            users: pl([
+            alice: alice([{ text: `access 15 min · refresh revocable`, icon: `clock` }]),
+            idp: mfaService(),
+            login: loginService({ tags: [{ text: `token expired → 401`, tone: `amber`, icon: `clock` }] }),
+            users: usersTable([
               { text: `alice@… : google-id 1042 · no password`, tone: `green`, icon: `idCard` },
             ]),
-            bot: hl([{ text: `token from leaked logs`, tone: `red`, icon: `key` }]),
+            bot: bot([{ text: `token from leaked logs`, tone: `red`, icon: `key` }]),
           },
           links: {
             ai: makeLink(`alice`, `idp`, [`alice`, [-12, `alice`], `idp`], { heads: `both` }),
             il: makeLink(`idp`, `login`, [`idp`, `login`]),
-            lu: V.base.lu,
-            al: V.base.al,
-            ...V.bot({ fail: 1, label: `expired token`, labelTone: `amber` }),
+            lu: links.base.lu,
+            al: links.base.al,
+            ...links.bot({ fail: 1, label: `expired token`, labelTone: `amber` }),
           },
-          flows: [{ route: [`al`, `lu`], kind: `mine`, rate: 0.7, bounce: !0 }, yl.bot(1)],
+          flows: [{ route: [`al`, `lu`], kind: `mine`, rate: 0.7, bounce: !0 }, requestFlows.bot(1)],
         },
       },
       {
@@ -491,12 +484,12 @@ const xl = {
         },
         metrics: { leak: `nothing usable`, stuffing: 0, mfa: `yes` },
         scene: {
-          entities: { alice: dl(), idp: vl(), login: fl(), users: pl() },
+          entities: { alice: alice(), idp: mfaService(), login: loginService(), users: usersTable() },
           links: {
             ai: makeLink(`alice`, `idp`, [`alice`, [-12, `alice`], `idp`], { heads: `both` }),
             il: makeLink(`idp`, `login`, [`idp`, `login`]),
-            lu: V.base.lu,
-            al: V.base.al,
+            lu: links.base.lu,
+            al: links.base.al,
           },
           flows: [{ route: [`al`, `lu`], kind: `mine`, rate: 0.7, bounce: !0 }],
         },
@@ -504,5 +497,5 @@ const xl = {
     ],
   };
 
-export { xl as authenticationLesson };
-export default xl;
+export { lesson as authenticationLesson };
+export default lesson;

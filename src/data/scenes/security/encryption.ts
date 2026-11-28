@@ -1,49 +1,41 @@
-// @ts-nocheck
-import {
-  makeBalancer,
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBalancer, makeBlock, makeDb, makeDevice, makeLink, makePanel, cardAt, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const Ml = (e = [], t = {}) => makeDevice(0, -21, { label: `Alice · café Wi-Fi`, tags: e, ...t });
+const alice = (e: Tag[] = [], t: Bag = {}) => makeDevice(0, -21, { label: `Alice · café Wi-Fi`, tags: e, ...t });
 
-const Nl = () => makeBlock(0, -12, { s: 3, h: 30, color: `slab`, glyph: `wifi`, label: [] });
+const wifiRouter = () => makeBlock(0, -12, { s: 3, h: 30, color: `slab`, glyph: `wifi`, label: [] });
 
-const Pl = (e = []) => makeDevice(-14, -3, { label: `Mallory · same Wi-Fi`, tags: e });
+const mallory = (e: Tag[] = []) => makeDevice(-14, -3, { label: `Mallory · same Wi-Fi`, tags: e });
 
-const Fl = (e = []) => makeBalancer(0, -3, { tags: e, pills: `below` });
+const loadBalancer = (e: Tag[] = []) => makeBalancer(0, -3, { tags: e, pills: `below` });
 
-const Il = (e = []) => makeBlock(0, 6, { label: [`App`], tags: e });
+const app = (e: Tag[] = []) => makeBlock(0, 6, { label: [`App`], tags: e });
 
-const Ll = (e = [], t = {}) =>
+const customerDb = (e: Tag[] = [], t: Bag = {}) =>
     makeDb(0, 15, { r: 2, h: 42, glyph: `user`, label: `customer DB`, tags: e, ...t });
 
-const Rl = (e = []) => makeDevice(13, 15, { label: `thief`, tags: e });
+const thief = (e: Tag[] = []) => makeDevice(13, 15, { label: `thief`, tags: e });
 
-const zl = () => makeBlock(0, 25, { color: `yellow`, glyph: `key`, label: [`KMS`], sub: `key service` });
+const kms = () => makeBlock(5, 20, { color: `yellow`, glyph: `key`, label: [`KMS`], sub: `key service` });
 
-const Bl = (e = []) =>
+const secretsManager = (e: Tag[] = []) =>
     makeBlock(-12, 6, { color: `yellow`, glyph: `keyhole`, label: [`Secrets`, `Manager`], tags: e });
 
-const Vl = (e = []) => makeBlock(13, 6, { color: `slab`, glyph: `file`, label: [`Public`, `Repo`], tags: e });
+const publicRepo = (e: Tag[] = []) => makeBlock(13, 6, { color: `slab`, glyph: `file`, label: [`Public`, `Repo`], tags: e });
 
-const Hl = (e = []) => makeDevice(15, -5, { label: `scanner bot`, tags: e });
+const scannerBot = (e: Tag[] = []) => makeDevice(15, -5, { label: `scanner bot`, tags: e });
 
-const Ul = (e = {}) => ({
+const baseLinks = (e: Bag = {}) => ({
     ar: makeLink(`alice`, `router`, [`alice`, `router`], { heads: `both`, ...(e.ar || {}) }),
     rl: makeLink(`router`, `lb`, [`router`, `lb`], { heads: `both`, ...(e.rl || {}) }),
     la: makeLink(`lb`, `app`, [`lb`, `app`], { heads: `both`, ...(e.la || {}) }),
     ad: makeLink(`app`, `db`, [`app`, `db`], { heads: `both`, ...(e.ad || {}) }),
   });
 
-const Wl = () => ({
+const sniffLinks = () => ({
     sn: makeLink(`router`, `mallory`, [`router`, [`mallory`, `router`], `mallory`], { style: `dashed` }),
   });
 
-const Gl = {
+const leakLinks = {
     st: makeLink(`db`, `thief`, [`db`, `thief`], {
       style: `dashed`,
       label: `backup copied`,
@@ -51,7 +43,7 @@ const Gl = {
     }),
   };
 
-const Kl = {
+const baseFlows = {
     req: { route: [`ar`, `rl`, `la`, `ad`], kind: `mine`, rate: 0.9, bounce: !0 },
     sniffPlain: { route: [`sn`], kind: `poison`, rate: 0.9 },
     sniffCipher: { route: [`sn`], kind: `empty`, rate: 0.9 },
@@ -59,17 +51,17 @@ const Kl = {
     stealCipher: { route: [`st`], kind: `empty`, rate: 0.7 },
   };
 
-const ql = (e = {}) => ({
-    alice: Ml(e.alice),
-    router: Nl(),
-    lb: Fl(e.lb),
-    app: Il(e.app),
-    db: Ll(e.db, e.dbProps),
+const baseEntities = (e: Bag = {}) => ({
+    alice: alice(e.alice),
+    router: wifiRouter(),
+    lb: loadBalancer(e.lb),
+    app: app(e.app),
+    db: customerDb(e.db, e.dbProps),
   });
 
-const Jl = (e, t, n) => makePanel({ x: -12, y: 2, z: 0, dx: -150, dy: -150 }, e, t, { icon: n });
+const card = cardAt({ x: -12, y: 2, dx: -150, dy: -150 });
 
-const Yl = {
+const encryptionLesson = {
     id: `encryption`,
     title: `Encryption & Secrets`,
     summary: `Protecting data on the wire, on disk, and the keys and passwords your services use.`,
@@ -105,13 +97,13 @@ const Yl = {
         metrics: { inTransit: `no`, atRest: `no`, secrets: `—` },
         scene: {
           entities: {
-            ...ql({
+            ...baseEntities({
               alice: [{ text: `http:// · password in clear`, tone: `red`, icon: `eyeOff` }],
             }),
-            mallory: Pl([{ text: `reads: alice / hunter2`, tone: `red`, icon: `eye` }]),
+            mallory: mallory([{ text: `reads: alice / hunter2`, tone: `red`, icon: `eye` }]),
           },
-          links: { ...Ul(), ...Wl() },
-          flows: [Kl.req, Kl.sniffPlain],
+          links: { ...baseLinks(), ...sniffLinks() },
+          flows: [baseFlows.req, baseFlows.sniffPlain],
         },
       },
       {
@@ -130,14 +122,14 @@ const Yl = {
         metrics: { inTransit: `outside only`, atRest: `no`, secrets: `—` },
         scene: {
           entities: {
-            ...ql({
+            ...baseEntities({
               alice: [{ text: `https:// · encrypted`, tone: `green`, icon: `lock` }],
               lb: [{ text: `certificate: shop.example`, icon: `fileKey` }],
             }),
-            mallory: Pl([{ text: `sees random bytes`, tone: `green`, icon: `eyeOff` }]),
+            mallory: mallory([{ text: `sees random bytes`, tone: `green`, icon: `eyeOff` }]),
           },
-          links: { ...Ul({ ar: { label: `TLS`, labelAt: 0.5 }, rl: { label: `TLS` } }), ...Wl() },
-          flows: [Kl.req, Kl.sniffCipher],
+          links: { ...baseLinks({ ar: { label: `TLS`, labelAt: 0.5 }, rl: { label: `TLS` } }), ...sniffLinks() },
+          flows: [baseFlows.req, baseFlows.sniffCipher],
         },
       },
       {
@@ -160,11 +152,11 @@ const Yl = {
         metrics: { inTransit: `outside only`, atRest: `no`, secrets: `—` },
         scene: {
           entities: {
-            ...ql({
+            ...baseEntities({
               alice: [{ text: `“Your connection is not private”`, tone: `red`, icon: `alert` }],
               lb: [{ text: `certificate expired 03:00`, tone: `red`, icon: `clock` }],
             }),
-            card: Jl(
+            card: card(
               `Never expire by surprise`,
               [
                 `! renewed by hand, once a year`,
@@ -175,7 +167,7 @@ const Yl = {
               `fileKey`,
             ),
           },
-          links: Ul({ ar: { fail: 0.8 } }),
+          links: baseLinks({ ar: { fail: 0.8 } }),
           flows: [{ route: [`ar`, `rl`, `la`, `ad`], kind: `mine`, rate: 0.9, bounce: !0 }],
         },
       },
@@ -195,11 +187,11 @@ const Yl = {
         metrics: { inTransit: `yes`, atRest: `no`, secrets: `—` },
         scene: {
           entities: {
-            ...ql({ app: [{ text: `mTLS · own certificate`, tone: `green`, icon: `fileKey` }] }),
-            mallory: Pl([{ text: `sees random bytes`, tone: `green`, icon: `eyeOff` }]),
+            ...baseEntities({ app: [{ text: `mTLS · own certificate`, tone: `green`, icon: `fileKey` }] }),
+            mallory: mallory([{ text: `sees random bytes`, tone: `green`, icon: `eyeOff` }]),
           },
-          links: { ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }), ...Wl() },
-          flows: [Kl.req, Kl.sniffCipher],
+          links: { ...baseLinks({ la: { label: `mTLS` }, ad: { label: `mTLS` } }), ...sniffLinks() },
+          flows: [baseFlows.req, baseFlows.sniffCipher],
         },
       },
       {
@@ -218,11 +210,11 @@ const Yl = {
         metrics: { inTransit: `yes`, atRest: `no`, secrets: `—` },
         scene: {
           entities: {
-            ...ql({ db: [{ text: `backup in public bucket`, tone: `red`, icon: `alert` }] }),
-            thief: Rl([{ text: `reads every customer`, tone: `red`, icon: `eye` }]),
+            ...baseEntities({ db: [{ text: `backup in public bucket`, tone: `red`, icon: `alert` }] }),
+            thief: thief([{ text: `reads every customer`, tone: `red`, icon: `eye` }]),
           },
-          links: { ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }), ...Gl },
-          flows: [Kl.req, Kl.stealPlain],
+          links: { ...baseLinks({ la: { label: `mTLS` }, ad: { label: `mTLS` } }), ...leakLinks },
+          flows: [baseFlows.req, baseFlows.stealPlain],
         },
       },
       {
@@ -245,10 +237,10 @@ const Yl = {
         metrics: { inTransit: `yes`, atRest: `yes`, secrets: `—` },
         scene: {
           entities: {
-            ...ql({ db: [{ text: `encrypted · AES-256`, tone: `green`, icon: `lock` }] }),
-            thief: Rl([{ text: `only ciphertext`, tone: `green`, icon: `eyeOff` }]),
-            kms: zl(),
-            card: Jl(
+            ...baseEntities({ db: [{ text: `encrypted · AES-256`, tone: `green`, icon: `lock` }] }),
+            thief: thief([{ text: `only ciphertext`, tone: `green`, icon: `eyeOff` }]),
+            kms: kms(),
+            card: card(
               `Envelope encryption`,
               [
                 `data  —encrypted with→  data key`,
@@ -260,11 +252,11 @@ const Yl = {
             ),
           },
           links: {
-            ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
-            ...Gl,
+            ...baseLinks({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
+            ...leakLinks,
             dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both`, label: `unwrap data key` }),
           },
-          flows: [Kl.req, Kl.stealCipher, { route: [`dk`], kind: `write`, rate: 0.4, bounce: !0 }],
+          flows: [baseFlows.req, baseFlows.stealCipher, { route: [`dk`], kind: `write`, rate: 0.4, bounce: !0 }],
         },
       },
       {
@@ -287,9 +279,9 @@ const Yl = {
         metrics: { inTransit: `yes`, atRest: `yes`, secrets: `—` },
         scene: {
           entities: {
-            ...ql({ db: [{ text: `data keys re-wrapped · v2`, tone: `green`, icon: `refresh` }] }),
-            kms: zl(),
-            card: Jl(
+            ...baseEntities({ db: [{ text: `data keys re-wrapped · v2`, tone: `green`, icon: `refresh` }] }),
+            kms: kms(),
+            card: card(
               `Rotating keys`,
               [
                 `new master key v2 in the KMS`,
@@ -301,10 +293,10 @@ const Yl = {
             ),
           },
           links: {
-            ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
+            ...baseLinks({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
             dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both`, label: `re-wrap data keys` }),
           },
-          flows: [Kl.req, { route: [`dk`], kind: `write`, rate: 1.2, bounce: !0 }],
+          flows: [baseFlows.req, { route: [`dk`], kind: `write`, rate: 1.2, bounce: !0 }],
         },
       },
       {
@@ -323,13 +315,13 @@ const Yl = {
         metrics: { inTransit: `yes`, atRest: `yes`, secrets: `source code` },
         scene: {
           entities: {
-            ...ql({ app: [{ text: `API key in source code`, tone: `red`, icon: `key` }] }),
-            kms: zl(),
-            repo: Vl([{ text: `sk_live_… in history`, tone: `red`, icon: `alert` }]),
-            bot: Hl([{ text: `key found in 4 min`, tone: `red`, icon: `bot` }]),
+            ...baseEntities({ app: [{ text: `API key in source code`, tone: `red`, icon: `key` }] }),
+            kms: kms(),
+            repo: publicRepo([{ text: `sk_live_… in history`, tone: `red`, icon: `alert` }]),
+            bot: scannerBot([{ text: `key found in 4 min`, tone: `red`, icon: `bot` }]),
           },
           links: {
-            ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
+            ...baseLinks({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
             dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
             ap: makeLink(`app`, `repo`, [`app`, `repo`], { label: `git push` }),
             rb: makeLink(`repo`, `bot`, [`repo`, [`bot`, `repo`], `bot`], {
@@ -339,7 +331,7 @@ const Yl = {
             }),
           },
           flows: [
-            Kl.req,
+            baseFlows.req,
             { route: [`ap`], kind: `write`, rate: 0.4 },
             { route: [`rb`], kind: `poison`, rate: 0.8 },
           ],
@@ -365,19 +357,19 @@ const Yl = {
         metrics: { inTransit: `yes`, atRest: `yes`, secrets: `secrets manager` },
         scene: {
           entities: {
-            ...ql({ app: [{ text: `no secrets in code`, tone: `green`, icon: `check` }] }),
-            kms: zl(),
-            vault: Bl([{ text: `rotated every 30 days`, icon: `refresh` }]),
-            repo: Vl([{ text: `secret scan: clean`, tone: `green`, icon: `check` }]),
+            ...baseEntities({ app: [{ text: `no secrets in code`, tone: `green`, icon: `check` }] }),
+            kms: kms(),
+            vault: secretsManager([{ text: `rotated every 30 days`, icon: `refresh` }]),
+            repo: publicRepo([{ text: `secret scan: clean`, tone: `green`, icon: `check` }]),
           },
           links: {
-            ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
+            ...baseLinks({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
             dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
             av: makeLink(`app`, `vault`, [`app`, `vault`], { heads: `both`, label: `fetch at startup` }),
             ap: makeLink(`app`, `repo`, [`app`, `repo`], { label: `git push` }),
           },
           flows: [
-            Kl.req,
+            baseFlows.req,
             { route: [`av`], kind: `write`, rate: 0.5, bounce: !0 },
             { route: [`ap`], rate: 0.3 },
           ],
@@ -403,30 +395,30 @@ const Yl = {
         metrics: { inTransit: `yes`, atRest: `yes`, secrets: `secrets manager` },
         scene: {
           entities: {
-            ...ql({
+            ...baseEntities({
               app: [{ text: `never sees card numbers`, tone: `green`, icon: `check` }],
               db: [{ text: `card: tok_4f2c`, tone: `green`, icon: `creditCard` }],
             }),
-            kms: zl(),
+            kms: kms(),
             pp: makeBlock(-12, 15, {
               color: `purple`,
               glyph: `creditCard`,
               label: [`Payment`, `Provider`],
               tags: [{ text: `holds real card numbers`, icon: `lock` }],
             }),
-            thief: Rl([{ text: `steals tokens · useless`, tone: `green`, icon: `eyeOff` }]),
+            thief: thief([{ text: `steals tokens · useless`, tone: `green`, icon: `eyeOff` }]),
           },
           links: {
-            ...Ul({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
+            ...baseLinks({ la: { label: `mTLS` }, ad: { label: `mTLS` } }),
             dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
             pt: makeLink(`app`, `pp`, [`app`, [-6, `app`], [-6, `pp`], `pp`], {
               heads: `both`,
               label: `card → token`,
               labelAt: 0.45,
             }),
-            ...Gl,
+            ...leakLinks,
           },
-          flows: [Kl.req, { route: [`pt`], kind: `mine`, rate: 0.5, bounce: !0 }, Kl.stealCipher],
+          flows: [baseFlows.req, { route: [`pt`], kind: `mine`, rate: 0.5, bounce: !0 }, baseFlows.stealCipher],
         },
       },
       {
@@ -446,7 +438,7 @@ const Yl = {
         metrics: { inTransit: `end-to-end`, atRest: `yes`, secrets: `secrets manager` },
         scene: {
           entities: {
-            alice: Ml([{ text: `encrypt with Bob’s public key`, icon: `lock` }], {
+            alice: alice([{ text: `encrypt with Bob’s public key`, icon: `lock` }], {
               form: `phone`,
               w: 5,
               d: 5,
@@ -492,17 +484,17 @@ const Yl = {
         },
         metrics: { inTransit: `yes`, atRest: `yes`, secrets: `secrets manager` },
         scene: {
-          entities: { ...ql(), kms: zl(), vault: Bl() },
+          entities: { ...baseEntities(), kms: kms(), vault: secretsManager() },
           links: {
-            ...Ul({ ar: { label: `TLS` }, la: { label: `mTLS` }, ad: { label: `mTLS` } }),
+            ...baseLinks({ ar: { label: `TLS` }, la: { label: `mTLS` }, ad: { label: `mTLS` } }),
             dk: makeLink(`db`, `kms`, [`db`, `kms`], { heads: `both` }),
             av: makeLink(`app`, `vault`, [`app`, `vault`], { heads: `both` }),
           },
-          flows: [Kl.req, { route: [`av`], kind: `write`, rate: 0.4, bounce: !0 }],
+          flows: [baseFlows.req, { route: [`av`], kind: `write`, rate: 0.4, bounce: !0 }],
         },
       },
     ],
   };
 
-export { Yl as encryptionLesson };
-export default Yl;
+export { encryptionLesson as encryptionLesson };
+export default encryptionLesson;
