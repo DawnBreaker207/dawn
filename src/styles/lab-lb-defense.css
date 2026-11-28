@@ -1,0 +1,81 @@
+/* Load Balancer Defense (/lab/lb-defense). Everything is scoped under .lbd-lab. */
+.lbd-lab {
+  .lbd-stage {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--bg-alt);
+    overflow: hidden;
+  }
+
+  /* Below 640px the drawing scrolls sideways instead of shrinking until the text is unreadable. */
+  .lbd-scroll {
+    overflow-x: auto;
+  }
+
+  .lbd-canvas {
+    display: block;
+    width: 100%;
+    min-width: 640px;
+    height: auto;
+    aspect-ratio: 960 / 420;
+  }
+
+  .lbd-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+    background: color-mix(in srgb, var(--bg-alt) 88%, transparent);
+  }
+
+  /* The flex display above would otherwise win over the hidden utility class. */
+  .lbd-overlay.hidden {
+    display: none;
+  }
+
+  .lbd-buy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--bg-alt);
+    padding: 0.625rem 0.875rem;
+    text-align: left;
+    color: var(--fg);
+    cursor: pointer;
+    transition: border-color 120ms ease;
+  }
+
+  .lbd-buy:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+
+  .lbd-buy:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .lbd-buy[data-maxed='true'] {
+    border-style: dashed;
+  }
+
+  .lbd-bar {
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--bg-subtle);
+    overflow: hidden;
+  }
+
+  .lbd-bar > span {
+    display: block;
+    height: 100%;
+    transition: width 120ms linear;
+  }
+}

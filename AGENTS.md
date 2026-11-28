@@ -826,9 +826,9 @@ A floating panel provides high pedagogical value when it presents a **concrete t
   ```
   The scene linter and master auditor **MUST pass with 0 critical overlaps (`CLEAN`), 0 broken links, 0 goal alignment errors, and 0 glyph-label collision hazards**, and the static build must complete with exit code 0.
 
-### Canonical Navigation & Domain Grouping (11 Topics on Navbar)
+### Canonical Navigation & Domain Grouping (12 Topics on Navbar)
 
-All interactive simulations are strictly partitioned into 11 mutually exclusive domain tracks on the Navbar / Sidebar Explorer:
+All interactive simulations are strictly partitioned into 12 mutually exclusive domain tracks on the Navbar / Sidebar Explorer:
 
 | Nav Item | Domain Scope | Included Content & Exclusions | Total Lessons |
 |---|---|---|:---:|
@@ -842,6 +842,7 @@ All interactive simulations are strictly partitioned into 11 mutually exclusive 
 | **`k8s.sim`** | Containers & Kubernetes Orchestration | Docker namespaces & cgroups, multi-stage builds, K8s Pods & ReplicaSets, Services, Ingress Controller, ConfigMaps/Secrets, StatefulSets & Storage, HPA & Autoscaling | **8** |
 | **`java.sim`** | Java & Spring Runtime Engine | **Single Canvas 3D + Code Cards (6+ steps, Why & Core Mechanics):** Types/Boxing/Generics, String Pool & Compact Strings, HashMap & ConcurrentHashMap, Lambda & Lazy Streams, Modern Java & Core APIs, I/O/NIO.2/Selector, JDBC Pool/TX/Batch, Exceptions/Reflection/Proxy, ClassLoader & HotSpot JIT, JVM Memory/GC/Refs, Monitors/JMM/CAS/AQS, Pools/ThreadLocal/Loom, Spring IoC & Boot Auto-Config, AOP/@Transactional/@Async/Cache, MVC/Loom/WebFlux, JPA/N+1/Locking, Security/OAuth2, Actuator/Test Cache (18 lessons total) | **18** |
 | **`system-design.sim`** | System Design & AI Agents | HLD vs LLD, TinyURL, News Feed, Chat app, redundancy, rate limiting, timeouts/retries, observability.<br>**Flagship Lesson:** `ai-agent-architecture` (8-step Onion Model: LLM, RAG, MCP, Loop, Harness, Superpowers, LangChain, BMAD Swarms) | **10** |
+| **`devsecops.sim`** | Security & Delivery | Authentication, Authorization, Encryption & Secrets, CI/CD & Deployments, Testing Strategy | **5** |
 | **`aws-cloud.sim`** | AWS Cloud Architecture (SAA-C03) | **Full SAA-C03 Coverage (10 lessons):** VPC, Hybrid Networking, IAM & KMS Encryption, Edge Security, HA & DR Tiers, Compute, Storage, Databases, Serverless, Migration | **10** |
 | **TOTAL** | **Complete 3D Architecture Simulation System** | **100% Single Canvas 3D + Code-Driven Cards** | **135 Lessons** |
 
@@ -1374,6 +1375,7 @@ Several files are written by build scripts (most are gitignored; `src/data/books
 | `src/data/timeline.json` | `scripts/sync-notion.mjs` | After updating timeline in Notion |
 | `src/build-stats.json` | `scripts/build-stats.mjs` | After deploy (CI runs this) |
 | `public/og/*.png` | `scripts/build-og.mjs` | After publishing new blog post |
+| `public/og/lab-*.png` | `scripts/build-og.mjs` | Every build (git-ignored, one per curriculum lesson) |
 
 If an agent creates or modifies content that should update one of these files, run
 the script — do not write to the file directly.

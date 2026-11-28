@@ -1,0 +1,121 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import '@/styles/lab-lb-defense.css';
+
+export const prerender = true;
+
+const UPGRADES = [
+  { id: 'server', key: '1', name: 'Add server', what: 'More capacity. Up to six servers.' },
+  { id: 'level', key: '2', name: 'Faster servers', what: 'Every server handles 50% more requests per second.' },
+  { id: 'cache', key: '3', name: 'Cache', what: 'About 45% of reads are answered without touching a server.' },
+  { id: 'leastConn', key: '4', name: 'Least connections', what: 'Send each request to the least busy server instead of taking turns.' },
+  { id: 'health', key: '5', name: 'Health checks', what: 'The balancer stops sending traffic to a crashed server.' },
+  { id: 'limiter', key: '6', name: 'Rate limiter', what: 'Drops most bot traffic (purple) before it reaches a server.' },
+] as const;
+---
+
+<BaseLayout
+  title="Load Balancer Defense"
+  description="A tiny tower-defense game about load balancing: add servers, a cache, health checks and a rate limiter to keep a service alive through eight waves of traffic."
+>
+  <header class="mb-7 space-y-4 border-b border-(--border) pt-1 pb-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-sm text-(--fg-faint)">
+      <div class="flex items-center gap-2">
+        <span class="inline-block size-2 rounded-full bg-(--accent)"></span>
+        <span class="text-(--fg)">~/dawn/lab/lb-defense</span>
+      </div>
+      <a href="/lab" class="text-(--fg-dim) no-underline hover:text-(--accent)">All labs →</a>
+    </div>
+    <div class="space-y-2.5">
+      <h1 class="m-0 bg-gradient-to-r from-amber-500 via-rose-500 to-fuchsia-600 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl md:text-5xl">
+        Load Balancer Defense
+      </h1>
+      <p class="m-0 max-w-2xl border-l-2 border-(--accent) pl-3.5 text-base leading-relaxed text-(--fg-dim) sm:text-lg">
+        Requests keep coming and every dropped one hurts your service. Spend what you earn on servers, a cache and smarter balancing to survive eight waves.
+      </p>
+    </div>
+  </header>
+
+  <div id="lbd-root" class="lbd-lab space-y-4 pb-10" data-state="ready">
+    <div class="grid grid-cols-2 gap-3 font-mono sm:grid-cols-4 lg:grid-cols-6">
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-3 py-2.5">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Wave</div>
+        <div class="text-xl font-bold text-(--fg)"><span id="lbd-wave">1 / 8</span></div>
+        <div class="truncate text-xs text-(--fg-dim)" id="lbd-wave-title">Warm-up</div>
+        <div class="lbd-bar mt-1"><span id="lbd-wave-bar" style="width: 0%; background: var(--fg-dim)"></span></div>
+      </div>
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-3 py-2.5">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Health</div>
+        <div id="lbd-health" class="text-xl font-bold text-(--fg)">100</div>
+        <div class="lbd-bar mt-1"><span id="lbd-health-bar" style="width: 100%; background: #16a34a"></span></div>
+      </div>
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-3 py-2.5">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Money</div>
+        <div id="lbd-money" class="text-xl font-bold text-(--fg)">$120</div>
+      </div>
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-3 py-2.5">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Traffic</div>
+        <div id="lbd-rps" class="text-xl font-bold text-(--fg)">0/s</div>
+      </div>
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-3 py-2.5">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Served / dropped</div>
+        <div class="text-xl font-bold text-(--fg)"><span id="lbd-ok">0</span> <span class="text-(--accent)">/ <span id="lbd-drop">0</span></span></div>
+      </div>
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-3 py-2.5">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Latency · best</div>
+        <div class="text-xl font-bold text-(--fg)"><span id="lbd-latency">-</span> <span class="text-base text-(--accent)">· <span id="lbd-best">-</span></span></div>
+      </div>
+    </div>
+
+    <p id="lbd-banner" class="m-0 min-h-6 font-mono text-sm text-(--fg-dim) sm:text-base" aria-live="polite"></p>
+
+    <div class="lbd-stage">
+      <div class="lbd-scroll">
+        <canvas id="lbd-canvas" class="lbd-canvas" aria-label="Traffic flowing from users through a load balancer to servers"></canvas>
+      </div>
+      <div id="lbd-overlay" class="lbd-overlay">
+        <h2 id="lbd-overlay-title" class="m-0 text-2xl font-extrabold text-(--fg) sm:text-3xl">Load Balancer Defense</h2>
+        <p id="lbd-overlay-text" class="m-0 max-w-xl text-base text-(--fg-dim)"></p>
+        <button type="button" id="lbd-start" data-track-event="lbdef-start" class="cursor-pointer rounded-lg border border-(--accent) bg-(--accent) px-5 py-2.5 font-mono text-sm font-semibold text-white transition-colors hover:bg-(--accent-hover)">
+          Start defense
+        </button>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-sm">
+      <div class="flex items-center gap-2 text-(--fg-dim)">
+        <span class="inline-block size-3 rounded-full" style="background:#0ea5e9"></span> read
+        <span class="inline-block size-3 rounded-full" style="background:#16a34a"></span> write
+        <span class="inline-block size-3 rounded-full" style="background:#a855f7"></span> bot
+      </div>
+      <div class="flex gap-2">
+        <button type="button" id="lbd-pause" data-track-event="lbdef-pause" class="cursor-pointer rounded-lg border border-(--border) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent) hover:text-(--accent)">Pause (Space)</button>
+        <button type="button" id="lbd-restart" data-track-event="lbdef-restart" class="cursor-pointer rounded-lg border border-(--border) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent) hover:text-(--accent)">Restart</button>
+      </div>
+    </div>
+
+    <div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+      {UPGRADES.map((u) => (
+        <button type="button" class="lbd-buy" data-lbd-buy={u.id} data-track-event="lbdef-buy" data-track-item={u.id} disabled>
+          <span class="flex items-center justify-between gap-2 font-mono text-sm font-semibold sm:text-base">
+            <span><kbd class="mr-1.5 rounded border border-(--border) px-1.5 text-(--fg-dim)">{u.key}</kbd>{u.name}</span>
+            <span data-lbd-cost class="text-(--accent)">$-</span>
+          </span>
+          <span class="text-xs text-(--fg-dim) sm:text-sm">{u.what}</span>
+        </button>
+      ))}
+    </div>
+
+    <section class="rounded-xl border border-(--border) bg-(--bg-alt) px-5 py-4 text-sm leading-relaxed text-(--fg-dim) sm:text-base">
+      <h2 class="m-0 mb-1.5 text-base font-bold text-(--fg) sm:text-lg">What you are learning</h2>
+      <ul class="m-0 list-disc space-y-1 pl-5">
+        <li><b>Round robin</b> hands out requests in turns, so one slow or crashed server still gets its share. <b>Least connections</b> sends work to the least busy server.</li>
+        <li><b>Health checks</b> let the balancer notice a dead server instead of feeding it traffic.</li>
+        <li>A <b>cache</b> answers repeated reads without touching the servers, and a <b>rate limiter</b> sheds junk traffic at the door.</li>
+        <li>When a queue is full the request is dropped. Scaling out early is cheaper than recovering later.</li>
+      </ul>
+    </section>
+  </div>
+
+  <script>import '@/scripts/lab/lb-defense/lb-defense.ts';</script>
+</BaseLayout>

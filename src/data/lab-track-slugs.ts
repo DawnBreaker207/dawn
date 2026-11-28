@@ -1,7 +1,11 @@
 // Sidebar highlighting: which lesson slugs belong to which curriculum track page.
 // Keyed by the track entry href (see lab-track-pages.ts for the track pages themselves).
 
-export const TRACK_SLUG_MAP: Record<string, string[]> = {
+import { CURRICULUM_MODULES } from '@/data/curriculum';
+
+/** Hand-picked slugs: track entry pages plus aliases that are not curriculum lessons. */
+const HAND_PICKED_SLUGS: Record<string, string[]> = {
+  '/lab/security': ['security', 'authentication', 'authorization', 'encryption', 'cicd', 'testing'],
   '/lab/foundations': [
     'foundations', 'request-lifecycle', 'latency-throughput', 'napkin-math',
     'vertical-horizontal', 'load-balancing', 'stateless', 'caching', 'cdn',
@@ -59,3 +63,28 @@ export const TRACK_SLUG_MAP: Record<string, string[]> = {
     'gitops-argocd', 'devops-dora-metrics',
   ],
 };
+
+/** Curriculum track id behind each track entry href, used to add every lesson of the track. */
+const TRACK_ID_BY_ENTRY: Record<string, string> = {
+  '/lab/git': 'git',
+  '/lab/foundations': 'network-scale',
+  '/lab/sql': 'storage-tier',
+  '/lab/angular': 'angular',
+  '/lab/java': 'java-runtime',
+  '/lab/devops': 'devops',
+  '/lab/k8s': 'k8s',
+  '/lab/distributed': 'distributed',
+  '/lab/microservices': 'microservices',
+  '/lab/aws-cloud': 'cloud-aws',
+  '/lab/system-design': 'system-design',
+  '/lab/security': 'devsecops',
+};
+
+export const TRACK_SLUG_MAP: Record<string, string[]> = Object.fromEntries(
+  Object.entries(HAND_PICKED_SLUGS).map(([href, slugs]) => {
+    const lessons = CURRICULUM_MODULES.filter((m) => m.trackId === TRACK_ID_BY_ENTRY[href]).flatMap((m) =>
+      m.lessons.map((l) => l.id),
+    );
+    return [href, [...new Set([...slugs, ...lessons])]];
+  }),
+);

@@ -24,6 +24,18 @@ export interface Tab {
   path: string;
 }
 
+/** Standalone toys and games, in sidebar order. Their file is `<slug>.play` in both the sidebar and the tab bar. */
+export const PLAYGROUND_SLUGS = [
+  'typing',
+  'quiz',
+  'lb-defense',
+  '2048',
+  'terminal',
+  'pathfinding',
+  'spider',
+  'boids',
+] as const;
+
 export function tabsFor(pathname: string) {
   if (pathname === '/' || pathname === '') return [{ id: 'README', label: 'README.md', path: '/' }];
   const slug = pathname.match(/^\/blog\/([^/]+)/)?.[1];
@@ -34,6 +46,7 @@ export function tabsFor(pathname: string) {
   if (pathname.startsWith('/topics')) return [{ id: 'topics', label: 'topics.astro', path: '/topics' }];
   if (pathname.startsWith('/heatmap')) return [{ id: 'heatmap', label: 'heatmap.astro', path: '/heatmap' }];
   if (pathname.startsWith('/tokens')) return [{ id: 'tokens', label: 'tokens.astro', path: '/tokens' }];
+  if (pathname.startsWith('/guestbook')) return [{ id: 'guestbook', label: 'guestbook.md', path: '/guestbook' }];
   if (pathname.startsWith('/books')) return [{ id: 'books', label: 'books.astro', path: '/books' }];
   if (pathname.startsWith('/lab')) {
     const exp = pathname.match(/^\/lab\/([^/]+)/)?.[1];
@@ -47,6 +60,9 @@ export function tabsFor(pathname: string) {
       }
       if (exp === 'java') {
         return [{ id: 'java', label: 'concurrency-jvm.java', path: '/lab/java' }];
+      }
+      if ((PLAYGROUND_SLUGS as readonly string[]).includes(exp)) {
+        return [{ id: exp, label: `${exp}.play`, path: `/lab/${exp}` }];
       }
       return [{ id: exp, label: `${exp}.lab`, path: `/lab/${exp}` }];
     }

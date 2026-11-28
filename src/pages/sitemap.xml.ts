@@ -23,6 +23,11 @@ const dedicatedLabRoutes = [
   '/lab/spider',
   '/lab/terminal',
   '/lab/pathfinding',
+  '/lab/2048',
+  '/lab/boids',
+  '/lab/typing',
+  '/lab/quiz',
+  '/lab/lb-defense',
 ];
 
 const staticRoutes = [
@@ -30,6 +35,7 @@ const staticRoutes = [
   ...headerNavLinks.map((l) => l.href),
   '/books',
   '/heatmap',
+  '/guestbook',
   '/topics',
   ...dedicatedLabRoutes,
   '/help',

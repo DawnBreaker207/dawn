@@ -145,5 +145,18 @@ const inBlogIndex = activePath === '/blog' || activePath.startsWith('/blog/page/
       </span>
       <span class="row-label truncate">now.md</span>
     </a>
+
+    <a
+      href="/guestbook"
+      class:list={['explorer-row no-underline', activePath === '/guestbook' && 'is-active']}
+      aria-current={activePath === '/guestbook' ? 'page' : undefined}
+      data-track-event="explorer-guestbook"
+    >
+      <span class="explorer-caret" aria-hidden="true"></span>
+      <span class="explorer-icon">
+        <ExplorerFileIcon type="markdown" />
+      </span>
+      <span class="row-label truncate">guestbook.md</span>
+    </a>
   </nav>
   </details>

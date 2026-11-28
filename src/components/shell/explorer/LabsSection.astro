@@ -2,6 +2,8 @@
 // Sidebar "Architecture Labs" section: curriculum tracks and standalone simulators.
 import ExplorerFileIcon from '@/components/shell/ExplorerFileIcon.astro';
 import { TRACK_SLUG_MAP } from '@/data/lab-track-slugs';
+import { CURRICULUM_MODULES } from '@/data/curriculum';
+import { PLAYGROUND_SLUGS } from '@/lib/site';
 
 interface Props {
   activePath: string;
@@ -12,20 +14,29 @@ const { activePath } = Astro.props;
 const labSlug = activePath.startsWith('/lab/') ? activePath.replace('/lab/', '') : '';
 const isSpecializedRoute = ['architecture', '', 'terminal', 'pathfinding', 'spider'].includes(labSlug);
 
+// Standalone toys and games shown under playground/. Add a new one here and it is listed and opens the folder.
+const PLAYGROUND = PLAYGROUND_SLUGS.map((slug) => [`/lab/${slug}`, `${slug}.play`] as const);
+const playgroundOpen = PLAYGROUND.some(([href]) => activePath.startsWith(href));
+
+const lessonCount = (trackId: string) =>
+  CURRICULUM_MODULES.filter((m) => m.trackId === trackId).reduce((n, m) => n + m.lessons.length, 0);
+
 const CURRICULUM_TRACK_ITEMS = [
-  { href: '/lab/git', label: 'git.sim', iconType: 'git', title: 'Git Deep Internals & Practical Case Resolver (14 labs)' },
-  { href: '/lab/foundations', label: 'network.sim', iconType: 'network', title: 'Networking & Web Scale (8 labs)' },
-  { href: '/lab/sql', label: 'storage.sim', iconType: 'storage', title: 'Database & Storage Tier (8 labs)' },
-  { href: '/lab/angular', label: 'angular.sim', iconType: 'angular', title: 'Angular Core Architecture & Modern Mechanics (15 labs)' },
-  { href: '/lab/java', label: 'java.sim', iconType: 'java', title: 'Java Runtime & Concurrency Engine (27 labs)' },
-  { href: '/lab/devops', label: 'devops.sim', iconType: 'devops', title: 'DevOps Engineering & Progressive Delivery (5 labs)' },
-  { href: '/lab/k8s', label: 'k8s.sim', iconType: 'k8s', title: 'Containers & Kubernetes Orchestration (8 labs)' },
-  { href: '/lab/distributed', label: 'distributed.sim', iconType: 'distributed', title: 'Distributed Systems Core (6 labs)' },
-  { href: '/lab/microservices', label: 'microservices.sim', iconType: 'microservices', title: 'Microservices & Event-Driven (7 labs)' },
-  { href: '/lab/aws-cloud', label: 'aws-cloud.sim', iconType: 'cloud', title: 'AWS Cloud Architecture SAA-C03 (6 labs)' },
-  { href: '/lab/system-design', label: 'system-design.sim', iconType: 'system', title: 'System Design & AI Agents (10 labs)' },
+  { href: '/lab/git', label: 'git.sim', iconType: 'git', name: 'Git Deep Internals & Practical Case Resolver', trackId: 'git' },
+  { href: '/lab/foundations', label: 'network.sim', iconType: 'network', name: 'Networking & Web Scale', trackId: 'network-scale' },
+  { href: '/lab/sql', label: 'storage.sim', iconType: 'storage', name: 'Database & Storage Tier', trackId: 'storage-tier' },
+  { href: '/lab/angular', label: 'angular.sim', iconType: 'angular', name: 'Angular Core Architecture & Modern Mechanics', trackId: 'angular' },
+  { href: '/lab/java', label: 'java.sim', iconType: 'java', name: 'Java Runtime & Concurrency Engine', trackId: 'java-runtime' },
+  { href: '/lab/devops', label: 'devops.sim', iconType: 'devops', name: 'DevOps Engineering & Progressive Delivery', trackId: 'devops' },
+  { href: '/lab/k8s', label: 'k8s.sim', iconType: 'k8s', name: 'Containers & Kubernetes Orchestration', trackId: 'k8s' },
+  { href: '/lab/distributed', label: 'distributed.sim', iconType: 'distributed', name: 'Distributed Systems Core', trackId: 'distributed' },
+  { href: '/lab/microservices', label: 'microservices.sim', iconType: 'microservices', name: 'Microservices & Event-Driven', trackId: 'microservices' },
+  { href: '/lab/aws-cloud', label: 'aws-cloud.sim', iconType: 'cloud', name: 'AWS Cloud Architecture SAA-C03', trackId: 'cloud-aws' },
+  { href: '/lab/system-design', label: 'system-design.sim', iconType: 'system', name: 'System Design & AI Agents', trackId: 'system-design' },
+  { href: '/lab/security', label: 'devsecops.sim', iconType: 'security', name: 'DevSecOps: Auth, Encryption, CI/CD & Testing', trackId: 'devsecops' },
 ].map((item) => ({
   ...item,
+  title: `${item.name} (${lessonCount(item.trackId)} labs)`,
   isActive: activePath === item.href || (!isSpecializedRoute && !!TRACK_SLUG_MAP[item.href]?.includes(labSlug)),
 }));
 ---
@@ -112,8 +123,8 @@ const CURRICULUM_TRACK_ITEMS = [
       </details>
 
       <!-- Simulators & Extras (Folder) -->
-      <details class="tree-sec" data-sec="simulators" open={activePath.startsWith('/lab/terminal') || activePath.startsWith('/lab/pathfinding') || activePath.startsWith('/lab/spider') || activePath.startsWith('/lab/2048') || activePath.startsWith('/lab/boids')}>
-        <summary class="explorer-row" data-track-event="sidebar-folder-simulators">
+      <details class="tree-sec" data-sec="playground" open={playgroundOpen}>
+        <summary class="explorer-row" data-track-event="sidebar-folder-playground">
           <span class="explorer-caret">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 6l6 6-6 6" />
@@ -128,25 +139,19 @@ const CURRICULUM_TRACK_ITEMS = [
               <path d="M6 11.5h12" />
             </svg>
           </span>
-          <span class="row-label truncate">simulators/</span>
+          <span class="row-label truncate">playground/</span>
         </summary>
         <div class="tree-children">
-          {[
-            ['/lab/terminal', 'terminal.astro', 'astro'],
-            ['/lab/pathfinding', 'pathfinding.astro', 'astro'],
-            ['/lab/spider', 'spider.astro', 'astro'],
-            ['/lab/2048', '2048.astro', 'astro'],
-            ['/lab/boids', 'boids.astro', 'astro'],
-          ].map(([href, label, icon]) => (
+          {PLAYGROUND.map(([href, label]) => (
             <a
               href={href}
               class:list={['explorer-row explorer-row--child no-underline', activePath === href && 'is-active']}
               aria-current={activePath === href ? 'page' : undefined}
-              data-track-event="explorer-simulator"
+              data-track-event="explorer-playground"
             >
               <span class="explorer-caret" aria-hidden="true"></span>
               <span class="explorer-icon">
-                <ExplorerFileIcon type={icon as 'markdown' | 'astro' | 'umami'} />
+                <ExplorerFileIcon type="play" />
               </span>
               <span class="row-label truncate">{label}</span>
             </a>

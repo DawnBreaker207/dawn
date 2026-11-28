@@ -64,6 +64,9 @@ const HELP_CMDS: HelpCmd[] = [
   ['projects go <id>', 'open a project by its id'],
   ['lab', 'list interactive lab experiments'],
   ['books', 'open reading list'],
+  ['stats', 'numbers about this site'],
+  ['play', 'jump into a random game'],
+  ['guestbook', 'sign the guestbook'],
   ['heatmap', 'open GitHub contribution heatmap'],
   ['now', 'what DawnBreaker is doing right now'],
   ['tokens', 'AI token burn telemetry'],
@@ -83,6 +86,7 @@ export default function CommandPalette({
   const [entries, setEntries] = useState<PaletteEntry[]>([]);
   const [historyPos, setHistoryPos] = useState(-1);
   const [sel, setSel] = useState(-1);
+  const [lessonPool, setLessonPool] = useState<PaletteItem[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const outRef = useRef<HTMLDivElement>(null);
@@ -94,6 +98,27 @@ export default function CommandPalette({
   const suggestionsRef = useRef<Sugg[]>([]);
 
   openRef.current = open;
+
+  // The 138 lab lessons are searchable too, but their list is only fetched (as a separate chunk)
+  // the first time the terminal opens, so it adds nothing to the initial page weight.
+  useEffect(() => {
+    if (!open || lessonPool.length > 0) return;
+    let alive = true;
+    import('@/data/curriculum')
+      .then(({ CURRICULUM_MODULES, getLessonHref }) => {
+        if (!alive) return;
+        const seen = new Set<string>();
+        setLessonPool(
+          CURRICULUM_MODULES.flatMap((m) =>
+            m.lessons.map((l) => ({ title: `Lesson · ${l.title}`, desc: m.title, route: getLessonHref(l.id) })),
+          ).filter((item) => !seen.has(item.route) && seen.add(item.route)),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [open, lessonPool.length]);
 
   const push = useCallback((entry: PaletteEntry) => {
     setEntries((prev) => [...prev, entry]);
@@ -406,6 +431,38 @@ export default function CommandPalette({
       desc: 'show reading list',
       run: () => window.location.assign('/books'),
     },
+    guestbook: {
+      desc: 'open the guestbook',
+      run: () => window.location.assign('/guestbook'),
+    },
+    play: {
+      desc: 'jump into a random game',
+      run: () => {
+        const games = ['/lab/typing', '/lab/quiz', '/lab/lb-defense', '/lab/2048', '/lab/boids'];
+        const href = games[Math.floor(Math.random() * games.length)];
+        push({ kind: 'txt', text: `Launching ${href} ...` });
+        window.location.assign(href);
+      },
+    },
+    stats: {
+      desc: 'numbers about this site',
+      run: () => {
+        import('@/data/curriculum')
+          .then(({ CURRICULUM_MODULES }) => {
+            const lessons = new Set(CURRICULUM_MODULES.flatMap((m) => m.lessons.map((l) => l.id)));
+            push({
+              kind: 'txt',
+              text: [
+                `posts      ${blogPosts.length}`,
+                `projects   ${projects.length}`,
+                `labs       ${LABS.length} pages`,
+                `lessons    ${lessons.size} interactive simulations`,
+              ].join('\n'),
+            });
+          })
+          .catch(() => push({ kind: 'err', text: 'stats: could not load the lesson list' }));
+      },
+    },
     sudo: {
       desc: 'superuser execution',
       run: (args) => {
@@ -534,8 +591,16 @@ export default function CommandPalette({
     { title: 'Token burn', desc: 'AI token usage telemetry', route: '/tokens' },
     { title: 'Topics', desc: 'topic index', route: '/topics' },
     { title: 'Help', desc: 'site manual', route: '/help' },
+    { title: 'Guestbook', desc: 'leave a note', route: '/guestbook' },
   ];
-  const searchPool = [...pages, ...blogPosts, ...projects];
+  // Lessons that resolve to a page already listed (a track entry) are not repeated.
+  const pageRoutes = new Set(pages.map((p) => p.route));
+  const searchPool = [...pages, ...blogPosts, ...projects, ...lessonPool.filter((l) => !pageRoutes.has(l.route))];
+  const matchesAll = (p: PaletteItem, tokens: string[]): boolean => {
+    // The route is searchable too, so "k8s cni" finds /lab/k8s-networking-cni.
+    const hay = `${p.title} ${p.desc ?? ''} ${p.route}`.toLowerCase();
+    return tokens.every((tok) => hay.includes(tok));
+  };
   const suggestFor = (raw: string): Sugg[] => {
     const input0 = raw.trim();
     if (!input0) return [];
@@ -550,11 +615,19 @@ export default function CommandPalette({
       if (cmds.includes(last)) return [];
       const q = last.toLowerCase();
       return searchPool
-        .filter((p) => `${p.title} ${p.desc ?? ''}`.toLowerCase().includes(q))
-        .slice(0, 6)
+        .filter((p) => matchesAll(p, [q]))
+        .slice(0, 8)
         .map((p) => ({ text: p.title, desc: p.route, type: 'go' as const, route: p.route }));
     }
     const cmd = words[0];
+    // Not a command: search with every word ("redis event loop").
+    if (!commands[cmd.toLowerCase()]) {
+      const tokens = words.map((w) => w.toLowerCase());
+      return searchPool
+        .filter((p) => matchesAll(p, tokens))
+        .slice(0, 8)
+        .map((p) => ({ text: p.title, desc: p.route, type: 'go' as const, route: p.route }));
+    }
     if (cmd === 'theme' && words.length === 2) {
       return ['dark', 'light', 'system', 'matrix']
         .filter((t) => t.startsWith(last) && t !== last)

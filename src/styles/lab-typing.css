@@ -1,0 +1,71 @@
+/* Code typing test (/lab/typing). Everything is scoped under .typing-lab. */
+.typing-lab {
+  .typing-stage {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--bg-alt);
+    padding: 1.25rem 1.5rem;
+    cursor: text;
+  }
+
+  .typing-stage:focus-within {
+    border-color: var(--accent);
+  }
+
+  .typing-text {
+    margin: 0;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    font-size: 1rem;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-word;
+    tab-size: 4;
+  }
+
+  .typing-ch {
+    color: var(--fg-faint);
+  }
+
+  .typing-ch.is-correct {
+    color: var(--fg);
+  }
+
+  .typing-ch.is-wrong {
+    color: var(--accent);
+    text-decoration: underline wavy;
+    text-underline-offset: 3px;
+  }
+
+  .typing-ch.is-current {
+    background: var(--bg-hover);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+
+  .typing-nl {
+    opacity: 0.55;
+  }
+
+  /* The real input sits on top of the text, invisible, so clicks focus it and phones show a keyboard. */
+  .typing-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    resize: none;
+    opacity: 0;
+    cursor: text;
+  }
+
+  .typing-chip[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  @media (min-width: 640px) {
+    .typing-text {
+      font-size: 1.125rem;
+    }
+  }
+}

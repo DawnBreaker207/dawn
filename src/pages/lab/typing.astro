@@ -1,0 +1,110 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { TYPING_LANGS } from '@/data/typing-snippets';
+import '@/styles/lab-typing.css';
+
+export const prerender = true;
+---
+
+<BaseLayout
+  title="Code Typing Test"
+  description="Type real Java, SQL, Git, TypeScript and Docker snippets and measure your speed and accuracy."
+>
+  <header class="mb-7 space-y-4 border-b border-(--border) pt-1 pb-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-sm text-(--fg-faint)">
+      <div class="flex items-center gap-2">
+        <span class="inline-block size-2 rounded-full bg-(--accent)"></span>
+        <span class="text-(--fg)">~/dawn/lab/typing</span>
+      </div>
+      <a href="/lab" class="text-(--fg-dim) no-underline hover:text-(--accent)">All labs →</a>
+    </div>
+    <div class="space-y-2.5">
+      <h1 class="m-0 bg-gradient-to-r from-sky-600 via-cyan-500 to-emerald-500 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl md:text-5xl">
+        Code Typing Test
+      </h1>
+      <p class="m-0 max-w-2xl border-l-2 border-(--accent) pl-3.5 text-base leading-relaxed text-(--fg-dim) sm:text-lg">
+        Type real snippets, not random words. Indentation fills itself in, mistakes stay visible, and the keyboard sounds from the footer work here too.
+      </p>
+    </div>
+  </header>
+
+  <div id="typing-root" class="typing-lab space-y-4 pb-10" data-state="idle">
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--bg-alt) px-4 py-3 font-mono text-sm sm:text-base">
+      <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Language">
+        <button
+          type="button"
+          class="typing-chip cursor-pointer rounded-lg border border-(--border) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent)"
+          data-typing-lang="all"
+          data-track-event="typing-lang"
+          aria-pressed="true"
+        >
+          All
+        </button>
+        {TYPING_LANGS.map((l) => (
+          <button
+            type="button"
+            class="typing-chip cursor-pointer rounded-lg border border-(--border) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent)"
+            data-typing-lang={l.id}
+            data-track-event="typing-lang"
+            aria-pressed="false"
+          >
+            {l.label}
+          </button>
+        ))}
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="typing-restart" data-track-event="typing-restart" class="cursor-pointer rounded-lg border border-(--border) px-3 py-1.5 text-(--fg-dim) transition-colors hover:border-(--accent) hover:text-(--accent)">
+          Restart <span class="text-(--fg-faint)">Esc</span>
+        </button>
+        <button type="button" id="typing-next" data-track-event="typing-next" class="cursor-pointer rounded-lg border border-(--accent) bg-(--accent) px-3 py-1.5 font-semibold text-white transition-colors hover:bg-(--accent-hover)">
+          New snippet <span class="opacity-80">Tab</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 font-mono sm:grid-cols-4">
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-4 py-3">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">WPM</div>
+        <div id="typing-wpm" class="text-2xl font-bold text-(--fg)">0</div>
+      </div>
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-4 py-3">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Accuracy</div>
+        <div id="typing-acc" class="text-2xl font-bold text-(--fg)">100%</div>
+      </div>
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-4 py-3">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Time</div>
+        <div id="typing-time" class="text-2xl font-bold text-(--fg)">0.0s</div>
+      </div>
+      <div class="rounded-xl border border-(--border) bg-(--bg-alt) px-4 py-3">
+        <div class="text-xs tracking-wider text-(--fg-faint) uppercase sm:text-sm">Best WPM</div>
+        <div id="typing-best" class="text-2xl font-bold text-(--accent)">-</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="mb-2 flex items-center justify-between font-mono text-xs text-(--fg-faint) sm:text-sm">
+        <span id="typing-title">snippet</span>
+        <span id="typing-hint">Click here and start typing</span>
+      </div>
+      <div class="typing-stage">
+        <div id="typing-text" class="typing-text" aria-hidden="true"></div>
+        <textarea
+          id="typing-input"
+          class="typing-input"
+          aria-label="Type the snippet shown above"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          autocorrect="off"
+        ></textarea>
+      </div>
+    </div>
+
+    <div id="typing-result" class="hidden rounded-xl border border-(--accent) bg-(--bg-alt) px-5 py-4 font-mono text-sm sm:text-base" role="status">
+      <p id="typing-result-text" class="m-0 text-(--fg)"></p>
+      <p class="m-0 mt-1 text-(--fg-dim)">Press <kbd>Tab</kbd> for the next snippet or <kbd>Esc</kbd> to try this one again.</p>
+    </div>
+  </div>
+
+  <script>import '@/scripts/lab/typing/typing.ts';</script>
+</BaseLayout>

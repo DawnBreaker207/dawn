@@ -1,0 +1,84 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { QUIZ_DECKS } from '@/data/quiz-questions';
+import '@/styles/lab-quiz.css';
+
+export const prerender = true;
+
+const MENU = [...QUIZ_DECKS, { id: 'mixed', label: 'Mixed', blurb: 'A bit of both, shuffled.' }];
+---
+
+<BaseLayout
+  title="Dev Quiz: HTTP & Git"
+  description="A ten-question quiz: pick the right HTTP status code or the right Git command for each situation."
+>
+  <header class="mb-7 space-y-4 border-b border-(--border) pt-1 pb-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-sm text-(--fg-faint)">
+      <div class="flex items-center gap-2">
+        <span class="inline-block size-2 rounded-full bg-(--accent)"></span>
+        <span class="text-(--fg)">~/dawn/lab/quiz</span>
+      </div>
+      <a href="/lab" class="text-(--fg-dim) no-underline hover:text-(--accent)">All labs →</a>
+    </div>
+    <div class="space-y-2.5">
+      <h1 class="m-0 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-rose-500 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl md:text-5xl">
+        Dev Quiz
+      </h1>
+      <p class="m-0 max-w-2xl border-l-2 border-(--accent) pl-3.5 text-base leading-relaxed text-(--fg-dim) sm:text-lg">
+        Ten situations per round. Pick the HTTP status code or the Git command that fits, with a short reason after every answer.
+      </p>
+    </div>
+  </header>
+
+  <div id="quiz-root" class="quiz-lab space-y-4 pb-10" data-state="menu">
+    <section id="quiz-menu" class="grid gap-3 sm:grid-cols-3" aria-label="Choose a deck">
+      {MENU.map((d) => (
+        <button
+          type="button"
+          data-quiz-deck={d.id}
+          data-track-event="quiz-start"
+          class="cursor-pointer rounded-xl border border-(--border) bg-(--bg-alt) p-4 text-left transition-colors hover:border-(--accent)"
+        >
+          <div class="text-lg font-bold text-(--fg)">{d.label}</div>
+          <div class="mt-1 text-sm text-(--fg-dim) sm:text-base">{d.blurb}</div>
+          <div class="mt-3 font-mono text-xs text-(--fg-faint) sm:text-sm">
+            Best: <span data-quiz-best={d.id}>-</span>
+          </div>
+        </button>
+      ))}
+    </section>
+
+    <section id="quiz-play" class="hidden space-y-4" aria-live="polite">
+      <div class="flex items-center justify-between font-mono text-sm text-(--fg-dim) sm:text-base">
+        <span id="quiz-progress">Question 1 / 10</span>
+        <span>Score <b id="quiz-score" class="text-(--fg)">0</b> · Streak <b id="quiz-streak" class="text-(--accent)">0</b></span>
+      </div>
+      <div class="quiz-bar"><span id="quiz-bar" style="width: 0%"></span></div>
+      <h2 id="quiz-prompt" class="m-0 text-xl leading-snug font-bold text-(--fg) sm:text-2xl"></h2>
+      <div id="quiz-choices" class="grid gap-2.5" role="group" aria-label="Answers"></div>
+      <div id="quiz-why" class="hidden rounded-xl border border-(--border) bg-(--bg-alt) px-4 py-3 text-sm leading-relaxed text-(--fg-dim) sm:text-base"></div>
+      <div class="flex justify-end">
+        <button
+          type="button"
+          id="quiz-next"
+          data-track-event="quiz-next"
+          class="hidden cursor-pointer rounded-lg border border-(--accent) bg-(--accent) px-4 py-2 font-mono text-sm font-semibold text-white transition-colors hover:bg-(--accent-hover)"
+        >
+          Next <span class="opacity-80">Enter</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="quiz-done" class="hidden space-y-4 rounded-xl border border-(--accent) bg-(--bg-alt) p-5" role="status">
+      <div id="quiz-grade" class="font-mono text-sm tracking-wider text-(--accent) uppercase"></div>
+      <div id="quiz-final" class="text-3xl font-extrabold text-(--fg)"></div>
+      <p id="quiz-final-note" class="m-0 text-sm text-(--fg-dim) sm:text-base"></p>
+      <div class="flex flex-wrap gap-2 font-mono text-sm">
+        <button type="button" id="quiz-again" data-track-event="quiz-again" class="cursor-pointer rounded-lg border border-(--accent) bg-(--accent) px-4 py-2 font-semibold text-white transition-colors hover:bg-(--accent-hover)">Play again</button>
+        <button type="button" id="quiz-menu-btn" data-track-event="quiz-menu" class="cursor-pointer rounded-lg border border-(--border) px-4 py-2 text-(--fg-dim) transition-colors hover:border-(--accent) hover:text-(--accent)">Change deck</button>
+      </div>
+    </section>
+  </div>
+
+  <script>import '@/scripts/lab/quiz/quiz.ts';</script>
+</BaseLayout>
