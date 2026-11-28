@@ -36,7 +36,7 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'Pure RAM (None)', data_loss_window: '100% on Crash', io_overhead: 'Zero', recovery_speed: 'Instant (Empty)' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET account:1 500', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'SET account:1 500', icon: 'zap' }] }),
           redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis RAM Core', 'Volatile Memory'], sub: 'Data lost on power failure' }),
           card: makePanel({ x: -2, y: 14 }, 'Persistence Trade-offs', [
             'RDB Snapshot (dump.rdb):',
@@ -103,7 +103,7 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'RDB Window', data_loss_window: '4 Minutes Lost!', io_overhead: 'Burst', recovery_speed: 'Fast' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Clients', tags: [{ text: '12:00 - 12:04 writes', tone: 'amber', icon: 'clock' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Clients', tags: [{ text: '12:00 - 12:04 writes', tone: 'amber', icon: 'clock' }] }),
           crash: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Server Crashed at 12:04', 'Power Failure'], sub: 'Restores 12:00 snapshot only' }),
           card: makePanel({ x: -2, y: 14 }, 'The RDB Data Loss Gap', [
             '12:00:00 -> dump.rdb saved successfully',
@@ -134,7 +134,7 @@ export const redisPersistenceRdbAofLesson = {
       metrics: { persistence_mode: 'AOF Enabled', data_loss_window: '≤ 1 Second', io_overhead: 'Continuous', recovery_speed: 'Moderate' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET k v', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'SET k v', icon: 'zap' }] }),
           redis: makeBlock(0, 0, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Engine', 'aof_buf Buffer'], sub: 'In-Memory + Log Append' }),
           aofFile: makeBlock(10, 8, { s: 4.6, h: 52, color: 'teal', glyph: 'folder', label: ['appendonly.aof', 'RESP Command Log'], sub: '*3\\r\\n$3\\r\\nSET...' }),
         },

@@ -1,43 +1,34 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeDb,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeCrowd, makeDb, makeLink, makePanel, makeZone, type Bag } from '@/lib/simulator/scene-builders';
 
-const At = { x0: -4.5, x1: 4.5, y0: -16, y1: -10 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -16, y1: -10 };
 
-const jt = { x0: -16, x1: -8, y0: -4, y1: 4 };
+const users = { x0: -16, x1: -8, y0: -4, y1: 4 };
 
-const Mt = () => makeCrowd(At, 11, `1M users`);
+const sqlDb = () => makeCrowd(usersArea, 11, `1M users`);
 
-const Nt = () => makeBlock(0, 0, { label: [`App`, `Server`] });
+const noSqlDb = () => makeBlock(0, 0, { label: [`App`, `Server`] });
 
-const Pt = (e = {}) => makeDb(11, 0, { glyph: `listOrdered`, label: `SQL database`, ...e });
+const appServer = (e: Bag = {}) => makeDb(11, 0, { glyph: `listOrdered`, label: `SQL database`, ...e });
 
-const Ft = (e = {}) => makeDb(0, 11, { glyph: `file`, label: `document store`, ...e });
+const links = (e: Bag = {}) => makeDb(0, 11, { glyph: `file`, label: `document store`, ...e });
 
-const It = () => ({
-    kvz: makeZone(jt, `KEY–VALUE · 3 NODES`),
+const requestFlows = () => ({
+    kvz: makeZone(users, `KEY–VALUE · 3 NODES`),
     kv1: makeDb(-12, -2.2, { r: 1.3, h: 28, glyph: `zap` }),
     kv2: makeDb(-12, 2.2, { r: 1.3, h: 28, glyph: `zap` }),
     kv3: makeDb(-14.6, 0, { r: 1.3, h: 28, glyph: `zap` }),
   });
 
-const w = {
+const comparisonCard = {
     ua: makeLink(`users`, `app`, [`users`, `app`], { heads: `both` }),
-    as: (e = {}) => ({ as: makeLink(`app`, `sql`, [`app`, `sql`], { heads: `both`, ...e }) }),
-    ad: (e = {}) => ({ ad: makeLink(`app`, `doc`, [`app`, `doc`], { heads: `both`, ...e }) }),
-    ak: (e = {}) => ({ ak: makeLink(`app`, `kvz`, [`app`, `kvz`], { heads: `both`, ...e }) }),
+    as: (e: Bag = {}) => ({ as: makeLink(`app`, `sql`, [`app`, `sql`], { heads: `both`, ...e }) }),
+    ad: (e: Bag = {}) => ({ ad: makeLink(`app`, `doc`, [`app`, `doc`], { heads: `both`, ...e }) }),
+    ak: (e: Bag = {}) => ({ ak: makeLink(`app`, `kvz`, [`app`, `kvz`], { heads: `both`, ...e }) }),
   };
 
-const Lt = (e, t, n, r = { x: 11, y: 0, dx: 40, dy: -230 }) => makePanel({ z: 0, ...r }, e, t, { icon: n });
+const card = (e: string, t: string[], n: string, r: Bag = { x: 11, y: 0, dx: 40, dy: -230 }) => makePanel({ z: 0, ...r }, e, t, { icon: n });
 
-const Rt = (e, t = 2.4, n = {}) => ({ route: [`ua`, ...e], rate: t, bounce: !0, ...n });
+const lesson = (e: string[], t = 2.4, n: Bag = {}) => ({ route: [`ua`, ...e], rate: t, bounce: !0, ...n });
 
 export const sqlNosqlLesson = {
     id: `sql-nosql`,
@@ -70,10 +61,10 @@ export const sqlNosqlLesson = {
         metrics: { joins: `yes`, tx: `yes`, schema: `fixed`, scaleOut: `hard` },
         scene: {
           entities: {
-            users: Mt(),
-            app: Nt(),
-            sql: Pt(),
-            card: Lt(
+            users: sqlDb(),
+            app: noSqlDb(),
+            sql: appServer(),
+            card: card(
               `Tables`,
               [
                 `users   (id, name, email)`,
@@ -84,8 +75,8 @@ export const sqlNosqlLesson = {
               `listOrdered`,
             ),
           },
-          links: { ua: w.ua, ...w.as() },
-          flows: [Rt([`as`])],
+          links: { ua: comparisonCard.ua, ...comparisonCard.as() },
+          flows: [lesson([`as`])],
         },
       },
       {
@@ -104,10 +95,10 @@ export const sqlNosqlLesson = {
         metrics: { joins: `yes`, tx: `yes`, schema: `fixed`, scaleOut: `hard` },
         scene: {
           entities: {
-            users: Mt(),
-            app: Nt(),
-            sql: Pt({ tags: [{ text: `ACID`, tone: `green`, icon: `lock` }] }),
-            card: Lt(
+            users: sqlDb(),
+            app: noSqlDb(),
+            sql: appServer({ tags: [{ text: `ACID`, tone: `green`, icon: `lock` }] }),
+            card: card(
               `One transaction`,
               [
                 `BEGIN`,
@@ -118,8 +109,8 @@ export const sqlNosqlLesson = {
               `lock`,
             ),
           },
-          links: { ua: w.ua, ...w.as({ label: `BEGIN … COMMIT` }) },
-          flows: [Rt([`as`], 1.6), { route: [`as`], kind: `write`, rate: 1.2 }],
+          links: { ua: comparisonCard.ua, ...comparisonCard.as({ label: `BEGIN … COMMIT` }) },
+          flows: [lesson([`as`], 1.6), { route: [`as`], kind: `write`, rate: 1.2 }],
         },
       },
       {
@@ -141,16 +132,16 @@ export const sqlNosqlLesson = {
         metrics: { joins: `yes`, tx: `yes`, schema: `fixed`, scaleOut: `hard` },
         scene: {
           entities: {
-            users: Mt(),
-            app: Nt(),
-            sql: Pt({
+            users: sqlDb(),
+            app: noSqlDb(),
+            sql: appServer({
               heat: 0.75,
               cpu: 0.9,
               tags: [{ text: `ALTER TABLE · 400M rows · 6 h`, tone: `red`, icon: `clock` }],
             }),
           },
-          links: { ua: w.ua, ...w.as({ label: `products · orders · users` }) },
-          flows: [Rt([`as`], 4.2)],
+          links: { ua: comparisonCard.ua, ...comparisonCard.as({ label: `products · orders · users` }) },
+          flows: [lesson([`as`], 4.2)],
         },
       },
       {
@@ -169,11 +160,11 @@ export const sqlNosqlLesson = {
         metrics: { joins: `limited`, tx: `per doc`, schema: `flexible`, scaleOut: `easy` },
         scene: {
           entities: {
-            users: Mt(),
-            app: Nt(),
-            sql: Pt(makeCool(0.45)),
-            doc: Ft(),
-            card: Lt(
+            users: sqlDb(),
+            app: noSqlDb(),
+            sql: appServer(makeCool(0.45)),
+            doc: links(),
+            card: card(
               `Two documents`,
               [
                 `{ "sku": "shoe-42",`,
@@ -186,7 +177,7 @@ export const sqlNosqlLesson = {
               { x: 0, y: 11, dx: 60, dy: -200 },
             ),
           },
-          links: { ua: w.ua, ...w.as(), ...w.ad({ label: `product catalog` }) },
+          links: { ua: comparisonCard.ua, ...comparisonCard.as(), ...comparisonCard.ad({ label: `product catalog` }) },
           flows: [
             { routes: [{ path: [`ua`, `as`] }, { path: [`ua`, `ad`] }], rate: 3, bounce: !0 },
           ],
@@ -208,12 +199,12 @@ export const sqlNosqlLesson = {
         metrics: { joins: `no`, tx: `limited`, schema: `none`, scaleOut: `easy` },
         scene: {
           entities: {
-            users: Mt(),
-            app: Nt(),
-            sql: Pt(makeCool(0.4)),
-            doc: Ft(),
-            ...It(),
-            card: Lt(
+            users: sqlDb(),
+            app: noSqlDb(),
+            sql: appServer(makeCool(0.4)),
+            doc: links(),
+            ...requestFlows(),
+            card: card(
               `Key → value`,
               [
                 `session:9f2c  →  { user: 42, cart: [7, 13] }`,
@@ -224,7 +215,7 @@ export const sqlNosqlLesson = {
               { x: 0, y: 11, dx: 60, dy: -200 },
             ),
           },
-          links: { ua: w.ua, ...w.as(), ...w.ad(), ...w.ak({ label: `sessions` }) },
+          links: { ua: comparisonCard.ua, ...comparisonCard.as(), ...comparisonCard.ad(), ...comparisonCard.ak({ label: `sessions` }) },
           flows: [
             {
               routes: [
@@ -262,8 +253,8 @@ export const sqlNosqlLesson = {
         },
         metrics: { joins: `limited`, tx: `limited`, schema: `flexible`, scaleOut: `easy` },
         scene: {
-          entities: { users: Mt(), app: Nt(), sql: Pt(makeCool(0.4)), doc: Ft(), ...It() },
-          links: { ua: w.ua, ...w.as(), ...w.ad(), ...w.ak() },
+          entities: { users: sqlDb(), app: noSqlDb(), sql: appServer(makeCool(0.4)), doc: links(), ...requestFlows() },
+          links: { ua: comparisonCard.ua, ...comparisonCard.as(), ...comparisonCard.ad(), ...comparisonCard.ak() },
           flows: [
             {
               routes: [
@@ -293,12 +284,12 @@ export const sqlNosqlLesson = {
         changes: [`~ Orders & payments → SQL`, `~ Catalog → documents`, `~ Sessions → key–value`],
         metrics: { joins: `yes`, tx: `yes`, schema: `flexible`, scaleOut: `easy` },
         scene: {
-          entities: { users: Mt(), app: Nt(), sql: Pt(makeCool(0.4)), doc: Ft(), ...It() },
+          entities: { users: sqlDb(), app: noSqlDb(), sql: appServer(makeCool(0.4)), doc: links(), ...requestFlows() },
           links: {
-            ua: w.ua,
-            ...w.as({ label: `orders · payments` }),
-            ...w.ad({ label: `catalog` }),
-            ...w.ak({ label: `sessions · carts` }),
+            ua: comparisonCard.ua,
+            ...comparisonCard.as({ label: `orders · payments` }),
+            ...comparisonCard.ad({ label: `catalog` }),
+            ...comparisonCard.ak({ label: `sessions · carts` }),
           },
           flows: [
             {
@@ -330,11 +321,11 @@ export const sqlNosqlLesson = {
         metrics: { joins: `yes`, tx: `yes`, schema: `flexible`, scaleOut: `easy` },
         scene: {
           entities: {
-            users: Mt(),
-            app: Nt(),
-            sql: Pt(makeCool(0.4)),
-            doc: Ft(),
-            ...It(),
+            users: sqlDb(),
+            app: noSqlDb(),
+            sql: appServer(makeCool(0.4)),
+            doc: links(),
+            ...requestFlows(),
             search: makeBlock(11, 11, {
               color: `yellow`,
               glyph: `search`,
@@ -343,10 +334,10 @@ export const sqlNosqlLesson = {
             }),
           },
           links: {
-            ua: w.ua,
-            ...w.as(),
-            ...w.ad(),
-            ...w.ak(),
+            ua: comparisonCard.ua,
+            ...comparisonCard.as(),
+            ...comparisonCard.ad(),
+            ...comparisonCard.ak(),
             sx: makeLink(`app`, `search`, [`app`, [5.5, 0], [5.5, 11], `search`], {
               heads: `both`,
               label: `“red running shoes”`,
@@ -384,11 +375,11 @@ export const sqlNosqlLesson = {
         metrics: { joins: `yes`, tx: `yes`, schema: `flexible`, scaleOut: `easy` },
         scene: {
           entities: {
-            users: Mt(),
-            app: Nt(),
-            sql: Pt(makeCool(0.4)),
-            doc: Ft(),
-            ...It(),
+            users: sqlDb(),
+            app: noSqlDb(),
+            sql: appServer(makeCool(0.4)),
+            doc: links(),
+            ...requestFlows(),
             search: makeBlock(11, 11, {
               color: `yellow`,
               glyph: `search`,
@@ -397,10 +388,10 @@ export const sqlNosqlLesson = {
             }),
           },
           links: {
-            ua: w.ua,
-            ...w.as(),
-            ...w.ad(),
-            ...w.ak(),
+            ua: comparisonCard.ua,
+            ...comparisonCard.as(),
+            ...comparisonCard.ad(),
+            ...comparisonCard.ak(),
             sx: makeLink(`app`, `search`, [`app`, [5.5, 0], [5.5, 11], `search`], { heads: `both` }),
             cs: makeLink(`sql`, `search`, [`sql`, `search`], { style: `dashed`, label: `change stream` }),
           },
@@ -438,8 +429,8 @@ export const sqlNosqlLesson = {
         },
         metrics: { joins: `yes`, tx: `yes`, schema: `flexible`, scaleOut: `easy` },
         scene: {
-          entities: { users: Mt(), app: Nt(), sql: Pt(makeCool(0.4)), doc: Ft(), ...It() },
-          links: { ua: w.ua, ...w.as(), ...w.ad(), ...w.ak() },
+          entities: { users: sqlDb(), app: noSqlDb(), sql: appServer(makeCool(0.4)), doc: links(), ...requestFlows() },
+          links: { ua: comparisonCard.ua, ...comparisonCard.as(), ...comparisonCard.ad(), ...comparisonCard.ak() },
           flows: [
             {
               routes: [

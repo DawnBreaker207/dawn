@@ -36,7 +36,7 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'redisObject', encoding: 'OBJ_ENCODING_RAW', time_complexity: 'O(1)', memory_efficiency: '16B Overhead' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET key "val"', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'SET key "val"', icon: 'zap' }] }),
           robj: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['redisObject (robj)', '16-Byte Header'], sub: 'type: 4b | enc: 4b | ptr: 8B' }),
           card: makePanel({ x: -2, y: 14 }, 'struct redisObject Definition', [
             'struct redisObject {',
@@ -69,7 +69,7 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'sdshdr8', encoding: 'OBJ_ENCODING_EMBSTR', time_complexity: 'O(1) strlen', memory_efficiency: 'Pre-allocated' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'STRLEN user:name', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'STRLEN user:name', icon: 'zap' }] }),
           sds: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'folder', label: ['SDS Struct (sdshdr8)', 'Contiguous Memory'], sub: 'len: 4 | alloc: 8 | buf[]' }),
           card: makePanel({ x: -2, y: 14 }, 'Why SDS Trumps C char*', [
             '1. O(1) Length: Reads len directly from header (Zero scanning)',
@@ -137,7 +137,7 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'listpack / intset', encoding: 'OBJ_ENCODING_LISTPACK', time_complexity: 'O(N) Small N (N<=512)', memory_efficiency: 'Ultra High (Zero Ptrs)' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'HSET user:10 name "Sam"', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'HSET user:10 name "Sam"', icon: 'zap' }] }),
           lp: makeBlock(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'folder', label: ['Listpack Block', 'Contiguous Memory Array'], sub: 'Total bytes | Entries | Elements' }),
           card: makePanel({ x: -2, y: 14 }, 'Listpack Memory Layout', [
             '[<tot-bytes> <num-elements> <entry 1> <entry 2> ... <end-byte 0xFF>]',
@@ -169,7 +169,7 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'quicklist', encoding: 'OBJ_ENCODING_QUICKLIST', time_complexity: 'O(1) Head / Tail', memory_efficiency: 'Hybrid Compressed' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Queue Producer', tags: [{ text: 'LPUSH / RPOP', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Queue Producer', tags: [{ text: 'LPUSH / RPOP', icon: 'zap' }] }),
           ql: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'layers', label: ['Quicklist Container', 'Doubly-Linked Chunks'], sub: 'Node 1 (LP) <-> Node 2 (LP)' }),
           card: makePanel({ x: -2, y: 14 }, 'Quicklist Structure', [
             'Head Node [Listpack 8KB] <--> Middle Node [LZF Compressed] <--> Tail Node [Listpack 8KB]',
@@ -199,7 +199,7 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'Top-Level Strings', encoding: 'Fragmented RAW', time_complexity: 'O(1)', memory_efficiency: '80% Wasted Metadata' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'App Client', tags: [{ text: '10M Top-level Keys', tone: 'red', icon: 'alert' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'App Client', tags: [{ text: '10M Top-level Keys', tone: 'red', icon: 'alert' }] }),
           db: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Fragmented RAM', 'Overhead: 1.2 GB'], sub: 'Payload: only 200MB!' }),
           card: makePanel({ x: -2, y: 14 }, 'Memory Breakdown for 1 String Key', [
             '- dictEntry (Hash table node): 24 bytes',
@@ -231,7 +231,7 @@ export const redisDataStructuresLesson = {
       metrics: { data_struct: 'Hashed Buckets', encoding: 'OBJ_ENCODING_LISTPACK', time_complexity: 'O(1) Lookups', memory_efficiency: '75% RAM Saved' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Optimized App', tags: [{ text: 'HSET users:1 42 data', tone: 'green', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Optimized App', tags: [{ text: 'HSET users:1 42 data', tone: 'green', icon: 'zap' }] }),
           redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Compact Redis Hash', '280 MB Total RAM'], sub: 'Listpack Encoded (500 fields)' }),
           card: makePanel({ x: -2, y: 14 }, 'Hash Bucketing Implementation', [
             'Function getBucket(userId):',

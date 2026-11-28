@@ -1,38 +1,31 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel, type Bag, type Tag, cardAt } from '@/lib/simulator/scene-builders';
 
-const Wa = (e = []) => makeDevice(-7, -18, { label: `Ana`, tags: e });
+const usersArea = (e: Tag[] = []) => makeDevice(-7, -18, { label: `Ana`, tags: e });
 
-const Ga = (e = []) => makeDevice(7, -18, { label: `Ben`, tags: e });
+const users = (e: Tag[] = []) => makeDevice(7, -18, { label: `Ben`, tags: e });
 
-const Ka = () => ({ a1: makeBlock(-7, -6, { label: [`Server 1`] }), a2: makeBlock(7, -6, { label: [`Server 2`] }) });
+const appServer = () => ({ a1: makeBlock(-7, -6, { label: [`Server 1`] }), a2: makeBlock(7, -6, { label: [`Server 2`] }) });
 
-const qa = (e = [], t = {}) =>
+const database = (e: Tag[] = [], t: Bag = {}) =>
     makeDb(0, 6, { r: 2.1, h: 44, glyph: `ticket`, label: `tickets DB`, tags: e, ...t });
 
-const Ja = (e, t = `paper`, n = ``) => ({ text: `seat 7 · left: ${e}${n}`, tone: t, icon: `ticket` });
+const links = (e: number, t = `paper`, n = ``) => ({ text: `seat 7 · left: ${e}${n}`, tone: t, icon: `ticket` });
 
-const Ya = (e = {}) => ({
+const requestFlows = (e: Bag = {}) => ({
     aa: makeLink(`ana`, `a1`, [`ana`, `a1`], { heads: `both` }),
     bb: makeLink(`ben`, `a2`, [`ben`, `a2`], { heads: `both` }),
     ad: makeLink(`a1`, `db`, [`a1`, [`a1`, `db`], `db`], { heads: `both`, ...(e.ad || {}) }),
     bd: makeLink(`a2`, `db`, [`a2`, [`a2`, `db`], `db`], { heads: `both`, ...(e.bd || {}) }),
   });
 
-const Xa = (e = {}) => [
+const card = (e: Bag = {}) => [
     { route: [`aa`, `ad`], kind: `mine`, rate: 0.75, bounce: !0, ...(e.ana || {}) },
     { route: [`bb`, `bd`], kind: `req`, rate: 0.75, bounce: !0, ...(e.ben || {}) },
   ];
 
-const Za = (e, t, n, r = {}) => makePanel({ x: 0, y: 6, z: 0, dx: 125, dy: -150 }, e, t, { icon: n, ...r });
+const metrics = cardAt({ x: 0, y: 6, dx: 125, dy: -150 });
 
-const Qa = Za(
+const lesson = metrics(
     `Book a seat`,
     [
       `n = SELECT left FROM seats WHERE id = 7`,
@@ -81,9 +74,9 @@ const $a = {
         },
         metrics: { seatsLeft: 1, sold: 0, oversold: `no`, lockWait: 0 },
         scene: {
-          entities: { ana: Wa(), ben: Ga(), ...Ka(), db: qa([Ja(1)]), },
-          links: Ya(),
-          flows: Xa({ ana: { rate: 0.5 }, ben: { rate: 0.5 } }),
+          entities: { ana: usersArea(), ben: users(), ...appServer(), db: database([links(1)]), },
+          links: requestFlows(),
+          flows: card({ ana: { rate: 0.5 }, ben: { rate: 0.5 } }),
         },
       },
       {
@@ -102,13 +95,13 @@ const $a = {
         metrics: { seatsLeft: 0, sold: `2 for 1 seat`, oversold: `yes`, lockWait: 0 },
         scene: {
           entities: {
-            ana: Wa([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ...Ka(),
-            db: qa([Ja(0, `red`, ` · 2 bookings!`)], { heat: 0.5 }),
+            ana: usersArea([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ben: users([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ...appServer(),
+            db: database([links(0, `red`, ` · 2 bookings!`)], { heat: 0.5 }),
           },
-          links: Ya(),
-          flows: Xa(),
+          links: requestFlows(),
+          flows: card(),
         },
       },
       {
@@ -127,13 +120,13 @@ const $a = {
         metrics: { seatsLeft: 0, sold: `2 for 1 seat`, oversold: `yes`, lockWait: 0 },
         scene: {
           entities: {
-            ana: Wa([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ...Ka(),
-            db: qa([Ja(0, `red`, ` · 2 bookings!`), { text: `read committed`, icon: `layers` }], {
+            ana: usersArea([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ben: users([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ...appServer(),
+            db: database([links(0, `red`, ` · 2 bookings!`), { text: `read committed`, icon: `layers` }], {
               heat: 0.5,
             }),
-            card: Za(
+            card: metrics(
               `Inside a transaction`,
               [
                 `BEGIN`,
@@ -145,8 +138,8 @@ const $a = {
               `lock`,
             ),
           },
-          links: Ya({ ad: { label: `BEGIN … COMMIT`, labelAt: 0.3 } }),
-          flows: Xa(),
+          links: requestFlows({ ad: { label: `BEGIN … COMMIT`, labelAt: 0.3 } }),
+          flows: card(),
         },
       },
       {
@@ -169,13 +162,13 @@ const $a = {
         metrics: { seatsLeft: 0, sold: 1, oversold: `no`, lockWait: 40 },
         scene: {
           entities: {
-            ana: Wa([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `sold out · sorry`, tone: `amber` }]),
-            ...Ka(),
-            db: qa([Ja(0, `green`), { text: `row 7 locked by Ana`, tone: `violet`, icon: `lock` }]),
+            ana: usersArea([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ben: users([{ text: `sold out · sorry`, tone: `amber` }]),
+            ...appServer(),
+            db: database([links(0, `green`), { text: `row 7 locked by Ana`, tone: `violet`, icon: `lock` }]),
           },
-          links: Ya({ bd: { label: `waits for the lock`, labelTone: `amber`, labelAt: 0.3 } }),
-          flows: Xa({ ben: { hold: 1.4 } }),
+          links: requestFlows({ bd: { label: `waits for the lock`, labelTone: `amber`, labelAt: 0.3 } }),
+          flows: card({ ben: { hold: 1.4 } }),
         },
       },
       {
@@ -194,11 +187,11 @@ const $a = {
         metrics: { seatsLeft: 0, sold: 1, oversold: `no`, lockWait: 2 },
         scene: {
           entities: {
-            ana: Wa([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `sold out · sorry`, tone: `amber` }]),
-            ...Ka(),
-            db: qa([Ja(0, `green`)]),
-            card: Za(
+            ana: usersArea([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ben: users([{ text: `sold out · sorry`, tone: `amber` }]),
+            ...appServer(),
+            db: database([links(0, `green`)]),
+            card: metrics(
               `One atomic statement`,
               [
                 `UPDATE seats SET left = left − 1`,
@@ -209,8 +202,8 @@ const $a = {
               `zap`,
             ),
           },
-          links: Ya(),
-          flows: Xa({ ben: { rate: 0.6 } }),
+          links: requestFlows(),
+          flows: card({ ben: { rate: 0.6 } }),
         },
       },
       {
@@ -232,11 +225,11 @@ const $a = {
         metrics: { seatsLeft: 0, sold: 1, oversold: `no`, lockWait: 0 },
         scene: {
           entities: {
-            ana: Wa([{ text: `v8 → v9 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `v8 is stale · retry`, tone: `amber`, icon: `replay` }]),
-            ...Ka(),
-            db: qa([Ja(0, `green`, ` · version 9`)]),
-            card: Za(
+            ana: usersArea([{ text: `v8 → v9 ✓`, tone: `green` }]),
+            ben: users([{ text: `v8 is stale · retry`, tone: `amber`, icon: `replay` }]),
+            ...appServer(),
+            db: database([links(0, `green`, ` · version 9`)]),
+            card: metrics(
               `Compare-and-set`,
               [
                 `read:  left = 1, version = 8`,
@@ -247,8 +240,8 @@ const $a = {
               `replay`,
             ),
           },
-          links: Ya({ bd: { fail: 0.5 } }),
-          flows: Xa(),
+          links: requestFlows({ bd: { fail: 0.5 } }),
+          flows: card(),
         },
       },
       {
@@ -274,13 +267,13 @@ const $a = {
         metrics: { seatsLeft: 0, sold: 1, oversold: `no`, lockWait: 0 },
         scene: {
           entities: {
-            ana: Wa([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `sold out · sorry`, tone: `amber` }]),
-            ...Ka(),
-            db: qa([Ja(0, `green`), { text: `serializable`, icon: `layers` }]),
+            ana: usersArea([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ben: users([{ text: `sold out · sorry`, tone: `amber` }]),
+            ...appServer(),
+            db: database([links(0, `green`), { text: `serializable`, icon: `layers` }]),
           },
-          links: Ya(),
-          flows: Xa({ ben: { rate: 0.5 } }),
+          links: requestFlows(),
+          flows: card({ ben: { rate: 0.5 } }),
         },
       },
       {
@@ -303,11 +296,11 @@ const $a = {
         metrics: { seatsLeft: `—`, sold: `2 for 1 seat`, oversold: `yes`, lockWait: 0 },
         scene: {
           entities: {
-            ana: Wa([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ...Ka(),
-            db: qa([{ text: `bookings: seat 7 × 2`, tone: `red`, icon: `alert` }], { heat: 0.5 }),
-            card: Za(
+            ana: usersArea([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ben: users([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ...appServer(),
+            db: database([{ text: `bookings: seat 7 × 2`, tone: `red`, icon: `alert` }], { heat: 0.5 }),
+            card: metrics(
               `Nothing to lock`,
               [
                 `SELECT … FROM bookings`,
@@ -318,8 +311,8 @@ const $a = {
               `lock`,
             ),
           },
-          links: Ya(),
-          flows: Xa(),
+          links: requestFlows(),
+          flows: card(),
         },
       },
       {
@@ -342,17 +335,17 @@ const $a = {
         metrics: { seatsLeft: `—`, sold: `—`, oversold: `no`, lockWait: 1e3 },
         scene: {
           entities: {
-            ana: Wa([{ text: `transfer A → B`, icon: `dollar` }]),
-            ben: Ga([{ text: `aborted · retrying`, tone: `red`, icon: `replay` }]),
-            ...Ka(),
-            db: qa(
+            ana: usersArea([{ text: `transfer A → B`, icon: `dollar` }]),
+            ben: users([{ text: `aborted · retrying`, tone: `red`, icon: `replay` }]),
+            ...appServer(),
+            db: database(
               [
                 { text: `Ana holds A · waits for B`, tone: `violet`, icon: `lock` },
                 { text: `Ben holds B · waits for A`, tone: `red`, icon: `lock` },
               ],
               { heat: 0.5, glyph: `database`, label: `accounts DB` },
             ),
-            card: Za(
+            card: metrics(
               `A wait cycle`,
               [
                 `Ana: lock A … waiting for B`,
@@ -363,8 +356,8 @@ const $a = {
               `lock`,
             ),
           },
-          links: Ya({ bd: { fail: 0.6 } }),
-          flows: Xa({ ana: { hold: 1.5 }, ben: { hold: 1.5 } }),
+          links: requestFlows({ bd: { fail: 0.6 } }),
+          flows: card({ ana: { hold: 1.5 }, ben: { hold: 1.5 } }),
         },
       },
       {
@@ -383,13 +376,13 @@ const $a = {
         metrics: { seatsLeft: 0, sold: 1, oversold: `no`, lockWait: 0 },
         scene: {
           entities: {
-            ana: Wa([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `duplicate key · sold out`, tone: `amber` }]),
-            ...Ka(),
-            db: qa([Ja(0, `green`), { text: `UNIQUE (concert, seat)`, icon: `key` }]),
+            ana: usersArea([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ben: users([{ text: `duplicate key · sold out`, tone: `amber` }]),
+            ...appServer(),
+            db: database([links(0, `green`), { text: `UNIQUE (concert, seat)`, icon: `key` }]),
           },
-          links: Ya({ bd: { fail: 0.8 } }),
-          flows: Xa(),
+          links: requestFlows({ bd: { fail: 0.8 } }),
+          flows: card(),
         },
       },
       {
@@ -412,21 +405,21 @@ const $a = {
         metrics: { seatsLeft: 1, sold: 0, oversold: `no`, lockWait: 3e3 },
         scene: {
           entities: {
-            ana: Wa([{ text: `paying… (lock held)`, tone: `amber`, icon: `hourglass` }]),
-            ben: Ga([{ text: `waiting for seat 7`, tone: `red`, icon: `hourglass` }]),
-            ...Ka(),
+            ana: usersArea([{ text: `paying… (lock held)`, tone: `amber`, icon: `hourglass` }]),
+            ben: users([{ text: `waiting for seat 7`, tone: `red`, icon: `hourglass` }]),
+            ...appServer(),
             pay: makeBlock(-16, -6, {
               color: `purple`,
               glyph: `creditCard`,
               label: [`Payment`, `Provider`],
               tags: [{ text: `3 s per charge`, tone: `amber`, icon: `clock` }],
             }),
-            db: qa([Ja(1), { text: `locked 3 s · 40 waiting`, tone: `red`, icon: `lock` }], {
+            db: database([links(1), { text: `locked 3 s · 40 waiting`, tone: `red`, icon: `lock` }], {
               heat: 0.6,
             }),
           },
           links: {
-            ...Ya({ bd: { label: `waits for the lock`, labelTone: `red`, labelAt: 0.3 } }),
+            ...requestFlows({ bd: { label: `waits for the lock`, labelTone: `red`, labelAt: 0.3 } }),
             ap: makeLink(`a1`, `pay`, [`a1`, `pay`], {
               heads: `both`,
               label: `charge card`,
@@ -460,16 +453,16 @@ const $a = {
         metrics: { seatsLeft: 0, sold: 1, oversold: `no`, lockWait: 2 },
         scene: {
           entities: {
-            ana: Wa([{ text: `seat held · paying`, tone: `violet`, icon: `clock` }]),
-            ben: Ga([{ text: `seat 7 held · pick another`, tone: `amber` }]),
-            ...Ka(),
+            ana: usersArea([{ text: `seat held · paying`, tone: `violet`, icon: `clock` }]),
+            ben: users([{ text: `seat 7 held · pick another`, tone: `amber` }]),
+            ...appServer(),
             pay: makeBlock(-16, -6, {
               color: `purple`,
               glyph: `creditCard`,
               label: [`Payment`, `Provider`],
             }),
-            db: qa([{ text: `seat 7: held for Ana · 12:10`, tone: `violet`, icon: `clock` }]),
-            card: Za(
+            db: database([{ text: `seat 7: held for Ana · 12:10`, tone: `violet`, icon: `clock` }]),
+            card: metrics(
               `Three short steps`,
               [
                 `1. UPDATE seat 7 SET held_by = Ana,`,
@@ -482,7 +475,7 @@ const $a = {
             ),
           },
           links: {
-            ...Ya(),
+            ...requestFlows(),
             ap: makeLink(`a1`, `pay`, [`a1`, `pay`], {
               heads: `both`,
               label: `charge card`,
@@ -516,13 +509,13 @@ const $a = {
         metrics: { seatsLeft: 0, sold: 1, oversold: `no`, lockWait: 2 },
         scene: {
           entities: {
-            ana: Wa([{ text: `booked seat 7 ✓`, tone: `green` }]),
-            ben: Ga([{ text: `sold out · sorry`, tone: `amber` }]),
-            ...Ka(),
-            db: qa([Ja(0, `green`)]),
+            ana: usersArea([{ text: `booked seat 7 ✓`, tone: `green` }]),
+            ben: users([{ text: `sold out · sorry`, tone: `amber` }]),
+            ...appServer(),
+            db: database([links(0, `green`)]),
           },
-          links: Ya(),
-          flows: Xa({ ben: { rate: 0.5 } }),
+          links: requestFlows(),
+          flows: card({ ben: { rate: 0.5 } }),
         },
       },
       {

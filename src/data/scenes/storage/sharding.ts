@@ -1,49 +1,42 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCool,
-  makeDb,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeDb, makeLink, makePanel, cardAt, type Tag, type Bag } from '@/lib/simulator/scene-builders';
 
-const Hn = [-10.5, -3.5, 3.5, 10.5];
+const shardXPositions = [-10.5, -3.5, 3.5, 10.5];
 
-const Un = [`sa`, `sb`, `sc`, `sd`];
+const shardIds = [`sa`, `sb`, `sc`, `sd`];
 
-const Wn = [`A`, `B`, `C`, `D`];
+const shardLabels = [`A`, `B`, `C`, `D`];
 
-const Gn = (e = []) => makeBlock(0, -12, { label: [`App`], tags: e });
+const appServer = (e: Tag[] = []) => makeBlock(0, -12, { label: [`App`], tags: e });
 
-const Kn = (e, t = {}) => makeDb(Hn[e], 0, { r: 1.6, h: 36, glyph: `database`, ...t });
+const shard = (e: number, t: Bag = {}) => makeDb(shardXPositions[e], 0, { r: 1.6, h: 36, glyph: `database`, ...t });
 
-const qn = (e = () => null, t = {}) =>
+const shards = (e: (i: number) => Tag | null = () => null, t: Record<string, Bag> = {}) =>
     Object.fromEntries(
-      Un.map((n, r) => {
+      shardIds.map((n, r) => {
         let i = e(r);
-        return [n, Kn(r, { ...makeCool(0.5), tags: i ? [i] : [], ...(t[n] || {}) })];
+        return [n, shard(r, { ...makeCool(0.5), tags: i ? [i] : [], ...(t[n] || {}) })];
       }),
     );
 
-const Jn = (e = Un) =>
+const appLinks = (e = shardIds) =>
     Object.fromEntries(
       e.map((e) => [`w${e}`, makeLink(`app`, e, [`app`, [e, `app`], e], { heads: `both` })]),
     );
 
-const Yn = (e = [1, 1, 1, 1], t = 4.4) => [
+const requestFlows = (e = [1, 1, 1, 1], t = 4.4) => [
     {
-      routes: Un.map((t, n) => ({ path: [`w${t}`], weight: e[n] })),
+      routes: shardIds.map((t, n) => ({ path: [`w${t}`], weight: e[n] })),
       pick: `weights`,
       rate: t,
       kind: `write`,
     },
   ];
 
-const Xn = (e, t, n) => makePanel({ x: 10.5, y: 0, z: 0, dx: 50, dy: -240 }, e, t, { icon: n });
+const card = cardAt({ x: 10.5, y: 0, dx: 50, dy: -240 });
 
-const Zn = (e) => ({ text: `${Wn[e]} · ids ${[`1–25M`, `25–50M`, `50–75M`, `75M+`][e]}` });
+const rangeLabel = (e: number) => ({ text: `${shardLabels[e]} · ids ${[`1–25M`, `25–50M`, `50–75M`, `75M+`][e]}` });
 
-const Qn = (e) => ({ text: `${Wn[e]} · hash % 4 = ${e}`, tone: `violet` });
+const hashLabel = (e: number) => ({ text: `${shardLabels[e]} · hash % 4 = ${e}`, tone: `violet` });
 
 export const shardingLesson = {
     id: `sharding`,
@@ -76,7 +69,7 @@ export const shardingLesson = {
         metrics: { shards: 1, perShard: 4e4, hottest: 100, size: `20 TB` },
         scene: {
           entities: {
-            app: Gn(),
+            app: appServer(),
             sa: makeDb(0, 0, {
               r: 2.8,
               h: 66,
@@ -108,9 +101,9 @@ export const shardingLesson = {
         ],
         metrics: { shards: 4, perShard: 1e4, hottest: 25, size: `5 TB` },
         scene: {
-          entities: { app: Gn([{ text: `route by user_id`, icon: `network` }]), ...qn(Zn) },
-          links: Jn(),
-          flows: Yn(),
+          entities: { app: appServer([{ text: `route by user_id`, icon: `network` }]), ...shards(rangeLabel) },
+          links: appLinks(),
+          flows: requestFlows(),
         },
       },
       {
@@ -127,8 +120,8 @@ export const shardingLesson = {
         metrics: { shards: 4, perShard: `uneven`, hottest: 78, size: `5 TB` },
         scene: {
           entities: {
-            app: Gn([{ text: `route by user_id`, icon: `network` }]),
-            ...qn(Zn, {
+            app: appServer([{ text: `route by user_id`, icon: `network` }]),
+            ...shards(rangeLabel, {
               sa: makeCool(0.12),
               sb: makeCool(0.14),
               sc: makeCool(0.2),
@@ -139,8 +132,8 @@ export const shardingLesson = {
               },
             }),
           },
-          links: Jn(),
-          flows: Yn([0.07, 0.07, 0.08, 0.78], 5),
+          links: appLinks(),
+          flows: requestFlows([0.07, 0.07, 0.08, 0.78], 5),
         },
       },
       {
@@ -159,9 +152,9 @@ export const shardingLesson = {
         metrics: { shards: 4, perShard: 1e4, hottest: 25, size: `5 TB` },
         scene: {
           entities: {
-            app: Gn([{ text: `hash(user_id) % 4`, icon: `network` }]),
-            ...qn(Qn),
-            card: Xn(
+            app: appServer([{ text: `hash(user_id) % 4`, icon: `network` }]),
+            ...shards(hashLabel),
+            card: card(
               `Where does each user go?`,
               [
                 `user 1001 → hash % 4 = 2 → C`,
@@ -172,8 +165,8 @@ export const shardingLesson = {
               `network`,
             ),
           },
-          links: Jn(),
-          flows: Yn(),
+          links: appLinks(),
+          flows: requestFlows(),
         },
       },
       {
@@ -192,8 +185,8 @@ export const shardingLesson = {
         metrics: { shards: 4, perShard: `uneven`, hottest: 70, size: `5 TB` },
         scene: {
           entities: {
-            app: Gn([{ text: `hash(user_id) % 4`, icon: `network` }]),
-            ...qn(Qn, {
+            app: appServer([{ text: `hash(user_id) % 4`, icon: `network` }]),
+            ...shards(hashLabel, {
               sc: {
                 heat: 0.9,
                 cpu: 0.98,
@@ -204,8 +197,8 @@ export const shardingLesson = {
               sd: makeCool(0.2),
             }),
           },
-          links: Jn(),
-          flows: Yn([0.1, 0.1, 0.7, 0.1], 5),
+          links: appLinks(),
+          flows: requestFlows([0.1, 0.1, 0.7, 0.1], 5),
         },
       },
       {
@@ -228,9 +221,9 @@ export const shardingLesson = {
         metrics: { shards: 4, perShard: 1e4, hottest: 27, size: `5 TB` },
         scene: {
           entities: {
-            app: Gn([{ text: `likes:42 → #0…#7`, icon: `split` }]),
-            ...qn((e) => ({ text: `${Wn[e]} · likes:42#${e * 2},#${e * 2 + 1}`, tone: `violet` })),
-            card: Xn(
+            app: appServer([{ text: `likes:42 → #0…#7`, icon: `split` }]),
+            ...shards((e: number) => ({ text: `${shardLabels[e]} · likes:42#${e * 2},#${e * 2 + 1}`, tone: `violet` })),
+            card: card(
               `Split a hot counter`,
               [
                 `write: likes:42#rand(0..7) += 1`,
@@ -240,8 +233,8 @@ export const shardingLesson = {
               `split`,
             ),
           },
-          links: Jn(),
-          flows: Yn([1, 1, 1.1, 1], 5),
+          links: appLinks(),
+          flows: requestFlows([1, 1, 1.1, 1], 5),
         },
       },
       {
@@ -260,12 +253,12 @@ export const shardingLesson = {
         metrics: { shards: 4, perShard: 1e4, hottest: 25, size: `5 TB` },
         scene: {
           entities: {
-            app: Gn([{ text: `top 10 by followers?`, icon: `search` }]),
-            ...qn(Qn),
+            app: appServer([{ text: `top 10 by followers?`, icon: `search` }]),
+            ...shards(hashLabel),
           },
-          links: Jn(),
+          links: appLinks(),
           flows: [
-            { fanout: !0, routes: Un.map((e) => ({ path: [`w${e}`] })), rate: 0.7, bounce: !0 },
+            { fanout: !0, routes: shardIds.map((e) => ({ path: [`w${e}`] })), rate: 0.7, bounce: !0 },
           ],
         },
       },
@@ -285,15 +278,15 @@ export const shardingLesson = {
         metrics: { shards: 5, perShard: 8e3, hottest: 20, size: `4 TB` },
         scene: {
           entities: {
-            app: Gn([{ text: `hash(user_id) % 5`, icon: `network` }]),
-            ...qn((e) => ({ text: `${Wn[e]} · moving`, tone: `amber`, icon: `replay` })),
-            se: makeDb(14, 6, {
+            app: appServer([{ text: `hash(user_id) % 5`, icon: `network` }]),
+            ...shards((e: number) => ({ text: `${shardLabels[e]} · moving`, tone: `amber`, icon: `replay` })),
+            se: makeDb(3.7, 8, {
               r: 1.6,
               h: 36,
               ...makeCool(0.5),
               tags: [{ text: `E · new`, tone: `green` }],
             }),
-            card: Xn(
+            card: card(
               `% 4 → % 5`,
               [
                 `user 1001: % 4 = 2, % 5 = 1  → moves`,
@@ -304,16 +297,16 @@ export const shardingLesson = {
             ),
           },
           links: {
-            ...Jn([...Un, `se`]),
+            ...appLinks([...shardIds, `se`]),
             ...Object.fromEntries(
-              Un.map((e) => [
+              shardIds.map((e) => [
                 `m${e}`,
                 makeLink(e, `se`, [e, [e, -3.2], [`se`, -3.2], `se`], { style: `dashed` }),
               ]),
             ),
           },
           flows: [
-            { fanout: !0, routes: Un.map((e) => ({ path: [`m${e}`] })), kind: `write`, rate: 0.9 },
+            { fanout: !0, routes: shardIds.map((e) => ({ path: [`m${e}`] })), kind: `write`, rate: 0.9 },
           ],
         },
       },
@@ -336,9 +329,9 @@ export const shardingLesson = {
         },
         metrics: { shards: 4, perShard: 1e4, hottest: 25, size: `5 TB` },
         scene: {
-          entities: { app: Gn([{ text: `hash(user_id) % 4`, icon: `network` }]), ...qn(Qn) },
-          links: Jn(),
-          flows: Yn(),
+          entities: { app: appServer([{ text: `hash(user_id) % 4`, icon: `network` }]), ...shards(hashLabel) },
+          links: appLinks(),
+          flows: requestFlows(),
         },
       },
     ],

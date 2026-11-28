@@ -1,52 +1,44 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeDevice, makeLink, makePanel, makeZone, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const Zi = -3;
+const usersArea = -3;
 
-const Qi = (e = [], t = {}) => makeBlock(-7, -12, { label: [`App`, `Server 1`], tags: e, ...t });
+const users = (e: Tag[] = [], t: Bag = {}) => makeBlock(3, -12, { label: [`App`, `Server 1`], tags: e, ...t });
 
-const $i = (e = [], t = {}) => makeBlock(7, -12, { label: [`App`, `Server 2`], tags: e, ...t });
+const $i = (e: Tag[] = [], t: Bag = {}) => makeBlock(10, -12, { label: [`App`, `Server 2`], tags: e, ...t });
 
-const ea = (e = [], t = {}) => makeDb(-7, 6, { r: 1.9, glyph: `database`, label: `shard A`, tags: e, ...t });
+const idGenerator = (e: Tag[] = [], t: Bag = {}) => makeDb(-7, 6, { r: 1.9, glyph: `database`, label: `shard A`, tags: e, ...t });
 
-const ta = (e = [], t = {}) => makeDb(7, 6, { r: 1.9, glyph: `database`, label: `shard B`, tags: e, ...t });
+const database = (e: Tag[] = [], t: Bag = {}) => makeDb(7, 6, { r: 1.9, glyph: `database`, label: `shard B`, tags: e, ...t });
 
-const na = (e = []) =>
+const snowflakeId = (e: Tag[] = []) =>
     makeBlock(0, -22, { color: `yellow`, glyph: `ticket`, label: [`Ticket`, `Server`], tags: e });
 
-const ra = {
+const uuidGenerator = {
     a1: makeLink(`s1`, `dA`, [`s1`, `dA`]),
-    b1: makeLink(`s1`, `dB`, [`s1`, [`s1`, Zi], [`dB`, Zi], `dB`]),
-    a2: makeLink(`s2`, `dA`, [`s2`, [`s2`, Zi], [`dA`, Zi], `dA`]),
+    b1: makeLink(`s1`, `dB`, [`s1`, [`s1`, usersArea], [`dB`, usersArea], `dB`]),
+    a2: makeLink(`s2`, `dA`, [`s2`, [`s2`, usersArea], [`dA`, usersArea], `dA`]),
     b2: makeLink(`s2`, `dB`, [`s2`, `dB`]),
   };
 
-const ia = (e = {}) => ({
+const ticketServer = (e: Bag = {}) => ({
     t1: makeLink(`s1`, `tk`, [`s1`, [`s1`, `tk`], `tk`], { heads: `both`, ...e }),
     t2: makeLink(`s2`, `tk`, [`s2`, [`s2`, `tk`], `tk`], { heads: `both`, ...e }),
   });
 
-const aa = (e = 1.6) => ({
+const links = (e = 1.6) => ({
     routes: [{ path: [`a1`] }, { path: [`b1`] }, { path: [`a2`] }, { path: [`b2`] }],
     kind: `write`,
     rate: e,
   });
 
-const oa = (e, t, n, r = {}) => makePanel({ x: 7, y: -12, z: 0, dx: 104, dy: -22, ...r }, e, t, { icon: n });
+const requestFlows = (e: string, t: string[], n: string, r: Bag = {}) => makePanel({ x: 7, y: -12, z: 0, dx: 104, dy: -22, ...r }, e, t, { icon: n });
 
-const sa = Array.from({ length: 10 }, (e, t) => -9.45 + t * 2.1);
+const card = Array.from({ length: 10 }, (e, t) => -9.45 + t * 2.1);
 
-const ca = (e = []) => {
-    let t = { idx: makeZone({ x0: -11, x1: 11, y0: 4.5, y1: 7.5 }, ``) };
+const snowflakeCard = (e: number[] = []) => {
+    let t: Record<string, Bag> = { idx: makeZone({ x0: -11, x1: 11, y0: 4.5, y1: 7.5 }, ``) };
     return (
-      sa.forEach((n, r) => {
+      card.forEach((n, r) => {
         t[`p${r}`] = makeBlock(n, 6, {
           s: 1.7,
           h: 11,
@@ -65,9 +57,9 @@ const ca = (e = []) => {
     );
   };
 
-const la = (e, t) => makeLink(e, `p${t}`, [e, [e, Zi], [sa[t], Zi], `p${t}`]);
+const formats = (e: string, t: number) => makeLink(e, `p${t}`, [e, [e, usersArea], [card[t], usersArea], `p${t}`]);
 
-const ua = {
+const lesson = {
     id: `unique-ids`,
     title: `Unique IDs at Scale`,
     summary: `Giving every row a name nobody else will ever use — without one counter everyone has to queue for.`,
@@ -98,10 +90,10 @@ const ua = {
         metrics: { collide: `no`, idSize: `64 bits`, sortable: `yes`, idDep: `one database` },
         scene: {
           entities: {
-            s1: Qi(),
-            dA: ea([{ text: `next id: 1004`, icon: `hash` }], { label: `orders database` }),
+            s1: users(),
+            dA: idGenerator([{ text: `next id: 1004`, icon: `hash` }], { label: `orders database` }),
           },
-          links: { a1: ra.a1 },
+          links: { a1: uuidGenerator.a1 },
           flows: [{ route: [`a1`], kind: `write`, rate: 1.2 }],
         },
       },
@@ -121,11 +113,11 @@ const ua = {
         metrics: { collide: `yes`, idSize: `64 bits`, sortable: `yes`, idDep: `each shard` },
         scene: {
           entities: {
-            s1: Qi(),
-            dA: ea([{ text: `order 1004 · Ana`, tone: `red`, icon: `alert` }]),
-            dB: ta([{ text: `order 1004 · Ben`, tone: `red`, icon: `alert` }]),
+            s1: users(),
+            dA: idGenerator([{ text: `order 1004 · Ana`, tone: `red`, icon: `alert` }]),
+            dB: database([{ text: `order 1004 · Ben`, tone: `red`, icon: `alert` }]),
           },
-          links: { a1: ra.a1, b1: ra.b1 },
+          links: { a1: uuidGenerator.a1, b1: uuidGenerator.b1 },
           flows: [{ routes: [{ path: [`a1`] }, { path: [`b1`] }], kind: `write`, rate: 1.4 }],
         },
       },
@@ -154,14 +146,14 @@ const ua = {
         },
         scene: {
           entities: {
-            s1: Qi(),
+            s1: users(),
             s2: $i(),
-            dA: ea(),
-            dB: ta(),
-            tk: na([{ text: `next id: 1005`, icon: `hash` }]),
+            dA: idGenerator(),
+            dB: database(),
+            tk: snowflakeId([{ text: `next id: 1005`, icon: `hash` }]),
           },
-          links: { ...ra, ...ia() },
-          flows: [{ routes: [{ path: [`t1`] }, { path: [`t2`] }], rate: 1.6, bounce: !0 }, aa(1.6)],
+          links: { ...uuidGenerator, ...ticketServer() },
+          flows: [{ routes: [{ path: [`t1`] }, { path: [`t2`] }], rate: 1.6, bounce: !0 }, links(1.6)],
         },
       },
       {
@@ -189,14 +181,14 @@ const ua = {
         },
         scene: {
           entities: {
-            s1: Qi([{ text: `block 1000–1999`, tone: `green`, icon: `layers` }]),
+            s1: users([{ text: `block 1000–1999`, tone: `green`, icon: `layers` }]),
             s2: $i([{ text: `block 2000–2999`, tone: `green`, icon: `layers` }]),
-            dA: ea(),
-            dB: ta(),
-            tk: na([{ text: `next block: 3000`, icon: `hash` }]),
+            dA: idGenerator(),
+            dB: database(),
+            tk: snowflakeId([{ text: `next block: 3000`, icon: `hash` }]),
           },
-          links: { ...ra, ...ia({ style: `dashed` }) },
-          flows: [{ routes: [{ path: [`t1`] }, { path: [`t2`] }], rate: 0.25, bounce: !0 }, aa(2)],
+          links: { ...uuidGenerator, ...ticketServer({ style: `dashed` }) },
+          flows: [{ routes: [{ path: [`t1`] }, { path: [`t2`] }], rate: 0.25, bounce: !0 }, links(2)],
         },
       },
       {
@@ -219,11 +211,11 @@ const ua = {
         metrics: { collide: `no`, idSize: `128 bits`, sortable: `no`, idDep: `nothing` },
         scene: {
           entities: {
-            s1: Qi([{ text: `f47ac10b-58cc-…`, icon: `fingerprint` }]),
+            s1: users([{ text: `f47ac10b-58cc-…`, icon: `fingerprint` }]),
             s2: $i([{ text: `9c1e6a2d-03b7-…`, icon: `fingerprint` }]),
-            dA: ea(),
-            dB: ta(),
-            card: oa(
+            dA: idGenerator(),
+            dB: database(),
+            card: requestFlows(
               `UUID v4`,
               [
                 `f47ac10b-58cc-4372-a567-0e02b2c3d479`,
@@ -234,8 +226,8 @@ const ua = {
               `fingerprint`,
             ),
           },
-          links: ra,
-          flows: [aa(2)],
+          links: uuidGenerator,
+          flows: [links(2)],
         },
       },
       {
@@ -257,10 +249,10 @@ const ua = {
         metrics: { collide: `no`, idSize: `128 bits`, sortable: `no`, idDep: `nothing` },
         scene: {
           entities: {
-            s1: Qi([{ text: `f47ac10b-58cc-…`, icon: `fingerprint` }]),
+            s1: users([{ text: `f47ac10b-58cc-…`, icon: `fingerprint` }]),
             s2: $i([{ text: `9c1e6a2d-03b7-…`, icon: `fingerprint` }]),
-            ...ca([1, 3, 4, 6, 8]),
-            card: oa(
+            ...snowflakeCard([1, 3, 4, 6, 8]),
+            card: requestFlows(
               `Where does the next row go?`,
               [
                 `counter id   → always the last page`,
@@ -271,11 +263,11 @@ const ua = {
             ),
           },
           links: {
-            r1: la(`s1`, 1),
-            r3: la(`s1`, 4),
-            r5: la(`s1`, 8),
-            r2: la(`s2`, 3),
-            r4: la(`s2`, 6),
+            r1: formats(`s1`, 1),
+            r3: formats(`s1`, 4),
+            r5: formats(`s1`, 8),
+            r2: formats(`s2`, 3),
+            r4: formats(`s2`, 6),
           },
           flows: [
             {
@@ -308,11 +300,11 @@ const ua = {
         metrics: { collide: `no`, idSize: `128 bits`, sortable: `yes`, idDep: `a clock` },
         scene: {
           entities: {
-            s1: Qi([{ text: `018f6b1c-3a40-7…`, icon: `clock` }]),
+            s1: users([{ text: `018f6b1c-3a40-7…`, icon: `clock` }]),
             s2: $i([{ text: `018f6b1c-3a41-7…`, icon: `clock` }]),
-            ...ca([9]),
+            ...snowflakeCard([9]),
           },
-          links: { r_s1_p9: la(`s1`, 9), r_s2_p9: la(`s2`, 9) },
+          links: { r_s1_p9: formats(`s1`, 9), r_s2_p9: formats(`s2`, 9) },
           flows: [{ routes: [{ path: [`r_s1_p9`] }, { path: [`r_s2_p9`] }], kind: `write`, rate: 2.4 }],
         },
       },
@@ -332,11 +324,11 @@ const ua = {
         metrics: { collide: `no`, idSize: `64 bits`, sortable: `yes`, idDep: `machine id + clock` },
         scene: {
           entities: {
-            s1: Qi([{ text: `machine 1`, tone: `green`, icon: `idCard` }]),
+            s1: users([{ text: `machine 1`, tone: `green`, icon: `idCard` }]),
             s2: $i([{ text: `machine 2`, tone: `green`, icon: `idCard` }]),
-            dA: ea(),
-            dB: ta(),
-            card: oa(
+            dA: idGenerator(),
+            dB: database(),
+            card: requestFlows(
               `One 64-bit id`,
               [
                 `41 bits   milliseconds   ≈ 69 years`,
@@ -347,8 +339,8 @@ const ua = {
               `hash`,
             ),
           },
-          links: ra,
-          flows: [aa(2.4)],
+          links: uuidGenerator,
+          flows: [links(2.4)],
         },
       },
       {
@@ -371,11 +363,11 @@ const ua = {
         metrics: { collide: `no`, idSize: `64 bits`, sortable: `yes`, idDep: `machine id + clock` },
         scene: {
           entities: {
-            s1: Qi([{ text: `clock −2 s · waiting`, tone: `amber`, icon: `clock` }], { heat: 0.4 }),
+            s1: users([{ text: `clock −2 s · waiting`, tone: `amber`, icon: `clock` }], { heat: 0.4 }),
             s2: $i([{ text: `machine 2`, tone: `green`, icon: `idCard` }]),
-            dA: ea(),
-            dB: ta(),
-            card: oa(
+            dA: idGenerator(),
+            dB: database(),
+            card: requestFlows(
               `Server 1’s generator`,
               [
                 `last id stamped   12:00:07.250`,
@@ -386,7 +378,7 @@ const ua = {
               `clock`,
             ),
           },
-          links: { ...ra, a1: { ...ra.a1, style: `off` }, b1: { ...ra.b1, style: `off` } },
+          links: { ...uuidGenerator, a1: { ...uuidGenerator.a1, style: `off` }, b1: { ...uuidGenerator.b1, style: `off` } },
           flows: [{ routes: [{ path: [`a2`] }, { path: [`b2`] }], kind: `write`, rate: 1.6 }],
         },
       },
@@ -409,12 +401,12 @@ const ua = {
         metrics: { collide: `no`, idSize: `64 bits`, sortable: `yes`, idDep: `machine id + clock` },
         scene: {
           entities: {
-            s1: Qi([{ text: `machine 1`, tone: `green`, icon: `idCard` }]),
+            s1: users([{ text: `machine 1`, tone: `green`, icon: `idCard` }]),
             s2: $i([{ text: `machine 2`, tone: `green`, icon: `idCard` }]),
-            dA: ea(),
-            dB: ta(),
+            dA: idGenerator(),
+            dB: database(),
             spy: makeDevice(-7, -22, { label: `competitor` }),
-            card: oa(
+            card: requestFlows(
               `Reading the ids`,
               [
                 `Mon 09:00   /orders/1004`,
@@ -425,8 +417,8 @@ const ua = {
               `eye`,
             ),
           },
-          links: { ...ra, sp: makeLink(`spy`, `s1`, [`spy`, `s1`], { heads: `both` }) },
-          flows: [aa(2), { route: [`sp`], rate: 0.6, bounce: !0 }],
+          links: { ...uuidGenerator, sp: makeLink(`spy`, `s1`, [`spy`, `s1`], { heads: `both` }) },
+          flows: [links(2), { route: [`sp`], rate: 0.6, bounce: !0 }],
         },
       },
       {
@@ -453,13 +445,13 @@ const ua = {
         metrics: { collide: `no`, idSize: `64 bits`, sortable: `yes`, idDep: `machine id + clock` },
         scene: {
           entities: {
-            s1: Qi([{ text: `machine 1`, tone: `green`, icon: `idCard` }]),
+            s1: users([{ text: `machine 1`, tone: `green`, icon: `idCard` }]),
             s2: $i([{ text: `machine 2`, tone: `green`, icon: `idCard` }]),
-            dA: ea(),
-            dB: ta(),
+            dA: idGenerator(),
+            dB: database(),
           },
-          links: ra,
-          flows: [aa(2.4)],
+          links: uuidGenerator,
+          flows: [links(2.4)],
         },
       },
       {
@@ -482,17 +474,17 @@ const ua = {
         metrics: { collide: `no`, idSize: `64 bits`, sortable: `yes`, idDep: `machine id + clock` },
         scene: {
           entities: {
-            s1: Qi([{ text: `machine 1`, tone: `green`, icon: `idCard` }]),
+            s1: users([{ text: `machine 1`, tone: `green`, icon: `idCard` }]),
             s2: $i([{ text: `machine 2`, tone: `green`, icon: `idCard` }]),
-            dA: ea(),
-            dB: ta(),
+            dA: idGenerator(),
+            dB: database(),
           },
-          links: ra,
-          flows: [aa(2.4)],
+          links: uuidGenerator,
+          flows: [links(2.4)],
         },
       },
     ],
   };
 
-export { ua as uniqueIdsLesson };
-export default ua;
+export { lesson as uniqueIdsLesson };
+export default lesson;

@@ -36,7 +36,7 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'ZSET (Dict + SkipList)', lookup_cost: 'O(1)', range_cost: 'O(log N + M)', skiplist_levels: '32 Max' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Game Client', tags: [{ text: 'ZADD scores 950 "Alice"', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Game Client', tags: [{ text: 'ZADD scores 950 "Alice"', icon: 'zap' }] }),
           zset: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis ZSET Engine', 'Dual Structure'], sub: 'Dict + SkipList' }),
           card: makePanel({ x: -2, y: 14 }, 'ZSET Core Operations', [
             'ZADD leaderboard 950 "Alice"      -> O(log N)',
@@ -130,7 +130,7 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'zskiplistLevel', lookup_cost: 'O(log N) Rank', range_cost: 'O(log N)', skiplist_levels: 'span counting' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Player', tags: [{ text: 'ZRANK user:42', icon: 'search' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Player', tags: [{ text: 'ZRANK user:42', icon: 'search' }] }),
           zsl: makeBlock(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'layers', label: ['SkipList Node', 'Span Accumulator'], sub: 'Span: 1000 + 400 + 2 = #1402' }),
           card: makePanel({ x: -2, y: 14 }, 'Span-Based Ranking Math', [
             'Traversal step 1: Jumps Level 4 link with span = 1,000 (rank = 1000)',
@@ -197,7 +197,7 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'ZSET (Listpack)', lookup_cost: 'O(N) Small N', range_cost: 'O(N) Compact', skiplist_levels: 'Zero Pointers' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'ZADD mini_set 1 "a"', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'ZADD mini_set 1 "a"', icon: 'zap' }] }),
           lp: makeBlock(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'folder', label: ['Listpack Encoded ZSET', 'Zero Pointer Overhead'], sub: '["member1", 10, "member2", 20]' }),
           card: makePanel({ x: -2, y: 14 }, 'Automatic Encoding Upgrade', [
             'Initial state: <= 128 members -> Stored as flat Listpack',
@@ -229,7 +229,7 @@ export const redisSortedSetsLesson = {
       metrics: { zset_struct: 'Geohash in ZSET', lookup_cost: 'O(log N)', range_cost: 'GEOSEARCH', skiplist_levels: '52-bit Score' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Rider App', tags: [{ text: 'GEOSEARCH 5km radius', icon: 'mapPin' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Rider App', tags: [{ text: 'GEOSEARCH 5km radius', icon: 'mapPin' }] }),
           geozset: makeBlock(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'globe', label: ['Geospatial ZSET', '52-Bit Geohash Scores'], sub: 'Score = Interleaved Lat/Lon' }),
           card: makePanel({ x: -2, y: 14 }, 'How GEOADD Secretly Works', [
             '1. GEOADD drivers 106.660172 10.762622 "Driver_A"',

@@ -1,40 +1,32 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBlock,
-  makeHot,
-  makeLink,
-  makePanel,
-  makeQueue,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeHot, makeLink, makePanel, makeQueue, makeZone, type Bag, type Tag } from '@/lib/simulator/scene-builders';
+import type { EntityProps, FlowSpec, LinkSpec } from '@/lib/simulator/stage/types';
 
-const tn = 2;
+const waypointY = 2;
 
-const nn = (e = {}) => makeBlock(0, -15, { label: [`App`], ...e });
+const app = (e: Bag = {}) => makeBlock(0, -15, { label: [`App`], ...e });
 
-const rn = (e = {}) =>
+const mem = (e: Bag = {}) =>
     makeBlock(0, -5, { s: 4.4, h: 44, color: `green`, glyph: `zap`, label: [`Pages in`, `memory`], ...e });
 
-const an = (e = {}) =>
-    rn({ glyph: `listOrdered`, label: [`Memtable`], sub: `sorted · in memory`, ...e });
+const memtable = (e: Bag = {}) =>
+    mem({ glyph: `listOrdered`, label: [`Memtable`], sub: `sorted · in memory`, ...e });
 
-const on = { x0: 10.2, x1: 23.4, y0: -8.6, y1: -2.4 };
+const logArea = { x0: 10.2, x1: 23.4, y0: -8.6, y1: -2.4 };
 
-const sn = (e, t = []) => ({
-    lz: makeZone(on, `LOG FILE · APPEND ONLY`),
+const logGroup = (e: number, t: Tag[] = []) => ({
+    lz: makeZone(logArea, `LOG FILE · APPEND ONLY`),
     wal: makeBlock(13, -5, { s: 4.0, h: 42, color: `yellow`, glyph: `scroll`, label: [`Log`], tags: t }),
     ent: makeQueue(16.2, -5, e, [1, 0], { gap: 1.05, color: `#8d99ae` }),
   });
 
-const cn = Array.from({ length: 10 }, (e, t) => -9.45 + t * 2.1);
+const pageX = Array.from({ length: 10 }, (e, t) => -9.45 + t * 2.1);
 
-const ln = { x0: -11, x1: 11, y0: 7.4, y1: 10.6 };
+const fileArea = { x0: -11, x1: 11, y0: 7.4, y1: 10.6 };
 
-const un = (e = [], t = `data file · 8 KB pages`, n = {}) => {
-    let r = { pz: makeZone(ln, ``) };
+const pages = (e: number[] = [], t = `data file · 8 KB pages`, n: Record<number, Bag> = {}) => {
+    let r: Record<string, EntityProps> = { pz: makeZone(fileArea, ``) };
     return (
-      cn.forEach((i, a) => {
+      pageX.forEach((i, a) => {
         r[`p${a}`] = makeBlock(i, 9, {
           s: 1.7,
           h: 11,
@@ -51,67 +43,67 @@ const un = (e = [], t = `data file · 8 KB pages`, n = {}) => {
     );
   };
 
-const dn = (e, t = {}) => makeLink(`mem`, `p${e}`, [`mem`, [`mem`, tn], [cn[e], tn], `p${e}`], t);
+const pageLink = (e: number, t: Partial<LinkSpec> = {}) => makeLink(`mem`, `p${e}`, [`mem`, [`mem`, waypointY], [pageX[e], waypointY], `p${e}`], t);
 
-const fn = (e, t = {}) => Object.fromEntries(e.map((e) => [`f${e}`, dn(e, t)]));
+const pageLinks = (e: number[], t: Partial<LinkSpec> = {}) => Object.fromEntries(e.map((e) => [`f${e}`, pageLink(e, t)]));
 
-const pn = (e, t, n = {}) => ({
+const pageWrites = (e: number[], t: number, n: Partial<FlowSpec> = {}) => ({
     routes: e.map((e) => ({ path: [`f${e}`] })),
     kind: `write`,
     rate: t,
     ...n,
   });
 
-const mn = [1, 4, 6, 8];
+const hotPages = [1, 4, 6, 8];
 
-const hn = [0, 2, 3, 5, 7, 9];
+const coldPages = [0, 2, 3, 5, 7, 9];
 
-const gn = [-7.5, -2.5, 2.5, 7.5];
+const sstableX = [-7.5, -2.5, 2.5, 7.5];
 
-const _n = (e, t = [], n = {}) =>
-    makeBlock(gn[e], 9, { s: 3.5, h: 13, radius: 4, color: `purple`, glyph: ``, label: [], tags: t, ...n });
+const sstable = (e: number, t: Tag[] = [], n: Bag = {}) =>
+    makeBlock(sstableX[e], 9, { s: 3.5, h: 13, radius: 4, color: `purple`, glyph: ``, label: [], tags: t, ...n });
 
-const vn = (e = {}) => ({
-    pz: makeZone(ln, ``),
-    s0: _n(0, e[0] || [{ text: `sorted files (SSTables) · oldest`, icon: `file` }]),
-    s1: _n(1, e[1] || []),
-    s2: _n(2, e[2] || []),
-    s3: _n(3, e[3] || [{ text: `newest`, icon: `clock` }]),
+const sstables = (e: Bag = {}) => ({
+    pz: makeZone(fileArea, ``),
+    s0: sstable(0, e[0] || [{ text: `sorted files (SSTables) · oldest`, icon: `file` }]),
+    s1: sstable(1, e[1] || []),
+    s2: sstable(2, e[2] || []),
+    s3: sstable(3, e[3] || [{ text: `newest`, icon: `clock` }]),
   });
 
-const yn = (e, t = {}) => makeLink(`mem`, `s${e}`, [`mem`, [`mem`, tn], [gn[e], tn], `s${e}`], t);
+const sstableLink = (e: number, t: Partial<LinkSpec> = {}) => makeLink(`mem`, `s${e}`, [`mem`, [`mem`, waypointY], [sstableX[e], waypointY], `s${e}`], t);
 
-const T = {
-    am: (e = {}) => makeLink(`app`, `mem`, [`app`, `mem`], { heads: `both`, ...e }),
-    mw: (e = {}) => makeLink(`mem`, `wal`, [`mem`, `wal`], e),
+const commonLinks = {
+    am: (e: Bag = {}) => makeLink(`app`, `mem`, [`app`, `mem`], { heads: `both`, ...e }),
+    mw: (e: Bag = {}) => makeLink(`mem`, `wal`, [`mem`, `wal`], e),
   };
 
-const bn = (e = 1.4, t = {}) => ({ route: [`am`], kind: `write`, rate: e, bounce: !0, ...t });
+const memWrite = (e = 1.4, t: Partial<FlowSpec> = {}): FlowSpec => ({ route: [`am`], kind: `write`, rate: e, bounce: !0, ...t });
 
-const xn = (e = 1.4, t = {}) => ({ route: [`mw`], kind: `write`, rate: e, ...t });
+const walWrite = (e = 1.4, t: Partial<FlowSpec> = {}): FlowSpec => ({ route: [`mw`], kind: `write`, rate: e, ...t });
 
-const Sn = (e, t, n, r = {}) => makePanel({ x: 0, y: -5, z: 0, dx: -398, dy: -196, ...r }, e, t, { icon: n });
+const panelAt = (e: string, t: string[], n: string, r: Bag = {}) => makePanel({ x: 0, y: -5, z: 0, dx: -398, dy: -196, ...r }, e, t, { icon: n });
 
-const Cn = { crashSafe: `yes`, wps: 4e4, diskPattern: `log + random pages`, lookupCost: `3–4 pages` };
+const btreeMetrics = { crashSafe: `yes`, wps: 4e4, diskPattern: `log + random pages`, lookupCost: `3–4 pages` };
 
-const wn = { crashSafe: `yes`, wps: 2e5, diskPattern: `all sequential`, lookupCost: `≈ 1 file` };
+const lsmMetrics = { crashSafe: `yes`, wps: 2e5, diskPattern: `all sequential`, lookupCost: `≈ 1 file` };
 
-const Tn = (e = [{ text: `merged · newest values only`, tone: `green`, icon: `merge` }]) => ({
-    app: nn(),
-    mem: an(),
-    ...sn(3),
-    pz: makeZone(ln, ``),
+const compactionScene = (e: Tag[] = [{ text: `merged · newest values only`, tone: `green`, icon: `merge` }]) => ({
+    app: app(),
+    mem: memtable(),
+    ...logGroup(3),
+    pz: makeZone(fileArea, ``),
     big: makeBlock(-4, 9, { s: 5.2, h: 15, radius: 4, color: `purple`, glyph: ``, label: [], tags: e }),
-    s3: _n(3, [{ text: `newest`, icon: `clock` }]),
+    s3: sstable(3, [{ text: `newest`, icon: `clock` }]),
   });
 
-const En = () => ({ am: T.am(), mw: T.mw(), n3: yn(3, { label: `flush`, labelAt: 0.5 }) });
+const compactionLinks = () => ({ am: commonLinks.am(), mw: commonLinks.mw(), n3: sstableLink(3, { label: `flush`, labelAt: 0.5 }) });
 
-const Dn = () => [bn(3), xn(2.4), { route: [`n3`], kind: `heavy`, rate: 0.5 }];
+const compactionFlows = () => [memWrite(3), walWrite(2.4), { route: [`n3`], kind: `heavy`, rate: 0.5 }];
 
-const On = [-10.5, -6.3, -2.1, 2.1, 6.3, 10.5];
+const columnX = [-10.5, -6.3, -2.1, 2.1, 6.3, 10.5];
 
-const kn = [`id`, `user`, `item`, `price`, `date`, `+35`];
+const columns = [`id`, `user`, `item`, `price`, `date`, `+35`];
 
 export const storageEnginesLesson = {
     id: `storage-engines`,
@@ -150,9 +142,9 @@ export const storageEnginesLesson = {
         },
         metrics: { crashSafe: `?`, wps: `—`, diskPattern: `—`, lookupCost: `—` },
         scene: {
-          entities: { app: nn(), mem: rn(), ...un() },
-          links: { am: T.am(), ...fn(mn, { style: `dashed` }) },
-          flows: [bn(1.2), pn(mn, 0.4)],
+          entities: { app: app(), mem: mem(), ...pages() },
+          links: { am: commonLinks.am(), ...pageLinks(hotPages, { style: `dashed` }) },
+          flows: [memWrite(1.2), pageWrites(hotPages, 0.4)],
         },
       },
       {
@@ -175,17 +167,17 @@ export const storageEnginesLesson = {
         metrics: { crashSafe: `no`, wps: 5e5, diskPattern: `random · whenever`, lookupCost: `—` },
         scene: {
           entities: {
-            app: nn(),
-            mem: rn({
+            app: app(),
+            mem: mem({
               ...DEAD_STATE,
               tags: [{ text: `power cut · 4 s of writes gone`, tone: `red`, icon: `power` }],
             }),
-            ...un([], `data file · 8 KB pages`, {
+            ...pages([], `data file · 8 KB pages`, {
               6: { heat: 0.9, tags: [{ text: `torn page`, tone: `red`, icon: `alert` }] },
             }),
           },
-          links: { am: T.am({ fail: 1 }), ...fn(mn, { style: `off` }) },
-          flows: [bn(1.6, { bounce: !1 })],
+          links: { am: commonLinks.am({ fail: 1 }), ...pageLinks(hotPages, { style: `off` }) },
+          flows: [memWrite(1.6, { bounce: !1 })],
         },
       },
       {
@@ -209,17 +201,17 @@ export const storageEnginesLesson = {
         metrics: { crashSafe: `yes`, wps: 5e3, diskPattern: `sequential log`, lookupCost: `—` },
         scene: {
           entities: {
-            app: nn(),
-            mem: rn(),
-            ...un(),
-            ...sn(4, [{ text: `fsync before “saved”`, tone: `green`, icon: `check` }]),
+            app: app(),
+            mem: mem(),
+            ...pages(),
+            ...logGroup(4, [{ text: `fsync before “saved”`, tone: `green`, icon: `check` }]),
           },
           links: {
-            am: T.am(),
-            mw: T.mw({ label: `1 · append`, labelAt: 0.5 }),
-            ...fn(mn, { style: `dashed` }),
+            am: commonLinks.am(),
+            mw: commonLinks.mw({ label: `1 · append`, labelAt: 0.5 }),
+            ...pageLinks(hotPages, { style: `dashed` }),
           },
-          flows: [{ route: [`am`, `mw`], kind: `write`, rate: 1.3, bounce: !0 }, pn(mn, 0.3)],
+          flows: [{ route: [`am`, `mw`], kind: `write`, rate: 1.3, bounce: !0 }, pageWrites(hotPages, 0.3)],
         },
       },
       {
@@ -237,18 +229,18 @@ export const storageEnginesLesson = {
         changes: [
           `+ Group commit: many transactions, one fsync`,
           `~ Writes 5,000 → 40,000 per second`,
-          `~ Optional: sync on a timer — faster, but a crash loses the last moments`,
+          `~ Optional: sync on a timer - faster, but a crash loses the last moments`,
         ],
         metrics: { crashSafe: `yes`, wps: 4e4, diskPattern: `sequential log`, lookupCost: `—` },
         scene: {
           entities: {
-            app: nn(),
-            mem: rn(),
-            ...un(),
-            ...sn(6, [{ text: `1 fsync for 8 transactions`, tone: `green`, icon: `layers` }]),
+            app: app(),
+            mem: mem(),
+            ...pages(),
+            ...logGroup(6, [{ text: `1 fsync for 8 transactions`, tone: `green`, icon: `layers` }]),
           },
-          links: { am: T.am(), mw: T.mw(), ...fn(mn, { style: `dashed` }) },
-          flows: [bn(3.2), xn(0.8, { kind: `heavy` }), pn(mn, 0.3)],
+          links: { am: commonLinks.am(), mw: commonLinks.mw(), ...pageLinks(hotPages, { style: `dashed` }) },
+          flows: [memWrite(3.2), walWrite(0.8, { kind: `heavy` }), pageWrites(hotPages, 0.3)],
         },
       },
       {
@@ -270,13 +262,13 @@ export const storageEnginesLesson = {
         metrics: { crashSafe: `yes`, wps: 4e4, diskPattern: `log + random pages`, lookupCost: `—` },
         scene: {
           entities: {
-            app: nn(),
-            mem: rn({ tags: [{ text: `checkpoint: flushing`, icon: `flag` }] }),
-            ...un(mn),
-            ...sn(2, [{ text: `older entries discarded`, icon: `check` }]),
+            app: app(),
+            mem: mem({ tags: [{ text: `checkpoint: flushing`, icon: `flag` }] }),
+            ...pages(hotPages),
+            ...logGroup(2, [{ text: `older entries discarded`, icon: `check` }]),
           },
-          links: { am: T.am(), mw: T.mw(), ...fn(mn) },
-          flows: [bn(2.4), xn(0.8, { kind: `heavy` }), pn(mn, 2.4)],
+          links: { am: commonLinks.am(), mw: commonLinks.mw(), ...pageLinks(hotPages) },
+          flows: [memWrite(2.4), walWrite(0.8, { kind: `heavy` }), pageWrites(hotPages, 2.4)],
         },
       },
       {
@@ -295,20 +287,20 @@ export const storageEnginesLesson = {
           `~ Reads: 3–4 pages, mostly from memory`,
           `~ Writes: find the page, change it in place`,
         ],
-        metrics: Cn,
+        metrics: btreeMetrics,
         scene: {
           entities: {
-            app: nn(),
-            mem: rn(),
-            ...un([], `B-tree pages · updated in place`),
-            ...sn(3),
+            app: app(),
+            mem: mem(),
+            ...pages([], `B-tree pages · updated in place`),
+            ...logGroup(3),
           },
-          links: { am: T.am(), mw: T.mw(), ...fn(mn, { heads: `both` }) },
+          links: { am: commonLinks.am(), mw: commonLinks.mw(), ...pageLinks(hotPages, { heads: `both` }) },
           flows: [
             { route: [`am`], rate: 3, bounce: !0 },
-            { routes: mn.map((e) => ({ path: [`f${e}`] })), kind: `slow`, rate: 0.6, bounce: !0 },
-            bn(0.6),
-            xn(0.5),
+            { routes: hotPages.map((e) => ({ path: [`f${e}`] })), kind: `slow`, rate: 0.6, bounce: !0 },
+            memWrite(0.6),
+            walWrite(0.5),
           ],
         },
       },
@@ -337,17 +329,17 @@ export const storageEnginesLesson = {
         },
         scene: {
           entities: {
-            app: nn({ label: [`200,000`, `writes / s`] }),
-            mem: rn({
+            app: app({ label: [`200,000`, `writes / s`] }),
+            mem: mem({
               ...makeHot(1),
               heat: 0.7,
               tags: [{ text: `full of changed pages`, tone: `red`, icon: `alert` }],
             }),
-            ...un([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], `B-tree pages · updated in place`),
-            ...sn(8),
+            ...pages([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], `B-tree pages · updated in place`),
+            ...logGroup(8),
           },
-          links: { am: T.am({ fail: 0.35 }), mw: T.mw(), ...fn(mn), ...fn(hn) },
-          flows: [bn(6), xn(3), pn([...mn, ...hn], 5)],
+          links: { am: commonLinks.am({ fail: 0.35 }), mw: commonLinks.mw(), ...pageLinks(hotPages), ...pageLinks(coldPages) },
+          flows: [memWrite(6), walWrite(3), pageWrites([...hotPages, ...coldPages], 5)],
         },
       },
       {
@@ -356,7 +348,7 @@ export const storageEnginesLesson = {
         title: `Never update in place: the LSM-tree`,
         body: [
           `A different design drops the idea that each row has one home. A write goes to the log and into a sorted structure in memory, the <span class="term">memtable</span>. That’s all — there is no page to find.`,
-          `When the memtable fills up it is written to disk in one go as an immutable, sorted file — an <span class="term">SSTable</span> — and a fresh memtable starts. Every disk write is sequential. This is the <span class="term">log-structured merge tree</span> (LSM): the design behind Cassandra, HBase, ScyllaDB and RocksDB, the engine many other databases embed.`,
+          `When the memtable fills up it is written to disk in one go as an immutable, sorted file - an <span class="term">SSTable</span> - and a fresh memtable starts. Every disk write is sequential. This is the <span class="term">log-structured merge tree</span> (LSM): the design behind Cassandra, HBase, ScyllaDB and RocksDB, the engine many other databases embed.`,
         ],
         callout: {
           kind: `tip`,
@@ -369,13 +361,13 @@ export const storageEnginesLesson = {
         ],
         metrics: { crashSafe: `yes`, wps: 2e5, diskPattern: `all sequential`, lookupCost: `?` },
         scene: {
-          entities: { app: nn({ label: [`200,000`, `writes / s`] }), mem: an(), ...sn(5), ...vn() },
+          entities: { app: app({ label: [`200,000`, `writes / s`] }), mem: memtable(), ...logGroup(5), ...sstables() },
           links: {
-            am: T.am(),
-            mw: T.mw(),
-            n3: yn(3, { label: `flush: one sequential write`, labelAt: 0.5 }),
+            am: commonLinks.am(),
+            mw: commonLinks.mw(),
+            n3: sstableLink(3, { label: `flush: one sequential write`, labelAt: 0.5 }),
           },
-          flows: [bn(6), xn(3), { route: [`n3`], kind: `heavy`, rate: 0.6 }],
+          flows: [memWrite(6), walWrite(3), { route: [`n3`], kind: `heavy`, rate: 0.6 }],
         },
       },
       {
@@ -395,13 +387,13 @@ export const storageEnginesLesson = {
           `+ A Bloom filter and a small index per file`,
           `~ Most lookups read a single file`,
         ],
-        metrics: wn,
+        metrics: lsmMetrics,
         scene: {
           entities: {
-            app: nn(),
-            mem: an({ tags: [{ text: `GET user:42 · not here`, icon: `search` }] }),
-            ...sn(5),
-            ...vn({
+            app: app(),
+            mem: memtable({ tags: [{ text: `GET user:42 · not here`, icon: `search` }] }),
+            ...logGroup(5),
+            ...sstables({
               0: [{ text: `not here`, icon: `filter` }],
               1: [{ text: `maybe → found`, tone: `green`, icon: `check` }],
               2: [{ text: `not here`, icon: `filter` }],
@@ -409,14 +401,14 @@ export const storageEnginesLesson = {
             }),
           },
           links: {
-            am: T.am(),
-            mw: T.mw(),
-            n0: yn(0, { style: `off` }),
-            n1: yn(1, { heads: `both` }),
-            n2: yn(2, { style: `off` }),
-            n3: yn(3, { style: `off` }),
+            am: commonLinks.am(),
+            mw: commonLinks.mw(),
+            n0: sstableLink(0, { style: `off` }),
+            n1: sstableLink(1, { heads: `both` }),
+            n2: sstableLink(2, { style: `off` }),
+            n3: sstableLink(3, { style: `off` }),
           },
-          flows: [{ route: [`am`, `n1`], rate: 2.2, bounce: !0 }, bn(1), xn(0.8)],
+          flows: [{ route: [`am`, `n1`], rate: 2.2, bounce: !0 }, memWrite(1), walWrite(0.8)],
         },
       },
       {
@@ -436,8 +428,8 @@ export const storageEnginesLesson = {
           `− Overwritten values and tombstones are dropped`,
           `~ Fewer files to consider on every read`,
         ],
-        metrics: wn,
-        scene: { entities: Tn(), links: En(), flows: Dn() },
+        metrics: lsmMetrics,
+        scene: { entities: compactionScene(), links: compactionLinks(), flows: compactionFlows() },
       },
       {
         short: `Choosing`,
@@ -454,17 +446,17 @@ export const storageEnginesLesson = {
             <tr><td>Found in</td><td>PostgreSQL, MySQL</td><td>Cassandra, RocksDB</td></tr>
           </tbody>
         </table>`,
-          `Read-heavy, with range queries and transactions: a B-tree. Write-heavy, huge and mostly appended: an LSM-tree. Several newer SQL databases — CockroachDB, TiDB, MyRocks — put SQL on top of an LSM engine.`,
+          `Read-heavy, with range queries and transactions: a B-tree. Write-heavy, huge and mostly appended: an LSM-tree. Several newer SQL databases - CockroachDB, TiDB, MyRocks - put SQL on top of an LSM engine.`,
         ],
         callout: {
           kind: `insight`,
           text: `You rarely choose a storage engine directly; you choose a database and inherit its engine. Knowing which one is underneath explains most of how it behaves under load.`,
         },
-        metrics: wn,
+        metrics: lsmMetrics,
         scene: {
-          entities: Tn([{ text: `sorted files · never modified`, icon: `file` }]),
-          links: En(),
-          flows: Dn(),
+          entities: compactionScene([{ text: `sorted files · never modified`, icon: `file` }]),
+          links: compactionLinks(),
+          flows: compactionFlows(),
         },
       },
       {
@@ -492,11 +484,11 @@ export const storageEnginesLesson = {
         },
         scene: {
           entities: {
-            app: nn({ label: [`Analytics`, `query`], glyph: `chart`, color: `orange` }),
-            ...un([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], `row store · every page read`),
+            app: app({ label: [`Analytics`, `query`], glyph: `chart`, color: `orange` }),
+            ...pages([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], `row store · every page read`),
             cz: makeZone({ x0: -12.8, x1: 12.8, y0: -3.4, y1: 1.4 }, ``),
             ...Object.fromEntries(
-              On.map((e, t) => [
+              columnX.map((e, t) => [
                 `c${t}`,
                 makeBlock(e, -1, {
                   s: 3.1,
@@ -504,7 +496,7 @@ export const storageEnginesLesson = {
                   radius: 4,
                   color: t === 3 ? `green` : `slab`,
                   glyph: ``,
-                  label: [kn[t]],
+                  label: [columns[t]],
                   tags:
                     t === 0 ? [{ text: `column store · one file per column`, icon: `sheets` }] : [],
                 }),
@@ -512,7 +504,7 @@ export const storageEnginesLesson = {
             ),
           },
           links: {
-            col: makeLink(`app`, `c3`, [`app`, [`app`, -8], [On[3], -8], `c3`], {
+            col: makeLink(`app`, `c3`, [`app`, [`app`, -8], [columnX[3], -8], `c3`], {
               heads: `both`,
               label: `reads 1 column of 40`,
               labelTone: `green`,
@@ -544,11 +536,11 @@ export const storageEnginesLesson = {
           kind: `next`,
           text: `Next up: <b>Replication</b> — what to do when one database server can’t take all the reads, or might die.`,
         },
-        metrics: wn,
+        metrics: lsmMetrics,
         scene: {
-          entities: Tn([{ text: `sorted files · never modified`, icon: `file` }]),
-          links: En(),
-          flows: Dn(),
+          entities: compactionScene([{ text: `sorted files · never modified`, icon: `file` }]),
+          links: compactionLinks(),
+          flows: compactionFlows(),
         },
       },
     ],

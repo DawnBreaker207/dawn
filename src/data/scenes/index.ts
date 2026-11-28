@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable */
 /**
  * Architecture Simulation Scenes Barrel

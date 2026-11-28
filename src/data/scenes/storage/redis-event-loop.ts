@@ -36,7 +36,7 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'NO LOCKS', active_conns: '10,000', qps: '110,000', avg_latency_us: '150µs' },
       scene: {
         entities: {
-          clients: makeDevice(-10, -8, { form: 'phone', label: '10,000 App Clients', tags: [{ text: 'Concurrent GET/SET', icon: 'zap' }] }),
+          clients: makeDevice(-7, -4, { form: 'phone', label: '10,000 App Clients', tags: [{ text: 'Concurrent GET/SET', icon: 'zap' }] }),
           redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Server', 'Single Thread Core'], sub: '100% In-Memory RAM' }),
           card: makePanel({ x: -2, y: 14 }, 'Multi-Threaded vs Single-Threaded', [
             'Multi-Threaded (Pthreads / Java):',
@@ -68,7 +68,7 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'epoll_wait()', active_conns: '10,000 (12 Ready)', qps: '120,000', avg_latency_us: '120µs' },
       scene: {
         entities: {
-          clients: makeDevice(-10, -8, { form: 'phone', label: 'Clients', tags: [{ text: '12 Sockets Ready', tone: 'green', icon: 'zap' }] }),
+          clients: makeDevice(-7, -4, { form: 'phone', label: 'Clients', tags: [{ text: '12 Sockets Ready', tone: 'green', icon: 'zap' }] }),
           epoll: makeBlock(0, 0, { s: 4.6, h: 52, color: 'orange', glyph: 'workflow', label: ['Linux Kernel', 'epoll_wait Subsystem'], sub: 'Ready List: fd 4, 12, 88' }),
           redis: makeBlock(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Event Loop', 'aeMain()'], sub: 'Dispatches Read Events' }),
           card: makePanel({ x: -2, y: 14 }, 'The Epoll Loop (ae_epoll.c)', [
@@ -139,7 +139,7 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'RESP Pipeline', active_conns: 'Active', qps: '130,000', avg_latency_us: '95µs' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET user:1 "John"', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'SET user:1 "John"', icon: 'zap' }] }),
           redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Dict Engine', 'Hash Table O(1)'], sub: 'db[0].dict' }),
           card: makePanel({ x: -2, y: 14 }, 'Command Execution Pipeline', [
             '1. readQueryFromClient(fd) -> querybuf',
@@ -226,7 +226,7 @@ export const redisEventLoopLesson = {
       metrics: { event_loop_state: 'Pipelined Burst', active_conns: 'Healthy', qps: '520,000', avg_latency_us: '65µs' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Pipeline Client', tags: [{ text: 'Batch 50 cmds/packet', tone: 'green', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Pipeline Client', tags: [{ text: 'Batch 50 cmds/packet', tone: 'green', icon: 'zap' }] }),
           redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis Server', 'High-Speed Reactor'], sub: 'P50: 65µs · P99: 180µs' }),
           card: makePanel({ x: -2, y: 14 }, 'Pipelining vs Sequential Commands', [
             'Sequential (50 cmds): 50 x 1ms RTT = 50ms total delay',

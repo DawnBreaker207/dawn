@@ -203,7 +203,7 @@ export const mysqlInnodbLesson: Lesson = {
       metrics: { index_layout: 'IOT vs Heap', mvcc_engine: 'Undo vs Tuple', page_safety: '16K vs 8K+TOAST', locking_mode: 'Gap vs SSI' },
       scene: {
         entities: {
-          mysql: makeBlock(-12, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'server', label: ['MySQL InnoDB'], sub: 'Clustered + Undo' }),
+          mysql: makeBlock(-10, -10, { s: 4.8, h: 54, color: 'amber', glyph: 'server', label: ['MySQL InnoDB'], sub: 'Clustered + Undo' }),
           pg: makeBlock(12, -10, { s: 4.8, h: 54, color: 'blue', glyph: 'server', label: ['PostgreSQL'], sub: 'Heap + xmin/xmax' }),
           card: makePanel({ x: -12, y: 12 }, 'MySQL InnoDB vs PostgreSQL Summary', [
             'Storage:  InnoDB = Clustered PK (16KB) | PG = Heap + ctid (8KB)',

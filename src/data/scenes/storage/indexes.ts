@@ -1,51 +1,44 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeDb,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel, makeZone, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const Bt = { x0: -11.8, x1: 11.8, y0: 6.6, y1: 9.4 };
+const usersArea = { x0: -11.8, x1: 11.8, y0: 6.6, y1: 9.4 };
 
-const Vt = { x0: -9.6, x1: 9.6, y0: -10.6, y1: 0.4 };
+const users = { x0: -9.6, x1: 9.6, y0: -10.6, y1: 0.4 };
 
-const Ht = Array.from({ length: 12 }, (e, t) => -10.45 + t * 1.9);
+const appServer = Array.from({ length: 12 }, (e, t) => -10.45 + t * 1.9);
 
-const Ut = 5.2;
+const database = 5.2;
 
-const Wt = () => ({ app: makeBlock(-13, -14, { label: [`App`] }) });
+const index = () => ({ app: makeBlock(-13, -14, { label: [`App`] }) });
 
-const Gt = (e = `USERS TABLE · 50M ROWS`) => {
-    let t = { tbl: makeZone(Bt, e) };
+const links = (e = `USERS TABLE · 50M ROWS`) => {
+    let t: Record<string, Bag> = { tbl: makeZone(usersArea, e) };
     return (
-      Ht.forEach((e, n) => {
+      appServer.forEach((e, n) => {
         t[`p${n}`] = makeBlock(e, 8, { s: 1.55, h: 10, radius: 3, color: `purple`, glyph: ``, label: [] });
       }),
       t
     );
   };
 
-const Kt = (e, t, n) => makeBlock(e, t, { s: 3, h: 30, color: `yellow`, glyph: ``, label: [n] });
+const requestFlows = (e: number, t: number, n: string) => makeBlock(e, t, { s: 3, h: 30, color: `yellow`, glyph: ``, label: [n] });
 
-const qt = (e = [`A–Z`, `A–H`, `I–Q`, `R–Z`], t = `INDEX ON email · B-TREE`) => ({
-    idx: makeZone(Vt, t),
-    root: Kt(0, -8, e[0]),
-    b1: Kt(-7, -2, e[1]),
-    b2: Kt(0, -2, e[2]),
-    b3: Kt(7, -2, e[3]),
+const card = (e = [`A–Z`, `A–H`, `I–Q`, `R–Z`], t = `INDEX ON email · B-TREE`) => ({
+    idx: makeZone(users, t),
+    root: requestFlows(0, -8, e[0]),
+    b1: requestFlows(-7, -2, e[1]),
+    b2: requestFlows(0, -2, e[2]),
+    b3: requestFlows(7, -2, e[3]),
   });
 
-const Jt = {
-    scan: makeLink(`app`, null, [`app`, [-13, Ut], [11.6, Ut]], {
+const seqScanFlow = {
+    scan: makeLink(`app`, null, [`app`, [-13, database], [11.6, database]], {
       heads: `none`,
       label: `reads every page`,
       labelAt: 0.62,
     }),
   };
 
-const Yt = {
+const indexScanFlow = {
     ar: makeLink(`app`, `root`, [`app`, [`root`, `app`], `root`], { heads: `both` }),
     rb1: makeLink(`root`, `b1`, [`root`, [`b1`, `root`], `b1`], { heads: `both` }),
     rb2: makeLink(`root`, `b2`, [`root`, `b2`], { heads: `both` }),
@@ -55,7 +48,7 @@ const Yt = {
     b3p: makeLink(`b3`, `p9`, [`b3`, [`p9`, `b3`], `p9`], { heads: `both` }),
   };
 
-const Xt = (e = 2.2) => [
+const metrics = (e = 2.2) => [
     {
       routes: [
         { path: [`ar`, `rb1`, `b1p`] },
@@ -67,11 +60,11 @@ const Xt = (e = 2.2) => [
     },
   ];
 
-const Zt = { route: [`scan`], kind: `slow`, rate: 0.45, speed: 0.42 };
+const lesson = { route: [`scan`], kind: `slow`, rate: 0.45, speed: 0.42 };
 
-const Qt = (e, t, n) => makePanel({ x: 11.8, y: 6.6, z: 0, dx: 34, dy: -215 }, e, t, { icon: n });
+const extra = cardAt({ x: 11.8, y: 6.6, dx: 34, dy: -215 });
 
-const $t = Qt(
+const $t = extra(
     `The query`,
     [`SELECT * FROM users`, `WHERE email = 'alice@example.com'`, `# 50,000,000 rows · no index`],
     `search`,
@@ -107,7 +100,7 @@ export const indexesLesson = {
           text: `Scans grow with the table. Fine at a thousand rows; painful at fifty million.`,
         },
         metrics: { p95: 2300, rows: 5e7, writeCost: 1, indexes: 0 },
-        scene: { entities: { ...Wt(), ...Gt(), q: $t }, links: Jt, flows: [Zt] },
+        scene: { entities: { ...index(), ...links(), q: $t }, links: seqScanFlow, flows: [lesson] },
       },
       {
         short: `Phone book`,
@@ -124,9 +117,9 @@ export const indexesLesson = {
         metrics: { p95: 2300, rows: 5e7, writeCost: 1, indexes: 0 },
         scene: {
           entities: {
-            ...Wt(),
-            ...Gt(),
-            q: Qt(
+            ...index(),
+            ...links(),
+            q: extra(
               `Sorted → binary search`,
               [
                 `halve the range at every step`,
@@ -136,8 +129,8 @@ export const indexesLesson = {
               `bulb`,
             ),
           },
-          links: Jt,
-          flows: [Zt],
+          links: seqScanFlow,
+          flows: [lesson],
         },
       },
       {
@@ -158,7 +151,7 @@ export const indexesLesson = {
           `~ p95 latency 2.3 s → 2 ms`,
         ],
         metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
-        scene: { entities: { ...Wt(), ...Gt(), ...qt() }, links: Yt, flows: Xt() },
+        scene: { entities: { ...index(), ...links(), ...card() }, links: indexScanFlow, flows: metrics() },
       },
       {
         short: `Why shallow`,
@@ -175,10 +168,10 @@ export const indexesLesson = {
         metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
         scene: {
           entities: {
-            ...Wt(),
-            ...Gt(),
-            ...qt(),
-            q: Qt(
+            ...index(),
+            ...links(),
+            ...card(),
+            q: extra(
               `Fan-out per level`,
               [
                 `each node ≈ 500 keys`,
@@ -189,8 +182,8 @@ export const indexesLesson = {
               `layers`,
             ),
           },
-          links: Yt,
-          flows: Xt(),
+          links: indexScanFlow,
+          flows: metrics(),
         },
       },
       {
@@ -208,19 +201,19 @@ export const indexesLesson = {
         changes: [`+ Inserts update table and index`, `~ Writes per insert 1 → 2`],
         metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
         scene: {
-          entities: { ...Wt(), ...Gt(), ...qt() },
+          entities: { ...index(), ...links(), ...card() },
           links: {
-            ...Yt,
-            ins: makeLink(`app`, `p11`, [`app`, [-13, Ut], [`p11`, Ut], `p11`], {
+            ...indexScanFlow,
+            ins: makeLink(`b3`, `p11`, [`b3`, `p11`], {
               label: `INSERT row`,
-              labelAt: 0.7,
+              labelAt: 0.5,
             }),
           },
           flows: [
-            ...Xt(1.4),
+            ...metrics(1.4),
             {
               fanout: !0,
-              routes: [{ path: [`ins`] }, { path: [`ar`, `rb3`, `b3p`] }],
+              routes: [{ path: [`ar`, `rb3`, `ins`] }, { path: [`ar`, `rb3`, `b3p`] }],
               kind: `write`,
               rate: 0.6,
             },
@@ -243,15 +236,15 @@ export const indexesLesson = {
         metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
         scene: {
           entities: {
-            ...Wt(),
-            ...Gt(),
+            ...index(),
+            ...links(),
             idx: makeZone({ x0: -12.6, x1: 12.6, y0: -10.6, y1: 0.4 }, `INDEX ON email · B-TREE`),
-            root: Kt(0, -8, `A–Z`),
-            b1: Kt(-10.5, -2, `A–H`),
-            b2: Kt(-3.5, -2, `I–Q`),
-            b3: Kt(3.5, -2, `R–S`),
-            b4: Kt(10.5, -2, `T–Z`),
-            q: Qt(
+            root: requestFlows(0, -8, `A–Z`),
+            b1: requestFlows(-10.5, -2, `A–H`),
+            b2: requestFlows(-3.5, -2, `I–Q`),
+            b3: requestFlows(3.5, -2, `R–S`),
+            b4: requestFlows(10.5, -2, `T–Z`),
+            q: extra(
               `Page split`,
               [
                 `INSERT INTO users (email) VALUES ('tom@example.com');`,
@@ -303,10 +296,10 @@ export const indexesLesson = {
         metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
         scene: {
           entities: {
-            ...Wt(),
-            ...Gt(),
-            ...qt([`country`, `DE · city`, `NL · city`, `US · city`], `INDEX ON (country, city)`),
-            q: Qt(
+            ...index(),
+            ...links(),
+            ...card([`country`, `DE · city`, `NL · city`, `US · city`], `INDEX ON (country, city)`),
+            q: extra(
               `Can it use the index?`,
               [
                 `country = 'NL' AND city = 'Delft'  ✓`,
@@ -316,8 +309,8 @@ export const indexesLesson = {
               `search`,
             ),
           },
-          links: { ...Yt, ...Jt },
-          flows: [...Xt(1.8), Zt],
+          links: { ...indexScanFlow, ...seqScanFlow },
+          flows: [...metrics(1.8), lesson],
         },
       },
       {
@@ -336,10 +329,10 @@ export const indexesLesson = {
         metrics: { p95: 2300, rows: 5e7, writeCost: 2, indexes: 1 },
         scene: {
           entities: {
-            ...Wt(),
-            ...Gt(),
-            ...qt(),
-            q: Qt(
+            ...index(),
+            ...links(),
+            ...card(),
+            q: extra(
               `Can it use the index?`,
               [
                 `email = 'alice@…'          ✓ seek`,
@@ -350,8 +343,8 @@ export const indexesLesson = {
               `search`,
             ),
           },
-          links: { ...Yt, ...Jt },
-          flows: [Zt],
+          links: { ...indexScanFlow, ...seqScanFlow },
+          flows: [lesson],
         },
       },
       {
@@ -374,10 +367,10 @@ export const indexesLesson = {
         metrics: { p95: 2600, rows: 5e7, writeCost: 3, indexes: 2 },
         scene: {
           entities: {
-            ...Wt(),
-            ...Gt(),
-            ...qt([`all`, `AR – FR`, `GB – MX`, `NG – ZA`], `INDEX ON country · NOT SELECTIVE`),
-            q: Qt(
+            ...index(),
+            ...links(),
+            ...card([`all`, `AR – FR`, `GB – MX`, `NG – ZA`], `INDEX ON country · NOT SELECTIVE`),
+            q: extra(
               `How many rows match?`,
               [
                 `email = 'alice@…'      1 row    ✓ index`,
@@ -388,8 +381,8 @@ export const indexesLesson = {
               `search`,
             ),
           },
-          links: { ...Yt, ...Jt },
-          flows: [Zt],
+          links: { ...indexScanFlow, ...seqScanFlow },
+          flows: [lesson],
         },
       },
       {
@@ -408,10 +401,10 @@ export const indexesLesson = {
         metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
         scene: {
           entities: {
-            ...Wt(),
-            ...Gt(),
-            ...qt(),
-            q: Qt(
+            ...index(),
+            ...links(),
+            ...card(),
+            q: extra(
               `EXPLAIN`,
               [
                 `SELECT * FROM users WHERE email = 'a@…'`,
@@ -423,8 +416,8 @@ export const indexesLesson = {
               `search`,
             ),
           },
-          links: Yt,
-          flows: Xt(),
+          links: indexScanFlow,
+          flows: metrics(),
         },
       },
       {
@@ -443,14 +436,14 @@ export const indexesLesson = {
         metrics: { p95: 1, rows: 1, writeCost: 2, indexes: 1 },
         scene: {
           entities: {
-            ...Wt(),
-            ...Gt(),
-            ...qt(
+            ...index(),
+            ...links(),
+            ...card(
               [`A–Z`, `A–H + name`, `I–Q + name`, `R–Z + name`],
               `INDEX ON email INCLUDE (id, name)`,
             ),
           },
-          links: Yt,
+          links: indexScanFlow,
           flows: [
             {
               routes: [{ path: [`ar`, `rb1`] }, { path: [`ar`, `rb2`] }, { path: [`ar`, `rb3`] }],
@@ -478,7 +471,7 @@ export const indexesLesson = {
           text: `Next up: <b>Storage Engines</b> — what the database actually does with a write, and why some are built for reads and others for writes.`,
         },
         metrics: { p95: 2, rows: 1, writeCost: 2, indexes: 1 },
-        scene: { entities: { ...Wt(), ...Gt(), ...qt() }, links: Yt, flows: Xt() },
+        scene: { entities: { ...index(), ...links(), ...card() }, links: indexScanFlow, flows: metrics() },
       },
       {
       short: 'GIN/BRIN/Part',

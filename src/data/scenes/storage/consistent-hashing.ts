@@ -1,13 +1,11 @@
-// @ts-nocheck
-import {
-  DEAD_STATE,
-  makeBlock,
-  makeDb,
-  makeLink,
-  makePanel
-} from '@/lib/simulator/scene-builders';
+import { DEAD_STATE, makeBlock, makeDb, makeLink, makePanel, type Bag, cardAt } from '@/lib/simulator/scene-builders';
 
-const Ei = (e, t) => {
+interface VNode {
+  a: number;
+  color: string;
+}
+
+const findResponsibleNode = (e: number, t: VNode[]) => {
   let n = [...t].sort((e, t) => e.a - t.a),
     r = n[n.length - 1];
   for (let t of n) t.a <= e && (r = t);
@@ -15,39 +13,39 @@ const Ei = (e, t) => {
 };
 
 
-const Ni = 10,
-  Pi = { A: 'blue', B: 'orange', C: 'green', D: 'purple', E: 'yellow' },
+const ringRadius = 10,
+  Pi: Record<string, string> = { A: 'blue', B: 'orange', C: 'green', D: 'purple', E: 'yellow' },
   Fi = [26, 40, 54, 68, 82, 118, 132, 146, 160, 174, 216, 230, 244, 258, 296, 322, 336, 350],
-  Ii = (e, t = Ni) => [t * Math.cos((e * Math.PI) / 180), t * Math.sin((e * Math.PI) / 180)],
-  Li = (e, t, n = {}) => {
+  Ii = (e: number, t = ringRadius): [number, number] => [t * Math.cos((e * Math.PI) / 180), t * Math.sin((e * Math.PI) / 180)],
+  Li = (e: string, t: number, n: Bag = {}) => {
     let [r, i] = Ii(t);
     return makeBlock(r, i, { s: 3.2, h: 38, color: Pi[e], glyph: '', label: [e], ...n });
   },
-  Ri = { A: 100, B: 10, C: 280, D: 200 },
-  zi = (e, t = {}) => ({
+  Ri: Record<string, number> = { A: 100, B: 10, C: 280, D: 200 },
+  zi = (e: VNode[], t: Bag = {}) => ({
     type: 'ring',
     x: 0,
     y: 0,
-    r: Ni,
+    r: ringRadius,
     nodes: e,
     keys: Fi,
     label: 'hash ring · 0 → 2³²',
     ...t,
   }),
-  Bi = (e) => Object.entries(e).map(([e, t]) => ({ a: t, color: Pi[e] })),
-  Vi = (e, t) => Fi.filter((n) => Ei(n, e).color !== Ei(n, t).color),
-  Hi = (e) => {
-    let t = {};
-    for (let n of Fi) t[Ei(n, e).color] = (t[Ei(n, e).color] || 0) + 1;
+  Bi = (e: Record<string, number>) => Object.entries(e).map(([e, t]) => ({ a: t, color: Pi[e] })),
+  Vi = (e: VNode[], t: VNode[]) => Fi.filter((n) => findResponsibleNode(n, e).color !== findResponsibleNode(n, t).color),
+  Hi = (e: VNode[]) => {
+    let t: Record<string, number> = {};
+    for (let n of Fi) t[findResponsibleNode(n, e).color] = (t[findResponsibleNode(n, e).color] || 0) + 1;
     return Math.round((Math.max(...Object.values(t)) / Fi.length) * 100);
   },
-  Ui = (e, t, n) => {
+  Ui = (e: number, t: string, n: number) => {
     let r = n <= e ? n : n - 360,
-      i = [];
+      i: [number, number][] = [];
     for (let t = e; t > r; t -= 5) i.push(Ii(t));
     return i.push(Ii(r)), makeLink('ring', t, i, { label: `key @ ${e}°`, labelAt: 0.25 });
   },
-  Wi = (e, t, n) => makePanel({ x: 0, y: 0, z: 0, dx: -470, dy: -250 }, e, t, { icon: n }),
+  Wi = cardAt({ x: 0, y: 0, dx: -470, dy: -250 }),
   Gi = Bi(Ri),
   Ki = Bi({ ...Ri, E: 308 }),
   qi = Bi({ A: 100, B: 10, D: 200 }),
@@ -56,12 +54,12 @@ const Ni = 10,
     ...Bi({ A: 75, B: 315, D: 225 }).map((e) => ({ ...e, mark: !0 })),
     ...Bi({ A: 180, B: 30, D: 340 }).map((e) => ({ ...e, mark: !0 })),
   ],
-  Yi = (e, t = {}) =>
+  Yi = (e: string[], t: Record<string, Bag> = {}) =>
     Object.fromEntries(e.map((e) => [e.toLowerCase(), Li(e, Ri[e] ?? 50, t[e] || {})]));
 
 
 // --- data ---
-const Xi = {
+const links = {
     id: `consistent-hashing`,
     title: `Consistent Hashing`,
     summary: `Add or remove servers and move only a sliver of the data.`,
@@ -338,5 +336,5 @@ const Xi = {
     ],
   };
 
-export { Xi as consistentHashingLesson };
-export default Xi;
+export { links as consistentHashingLesson };
+export default links;

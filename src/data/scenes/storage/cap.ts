@@ -1,43 +1,35 @@
-// @ts-nocheck
-import {
-  makeCrowd,
-  makeDb,
-  makeDevice,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeCrowd, makeDb, makeDevice, makeLink, makePanel, makeZone, cardAt, type Bag } from '@/lib/simulator/scene-builders';
 
-const da = { x0: -4, x1: 16, y0: -14.5, y1: -5.5 };
+const euArea = { x0: -4, x1: 16, y0: -14.5, y1: -5.5 };
 
-const fa = { x0: -4, x1: 16, y0: 5.5, y1: 14.5 };
+const usArea = { x0: -4, x1: 16, y0: 5.5, y1: 14.5 };
 
-const pa = { x0: 9.5, x1: 14.5, y0: -13, y1: -7 };
+const euUsersArea = { x0: 9.5, x1: 14.5, y0: -13, y1: -7 };
 
-const ma = { x0: 9.5, x1: 14.5, y0: 7, y1: 13 };
+const usUsersArea = { x0: 9.5, x1: 14.5, y0: 7, y1: 13 };
 
-const ha = () => ({ euz: makeZone(da, `EU REGION`), usz: makeZone(fa, `US REGION`) });
+const zones = () => ({ euz: makeZone(euArea, `EU REGION`), usz: makeZone(usArea, `US REGION`) });
 
-const ga = (e = {}) => makeDb(0, -10, { r: 1.9, glyph: `database`, ...e });
+const euDb = (e: Bag = {}) => makeDb(0, -10, { r: 1.9, glyph: `database`, ...e });
 
-const _a = (e = {}) => makeDb(0, 10, { r: 1.9, glyph: `database`, ...e });
+const usDb = (e: Bag = {}) => makeDb(0, 10, { r: 1.9, glyph: `database`, ...e });
 
-const va = (e = `EU users`) => makeCrowd(pa, 8, e);
+const euUsers = (e = `EU users`) => makeCrowd(euUsersArea, 8, e);
 
-const ya = (e = `US users`) => makeCrowd(ma, 8, e);
+const usUsers = (e = `US users`) => makeCrowd(usUsersArea, 8, e);
 
-const ba = (e, t = `paper`, n = ``) => ({ text: `seats left: ${e}${n}`, tone: t, icon: `info` });
+const seatsTag = (e: number, t = `paper`, n = ``) => ({ text: `seats left: ${e}${n}`, tone: t, icon: `info` });
 
-const xa = (e = {}) => ({
+const baseLinks = (e: Bag = {}) => ({
     ue: makeLink(`eus`, `eu`, [`eus`, `eu`], { heads: `both`, ...(e.eu || {}) }),
     uu: makeLink(`uss`, `us`, [`uss`, `us`], { heads: `both`, ...(e.us || {}) }),
   });
 
-const Sa = (e = {}) => ({
+const replicationLink = (e: Bag = {}) => ({
     rep: makeLink(`eu`, `us`, [`eu`, `us`], { heads: `both`, label: `replication`, ...e }),
   });
 
-const Ca = {
+const partitionLink = {
     rep: makeLink(`eu`, `us`, [`eu`, `us`], {
       heads: `none`,
       style: `cut`,
@@ -46,14 +38,14 @@ const Ca = {
     }),
   };
 
-const wa = (e = !1) => [
+const baseFlows = (e = !1) => [
     { route: [`ue`], rate: 1.8, bounce: !0 },
     { route: [`uu`], rate: 1.8, bounce: !e },
   ];
 
-const Ta = (e, t, n) => makePanel({ x: -4, y: -14.5, z: 0, dx: -52, dy: -262 }, e, t, { icon: n });
+const card = cardAt({ x: -4, y: -14.5, dx: -52, dy: -262 });
 
-const Ea = (e = {}) => ({
+const queueScene = (e: Bag = {}) => ({
     cl: makeDevice(0, -12, { label: `client` }),
     q1: makeDb(-7, 0, {
       r: 1.7,
@@ -75,13 +67,13 @@ const Ea = (e = {}) => ({
     }),
   });
 
-const Da = {
+const queueLinks = {
     c1: makeLink(`cl`, `q1`, [`cl`, [`q1`, `cl`], `q1`], { heads: `both` }),
     c2: makeLink(`cl`, `q2`, [`cl`, `q2`], { heads: `both` }),
     c3: makeLink(`cl`, `q3`, [`cl`, [`q3`, `cl`], `q3`], { heads: `both` }),
   };
 
-const Oa = {
+const capLesson = {
     id: `cap`,
     title: `CAP & Consistency`,
     summary: `When the network splits, copies of your data must choose between being right and being reachable.`,
@@ -112,14 +104,14 @@ const Oa = {
         metrics: { consistent: `yes`, available: `yes`, errors: 0, conflicts: 0 },
         scene: {
           entities: {
-            ...ha(),
-            eu: ga({ tags: [ba(1)] }),
-            us: _a({ tags: [ba(1)] }),
-            eus: va(),
-            uss: ya(),
+            ...zones(),
+            eu: euDb({ tags: [seatsTag(1)] }),
+            us: usDb({ tags: [seatsTag(1)] }),
+            eus: euUsers(),
+            uss: usUsers(),
           },
-          links: { ...xa(), ...Sa() },
-          flows: [...wa(), { route: [`rep`], kind: `write`, rate: 0.8, bounce: !0 }],
+          links: { ...baseLinks(), ...replicationLink() },
+          flows: [...baseFlows(), { route: [`rep`], kind: `write`, rate: 0.8, bounce: !0 }],
         },
       },
       {
@@ -138,14 +130,14 @@ const Oa = {
         metrics: { consistent: `?`, available: `?`, errors: 0, conflicts: 0 },
         scene: {
           entities: {
-            ...ha(),
-            eu: ga({ tags: [ba(1)] }),
-            us: _a({ tags: [ba(1), { text: `can’t reach EU`, tone: `red`, icon: `alert` }] }),
-            eus: va(),
-            uss: ya(),
+            ...zones(),
+            eu: euDb({ tags: [seatsTag(1)] }),
+            us: usDb({ tags: [seatsTag(1), { text: `can’t reach EU`, tone: `red`, icon: `alert` }] }),
+            eus: euUsers(),
+            uss: usUsers(),
           },
-          links: { ...xa(), ...Ca },
-          flows: wa(),
+          links: { ...baseLinks(), ...partitionLink },
+          flows: baseFlows(),
         },
       },
       {
@@ -164,17 +156,17 @@ const Oa = {
         metrics: { consistent: `yes`, available: `partly`, errors: 50, conflicts: 0 },
         scene: {
           entities: {
-            ...ha(),
-            eu: ga({ tags: [ba(1)] }),
-            us: _a({
+            ...zones(),
+            eu: euDb({ tags: [seatsTag(1)] }),
+            us: usDb({
               heat: 0,
               tags: [{ text: `read-only · refusing writes`, tone: `red`, icon: `lock` }],
             }),
-            eus: va(),
-            uss: ya(`US users: errors`),
+            eus: euUsers(),
+            uss: usUsers(`US users: errors`),
           },
-          links: { ...xa({ us: { fail: 1 } }), ...Ca },
-          flows: wa(!0),
+          links: { ...baseLinks({ us: { fail: 1 } }), ...partitionLink },
+          flows: baseFlows(!0),
         },
       },
       {
@@ -193,15 +185,15 @@ const Oa = {
         metrics: { consistent: `no`, available: `yes`, errors: 0, conflicts: 1 },
         scene: {
           entities: {
-            ...ha(),
-            eu: ga({ tags: [ba(0, `amber`, ` · sold to Ana`)] }),
-            us: _a({ tags: [ba(0, `amber`, ` · sold to Ben`)] }),
-            eus: va(),
-            uss: ya(),
+            ...zones(),
+            eu: euDb({ tags: [seatsTag(0, `amber`, ` · sold to Ana`)] }),
+            us: usDb({ tags: [seatsTag(0, `amber`, ` · sold to Ben`)] }),
+            eus: euUsers(),
+            uss: usUsers(),
           },
-          links: { ...xa(), ...Ca },
+          links: { ...baseLinks(), ...partitionLink },
           flows: [
-            ...wa(),
+            ...baseFlows(),
             { route: [`ue`], kind: `write`, rate: 0.6 },
             { route: [`uu`], kind: `write`, rate: 0.6 },
           ],
@@ -227,14 +219,14 @@ const Oa = {
         metrics: { consistent: `yes`, available: `yes`, errors: 0, conflicts: 0 },
         scene: {
           entities: {
-            ...ha(),
-            eu: ga({ tags: [ba(0, `green`, ` · Ana`)] }),
-            us: _a({ tags: [ba(0, `green`, ` · Ana`), { text: `Ben refunded`, tone: `amber` }] }),
-            eus: va(),
-            uss: ya(),
+            ...zones(),
+            eu: euDb({ tags: [seatsTag(0, `green`, ` · Ana`)] }),
+            us: usDb({ tags: [seatsTag(0, `green`, ` · Ana`), { text: `Ben refunded`, tone: `amber` }] }),
+            eus: euUsers(),
+            uss: usUsers(),
           },
-          links: { ...xa(), ...Sa({ label: `catching up` }) },
-          flows: [...wa(), { route: [`rep`], kind: `write`, rate: 1.6, bounce: !0 }],
+          links: { ...baseLinks(), ...replicationLink({ label: `catching up` }) },
+          flows: [...baseFlows(), { route: [`rep`], kind: `write`, rate: 1.6, bounce: !0 }],
         },
       },
       {
@@ -257,16 +249,16 @@ const Oa = {
         metrics: { consistent: `yes`, available: `yes`, errors: 0, conflicts: 1 },
         scene: {
           entities: {
-            ...ha(),
-            eu: ga({
+            ...zones(),
+            eu: euDb({
               tags: [{ text: `12:00:05 · 5 Rue Cler — the fix`, tone: `green`, icon: `clock` }],
             }),
-            us: _a({
+            us: usDb({
               tags: [{ text: `12:00:06 · 12 Elm St — clock +3 s`, tone: `red`, icon: `clock` }],
             }),
-            eus: va(),
-            uss: ya(),
-            card: Ta(
+            eus: euUsers(),
+            uss: usUsers(),
+            card: card(
               `Whose clock?`,
               [
                 `real 12:00:03   US saves “12 Elm St”`,
@@ -278,8 +270,8 @@ const Oa = {
               `clock`,
             ),
           },
-          links: { ...xa(), ...Sa({ label: `sync · highest timestamp wins` }) },
-          flows: [...wa(), { route: [`rep`], kind: `write`, rate: 1.2, bounce: !0 }],
+          links: { ...baseLinks(), ...replicationLink({ label: `sync · highest timestamp wins` }) },
+          flows: [...baseFlows(), { route: [`rep`], kind: `write`, rate: 1.2, bounce: !0 }],
         },
       },
       {
@@ -298,12 +290,12 @@ const Oa = {
         metrics: { consistent: `yes`, available: `yes`, errors: 0, conflicts: 0 },
         scene: {
           entities: {
-            ...ha(),
-            eu: ga({ tags: [ba(0)] }),
-            us: _a({ tags: [ba(0)] }),
-            eus: va(),
-            uss: ya(),
-            card: Ta(
+            ...zones(),
+            eu: euDb({ tags: [seatsTag(0)] }),
+            us: usDb({ tags: [seatsTag(0)] }),
+            eus: euUsers(),
+            uss: usUsers(),
+            card: card(
               `During a partition, choose`,
               [
                 `C — refuse, never be wrong`,
@@ -315,8 +307,8 @@ const Oa = {
               `scale`,
             ),
           },
-          links: { ...xa(), ...Sa() },
-          flows: [...wa(), { route: [`rep`], kind: `write`, rate: 0.8, bounce: !0 }],
+          links: { ...baseLinks(), ...replicationLink() },
+          flows: [...baseFlows(), { route: [`rep`], kind: `write`, rate: 0.8, bounce: !0 }],
         },
       },
       {
@@ -335,7 +327,7 @@ const Oa = {
         metrics: { consistent: `yes`, available: `yes`, errors: 0, conflicts: 0 },
         scene: {
           entities: {
-            ...Ea(),
+            ...queueScene(),
             card: makePanel(
               { x: 7, y: 0, z: 0, dx: 60, dy: -220 },
               `N = 3, W = 2, R = 2`,
@@ -347,7 +339,7 @@ const Oa = {
               { icon: `layers` },
             ),
           },
-          links: Da,
+          links: queueLinks,
           flows: [
             {
               fanout: !0,
@@ -376,7 +368,7 @@ const Oa = {
         metrics: { consistent: `per op`, available: `per op`, errors: 0, conflicts: 0 },
         scene: {
           entities: {
-            ...Ea({ q3: { tags: [{ text: `v2`, tone: `green` }] } }),
+            ...queueScene({ q3: { tags: [{ text: `v2`, tone: `green` }] } }),
             card: makePanel(
               { x: 7, y: 0, z: 0, dx: 60, dy: -220 },
               `Choose per operation`,
@@ -388,7 +380,7 @@ const Oa = {
               { icon: `scale` },
             ),
           },
-          links: Da,
+          links: queueLinks,
           flows: [
             { route: [`c1`], kind: `req`, rate: 1.2, bounce: !0 },
             {
@@ -417,9 +409,9 @@ const Oa = {
         metrics: { consistent: `per op`, available: `yes`, errors: 0, conflicts: 0 },
         scene: {
           entities: {
-            ...Ea(),
+            ...queueScene(),
           },
-          links: Da,
+          links: queueLinks,
           flows: [
             {
               fanout: !0,
@@ -451,8 +443,8 @@ const Oa = {
         },
         metrics: { consistent: `yes`, available: `yes`, errors: 0, conflicts: 0 },
         scene: {
-          entities: { ...Ea() },
-          links: Da,
+          entities: { ...queueScene() },
+          links: queueLinks,
           flows: [
             {
               fanout: !0,
@@ -468,5 +460,5 @@ const Oa = {
     ],
   };
 
-export { Oa as capLesson };
-export default Oa;
+export { capLesson as capLesson };
+export default capLesson;

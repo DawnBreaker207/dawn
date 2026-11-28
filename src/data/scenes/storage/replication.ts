@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   DEAD_STATE,
   makeBlock,
@@ -10,21 +9,21 @@ import {
   makePanel
 } from '@/lib/simulator/scene-builders';
 
-const jn = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -23, y1: -17 };
 
-const Mn = (e = `300,000 users`) => makeCrowd(jn, 12, e);
+const users = (e = `300,000 users`) => makeCrowd(usersArea, 12, e);
 
-const Nn = () => makeBlock(0, -9, { label: [`App`, `Server`] });
+const appServer = () => makeBlock(0, -9, { label: [`App`, `Server`] });
 
-const Pn = (e = {}) => makeDb(0, 0, { r: 1.9, glyph: `database`, label: `leader`, ...e });
+const leaderDb = (e = {}) => makeDb(0, 0, { r: 1.9, glyph: `database`, label: `leader`, ...e });
 
-const E = (e, t = {}) => makeDb(e, 9, { r: 1.7, glyph: `database`, label: `follower`, ...t });
+const followerDb = (e: number, t = {}) => makeDb(Math.sign(e) * 8, 8, { r: 1.7, glyph: `database`, label: `follower`, ...t });
 
-const Fn = { ua: makeLink(`users`, `app`, [`users`, `app`], { heads: `both` }) };
+const baseLinks = { ua: makeLink(`users`, `app`, [`users`, `app`], { heads: `both` }) };
 
-const In = (e = {}) => ({ al: makeLink(`app`, `ld`, [`app`, `ld`], { heads: `both`, ...e }) });
+const appToLeader = (e = {}) => ({ al: makeLink(`app`, `ld`, [`app`, `ld`], { heads: `both`, ...e }) });
 
-const Ln = (e = `ld`, t = [`f1`, `f2`], n = ``) => ({
+const replicationLinks = (e = `ld`, t = [`f1`, `f2`], n = ``) => ({
     [`r1${n}`]: makeLink(e, t[0], [e, [`${t[0]}+1`, e], `${t[0]}+1`], {
       label: `replication`,
       labelAt: 0.35,
@@ -35,16 +34,16 @@ const Ln = (e = `ld`, t = [`f1`, `f2`], n = ``) => ({
     }),
   });
 
-const Rn = (e = [`f1`, `f2`], t = ``) => ({
+const readLinks = (e = [`f1`, `f2`], t = ``) => ({
     [`a1${t}`]: makeLink(`app`, e[0], [`app`, [`${e[0]}-1`, `app`], `${e[0]}-1`], { heads: `both` }),
     [`a2${t}`]: makeLink(`app`, e[1], [`app`, [`${e[1]}+1`, `app`], `${e[1]}+1`], { heads: `both` }),
   });
 
-const zn = (e = 0.9, t = ``) => [
+const writeFlows = (e = 0.9, t = ``) => [
     { fanout: !0, routes: [{ path: [`r1${t}`] }, { path: [`r2${t}`] }], kind: `write`, rate: e },
   ];
 
-const Bn = (e = 4, t = ``) => ({
+const requestFlows = (e = 4, t = ``) => ({
     routes: [{ path: [`ua`, `a1${t}`] }, { path: [`ua`, `a2${t}`] }],
     rate: e,
     bounce: !0,
@@ -87,8 +86,8 @@ export const replicationLesson = {
         },
         metrics: { dbLoad: 90, reads: `1×`, lag: `—`, writes: `ok` },
         scene: {
-          entities: { users: Mn(), app: Nn(), ld: Pn({ label: `database`, heat: 0.7, cpu: 0.9 }) },
-          links: { ...Fn, ...In() },
+          entities: { users: users(), app: appServer(), ld: leaderDb({ label: `database`, heat: 0.7, cpu: 0.9 }) },
+          links: { ...baseLinks, ...appToLeader() },
           flows: [
             { route: [`ua`, `al`], rate: 4, bounce: !0 },
             { route: [`al`], kind: `write`, rate: 0.5 },
@@ -111,17 +110,17 @@ export const replicationLesson = {
         metrics: { dbLoad: 90, reads: `1×`, lag: `0 s`, writes: `ok` },
         scene: {
           entities: {
-            users: Mn(),
-            app: Nn(),
-            ld: Pn({ heat: 0.7, cpu: 0.9 }),
-            f1: E(-9),
-            f2: E(9),
+            users: users(),
+            app: appServer(),
+            ld: leaderDb({ heat: 0.7, cpu: 0.9 }),
+            f1: followerDb(-9),
+            f2: followerDb(9),
           },
-          links: { ...Fn, ...In(), ...Ln() },
+          links: { ...baseLinks, ...appToLeader(), ...replicationLinks() },
           flows: [
             { route: [`ua`, `al`], rate: 4, bounce: !0 },
             { route: [`al`], kind: `write`, rate: 0.5 },
-            ...zn(),
+            ...writeFlows(),
           ],
         },
       },
@@ -140,12 +139,12 @@ export const replicationLesson = {
         changes: [`~ Reads → followers`, `~ Writes → leader only`, `~ Leader CPU 90% → 30%`],
         metrics: { dbLoad: 30, reads: `2×`, lag: `0 s`, writes: `ok` },
         scene: {
-          entities: { users: Mn(), app: Nn(), ld: Pn(makeCool(0.3)), f1: E(-9, makeCool(0.4)), f2: E(9, makeCool(0.4)) },
-          links: { ...Fn, ...In({ label: `writes` }), ...Ln(), ...Rn() },
+          entities: { users: users(), app: appServer(), ld: leaderDb(makeCool(0.3)), f1: followerDb(-9, makeCool(0.4)), f2: followerDb(9, makeCool(0.4)) },
+          links: { ...baseLinks, ...appToLeader({ label: `writes` }), ...replicationLinks(), ...readLinks() },
           flows: [
             { routes: [{ path: [`ua`, `a1`] }, { path: [`ua`, `a2`] }], rate: 4, bounce: !0 },
             { route: [`al`], kind: `write`, rate: 0.6 },
-            ...zn(),
+            ...writeFlows(),
           ],
         },
       },
@@ -165,21 +164,21 @@ export const replicationLesson = {
         metrics: { dbLoad: 30, reads: `2×`, lag: `2 s`, writes: `ok` },
         scene: {
           entities: {
-            users: Mn(`Alice sees her old name`),
-            app: Nn(),
-            ld: Pn({ ...makeCool(0.3), tags: [{ text: `name: Alice Kim`, tone: `green` }] }),
-            f1: E(-9, {
+            users: users(`Alice sees her old name`),
+            app: appServer(),
+            ld: leaderDb({ ...makeCool(0.3), tags: [{ text: `name: Alice Kim`, tone: `green` }] }),
+            f1: followerDb(-9, {
               ...makeCool(0.4),
               tags: [{ text: `name: Alice Lee · 2 s behind`, tone: `red`, icon: `clock` }],
             }),
-            f2: E(9, makeCool(0.4)),
+            f2: followerDb(9, makeCool(0.4)),
           },
-          links: { ...Fn, ...In({ label: `writes` }), ...Ln(), ...Rn() },
+          links: { ...baseLinks, ...appToLeader({ label: `writes` }), ...replicationLinks(), ...readLinks() },
           flows: [
             { routes: [{ path: [`ua`, `a1`] }, { path: [`ua`, `a2`] }], rate: 3, bounce: !0 },
             { route: [`ua`, `al`], kind: `mine`, rate: 0.6 },
             { route: [`ua`, `a1`], kind: `mine`, rate: 0.6, bounce: !0 },
-            ...zn(0.5),
+            ...writeFlows(0.5),
           ],
         },
       },
@@ -199,17 +198,17 @@ export const replicationLesson = {
         metrics: { dbLoad: 32, reads: `2×`, lag: `2 s`, writes: `ok` },
         scene: {
           entities: {
-            users: Mn(`Alice sees her new name`),
-            app: Nn(),
-            ld: Pn({ ...makeCool(0.32), tags: [{ text: `name: Alice Kim`, tone: `green` }] }),
-            f1: E(-9, makeCool(0.4)),
-            f2: E(9, makeCool(0.4)),
+            users: users(`Alice sees her new name`),
+            app: appServer(),
+            ld: leaderDb({ ...makeCool(0.32), tags: [{ text: `name: Alice Kim`, tone: `green` }] }),
+            f1: followerDb(-9, makeCool(0.4)),
+            f2: followerDb(9, makeCool(0.4)),
           },
-          links: { ...Fn, ...In({ label: `writes + Alice’s reads` }), ...Ln(), ...Rn() },
+          links: { ...baseLinks, ...appToLeader({ label: `writes + Alice’s reads` }), ...replicationLinks(), ...readLinks() },
           flows: [
             { routes: [{ path: [`ua`, `a1`] }, { path: [`ua`, `a2`] }], rate: 3, bounce: !0 },
             { route: [`ua`, `al`], kind: `mine`, rate: 0.9, bounce: !0 },
-            ...zn(0.6),
+            ...writeFlows(0.6),
           ],
         },
       },
@@ -224,8 +223,8 @@ export const replicationLesson = {
         changes: [`− Leader down`, `− Writes failing`],
         metrics: { dbLoad: 0, reads: `2×`, lag: `—`, writes: `failing` },
         scene: {
-          entities: { users: Mn(), app: Nn(), ld: Pn(DEAD_STATE), f1: E(-9, makeCool(0.5)), f2: E(9, makeCool(0.5)) },
-          links: { ...Fn, ...In({ fail: 1 }), ...Ln(), ...Rn() },
+          entities: { users: users(), app: appServer(), ld: leaderDb(DEAD_STATE), f1: followerDb(-9, makeCool(0.5)), f2: followerDb(9, makeCool(0.5)) },
+          links: { ...baseLinks, ...appToLeader({ fail: 1 }), ...replicationLinks(), ...readLinks() },
           flows: [
             { routes: [{ path: [`ua`, `a1`] }, { path: [`ua`, `a2`] }], rate: 3, bounce: !0 },
             { route: [`ua`, `al`], kind: `write`, rate: 0.9 },
@@ -249,19 +248,19 @@ export const replicationLesson = {
         metrics: { dbLoad: 30, reads: `2×`, lag: `0 s`, writes: `ok` },
         scene: {
           entities: {
-            users: Mn(),
-            app: Nn(),
-            f1: Pn({ ...makeCool(0.3), tags: [{ text: `promoted`, tone: `green`, icon: `check` }] }),
-            f3: E(-9, makeCool(0.4)),
-            f2: E(9, makeCool(0.4)),
+            users: users(),
+            app: appServer(),
+            f1: leaderDb({ ...makeCool(0.3), tags: [{ text: `promoted`, tone: `green`, icon: `check` }] }),
+            f3: followerDb(-9, makeCool(0.4)),
+            f2: followerDb(9, makeCool(0.4)),
           },
           links: {
-            ...Fn,
+            ...baseLinks,
             al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
-            ...Ln(`f1`, [`f3`, `f2`], `n`),
-            ...Rn([`f3`, `f2`], `n`),
+            ...replicationLinks(`f1`, [`f3`, `f2`], `n`),
+            ...readLinks([`f3`, `f2`], `n`),
           },
-          flows: [Bn(4, `n`), { route: [`al2`], kind: `write`, rate: 0.6 }, ...zn(0.9, `n`)],
+          flows: [requestFlows(4, `n`), { route: [`al2`], kind: `write`, rate: 0.6 }, ...writeFlows(0.9, `n`)],
         },
       },
       {
@@ -283,11 +282,11 @@ export const replicationLesson = {
         metrics: { dbLoad: 30, reads: `2×`, lag: `0 s`, writes: `ok` },
         scene: {
           entities: {
-            users: Mn(),
-            app: Nn(),
-            f1: Pn(makeCool(0.3)),
-            f3: E(-9, makeCool(0.4)),
-            f2: E(9, makeCool(0.4)),
+            users: users(),
+            app: appServer(),
+            f1: leaderDb(makeCool(0.3)),
+            f3: followerDb(-9, makeCool(0.4)),
+            f2: followerDb(9, makeCool(0.4)),
             an: makeDb(0, 19, {
               r: 1.7,
               glyph: `chart`,
@@ -298,15 +297,15 @@ export const replicationLesson = {
             analysts: makeDevice(13, 19, { label: `finance team` }),
           },
           links: {
-            ...Fn,
+            ...baseLinks,
             al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
-            ...Ln(`f1`, [`f3`, `f2`], `n`),
-            ...Rn([`f3`, `f2`], `n`),
+            ...replicationLinks(`f1`, [`f3`, `f2`], `n`),
+            ...readLinks([`f3`, `f2`], `n`),
             r3: makeLink(`f1`, `an`, [`f1`, `an`], { label: `replication`, labelAt: 0.65 }),
             rep: makeLink(`analysts`, `an`, [`analysts`, `an`], { heads: `both` }),
           },
           flows: [
-            Bn(4, `n`),
+            requestFlows(4, `n`),
             { route: [`al2`], kind: `write`, rate: 0.6 },
             {
               fanout: !0,
@@ -339,17 +338,17 @@ export const replicationLesson = {
         metrics: { dbLoad: 30, reads: `2×`, lag: `0 s`, writes: `ok` },
         scene: {
           entities: {
-            users: Mn(),
-            app: Nn(),
-            f1: Pn({
+            users: users(),
+            app: appServer(),
+            f1: leaderDb({
               ...makeCool(0.3),
               tags: [{ text: `email = NULL · 2M rows`, tone: `red`, icon: `alert` }],
             }),
-            f3: E(-9, {
+            f3: followerDb(-9, {
               ...makeCool(0.4),
               tags: [{ text: `copied the mistake`, tone: `red`, icon: `alert` }],
             }),
-            f2: E(9, {
+            f2: followerDb(9, {
               ...makeCool(0.4),
               tags: [{ text: `copied the mistake`, tone: `red`, icon: `alert` }],
             }),
@@ -362,16 +361,16 @@ export const replicationLesson = {
             }),
           },
           links: {
-            ...Fn,
+            ...baseLinks,
             al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
-            ...Ln(`f1`, [`f3`, `f2`], `n`),
-            ...Rn([`f3`, `f2`], `n`),
+            ...replicationLinks(`f1`, [`f3`, `f2`], `n`),
+            ...readLinks([`f3`, `f2`], `n`),
             bkl: makeLink(`f1`, `bk`, [`f1`, `bk`]),
           },
           flows: [
-            Bn(4, `n`),
+            requestFlows(4, `n`),
             { route: [`al2`], kind: `write`, rate: 0.6 },
-            ...zn(0.9, `n`),
+            ...writeFlows(0.9, `n`),
             { route: [`bkl`], kind: `write`, rate: 0.4 },
           ],
         },
@@ -391,11 +390,11 @@ export const replicationLesson = {
         metrics: { dbLoad: 30, reads: `2×`, lag: `0 s`, writes: `ok` },
         scene: {
           entities: {
-            users: Mn(),
-            app: Nn(),
-            f1: Pn(makeCool(0.3)),
-            f3: E(-9, makeCool(0.4)),
-            f2: E(9, makeCool(0.4)),
+            users: users(),
+            app: appServer(),
+            f1: leaderDb(makeCool(0.3)),
+            f3: followerDb(-9, makeCool(0.4)),
+            f2: followerDb(9, makeCool(0.4)),
             card: makePanel(
               { x: -9, y: 9, z: 0, dx: -365, dy: -70 },
               `Replication styles`,
@@ -408,12 +407,12 @@ export const replicationLesson = {
             ),
           },
           links: {
-            ...Fn,
+            ...baseLinks,
             al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
-            ...Ln(`f1`, [`f3`, `f2`], `n`),
-            ...Rn([`f3`, `f2`], `n`),
+            ...replicationLinks(`f1`, [`f3`, `f2`], `n`),
+            ...readLinks([`f3`, `f2`], `n`),
           },
-          flows: [Bn(4, `n`), { route: [`al2`], kind: `write`, rate: 0.6 }, ...zn(0.9, `n`)],
+          flows: [requestFlows(4, `n`), { route: [`al2`], kind: `write`, rate: 0.6 }, ...writeFlows(0.9, `n`)],
         },
       },
       {
@@ -436,14 +435,14 @@ export const replicationLesson = {
         },
         metrics: { dbLoad: 30, reads: `2×`, lag: `0 s`, writes: `ok` },
         scene: {
-          entities: { users: Mn(), app: Nn(), f1: Pn(makeCool(0.3)), f3: E(-9, makeCool(0.4)), f2: E(9, makeCool(0.4)) },
+          entities: { users: users(), app: appServer(), f1: leaderDb(makeCool(0.3)), f3: followerDb(-9, makeCool(0.4)), f2: followerDb(9, makeCool(0.4)) },
           links: {
-            ...Fn,
+            ...baseLinks,
             al2: makeLink(`app`, `f1`, [`app`, `f1`], { heads: `both`, label: `writes` }),
-            ...Ln(`f1`, [`f3`, `f2`], `n`),
-            ...Rn([`f3`, `f2`], `n`),
+            ...replicationLinks(`f1`, [`f3`, `f2`], `n`),
+            ...readLinks([`f3`, `f2`], `n`),
           },
-          flows: [Bn(4, `n`), { route: [`al2`], kind: `write`, rate: 0.6 }, ...zn(0.9, `n`)],
+          flows: [requestFlows(4, `n`), { route: [`al2`], kind: `write`, rate: 0.6 }, ...writeFlows(0.9, `n`)],
         },
       },
     ],

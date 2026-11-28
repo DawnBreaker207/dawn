@@ -1,15 +1,8 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeDb,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeDb, makeLink, makePanel, makeZone, type Bag, type Tag } from '@/lib/simulator/scene-builders';
 
-const ka = { a: [0, -5], b: [-10, 7], c: [10, 7] };
+const ka: Record<string, [number, number]> = { a: [0, -5], b: [-10, 7], c: [10, 7] };
 
-const M = (e, t = [], n = {}) =>
+const node = (e: string, t: Tag[] = [], n: Bag = {}) =>
     makeDb(ka[e][0], ka[e][1], {
       r: 1.9,
       glyph: `database`,
@@ -18,37 +11,37 @@ const M = (e, t = [], n = {}) =>
       ...n,
     });
 
-const Aa = (e = {}) => makeBlock(0, -17, { label: [`App`, `Server 1`], ...e });
+const appServer1 = (e: Bag = {}) => makeBlock(7.5, -14, { label: [`App`, `Server 1`], ...e });
 
-const ja = (e = {}) => makeBlock(-16, 1, { label: [`App`, `Server 2`], ...e });
+const appServer2 = (e: Bag = {}) => makeBlock(-16, 1, { label: [`App`, `Server 2`], ...e });
 
-const Ma = (e) => ({ text: `leader · term ${e}`, tone: `green`, icon: `flag` });
+const leaderTag = (e: number) => ({ text: `leader · term ${e}`, tone: `green`, icon: `flag` });
 
-const Na = { text: `follower`, icon: `check` };
+const followerTag = { text: `follower`, icon: `check` };
 
-const Pa = { heads: `none`, style: `cut` };
+const cutStyle = { heads: `none`, style: `cut` };
 
-const N = {
-    w1a: (e = {}) => makeLink(`app1`, `a`, [`app1`, `a`], { heads: `both`, ...e }),
-    w2b: (e = {}) => makeLink(`app2`, `b`, [`app2`, `b`], { heads: `both`, ...e }),
-    w1b: (e = {}) => makeLink(`app1`, `b`, [`app1`, [`b-1`, `app1`], `b-1`], { heads: `both`, ...e }),
-    w1c: (e = {}) => makeLink(`app1`, `c`, [`app1`, [`c+1`, `app1`], `c+1`], { heads: `both`, ...e }),
-    ab: (e = {}) => makeLink(`a`, `b`, [`a`, [`b`, `a`], `b`], e),
-    ac: (e = {}) => makeLink(`a`, `c`, [`a`, [`c`, `a`], `c`], e),
-    ba: (e = {}) => makeLink(`b`, `a`, [`b`, [`b`, `a`], `a`], e),
-    bc: (e = {}) => makeLink(`b`, `c`, [`b`, `c`], e),
-    ca: (e = {}) => makeLink(`c`, `a`, [`c`, [`c`, `a`], `a`], e),
-    cb: (e = {}) => makeLink(`c`, `b`, [`c`, `b`], e),
+const links = {
+    w1a: (e: Bag = {}) => makeLink(`app1`, `a`, [`app1`, `a`], { heads: `both`, ...e }),
+    w2b: (e: Bag = {}) => makeLink(`app2`, `b`, [`app2`, `b`], { heads: `both`, ...e }),
+    w1b: (e: Bag = {}) => makeLink(`app1`, `b`, [`app1`, [`b-1`, `app1`], `b-1`], { heads: `both`, ...e }),
+    w1c: (e: Bag = {}) => makeLink(`app1`, `c`, [`app1`, [`c+1`, `app1`], `c+1`], { heads: `both`, ...e }),
+    ab: (e: Bag = {}) => makeLink(`a`, `b`, [`a`, [`b`, `a`], `b`], e),
+    ac: (e: Bag = {}) => makeLink(`a`, `c`, [`a`, [`c`, `a`], `c`], e),
+    ba: (e: Bag = {}) => makeLink(`b`, `a`, [`b`, [`b`, `a`], `a`], e),
+    bc: (e: Bag = {}) => makeLink(`b`, `c`, [`b`, `c`], e),
+    ca: (e: Bag = {}) => makeLink(`c`, `a`, [`c`, [`c`, `a`], `a`], e),
+    cb: (e: Bag = {}) => makeLink(`c`, `b`, [`c`, `b`], e),
   };
 
-const Fa = () => ({
-    xab: N.ab({ ...Pa, label: `✕ cut off`, labelTone: `red`, labelAt: 0.3 }),
-    xac: N.ac({ ...Pa }),
+const partitionLinks = () => ({
+    xab: links.ab({ ...cutStyle, label: `✕ cut off`, labelTone: `red`, labelAt: 0.3 }),
+    xac: links.ac({ ...cutStyle }),
   });
 
-const Ia = (e, t = 0.8, n = {}) => ({ route: e, kind: `write`, rate: t, bounce: !0, ...n });
+const writeFlow = (e: string[], t = 0.8, n: Bag = {}) => ({ route: e, kind: `write`, rate: t, bounce: !0, ...n });
 
-const La = (e, t = `write`, n = 0.8, r = {}) => ({
+const fanoutFlow = (e: string[], t = `write`, n = 0.8, r: Bag = {}) => ({
     fanout: !0,
     routes: e.map((e) => ({ path: [e] })),
     kind: t,
@@ -56,17 +49,17 @@ const La = (e, t = `write`, n = 0.8, r = {}) => ({
     ...r,
   });
 
-const Ra = (e, t, n, r = {}) => makePanel({ x: -10, y: 7, z: 0, dx: 190, dy: -125, ...r }, e, t, { icon: n });
+const panel = (e: string, t: string[], n: string, r: Bag = {}) => makePanel({ x: -10, y: 7, z: 0, dx: 190, dy: -125, ...r }, e, t, { icon: n });
 
-const za = (e = {}) => ({ a: M(`a`, e.a || [Na]), b: M(`b`, e.b || [Ma(2)]), c: M(`c`, e.c || [Na]) });
+const nodes = (e: Bag = {}) => ({ a: node(`a`, e.a || [followerTag]), b: node(`b`, e.b || [leaderTag(2)]), c: node(`c`, e.c || [followerTag]) });
 
-const Ba = () => ({ w1b: N.w1b(), w2b: N.w2b(), ba: N.ba(), bc: N.bc() });
+const baseLinks = () => ({ w1b: links.w1b(), w2b: links.w2b(), ba: links.ba(), bc: links.bc() });
 
-const Va = () => [Ia([`w1b`], 0.6), Ia([`w2b`], 0.6), La([`ba`, `bc`], `write`, 0.9)];
+const baseFlows = () => [writeFlow([`w1b`], 0.6), writeFlow([`w2b`], 0.6), fanoutFlow([`ba`, `bc`], `write`, 0.9)];
 
-const Ha = () => ({ w1c: N.w1c(), ca: N.ca(), cb: N.cb() });
+const triLinks = () => ({ w1c: links.w1c(), ca: links.ca(), cb: links.cb() });
 
-const Ua = {
+const lesson = {
     id: `consensus`,
     title: `Consensus & Leader Election`,
     summary: `How a group of servers agrees on one leader and one history — even when some of them can’t be reached.`,
@@ -104,13 +97,13 @@ const Ua = {
         metrics: { leaders: 1, term: `—`, writes: `ok`, canLose: `?` },
         scene: {
           entities: {
-            app1: Aa(),
-            a: M(`a`, [{ text: `leader`, tone: `green`, icon: `flag` }]),
-            b: M(`b`, [Na]),
-            c: M(`c`, [Na]),
+            app1: appServer1(),
+            a: node(`a`, [{ text: `leader`, tone: `green`, icon: `flag` }]),
+            b: node(`b`, [followerTag]),
+            c: node(`c`, [followerTag]),
           },
-          links: { w1a: N.w1a(), ab: N.ab({ label: `replication`, labelAt: 0.3 }), ac: N.ac() },
-          flows: [Ia([`w1a`]), La([`ab`, `ac`])],
+          links: { w1a: links.w1a(), ab: links.ab({ label: `replication`, labelAt: 0.3 }), ac: links.ac() },
+          flows: [writeFlow([`w1a`]), fanoutFlow([`ab`, `ac`])],
         },
       },
       {
@@ -133,14 +126,14 @@ const Ua = {
         metrics: { leaders: 2, term: `—`, writes: `diverging`, canLose: `?` },
         scene: {
           entities: {
-            app1: Aa(),
-            app2: ja(),
-            a: M(`a`, [{ text: `leader · seat 7 → Ana`, tone: `red`, icon: `flag` }]),
-            b: M(`b`, [{ text: `leader · seat 7 → Ben`, tone: `red`, icon: `flag` }]),
-            c: M(`c`, [Na]),
+            app1: appServer1(),
+            app2: appServer2(),
+            a: node(`a`, [{ text: `leader · seat 7 → Ana`, tone: `red`, icon: `flag` }]),
+            b: node(`b`, [{ text: `leader · seat 7 → Ben`, tone: `red`, icon: `flag` }]),
+            c: node(`c`, [followerTag]),
           },
-          links: { w1a: N.w1a(), w2b: N.w2b(), ...Fa(), bc: N.bc() },
-          flows: [Ia([`w1a`]), Ia([`w2b`]), La([`bc`])],
+          links: { w1a: links.w1a(), w2b: links.w2b(), ...partitionLinks(), bc: links.bc() },
+          flows: [writeFlow([`w1a`]), writeFlow([`w2b`]), fanoutFlow([`bc`])],
         },
       },
       {
@@ -163,12 +156,12 @@ const Ua = {
         metrics: { leaders: 1, term: 2, writes: `ok`, canLose: `1 of 3` },
         scene: {
           entities: {
-            app1: Aa(),
-            app2: ja(),
-            a: M(`a`, [{ text: `1 of 3 · can’t commit`, tone: `amber`, icon: `lock` }]),
-            b: M(`b`, [Ma(2)]),
-            c: M(`c`, [Na]),
-            card: Ra(
+            app1: appServer1(),
+            app2: appServer2(),
+            a: node(`a`, [{ text: `1 of 3 · can’t commit`, tone: `amber`, icon: `lock` }]),
+            b: node(`b`, [leaderTag(2)]),
+            c: node(`c`, [followerTag]),
+            card: panel(
               `Majority (quorum)`,
               [
                 `3 nodes → 2 must agree`,
@@ -179,8 +172,8 @@ const Ua = {
               `scale`,
             ),
           },
-          links: { w1a: N.w1a({ fail: 1 }), w2b: N.w2b(), ...Fa(), bc: N.bc() },
-          flows: [Ia([`w1a`]), Ia([`w2b`]), La([`bc`])],
+          links: { w1a: links.w1a({ fail: 1 }), w2b: links.w2b(), ...partitionLinks(), bc: links.bc() },
+          flows: [writeFlow([`w1a`]), writeFlow([`w2b`]), fanoutFlow([`bc`])],
         },
       },
       {
@@ -203,12 +196,12 @@ const Ua = {
         metrics: { leaders: 1, term: 2, writes: `ok`, canLose: `1 of 3` },
         scene: {
           entities: {
-            app1: Aa(),
-            app2: ja(),
-            a: M(`a`, [{ text: `still on term 1`, tone: `amber`, icon: `clock` }]),
-            b: M(`b`, [Ma(2)]),
-            c: M(`c`, [{ text: `voted for B`, tone: `green`, icon: `check` }]),
-            card: Ra(
+            app1: appServer1(),
+            app2: appServer2(),
+            a: node(`a`, [{ text: `still on term 1`, tone: `amber`, icon: `clock` }]),
+            b: node(`b`, [leaderTag(2)]),
+            c: node(`c`, [{ text: `voted for B`, tone: `green`, icon: `check` }]),
+            card: panel(
               `Election · term 2`,
               [
                 `B: timer fires — no heartbeat`,
@@ -221,13 +214,13 @@ const Ua = {
             ),
           },
           links: {
-            w1a: N.w1a({ fail: 1 }),
-            w2b: N.w2b(),
-            ...Fa(),
-            bc: N.bc({ heads: `both`, label: `vote for me? · term 2` }),
+            w1a: links.w1a({ fail: 1 }),
+            w2b: links.w2b(),
+            ...partitionLinks(),
+            bc: links.bc({ heads: `both`, label: `vote for me? · term 2` }),
           },
           flows: [
-            Ia([`w1a`], 0.5),
+            writeFlow([`w1a`], 0.5),
             { route: [`bc`], kind: `msg`, rate: 0.7, bounce: !0 },
             { route: [`bc`], kind: `ping`, rate: 0.9 },
           ],
@@ -253,21 +246,21 @@ const Ua = {
         metrics: { leaders: 1, term: 2, writes: `ok`, canLose: `1 of 3` },
         scene: {
           entities: {
-            app1: Aa(),
-            app2: ja(),
-            a: M(`a`, [
+            app1: appServer1(),
+            app2: appServer2(),
+            a: node(`a`, [
               { text: `log 1 2 3 · 4′ Ana, unconfirmed`, tone: `amber`, icon: `listOrdered` },
             ]),
-            b: M(`b`, [Ma(2), { text: `log 1 2 3 · 4 Ben ✓`, tone: `green`, icon: `listOrdered` }]),
-            c: M(`c`, [{ text: `log 1 2 3 · 4 Ben ✓`, tone: `green`, icon: `listOrdered` }]),
+            b: node(`b`, [leaderTag(2), { text: `log 1 2 3 · 4 Ben ✓`, tone: `green`, icon: `listOrdered` }]),
+            c: node(`c`, [{ text: `log 1 2 3 · 4 Ben ✓`, tone: `green`, icon: `listOrdered` }]),
           },
           links: {
-            w1a: N.w1a({ fail: 1 }),
-            w2b: N.w2b(),
-            ...Fa(),
-            bc: N.bc({ heads: `both`, label: `append entry 4` }),
+            w1a: links.w1a({ fail: 1 }),
+            w2b: links.w2b(),
+            ...partitionLinks(),
+            bc: links.bc({ heads: `both`, label: `append entry 4` }),
           },
-          flows: [Ia([`w1a`], 0.5), Ia([`w2b`, `bc`], 0.7)],
+          flows: [writeFlow([`w1a`], 0.5), writeFlow([`w2b`, `bc`], 0.7)],
         },
       },
       {
@@ -291,12 +284,12 @@ const Ua = {
         metrics: { leaders: 1, term: 2, writes: `ok`, canLose: `1 of 3` },
         scene: {
           entities: {
-            app1: Aa(),
-            app2: ja(),
-            ...za({ a: [{ text: `follower · term 2 · caught up`, tone: `green`, icon: `check` }] }),
+            app1: appServer1(),
+            app2: appServer2(),
+            ...nodes({ a: [{ text: `follower · term 2 · caught up`, tone: `green`, icon: `check` }] }),
           },
-          links: { ...Ba(), ba: N.ba({ label: `heartbeat · term 2`, labelAt: 0.3 }) },
-          flows: [...Va(), La([`ba`, `bc`], `ping`, 0.7)],
+          links: { ...baseLinks(), ba: links.ba({ label: `heartbeat · term 2`, labelAt: 0.3 }) },
+          flows: [...baseFlows(), fanoutFlow([`ba`, `bc`], `ping`, 0.7)],
         },
       },
       {
@@ -315,21 +308,21 @@ const Ua = {
         metrics: { leaders: 1, term: 2, writes: `ok`, canLose: `1 of 3` },
         scene: {
           entities: {
-            app1: Aa(),
-            app2: ja(),
-            ...za({
+            app1: appServer1(),
+            app2: appServer2(),
+            ...nodes({
               a: [{ text: `zone 1`, icon: `building` }],
-              b: [Ma(2), { text: `zone 2`, icon: `building` }],
+              b: [leaderTag(2), { text: `zone 2`, icon: `building` }],
               c: [{ text: `zone 3`, icon: `building` }],
             }),
-            card: Ra(
+            card: panel(
               `Nodes → majority → can lose`,
               [`3  →  2  →  1`, `! 4  →  3  →  1   no gain`, `5  →  3  →  2`, `7  →  4  →  3`],
               `scale`,
             ),
           },
-          links: Ba(),
-          flows: Va(),
+          links: baseLinks(),
+          flows: baseFlows(),
         },
       },
       {
@@ -352,12 +345,12 @@ const Ua = {
         metrics: { leaders: `1 + a zombie`, term: 3, writes: `diverging`, canLose: `1 of 3` },
         scene: {
           entities: {
-            app1: Aa(),
-            a: M(`a`, [Na]),
-            b: M(`b`, [{ text: `awake · thinks it leads term 2`, tone: `red`, icon: `alert` }], {
+            app1: appServer1(),
+            a: node(`a`, [followerTag]),
+            b: node(`b`, [{ text: `awake · thinks it leads term 2`, tone: `red`, icon: `alert` }], {
               heat: 0.5,
             }),
-            c: M(`c`, [Ma(3)]),
+            c: node(`c`, [leaderTag(3)]),
             store: makeDb(0, 19, {
               r: 1.8,
               glyph: `file`,
@@ -367,7 +360,7 @@ const Ua = {
             }),
           },
           links: {
-            ...Ha(),
+            ...triLinks(),
             sb: makeLink(`b`, `store`, [`b`, [`b`, `store`], `store`], {
               label: `write (stale)`,
               labelTone: `red`,
@@ -376,8 +369,8 @@ const Ua = {
             sc: makeLink(`c`, `store`, [`c`, [`c`, `store`], `store`]),
           },
           flows: [
-            Ia([`w1c`], 0.6),
-            La([`ca`], `write`, 0.7),
+            writeFlow([`w1c`], 0.6),
+            fanoutFlow([`ca`], `write`, 0.7),
             { route: [`sc`], kind: `write`, rate: 0.5 },
             { route: [`sb`], kind: `poison`, rate: 0.7 },
           ],
@@ -403,10 +396,10 @@ const Ua = {
         metrics: { leaders: 1, term: 3, writes: `ok`, canLose: `1 of 3` },
         scene: {
           entities: {
-            app1: Aa(),
-            a: M(`a`, [Na]),
-            b: M(`b`, [{ text: `refused → steps down`, tone: `amber`, icon: `undo` }]),
-            c: M(`c`, [Ma(3)]),
+            app1: appServer1(),
+            a: node(`a`, [followerTag]),
+            b: node(`b`, [{ text: `refused → steps down`, tone: `amber`, icon: `undo` }]),
+            c: node(`c`, [leaderTag(3)]),
             store: makeDb(0, 19, {
               r: 1.8,
               glyph: `file`,
@@ -416,7 +409,7 @@ const Ua = {
             }),
           },
           links: {
-            ...Ha(),
+            ...triLinks(),
             sb: makeLink(`b`, `store`, [`b`, [`b`, `store`], `store`], {
               label: `token 2 ✕`,
               labelTone: `red`,
@@ -429,8 +422,8 @@ const Ua = {
             }),
           },
           flows: [
-            Ia([`w1c`], 0.6),
-            La([`ca`, `cb`], `write`, 0.7),
+            writeFlow([`w1c`], 0.6),
+            fanoutFlow([`ca`, `cb`], `write`, 0.7),
             { route: [`sc`], kind: `write`, rate: 0.5 },
             { route: [`sb`], kind: `poison`, rate: 0.7 },
           ],
@@ -455,11 +448,11 @@ const Ua = {
         metrics: { leaders: 1, term: 3, writes: `ok`, canLose: `1 of 3` },
         scene: {
           entities: {
-            app1: Aa(),
-            a: M(`a`, [Na]),
-            b: M(`b`, [Na]),
-            c: M(`c`, [Ma(3), { text: `waits for 1 more ack`, icon: `hourglass` }]),
-            card: Ra(
+            app1: appServer1(),
+            a: node(`a`, [followerTag]),
+            b: node(`b`, [followerTag]),
+            c: node(`c`, [leaderTag(3), { text: `waits for 1 more ack`, icon: `hourglass` }]),
+            card: panel(
               `The bill`,
               [
                 `every write: + 1 majority round trip`,
@@ -470,8 +463,8 @@ const Ua = {
               `dollar`,
             ),
           },
-          links: Ha(),
-          flows: [Ia([`w1c`], 0.7), La([`ca`, `cb`], `write`, 0.7, { bounce: !0 })],
+          links: triLinks(),
+          flows: [writeFlow([`w1c`], 0.7), fanoutFlow([`ca`, `cb`], `write`, 0.7, { bounce: !0 })],
         },
       },
       {
@@ -491,10 +484,10 @@ const Ua = {
         scene: {
           entities: {
             cz: makeZone({ x0: -13.5, x1: 13.5, y0: -8.5, y1: 10.5 }, `CONSENSUS CLUSTER · etcd`),
-            a: M(`a`, [Na]),
-            b: M(`b`, [Na]),
-            c: M(`c`, [Ma(3)]),
-            k8s: makeBlock(-11, -18, {
+            a: node(`a`, [followerTag]),
+            b: node(`b`, [followerTag]),
+            c: node(`c`, [leaderTag(3)]),
+            k8s: makeBlock(-12, -12, {
               color: `purple`,
               glyph: `box`,
               label: [`Kubernetes`],
@@ -506,7 +499,7 @@ const Ua = {
               label: [`Database`],
               sub: `who is primary?`,
             }),
-            job: makeBlock(11, -18, {
+            job: makeBlock(14, -16, {
               color: `green`,
               glyph: `clock`,
               label: [`Scheduler`],
@@ -514,8 +507,8 @@ const Ua = {
             }),
           },
           links: {
-            ca: N.ca(),
-            cb: N.cb(),
+            ca: links.ca(),
+            cb: links.cb(),
             u1: makeLink(`k8s`, `b`, [`k8s`, `b-1`], { heads: `both` }),
             u2: makeLink(`dbf`, `a`, [`dbf`, `a`], { heads: `both` }),
             u3: makeLink(`job`, `c`, [`job`, `c+1`], { heads: `both` }),
@@ -526,7 +519,7 @@ const Ua = {
               rate: 1.6,
               bounce: !0,
             },
-            La([`ca`, `cb`], `write`, 0.6),
+            fanoutFlow([`ca`, `cb`], `write`, 0.6),
           ],
         },
       },
@@ -549,13 +542,13 @@ const Ua = {
         },
         metrics: { leaders: 1, term: 3, writes: `ok`, canLose: `1 of 3` },
         scene: {
-          entities: { app1: Aa(), a: M(`a`, [Na]), b: M(`b`, [Na]), c: M(`c`, [Ma(3)]) },
-          links: Ha(),
-          flows: [Ia([`w1c`], 0.7), La([`ca`, `cb`], `write`, 0.7)],
+          entities: { app1: appServer1(), a: node(`a`, [followerTag]), b: node(`b`, [followerTag]), c: node(`c`, [leaderTag(3)]) },
+          links: triLinks(),
+          flows: [writeFlow([`w1c`], 0.7), fanoutFlow([`ca`, `cb`], `write`, 0.7)],
         },
       },
     ],
   };
 
-export { Ua as consensusLesson };
-export default Ua;
+export { lesson as consensusLesson };
+export default lesson;

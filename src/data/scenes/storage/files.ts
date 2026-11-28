@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   makeBlock,
   makeCool,
@@ -11,17 +10,17 @@ import {
   makeQueue
 } from '@/lib/simulator/scene-builders';
 
-const eo = { x0: -4.5, x1: 4.5, y0: -22, y1: -16 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -22, y1: -16 };
 
-const to = (e = `people sharing photos`) => makeCrowd(eo, 11, e);
+const users = (e = `people sharing photos`) => makeCrowd(usersArea, 11, e);
 
-const no = (e = {}) => makeBlock(0, -6, { label: [`App`, `Servers`], ...e });
+const appServer = (e = {}) => makeBlock(0, -6, { label: [`App`, `Servers`], ...e });
 
-const ro = (e = {}) => makeDb(0, 6, { r: 2.1, h: 44, label: `database`, ...e });
+const fileSystem = (e = {}) => makeDb(0, 6, { r: 2.1, h: 44, label: `database`, ...e });
 
-const io = (e = {}) => makeDb(-10, 6, { label: `metadata`, ...e });
+const objectStore = (e = {}) => makeDb(-10, 6, { label: `metadata`, ...e });
 
-const ao = (e = {}) =>
+const links = (e = {}) =>
     makeBlock(10, 6, {
       s: 5,
       h: 48,
@@ -31,12 +30,12 @@ const ao = (e = {}) =>
       ...e,
     });
 
-const oo = (e = {}) =>
+const requestFlows = (e = {}) =>
   makeBlock(16, 12, { s: 3.8, h: 30, color: `green`, glyph: `workflow`, label: [`Workers`], ...e });
 
-const so = (e = {}) => makeBlock(10, -8, { color: `orange`, glyph: `globe`, label: [`CDN`], ...e });
+const card = (e = {}) => makeBlock(10, -8, { color: `orange`, glyph: `globe`, label: [`CDN`], ...e });
 
-const P = {
+const positions = {
     ua: (e = {}) => makeLink(`users`, `app`, [`users`, `app`], { heads: `both`, ...e }),
     ab: (e = {}) => makeLink(`app`, `blob`, [`app`, `blob`], { heads: `both`, ...e }),
     ad: (e = {}) => makeLink(`app`, `db`, [`app`, [`app`, 0], [`db`, 0], `db`], { heads: `both`, ...e }),
@@ -50,45 +49,45 @@ const P = {
     co: (e = {}) => makeLink(`cdn`, `obj`, [`cdn`, `obj`], { heads: `both`, ...e }),
   };
 
-const co = (e, t, n) => makePanel({ x: 0, y: 4, z: 0 }, e, t, { icon: n });
+const fileTree = (e: string, t: string[], n: string) => makePanel({ x: 0, y: 4, z: 0 }, e, t, { icon: n });
 
-const lo = (e = {}) => ({
-    users: to(),
-    app: no(),
-    db: io(),
-    obj: ao(),
-    workers: oo(),
+const metadata = (e = {}) => ({
+    users: users(),
+    app: appServer(),
+    db: objectStore(),
+    obj: links(),
+    workers: requestFlows(),
     jq: makeQueue(19, 6, 3, [-1, 0]),
-    cdn: so(),
+    cdn: card(),
     ...e,
   });
 
-const uo = (e = {}) => ({
-    ua: P.ua(),
-    ad: P.ad(),
-    uo: P.uo(),
-    oa: P.oa(),
-    ow: P.ow(),
-    uc: P.uc(),
-    co: P.co(),
+const chunks = (e = {}) => ({
+    ua: positions.ua(),
+    ad: positions.ad(),
+    uo: positions.uo(),
+    oa: positions.oa(),
+    ow: positions.ow(),
+    uc: positions.uc(),
+    co: positions.co(),
     ...e,
   });
 
-const fo = () => [
+const metrics = () => [
     { route: [`uc`], rate: 3.2, bounce: !0 },
     { route: [`ua`, `ad`], rate: 1, bounce: !0 },
     { route: [`uo`], kind: `heavy`, rate: 0.6 },
     { route: [`ow`], kind: `msg`, rate: 0.6, bounce: !0 },
   ];
 
-const po = {
+const lesson = {
     dbGrowth: `+1 GB / day`,
     appTraffic: `small requests only`,
     imgLoad: 35,
     storeCost: `$16,800`,
   };
 
-const mo = {
+const extra = {
     id: `files`,
     title: `Files & Media`,
     summary: `Photos and videos don’t belong in your database — where they go instead, and how they get there and back.`,
@@ -131,11 +130,11 @@ const mo = {
         },
         scene: {
           entities: {
-            users: to(),
-            app: no(),
-            blob: ro({ tags: [{ text: `photos as BLOBs`, icon: `database` }] }),
+            users: users(),
+            app: appServer(),
+            blob: fileSystem({ tags: [{ text: `photos as BLOBs`, icon: `database` }] }),
           },
-          links: { ua: P.ua(), ab: P.ab() },
+          links: { ua: positions.ua(), ab: positions.ab() },
           flows: [{ route: [`ua`, `ab`], kind: `heavy`, rate: 1.2, bounce: !0 }],
         },
       },
@@ -164,11 +163,11 @@ const mo = {
         },
         scene: {
           entities: {
-            users: to(),
-            app: no(makeHot(0.85)),
-            blob: ro({ ...makeHot(0.95), tags: [{ text: `+2 TB / day`, tone: `red`, icon: `alert` }] }),
+            users: users(),
+            app: appServer(makeHot(0.85)),
+            blob: fileSystem({ ...makeHot(0.95), tags: [{ text: `+2 TB / day`, tone: `red`, icon: `alert` }] }),
           },
-          links: { ua: P.ua(), ab: P.ab() },
+          links: { ua: positions.ua(), ab: positions.ab() },
           flows: [{ route: [`ua`, `ab`], kind: `heavy`, rate: 3.4, bounce: !0 }],
         },
       },
@@ -197,12 +196,12 @@ const mo = {
         },
         scene: {
           entities: {
-            users: to(),
-            app: no(),
-            db: io({ tags: [{ text: `key · owner · size · type`, icon: `listOrdered` }] }),
-            obj: ao({ tags: [{ text: `photos/9f2c.jpg`, icon: `file` }] }),
+            users: users(),
+            app: appServer(),
+            db: objectStore({ tags: [{ text: `key · owner · size · type`, icon: `listOrdered` }] }),
+            obj: links({ tags: [{ text: `photos/9f2c.jpg`, icon: `file` }] }),
           },
-          links: { ua: P.ua(), ad: P.ad(), ao: P.ao() },
+          links: { ua: positions.ua(), ad: positions.ad(), ao: positions.ao() },
           flows: [
             { route: [`ua`, `ao`], kind: `heavy`, rate: 1.6, bounce: !0 },
             { route: [`ua`, `ad`], rate: 1.2, bounce: !0 },
@@ -230,15 +229,15 @@ const mo = {
         },
         scene: {
           entities: {
-            users: to(`people uploading videos`),
-            app: no({
+            users: users(`people uploading videos`),
+            app: appServer({
               ...makeHot(0.9),
               tags: [{ text: `relaying 2 GB uploads`, tone: `red`, icon: `hourglass` }],
             }),
-            db: io(),
-            obj: ao(),
+            db: objectStore(),
+            obj: links(),
           },
-          links: { ua: P.ua(), ad: P.ad(), ao: P.ao() },
+          links: { ua: positions.ua(), ad: positions.ad(), ao: positions.ao() },
           flows: [{ route: [`ua`, `ao`], kind: `heavy`, rate: 3, speed: 0.5 }],
         },
       },
@@ -267,11 +266,11 @@ const mo = {
         },
         scene: {
           entities: {
-            users: to(`people uploading videos`),
-            app: no(makeCool(0.2)),
-            db: io({ tags: [{ text: `status: pending → uploaded`, icon: `refresh` }] }),
-            obj: ao(),
-            card: co(
+            users: users(`people uploading videos`),
+            app: appServer(makeCool(0.2)),
+            db: objectStore({ tags: [{ text: `status: pending → uploaded`, icon: `refresh` }] }),
+            obj: links(),
+            card: fileTree(
               `A presigned upload`,
               [
                 `PUT https://bucket…/videos/7a1e.mp4`,
@@ -283,10 +282,10 @@ const mo = {
             ),
           },
           links: {
-            ua: P.ua({ label: `may I upload?` }),
-            ad: P.ad(),
-            uo: P.uo({ label: `the bytes`, labelAt: 0.3 }),
-            oa: P.oa({ label: `upload complete` }),
+            ua: positions.ua({ label: `may I upload?` }),
+            ad: positions.ad(),
+            uo: positions.uo({ label: `the bytes`, labelAt: 0.3 }),
+            oa: positions.oa({ label: `upload complete` }),
           },
           flows: [
             { route: [`ua`, `ad`], rate: 1, bounce: !0 },
@@ -320,11 +319,11 @@ const mo = {
         },
         scene: {
           entities: {
-            users: to(`people uploading videos`),
-            app: no(makeCool(0.2)),
-            db: io(),
-            obj: ao({ tags: [{ text: `parts 1–200 → one object`, icon: `merge` }] }),
-            card: co(
+            users: users(`people uploading videos`),
+            app: appServer(makeCool(0.2)),
+            db: objectStore(),
+            obj: links({ tags: [{ text: `parts 1–200 → one object`, icon: `merge` }] }),
+            card: fileTree(
               `Multipart upload`,
               [
                 `start      → upload id + 200 URLs`,
@@ -335,7 +334,7 @@ const mo = {
               `layers`,
             ),
           },
-          links: { ua: P.ua(), ad: P.ad(), uo: P.uo({ fail: 0.12 }), oa: P.oa() },
+          links: { ua: positions.ua(), ad: positions.ad(), uo: positions.uo({ fail: 0.12 }), oa: positions.oa() },
           flows: [
             { route: [`uo`], kind: `heavy`, rate: 3.6, speed: 0.8 },
             { route: [`ua`, `ad`], rate: 0.6, bounce: !0 },
@@ -367,19 +366,19 @@ const mo = {
         },
         scene: {
           entities: {
-            users: to(),
-            app: no(makeCool(0.2)),
-            db: io({ tags: [{ text: `status: ready`, tone: `green`, icon: `check` }] }),
-            obj: ao(),
+            users: users(),
+            app: appServer(makeCool(0.2)),
+            db: objectStore({ tags: [{ text: `status: ready`, tone: `green`, icon: `check` }] }),
+            obj: links(),
             jq: makeQueue(19, 6, 3, [-1, 0]),
-            workers: oo({ tags: [{ text: `resize · strip GPS · transcode`, icon: `workflow` }] }),
+            workers: requestFlows({ tags: [{ text: `resize · strip GPS · transcode`, icon: `workflow` }] }),
           },
           links: {
-            ua: P.ua(),
-            ad: P.ad(),
-            uo: P.uo(),
-            oa: P.oa(),
-            ow: P.ow({ label: `jobs`, labelAt: 0.25 }),
+            ua: positions.ua(),
+            ad: positions.ad(),
+            uo: positions.uo(),
+            oa: positions.oa(),
+            ow: positions.ow({ label: `jobs`, labelAt: 0.25 }),
           },
           flows: [
             { route: [`uo`], kind: `heavy`, rate: 0.7 },
@@ -405,8 +404,8 @@ const mo = {
           `~ Views served from the nearest edge`,
           `~ Photo load 120 → 35 ms`,
         ],
-        metrics: po,
-        scene: { entities: lo(), links: uo(), flows: fo() },
+        metrics: lesson,
+        scene: { entities: metadata(), links: chunks(), flows: metrics() },
       },
       {
         short: `Video`,
@@ -424,12 +423,12 @@ const mo = {
           `+ Each video: 4-second segments × 5 qualities`,
           `+ Player switches quality segment by segment`,
         ],
-        metrics: po,
+        metrics: lesson,
         scene: {
-          entities: lo({
-            cdn: so({ tags: [{ text: `segments · 4 s each`, icon: `video` }] }),
+          entities: metadata({
+            cdn: card({ tags: [{ text: `segments · 4 s each`, icon: `video` }] }),
           }),
-          links: uo(),
+          links: chunks(),
           flows: [
             { route: [`uc`], kind: `heavy`, rate: 2.6, bounce: !0 },
             { route: [`co`], rate: 0.4, bounce: !0 },
@@ -453,11 +452,11 @@ const mo = {
           `+ Deletes: row first, then queued file deletes`,
           `+ Nightly cleanup of orphans`,
         ],
-        metrics: po,
+        metrics: lesson,
         scene: {
-          entities: lo({
-            db: io({ tags: [{ text: `312 pending > 1 day`, tone: `amber`, icon: `hourglass` }] }),
-            sweep: makeBlock(-10, -6, {
+          entities: metadata({
+            db: objectStore({ tags: [{ text: `312 pending > 1 day`, tone: `amber`, icon: `hourglass` }] }),
+            sweep: makeBlock(-9, 13, {
               s: 4.2,
               h: 46,
               color: `slab`,
@@ -466,7 +465,7 @@ const mo = {
               sub: `nightly`,
             }),
           }),
-          links: uo({
+          links: chunks({
             sd: makeLink(`sweep`, `db`, [`sweep`, `db`], { heads: `both` }),
             so: makeLink(`sweep`, `obj`, [`sweep`, [`sweep`, -2], [`obj`, -2], `obj`], {
               style: `dashed`,
@@ -475,7 +474,7 @@ const mo = {
             }),
           }),
           flows: [
-            ...fo(),
+            ...metrics(),
             { route: [`sd`], rate: 0.5, bounce: !0 },
             { route: [`so`], kind: `kill`, rate: 0.5 },
           ],
@@ -497,13 +496,13 @@ const mo = {
           `+ Lifecycle: originals → archive after 90 days`,
           `~ Storage bill after one year $16,800 → ≈ $6,300 / month`,
         ],
-        metrics: { ...po, storeCost: `≈ $6,300` },
+        metrics: { ...lesson, storeCost: `≈ $6,300` },
         scene: {
-          entities: lo({
-            obj: ao({
+          entities: metadata({
+            obj: links({
               tags: [{ text: `originals > 90 days → archive`, tone: `green`, icon: `clock` }],
             }),
-            card: co(
+            card: fileTree(
               `Storage classes · per TB-month`,
               [
                 `standard            ≈ $23    hot, cheap to read`,
@@ -514,8 +513,8 @@ const mo = {
               `dollar`,
             ),
           }),
-          links: uo(),
-          flows: fo(),
+          links: chunks(),
+          flows: metrics(),
         },
       },
       {
@@ -535,13 +534,13 @@ const mo = {
           `+ Public access blocked, CDN with signed URLs`,
           `+ Least-privilege keys per service`,
         ],
-        metrics: { ...po, storeCost: `≈ $6,300` },
+        metrics: { ...lesson, storeCost: `≈ $6,300` },
         scene: {
-          entities: lo({
-            spy: makeDevice(18, -8, { label: `anyone` }),
-            obj: ao({ tags: [{ text: `public access blocked`, tone: `green`, icon: `lock` }] }),
+          entities: metadata({
+            spy: makeDevice(16, -6, { label: `anyone` }),
+            obj: links({ tags: [{ text: `public access blocked`, tone: `green`, icon: `lock` }] }),
           }),
-          links: uo({
+          links: chunks({
             so: makeLink(`spy`, `obj`, [`spy`, [20, `obj`], `obj`], {
               fail: 1,
               label: `GET /?list`,
@@ -549,7 +548,7 @@ const mo = {
               labelAt: 0.3,
             }),
           }),
-          flows: [...fo(), { route: [`so`], kind: `poison`, rate: 0.9 }],
+          flows: [...metrics(), { route: [`so`], kind: `poison`, rate: 0.9 }],
         },
       },
       {
@@ -569,11 +568,11 @@ const mo = {
           kind: `next`,
           text: `That completes Data & Storage. Next module: <b>Communication</b> — how services talk to each other.`,
         },
-        metrics: { ...po, storeCost: `≈ $6,300` },
-        scene: { entities: lo(), links: uo(), flows: fo() },
+        metrics: { ...lesson, storeCost: `≈ $6,300` },
+        scene: { entities: metadata(), links: chunks(), flows: metrics() },
       },
     ],
   };
 
-export { mo as filesLesson };
-export default mo;
+export { extra as filesLesson };
+export default extra;

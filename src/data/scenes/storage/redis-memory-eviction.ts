@@ -36,7 +36,7 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'noeviction', used_memory: '4.0 GB / 4.0 GB', evicted_keys_sec: '0', frag_ratio: '1.02' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET user:99 (OOM!)', tone: 'red', icon: 'alert' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'SET user:99 (OOM!)', tone: 'red', icon: 'alert' }] }),
           redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['Redis RAM Core', '100% Saturated (4GB)'], sub: 'noeviction: Rejecting writes' }),
           card: makePanel({ x: -2, y: 14 }, 'OOM Error Response', [
             'Client -> SET new_session "data"',
@@ -66,7 +66,7 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'allkeys-lru', used_memory: '4.0 GB (Stable)', evicted_keys_sec: '1,200/s', frag_ratio: '1.04' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'SET writes continuous', tone: 'green', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'SET writes continuous', tone: 'green', icon: 'zap' }] }),
           redis: makeBlock(6, 8, { s: 4.8, h: 50, color: 'green', glyph: 'database', label: ['Redis Engine', 'allkeys-lru Active'], sub: 'Evicting stale keys' }),
           card: makePanel({ x: -2, y: 14 }, '8 Policy Matrix', [
             '+------------------+------------------------------------------------+',
@@ -132,7 +132,7 @@ export const redisMemoryEvictionLesson = {
       metrics: { maxmemory_policy: 'allkeys-lfu', used_memory: '4.0 GB', evicted_keys_sec: '1,800/s', frag_ratio: '1.03' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Access hot key', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'Access hot key', icon: 'zap' }] }),
           lfuNode: makeBlock(6, 8, { s: 4.8, h: 50, color: 'purple', glyph: 'layers', label: ['LFU 24-bit Field', 'LDT:16 | LOG_C:8'], sub: 'Freq: 42 (Probabilistic)' }),
           card: makePanel({ x: -2, y: 14 }, 'LFU 8-Bit Counter Math', [
             'Increment formula:',
@@ -166,7 +166,7 @@ export const redisMemoryEvictionLesson = {
         entities: {
           client: makeDevice(-12, -6, { form: 'phone', label: 'Client', tags: [{ text: 'GET expired_key -> nil', icon: 'search' }] }),
           cron: makeBlock(0, -6, { s: 4.4, h: 52, color: 'purple', glyph: 'clock', label: ['serverCron (10Hz)', 'Active Sampling'], sub: 'Checks 20 random keys' }),
-          expires: makeBlock(8, 4, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['db[0].expires Dict', 'Key -> Expiry Timestamp'], sub: 'Lazy deleted on access' }),
+          expires: makeBlock(4, 2, { s: 4.8, h: 50, color: 'rose', glyph: 'database', label: ['db[0].expires Dict', 'Key -> Expiry Timestamp'], sub: 'Lazy deleted on access' }),
           card: makePanel({ x: -2, y: 14 }, 'Active Expiration Cycle (activeExpireCycle)', [
             '1. Sample 20 random keys from db->expires dict',
             '2. Delete all keys that have passed current timestamp',
