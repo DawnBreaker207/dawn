@@ -227,7 +227,7 @@ export const requestLifecycleLesson = {
         metrics: { dns: 20, connect: 400, request: 225, download: 60, total: 705 },
         scene: {
           entities: {
-            dev: makeDevice(0, -22, { label: `you · Sydney`, tags: [URL_TAG] }),
+            dev: makeDevice(0, -16, { label: `you · Sydney`, tags: [URL_TAG] }),
             dns: makeDns(),
             web: makeWebServer({ tags: [{ text: `Virginia`, icon: `globe` }] }),
             db: makeDatabase(),

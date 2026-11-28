@@ -36,7 +36,7 @@ export const networkSecurityDdosLesson = {
       metrics: { attack_type: 'Botnet Mixed', attack_volume_gbps: '250 Gbps', defense_tier: 'None (Unprotected)', mitigation_status: 'DOWN' },
       scene: {
         entities: {
-          botnet: makeDevice(-10, -8, { form: 'phone', label: '100k Botnet IoT', tags: [{ text: '250 Gbps Malicious', tone: 'red', icon: 'alert' }] }),
+          botnet: makeDevice(-7, -4, { form: 'phone', label: '100k Botnet IoT', tags: [{ text: '250 Gbps Malicious', tone: 'red', icon: 'alert' }] }),
           victim: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Target Server', 'Uplink Saturated'], sub: '100% CPU / Packet Drop' }),
           card: makePanel({ x: -2, y: 14 }, 'DDoS Attack Categories', [
             '1. Volumetric (L3/L4): Saturate bandwidth (UDP / NTP Flood)',
@@ -66,7 +66,7 @@ export const networkSecurityDdosLesson = {
       metrics: { attack_type: 'SYN Flood (L4)', attack_volume_gbps: '10M Packets/s', defense_tier: 'Kernel State', mitigation_status: 'Backlog Full' },
       scene: {
         entities: {
-          attacker: makeDevice(-10, -8, { form: 'phone', label: 'Spoofed SYNs', tags: [{ text: 'Never sends ACK', tone: 'red', icon: 'zap' }] }),
+          attacker: makeDevice(-7, -4, { form: 'phone', label: 'Spoofed SYNs', tags: [{ text: 'Never sends ACK', tone: 'red', icon: 'zap' }] }),
           victim: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Linux Server', 'SYN Backlog Queue'], sub: 'Backlog 1024/1024' }),
           card: makePanel({ x: -2, y: 14 }, 'SYN Queue Exhaustion', [
             'Attacker: SYN (Src: 1.2.3.4:55123) -> Server queues half-open socket',
@@ -96,7 +96,7 @@ export const networkSecurityDdosLesson = {
       metrics: { attack_type: 'SYN Flood Absorbed', attack_volume_gbps: '10M Packets/s', defense_tier: 'SYN Cookies', mitigation_status: '100% HEALTHY' },
       scene: {
         entities: {
-          attacker: makeDevice(-10, -8, { form: 'phone', label: 'SYN Flooder', tags: [{ text: 'Spoofed IP', tone: 'amber', icon: 'zap' }] }),
+          attacker: makeDevice(-7, -4, { form: 'phone', label: 'SYN Flooder', tags: [{ text: 'Spoofed IP', tone: 'amber', icon: 'zap' }] }),
           victim: makeBlock(6, 8, { s: 4.8, h: 50, color: 'green', glyph: 'shield', label: ['Hardened Server', 'SYN Cookies Active'], sub: 'Zero Memory Allocated' }),
           card: makePanel({ x: -2, y: 14 }, 'SYN Cookie Cryptography', [
             'Kernel allocates ZERO memory on incoming SYN',
@@ -128,7 +128,7 @@ export const networkSecurityDdosLesson = {
         entities: {
           attacker: makeDevice(-12, -8, { form: 'phone', label: 'Attacker', tags: [{ text: 'Spoofed Query (60B)', icon: 'zap' }] }),
           reflector: makeBlock(0, -8, { s: 4.6, h: 52, color: 'purple', glyph: 'server', label: ['Open Reflector', 'Amp Factor 50x'], sub: 'Echoes to Spoofed IP' }),
-          victim: makeBlock(10, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Victim Origin', 'Fiber Pipe Crushed'], sub: '1.2 Tbps Flood' }),
+          victim: makeBlock(8, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Victim Origin', 'Fiber Pipe Crushed'], sub: '1.2 Tbps Flood' }),
           card: makePanel({ x: -2, y: 14 }, 'Amplification Multiplication', [
             '1. Attacker sends 60-byte UDP query: "dig ANY ripe.net"',
             '   Spoofed Source IP = 198.51.100.5 (Victim IP)',
@@ -196,7 +196,7 @@ export const networkSecurityDdosLesson = {
       metrics: { attack_type: 'Slowloris (L7)', attack_volume_gbps: '0.001 Gbps (Low & Slow)', defense_tier: 'Web Server', mitigation_status: 'Thread Starvation' },
       scene: {
         entities: {
-          attacker: makeDevice(-10, -8, { form: 'phone', label: 'Slowloris Bot', tags: [{ text: '1 byte every 15s', tone: 'amber', icon: 'hourglass' }] }),
+          attacker: makeDevice(-7, -4, { form: 'phone', label: 'Slowloris Bot', tags: [{ text: '1 byte every 15s', tone: 'amber', icon: 'hourglass' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'rose', glyph: 'server', label: ['Apache HTTPD', 'Thread Pool (256/256)'], sub: 'All Threads Blocked' }),
           card: makePanel({ x: -2, y: 14 }, 'Slowloris Header Injection', [
             'Client opens connection:',

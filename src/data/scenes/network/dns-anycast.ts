@@ -36,7 +36,7 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: 'None', resolution_ms: '0ms (Cache)', routing_type: 'Localhost', security_mode: 'Local OS' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'User Device', tags: [{ text: 'Lookup: shop.example', icon: 'search' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'User Device', tags: [{ text: 'Lookup: shop.example', icon: 'search' }] }),
           resolver: makeBlock(6, 8, { s: 4.8, h: 50, color: 'yellow', glyph: 'globe', label: ['Recursive DNS', '1.1.1.1 / 8.8.8.8'], sub: 'Local ISP / Cloudflare' }),
           card: makePanel({ x: -2, y: 14 }, 'DNS Cache Priority', [
             '1. Browser DNS cache (chrome://net-internals/#dns)',
@@ -69,7 +69,7 @@ export const dnsAnycastLesson = {
           resolver: makeBlock(-10, -6, { s: 4.6, h: 52, color: 'yellow', glyph: 'globe', label: ['Recursive Resolver'], sub: '1.1.1.1' }),
           root: makeBlock(0, -6, { s: 4.2, h: 52, color: 'purple', glyph: 'server', label: ['Root Server', 'Zone: "."'], sub: 'Refers to .com' }),
           tld: makeBlock(10, -6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['TLD Server', 'Zone: ".com"'], sub: 'Refers to NS' }),
-          auth: makeBlock(10, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Auth Nameserver', 'shop.example'], sub: 'Returns A Record' }),
+          auth: makeBlock(6, 2, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Auth Nameserver', 'shop.example'], sub: 'Returns A Record' }),
           card: makePanel({ x: -2, y: 14 }, 'Iterative Query Path', [
             'Resolver -> Root ("."): "Where is .com?" -> NS a.gtld-servers.net',
             'Resolver -> TLD (".com"): "Where is shop.example?" -> NS ns1.cloudflare.com',
@@ -104,7 +104,7 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: '3600s', resolution_ms: '5ms (Warm)', routing_type: 'Record Lookup', security_mode: 'RFC 1035' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'IPv4 + IPv6 Dual', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'IPv4 + IPv6 Dual', icon: 'zap' }] }),
           auth: makeBlock(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'database', label: ['Auth Nameserver', 'Zone Records'], sub: 'Zone apex: @' }),
         },
         links: {
@@ -129,7 +129,7 @@ export const dnsAnycastLesson = {
       scene: {
         entities: {
           resolver: makeBlock(-10, -6, { s: 4.6, h: 52, color: 'yellow', glyph: 'globe', label: ['Resolver Cache', 'TTL Countdown'], sub: 'TTL: 42s left' }),
-          server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Origin Web Host', 'Port 443'], sub: '198.51.100.1' }),
+          server: makeBlock(4, 4, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Origin Web Host', 'Port 443'], sub: '198.51.100.1' }),
           card: makePanel({ x: -2, y: 14 }, 'TTL Caching Trade-offs', [
             'TTL = 86400 (24h): 99.9% Cache Hit Rate, BUT DNS changes take 24h to propagate',
             'TTL = 60s: Fast failover, but resolver queries origin frequently',
@@ -194,7 +194,7 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: '60s', resolution_ms: '15ms', routing_type: 'GeoDNS GSLB', security_mode: 'EDNS0 ECS' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Tokyo Client', tags: [{ text: 'ECS: 210.140.x.x/24', icon: 'mapPin' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Tokyo Client', tags: [{ text: 'ECS: 210.140.x.x/24', icon: 'mapPin' }] }),
           geodns: makeBlock(6, 8, { s: 4.8, h: 50, color: 'teal', glyph: 'globe', label: ['GeoDNS Engine', 'Route 53 Geolocation'], sub: 'Resolves to ap-northeast-1' }),
           card: makePanel({ x: -2, y: 14 }, 'GeoDNS Decision Logic', [
             'Query from Client with EDNS Client Subnet: 210.140.10.0/24',
@@ -225,7 +225,7 @@ export const dnsAnycastLesson = {
       metrics: { dns_ttl: '300s', resolution_ms: '18ms', routing_type: 'DoH (HTTPS Port 443)', security_mode: 'DNSSEC + TLS' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'DoH Client', tags: [{ text: 'Encrypted via HTTPS', tone: 'green', icon: 'lock' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'DoH Client', tags: [{ text: 'Encrypted via HTTPS', tone: 'green', icon: 'lock' }] }),
           resolver: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'shield', label: ['DoH Resolver', 'DNSSEC Validating'], sub: '1.1.1.1 /dns-query' }),
           card: makePanel({ x: -2, y: 14 }, 'Modern DNS Security Stack', [
             '1. Privacy (Client <-> Resolver):',

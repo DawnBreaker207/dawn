@@ -36,7 +36,7 @@ export const websocketRealtimeProtocolsLesson = {
       metrics: { channel_type: 'Short Polling', frame_overhead: '1,000 bytes (Headers)', concurrency: '10,000 (Exhausted)', directionality: 'Half-Duplex (Pull)' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Poll every 2s', tone: 'amber', icon: 'refresh' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'Poll every 2s', tone: 'amber', icon: 'refresh' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Polling Server', 'CPU Saturation'], sub: '99% Empty 304/200' }),
           card: makePanel({ x: -2, y: 14 }, 'HTTP Polling Waste', [
             'Client -> Server: GET /messages?since=100 (1200 bytes)',
@@ -66,7 +66,7 @@ export const websocketRealtimeProtocolsLesson = {
       metrics: { channel_type: 'WebSocket (Upgraded)', frame_overhead: '2 bytes', concurrency: 'Active', directionality: 'Full-Duplex' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Upgrade: websocket', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'Upgrade: websocket', icon: 'zap' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['WebSocket Gateway', 'Port 443'], sub: 'HTTP 101 Switched' }),
         },
         links: {
@@ -90,7 +90,7 @@ export const websocketRealtimeProtocolsLesson = {
       metrics: { channel_type: 'WebSocket Binary', frame_overhead: '2–6 bytes', concurrency: '100k+', directionality: 'Full-Duplex' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Masked Frame', icon: 'lock' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'Masked Frame', icon: 'lock' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'Unmasking Engine'], sub: 'Opcode: 0x1 (Text)' }),
           card: makePanel({ x: -2, y: 14 }, 'WebSocket Frame Bitfields (RFC 6455)', [
             'Byte 0: FIN (1 bit) | RSV (3 bits) | Opcode (4 bits)',
@@ -121,7 +121,7 @@ export const websocketRealtimeProtocolsLesson = {
       metrics: { channel_type: 'Server-Sent Events', frame_overhead: 'text/event-stream', concurrency: 'H2 Multiplexed', directionality: 'Unidirectional (Server → Client)' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'EventSource API', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'EventSource API', icon: 'zap' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['LLM / News Server', 'SSE Stream'], sub: 'text/event-stream' }),
           card: makePanel({ x: -2, y: 14 }, 'SSE Protocol Wire Format', [
             'Client -> Server: GET /stream HTTP/2 (Accept: text/event-stream)',
@@ -153,7 +153,7 @@ export const websocketRealtimeProtocolsLesson = {
       metrics: { channel_type: 'Ping / Pong (0x9 / 0xA)', frame_overhead: '2 bytes', concurrency: 'Filtered', directionality: 'Full-Duplex' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client (Sleep)', tags: [{ text: 'Offline / Tunnel', tone: 'amber', icon: 'alert' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client (Sleep)', tags: [{ text: 'Offline / Tunnel', tone: 'amber', icon: 'alert' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Gateway Server', 'Heartbeat Watchdog'], sub: 'Ping timeout -> Terminate' }),
           card: makePanel({ x: -2, y: 14 }, 'Heartbeat State Machine', [
             'Server sends [Opcode 0x9 PING] every 30 seconds',
@@ -184,7 +184,7 @@ export const websocketRealtimeProtocolsLesson = {
       metrics: { channel_type: 'Tuned Epoll Socket', frame_overhead: '4KB RAM / Conn', concurrency: '1,000,000 Active', directionality: 'Full-Duplex' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: '1M Users', tags: [{ text: '1,000,000 Sockets', tone: 'green', icon: 'users' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: '1M Users', tags: [{ text: '1,000,000 Sockets', tone: 'green', icon: 'users' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['High-Perf Gateway', 'Linux Epoll Kernel'], sub: 'RAM: 4GB Total' }),
           card: makePanel({ x: -2, y: 14 }, 'Kernel Tuning for 1M WebSockets', [
             '/etc/security/limits.conf: * soft nofile 1048576',

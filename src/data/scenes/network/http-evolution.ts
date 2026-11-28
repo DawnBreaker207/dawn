@@ -36,7 +36,7 @@ export const httpEvolutionLesson = {
       metrics: { http_version: 'HTTP/1.0', transport: 'TCP (Ephemeral)', multiplexing: 'None', hol_blocking: 'High', conn_migration: 'No' },
       scene: {
         entities: {
-          browser: makeDevice(-10, -8, { form: 'phone', label: 'Browser', tags: [{ text: '50 assets to fetch', icon: 'layers' }] }),
+          browser: makeDevice(-7, -4, { form: 'phone', label: 'Browser', tags: [{ text: '50 assets to fetch', icon: 'layers' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Web Server', 'HTTP/1.0'], sub: '1 Conn per Object' }),
           card: makePanel({ x: -2, y: 14 }, 'HTTP/1.0 Connection Overhead', [
             'Asset 1 (index.html): [SYN -> SYN-ACK -> ACK] -> GET -> [FIN]',
@@ -66,7 +66,7 @@ export const httpEvolutionLesson = {
       metrics: { http_version: 'HTTP/1.1', transport: 'TCP Keep-Alive', multiplexing: 'Sequential Only', hol_blocking: 'Application Level', conn_migration: 'No' },
       scene: {
         entities: {
-          browser: makeDevice(-10, -8, { form: 'phone', label: 'Browser', tags: [{ text: 'Blocked on Req #1', tone: 'amber', icon: 'hourglass' }] }),
+          browser: makeDevice(-7, -4, { form: 'phone', label: 'Browser', tags: [{ text: 'Blocked on Req #1', tone: 'amber', icon: 'hourglass' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Web Server', 'HTTP/1.1 FIFO'], sub: 'Slow query stalls queue' }),
         },
         links: {
@@ -90,7 +90,7 @@ export const httpEvolutionLesson = {
       metrics: { http_version: 'HTTP/1.1 (Sharded)', transport: '6x Parallel TCP', multiplexing: 'Fake (Multi-socket)', hol_blocking: 'Mitigated', conn_migration: 'No' },
       scene: {
         entities: {
-          browser: makeDevice(-10, -8, { form: 'phone', label: 'Browser', tags: [{ text: '6 Sockets / Host', icon: 'layers' }] }),
+          browser: makeDevice(-7, -4, { form: 'phone', label: 'Browser', tags: [{ text: '6 Sockets / Host', icon: 'layers' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Web Server', 'High Concurrency'], sub: '6 Sockets per User' }),
           card: makePanel({ x: -2, y: 14 }, 'The Cost of Domain Sharding', [
             'Host 1: static1.cdn.com (6 TCP connections)',
@@ -120,7 +120,7 @@ export const httpEvolutionLesson = {
       metrics: { http_version: 'HTTP/2', transport: 'Single TCP Socket', multiplexing: 'FULL (Stream IDs)', hol_blocking: 'Eliminated (App)', conn_migration: 'No' },
       scene: {
         entities: {
-          browser: makeDevice(-10, -8, { form: 'phone', label: 'Browser', tags: [{ text: '1 TCP, 100 Streams', tone: 'green', icon: 'zap' }] }),
+          browser: makeDevice(-7, -4, { form: 'phone', label: 'Browser', tags: [{ text: '1 TCP, 100 Streams', tone: 'green', icon: 'zap' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['H2 Web Server', 'Binary Framing Layer'], sub: 'Multiplexed Streams' }),
           card: makePanel({ x: -2, y: 14 }, 'Binary Frame Interleaving', [
             'Frame 1: [Stream 1: HEADERS /api/slow]',
@@ -151,7 +151,7 @@ export const httpEvolutionLesson = {
       metrics: { http_version: 'HTTP/2 HPACK', transport: 'Single TCP', multiplexing: 'YES', hol_blocking: 'Low', conn_migration: 'No' },
       scene: {
         entities: {
-          browser: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'Dynamic Table: 4KB', icon: 'zap' }] }),
+          browser: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'Dynamic Table: 4KB', icon: 'zap' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'HPACK Engine'], sub: 'Synchronized Tables' }),
           card: makePanel({ x: -2, y: 14 }, 'HPACK Compression Mechanism', [
             'Static Table: Index 2 = :method GET, Index 7 = :scheme https',
@@ -181,7 +181,7 @@ export const httpEvolutionLesson = {
       metrics: { http_version: 'HTTP/2', transport: 'Single TCP (Bottleneck)', multiplexing: 'FROZEN', hol_blocking: 'TCP-Level Stall', conn_migration: 'No' },
       scene: {
         entities: {
-          browser: makeDevice(-10, -8, { form: 'phone', label: 'Mobile Client', tags: [{ text: 'Cellular 2% Drop', tone: 'red', icon: 'alert' }] }),
+          browser: makeDevice(-7, -4, { form: 'phone', label: 'Mobile Client', tags: [{ text: 'Cellular 2% Drop', tone: 'red', icon: 'alert' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Server', 'TCP Buffer Stall'], sub: 'Waiting for Packet #2' }),
           card: makePanel({ x: -2, y: 14 }, 'TCP-Level Stall Breakdown', [
             'Stream 1 (Video), Stream 2 (CSS), Stream 3 (JS)',
@@ -211,7 +211,7 @@ export const httpEvolutionLesson = {
       metrics: { http_version: 'HTTP/3', transport: 'QUIC (UDP Port 443)', multiplexing: 'TRUE INDEPENDENT', hol_blocking: 'NONE', conn_migration: 'YES (0-ms)' },
       scene: {
         entities: {
-          browser: makeDevice(-10, -8, { form: 'phone', label: 'QUIC Client', tags: [{ text: 'UDP / 0-RTT Migr', tone: 'green', icon: 'zap' }] }),
+          browser: makeDevice(-7, -4, { form: 'phone', label: 'QUIC Client', tags: [{ text: 'UDP / 0-RTT Migr', tone: 'green', icon: 'zap' }] }),
           server: makeBlock(6, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Edge Server', 'HTTP/3 QUIC Engine'], sub: 'UDP Port 443' }),
           card: makePanel({ x: -2, y: 14 }, 'Why HTTP/3 Wins', [
             '1. No TCP HoL: Packet drop on Stream 1 does NOT stall Stream 2',

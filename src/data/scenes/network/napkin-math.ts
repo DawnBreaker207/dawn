@@ -1,64 +1,53 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeDb,
-  makeHot,
-  makeLink,
-  makePanel,
-  makeZone
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeCrowd, makeDb, makeHot, makeLink, makePanel, makeZone, type Bag, cardAt } from '@/lib/simulator/scene-builders';
 
-const ge = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -24, y1: -18 };
 
-const _e = { x0: -8.5, x1: 8.5, y0: -12.5, y1: -2.5 };
+const storeArea = { x0: -8.5, x1: 8.5, y0: -12.5, y1: -2.5 };
 
-const ve = { x0: 12.5, x1: 20.5, y0: -13.5, y1: -2.5 };
+const cdnArea = { x0: 12.5, x1: 20.5, y0: -13.5, y1: -2.5 };
 
-const ye = () => makeCrowd(ge, 15, `10M daily users`);
+const users = () => makeCrowd(usersArea, 15, `10M daily users`);
 
-const be = (e, t, n = `sparkles`) =>
-    makePanel({ x: -8.5, y: -2.5, z: 0, dx: 150, dy: -205 }, e, t, { icon: n });
+const makeCard = cardAt({ x: -8.5, y: -2.5, dx: 150, dy: -205 }, `sparkles`);
 
-const xe = [-6.4, -3.2, 0, 3.2, 6.4];
+const shardX = [-6.4, -3.2, 0, 3.2, 6.4];
 
-const Se = [`s1`, `s2`, `s0`, `s3`, `s4`];
+const shardOrder = [`s1`, `s2`, `s0`, `s3`, `s4`];
 
-const Ce = () => {
-    let e = {};
+const shardBlocks = () => {
+    let e: Record<string, Bag> = {};
     return (
-      xe.forEach((t, n) => {
-        ((e[Se[n]] = makeBlock(t, -9.6, { s: 2.8, h: 34, label: [], ...makeCool(-1) })),
+      shardX.forEach((t, n) => {
+        ((e[shardOrder[n]] = makeBlock(t, -9.6, { s: 2.8, h: 34, label: [], ...makeCool(-1) })),
           (e[`t${n}`] = makeBlock(t, -5.4, { s: 2.8, h: 34, label: [], ...makeCool(-1) })));
       }),
       e
     );
   };
 
-const we = (e = {}) => ({ s0: makeBlock(0, -7.5, { label: [`One`, `server?`], ...e }) });
+const oneServer = (e: Bag = {}) => ({ s0: makeBlock(0, -7.5, { label: [`One`, `server?`], ...e }) });
 
-const Te = () =>
+const shardDbs = () =>
     Object.fromEntries(
       [-10.2, -4.8].flatMap((e, t) =>
         [11.5, 15.5].map((n, r) => [`d${t}${r}`, makeDb(n, e, { r: 1.45, h: 30 })]),
       ),
     );
 
-const Ee = (e) => ({ u: makeLink(`users`, `s0`, [`users`, `s0`], e) });
+const userLinks = (e: Bag = {}) => ({ u: makeLink(`users`, `s0`, [`users`, `s0`], e) });
 
-const De = { uw: makeLink(`users`, `web`, [`users`, `web`]) };
+const userWebLink = { uw: makeLink(`users`, `web`, [`users`, `web`]) };
 
-const Oe = { w: makeLink(`web`, `store`, [`web`, `store`]) };
+const webStoreLink = { w: makeLink(`web`, `store`, [`web`, `store`]) };
 
-const ke = (e = !1) => ({
+const cdnScene = (e = !1) => ({
     cdn: makeBlock(12, -21, { color: `green`, glyph: `globe`, label: [`CDN`] }),
     ...(e
       ? { cache: makeBlock(-14, -7.5, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `~21 GB` }) }
       : {}),
   });
 
-const Ae = {
+const cacheFillLink = {
     sc: makeLink(`store`, `cdn`, [`store`, [`store`, `cdn`], `cdn`], {
       style: `dashed`,
       label: `cache fill`,
@@ -67,9 +56,9 @@ const Ae = {
     cu: makeLink(`cdn`, `users`, [`cdn`, `users`], { label: `images · ~16 Gbit/s`, labelAt: 0.5 }),
   };
 
-const je = { wc: makeLink(`web`, `cache`, [`web`, `cache`], { heads: `both` }) };
+const webCacheLink = { wc: makeLink(`web`, `cache`, [`web`, `cache`], { heads: `both` }) };
 
-const Me = be(
+const briefCard = makeCard(
     `The brief`,
     [
       `PhotoShare: **10M** daily active users`,
@@ -110,8 +99,8 @@ export const napkinMathLesson = {
         },
         metrics: { dau: `10M`, avg: `?`, peak: `?`, servers: `?`, storage: `?` },
         scene: {
-          entities: { users: ye(), ...we({ tags: [{ text: `enough?`, icon: `info` }] }), },
-          links: Ee(),
+          entities: { users: users(), ...oneServer({ tags: [{ text: `enough?`, icon: `info` }] }), },
+          links: userLinks(),
           flows: [{ route: [`u`], rate: 2 }],
         },
       },
@@ -131,9 +120,9 @@ export const napkinMathLesson = {
         metrics: { dau: `10M`, avg: 2300, peak: `?`, servers: `?`, storage: `?` },
         scene: {
           entities: {
-            users: ye(),
-            ...we({ cpu: 0.8 }),
-            card: be(
+            users: users(),
+            ...oneServer({ cpu: 0.8 }),
+            card: makeCard(
               `Requests per second`,
               [
                 `10M users × 20 = **200M** requests/day`,
@@ -143,7 +132,7 @@ export const napkinMathLesson = {
               `activity`,
             ),
           },
-          links: Ee(),
+          links: userLinks(),
           flows: [{ route: [`u`], rate: 3.2 }],
         },
       },
@@ -163,10 +152,10 @@ export const napkinMathLesson = {
         metrics: { dau: `10M`, avg: 2300, peak: 7e3, servers: `?`, storage: `?` },
         scene: {
           entities: {
-            users: ye(),
-            ...we(makeHot(1)),
+            users: users(),
+            ...oneServer(makeHot(1)),
           },
-          links: Ee({ fail: 0.35 }),
+          links: userLinks({ fail: 0.35 }),
           flows: [{ route: [`u`], rate: 6.5 }],
         },
       },
@@ -186,10 +175,10 @@ export const napkinMathLesson = {
         metrics: { dau: `10M`, avg: 2300, peak: 7e3, servers: 10, storage: `?` },
         scene: {
           entities: {
-            users: ye(),
-            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
-            ...Ce(),
-            card: be(
+            users: users(),
+            web: makeZone(storeArea, `WEB TIER · 10 SERVERS`),
+            ...shardBlocks(),
+            card: makeCard(
               `Servers`,
               [
                 `1 server ≈ 1,000 req/s (load test)`,
@@ -200,7 +189,7 @@ export const napkinMathLesson = {
               `server`,
             ),
           },
-          links: De,
+          links: userWebLink,
           flows: [{ route: [`uw`], rate: 6.5 }],
         },
       },
@@ -220,12 +209,12 @@ export const napkinMathLesson = {
         metrics: { dau: `10M`, avg: 2300, peak: 7e3, servers: 10, storage: `730 TB` },
         scene: {
           entities: {
-            users: ye(),
-            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
-            ...Ce(),
-            store: makeZone(ve, `STORAGE`),
-            ...Te(),
-            card: be(
+            users: users(),
+            web: makeZone(storeArea, `WEB TIER · 10 SERVERS`),
+            ...shardBlocks(),
+            store: makeZone(cdnArea, `STORAGE`),
+            ...shardDbs(),
+            card: makeCard(
               `Storage`,
               [
                 `1M photos × 2 MB = **2 TB** per day`,
@@ -236,7 +225,7 @@ export const napkinMathLesson = {
               `database`,
             ),
           },
-          links: { ...De, ...Oe },
+          links: { ...userWebLink, ...webStoreLink },
           flows: [
             { route: [`uw`], rate: 6 },
             { route: [`w`], rate: 1.6 },
@@ -259,13 +248,13 @@ export const napkinMathLesson = {
         metrics: { dau: `10M`, avg: 2300, peak: 7e3, servers: 10, storage: `730 TB` },
         scene: {
           entities: {
-            users: ye(),
-            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
-            ...Ce(),
-            store: makeZone(ve, `STORAGE`),
-            ...Te(),
-            ...ke(),
-            card: be(
+            users: users(),
+            web: makeZone(storeArea, `WEB TIER · 10 SERVERS`),
+            ...shardBlocks(),
+            store: makeZone(cdnArea, `STORAGE`),
+            ...shardDbs(),
+            ...cdnScene(),
+            card: makeCard(
               `Bytes per second`,
               [
                 `in:  2 TB/day ÷ 100k s ≈ 20 MB/s`,
@@ -276,7 +265,7 @@ export const napkinMathLesson = {
               `activity`,
             ),
           },
-          links: { ...De, ...Oe, ...Ae },
+          links: { ...userWebLink, ...webStoreLink, ...cacheFillLink },
           flows: [
             { route: [`uw`], rate: 6 },
             { route: [`w`], rate: 1.6 },
@@ -300,14 +289,14 @@ export const napkinMathLesson = {
         metrics: { dau: `10M`, avg: 2300, peak: 7e3, servers: 10, storage: `730 TB` },
         scene: {
           entities: {
-            users: ye(),
-            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
-            ...Ce(),
-            store: makeZone(ve, `STORAGE`),
-            ...Te(),
-            ...ke(),
+            users: users(),
+            web: makeZone(storeArea, `WEB TIER · 10 SERVERS`),
+            ...shardBlocks(),
+            store: makeZone(cdnArea, `STORAGE`),
+            ...shardDbs(),
+            ...cdnScene(),
             cache: makeBlock(-14, -7.5, { color: `green`, glyph: `zap`, label: [`Cache`], sub: `~21 GB` }),
-            card: be(
+            card: makeCard(
               `Hot data in RAM`,
               [
                 `profiles: 10M × 2 KB  = 20 GB`,
@@ -318,9 +307,9 @@ export const napkinMathLesson = {
             ),
           },
           links: {
-            ...De,
-            ...Oe,
-            ...Ae,
+            ...userWebLink,
+            ...webStoreLink,
+            ...cacheFillLink,
             wc: makeLink(`web`, `cache`, [`web`, `cache`], { heads: `both` }),
           },
           flows: [
@@ -350,13 +339,13 @@ export const napkinMathLesson = {
         metrics: { dau: `10M`, avg: 2300, peak: 7e3, servers: 10, storage: `730 TB` },
         scene: {
           entities: {
-            users: ye(),
-            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
-            ...Ce(),
-            store: makeZone(ve, `STORAGE`),
-            ...Te(),
-            ...ke(!0),
-            card: be(
+            users: users(),
+            web: makeZone(storeArea, `WEB TIER · 10 SERVERS`),
+            ...shardBlocks(),
+            store: makeZone(cdnArea, `STORAGE`),
+            ...shardDbs(),
+            ...cdnScene(!0),
+            card: makeCard(
               `Handy numbers`,
               [
                 `1 day ≈ 100,000 s`,
@@ -367,7 +356,7 @@ export const napkinMathLesson = {
               `bulb`,
             ),
           },
-          links: { ...De, ...Oe, ...Ae, ...je },
+          links: { ...userWebLink, ...webStoreLink, ...cacheFillLink, ...webCacheLink },
           flows: [
             { route: [`uw`], rate: 6 },
             { route: [`w`], rate: 1.6 },
@@ -394,13 +383,13 @@ export const napkinMathLesson = {
         metrics: { dau: `10M`, avg: 2300, peak: 7e3, servers: 10, storage: `730 TB` },
         scene: {
           entities: {
-            users: ye(),
-            web: makeZone(_e, `WEB TIER · 10 SERVERS`),
-            ...Ce(),
-            store: makeZone(ve, `STORAGE`),
-            ...Te(),
-            ...ke(!0),
-            card: be(
+            users: users(),
+            web: makeZone(storeArea, `WEB TIER · 10 SERVERS`),
+            ...shardBlocks(),
+            store: makeZone(cdnArea, `STORAGE`),
+            ...shardDbs(),
+            ...cdnScene(!0),
+            card: makeCard(
               `The estimate`,
               [
                 `average  ≈ 2,300 req/s`,
@@ -411,7 +400,7 @@ export const napkinMathLesson = {
               `listOrdered`,
             ),
           },
-          links: { ...De, ...Oe, ...Ae, ...je },
+          links: { ...userWebLink, ...webStoreLink, ...cacheFillLink, ...webCacheLink },
           flows: [
             { route: [`uw`], rate: 6 },
             { route: [`w`], rate: 1.6 },

@@ -1,24 +1,14 @@
-// @ts-nocheck
-import {
-  makeBlock,
-  makeCool,
-  makeCrowd,
-  makeDb,
-  makeHot,
-  makeLink,
-  makePanel,
-  makeQueue
-} from '@/lib/simulator/scene-builders';
+import { makeBlock, makeCool, makeCrowd, makeDb, makeHot, makeLink, makePanel, makeQueue, type Bag } from '@/lib/simulator/scene-builders';
 
-const le = { x0: -4.5, x1: 4.5, y0: -16, y1: -10 };
+const usersArea = { x0: -4.5, x1: 4.5, y0: -16, y1: -10 };
 
-const ue = (e, t, n) => makeCrowd(le, e, t, n);
+const usersCrowd = (e: number, t: string, n?: Bag) => makeCrowd(usersArea, e, t, n);
 
-const de = (e = {}) => makeBlock(0, 0, { label: [`App`, `Server`], ...e });
+const appServer = (e: Bag = {}) => makeBlock(0, 0, { label: [`App`, `Server`], ...e });
 
-const fe = (e = {}) => ({ u: makeLink(`users`, `srv`, [`users`, `srv`], { heads: `both`, ...e }) });
+const userLink = (e: Bag = {}) => ({ u: makeLink(`users`, `srv`, [`users`, `srv`], { heads: `both`, ...e }) });
 
-const pe = (e, t = { x: 0, y: 0 }) =>
+const latencyPanel = (e: number, t: Bag = { x: 0, y: 0 }) =>
     makePanel({ ...t, z: 0, dx: 92, dy: -150 }, `Latency vs. how busy`, [], {
       chart: `hockey`,
       marker: e,
@@ -26,7 +16,7 @@ const pe = (e, t = { x: 0, y: 0 }) =>
       w: 236,
     });
 
-const me = (e, t = {}) => [{ route: [`u`], bounce: !0, rate: e, speed: 0.85, ...t }];
+const requestFlows = (e: number, t: Bag = {}) => [{ route: [`u`], bounce: !0, rate: e, speed: 0.85, ...t }];
 
 export const latencyThroughputLesson = {
     id: `latency-throughput`,
@@ -58,9 +48,9 @@ export const latencyThroughputLesson = {
         },
         metrics: { p50: 120, p99: 180, throughput: 50, util: 10 },
         scene: {
-          entities: { users: ue(5, `1,000 users`), srv: de({ cpu: 0.1 }) },
-          links: fe({ label: `≈ 120 ms round trip`, labelAt: 0.62 }),
-          flows: me(1.1),
+          entities: { users: usersCrowd(5, `1,000 users`), srv: appServer({ cpu: 0.1 }) },
+          links: userLink({ label: `≈ 120 ms round trip`, labelAt: 0.62 }),
+          flows: requestFlows(1.1),
         },
       },
       {
@@ -79,13 +69,13 @@ export const latencyThroughputLesson = {
         metrics: { p50: 160, p99: 600, throughput: 350, util: 70 },
         scene: {
           entities: {
-            users: ue(11, `7,000 users`),
-            srv: de(makeCool(0.7)),
+            users: usersCrowd(11, `7,000 users`),
+            srv: appServer(makeCool(0.7)),
             q: makeQueue(0, -2.9, 2),
-            chart: pe(0.7),
+            chart: latencyPanel(0.7),
           },
-          links: fe(),
-          flows: me(3.4),
+          links: userLink(),
+          flows: requestFlows(3.4),
         },
       },
       {
@@ -110,13 +100,13 @@ export const latencyThroughputLesson = {
         metrics: { p50: 900, p99: 4200, throughput: 480, util: 96 },
         scene: {
           entities: {
-            users: ue(15, `9,600 users`),
-            srv: de({ ...makeHot(0.96), heat: 0.8 }),
+            users: usersCrowd(15, `9,600 users`),
+            srv: appServer({ ...makeHot(0.96), heat: 0.8 }),
             q: makeQueue(0, -2.9, 6),
-            chart: pe(0.96),
+            chart: latencyPanel(0.96),
           },
-          links: fe({ fail: 0.08 }),
-          flows: me(5.2),
+          links: userLink({ fail: 0.08 }),
+          flows: requestFlows(5.2),
         },
       },
       {
@@ -139,8 +129,8 @@ export const latencyThroughputLesson = {
         metrics: { p50: 160, p99: 600, throughput: 350, util: 70 },
         scene: {
           entities: {
-            users: ue(11, `7,000 users`),
-            srv: de(makeCool(0.7)),
+            users: usersCrowd(11, `7,000 users`),
+            srv: appServer(makeCool(0.7)),
             q: makeQueue(0, -2.9, 2),
             chart: makePanel(
               { x: 0, y: 0, z: 0, dx: 92, dy: -150 },
@@ -154,8 +144,8 @@ export const latencyThroughputLesson = {
               { icon: `activity` },
             ),
           },
-          links: fe(),
-          flows: me(3.4, { pattern: [`req`, `req`, `req`, `req`, `req`, `req`, `slow`] }),
+          links: userLink(),
+          flows: requestFlows(3.4, { pattern: [`req`, `req`, `req`, `req`, `req`, `req`, `slow`] }),
         },
       },
       {
@@ -179,13 +169,13 @@ export const latencyThroughputLesson = {
         metrics: { p50: 120, p99: 190, throughput: 350, util: 35 },
         scene: {
           entities: {
-            users: ue(11, `7,000 users`),
-            srv: de({ s: 5, h: 62, ...makeCool(0.35) }),
+            users: usersCrowd(11, `7,000 users`),
+            srv: appServer({ s: 5, h: 62, ...makeCool(0.35) }),
             q: makeQueue(0, -3.4, 0),
-            chart: pe(0.35),
+            chart: latencyPanel(0.35),
           },
-          links: fe(),
-          flows: me(3.4),
+          links: userLink(),
+          flows: requestFlows(3.4),
         },
       },
       {
@@ -208,11 +198,11 @@ export const latencyThroughputLesson = {
         metrics: { p50: 195, p99: 265, throughput: 350, util: 35 },
         scene: {
           entities: {
-            users: ue(11, `7,000 users`, { label: `users in New York` }),
-            srv: de({ s: 5, h: 62, ...makeCool(0.35), y: 14, tags: [{ text: `London`, icon: `globe` }] }),
+            users: usersCrowd(11, `7,000 users`, { label: `users in New York` }),
+            srv: appServer({ s: 5, h: 62, ...makeCool(0.35), y: 14, tags: [{ text: `London`, icon: `globe` }] }),
           },
-          links: fe({ label: `+ 75 ms each round trip`, labelTone: `amber` }),
-          flows: me(3.4),
+          links: userLink({ label: `+ 75 ms each round trip`, labelTone: `amber` }),
+          flows: requestFlows(3.4),
         },
       },
       {
@@ -231,8 +221,8 @@ export const latencyThroughputLesson = {
         metrics: { p50: 120, p99: 190, throughput: 350, util: 35 },
         scene: {
           entities: {
-            users: ue(11, `7,000 users`),
-            srv: de({
+            users: usersCrowd(11, `7,000 users`),
+            srv: appServer({
               s: 5,
               h: 62,
               ...makeCool(0.35),
@@ -249,8 +239,8 @@ export const latencyThroughputLesson = {
               { icon: `layers` },
             ),
           },
-          links: fe(),
-          flows: me(3.4),
+          links: userLink(),
+          flows: requestFlows(3.4),
         },
       },
       {
@@ -273,8 +263,8 @@ export const latencyThroughputLesson = {
         metrics: { p50: 380, p99: 900, throughput: 350, util: 40 },
         scene: {
           entities: {
-            users: ue(11, `7,000 searches`),
-            srv: de({ s: 5, h: 62, label: [`Search`], sub: `fan-out`, ...makeCool(0.4) }),
+            users: usersCrowd(11, `7,000 searches`),
+            srv: appServer({ s: 5, h: 62, label: [`Search`], sub: `fan-out`, ...makeCool(0.4) }),
             ...Object.fromEntries(
               [-12, -4, 4, 12].map((e, t) => [
                 `ix${t}`,
@@ -303,7 +293,7 @@ export const latencyThroughputLesson = {
             ),
           },
           links: {
-            ...fe(),
+            ...userLink(),
             ...Object.fromEntries(
               [-12, -4, 4, 12].map((e, t) => [
                 `f${t}`,
@@ -312,7 +302,7 @@ export const latencyThroughputLesson = {
             ),
           },
           flows: [
-            ...me(1.6),
+            ...requestFlows(1.6),
             {
               fanout: !0,
               routes: [0, 1, 3].map((e) => ({ path: [`f${e}`] })),
@@ -343,8 +333,8 @@ export const latencyThroughputLesson = {
         metrics: { p50: 140, p99: 210, throughput: 5e4, util: 35 },
         scene: {
           entities: {
-            users: ue(11, `events from apps`),
-            srv: de({
+            users: usersCrowd(11, `events from apps`),
+            srv: appServer({
               s: 5,
               h: 62,
               label: [`Event`, `Writer`],
@@ -363,8 +353,8 @@ export const latencyThroughputLesson = {
               { icon: `layers` },
             ),
           },
-          links: { ...fe(), w: makeLink(`srv`, `db`, [`srv`, `db`], { label: `INSERT 100 rows` }) },
-          flows: [...me(3.4), { route: [`w`], kind: `heavy`, rate: 0.7 }],
+          links: { ...userLink(), w: makeLink(`srv`, `db`, [`srv`, `db`], { label: `INSERT 100 rows` }) },
+          flows: [...requestFlows(3.4), { route: [`w`], kind: `heavy`, rate: 0.7 }],
         },
       },
       {
@@ -387,12 +377,12 @@ export const latencyThroughputLesson = {
         metrics: { p50: 120, p99: 190, throughput: 350, util: 35 },
         scene: {
           entities: {
-            users: ue(11, `7,000 users`),
-            srv: de({ s: 5, h: 62, ...makeCool(0.35) }),
-            chart: pe(0.35),
+            users: usersCrowd(11, `7,000 users`),
+            srv: appServer({ s: 5, h: 62, ...makeCool(0.35) }),
+            chart: latencyPanel(0.35),
           },
-          links: fe(),
-          flows: me(3.4),
+          links: userLink(),
+          flows: requestFlows(3.4),
         },
       },
     ],

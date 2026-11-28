@@ -36,7 +36,7 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'L4 Transport', throughput_conn_sec: '5,000,000/s', tls_termination: 'Backend Only', routing_granularity: 'IP:Port Hash' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Client', tags: [{ text: 'HTTPS GET /api/v1', icon: 'globe' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Client', tags: [{ text: 'HTTPS GET /api/v1', icon: 'globe' }] }),
           lb: makeBlock(0, 0, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['L4 vs L7 Balancer', 'Port 443'], sub: 'Architecture Split' }),
           backend: makeBlock(10, 8, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Backend Cluster', 'Compute Nodes'], sub: 'Web / API' }),
           card: makePanel({ x: -2, y: 14 }, 'OSI Layer Comparison', [
@@ -70,7 +70,7 @@ export const reverseProxyL4L7Lesson = {
       metrics: { lb_layer: 'L4 NLB / IPVS', throughput_conn_sec: '10,000,000/s', tls_termination: 'Passthrough', routing_granularity: '5-Tuple Hash' },
       scene: {
         entities: {
-          client: makeDevice(-10, -8, { form: 'phone', label: 'Traffic Flood', tags: [{ text: 'Raw TCP Packets', icon: 'zap' }] }),
+          client: makeDevice(-7, -4, { form: 'phone', label: 'Traffic Flood', tags: [{ text: 'Raw TCP Packets', icon: 'zap' }] }),
           l4: makeBlock(0, 0, { s: 4.8, h: 50, color: 'orange', glyph: 'balancer', label: ['AWS NLB / IPVS', 'Kernel L4 Engine'], sub: '10M Packets/sec' }),
           b1: makeBlock(10, -6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node A'], sub: 'Terminates TLS' }),
           b2: makeBlock(10, 6, { s: 4.2, h: 52, color: 'blue', glyph: 'server', label: ['Node B'], sub: 'Terminates TLS' }),
@@ -109,7 +109,7 @@ export const reverseProxyL4L7Lesson = {
         entities: {
           client: makeDevice(-10, -6, { form: 'phone', label: 'Client', tags: [{ text: 'Direct Response', icon: 'zap' }] }),
           l4: makeBlock(0, -6, { s: 4.6, h: 52, color: 'orange', glyph: 'balancer', label: ['DSR Balancer', 'Inbound Only'], sub: 'Tiny GETs only' }),
-          server: makeBlock(8, 6, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Backend Server', 'VIP on lo interface'], sub: 'Answers directly to Client' }),
+          server: makeBlock(5, 3, { s: 4.8, h: 50, color: 'blue', glyph: 'server', label: ['Backend Server', 'VIP on lo interface'], sub: 'Answers directly to Client' }),
           card: makePanel({ x: -2, y: 14 }, 'DSR Flow Architecture', [
             '1. Client -> DSR Balancer: GET request (500 bytes)',
             '2. Balancer forwards to Backend via L2 MAC rewrite',
